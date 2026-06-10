@@ -24,8 +24,8 @@
 ## Hosted Validation
 
 - GitHub Actions workflow `Preview Build` added on 2026-06-10.
-- Latest hosted build for `codex/step-2-build` passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
-- Latest Vercel preview for `codex/step-2-build` is `READY`: `https://vetted-saa-s-blueprint-qajjglnu8-michaelchamboko-gravityclaw.vercel.app`.
+- Hosted build validation for `codex/step-2-build` passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
+- Vercel preview validation for `codex/step-2-build` reached `READY` on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
 - Vercel Deployment Protection still blocks unauthenticated automated page fetches for the preview URL; rendered smoke testing needs an approved Vercel bypass/auth path or interactive logged-in browser access.
 
 ## Current Boundaries
