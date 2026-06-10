@@ -27,6 +27,7 @@
 - Hosted build validation for `codex/step-2-build` passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
 - Vercel preview validation for `codex/step-2-build` reached `READY` on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
 - Vercel Deployment Protection still blocks unauthenticated automated page fetches for the preview URL; rendered smoke testing needs an approved Vercel bypass/auth path or interactive logged-in browser access.
+- T02A operator handoff checklist: `docs/deployment/oracle-t02a-operator-handoff.md`.
 
 ## Current Boundaries
 

@@ -23,6 +23,8 @@ No schema migration may run until this worksheet reaches `READ_ONLY_QUERY_VERIFI
 5. Approve any minimum client/driver installation required for the chosen path.
 6. Provide or approve the non-secret environment variable names needed by Vercel and Hermes.
 
+Use `docs/deployment/oracle-t02a-operator-handoff.md` as the non-secret response checklist. Do not paste wallet paths, wallet filenames, passwords, connection strings, or raw environment variable values into chat or repository files.
+
 ## Repository Safety Rules
 
 - Do not copy wallet files into this repository.
