@@ -34,6 +34,8 @@ Impact: the app is not yet aligned to Oracle access patterns and may fail hosted
 
 Update: the product array type error was fixed so hosted Next.js build validation passes. The larger Oracle-alignment issue remains until `T02A`, `T02`, and `T03` can proceed.
 
+Runtime note: branch-preview smoke testing confirmed static routes can render through Vercel-authenticated fetch, while a sample DB-backed dynamic landing page returns a server error until the database path is connected and converted away from scaffold Postgres access.
+
 ### F-005: Zod latest API mismatch appears in schema contract — resolved
 
 The partial dependency install resolved Zod 4, where `z.record(z.any())` is no longer accepted by the current type definitions.
