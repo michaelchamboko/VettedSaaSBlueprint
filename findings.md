@@ -8,7 +8,7 @@
 
 Impact: local dependency state is not trustworthy and must not be used as a readiness signal. Vercel/GitHub should perform hosted app install/build validation from the repository.
 
-Update: a GitHub-hosted `Preview Build` workflow now runs `npm ci` and `npm run build`. It passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`; local installs remain out of scope by default.
+Update: a GitHub-hosted `Preview Build` workflow now runs `npm ci` and `npm run build` for branch validation; local installs remain out of scope by default.
 
 ### F-002: Oracle database connectivity is not ready
 
@@ -38,4 +38,4 @@ Update: the product array type error was fixed so hosted Next.js build validatio
 
 The partial dependency install resolved Zod 4, where `z.record(z.any())` is no longer accepted by the current type definitions.
 
-Resolution: `schema_markup` now uses Zod 4-compatible `z.record(z.string(), z.any())` calls, and hosted build validation passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
+Resolution: `schema_markup` now uses Zod 4-compatible `z.record(z.string(), z.any())` calls, and hosted build validation is covered by the branch `Preview Build` workflow.
