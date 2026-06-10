@@ -21,6 +21,13 @@
 | Module Plans | Complete / initial | Added `build-pack/module-plans/` to make the implementation plan modular and validation-location aware. |
 | Build Plans | Complete / initial | Added `build-pack/build-plans/`, including the UI/UX build plan for owner workflows and public landing pages. |
 
+## Hosted Validation
+
+- GitHub Actions workflow `Preview Build` added on 2026-06-10.
+- Latest hosted build for `codex/step-2-build` passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
+- Latest Vercel preview for `codex/step-2-build` is `READY`: `https://vetted-saa-s-blueprint-qajjglnu8-michaelchamboko-gravityclaw.vercel.app`.
+- Vercel Deployment Protection still blocks unauthenticated automated page fetches for the preview URL; rendered smoke testing needs an approved Vercel bypass/auth path or interactive logged-in browser access.
+
 ## Current Boundaries
 
 - No Oracle schema has been applied.

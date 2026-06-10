@@ -8,7 +8,7 @@
 
 Impact: local dependency state is not trustworthy and must not be used as a readiness signal. Vercel/GitHub should perform hosted app install/build validation from the repository.
 
-Next action: do not retry local installs. Remove local generated install artifacts when approved, then use GitHub/Vercel validation for the app.
+Update: a GitHub-hosted `Preview Build` workflow now runs `npm ci` and `npm run build`. It passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`; local installs remain out of scope by default.
 
 ### F-002: Oracle database connectivity is not ready
 
@@ -32,12 +32,10 @@ Several routes still import `@vercel/postgres`, and the product insert route pas
 
 Impact: the app is not yet aligned to Oracle access patterns and may fail hosted build/type validation until `T02`/`T03` convert the database layer.
 
-Next action: complete `T02A`, then convert schema and database access work through `T02` and `T03`.
+Update: the product array type error was fixed so hosted Next.js build validation passes. The larger Oracle-alignment issue remains until `T02A`, `T02`, and `T03` can proceed.
 
-### F-005: Zod latest API mismatch appears in schema contract
+### F-005: Zod latest API mismatch appears in schema contract — resolved
 
 The partial dependency install resolved Zod 4, where `z.record(z.any())` is no longer accepted by the current type definitions.
 
-Impact: hosted type/build validation may report errors in `src/lib/schemas/contracts.ts` for `schema_markup` record fields.
-
-Next action: pin compatible dependencies or update schema code in the application-foundation task through GitHub/Vercel validation, not local install/build.
+Resolution: `schema_markup` now uses Zod 4-compatible `z.record(z.string(), z.any())` calls, and hosted build validation passed on commit `a2b719e6b6e5bc4af1aa4c0f70e45dbf0a1b5ae3`.
