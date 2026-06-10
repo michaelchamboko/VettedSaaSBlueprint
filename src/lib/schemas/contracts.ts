@@ -68,7 +68,10 @@ export const pageBlueprintSchema = z.object({
   objection_handling: z.array(z.object({ objection: z.string(), response: z.string(), source_reference_ids: z.array(z.string().uuid()) })).default([]),
   cta_blocks: z.array(z.object({ placement: z.string(), label: z.string(), supporting_text: z.string(), affiliate_link_id: z.string().uuid() })).min(1),
   faq: z.array(z.object({ question: z.string(), answer: z.string(), source_reference_ids: z.array(z.string().uuid()) })).default([]),
-  schema_markup: z.object({ faq_schema: z.record(z.any()), breadcrumb_schema: z.record(z.any()) }),
+  schema_markup: z.object({
+    faq_schema: z.record(z.string(), z.any()),
+    breadcrumb_schema: z.record(z.string(), z.any()),
+  }),
   quality_scores: z.object({ evidence_score: z.number(), originality_score: z.number(), conversion_score: z.number(), compliance_score: z.number(), readability_score: z.number(), seo_safety_score: z.number(), overall_score: z.number() }),
 });
 
