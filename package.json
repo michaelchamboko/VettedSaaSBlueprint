@@ -1,0 +1,30 @@
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "hermes": "tsx hermes/worker.ts"
+  },
+  "dependencies": {
+    "@vercel/postgres": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "tailwindcss": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest"
+  },
+  "name": "globalsetup",
+  "private": true
+}
