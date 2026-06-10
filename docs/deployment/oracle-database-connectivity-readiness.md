@@ -6,11 +6,36 @@ This worksheet is the Step 2 `T02A` artifact for preparing Oracle Autonomous Dat
 
 ## Current Verdict
 
-- Oracle compute/Hermes host: `PARTIAL_READY`
+- Oracle compute/Hermes host: `SSH_METADATA_READY`
 - Oracle database connectivity: `NOT_READY`
 - Schema application: `BLOCKED_PENDING_DB_CONNECTIVITY`
 
 No schema migration may run until this worksheet reaches `READ_ONLY_QUERY_VERIFIED`.
+
+## Latest SSH Metadata Probe
+
+An operator-provided SSH launcher workflow reached the Oracle host for read-only
+metadata checks. The launcher's identity reference did not resolve directly, so
+a single local OpenSSH key candidate from the operator's Oracle folder was used
+in memory for the probe. The key path, host, username, and raw SSH command were
+not printed, copied, or committed.
+
+Sanitized probe result:
+
+```text
+ssh_connected=1
+shell_available=1
+sqlplus_present=0
+sqlcl_present=0
+python_oracledb_present=0
+oracle_wallet_config_candidate_count=0
+oracle_related_env_name_count=0
+hermes_dir_present=1
+```
+
+This proves host metadata access only. It does not prove Oracle Database
+connectivity because no database client/driver, wallet/config material, or
+Oracle connection environment names were detected.
 
 ## Required Operator Inputs
 

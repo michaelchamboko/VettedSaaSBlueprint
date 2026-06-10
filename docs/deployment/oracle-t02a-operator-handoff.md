@@ -5,8 +5,9 @@ This handoff is for `T02A - Oracle Database Connectivity Readiness`. It is inten
 ## Current State
 
 - Vercel/GitHub hosted app build is passing on `codex/step-2-build`.
+- Oracle host SSH metadata access is reachable through the operator-provided launcher workflow.
 - Oracle schema migration is still blocked.
-- A redacted local metadata check found zero Oracle wallet/config candidates in the expected local staging folders.
+- Redacted local and remote metadata checks found zero Oracle wallet/config candidates.
 - No Oracle schema, users, packages, wallet files, firewall settings, services, or Hermes runtime files have been changed.
 
 ## Operator Decisions Needed

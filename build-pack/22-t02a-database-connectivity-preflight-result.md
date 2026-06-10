@@ -3,7 +3,7 @@
 **Date**: 2026-06-10  
 **Task**: `T02A — Oracle Database Connectivity Readiness`  
 **Mode**: Read-only local + SSH metadata checks  
-**Result**: `BLOCKED_PENDING_ORACLE_DB_CONNECTION_MATERIAL`
+**Result**: `SSH_METADATA_READY_DB_CONNECTION_MATERIAL_MISSING`
 
 ## What Was Checked
 
@@ -32,11 +32,14 @@ Oracle host metadata-only search:
 - No Node Oracle driver was found in observed workspaces.
 - No Oracle DB connection environment variable names were found.
 - No wallet/config metadata was found on the Oracle host.
+- A later operator-provided SSH launcher workflow reached the Oracle host for read-only metadata checks. The launcher's identity reference did not resolve directly, so a single local OpenSSH key candidate from the operator's Oracle folder was used in memory. No key path, host, username, or raw SSH command was printed or committed.
+- Sanitized SSH probe results: `ssh_connected=1`, `shell_available=1`, `sqlplus_present=0`, `sqlcl_present=0`, `python_oracledb_present=0`, `oracle_wallet_config_candidate_count=0`, `oracle_related_env_name_count=0`, `hermes_dir_present=1`.
 
 ## Current Readiness
 
-- Oracle compute/Hermes host: `READY_FOR_PLANNING`
+- Oracle compute/Hermes host: `SSH_METADATA_READY`
 - Oracle DB connection material: `MISSING`
+- Oracle DB client/driver: `MISSING`
 - Read-only DB query verification: `NOT_POSSIBLE_YET`
 - Schema migration readiness: `BLOCKED`
 

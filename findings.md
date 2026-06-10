@@ -18,6 +18,8 @@ Impact: schema migration and DB-connected Hermes work are blocked until `T02A` s
 
 Next action: complete the redacted readiness worksheet and get explicit approval for connection material placement and any driver/client installation.
 
+Update: the operator-provided SSH launcher workflow can reach the Oracle host for read-only metadata checks, but sanitized probing still found no Oracle client tools, Python Oracle driver, wallet/config candidates, or Oracle connection environment names. The database read-only query remains blocked.
+
 ### F-003: Task graph and task-card numbering differ
 
 `build-pack/11-task-graph.md` describes tasks through `T20`, while `build-pack/tasks/` currently stops at `T10` and groups later graph work into broader cards.
