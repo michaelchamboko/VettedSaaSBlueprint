@@ -1,16 +1,16 @@
 # Oracle Database Connectivity Readiness
 
-Status: `PENDING_OPERATOR_INPUT`
+Status: `READ_ONLY_QUERY_VERIFIED`
 
 This worksheet is the Step 2 `T02A` artifact for preparing Oracle Autonomous Database connectivity. It is intentionally redacted and must not contain secrets, wallet files, passwords, full connection strings, token values, or raw environment dumps.
 
 ## Current Verdict
 
 - Oracle compute/Hermes host: `SSH_METADATA_READY`
-- Oracle database connectivity: `NOT_READY`
-- Schema application: `BLOCKED_PENDING_DB_CONNECTIVITY`
+- Oracle database connectivity: `READ_ONLY_QUERY_VERIFIED`
+- Schema application: `READY_FOR_T02_SCHEMA_TASK`
 
-No schema migration may run until this worksheet reaches `READ_ONLY_QUERY_VERIFIED`.
+No schema migration was run during `T02A`.
 
 ## Latest SSH Metadata Probe
 
@@ -33,20 +33,36 @@ oracle_related_env_name_count=0
 hermes_dir_present=1
 ```
 
-This proves host metadata access only. It does not prove Oracle Database
-connectivity because no database client/driver, wallet/config material, or
-Oracle connection environment names were detected.
+This proves host metadata access only.
+
+## Latest Read-Only Database Verification
+
+The operator provided wallet material and local runtime values outside the
+repository. A temporary local Python virtual environment was created outside the
+repository for the approved connectivity test, using the Oracle `oracledb`
+driver only for `T02A`.
+
+Sanitized database verification result:
+
+```text
+t02a_status=read_only_query_verified
+select_one_result=1
+```
+
+The temporary local virtual environment was removed after the test. No Oracle
+schema, Oracle instance setting, Oracle package, Hermes runtime file, systemd
+service, Vercel setting, wallet file, password, token, connection string, or raw
+environment value was committed.
 
 ## Required Operator Inputs
 
-1. Confirm the exact Oracle Autonomous Database target and service alias.
-2. Confirm the target remains Always Free or explicitly approve any non-free tier.
-3. Approve the connection method.
-   - Preferred: wallet-based TLS/mTLS.
-   - Alternative: mTLS-less connection only if already configured and explicitly approved.
-4. Approve a secure runtime-only wallet/secret storage path outside the repository.
-5. Approve any minimum client/driver installation required for the chosen path.
-6. Provide or approve the non-secret environment variable names needed by Vercel and Hermes.
+1. Confirm the exact Oracle Autonomous Database target and service alias. `DONE`
+2. Confirm the target remains Always Free or explicitly approve any non-free tier. `DONE`
+3. Approve the connection method. `DONE`
+   - Selected: wallet-based TLS/mTLS.
+4. Approve a secure runtime-only wallet/secret storage path outside the repository. `DONE`
+5. Approve any minimum client/driver installation required for the chosen path. `DONE_FOR_LOCAL_T02A_ONLY`
+6. Provide or approve the non-secret environment variable names needed by Vercel and Hermes. `PENDING_T03_RUNTIME_DESIGN`
 
 Use `docs/deployment/oracle-t02a-operator-handoff.md` as the non-secret response checklist. Do not paste wallet paths, wallet filenames, passwords, connection strings, or raw environment variable values into chat or repository files.
 
@@ -87,14 +103,16 @@ Expected result:
 
 ## Readiness Checklist
 
-- [ ] Autonomous Database target confirmed without exposing secrets.
-- [ ] Always Free posture confirmed or non-free tier explicitly approved.
-- [ ] Connection method approved.
-- [ ] Runtime-only wallet/secret storage path approved.
-- [ ] Minimum client/driver installation approved, if needed.
-- [ ] Read-only query executed successfully.
-- [ ] Rollback/removal notes documented for any installed client tooling.
+- [x] Autonomous Database target confirmed without exposing secrets.
+- [x] Always Free posture confirmed or non-free tier explicitly approved.
+- [x] Connection method approved.
+- [x] Runtime-only wallet/secret storage path approved.
+- [x] Minimum client/driver installation approved, if needed.
+- [x] Read-only query executed successfully.
+- [x] Rollback/removal notes documented for any installed client tooling.
 
 ## Rollback Notes
 
-Rollback notes are pending until the chosen client/driver path is approved. If no client tooling is installed, rollback is limited to removing uncommitted local notes and leaving Oracle unchanged.
+The temporary local Python virtual environment used for `T02A` was removed after
+verification. No Oracle-hosted client tooling was installed, so there is no
+Oracle-host rollback action for this task.

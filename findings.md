@@ -10,15 +10,15 @@ Impact: local dependency state is not trustworthy and must not be used as a read
 
 Update: a GitHub-hosted `Preview Build` workflow now runs `npm ci` and `npm run build` for branch validation; local installs remain out of scope by default.
 
-### F-002: Oracle database connectivity is not ready
+### F-002: Oracle database connectivity readiness verified
 
 The Step 1 read-only review found no Oracle DB client/driver/wallet/env setup for the approved Autonomous Database path.
 
-Impact: schema migration and DB-connected Hermes work are blocked until `T02A` succeeds.
+Impact: schema migration and DB-connected Hermes work were blocked until `T02A` succeeded.
 
-Next action: complete the redacted readiness worksheet and get explicit approval for connection material placement and any driver/client installation.
+Resolution: wallet-based Oracle Autonomous Database connectivity was verified with read-only `select 1 from dual`. No schema was applied, no Oracle-hosted client tooling was installed, and the temporary local test virtual environment was removed after verification.
 
-Update: the operator-provided SSH launcher workflow can reach the Oracle host for read-only metadata checks, but sanitized probing still found no Oracle client tools, Python Oracle driver, wallet/config candidates, or Oracle connection environment names. The database read-only query remains blocked.
+Next action: proceed to `T02` schema migration planning and execution using the approved connection path, with separate approval before any Oracle-hosted runtime or Hermes dependency changes.
 
 ### F-003: Task graph and task-card numbering differ
 

@@ -17,7 +17,7 @@
 | --- | --- | --- |
 | T00 Decision Ledger | Complete | Stale implementation-plan wording cleaned up; blocker search returns no active matches outside the task card itself. |
 | T01 Governance Files | Complete | `AGENTS.md`, `project_rules.md`, `state.md`, and `findings.md` exist. |
-| T02A Oracle DB Connectivity Readiness | In progress / pending operator input | Oracle host SSH metadata probe is reachable through the operator-provided launcher workflow. Requires target Autonomous Database details, approved wallet/secret storage path, connection method, database material, and explicit approval before client/driver installation or read-only query execution. |
+| T02A Oracle DB Connectivity Readiness | Complete | Wallet-based Oracle Autonomous Database connectivity verified with read-only `select 1 from dual`. No schema, Oracle-hosted package, Hermes runtime, service, wallet, or Vercel setting was changed. Temporary local driver tooling was removed after verification. |
 | Module Plans | Complete / initial | Added `build-pack/module-plans/` to make the implementation plan modular and validation-location aware. |
 | Build Plans | Complete / initial | Added `build-pack/build-plans/`, including the UI/UX build plan for owner workflows and public landing pages. |
 
