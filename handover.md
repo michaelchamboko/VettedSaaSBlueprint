@@ -8,8 +8,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 
 - Active branch: `codex/step-2-build`.
 - Step 2 is in progress, following `build-pack/11-task-graph.md`.
-- Completed tasks: `T02A`, `T02`, `T03`.
-- Current next task: `T04 - Auth Strategy` (after hosted build validation).
+- Completed tasks: `T00`, `T01`, `T02A`, `T02`, `T03`.
+- Current next task: `T04 - Auth Strategy`.
 - The repo is still a single-operator personal marketing tool. Do not add public signup, teams, tenants, billing, roles, or third-party identity unless the operator changes direction.
 
 ## Verified So Far
@@ -24,6 +24,7 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - T03 Database Access Layer created: `src/lib/db/` module with Oracle-compatible query wrapper.
 - All 10 source files migrated from `@vercel/postgres` to `@/lib/db`.
 - `package.json` dependency changed: `@vercel/postgres` → `oracledb@^6.7.0`.
+- T02+T03 pushed to GitHub as commit `16b49aa` (feat) + `b50e333` (docs).
 
 ## Not Done Yet
 
@@ -32,9 +33,11 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - No least-privilege Oracle application user has been designed or migrated yet.
 - No Oracle-hosted packages, services, systemd units, firewall rules, network settings, storage settings, or Hermes runtime files have been changed.
 - No wallet files or secrets have been committed.
-- Hosted build validation for T02+T03 is pending (commit `16b49aa`).
+- Hosted build validation for T02+T03 pending (commit `16b49aa`).
 - Hermes worker end-to-end processing is not yet connected to Oracle.
 - DB-backed dynamic page smoke testing remains blocked until Oracle schema is applied.
+- Owner/admin authentication not yet implemented (T04 pending).
+- Admin pages are unauthenticated static shells.
 
 ## Current Important Files
 
@@ -44,10 +47,13 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - `build-pack/11-task-graph.md`: authoritative execution order.
 - `build-pack/tasks/T04-auth-strategy.md`: next task card.
 - `build-pack/06-database-contract.md`: Oracle database contract.
+- `build-pack/09-permissions-contract.md`: permission matrix for all actors.
 - `db/oracle-migration-001.sql`: Oracle-compatible DDL migration (not yet applied).
 - `db/schema.sql`: PostgreSQL reference (annotated, do not apply).
 - `db/README.md`: migration strategy documentation.
 - `src/lib/db/`: Oracle-compatible database access layer.
+- `src/lib/hermes/auth.ts`: existing Hermes bearer token auth.
+- `src/app/admin/`: unauthenticated admin page shells.
 - `docs/deployment/oracle-database-connectivity-readiness.md`: T02A readiness evidence.
 - `docs/deployment/oracle-t02a-operator-handoff.md`: Oracle connectivity handoff.
 
@@ -57,15 +63,40 @@ The operator mentioned a Supabase-related account email, but the repository curr
 
 ## Next Work
 
-1. Wait for hosted build validation to pass for commit `16b49aa`.
+1. Wait for hosted build validation to confirm T02+T03 commit `16b49aa` compiles.
 2. If build fails, fix type/syntax errors in `src/lib/db/query.ts` or source files.
 3. Operator reviews and approves `db/oracle-migration-001.sql`.
 4. Apply Oracle schema through the approved connection path.
 5. Set Oracle environment variables in Vercel: `ORACLE_WALLET_LOCATION`, `ORACLE_CONNECTION_STRING`, `ORACLE_DB_USER`, `ORACLE_DB_PASSWORD`.
-6. Proceed to `T04 - Auth Strategy` for owner authentication.
+6. Implement T04 Auth Strategy:
+   - Single-owner password auth with bcrypt hashing.
+   - HTTP-only signed session cookies.
+   - Session expiry and login rate limiting.
+   - Protect admin API routes and admin pages.
+   - Audit logging for admin actions.
 7. Keep Vercel/GitHub as the hosted validation path.
 
-## Stop Conditions
+## T04 Auth Strategy — Pre-Flight
+
+**Architecture decisions for T04:**
+- **Password hashing**: bcrypt via `bcryptjs` (pure JS, works on Vercel).
+- **Session tokens**: HMAC-signed HTTP-only cookies (no external session store needed).
+- **Session storage**: In-memory Map with TTL (single-operator, no DB session table needed for MVP).
+- **Rate limiting**: In-memory sliding window for login attempts.
+- **Route protection**: Next.js middleware for `/admin/*` and `/api/admin/*` routes.
+- **Hermes auth**: Already implemented as bearer token — no changes needed.
+
+**Files to create/modify:**
+- `src/lib/auth/password.ts` — bcrypt hash/verify helpers.
+- `src/lib/auth/session.ts` — cookie signing, session creation/validation.
+- `src/lib/auth/rate-limit.ts` — login attempt rate limiting.
+- `src/lib/auth/middleware.ts` — route protection helpers.
+- `src/app/api/auth/login/route.ts` — login endpoint.
+- `src/app/api/auth/logout/route.ts` — logout endpoint.
+- `src/middleware.ts` — Next.js middleware for admin route protection.
+- `package.json` — add `bcryptjs` and `@types/bcryptjs`.
+
+**Stop Conditions**
 
 Stop before continuing if any next step would:
 
@@ -74,3 +105,4 @@ Stop before continuing if any next step would:
 - Change Oracle instance shape, Always Free posture, networking, firewall, storage, packages, systemd services, or existing Hermes runtime without separate explicit approval.
 - Apply schema before the intended migration artifact is reviewed for Oracle compatibility.
 - Add Supabase, public auth, signup, billing, multi-tenant features, or third-party identity without explicit direction.
+- Add public user registration, team management, or external identity providers.

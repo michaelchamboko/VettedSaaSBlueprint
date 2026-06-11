@@ -28,39 +28,45 @@ Impact: not a product-direction blocker, but later Step 2 execution may need tas
 
 Next action: split or supplement task cards before starting grouped high-blast-radius work.
 
-### F-004: Existing scaffold still contains Postgres-specific app code
+### F-006: T02 Oracle migration artifact created — awaiting operator approval
 
-Several routes still import `@vercel/postgres`, and the product insert route passes arrays directly to the Postgres template tag. This conflicts with the approved Oracle MVP direction and is expected to be removed during the database access layer task.
-
-Impact: the app is not yet aligned to Oracle access patterns and may fail hosted build/type validation until `T02`/`T03` convert the database layer.
-
-Update: the product array type error was fixed so hosted Next.js build validation passes. The larger Oracle-alignment issue remains until `T02` artifact is complete and `T03` can proceed.
-
-Runtime note: branch-preview smoke testing confirmed static routes can render through Vercel-authenticated fetch, while a sample DB-backed dynamic landing page returns a server error until the database path is connected and converted away from scaffold Postgres access.
-
-### F-006: T02 Oracle migration artifact created but not yet applied
-
-`db/oracle-migration-001.sql` contains Oracle-compatible DDL for all 21 MVP tables with proper constraints, foreign keys, and indexes. The PostgreSQL reference `db/schema.sql` is annotated to indicate it should not be applied to Oracle.
+`db/oracle-migration-001.sql` contains Oracle-compatible DDL for 20 MVP tables with proper constraints, foreign keys, and indexes. The PostgreSQL reference `db/schema.sql` is annotated to indicate it should not be applied to Oracle.
 
 Impact: schema is ready for operator review and approval before application through the approved Oracle connection path.
 
-Next action: operator reviews migration artifact, approves, and applies via Oracle connection path. Then proceed to T03 database access layer.
+Status: pushed as commit `16b49aa`. Awaiting operator review.
 
-### F-007: T03 Database Access Layer complete — hosted build validation needed
+Next action: operator reviews migration artifact, approves, and applies via Oracle connection path.
+
+### F-007: T03 Database Access Layer complete — hosted build validation pending
 
 `src/lib/db/` module created with Oracle-compatible database access layer. All 10 source files migrated from `@vercel/postgres` to `@/lib/db`. `package.json` dependency changed from `@vercel/postgres` to `oracledb@^6.7.0`.
 
 Impact: the app no longer depends on `@vercel/postgres`. Hosted build validation via GitHub/Vercel is required to confirm the migration works in the deployment environment.
+
+Status: pushed as commit `16b49aa`. Awaiting `Preview Build` workflow result.
 
 Remaining risks:
 1. `oracledb` thin mode may not support all Oracle features used in queries (e.g., `FOR UPDATE SKIP LOCKED`).
 2. `returning *` clause behavior may differ between PostgreSQL and Oracle for complex inserts.
 3. The `::text[]` to JSON conversion in the products route may need runtime validation.
 
-Next action: push to GitHub, let Vercel `Preview Build` workflow validate, fix any type/build errors.
+### F-008: T04 auth strategy — no owner authentication exists
 
-### F-005: Zod latest API mismatch appears in schema contract — resolved
+Admin routes (`/api/admin/*`) and admin pages (`/admin/*`) are currently unauthenticated. The permissions contract requires single-owner password auth with session cookies.
 
-The partial dependency install resolved Zod 4, where `z.record(z.any())` is no longer accepted by the current type definitions.
+Impact: any visitor can currently access admin APIs and pages. This must be resolved before any production use.
 
-Resolution: `schema_markup` now uses Zod 4-compatible `z.record(z.string(), z.any())` calls, and hosted build validation is covered by the branch `Preview Build` workflow.
+Next action: implement T04 auth strategy with bcrypt password hashing, HTTP-only session cookies, rate limiting, and route protection.
+
+## Resolved Findings
+
+### F-004: Existing scaffold contained Postgres-specific app code — resolved
+
+All `@vercel/postgres` imports have been replaced with `@/lib/db` (T03). The `package.json` dependency has been changed from `@vercel/postgres` to `oracledb@^6.7.0`.
+
+Resolution: commit `16b49aa`.
+
+### F-005: Zod latest API mismatch — resolved
+
+`z.record(z.any())` replaced with `z.record(z.string(), z.any())` for Zod 4 compatibility. Hosted build validation covered by `Preview Build` workflow.
