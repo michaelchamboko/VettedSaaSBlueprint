@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/db";
 import { jsonError, requireHermesAuth } from "@/lib/hermes/auth";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {

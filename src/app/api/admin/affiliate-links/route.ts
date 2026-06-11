@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/db";
 import { affiliateLinkSchema } from "@/lib/schemas/contracts";
 
 export async function GET() {

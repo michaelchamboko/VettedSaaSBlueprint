@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/db";
 import { productSchema } from "@/lib/schemas/contracts";
 
 function toPostgresTextArray(values: string[]) {

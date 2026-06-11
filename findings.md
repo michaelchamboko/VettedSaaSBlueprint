@@ -34,9 +34,30 @@ Several routes still import `@vercel/postgres`, and the product insert route pas
 
 Impact: the app is not yet aligned to Oracle access patterns and may fail hosted build/type validation until `T02`/`T03` convert the database layer.
 
-Update: the product array type error was fixed so hosted Next.js build validation passes. The larger Oracle-alignment issue remains until `T02A`, `T02`, and `T03` can proceed.
+Update: the product array type error was fixed so hosted Next.js build validation passes. The larger Oracle-alignment issue remains until `T02` artifact is complete and `T03` can proceed.
 
 Runtime note: branch-preview smoke testing confirmed static routes can render through Vercel-authenticated fetch, while a sample DB-backed dynamic landing page returns a server error until the database path is connected and converted away from scaffold Postgres access.
+
+### F-006: T02 Oracle migration artifact created but not yet applied
+
+`db/oracle-migration-001.sql` contains Oracle-compatible DDL for all 21 MVP tables with proper constraints, foreign keys, and indexes. The PostgreSQL reference `db/schema.sql` is annotated to indicate it should not be applied to Oracle.
+
+Impact: schema is ready for operator review and approval before application through the approved Oracle connection path.
+
+Next action: operator reviews migration artifact, approves, and applies via Oracle connection path. Then proceed to T03 database access layer.
+
+### F-007: T03 Database Access Layer complete — hosted build validation needed
+
+`src/lib/db/` module created with Oracle-compatible database access layer. All 10 source files migrated from `@vercel/postgres` to `@/lib/db`. `package.json` dependency changed from `@vercel/postgres` to `oracledb@^6.7.0`.
+
+Impact: the app no longer depends on `@vercel/postgres`. Hosted build validation via GitHub/Vercel is required to confirm the migration works in the deployment environment.
+
+Remaining risks:
+1. `oracledb` thin mode may not support all Oracle features used in queries (e.g., `FOR UPDATE SKIP LOCKED`).
+2. `returning *` clause behavior may differ between PostgreSQL and Oracle for complex inserts.
+3. The `::text[]` to JSON conversion in the products route may need runtime validation.
+
+Next action: push to GitHub, let Vercel `Preview Build` workflow validate, fix any type/build errors.
 
 ### F-005: Zod latest API mismatch appears in schema contract — resolved
 

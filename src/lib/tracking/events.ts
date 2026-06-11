@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/db";
 import { createHash } from "crypto";
 
 export function hashIp(value: string | null) {

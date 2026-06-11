@@ -1,3 +1,8 @@
+-- PostgreSQL reference schema (Step 1 artifact)
+-- Oracle-compatible migration: see db/oracle-migration-001.sql
+-- This file is retained as the original PostgreSQL schema reference.
+-- Do NOT apply this directly to Oracle Autonomous Database.
+
 create extension if not exists pgcrypto;
 
 create table if not exists products (
