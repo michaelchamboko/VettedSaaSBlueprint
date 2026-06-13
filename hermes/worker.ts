@@ -1,4 +1,5 @@
 type HermesJob = { id: string; job_type: string; input_payload: Record<string, unknown> };
+type HermesBudget = { spent: number; limit: number };
 
 const apiBase = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const token = process.env.HERMES_API_TOKEN;
@@ -23,13 +24,22 @@ async function failJob(job: HermesJob, error: unknown) {
   await hermesFetch(`/api/hermes/jobs/${job.id}/fail`, { method: "POST", body: JSON.stringify({ error_message: error instanceof Error ? error.message : String(error) }) });
 }
 
+function getBudgetFromPayload(job: HermesJob): HermesBudget {
+  const payload = job.input_payload as Partial<HermesBudget>;
+  return { spent: Number(payload.spent ?? 0), limit: Number(payload.limit ?? 0) };
+}
+
 async function runJob(job: HermesJob) {
+  const budget = getBudgetFromPayload(job);
   switch (job.job_type) {
     case "RESEARCH_REFRESH_CYCLE":
+      if (budget.limit > 0 && budget.spent >= budget.limit) return { action: "budget_paused", spent: budget.spent, limit: budget.limit };
       return { action: "queued_light_refresh", note: "Scrapling integration boundary prepared; implement Oracle-side crawlers here." };
     case "AFFILIATE_LINK_CHECK":
+      if (budget.limit > 0 && budget.spent >= budget.limit) return { action: "budget_paused", spent: budget.spent, limit: budget.limit };
       return { action: "link_check_placeholder", note: "Validate redirects without self-referral signup or purchase." };
     case "QUALITY_COMPLIANCE_SCORE":
+      if (budget.limit > 0 && budget.spent >= budget.limit) return { action: "budget_paused", spent: budget.spent, limit: budget.limit };
       return { action: "compliance_score_placeholder", note: "Use structured page JSON plus evidence ledger before publication." };
     default:
       return { action: "manual_worker_placeholder", job_type: job.job_type };
