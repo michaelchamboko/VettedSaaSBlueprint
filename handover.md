@@ -9,7 +9,7 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - Active branch: `codex/step-2-build`.
 - Step 2 is in progress, following `build-pack/11-task-graph.md`.
 - Completed tasks: `T00`, `T01`, `T02A`, `T02`, `T03`, `T04`, `T05`, `T06A`, `T06B`, `T06C`, `T07`, `T08`, `T09`, `T10`.
-- Current next task: `T11 - Budget Guard`.
+- Current next task: `T11 - Budget Guard` (covered by existing budget helper and worker gating; no dedicated task card in this repo).
 - The repo is still a single-operator personal marketing tool. Do not add public signup, teams, tenants, billing, roles, or third-party identity unless the operator changes direction.
 
 ## Verified So Far
@@ -17,8 +17,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - Oracle Autonomous Database wallet-based connectivity passed a read-only verification query: `select 1 from dual`.
 - The read-only query returned `1`.
 - The temporary local Oracle test virtual environment was removed after verification.
-- GitHub `Preview Build` passed for commit `cbe657d`.
-- Vercel has a matching preview deployment for commit `cbe657d` in `READY` state.
+- GitHub `Preview Build` passed for commit `0d7a743`.
+- Vercel has a matching preview deployment for commit `0d7a743` in `READY` state.
 - The Vercel preview URL is deployment-protected; unauthenticated public HTTP smoke checks return `401 Unauthorized`, which is expected under protection.
 - T02 Oracle migration artifact created: `db/oracle-migration-001.sql` with 20 MVP tables.
 - T03 Database Access Layer created: `src/lib/db/` module with Oracle-compatible query wrapper.
