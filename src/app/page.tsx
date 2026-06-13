@@ -8,6 +8,7 @@ const cards = [
   ["Research Ledger", "/admin/research-ledger", "Track evidence claims, source usage, and research traces."],
   ["Approval Queue", "/admin/approvals", "Review high-risk claims and first publications."],
   ["Optimization", "/admin/optimization-recommendations", "Review daily recommendations and low-risk changes."],
+  ["Daily Metrics", "/admin/daily-metrics", "Inspect first-party event rollups for the optimization loop."],
   ["Hermes Jobs", "/admin/jobs", "Inspect research, scoring, and optimization jobs."],
 ] as const;
 
