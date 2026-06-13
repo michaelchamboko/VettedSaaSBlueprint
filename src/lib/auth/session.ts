@@ -1,5 +1,3 @@
-import crypto from "crypto";
-import { cookies } from "next/headers";
 import { LOGIN_RATE_LIMIT_MAX_ATTEMPTS, LOGIN_RATE_LIMIT_WINDOW_MS, OWNER_USERNAME, SESSION_COOKIE_NAME, SESSION_TTL_MS } from "./config";
 
 type SessionRecord = { username: string; expiresAt: number };
@@ -11,31 +9,54 @@ function getSessionSecret() {
   return process.env.ORACLE_SESSION_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.SESSION_SECRET;
 }
 
+function encodeUtf8(value: string) {
+  return new TextEncoder().encode(value);
+}
+
+function decodeUtf8(value: Uint8Array) {
+  return new TextDecoder().decode(value);
+}
+
 function encodeBase64Url(value: string) {
-  return Buffer.from(value).toString("base64url");
+  return Buffer.from(value, "utf8").toString("base64url");
 }
 
 function decodeBase64Url(value: string) {
   return Buffer.from(value, "base64url").toString("utf8");
 }
 
-export function createSessionToken(username: string) {
+async function sign(payloadPart: string) {
   const secret = getSessionSecret();
   if (!secret) throw new Error("Missing session secret");
+  const key = await crypto.subtle.importKey("raw", encodeUtf8(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("HMAC", key, encodeUtf8(payloadPart));
+  return Buffer.from(signature).toString("base64url");
+}
+
+async function verify(payloadPart: string, signature: string) {
+  const expected = await sign(payloadPart);
+  if (expected.length !== signature.length) return false;
+  return crypto.subtle.verify(
+    "HMAC",
+    await crypto.subtle.importKey("raw", encodeUtf8(getSessionSecret() ?? ""), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]),
+    Uint8Array.from(Buffer.from(signature, "base64url")),
+    encodeUtf8(payloadPart)
+  );
+}
+
+export async function createSessionToken(username: string) {
   const payload = JSON.stringify({ username, expiresAt: Date.now() + SESSION_TTL_MS });
   const payloadPart = encodeBase64Url(payload);
-  const signature = crypto.createHmac("sha256", secret).update(payloadPart).digest("base64url");
+  const signature = await sign(payloadPart);
   return `${payloadPart}.${signature}`;
 }
 
-export function parseSessionToken(token: string) {
+export async function parseSessionToken(token: string) {
   const secret = getSessionSecret();
   if (!secret) return null;
   const [payloadPart, signature] = token.split(".");
   if (!payloadPart || !signature) return null;
-  const expected = crypto.createHmac("sha256", secret).update(payloadPart).digest("base64url");
-  if (signature.length !== expected.length) return null;
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  if (!(await verify(payloadPart, signature))) return null;
   let parsed: SessionRecord;
   try {
     parsed = JSON.parse(decodeBase64Url(payloadPart)) as SessionRecord;
@@ -47,8 +68,8 @@ export function parseSessionToken(token: string) {
   return parsed;
 }
 
-export function issueSession(username: string) {
-  const token = createSessionToken(username);
+export async function issueSession(username: string) {
+  const token = await createSessionToken(username);
   sessions.set(token, { username, expiresAt: Date.now() + SESSION_TTL_MS });
   return token;
 }
@@ -63,22 +84,22 @@ export function readSessionTokenFromRequest(request: Request) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-export function getCurrentSession(request?: Request) {
-  const token = request ? readSessionTokenFromRequest(request) : cookies().get(SESSION_COOKIE_NAME)?.value ?? null;
+export async function getCurrentSession(request: Request) {
+  const token = readSessionTokenFromRequest(request);
   if (!token) return null;
   const record = sessions.get(token);
   if (record && record.expiresAt > Date.now()) return { token, ...record };
-  const parsed = parseSessionToken(token);
+  const parsed = await parseSessionToken(token);
   if (!parsed) return null;
   sessions.set(token, parsed);
   return { token, ...parsed };
 }
 
-export function requireOwnerSession(request: Request) {
-  return Boolean(getCurrentSession(request));
+export async function requireOwnerSession(request: Request) {
+  return Boolean(await getCurrentSession(request));
 }
 
-export function isOwnerAuthenticated(request: Request) {
+export async function isOwnerAuthenticated(request: Request) {
   return requireOwnerSession(request);
 }
 

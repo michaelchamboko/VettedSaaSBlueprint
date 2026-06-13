@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!registerLoginAttempt(identifier)) return Response.json({ error: "Too many attempts" }, { status: 429 });
   if (username !== OWNER_USERNAME) return Response.json({ error: "Unauthorized" }, { status: 401 });
   if (!(await verifyOwnerPassword(password))) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  const token = issueSession(username);
+  const token = await issueSession(username);
   const response = Response.redirect(new URL(nextPath, request.url), 303);
   setSessionCookie(response, token);
   auditAdminAction("login", { username });

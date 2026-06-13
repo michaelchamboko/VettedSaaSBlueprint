@@ -7,9 +7,9 @@ process.env.ORACLE_APP_PASSWORD = "$2a$12$C6UzMDM.H6dfI/f/IKcEeO8JYjR4n8Qy2zHqV5
 const session = await import("../src/lib/auth/session");
 const password = await import("../src/lib/auth/password");
 
-test("creates and parses an owner session token", () => {
-  const token = session.createSessionToken("owner");
-  const parsed = session.parseSessionToken(token);
+test("creates and parses an owner session token", async () => {
+  const token = await session.createSessionToken("owner");
+  const parsed = await session.parseSessionToken(token);
   assert.ok(parsed);
   assert.equal(parsed?.username, "owner");
 });
