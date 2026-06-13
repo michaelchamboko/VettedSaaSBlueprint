@@ -41,6 +41,18 @@ export const offerFolderSchema = z.object({
   status: z.enum(["active", "paused", "archived"]).default("active"),
 });
 
+export const partnerstackProgramResourceSchema = z.object({
+  id: z.string().uuid().optional(),
+  offer_folder_id: z.string().uuid(),
+  resource_type: z.enum(["pdf", "image", "link", "video", "note"]),
+  title: z.string().min(1),
+  source_url: z.string().url().optional().nullable(),
+  storage_url: z.string().url().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  analysis_status: z.enum(["pending", "analyzing", "draft", "approved", "rejected"]).default("pending"),
+  owner_review_status: z.enum(["pending", "approved", "rejected"]).default("pending"),
+});
+
 export const pageBlueprintSchema = z.object({
   metadata: z.object({
     product_id: z.string().uuid(),
@@ -86,4 +98,5 @@ export const pageBlueprintSchema = z.object({
 export type ProductInput = z.infer<typeof productSchema>;
 export type AffiliateLinkInput = z.infer<typeof affiliateLinkSchema>;
 export type OfferFolderInput = z.infer<typeof offerFolderSchema>;
+export type PartnerstackProgramResourceInput = z.infer<typeof partnerstackProgramResourceSchema>;
 export type PageBlueprint = z.infer<typeof pageBlueprintSchema>;

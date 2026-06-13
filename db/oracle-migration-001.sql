@@ -106,6 +106,26 @@ CREATE TABLE offer_folders (
 );
 
 -- ============================================================
+-- PARTNERSTACK_PROGRAM_RESOURCES
+-- ============================================================
+CREATE TABLE partnerstack_program_resources (
+  id VARCHAR2(36) NOT NULL,
+  offer_folder_id VARCHAR2(36) NOT NULL,
+  resource_type VARCHAR2(50) NOT NULL,
+  title VARCHAR2(255) NOT NULL,
+  source_url CLOB,
+  storage_url CLOB,
+  notes CLOB,
+  analysis_status VARCHAR2(50) NOT NULL DEFAULT 'pending',
+  owner_review_status VARCHAR2(50) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT SYSTIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT SYSTIMESTAMP,
+  CONSTRAINT pk_partnerstack_program_resources PRIMARY KEY (id),
+  CONSTRAINT fk_partnerstack_program_resources_folder FOREIGN KEY (offer_folder_id)
+    REFERENCES offer_folders(id) ON DELETE CASCADE
+);
+
+-- ============================================================
 -- CATEGORIES (from database contract)
 -- ============================================================
 CREATE TABLE categories (
