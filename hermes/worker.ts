@@ -34,7 +34,7 @@ async function runJob(job: HermesJob) {
   switch (job.job_type) {
     case "RESEARCH_REFRESH_CYCLE":
       if (budget.limit > 0 && budget.spent >= budget.limit) return { action: "budget_paused", spent: budget.spent, limit: budget.limit };
-      return { action: "queued_light_refresh", note: "Scrapling integration boundary prepared; implement Oracle-side crawlers here." };
+      return { action: "queued_scrapling_plan", note: "Scrapling integration boundary prepared; implement Oracle-side crawlers here.", budget };
     case "AFFILIATE_LINK_CHECK":
       if (budget.limit > 0 && budget.spent >= budget.limit) return { action: "budget_paused", spent: budget.spent, limit: budget.limit };
       return { action: "link_check_placeholder", note: "Validate redirects without self-referral signup or purchase." };
