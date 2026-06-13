@@ -26,7 +26,10 @@
 | T06B PartnerStack Program Resource Intake | Complete | Program resource intake schema, admin API, UI surface, and validation tests added. Hosted build passed on commit `cd0a4fa`. |
 | T06C Purchase Destination Review | Complete | Purchase review schema, admin API, UI surface, and destination-review gate helper added. Hosted build passed on commit `cb224b8`. |
 | T07 Hermes Job Queue and Oracle Worker | Complete | Hermes job lifecycle helpers and non-Vercel runtime documentation added. Hosted build passed on commit `8160e3e`. |
-| T08 Manual Review Queue | Not started | Next task. |
+| T08 Scrapling Research and Evidence Ledger | Complete | Research source/evidence ledger APIs, admin surface, and budget tests added. Hosted build passed on commit `3fa14d6`. |
+| T09 Page Drafting, Compliance Gate, Publishing | Complete | Page blueprint/version workflow routes and publish-gate helper added. Hosted build passed on commit `e5a6e90`. |
+| T10 Tracking and Optimization Loop | Complete | Tracking recommendations loop and admin surface added. Hosted build passed on commit `cbe657d`. |
+| T11 Budget Guard | Not started | Next task. |
 | Module Plans | Complete / initial | Added `build-pack/module-plans/` to make the implementation plan modular and validation-location aware. |
 | Build Plans | Complete / initial | Added `build-pack/build-plans/`, including the UI/UX build plan for owner workflows and public landing pages. |
 
@@ -34,8 +37,8 @@
 
 - GitHub Actions workflow `Preview Build` added on 2026-06-10.
 - Hosted build validation for `codex/step-2-build` is enforced by the `Preview Build` workflow (`npm ci`, then `npm run build`).
-- Latest hosted build on commit `8160e3e` passed in GitHub Actions.
-- Latest Vercel preview deployment for commit `8160e3e` is `READY`.
+- Latest hosted build on commit `cbe657d` passed in GitHub Actions.
+- Latest Vercel preview deployment for commit `cbe657d` is `READY`.
 - Vercel preview validation for `codex/step-2-build` is handled by the Vercel GitHub integration for the branch HEAD.
 - Vercel Deployment Protection still blocks unauthenticated automated page fetches for the preview URL; rendered smoke testing needs an approved Vercel bypass/auth path or interactive logged-in browser access.
 - Vercel-authenticated smoke checks can render static branch-preview routes; DB-backed dynamic page routes remain blocked until Oracle schema is applied.
