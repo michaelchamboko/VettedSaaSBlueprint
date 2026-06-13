@@ -5,6 +5,7 @@ const cards = [
   ["Affiliate Link Vault", "/admin/affiliate-links", "Store original PartnerStack links and health state."],
   ["Offer Folders", "/admin/offer-folders", "Link products, affiliate URLs, resources, and review state."],
   ["Program Resources", "/admin/program-resources", "Capture notes, files, links, and analysis status."],
+  ["Research Ledger", "/admin/research-ledger", "Track evidence claims, source usage, and research traces."],
   ["Approval Queue", "/admin/approvals", "Review high-risk claims and first publications."],
   ["Hermes Jobs", "/admin/jobs", "Inspect research, scoring, and optimization jobs."],
 ] as const;
