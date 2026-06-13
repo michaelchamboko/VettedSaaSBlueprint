@@ -53,11 +53,11 @@ Remaining risks:
 
 ### F-008: T04 auth strategy — no owner authentication exists
 
-Admin routes (`/api/admin/*`) and admin pages (`/admin/*`) are currently unauthenticated. The permissions contract requires single-owner password auth with session cookies.
+Admin routes (`/api/admin/*`) and admin pages (`/admin/*`) were previously unauthenticated. The permissions contract requires single-owner password auth with session cookies.
 
-Impact: any visitor can currently access admin APIs and pages. This must be resolved before any production use.
+Impact: any visitor could previously access admin APIs and pages. This was resolved by the owner-session middleware and login/logout routes on commit `1a03e3e`.
 
-Next action: implement T04 auth strategy with bcrypt password hashing, HTTP-only session cookies, rate limiting, and route protection.
+Status: resolved on commit `1a03e3e`.
 
 ## Resolved Findings
 

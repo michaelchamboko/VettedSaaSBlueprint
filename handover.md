@@ -8,8 +8,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 
 - Active branch: `codex/step-2-build`.
 - Step 2 is in progress, following `build-pack/11-task-graph.md`.
-- Completed tasks: `T00`, `T01`, `T02A`, `T02`, `T03`.
-- Current next task: `T04 - Auth Strategy`.
+- Completed tasks: `T00`, `T01`, `T02A`, `T02`, `T03`, `T04`.
+- Current next task: `T05 - Product Vault`.
 - The repo is still a single-operator personal marketing tool. Do not add public signup, teams, tenants, billing, roles, or third-party identity unless the operator changes direction.
 
 ## Verified So Far
@@ -17,8 +17,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - Oracle Autonomous Database wallet-based connectivity passed a read-only verification query: `select 1 from dual`.
 - The read-only query returned `1`.
 - The temporary local Oracle test virtual environment was removed after verification.
-- GitHub `Preview Build` passed for commit `a5e00be`.
-- Vercel has a matching preview deployment for commit `a5e00be` in `READY` state.
+- GitHub `Preview Build` passed for commit `1a03e3e`.
+- Vercel has a matching preview deployment for commit `1a03e3e` in `READY` state.
 - The Vercel preview URL is deployment-protected; unauthenticated public HTTP smoke checks return `401 Unauthorized`, which is expected under protection.
 - T02 Oracle migration artifact created: `db/oracle-migration-001.sql` with 20 MVP tables.
 - T03 Database Access Layer created: `src/lib/db/` module with Oracle-compatible query wrapper.
@@ -36,8 +36,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - Hosted build validation for T02+T03 is complete for the current branch tip.
 - Hermes worker end-to-end processing is not yet connected to Oracle.
 - DB-backed dynamic page smoke testing remains blocked until Oracle schema is applied.
-- Owner/admin authentication not yet implemented (T04 pending).
-- Admin pages are unauthenticated static shells.
+- Owner/admin authentication implemented with single-owner login, signed session cookies, middleware protection, and login/logout routes.
+- Admin pages are now behind owner authentication.
 
 ## Current Important Files
 
@@ -66,12 +66,7 @@ The operator mentioned a Supabase-related account email, but the repository curr
 1. Operator reviews and approves `db/oracle-migration-001.sql`.
 2. Apply Oracle schema through the approved connection path.
 3. Set Oracle environment variables in Vercel: `ORACLE_WALLET_LOCATION`, `ORACLE_CONNECTION_STRING`, `ORACLE_DB_USER`, `ORACLE_DB_PASSWORD`.
-4. Implement T04 Auth Strategy:
-   - Single-owner password auth with bcrypt hashing.
-   - HTTP-only signed session cookies.
-   - Session expiry and login rate limiting.
-   - Protect admin API routes and admin pages.
-   - Audit logging for admin actions.
+4. Implement `T05 - Product Vault`.
 5. Keep Vercel/GitHub as the hosted validation path.
 
 ## T04 Auth Strategy — Pre-Flight
