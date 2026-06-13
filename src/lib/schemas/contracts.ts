@@ -73,6 +73,34 @@ export const offerPurchaseDestinationReviewSchema = z.object({
   owner_override: z.boolean().default(false),
 });
 
+export const researchSourceSchema = z.object({
+  id: z.string().uuid().optional(),
+  product_id: z.string().uuid().optional().nullable(),
+  source_type: z.string().min(1),
+  source_url: z.string().url(),
+  source_title: z.string().optional().nullable(),
+  source_hash: z.string().optional().nullable(),
+  usage_allowed: z.boolean().default(false),
+  robots_policy: z.string().optional().nullable(),
+  summary: z.string().optional().nullable(),
+  confidence_score: z.number().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
+export const evidenceClaimSchema = z.object({
+  id: z.string().uuid().optional(),
+  product_id: z.string().uuid().optional().nullable(),
+  page_id: z.string().uuid().optional().nullable(),
+  source_id: z.string().uuid().optional().nullable(),
+  claim_text: z.string().min(1),
+  claim_type: z.string().min(1),
+  risk_level: z.string().min(1),
+  extracted_quote: z.string().optional().nullable(),
+  source_summary: z.string().optional().nullable(),
+  confidence_score: z.number().min(0).max(1),
+  usage_allowed: z.boolean().default(false),
+});
+
 export const pageBlueprintSchema = z.object({
   metadata: z.object({
     product_id: z.string().uuid(),
@@ -120,4 +148,6 @@ export type AffiliateLinkInput = z.infer<typeof affiliateLinkSchema>;
 export type OfferFolderInput = z.infer<typeof offerFolderSchema>;
 export type PartnerstackProgramResourceInput = z.infer<typeof partnerstackProgramResourceSchema>;
 export type OfferPurchaseDestinationReviewInput = z.infer<typeof offerPurchaseDestinationReviewSchema>;
+export type ResearchSourceInput = z.infer<typeof researchSourceSchema>;
+export type EvidenceClaimInput = z.infer<typeof evidenceClaimSchema>;
 export type PageBlueprint = z.infer<typeof pageBlueprintSchema>;
