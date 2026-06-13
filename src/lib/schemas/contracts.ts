@@ -53,6 +53,26 @@ export const partnerstackProgramResourceSchema = z.object({
   owner_review_status: z.enum(["pending", "approved", "rejected"]).default("pending"),
 });
 
+export const offerPurchaseDestinationReviewSchema = z.object({
+  id: z.string().uuid().optional(),
+  offer_folder_id: z.string().uuid(),
+  affiliate_link_id: z.string().uuid(),
+  affiliate_url_checked: z.string().url(),
+  final_visible_destination_url: z.string().url().optional().nullable(),
+  redirect_chain: z.array(z.string()).default([]),
+  message_match_notes: z.string().optional().nullable(),
+  cta_language: z.string().optional().nullable(),
+  offer_promise: z.string().optional().nullable(),
+  pricing_trial_guarantee_claims: z.string().optional().nullable(),
+  trust_cues: z.string().optional().nullable(),
+  friction_notes: z.string().optional().nullable(),
+  visual_affinity_profile: z.string().optional().nullable(),
+  compliance_warnings: z.string().optional().nullable(),
+  conversion_continuity_score: z.number().min(0).max(100).default(0),
+  reviewed_by_owner: z.boolean().default(false),
+  owner_override: z.boolean().default(false),
+});
+
 export const pageBlueprintSchema = z.object({
   metadata: z.object({
     product_id: z.string().uuid(),
@@ -99,4 +119,5 @@ export type ProductInput = z.infer<typeof productSchema>;
 export type AffiliateLinkInput = z.infer<typeof affiliateLinkSchema>;
 export type OfferFolderInput = z.infer<typeof offerFolderSchema>;
 export type PartnerstackProgramResourceInput = z.infer<typeof partnerstackProgramResourceSchema>;
+export type OfferPurchaseDestinationReviewInput = z.infer<typeof offerPurchaseDestinationReviewSchema>;
 export type PageBlueprint = z.infer<typeof pageBlueprintSchema>;

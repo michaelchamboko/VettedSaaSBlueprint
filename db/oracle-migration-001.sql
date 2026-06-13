@@ -126,6 +126,36 @@ CREATE TABLE partnerstack_program_resources (
 );
 
 -- ============================================================
+-- OFFER_PURCHASE_DESTINATION_REVIEWS
+-- ============================================================
+CREATE TABLE offer_purchase_destination_reviews (
+  id VARCHAR2(36) NOT NULL,
+  offer_folder_id VARCHAR2(36) NOT NULL,
+  affiliate_link_id VARCHAR2(36) NOT NULL,
+  affiliate_url_checked CLOB NOT NULL,
+  final_visible_destination_url CLOB,
+  redirect_chain CLOB DEFAULT '[]' CHECK (redirect_chain IS JSON),
+  message_match_notes CLOB,
+  cta_language CLOB,
+  offer_promise CLOB,
+  pricing_trial_guarantee_claims CLOB,
+  trust_cues CLOB,
+  friction_notes CLOB,
+  visual_affinity_profile CLOB,
+  compliance_warnings CLOB,
+  conversion_continuity_score NUMBER(10) NOT NULL DEFAULT 0,
+  reviewed_by_owner NUMBER(1) NOT NULL DEFAULT 0,
+  owner_override NUMBER(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT SYSTIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT SYSTIMESTAMP,
+  CONSTRAINT pk_offer_purchase_destination_reviews PRIMARY KEY (id),
+  CONSTRAINT fk_offer_purchase_destination_reviews_folder FOREIGN KEY (offer_folder_id)
+    REFERENCES offer_folders(id) ON DELETE CASCADE,
+  CONSTRAINT fk_offer_purchase_destination_reviews_link FOREIGN KEY (affiliate_link_id)
+    REFERENCES affiliate_links(id) ON DELETE CASCADE
+);
+
+-- ============================================================
 -- CATEGORIES (from database contract)
 -- ============================================================
 CREATE TABLE categories (

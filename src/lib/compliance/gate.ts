@@ -15,3 +15,9 @@ export function evaluateBlueprintForPublication(blueprint: PageBlueprint) {
 
   return { publishable: failures.length === 0, failures };
 }
+
+export function requireDestinationReviewForPublication(options: { hasCurrentDestinationReview: boolean; ownerOverride: boolean }) {
+  const failures: string[] = [];
+  if (!options.hasCurrentDestinationReview && !options.ownerOverride) failures.push("A current purchase destination review or explicit owner override is required before first publication.");
+  return { publishable: failures.length === 0, failures };
+}
