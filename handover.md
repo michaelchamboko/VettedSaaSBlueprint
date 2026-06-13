@@ -33,7 +33,7 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - No least-privilege Oracle application user has been designed or migrated yet.
 - No Oracle-hosted packages, services, systemd units, firewall rules, network settings, storage settings, or Hermes runtime files have been changed.
 - No wallet files or secrets have been committed.
-- Hosted build validation for T02+T03 pending (commit `16b49aa`).
+- Hosted build validation for T02+T03 was previously blocked by a lockfile mismatch and is now ready to rerun after the lockfile sync.
 - Hermes worker end-to-end processing is not yet connected to Oracle.
 - DB-backed dynamic page smoke testing remains blocked until Oracle schema is applied.
 - Owner/admin authentication not yet implemented (T04 pending).
