@@ -33,6 +33,14 @@ export const affiliateLinkSchema = z.object({
   status: z.enum(["draft", "active", "disabled", "manual_review"]).default("draft"),
 });
 
+export const offerFolderSchema = z.object({
+  id: z.string().uuid().optional(),
+  product_id: z.string().uuid(),
+  affiliate_link_id: z.string().uuid(),
+  name: z.string().min(1),
+  status: z.enum(["active", "paused", "archived"]).default("active"),
+});
+
 export const pageBlueprintSchema = z.object({
   metadata: z.object({
     product_id: z.string().uuid(),
@@ -77,4 +85,5 @@ export const pageBlueprintSchema = z.object({
 
 export type ProductInput = z.infer<typeof productSchema>;
 export type AffiliateLinkInput = z.infer<typeof affiliateLinkSchema>;
+export type OfferFolderInput = z.infer<typeof offerFolderSchema>;
 export type PageBlueprint = z.infer<typeof pageBlueprintSchema>;
