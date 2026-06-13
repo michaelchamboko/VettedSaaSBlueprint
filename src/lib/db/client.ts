@@ -1,8 +1,9 @@
 import oracledb from "oracledb";
+import type { Pool, PoolAttributes } from "oracledb";
 
-let pool: oracledb.Pool | null = null;
+let pool: Pool | null = null;
 
-function getOracleConfig(): oracledb.PoolAttributes {
+function getOracleConfig(): PoolAttributes {
   const walletLocation = process.env.ORACLE_WALLET_LOCATION;
   const connectionString = process.env.ORACLE_CONNECTION_STRING;
   const user = process.env.ORACLE_DB_USER;
@@ -26,7 +27,7 @@ function getOracleConfig(): oracledb.PoolAttributes {
   };
 }
 
-export async function getPool(): Promise<oracledb.Pool> {
+export async function getPool(): Promise<Pool> {
   if (pool) return pool;
 
   const config = getOracleConfig();

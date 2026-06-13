@@ -1,4 +1,5 @@
 import oracledb from "oracledb";
+import type { Metadata, Result } from "oracledb";
 import { getPool } from "./client";
 
 type TaggedTemplateResult = {
@@ -45,10 +46,10 @@ function convertOracleSyntax(sql: string): string {
   return converted;
 }
 
-function mapRows(result: oracledb.Result<unknown>): Record<string, unknown>[] {
+function mapRows(result: Result<unknown>): Record<string, unknown>[] {
   if (!result.rows || result.rows.length === 0) return [];
 
-  const columns = result.metaData?.map((c: oracledb.Metadata<unknown>) => c.name) ?? [];
+  const columns = result.metaData?.map((c: Metadata<unknown>) => c.name) ?? [];
   return result.rows.map((row: unknown) => {
     const obj: Record<string, unknown> = {};
     if (Array.isArray(row)) {
