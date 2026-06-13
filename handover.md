@@ -1,6 +1,6 @@
 # VettedSaaSBlueprint Handover
 
-Last updated: 2026-06-11
+Last updated: 2026-06-13
 
 This handover is non-secret. Do not add passwords, wallet paths, wallet filenames, connection strings, tokens, raw environment values, or key material.
 
@@ -17,8 +17,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - Oracle Autonomous Database wallet-based connectivity passed a read-only verification query: `select 1 from dual`.
 - The read-only query returned `1`.
 - The temporary local Oracle test virtual environment was removed after verification.
-- GitHub `Preview Build` passed for commit `d0190b2`.
-- Vercel has a matching preview deployment for commit `d0190b2` in `READY` state.
+- GitHub `Preview Build` passed for commit `a5e00be`.
+- Vercel has a matching preview deployment for commit `a5e00be` in `READY` state.
 - The Vercel preview URL is deployment-protected; unauthenticated public HTTP smoke checks return `401 Unauthorized`, which is expected under protection.
 - T02 Oracle migration artifact created: `db/oracle-migration-001.sql` with 20 MVP tables.
 - T03 Database Access Layer created: `src/lib/db/` module with Oracle-compatible query wrapper.
@@ -33,7 +33,7 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - No least-privilege Oracle application user has been designed or migrated yet.
 - No Oracle-hosted packages, services, systemd units, firewall rules, network settings, storage settings, or Hermes runtime files have been changed.
 - No wallet files or secrets have been committed.
-- Hosted build validation for T02+T03 was previously blocked by a lockfile mismatch and is now ready to rerun after the lockfile sync.
+- Hosted build validation for T02+T03 is complete for the current branch tip.
 - Hermes worker end-to-end processing is not yet connected to Oracle.
 - DB-backed dynamic page smoke testing remains blocked until Oracle schema is applied.
 - Owner/admin authentication not yet implemented (T04 pending).
@@ -63,18 +63,16 @@ The operator mentioned a Supabase-related account email, but the repository curr
 
 ## Next Work
 
-1. Wait for hosted build validation to confirm T02+T03 commit `16b49aa` compiles.
-2. If build fails, fix type/syntax errors in `src/lib/db/query.ts` or source files.
-3. Operator reviews and approves `db/oracle-migration-001.sql`.
-4. Apply Oracle schema through the approved connection path.
-5. Set Oracle environment variables in Vercel: `ORACLE_WALLET_LOCATION`, `ORACLE_CONNECTION_STRING`, `ORACLE_DB_USER`, `ORACLE_DB_PASSWORD`.
-6. Implement T04 Auth Strategy:
+1. Operator reviews and approves `db/oracle-migration-001.sql`.
+2. Apply Oracle schema through the approved connection path.
+3. Set Oracle environment variables in Vercel: `ORACLE_WALLET_LOCATION`, `ORACLE_CONNECTION_STRING`, `ORACLE_DB_USER`, `ORACLE_DB_PASSWORD`.
+4. Implement T04 Auth Strategy:
    - Single-owner password auth with bcrypt hashing.
    - HTTP-only signed session cookies.
    - Session expiry and login rate limiting.
    - Protect admin API routes and admin pages.
    - Audit logging for admin actions.
-7. Keep Vercel/GitHub as the hosted validation path.
+5. Keep Vercel/GitHub as the hosted validation path.
 
 ## T04 Auth Strategy — Pre-Flight
 

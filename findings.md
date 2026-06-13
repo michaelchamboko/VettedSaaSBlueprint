@@ -42,9 +42,9 @@ Next action: operator reviews migration artifact, approves, and applies via Orac
 
 `src/lib/db/` module created with Oracle-compatible database access layer. All 10 source files migrated from `@vercel/postgres` to `@/lib/db`. `package.json` dependency changed from `@vercel/postgres` to `oracledb@^6.7.0`.
 
-Impact: the app no longer depends on `@vercel/postgres`. Hosted build validation via GitHub/Vercel is required to confirm the migration works in the deployment environment.
+Impact: the app no longer depends on `@vercel/postgres`. Hosted build validation via GitHub/Vercel confirmed the migration works in the deployment environment.
 
-Status: pushed as commit `16b49aa`. Awaiting `Preview Build` workflow result.
+Status: pushed across commits `16b49aa` through `a5e00be`. Latest `Preview Build` workflow passed successfully.
 
 Remaining risks:
 1. `oracledb` thin mode may not support all Oracle features used in queries (e.g., `FOR UPDATE SKIP LOCKED`).

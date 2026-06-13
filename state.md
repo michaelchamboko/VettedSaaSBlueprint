@@ -28,6 +28,8 @@
 
 - GitHub Actions workflow `Preview Build` added on 2026-06-10.
 - Hosted build validation for `codex/step-2-build` is enforced by the `Preview Build` workflow (`npm ci`, then `npm run build`).
+- Latest hosted build on commit `a5e00be` passed in GitHub Actions.
+- Latest Vercel preview deployment for commit `a5e00be` is `READY`.
 - Vercel preview validation for `codex/step-2-build` is handled by the Vercel GitHub integration for the branch HEAD.
 - Vercel Deployment Protection still blocks unauthenticated automated page fetches for the preview URL; rendered smoke testing needs an approved Vercel bypass/auth path or interactive logged-in browser access.
 - Vercel-authenticated smoke checks can render static branch-preview routes; DB-backed dynamic page routes remain blocked until Oracle schema is applied.
