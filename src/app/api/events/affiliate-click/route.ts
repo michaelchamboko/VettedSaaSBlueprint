@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db";
 import { recordEvent } from "@/lib/tracking/events";
+import { resolveAffiliateRedirect } from "@/lib/tracking/affiliate-redirect";
 
 export async function POST(request: Request) {
   return Response.json({ event: await recordEvent(request, "affiliate_click") }, { status: 201 });
@@ -12,7 +13,6 @@ export async function GET(request: Request) {
 
   await recordEvent(request, "affiliate_click");
   const { rows } = await sql`select partnerstack_url from affiliate_links where id = ${linkId} and status = 'active' limit 1`;
-  if (!rows[0]) return Response.redirect(new URL("/affiliate-link-unavailable", url.origin));
-
-  return Response.redirect(String(rows[0].partnerstack_url), 302);
+  const redirectUrl = resolveAffiliateRedirect(rows[0]?.partnerstack_url ?? null, url.origin);
+  return Response.redirect(redirectUrl, rows[0] ? 302 : 302);
 }
