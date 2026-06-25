@@ -6,7 +6,7 @@ const safeBlueprint = {
   metadata: {
     product_id: "550e8400-e29b-41d4-a716-446655440000",
     page_type: "direct_review",
-    target_keyword: "best workflow tool",
+    target_keyword: "productivity workflow tool",
     search_intent: "commercial",
     category_slug: "workflow-tools",
     url_slug: "workflow-tools",
