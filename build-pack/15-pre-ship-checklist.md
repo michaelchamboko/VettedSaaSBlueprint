@@ -10,9 +10,9 @@
 
 - [x] Typecheck passes.
 - [x] Build passes.
-- [ ] Unit tests pass.
-- [ ] Integration tests pass.
-- [ ] API contract tests pass.
+- [x] Unit tests pass.
+- [x] Integration tests pass.
+- [x] API contract tests pass.
 - [x] Database migration validation passes.
 
 ## Compliance Validation
@@ -28,7 +28,7 @@
 
 - [x] Vercel deploy succeeds.
 - [x] Oracle Autonomous Database schema applied.
-- [ ] Oracle Hermes service running. (Runtime validation blocked: production has no Oracle environment variables configured, so DB-backed handlers fail at connection time.)
+- [ ] Oracle Hermes service running. (Runtime validation remains blocked: production has no Oracle environment variables configured, so DB-backed handlers fail at connection time.)
 - [x] Hermes can claim/complete job. (POST routes are live: `/api/hermes/jobs/claim` and `/api/hermes/jobs/{id}/complete` reject unauthorized calls with 401; GET returns 405 for POST-only handlers.)
 - [x] Public page renders mobile-first. (`GET /` and `GET /admin/login` return 200 via bypass/custom-domain target.)
 - [ ] Tracking events recorded minimally. (Tracking endpoints currently return 500 due missing Oracle env in production.)
@@ -43,8 +43,8 @@
 
 ## Current Evidence Limits
 
-- `Preview Build` workflow definition currently runs hosted install/build/typecheck/tests (`npm ci`, `npm run build`, `npm run typecheck`, `npm run test`), but the last pushed run on this branch (`e5e99a1`) failed typecheck (`src/app/api/events/affiliate-click/route.ts`) because the patch that resolves this is still local-only and not yet pushed.
-- Vercel CLI now shows the latest production deployment as `dpl_28Gbr2ywMZWxepYQt241QcNQQRhj` (`vetted-saa-s-blueprint-7ao2svzqe-michaelchamboko-gravityclaw.vercel.app`) and aliases include `https://vetted-saa-s-blueprint.vercel.app`.
+- `Preview Build` workflow now includes hosted install/build/typecheck/tests (`npm ci`, `npm run build`, `npm run typecheck`, `npm run test`). Latest branch run `28167530338` on commit `5785970` succeeded; summary shows all 39 tests passing.
+- Vercel CLI now shows the latest production deployment as `dpl_Fbcv9Km2qwv1twsPrrFcAMAT2KVS` (`vetted-saa-s-blueprint-hmotwh4g2-michaelchamboko-gravityclaw.vercel.app`) and aliases include `https://vetted-saa-s-blueprint.vercel.app`.
 - `vercel env ls` in project `michaelchamboko-gravityclaw/vetted-saa-s-blueprint` returns no environment variables.
 - Runtime smoke checks (via `curl` with `-k`, bypass/custom-domain target) on `https://vetted-saa-s-blueprint.vercel.app`:
   - `GET /` => `200`.
@@ -60,4 +60,4 @@
   - `POST /api/events/cta-click` => `500`.
   - `POST /api/events/faq-expand` => `500`.
   - `POST /api/events/link-error` => `500`.
-- `npm run test` in this environment fails because required test dependencies are not installed (`tsx` missing), matching repo constraints around local dependency installs; CI-backed testing is still pending on a pushed branch state.
+- `npm run test` in this environment still fails because required test dependencies are not installed (`tsx` missing); CI-backed test validation is complete and linked to run `28167530338`.
