@@ -10,9 +10,8 @@ function parseList(value: FormDataEntryValue | null) {
     .filter(Boolean);
 }
 
-function toPostgresTextArray(values: string[]) {
-  const escapedValues = values.map((value) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`);
-  return `{${escapedValues.join(",")}}`;
+function toOracleJsonArray(values: string[]) {
+  return JSON.stringify(values);
 }
 
 export async function GET(request: Request) {
@@ -40,7 +39,7 @@ export async function POST(request: Request) {
     research_priority: Number(form.get("research_priority") ?? 50),
     auto_low_risk_updates_enabled: form.get("auto_low_risk_updates_enabled") === "on",
   });
-  const { rows } = await sql`insert into products (name, slug, website_url, partnerstack_id, description, primary_audience, pricing_summary, commission_summary, target_countries, competitor_products, seed_keywords, status, research_priority, auto_low_risk_updates_enabled) values (${input.name}, ${input.slug}, ${input.website_url ?? null}, ${input.partnerstack_id ?? null}, ${input.description ?? null}, ${input.primary_audience ?? null}, ${input.pricing_summary ?? null}, ${input.commission_summary ?? null}, ${toPostgresTextArray(input.target_countries)}::text[], ${toPostgresTextArray(input.competitor_products)}::text[], ${toPostgresTextArray(input.seed_keywords)}::text[], ${input.status}, ${input.research_priority}, ${input.auto_low_risk_updates_enabled}) returning *`;
+  const { rows } = await sql`insert into products (name, slug, website_url, partnerstack_id, description, primary_audience, pricing_summary, commission_summary, target_countries, competitor_products, seed_keywords, status, research_priority, auto_low_risk_updates_enabled) values (${input.name}, ${input.slug}, ${input.website_url ?? null}, ${input.partnerstack_id ?? null}, ${input.description ?? null}, ${input.primary_audience ?? null}, ${input.pricing_summary ?? null}, ${input.commission_summary ?? null}, ${toOracleJsonArray(input.target_countries)}, ${toOracleJsonArray(input.competitor_products)}, ${toOracleJsonArray(input.seed_keywords)}, ${input.status}, ${input.research_priority}, ${input.auto_low_risk_updates_enabled}) returning *`;
   await sql`insert into manual_review_tasks (product_id, entity_type, entity_id, review_type, risk_level, reason) values (${rows[0].id}, 'product', ${rows[0].id}, 'COMPLIANCE_PROFILE_REQUIRED', 'MEDIUM_RISK', 'Product cannot publish until program rules and compliance profile are reviewed.')`;
   auditAdminAction("create_product", { product_id: rows[0].id });
   return Response.json({ product: rows[0] }, { status: 201 });

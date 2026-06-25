@@ -1,7 +1,8 @@
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 import { evaluatePagePublishability } from "./publication";
+import type { PublishReadinessRequirements } from "@/lib/compliance/gate";
 
-export function canPublishPage(blueprint: PageBlueprint, options: { hasCurrentDestinationReview: boolean; ownerOverride: boolean; affiliateLinkActive: boolean; approved: boolean }) {
+export function canPublishPage(blueprint: PageBlueprint, options: PublishReadinessRequirements & { approved: boolean }) {
   const gate = evaluatePagePublishability(blueprint, options);
   if (!options.approved) gate.failures.push("Page version must be approved before publishing.");
   return { publishable: gate.publishable && options.approved, failures: gate.failures };

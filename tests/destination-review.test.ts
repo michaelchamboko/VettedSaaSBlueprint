@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { requireDestinationReviewForPublication } from "../src/lib/compliance/gate";
+import { evaluateComplianceStatesForPublication, requireDestinationReviewForPublication } from "../src/lib/compliance/gate";
 import { offerPurchaseDestinationReviewSchema } from "../src/lib/schemas/contracts";
 
 test("destination review preserves the original affiliate URL", () => {
@@ -22,4 +22,14 @@ test("publication is blocked without a current destination review or owner overr
 test("owner override can bypass destination review requirement", () => {
   const gate = requireDestinationReviewForPublication({ hasCurrentDestinationReview: false, ownerOverride: true });
   assert.equal(gate.publishable, true);
+});
+
+test("high-risk claims must be approved before publication", () => {
+  const gate = evaluateComplianceStatesForPublication({
+    complianceProfileComplete: true,
+    programRulesReviewed: true,
+    highRiskClaimsApproved: false,
+  });
+  assert.equal(gate.publishable, false);
+  assert.ok(gate.failures.includes("High-risk claims must be approved and usage-allowed before publication."));
 });

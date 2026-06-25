@@ -13,6 +13,8 @@ export async function GET(request: Request) {
 
   await recordEvent(request, "affiliate_click");
   const { rows } = await sql`select partnerstack_url from affiliate_links where id = ${linkId} and status = 'active' limit 1`;
-  const redirectUrl = resolveAffiliateRedirect(rows[0]?.partnerstack_url ?? null, url.origin);
+  const rawAffiliateUrl = rows.length > 0 && rows[0] ? rows[0].partnerstack_url : null;
+  const partnerstackUrl = typeof rawAffiliateUrl === "string" ? rawAffiliateUrl : null;
+  const redirectUrl = resolveAffiliateRedirect(partnerstackUrl, url.origin);
   return Response.redirect(redirectUrl, rows[0] ? 302 : 302);
 }

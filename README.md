@@ -25,12 +25,13 @@ The project is not intended to make the local folder the runtime. Dependencies a
 
 1. Provision Oracle Autonomous Database, preferably Always Free Autonomous Transaction Processing for MVP.
 2. Convert `db/schema.sql` to Oracle-compatible DDL and apply it to Oracle Autonomous Database.
-3. Connect `michaelchamboko/VettedSaaSBlueprint` to the Vercel project serving `https://vetted-saa-s-blueprint.vercel.app`.
-4. Configure Vercel environment variables from `.env.example`.
+3. Connect `michaelchamboko/VettedSaaSBlueprint` to the Vercel project serving your expected production URL (historically `https://vetted-saa-s-blueprint.vercel.app`).
+4. Configure Vercel environment variables from `.env.example` using non-secret deployment/runtime values.
 5. Let Vercel install `package.json` dependencies during deployment.
 6. Provision the Oracle Hermes worker environment near the Oracle database.
 7. Install Hermes/Scrapling worker dependencies on Oracle, not in the local repo folder.
 8. Start Hermes as a managed Oracle service after the Vercel app is live.
+9. Run initial runtime smoke checks against the active deployment URL for `/`, `/admin/login`, and Hermes endpoints once auth is configured.
 
 ## Optional local preview
 

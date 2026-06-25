@@ -12,6 +12,8 @@ Production URL:
 https://vetted-saa-s-blueprint.vercel.app
 ```
 
+Note: as of 2026-06-25, runtime probes against this host return `404`/`NOT_FOUND`, so the active Vercel production hostname should be confirmed before final smoke validation.
+
 Responsibilities:
 
 - Render single-owner admin dashboard pages.
@@ -22,11 +24,21 @@ Responsibilities:
 - Trigger ISR revalidation.
 - Enforce disclosure and publication gates in code-controlled components.
 
-Required Vercel environment variables:
+Required Vercel runtime variables for Oracle connectivity:
 
 ```text
+ORACLE_CONNECTION_STRING
+ORACLE_DB_USER
+ORACLE_DB_PASSWORD
+ORACLE_WALLET_LOCATION
+ORACLE_SERVICE_ALIAS
+TNS_ADMIN
 DATABASE_URL
+ORACLE_APP_USER
+ORACLE_APP_PASSWORD
 HERMES_API_TOKEN
+ORACLE_SESSION_SECRET
+SESSION_SECRET
 NEXT_PUBLIC_SITE_URL
 ```
 
@@ -55,7 +67,7 @@ Responsibilities:
 Schema source:
 
 ```text
-db/schema.sql
+db/oracle-migration-001.sql
 ```
 
 ## Oracle Hermes worker
@@ -72,12 +84,22 @@ Responsibilities:
 - Apply budget guardrails before expensive AI work.
 - Create evidence, drafts, scores, recommendations, and manual review tasks.
 
-Required Oracle worker environment variables:
+Required Oracle worker/runtime variables:
 
 ```text
-NEXT_PUBLIC_SITE_URL
-HERMES_API_TOKEN
+ORACLE_CONNECTION_STRING
+ORACLE_DB_USER
+ORACLE_DB_PASSWORD
+ORACLE_WALLET_LOCATION
+ORACLE_SERVICE_ALIAS
+TNS_ADMIN
 DATABASE_URL
+ORACLE_APP_USER
+ORACLE_APP_PASSWORD
+HERMES_API_TOKEN
+ORACLE_SESSION_SECRET
+SESSION_SECRET
+NEXT_PUBLIC_SITE_URL
 ```
 
 ## Deployment order

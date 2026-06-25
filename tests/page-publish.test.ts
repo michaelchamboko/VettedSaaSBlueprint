@@ -33,11 +33,25 @@ const safeBlueprint = {
 } as any;
 
 test("publication is blocked without active link or destination review", () => {
-  const result = evaluatePagePublishability(safeBlueprint, { hasCurrentDestinationReview: false, ownerOverride: false, affiliateLinkActive: false });
+  const result = evaluatePagePublishability(safeBlueprint, {
+    hasCurrentDestinationReview: false,
+    ownerOverride: false,
+    affiliateLinkActive: false,
+    complianceProfileComplete: true,
+    programRulesReviewed: true,
+    highRiskClaimsApproved: true,
+  });
   assert.equal(result.publishable, false);
 });
 
 test("publication can proceed when active link, review, and compliance are present", () => {
-  const result = evaluatePagePublishability(safeBlueprint, { hasCurrentDestinationReview: true, ownerOverride: false, affiliateLinkActive: true });
+  const result = evaluatePagePublishability(safeBlueprint, {
+    hasCurrentDestinationReview: true,
+    ownerOverride: false,
+    affiliateLinkActive: true,
+    complianceProfileComplete: true,
+    programRulesReviewed: true,
+    highRiskClaimsApproved: true,
+  });
   assert.equal(result.publishable, true);
 });

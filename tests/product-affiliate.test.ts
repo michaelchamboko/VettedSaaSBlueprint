@@ -29,3 +29,12 @@ test("affiliate link schema accepts a PartnerStack referral URL", () => {
   });
   assert.equal(affiliateLink.status, "draft");
 });
+
+test("affiliate link schema accepts approved Flowith affiliate URLs", () => {
+  const affiliateLink = affiliateLinkSchema.parse({
+    product_id: "550e8400-e29b-41d4-a716-446655440000",
+    partnerstack_url: "https://aff.flowith.io/bwo8r7hygk6t",
+    link_type: "cta",
+  });
+  assert.equal(affiliateLink.status, "draft");
+});

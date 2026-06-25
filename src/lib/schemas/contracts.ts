@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+function isApprovedAffiliateUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    return (
+      host === "partnerstack.com" || host.endsWith(".partnerstack.com") ||
+      host === "psref.com" || host.endsWith(".psref.com") ||
+      host === "aff.flowith.io"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const productSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1),
@@ -21,7 +36,10 @@ export const productSchema = z.object({
 export const affiliateLinkSchema = z.object({
   id: z.string().uuid().optional(),
   product_id: z.string().uuid(),
-  partnerstack_url: z.string().url().refine((url) => url.includes("partnerstack") || url.includes("psref"), "Store the original PartnerStack referral URL."),
+  partnerstack_url: z.string().url().refine(
+    (url) => isApprovedAffiliateUrl(url),
+    "Store the original approved referral URL (PartnerStack, psref, or Flowith affiliate domain).",
+  ),
   destination_url: z.string().url().optional().nullable(),
   link_type: z.string().min(1),
   geo_target: z.string().optional().nullable(),

@@ -1,6 +1,6 @@
 # VettedSaaSBlueprint Handover
 
-Last updated: 2026-06-13
+Last updated: 2026-06-25
 
 This handover is non-secret. Do not add passwords, wallet paths, wallet filenames, connection strings, tokens, raw environment values, or key material.
 
@@ -8,8 +8,8 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 
 - Active branch: `codex/step-2-build`.
 - Step 2 is in progress, following `build-pack/11-task-graph.md`.
-- Completed tasks: `T00`, `T01`, `T02A`, `T02`, `T03`, `T04`, `T05`, `T06A`, `T06B`, `T06C`, `T07`, `T08`, `T09`, `T10`.
-- Current next task: `T11 - Budget Guard` (covered by existing budget helper and worker gating; no dedicated task card in this repo).
+- Completed tasks: `T00`, `T01`, `T02A`, `T02`, `T03`, `T04`, `T05`, `T06A`, `T06B`, `T06C`, `T07`, `T08`, `T09`, `T10`, `T11`.
+- `T11 - Budget Guard` is already implemented in code and documented in `state.md`; no separate task card exists in this repo.
 - The repo is still a single-operator personal marketing tool. Do not add public signup, teams, tenants, billing, roles, or third-party identity unless the operator changes direction.
 
 ## Verified So Far
@@ -17,25 +17,25 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - Oracle Autonomous Database wallet-based connectivity passed a read-only verification query: `select 1 from dual`.
 - The read-only query returned `1`.
 - The temporary local Oracle test virtual environment was removed after verification.
-- GitHub `Preview Build` passed for commit `0d7a743`.
-- Vercel has a matching preview deployment for commit `0d7a743` in `READY` state.
-- The Vercel preview URL is deployment-protected; unauthenticated public HTTP smoke checks return `401 Unauthorized`, which is expected under protection.
+- GitHub `Preview Build` is used for hosted validation, and the live production deployment now resolves to `vetted-saa-s-blueprint-esed4x4lm-michaelchamboko-gravityclaw.vercel.app`.
+- Runtime probes against the protected deployment now return `200` for `/` and `/admin/login`; Hermes route smoke checks return `401`/`405`; DB-backed event routes currently return `500` because production Oracle environment variables are not set.
+- `vercel project protection vetted-saa-s-blueprint` reports SSO protection for all non-custom-domain access.
+- `vercel inspect vetted-saa-s-blueprint.vercel.app` resolves to deployment `https://vetted-saa-s-blueprint-esed4x4lm-michaelchamboko-gravityclaw.vercel.app`.
 - T02 Oracle migration artifact created: `db/oracle-migration-001.sql` with 20 MVP tables.
 - T03 Database Access Layer created: `src/lib/db/` module with Oracle-compatible query wrapper.
 - All 10 source files migrated from `@vercel/postgres` to `@/lib/db`.
 - `package.json` dependency changed: `@vercel/postgres` → `oracledb@^6.7.0`.
 - T02+T03 pushed to GitHub as commit `16b49aa` (feat) + `b50e333` (docs).
 
-## Not Done Yet
+## Current Status and Remaining Gaps
 
-- No Oracle schema has been applied.
 - No Oracle database app user beyond the currently configured connection user has been created.
 - No least-privilege Oracle application user has been designed or migrated yet.
 - No Oracle-hosted packages, services, systemd units, firewall rules, network settings, storage settings, or Hermes runtime files have been changed.
 - No wallet files or secrets have been committed.
-- Hosted build validation for T02+T03 is complete for the current branch tip.
-- Hermes worker end-to-end processing is not yet connected to Oracle.
-- DB-backed dynamic page smoke testing remains blocked until Oracle schema is applied.
+- Hosted build validation for T02+T03 was complete for the current branch tip.
+- Repository status tracking now records that the repo-level Oracle schema migration applies cleanly to the live Oracle service.
+- DB-backed dynamic route behavior is partially validated on routing and auth for Hermes endpoints; remaining missing piece is Oracle env wiring for persistent operations like event tracking and job processing.
 - Owner/admin authentication implemented with single-owner login, signed session cookies, middleware protection, and login/logout routes.
 - Admin pages are now behind owner authentication.
 
@@ -45,15 +45,15 @@ This handover is non-secret. Do not add passwords, wallet paths, wallet filename
 - `state.md`: current project progress.
 - `findings.md`: active findings and resolved blockers.
 - `build-pack/11-task-graph.md`: authoritative execution order.
-- `build-pack/tasks/T04-auth-strategy.md`: next task card.
+- `build-pack/15-pre-ship-checklist.md`: current validation closure checklist.
 - `build-pack/06-database-contract.md`: Oracle database contract.
 - `build-pack/09-permissions-contract.md`: permission matrix for all actors.
-- `db/oracle-migration-001.sql`: Oracle-compatible DDL migration (not yet applied).
+- `db/oracle-migration-001.sql`: Oracle-compatible DDL migration that now applies successfully to the live Oracle service.
 - `db/schema.sql`: PostgreSQL reference (annotated, do not apply).
 - `db/README.md`: migration strategy documentation.
 - `src/lib/db/`: Oracle-compatible database access layer.
 - `src/lib/hermes/auth.ts`: existing Hermes bearer token auth.
-- `src/app/admin/`: unauthenticated admin page shells.
+- `src/app/admin/`: owner-protected admin surfaces.
 - `docs/deployment/oracle-database-connectivity-readiness.md`: T02A readiness evidence.
 - `docs/deployment/oracle-t02a-operator-handoff.md`: Oracle connectivity handoff.
 
@@ -63,13 +63,11 @@ The operator mentioned a Supabase-related account email, but the repository curr
 
 ## Next Work
 
-1. Operator reviews and approves `db/oracle-migration-001.sql`.
-2. Apply Oracle schema through the approved connection path.
-3. Set Oracle environment variables in Vercel: `ORACLE_WALLET_LOCATION`, `ORACLE_CONNECTION_STRING`, `ORACLE_DB_USER`, `ORACLE_DB_PASSWORD`.
-4. Implement `T11 - Budget Guard`.
-5. Keep Vercel/GitHub as the hosted validation path.
+1. Confirm whether the operator wants a least-privilege Oracle application user migration next.
+2. Continue with the remaining post-core build work if the task graph is extended past `T10`.
+3. Keep Vercel/GitHub as the hosted validation path.
 
-## T04 Auth Strategy — Pre-Flight
+## T04 Auth Strategy — Historical Pre-Flight
 
 **Architecture decisions for T04:**
 - **Password hashing**: bcrypt via `bcryptjs` (pure JS, works on Vercel).
@@ -96,6 +94,6 @@ Stop before continuing if any next step would:
 - Print, commit, or log secrets.
 - Commit wallet files or raw connection material.
 - Change Oracle instance shape, Always Free posture, networking, firewall, storage, packages, systemd services, or existing Hermes runtime without separate explicit approval.
-- Apply schema before the intended migration artifact is reviewed for Oracle compatibility.
+- Apply any future schema change before its migration artifact is reviewed for Oracle compatibility.
 - Add Supabase, public auth, signup, billing, multi-tenant features, or third-party identity without explicit direction.
 - Add public user registration, team management, or external identity providers.

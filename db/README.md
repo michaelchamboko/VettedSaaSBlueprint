@@ -12,8 +12,8 @@
 | PostgreSQL | Oracle | Notes |
 |------------|--------|-------|
 | `uuid` | `VARCHAR2(36)` | Application generates UUIDs |
-| `jsonb` | `CLOB CHECK (col IS JSON)` | Oracle 19c+ compatible |
-| `text[]` | `CLOB CHECK (col IS JSON)` | Application serializes as JSON arrays |
+| `jsonb` | `CLOB` | Application stores JSON payloads in CLOB |
+| `text[]` | `CLOB` | Application serializes as JSON arrays |
 | `gen_random_uuid()` | Removed | Application-layer UUID generation |
 | `timestamptz` | `TIMESTAMP WITH TIME ZONE` | |
 | `now()` | `SYSTIMESTAMP` | |

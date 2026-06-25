@@ -2,6 +2,33 @@ import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 const blockedPhrases = ["#1", "best", "better than", "guaranteed", "limited time", "only today", "verified discount", "lock in this price"];
 
+export type PublishReadinessRequirements = {
+  hasCurrentDestinationReview: boolean;
+  ownerOverride: boolean;
+  affiliateLinkActive: boolean;
+  complianceProfileComplete: boolean;
+  programRulesReviewed: boolean;
+  highRiskClaimsApproved: boolean;
+};
+
+export function isCompliantProfileStatus(status: unknown) {
+  return typeof status === "string" && ["approved", "reviewed", "complete", "active"].includes(status.toLowerCase());
+}
+
+export function isHighRiskClaimLevel(riskLevel: unknown) {
+  if (typeof riskLevel !== "string") return false;
+  const normalized = riskLevel.trim().toLowerCase();
+  return normalized === "high" || normalized === "high_risk" || normalized === "high-risk";
+}
+
+export function evaluateComplianceStatesForPublication(requirements: Pick<PublishReadinessRequirements, "complianceProfileComplete" | "programRulesReviewed" | "highRiskClaimsApproved">) {
+  const failures: string[] = [];
+  if (!requirements.complianceProfileComplete) failures.push("Compliance profile state is unknown and must be reviewed before publication.");
+  if (!requirements.programRulesReviewed) failures.push("PartnerStack program rules are unknown or not reviewed before publication.");
+  if (!requirements.highRiskClaimsApproved) failures.push("High-risk claims must be approved and usage-allowed before publication.");
+  return { publishable: failures.length === 0, failures };
+}
+
 export function evaluateBlueprintForPublication(blueprint: PageBlueprint) {
   const text = JSON.stringify(blueprint).toLowerCase();
   const blocked = blockedPhrases.filter((phrase) => text.includes(phrase.toLowerCase()));

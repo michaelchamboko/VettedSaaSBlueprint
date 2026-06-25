@@ -62,7 +62,7 @@ environment value was committed.
    - Selected: wallet-based TLS/mTLS.
 4. Approve a secure runtime-only wallet/secret storage path outside the repository. `DONE`
 5. Approve any minimum client/driver installation required for the chosen path. `DONE_FOR_LOCAL_T02A_ONLY`
-6. Provide or approve the non-secret environment variable names needed by Vercel and Hermes. `PENDING_T03_RUNTIME_DESIGN`
+6. Provide or approve the non-secret environment variable names needed by Vercel and Hermes. `DONE` (compatibility aliases accepted by runtime module)
 
 Use `docs/deployment/oracle-t02a-operator-handoff.md` as the non-secret response checklist. Do not paste wallet paths, wallet filenames, passwords, connection strings, or raw environment variable values into chat or repository files.
 
@@ -76,16 +76,23 @@ Use `docs/deployment/oracle-t02a-operator-handoff.md` as the non-secret response
 
 ## Proposed Runtime Env Names
 
-These names are placeholders for runtime configuration only:
+Canonical names used by the runtime module:
 
 ```text
 DATABASE_URL
+ORACLE_CONNECTION_STRING
 ORACLE_WALLET_LOCATION
+ORACLE_DB_USER
+ORACLE_DB_PASSWORD
+ORACLE_SERVICE_ALIAS
+TNS_ADMIN
 HERMES_API_TOKEN
 NEXT_PUBLIC_SITE_URL
+ORACLE_APP_USER
+ORACLE_APP_PASSWORD
 ```
 
-If the selected Oracle driver requires a different convention, update this section before implementation.
+The module accepts both `ORACLE_*` canonical names and legacy fallbacks (`DATABASE_URL`, `ORACLE_APP_USER`, and `ORACLE_APP_PASSWORD`) to keep continuity with existing runtime paths.
 
 ## Verification Query
 
