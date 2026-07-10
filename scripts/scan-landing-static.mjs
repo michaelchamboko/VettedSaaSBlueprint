@@ -6,6 +6,8 @@ import { pathToFileURL } from "node:url";
 const targetDir = "src/generated/landing-pages";
 const routePath = "src/app/landing-page-builders/[slug]/page.tsx";
 const componentPath = "src/components/landing/DirectReviewPage.tsx";
+const editorialComponentPath = "src/components/landing/EditorialReviewPage.tsx";
+const stylesPath = "src/app/globals.css";
 const generatedLibPath = "src/lib/generated/landing-pages.ts";
 
 export const landingStaticScanModes = [
@@ -21,6 +23,7 @@ export const landingStaticScanModes = [
   "responsive",
   "assets",
   "publish-readiness",
+  "editorial-v2",
 ];
 
 function readText(path) {
@@ -49,6 +52,8 @@ export function loadLandingStaticContext() {
     manifest: existsSync(join(targetDir, "index.json")) ? readJson(join(targetDir, "index.json")) : { pages: [] },
     routeSource: readText(routePath),
     componentSource: readText(componentPath),
+    editorialComponentSource: existsSync(editorialComponentPath) ? readText(editorialComponentPath) : "",
+    stylesSource: existsSync(stylesPath) ? readText(stylesPath) : "",
     generatedSource: readText(generatedLibPath),
   };
 }
@@ -198,6 +203,50 @@ function checkPublishReadiness(rows, issues) {
   if (!performanceDoc.includes("npm run gate:stage2:pre-review")) issue(issues, "stage2_gate_command_missing", "Stage 2 gate command is missing.");
 }
 
+function countWords(value) {
+  return typeof value === "string" && value.trim() ? value.trim().split(/\s+/).length : 0;
+}
+
+function futureScopedStyles(stylesSource) {
+  const start = stylesSource.indexOf(".landing-editorial-v2");
+  return start >= 0 ? stylesSource.slice(start) : "";
+}
+
+function checkEditorialV2(rows, editorialComponentSource, stylesSource, issues) {
+  const futureRows = rows.filter((row) => row.data?.metadata?.design_profile === "editorial_v2");
+  if (futureRows.length === 0) return;
+
+  for (const row of futureRows) {
+    const answerSnippet = row.data.hero?.answer_snippet;
+    if (countWords(answerSnippet) < 40 || countWords(answerSnippet) > 60) {
+      issue(issues, "editorial_answer_snippet_invalid", "Editorial v2 answer_snippet must contain 40–60 words.", row.file);
+    }
+
+    const ctaLabel = row.data.hero?.primary_cta_label ?? "";
+    if (ctaLabel.length > 32 || /(?:->|--?>|[↗→⇒])/u.test(ctaLabel)) {
+      issue(issues, "editorial_cta_label_too_long", "Editorial v2 CTA labels must be at most 32 characters and must not embed arrow glyphs.", row.file);
+    }
+  }
+
+  const scopedStyles = futureScopedStyles(stylesSource);
+  const futureSource = `${editorialComponentSource}\n${scopedStyles}`;
+  if (!editorialComponentSource.includes("flex items-center justify-between whitespace-nowrap")) {
+    issue(issues, "editorial_cta_primitive_missing", "Editorial v2 renderer must use the no-wrap flex CTA primitive.");
+  }
+  if (!editorialComponentSource.includes("compact-disclosure") || !editorialComponentSource.includes("full-disclosure")) {
+    issue(issues, "editorial_disclosure_footer_wiring_missing", "Editorial v2 renderer must show compact disclosure near the CTA and full disclosure in the footer.");
+  }
+  if (!scopedStyles.startsWith(".landing-editorial-v2")) {
+    issue(issues, "editorial_styles_unscoped", "Editorial v2 styles must be scoped under .landing-editorial-v2.");
+  }
+  if (/gradient/i.test(futureSource)) {
+    issue(issues, "editorial_gradient_interactive", "Editorial v2 interactive primitives must not use gradients.");
+  }
+  if (/(position\s*:\s*(?:fixed|sticky)|(?:fixed|sticky)\s+bottom)/i.test(futureSource)) {
+    issue(issues, "editorial_sticky_cta", "Editorial v2 must not use fixed or sticky bottom CTA primitives.");
+  }
+}
+
 export function buildLandingStaticReport(mode, context = loadLandingStaticContext()) {
   const issues = [];
   const warnings = [];
@@ -206,6 +255,8 @@ export function buildLandingStaticReport(mode, context = loadLandingStaticContex
     manifest,
     routeSource,
     componentSource,
+    editorialComponentSource,
+    stylesSource,
     generatedSource,
   } = context;
 
@@ -245,6 +296,9 @@ export function buildLandingStaticReport(mode, context = loadLandingStaticContex
       break;
     case "publish-readiness":
       checkPublishReadiness(rows, issues);
+      break;
+    case "editorial-v2":
+      checkEditorialV2(rows, editorialComponentSource ?? "", stylesSource ?? "", issues);
       break;
     default:
       issue(issues, "unknown_static_scan_mode", `Unknown scan mode: ${mode ?? "(missing)"}.`);

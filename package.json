@@ -25,6 +25,7 @@
     "scan:landing:responsive": "node scripts/scan-landing-static.mjs responsive --json",
     "scan:landing:assets": "node scripts/scan-landing-static.mjs assets --json",
     "scan:landing:publish-readiness": "node scripts/scan-landing-static.mjs publish-readiness --json",
+    "scan:landing:editorial-v2": "node scripts/scan-landing-static.mjs editorial-v2 --json",
     "scan:landing:uniqueness": "node .agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplicates.mjs src/generated/landing-pages --json",
     "scan:landing:duplicates": "npm run scan:landing:uniqueness",
     "scan:landing:compliance": "node .agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs src/generated/landing-pages --json",
