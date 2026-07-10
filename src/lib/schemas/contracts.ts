@@ -154,6 +154,7 @@ export const pageBlueprintSchema = z.object({
     canonical_url: z.string().url().optional().nullable(),
     robots: z.string().default("index,follow"),
     motion_profile: z.enum(["static", "gsap_editorial"]).default("static"),
+    design_profile: z.enum(["legacy", "editorial_v2"]).default("legacy"),
   }),
   affiliate_disclosure: z.object({
     short_disclosure: z.string().min(1),
@@ -167,6 +168,7 @@ export const pageBlueprintSchema = z.object({
     primary_cta_link_id: z.string().uuid(),
     risk_reversal: z.string().optional().nullable(),
     social_proof_summary: z.string().optional().nullable(),
+    answer_snippet: z.string().min(1).optional().nullable(),
     visual_asset: generatedVisualAssetSchema.optional().nullable(),
   }),
   problem_solution: z.object({ problem: z.string(), agitation: z.string(), solution: z.string() }),
