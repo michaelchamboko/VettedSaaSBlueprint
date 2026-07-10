@@ -140,12 +140,14 @@ function checkSeo(rows, routeSource, issues, warnings) {
   if (!routeSource.includes("canonical")) warning(warnings, "canonical_not_explicit", "Canonical metadata is not explicit in the route source.");
 }
 
-function checkLinks(componentSource, rows, issues) {
-  for (const token of ["buildOracleAffiliateRedirectUrl", "/api/events/affiliate-click", "data-link-id"]) {
-    if (!componentSource.includes(token)) issue(issues, "affiliate_link_wiring_missing", `DirectReviewPage is missing ${token}.`);
-  }
-  if (!/rel=["'](?:nofollow\s+sponsored|sponsored\s+nofollow|sponsored)["']/.test(componentSource)) {
-    issue(issues, "affiliate_link_rel_missing", "DirectReviewPage must mark affiliate CTA links with rel=\"sponsored\".");
+function checkLinks(componentSource, editorialComponentSource, rows, issues) {
+  for (const [renderer, source] of [["DirectReviewPage", componentSource], ["EditorialReviewPage", editorialComponentSource]]) {
+    for (const token of ["/r/affiliate?", "data-link-id"]) {
+      if (!source.includes(token)) issue(issues, "affiliate_link_wiring_missing", `${renderer} is missing ${token}.`);
+    }
+    if (!/rel=["'](?:nofollow\s+sponsored|sponsored\s+nofollow|sponsored)["']/.test(source)) {
+      issue(issues, "affiliate_link_rel_missing", `${renderer} must mark affiliate CTA links with rel=\"sponsored\".`);
+    }
   }
   for (const row of rows) if (!hasText(row.data.hero?.primary_cta_link_id)) issue(issues, "affiliate_link_id_missing", "Hero affiliate link id is missing.", row.file);
 }
@@ -277,7 +279,7 @@ export function buildLandingStaticReport(mode, context = loadLandingStaticContex
       checkSeo(rows, routeSource, issues, warnings);
       break;
     case "links":
-      checkLinks(componentSource, rows, issues);
+      checkLinks(componentSource, editorialComponentSource, rows, issues);
       break;
     case "forms":
       checkForms(componentSource, issues);
