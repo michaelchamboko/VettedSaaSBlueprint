@@ -97,3 +97,12 @@ Do not create `src/generated/landing-page-drafts/next-50/` artifacts from this s
 - [AdCreative.ai feature collection](https://help.adcreative.ai/en/collections/11004452-creative-tools-features)
 - [Snowfire product features](https://www.snowfire.ai/our-product/product-features)
 
+## External program-rule observations
+
+These are research notes, not owner-approved database records:
+
+- [DataHawk affiliate terms](https://datahawk.co/wp-content/uploads/2025/09/datahawk-affiliate-terms-and-conditions.pdf) prohibit branded PPC bidding, require the publisher/site to be clearly independent, and restrict coupon/deal-style promotion. DataHawk-specific pages must not be paired with paid branded-search campaigns.
+- [Thinkific affiliate information](https://www.thinkific.com/affiliates/) states that the program runs on PartnerStack, uses a default referral destination, and requires the affiliate team to be contacted for a custom link. The supplied URL must remain the preserved link unless an audited custom-link record exists.
+- [ElevenLabs affiliate terms](https://elevenlabs.io/affiliates-terms) require visual distinction from ElevenLabs properties, prohibit paid targeting of ElevenLabs marks, and require a clear disclosure near the affiliate link; any use of marks also carries an attribution requirement.
+
+These observations reduce public-rule uncertainty but do not resolve the supplied URL’s active state, redirect record, owner-reviewed destination, evidence usage permission, or publication approval. Those records remain hard gates for `DH01` and every other candidate.
