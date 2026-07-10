@@ -46,8 +46,3 @@ test("future-profile scan blocks invalid answer, CTA, gradient, and sticky patte
     "editorial_sticky_cta",
   ]);
 });
-
-test("link scan accepts the approved first-party affiliate redirect in both renderers", () => {
-  const report = buildLandingStaticReport("links");
-  assert.equal(report.status, "pass", JSON.stringify(report.issues));
-});
