@@ -10,6 +10,7 @@ const vercel = JSON.parse(readFileSync("vercel.json", "utf8")) as {
   buildCommand?: string;
 };
 const publicSiteContract = readFileSync("src/lib/site/public-site.ts", "utf8");
+const publicCatalogue = readFileSync("src/lib/generated/landing-pages.ts", "utf8");
 const releaseRunbook = readFileSync("docs/deployment/public-site-release.md", "utf8");
 
 function workflowJob(name: string): string {
@@ -32,6 +33,10 @@ test("public release validation is a named source-side gate", () => {
   assert.equal(packageJson.scripts["validate:public-site"], "tsx scripts/validate-public-site.ts");
   assert.equal(packageJson.scripts["gate:public-release"], "npm run validate:public-site");
   assert.equal(vercel.buildCommand, "npm run validate:public-site && next build");
+});
+
+test("published review links retain the typed dynamic-route contract", () => {
+  assert.match(publicCatalogue, /path:\s*`\/landing-page-builders\/\$\{string\}`;/);
 });
 
 test("build and final workflow gates receive release values", () => {

@@ -24,7 +24,7 @@ const landingPageManifestSchema = z.object({
 type ManifestPage = z.infer<typeof manifestPageSchema>;
 export type PublicReviewSummary = {
   slug: string;
-  path: string;
+  path: `/landing-page-builders/${string}`;
   title: string;
   description: string;
   categorySlug: string;
@@ -65,7 +65,7 @@ function loadCatalogue(directory: string): Catalogue {
     blueprints.set(entry.slug, blueprint);
     summaries.push({
       slug: entry.slug,
-      path: entry.path,
+      path: `/landing-page-builders/${entry.slug}`,
       title: blueprint.metadata.title_tag,
       description: blueprint.metadata.meta_description,
       categorySlug: blueprint.metadata.category_slug,
