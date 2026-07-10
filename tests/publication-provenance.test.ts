@@ -13,10 +13,12 @@ function fakeConnection() {
     commits: 0,
     rollbacks: 0,
     closes: 0,
+    executedSql: [] as string[],
     executeOptions: [] as unknown[],
   };
   const connection: TransactionConnection = {
-    async execute(_sql, _binds, options) {
+    async execute(sql, _binds, options) {
+      calls.executedSql.push(sql);
       calls.executeOptions.push(options);
       return { rows: [[1]], metaData: [{ name: "VALUE" }] };
     },
@@ -31,7 +33,7 @@ test("transaction uses one connection, commits once, and closes on success", asy
   const { calls, connection } = fakeConnection();
 
   const value = await withTransaction(async (tx) => {
-    const result = await tx`select ${1} as value from dual`;
+    const result = await tx`select ${1} as value from dual limit 1`;
     assert.equal(result.rows[0].value, 1);
     return "committed";
   }, async () => connection);
@@ -40,6 +42,8 @@ test("transaction uses one connection, commits once, and closes on success", asy
   assert.equal(calls.commits, 1);
   assert.equal(calls.rollbacks, 0);
   assert.equal(calls.closes, 1);
+  assert.match(calls.executedSql[0], /FETCH FIRST 1 ROWS ONLY$/);
+  assert.doesNotMatch(calls.executedSql[0], /\blimit\b/i);
   assert.equal(
     (calls.executeOptions[0] as { autoCommit?: boolean }).autoCommit,
     false,

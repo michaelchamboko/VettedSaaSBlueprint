@@ -43,6 +43,11 @@ function convertOracleSyntax(sql: string): string {
     ""
   );
 
+  converted = converted.replace(
+    /\s+limit\s+(\d+)\s*$/i,
+    (_match, count: string) => ` FETCH FIRST ${count} ROWS ONLY`,
+  );
+
   return converted;
 }
 

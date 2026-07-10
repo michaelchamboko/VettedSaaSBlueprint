@@ -87,9 +87,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!blueprint) return Response.json({ error: "Not found" }, { status: 404 });
 
   if (action === "approve") {
-    const { rows } = await sql`update page_blueprints set status = ${nextPageStatus("approve")} where id = ${id} returning *`;
+    await sql`update page_blueprints set status = ${nextPageStatus("approve")} where id = ${id}`;
+    const updated = await getBlueprintAndStatus(id);
     auditAdminAction("approve_page_blueprint", { blueprint_id: id });
-    return Response.json({ page_blueprint: rows[0] });
+    return Response.json({ page_blueprint: updated });
   }
 
   if (action === "publish") {
@@ -113,9 +114,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (action === "pause" || action === "noindex") {
     const status = nextPageStatus(action);
-    const { rows } = await sql`update page_blueprints set status = ${status} where id = ${id} returning *`;
+    await sql`update page_blueprints set status = ${status} where id = ${id}`;
+    const updated = await getBlueprintAndStatus(id);
     auditAdminAction(`page_${action}`, { blueprint_id: id });
-    return Response.json({ page_blueprint: rows[0] });
+    return Response.json({ page_blueprint: updated });
   }
 
   return Response.json({ error: "Unsupported action" }, { status: 400 });
