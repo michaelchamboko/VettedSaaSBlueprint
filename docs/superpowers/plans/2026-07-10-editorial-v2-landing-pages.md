@@ -211,7 +211,7 @@ git commit -m "chore: gate editorial v2 landing drafts"
 ### Task 4: Produce the exemplar from audited intake records
 
 **Files:**
-- Create: `src/generated/landing-page-drafts/next-30/` artifacts only after audited intake exists.
+- Create: `src/generated/landing-page-drafts/next-50/` artifacts only after audited intake exists.
 - Review: `src/generated/landing-pages/index.json` and closest published artifacts without modifying them until the page passes every gate.
 - Review: source-of-truth product, affiliate-link, evidence, disclosure, program-rule, and destination-review records.
 
@@ -282,18 +282,17 @@ Continue in batches of one exemplar, then at most three pages until the workflow
 ### Task 6: Run the batch retro and final requirement audit
 
 **Files:**
-- Create: `docs/superpowers/reports/2026-07-10-editorial-v2-next-30-retro.json` after a batch exists.
+- Create: `docs/superpowers/reports/2026-07-10-editorial-v2-next-50-retro.json` after a batch exists.
 - Review: all page-level gate outputs, Vercel deployment evidence, and owner decisions.
 
 - [ ] **Step 1: Run `landing-page-batch-retro` after each batch**
 
 Convert recurring CTA, typography, spacing, disclosure, duplicate-intent, evidence, or Vercel failures into exact skill/scanner/process changes or owner-approved deferrals.
 
-- [ ] **Step 2: Verify the 30-page objective requirement-by-requirement**
+- [ ] **Step 2: Verify the 50-page objective requirement-by-requirement**
 
 Confirm every page has a distinct buyer decision, editorial v2 profile, audited evidence/link/destination/compliance records, owner approval, a READY Vercel deployment, and a shareable canonical URL.
 
 - [ ] **Step 3: Report any unresolved intake or deployment blockers explicitly**
 
-Do not claim all 30 pages are complete when the required 30 source inputs or Vercel legal environment values are missing.
-
+Do not claim all 50 pages are complete when the required page-level source inputs or Vercel legal environment values are missing.

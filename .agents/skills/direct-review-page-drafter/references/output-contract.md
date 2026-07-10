@@ -68,7 +68,7 @@ Rule: put core buyer value, proof implications, objections, and friction into re
 
 ## Editorial v2 renderer contract
 
-Future next-30 drafts must set `metadata.design_profile: "editorial_v2"`. The renderer contract for that profile is:
+Future next-50 drafts must set `metadata.design_profile: "editorial_v2"`. The renderer contract for that profile is:
 
 - `hero.answer_snippet` is required and must be 40–60 words under the H1.
 - CTA labels are limited to 32 characters and contain no embedded arrow glyphs or `->` fragments.

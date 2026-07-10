@@ -77,7 +77,7 @@ Handle `noindex_draft` narrowly:
 
 ## Editorial v2 Future Batch Contract
 
-When the approved batch target is the next-30 editorial rollout, set `metadata.design_profile` to `editorial_v2` for every new draft. Existing artifacts without this field remain `legacy` and must not be rewritten as part of the batch.
+When the approved batch target is the next-50 editorial rollout, set `metadata.design_profile` to `editorial_v2` for every new draft. Existing artifacts without this field remain `legacy` and must not be rewritten as part of the batch.
 
 For `editorial_v2` drafts:
 

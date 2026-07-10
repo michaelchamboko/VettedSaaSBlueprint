@@ -25,12 +25,12 @@ Step 2 approval does not automatically approve Oracle infrastructure changes, sc
 
 ## Future Editorial v2 Batch Rules
 
-- New pages in the next-30 batch must explicitly set `metadata.design_profile` to `editorial_v2`; missing profiles remain `legacy` so existing live artifacts are not restyled.
+- New pages in the next-50 batch must explicitly set `metadata.design_profile` to `editorial_v2`; missing profiles remain `legacy` so existing live artifacts are not restyled.
 - Editorial v2 uses scoped loaded geometric fonts, a dark monochrome palette with one solid accent, and only 8px-grid spacing values.
 - Editorial v2 CTAs must use separate label/arrow flex children with `flex items-center justify-between whitespace-nowrap`, a maximum 32-character generated label, and no gradient, fixed, sticky, or floating mobile CTA.
 - Editorial v2 hero copy must include a 40–60-word `hero.answer_snippet` under the H1. The compact disclosure remains before/near the first CTA; full disclosure and secondary links render in the footer.
 - Benefits must be semantic decision cards and FAQs must use accessible disclosure rows; blind text pills are not allowed.
-- Run `npm run scan:landing:editorial-v2 -- --json` before any next-30 page advances to subjective review. Legacy artifacts are ignored by this profile scan.
+- Run `npm run scan:landing:editorial-v2 -- --json` before any next-50 page advances to subjective review. Legacy artifacts are ignored by this profile scan.
 - Keep one exemplar first and cap subsequent batches at three pages until uniqueness, compliance, conversion, and owner-approval gates pass without major rework.
 
 ## Prohibited MVP Scope
