@@ -291,6 +291,7 @@ function assertSummaryNumber(parsed, key, expected, errors) {
 }
 
 function landingArtifactCount() {
+  if (!existsSync(landingPagesDir)) return 0;
   return readdirSync(landingPagesDir).filter((file) => file.endsWith(".json") && file !== "index.json").length;
 }
 
