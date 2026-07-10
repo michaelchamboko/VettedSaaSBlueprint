@@ -1,10 +1,15 @@
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 import Link from "next/link";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { EditorialReviewPage } from "./EditorialReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
 import { OracleTracking } from "./OracleTracking";
 
 export function DirectReviewPage({ blueprint, analyticsEnabled = false }: { blueprint: PageBlueprint; analyticsEnabled?: boolean }) {
+  if (blueprint.metadata.design_profile === "editorial_v2") {
+    return <EditorialReviewPage blueprint={blueprint} analyticsEnabled={analyticsEnabled} />;
+  }
+
   const approvedHeroVisual =
     blueprint.hero.visual_asset?.approval_status === "approved" && blueprint.hero.visual_asset.approved_by_owner
       ? blueprint.hero.visual_asset
