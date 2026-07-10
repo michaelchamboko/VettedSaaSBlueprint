@@ -2,17 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import os from "node:os";
 
 import { buildPublishedLandingArtifactsPayload, writeLandingArtifactsToDirectory, type PublishedLandingArtifactsPayload } from "../src/lib/publication/landing-artifacts";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { samplePageBlueprint as sampleBlueprint } from "./fixtures/sample-page-blueprint";
 
 test("publication artifact writer creates committed artifacts and manifest", async () => {
-  const sampleBlueprint = JSON.parse(
-    await readFile(path.join(__dirname, "..", "src", "generated", "landing-pages", "workflow-tools-review.json"), "utf8"),
-  );
   const outputDirectory = await mkdtemp(path.join(os.tmpdir(), "landing-artifacts-"));
   try {
     const payload: PublishedLandingArtifactsPayload = {
@@ -59,11 +54,7 @@ test("publication artifact writer creates committed artifacts and manifest", asy
   }
 });
 
-test("publication artifact payload builder accepts Oracle-style rows", async () => {
-  const sampleBlueprint = JSON.parse(
-    await readFile(path.join(__dirname, "..", "src", "generated", "landing-pages", "workflow-tools-review.json"), "utf8"),
-  );
-
+test("publication artifact payload builder accepts Oracle-style rows", () => {
   const payload = buildPublishedLandingArtifactsPayload(
     [
       {
@@ -89,10 +80,7 @@ test("publication artifact payload builder accepts Oracle-style rows", async () 
   assert.deepEqual(payload.artifacts["workflow-tools-review"], sampleBlueprint);
 });
 
-test("publication artifact payload excludes stale and unrelated audits", async () => {
-  const sampleBlueprint = JSON.parse(
-    await readFile(path.join(__dirname, "..", "src", "generated", "landing-pages", "workflow-tools-review.json"), "utf8"),
-  );
+test("publication artifact payload excludes stale and unrelated audits", () => {
   const baseRow = {
     PATH: "/landing-page-builders/workflow-tools-review",
     PUBLISHED_AT: "2026-06-25T00:00:00.000Z",

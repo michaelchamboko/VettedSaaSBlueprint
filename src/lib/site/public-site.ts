@@ -89,7 +89,7 @@ function isHttpsOrigin(value: string): boolean {
 }
 
 export function loadPublicSiteConfig(
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = process.env,
 ): PublicSiteConfig {
   const parsed = environmentSchema.parse(env);
   const effectiveDate = parsed.PUBLIC_POLICY_EFFECTIVE_DATE ?? "";

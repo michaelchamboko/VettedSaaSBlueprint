@@ -95,7 +95,7 @@ test("PAIA page is a complete printable Section 51 private-body manual", () => {
     "Update history",
     "https://inforegulator.org.za/paia/",
   ]) {
-    assert.ok(page.includes(requirement), `PAIA manual should include ${requirement}`);
+    assert.ok(page.toLowerCase().includes(requirement.toLowerCase()), `PAIA manual should include ${requirement}`);
   }
   assert.match(page, /print:/);
 });

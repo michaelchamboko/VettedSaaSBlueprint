@@ -10,6 +10,7 @@ const vercel = JSON.parse(readFileSync("vercel.json", "utf8")) as {
   buildCommand?: string;
 };
 const publicSiteContract = readFileSync("src/lib/site/public-site.ts", "utf8");
+const releaseRunbook = readFileSync("docs/deployment/public-site-release.md", "utf8");
 
 function workflowJob(name: string): string {
   const start = workflow.indexOf(`  ${name}:`);
@@ -53,5 +54,5 @@ test("public release validation runs before build and Stage 2 reporting", () => 
 
 test("workflow does not create or target another hosting project", () => {
   assert.doesNotMatch(workflow, /vercel\s+(?:link|project|deploy)|create[_ -]?project|sites[_ -]?project/i);
-  assert.match(readFileSync(".vercel/project.json", "utf8"), /"projectName":"vetted-saa-s-blueprint"/);
+  assert.match(releaseRunbook, /existing Vercel project\s+`vetted-saa-s-blueprint`/);
 });

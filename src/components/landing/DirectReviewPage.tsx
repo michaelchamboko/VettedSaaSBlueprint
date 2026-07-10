@@ -1,4 +1,5 @@
 import type { PageBlueprint } from "@/lib/schemas/contracts";
+import Link from "next/link";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { LandingPageMotion } from "./LandingPageMotion";
 import { OracleTracking } from "./OracleTracking";
@@ -21,8 +22,8 @@ export function DirectReviewPage({ blueprint, analyticsEnabled = false }: { blue
     >
       <section className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-8 md:px-8 md:py-14">
         <nav className="flex items-center justify-between text-sm text-slate-300" data-motion="nav">
-          <a className="font-semibold text-white" href="/">VettedSaaSBlueprint</a>
-          <a className="rounded-full border border-white/15 px-4 py-2" href="/affiliate-disclosure">Disclosure</a>
+          <Link className="font-semibold text-white" href="/">VettedSaaSBlueprint</Link>
+          <Link className="rounded-full border border-white/15 px-4 py-2" href="/affiliate-disclosure">Disclosure</Link>
         </nav>
         <div className="grid gap-8 md:grid-cols-[1.1fr_.9fr] md:items-center">
           <div className="space-y-5" data-motion="hero-copy">
@@ -126,11 +127,11 @@ export function DirectReviewPage({ blueprint, analyticsEnabled = false }: { blue
       </section>
       {blueprint.metadata.motion_profile === "gsap_editorial" ? <LandingPageMotion pageSlug={blueprint.metadata.url_slug} /> : null}
       <footer className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 border-t border-white/10 px-5 py-8 text-sm text-slate-400 md:px-8">
-        <a href="/">Home</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/terms">Terms</a>
-        <a href="/affiliate-disclosure">Affiliate disclosure</a>
-        <a href="/contact">Contact</a>
+        <Link href="/">Home</Link>
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Terms</Link>
+        <Link href="/affiliate-disclosure">Affiliate disclosure</Link>
+        <Link href="/contact">Contact</Link>
       </footer>
       <OracleTracking enabled={analyticsEnabled} pageSlug={blueprint.metadata.url_slug} ctaLinkId={blueprint.hero.primary_cta_link_id} />
     </main>

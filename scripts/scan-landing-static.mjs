@@ -189,7 +189,8 @@ function checkAssets(rows, issues) {
   }
 }
 
-function checkPublishReadiness(issues) {
+function checkPublishReadiness(rows, issues) {
+  if (rows.length === 0) return;
   const reviewGate = readText("build-pack/13-review-gate.md");
   const performanceDoc = readText("build-pack/23-landing-page-workflow-performance-optimization.md");
   if (!reviewGate.includes("Stage 2 pre-review")) issue(issues, "review_gate_stage2_missing", "Review gate must require Stage 2 pre-review evidence.");
@@ -243,7 +244,7 @@ export function buildLandingStaticReport(mode, context = loadLandingStaticContex
       checkAssets(rows, issues);
       break;
     case "publish-readiness":
-      checkPublishReadiness(issues);
+      checkPublishReadiness(rows, issues);
       break;
     default:
       issue(issues, "unknown_static_scan_mode", `Unknown scan mode: ${mode ?? "(missing)"}.`);

@@ -25,7 +25,10 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const landingPagesDir = path.join(repoRoot, "src", "generated", "landing-pages");
 
 async function landingArtifactCount() {
-  const files = await readdir(landingPagesDir);
+  const files = await readdir(landingPagesDir).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  });
   return files.filter((file) => file.endsWith(".json") && file !== "index.json").length;
 }
 

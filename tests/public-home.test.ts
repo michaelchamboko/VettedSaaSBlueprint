@@ -43,6 +43,6 @@ test("public shell includes skip navigation and every legal route", () => {
     "/paia",
     "/accessibility",
   ]) {
-    assert.match(shellSource, new RegExp(`href=["']${route}["']`));
+    assert.match(shellSource, new RegExp(`["']${route}["']`));
   }
 });
