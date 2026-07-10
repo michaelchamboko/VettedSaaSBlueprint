@@ -1,5 +1,4 @@
 import { sql } from "@/lib/db";
-import { createHash } from "crypto";
 
 function minimizePayload(raw: Record<string, unknown>) {
   const payload: Record<string, unknown> = {};
@@ -8,11 +7,6 @@ function minimizePayload(raw: Record<string, unknown>) {
     payload[key] = value;
   });
   return payload;
-}
-
-export function hashIp(value: string | null) {
-  if (!value) return null;
-  return createHash("sha256").update(value).digest("hex");
 }
 
 export async function recordEvent(request: Request, eventType: string) {
@@ -42,7 +36,7 @@ export async function recordEvent(request: Request, eventType: string) {
     insert into conversion_events
       (page_id, product_id, affiliate_link_id, event_type, event_payload, user_agent, referrer, ip_hash)
     values
-      (${pageId}, ${productId}, ${affiliateLinkId}, ${eventType}, ${eventPayload}, ${request.headers.get("user-agent")}, ${request.headers.get("referer")}, ${hashIp(request.headers.get("x-forwarded-for"))})
+      (${pageId}, ${productId}, ${affiliateLinkId}, ${eventType}, ${eventPayload}, ${request.headers.get("user-agent")}, ${request.headers.get("referer")}, ${null})
     returning id
   `;
   return rows[0];

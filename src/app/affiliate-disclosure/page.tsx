@@ -1,26 +1,40 @@
+import { LegalDocument } from "@/components/public/LegalDocument";
+import { loadPublicSiteConfig } from "@/lib/site/public-site";
+
 export default function AffiliateDisclosurePage() {
+  const config = loadPublicSiteConfig();
+
   return (
-    <main className="mx-auto min-h-screen max-w-3xl px-6 py-12">
-      <a className="text-sm text-[var(--accent)]" href="/">
-        Back to dashboard
-      </a>
-      <h1 className="mt-8 text-4xl font-bold">Affiliate Disclosure</h1>
-      <div className="mt-6 space-y-5 text-base leading-7 text-slate-300">
+    <LegalDocument
+      title="Affiliate disclosure"
+      summary="How referral commissions support the publication without deciding its conclusions."
+      effectiveDate={config.policies.effectiveDate}
+      reviewDate={config.policies.reviewDate}
+    >
+      <section>
+        <h2>How commissions work</h2>
         <p>
-          GlobalSetup may earn a commission when a visitor clicks an affiliate
-          link and later buys or signs up through the official partner site.
+          VettedSaaSBlueprint may earn a commission if you follow an affiliate link and later sign up or buy from the destination vendor, at no extra cost to you. The vendor or affiliate network tracks and administers that separate relationship.
         </p>
+      </section>
+      <section>
+        <h2>Editorial independence</h2>
         <p>
-          Affiliate relationships do not allow unsupported rankings, invented
-          usage claims, fake urgency, or hidden offer terms. Public landing
-          pages must preserve the original referral link and show an in-page
-          disclosure before or near the first affiliate CTA.
+          Compensation does not guarantee a positive review, ranking, recommendation, or publication. Claims still require evidence, limitations remain visible, and the owner must approve a page before it becomes public.
         </p>
+      </section>
+      <section>
+        <h2>Disclosure placement</h2>
         <p>
-          Pricing, trial, refund, security, integration, and comparison claims
-          require current evidence and manual review before publication.
+          Individual review pages keep a plain-language disclosure before or near affiliate calls to action. Affiliate links use sponsored relationship markup and preserve the approved destination and tracking parameters.
         </p>
-      </div>
-    </main>
+      </section>
+      <section>
+        <h2>Vendor responsibility</h2>
+        <p>
+          VettedSaaSBlueprint does not sell the reviewed product or control its pricing, trial, refund, security, support, or contract terms. Confirm those details directly with the vendor before deciding.
+        </p>
+      </section>
+    </LegalDocument>
   );
 }

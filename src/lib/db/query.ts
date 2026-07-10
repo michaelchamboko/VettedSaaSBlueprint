@@ -46,19 +46,26 @@ function convertOracleSyntax(sql: string): string {
   return converted;
 }
 
-function mapRows(result: Result<unknown>): Record<string, unknown>[] {
+async function normalizeOracleValue(value: unknown): Promise<unknown> {
+  if (value && typeof value === "object" && "getData" in value && typeof (value as { getData?: unknown }).getData === "function") {
+    return (value as { getData: () => Promise<unknown> }).getData();
+  }
+  return value;
+}
+
+async function mapRows(result: Result<unknown>): Promise<Record<string, unknown>[]> {
   if (!result.rows || result.rows.length === 0) return [];
 
   const columns = result.metaData?.map((c: Metadata<unknown>) => c.name) ?? [];
-  return result.rows.map((row: unknown) => {
+  return Promise.all(result.rows.map(async (row: unknown) => {
     const obj: Record<string, unknown> = {};
     if (Array.isArray(row)) {
-      columns.forEach((col: string, i: number) => {
-        obj[col] = row[i];
-      });
+      await Promise.all(columns.map(async (col: string, i: number) => {
+        obj[col] = await normalizeOracleValue(row[i]);
+      }));
     }
     return obj;
-  });
+  }));
 }
 
 export async function executeQuery(
@@ -73,7 +80,43 @@ export async function executeQuery(
       outFormat: oracledb.OUT_FORMAT_ARRAY,
       autoCommit: true,
     });
-    return { rows: mapRows(result) };
+    return { rows: await mapRows(result) };
+  } finally {
+    await connection.close();
+  }
+}
+
+export type TransactionSql = (
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+) => Promise<{ rows: Record<string, unknown>[] }>;
+
+export type TransactionRunner = <T>(work: (tx: TransactionSql) => Promise<T>) => Promise<T>;
+
+export async function withTransaction<T>(work: (tx: TransactionSql) => Promise<T>): Promise<T> {
+  const pool = await getPool();
+  const connection = await pool.getConnection();
+  const transactionalConnection = connection as typeof connection & {
+    commit(): Promise<void>;
+    rollback(): Promise<void>;
+  };
+
+  const tx: TransactionSql = async (strings, ...values) => {
+    const { sql: query, binds } = parseTemplate(strings, values);
+    const result = await connection.execute(convertOracleSyntax(query), binds, {
+      outFormat: oracledb.OUT_FORMAT_ARRAY,
+      autoCommit: false,
+    });
+    return { rows: await mapRows(result) };
+  };
+
+  try {
+    const result = await work(tx);
+    await transactionalConnection.commit();
+    return result;
+  } catch (error) {
+    await transactionalConnection.rollback();
+    throw error;
   } finally {
     await connection.close();
   }

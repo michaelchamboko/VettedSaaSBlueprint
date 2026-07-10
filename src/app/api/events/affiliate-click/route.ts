@@ -1,9 +1,11 @@
-import { sql } from "@/lib/db";
-import { recordEvent } from "@/lib/tracking/events";
-import { resolveAffiliateRedirect } from "@/lib/tracking/affiliate-redirect";
+import { buildOracleAffiliateRedirectUrl } from "@/lib/tracking/oracle-public-endpoints";
+import { handleOraclePublicEventPost } from "@/lib/tracking/oracle-public-event-handler";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 export async function POST(request: Request) {
-  return Response.json({ event: await recordEvent(request, "affiliate_click") }, { status: 201 });
+  return handleOraclePublicEventPost(request, "affiliate_click");
 }
 
 export async function GET(request: Request) {
@@ -11,10 +13,14 @@ export async function GET(request: Request) {
   const linkId = url.searchParams.get("linkId");
   if (!linkId) return Response.json({ error: "linkId required" }, { status: 400 });
 
-  await recordEvent(request, "affiliate_click");
-  const { rows } = await sql`select partnerstack_url from affiliate_links where id = ${linkId} and status = 'active' limit 1`;
-  const rawAffiliateUrl = rows.length > 0 && rows[0] ? rows[0].partnerstack_url : null;
-  const partnerstackUrl = typeof rawAffiliateUrl === "string" ? rawAffiliateUrl : null;
-  const redirectUrl = resolveAffiliateRedirect(partnerstackUrl, url.origin);
-  return Response.redirect(redirectUrl, rows[0] ? 302 : 302);
+  const base = process.env.NEXT_PUBLIC_ORACLE_PUBLIC_BASE_URL?.trim();
+  let redirect = `${url.origin}/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
+  if (base) {
+    try {
+      redirect = buildOracleAffiliateRedirectUrl(linkId, base);
+    } catch {
+      redirect = `${url.origin}/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
+    }
+  }
+  return Response.redirect(redirect, 302);
 }

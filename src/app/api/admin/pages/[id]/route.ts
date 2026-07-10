@@ -4,6 +4,7 @@ import { requireOwnerSession } from "@/lib/auth/session";
 import { canPublishPage, nextPageStatus } from "@/lib/pages/workflow";
 import { pageBlueprintSchema } from "@/lib/schemas/contracts";
 import { isCompliantProfileStatus, isHighRiskClaimLevel, type PublishReadinessRequirements } from "@/lib/compliance/gate";
+import { publishApprovedPageAtomically } from "@/lib/pages/publish-transaction";
 
 function toBoolean(value: unknown) {
   return value === 1 || value === true || value === "1" || value === "true";
@@ -96,19 +97,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const productId = typeof parsed.metadata?.product_id === "string" ? parsed.metadata.product_id : "";
     const ctaLinkId = typeof parsed.hero?.primary_cta_link_id === "string" ? parsed.hero.primary_cta_link_id : "";
     const readiness = await getPublishReadiness(String(blueprint.id), productId, ctaLinkId);
-    const page = await sql`select dp.id, dp.path, dp.status from dynamic_pages dp where dp.blueprint_id = ${id} limit 1`;
     const approved = blueprint.status === "approved";
     const gate = canPublishPage(parsed, { ...readiness, approved });
     if (!gate.publishable) return Response.json({ error: gate.failures.join(" ") }, { status: 409 });
-    const dynamicPageId = page.rows[0]?.id;
-    if (dynamicPageId) {
-      const { rows } = await sql`update dynamic_pages set status = ${nextPageStatus("publish")}, published_at = now(), updated_at = now() where id = ${dynamicPageId} returning *`;
-      auditAdminAction("publish_page", { blueprint_id: id, page_id: dynamicPageId });
-      return Response.json({ dynamic_page: rows[0] });
-    }
-    const { rows } = await sql`insert into dynamic_pages (blueprint_id, path, status, robots, revalidate_seconds, published_at) values (${id}, ${`/landing-page-builders/${parsed.metadata.url_slug}`}, 'published', 'index,follow', 10800, now()) returning *`;
-    auditAdminAction("publish_page", { blueprint_id: id, page_id: rows[0].id });
-    return Response.json({ dynamic_page: rows[0] }, { status: 201 });
+    const publishedPage = await publishApprovedPageAtomically({
+      blueprintId: id,
+      productId,
+      path: `/landing-page-builders/${parsed.metadata.url_slug}`,
+      complianceResult: { ...readiness, ...gate },
+      qualityScore: parsed.quality_scores.overall_score,
+      evidenceScore: parsed.quality_scores.evidence_score,
+    });
+    return Response.json({ dynamic_page: publishedPage }, { status: 201 });
   }
 
   if (action === "pause" || action === "noindex") {

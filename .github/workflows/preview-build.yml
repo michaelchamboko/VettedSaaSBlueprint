@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Install and build
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -29,11 +29,161 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
-        run: npm run build
-
       - name: Typecheck
         run: npm run typecheck
 
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run tests
         run: npm run test
+
+  build:
+    name: Build application
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PUBLIC_SITE_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+      PUBLIC_POLICY_EFFECTIVE_DATE: ${{ vars.PUBLIC_POLICY_EFFECTIVE_DATE }}
+      INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: ${{ vars.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate public release configuration
+        run: npm run gate:public-release
+
+      - name: Build application
+        run: npm run build
+
+  landing-scanners:
+    name: Landing scanner (${{ matrix.scan }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scan:
+          - route
+          - structure
+          - hero
+          - cta
+          - seo
+          - a11y
+          - links
+          - forms
+          - compliance
+          - uniqueness
+          - conversion
+          - conversion-copy
+          - responsive
+          - assets
+          - publish-readiness
+    env:
+      CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run landing scanner
+        run: npm run --silent scan:landing:${{ matrix.scan }} -- --report-only > landing-scanner-${{ matrix.scan }}.json
+
+      - name: Upload scanner report
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-scanner-${{ matrix.scan }}
+          path: landing-scanner-${{ matrix.scan }}.json
+          if-no-files-found: error
+
+  landing-workflow:
+    name: Landing workflow gate
+    runs-on: ubuntu-latest
+    needs:
+      - typecheck
+      - lint
+      - test
+      - build
+      - landing-scanners
+    env:
+      CI: true
+      PUBLIC_SITE_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+      PUBLIC_POLICY_EFFECTIVE_DATE: ${{ vars.PUBLIC_POLICY_EFFECTIVE_DATE }}
+      INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: ${{ vars.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download scanner reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: landing-scanner-*
+          path: .stage2/scanner-reports
+          merge-multiple: true
+
+      - name: Validate public release configuration
+        run: npm run gate:public-release
+
+      - name: Stage 2 pre-review gate
+        run: npm run gate:stage2:pre-review -- --ci-prechecked --scanner-report-dir .stage2/scanner-reports

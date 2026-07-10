@@ -1,14 +1,39 @@
 import { notFound } from "next/navigation";
-import { sql } from "@/lib/db";
-import { pageBlueprintSchema } from "@/lib/schemas/contracts";
+import type { Metadata } from "next";
 import { DirectReviewPage } from "@/components/landing/DirectReviewPage";
+import { getPublishedLandingPage, listPublishedLandingPageParams } from "@/lib/generated/landing-pages";
+import { loadPublicSiteConfig } from "@/lib/site/public-site";
 
-export const revalidate = 10800;
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return listPublishedLandingPageParams();
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const blueprint = getPublishedLandingPage(slug);
+  if (!blueprint) return { title: "Page not found" };
+  const config = loadPublicSiteConfig();
+  const robotsValue = blueprint.metadata.robots.toLowerCase().split(",").map((value) => value.trim()).join(",");
+  const canIndex = robotsValue === "index,follow";
+  let canonical = `${config.canonicalOrigin}/landing-page-builders/${slug}`;
+  try {
+    const candidate = new URL(blueprint.metadata.canonical_url ?? "");
+    if (candidate.protocol === "https:" && candidate.origin === config.canonicalOrigin) canonical = candidate.toString();
+  } catch {}
+  return {
+    title: blueprint.metadata.title_tag,
+    description: blueprint.metadata.meta_description,
+    robots: { index: canIndex, follow: canIndex },
+    alternates: { canonical },
+  };
+}
 
 export default async function LandingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { rows } = await sql`select pb.structural_json from dynamic_pages dp join page_blueprints pb on pb.id = dp.blueprint_id where dp.path = ${`/landing-page-builders/${slug}`} and dp.status = 'published' limit 1`;
-  if (!rows[0]) notFound();
-  const blueprint = pageBlueprintSchema.parse(rows[0].structural_json);
-  return <DirectReviewPage blueprint={blueprint} />;
+  const blueprint = getPublishedLandingPage(slug);
+  if (!blueprint) notFound();
+  const config = loadPublicSiteConfig();
+  return <DirectReviewPage blueprint={blueprint} analyticsEnabled={config.analytics.enabled} />;
 }

@@ -5,10 +5,21 @@ function isApprovedAffiliateUrl(url: string) {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:") return false;
     const host = parsed.hostname.toLowerCase();
+    const approvedExactHosts = new Set([
+      "aff.flowith.io",
+      "get.cloudtalk.io",
+      "grow.amplemarket.com",
+      "join.rankprompt.com",
+      "partners.browse.ai",
+      "try.elevenlabs.io",
+      "try.landingi.com",
+      "try.leadpages.com",
+      "trymoo.moosend.com",
+    ]);
     return (
       host === "partnerstack.com" || host.endsWith(".partnerstack.com") ||
       host === "psref.com" || host.endsWith(".psref.com") ||
-      host === "aff.flowith.io"
+      approvedExactHosts.has(host)
     );
   } catch {
     return false;
@@ -38,7 +49,7 @@ export const affiliateLinkSchema = z.object({
   product_id: z.string().uuid(),
   partnerstack_url: z.string().url().refine(
     (url) => isApprovedAffiliateUrl(url),
-    "Store the original approved referral URL (PartnerStack, psref, or Flowith affiliate domain).",
+    "Store the original approved referral URL from an allowlisted affiliate domain.",
   ),
   destination_url: z.string().url().optional().nullable(),
   link_type: z.string().min(1),
@@ -119,6 +130,16 @@ export const evidenceClaimSchema = z.object({
   usage_allowed: z.boolean().default(false),
 });
 
+const generatedVisualAssetSchema = z.object({
+  asset_type: z.literal("codex_generated_image"),
+  asset_url: z.string().min(1).regex(/^\/[A-Za-z0-9/_\-.]+$/, "Use a versioned local public asset path."),
+  alt_text: z.string().min(1),
+  prompt_summary: z.string().min(1),
+  generation_tool: z.literal("codex_image_generation"),
+  approval_status: z.enum(["draft", "approved", "rejected"]).default("draft"),
+  approved_by_owner: z.boolean().default(false),
+});
+
 export const pageBlueprintSchema = z.object({
   metadata: z.object({
     product_id: z.string().uuid(),
@@ -132,6 +153,7 @@ export const pageBlueprintSchema = z.object({
     meta_description: z.string().min(1),
     canonical_url: z.string().url().optional().nullable(),
     robots: z.string().default("index,follow"),
+    motion_profile: z.enum(["static", "gsap_editorial"]).default("static"),
   }),
   affiliate_disclosure: z.object({
     short_disclosure: z.string().min(1),
@@ -145,9 +167,16 @@ export const pageBlueprintSchema = z.object({
     primary_cta_link_id: z.string().uuid(),
     risk_reversal: z.string().optional().nullable(),
     social_proof_summary: z.string().optional().nullable(),
+    visual_asset: generatedVisualAssetSchema.optional().nullable(),
   }),
   problem_solution: z.object({ problem: z.string(), agitation: z.string(), solution: z.string() }),
-  benefits: z.array(z.object({ benefit_title: z.string(), benefit_description: z.string(), feature_supporting_it: z.string(), source_reference_ids: z.array(z.string().uuid()) })).min(1),
+  benefits: z.array(z.object({
+    benefit_title: z.string(),
+    benefit_description: z.string(),
+    feature_supporting_it: z.string(),
+    source_reference_ids: z.array(z.string().uuid()),
+    visual_asset: generatedVisualAssetSchema.optional().nullable(),
+  })).min(1),
   proof_blocks: z.array(z.object({ proof_type: z.string(), summary: z.string(), source_reference_id: z.string().uuid(), evidence_claim_id: z.string().uuid().optional().nullable(), confidence_score: z.number().min(0).max(1) })).default([]),
   how_it_works: z.array(z.object({ step_number: z.number().int(), title: z.string(), description: z.string() })).default([]),
   limitations: z.array(z.object({ limitation: z.string(), who_it_affects: z.string(), mitigation: z.string(), evidence_claim_id: z.string().uuid().optional().nullable() })).min(1),

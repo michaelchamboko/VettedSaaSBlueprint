@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
+import { loadPublicSiteConfig, publicSiteMetadata } from "@/lib/site/public-site";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Controlled Affiliate Intelligence Loop",
-  description: "Compliance-first affiliate research, evidence, publishing, and optimization engine.",
-};
+export const metadata: Metadata = publicSiteMetadata(loadPublicSiteConfig());
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
