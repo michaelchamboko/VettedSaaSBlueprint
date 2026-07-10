@@ -123,6 +123,7 @@ jobs:
           - responsive
           - assets
           - publish-readiness
+          - editorial-v2
     env:
       CI: true
     steps:

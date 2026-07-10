@@ -19,6 +19,7 @@ const staticChecks = [
   "responsive",
   "assets",
   "publish-readiness",
+  "editorial-v2",
 ];
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

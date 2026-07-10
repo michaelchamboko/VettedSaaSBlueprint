@@ -53,6 +53,7 @@ const scannerChecks = [
   { order: 13.75, check: "Image / asset validation", script: "scan:landing:assets", scan: "assets", type: "static" },
   { order: 14, check: "Responsive layout static scanner", script: "scan:landing:responsive", scan: "responsive", type: "static" },
   { order: 14.5, check: "Publishing-readiness scanner", script: "scan:landing:publish-readiness", scan: "publish-readiness", type: "static" },
+  { order: 14.55, check: "Editorial v2 design-profile scanner", script: "scan:landing:editorial-v2", scan: "editorial-v2", type: "static" },
 ];
 
 function valueAfter(flag) {
