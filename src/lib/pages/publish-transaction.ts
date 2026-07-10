@@ -49,14 +49,15 @@ export async function publishApprovedPageAtomically(
     `;
     const versionNumber = Number(rowValue(versionRows.rows[0], "next_version_number") ?? 1);
     const versionId = randomUUID();
-    const publishedAt = new Date().toISOString();
+    const publishedAtDate = new Date();
+    const publishedAt = publishedAtDate.toISOString();
     const structuralCopy = rowValue(blueprint, "structural_json");
 
     await tx`
       insert into page_versions
         (id, blueprint_id, version_number, structural_copy, compliance_result, quality_score, evidence_score, approved_by, approval_mode, published_at)
       values
-        (${versionId}, ${input.blueprintId}, ${versionNumber}, ${typeof structuralCopy === "string" ? structuralCopy : JSON.stringify(structuralCopy)}, ${JSON.stringify(input.complianceResult)}, ${input.qualityScore ?? null}, ${input.evidenceScore ?? null}, ${"owner"}, ${"manual"}, ${publishedAt})
+        (${versionId}, ${input.blueprintId}, ${versionNumber}, ${typeof structuralCopy === "string" ? structuralCopy : JSON.stringify(structuralCopy)}, ${JSON.stringify(input.complianceResult)}, ${input.qualityScore ?? null}, ${input.evidenceScore ?? null}, ${"owner"}, ${"manual"}, ${publishedAtDate})
     `;
 
     const existingPages = await tx`
@@ -69,7 +70,7 @@ export async function publishApprovedPageAtomically(
     if (existingPages.rows[0]) {
       await tx`
         update dynamic_pages
-        set current_version_id = ${versionId}, path = ${input.path}, status = ${"published"}, robots = ${"index,follow"}, published_at = ${publishedAt}, updated_at = ${publishedAt}
+        set current_version_id = ${versionId}, path = ${input.path}, status = ${"published"}, robots = ${"index,follow"}, published_at = ${publishedAtDate}, updated_at = ${publishedAtDate}
         where id = ${pageId}
       `;
     } else {
@@ -77,7 +78,7 @@ export async function publishApprovedPageAtomically(
         insert into dynamic_pages
           (id, blueprint_id, current_version_id, path, status, robots, revalidate_seconds, published_at, updated_at)
         values
-          (${pageId}, ${input.blueprintId}, ${versionId}, ${input.path}, ${"published"}, ${"index,follow"}, ${10800}, ${publishedAt}, ${publishedAt})
+          (${pageId}, ${input.blueprintId}, ${versionId}, ${input.path}, ${"published"}, ${"index,follow"}, ${10800}, ${publishedAtDate}, ${publishedAtDate})
       `;
     }
 

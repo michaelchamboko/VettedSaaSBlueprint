@@ -56,7 +56,7 @@ async function normalizeOracleValue(value: unknown): Promise<unknown> {
 async function mapRows(result: Result<unknown>): Promise<Record<string, unknown>[]> {
   if (!result.rows || result.rows.length === 0) return [];
 
-  const columns = result.metaData?.map((c: Metadata<unknown>) => c.name) ?? [];
+  const columns = result.metaData?.map((c: Metadata<unknown>) => c.name.toLowerCase()) ?? [];
   return Promise.all(result.rows.map(async (row: unknown) => {
     const obj: Record<string, unknown> = {};
     if (Array.isArray(row)) {
@@ -93,13 +93,27 @@ export type TransactionSql = (
 
 export type TransactionRunner = <T>(work: (tx: TransactionSql) => Promise<T>) => Promise<T>;
 
-export async function withTransaction<T>(work: (tx: TransactionSql) => Promise<T>): Promise<T> {
-  const pool = await getPool();
-  const connection = await pool.getConnection();
-  const transactionalConnection = connection as typeof connection & {
-    commit(): Promise<void>;
-    rollback(): Promise<void>;
-  };
+export type TransactionConnection = {
+  execute(
+    sql: string,
+    binds?: unknown[],
+    options?: unknown,
+  ): Promise<Result<unknown>>;
+  commit(): Promise<void>;
+  rollback(): Promise<void>;
+  close(): Promise<void>;
+};
+
+type TransactionConnectionFactory = () => Promise<TransactionConnection>;
+
+export async function withTransaction<T>(
+  work: (tx: TransactionSql) => Promise<T>,
+  getConnection: TransactionConnectionFactory = async () => {
+    const pool = await getPool();
+    return (await pool.getConnection()) as unknown as TransactionConnection;
+  },
+): Promise<T> {
+  const connection = await getConnection();
 
   const tx: TransactionSql = async (strings, ...values) => {
     const { sql: query, binds } = parseTemplate(strings, values);
@@ -112,10 +126,10 @@ export async function withTransaction<T>(work: (tx: TransactionSql) => Promise<T
 
   try {
     const result = await work(tx);
-    await transactionalConnection.commit();
+    await connection.commit();
     return result;
   } catch (error) {
-    await transactionalConnection.rollback();
+    await connection.rollback();
     throw error;
   } finally {
     await connection.close();

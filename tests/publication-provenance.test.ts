@@ -2,7 +2,65 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { publishApprovedPageAtomically } from "../src/lib/pages/publish-transaction";
-import type { TransactionSql } from "../src/lib/db/query";
+import {
+  withTransaction,
+  type TransactionConnection,
+  type TransactionSql,
+} from "../src/lib/db/query";
+
+function fakeConnection() {
+  const calls = {
+    commits: 0,
+    rollbacks: 0,
+    closes: 0,
+    executeOptions: [] as unknown[],
+  };
+  const connection: TransactionConnection = {
+    async execute(_sql, _binds, options) {
+      calls.executeOptions.push(options);
+      return { rows: [[1]], metaData: [{ name: "VALUE" }] };
+    },
+    async commit() { calls.commits += 1; },
+    async rollback() { calls.rollbacks += 1; },
+    async close() { calls.closes += 1; },
+  };
+  return { calls, connection };
+}
+
+test("transaction uses one connection, commits once, and closes on success", async () => {
+  const { calls, connection } = fakeConnection();
+
+  const value = await withTransaction(async (tx) => {
+    const result = await tx`select ${1} as value from dual`;
+    assert.equal(result.rows[0].value, 1);
+    return "committed";
+  }, async () => connection);
+
+  assert.equal(value, "committed");
+  assert.equal(calls.commits, 1);
+  assert.equal(calls.rollbacks, 0);
+  assert.equal(calls.closes, 1);
+  assert.equal(
+    (calls.executeOptions[0] as { autoCommit?: boolean }).autoCommit,
+    false,
+  );
+});
+
+test("transaction rolls back and closes without committing on failure", async () => {
+  const { calls, connection } = fakeConnection();
+
+  await assert.rejects(
+    () => withTransaction(async (tx) => {
+      await tx`select ${1} as value from dual`;
+      throw new Error("transaction work failed");
+    }, async () => connection),
+    /transaction work failed/,
+  );
+
+  assert.equal(calls.commits, 0);
+  assert.equal(calls.rollbacks, 1);
+  assert.equal(calls.closes, 1);
+});
 
 test("atomic publisher propagates audit failure so the transaction can roll back", async () => {
   const statements: string[] = [];
