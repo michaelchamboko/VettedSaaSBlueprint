@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const workflow = readFileSync(".github/workflows/preview-build.yml", "utf8");
@@ -37,6 +37,10 @@ test("public release validation is a named source-side gate", () => {
 
 test("published review links retain the typed dynamic-route contract", () => {
   assert.match(publicCatalogue, /path:\s*`\/landing-page-builders\/\$\{string\}`;/);
+});
+
+test("the public site publishes an application icon", () => {
+  assert.equal(existsSync("src/app/icon.svg"), true);
 });
 
 test("build and final workflow gates receive release values", () => {
