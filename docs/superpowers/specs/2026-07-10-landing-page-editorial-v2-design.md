@@ -8,7 +8,7 @@ Approved design direction; implementation waits for written-spec review.
 
 The current direct-review landing-page renderer converges on a predictable mobile pattern: generic system typography, gradient-heavy interactive primitives, disclosure text that consumes the first viewport, ambiguous text pills, and CTA treatments that can wrap or compete for attention. Existing pages are already live and must remain visually unchanged.
 
-The next 30 landing pages need a constrained visual identity and deterministic checks that prevent these failures from reappearing during drafting or rendering.
+The next 50 landing pages need a constrained visual identity and deterministic checks that prevent these failures from reappearing during drafting or rendering.
 
 ## Goals
 
@@ -38,7 +38,7 @@ Use a versioned design profile carried inside the page blueprint:
 metadata.design_profile = "legacy" | "editorial_v2"
 ```
 
-The field is optional with a `legacy` default so all existing artifacts continue to parse and render through their current path. New pages in the next-30 program must explicitly set `editorial_v2`. The route remains the same; `DirectReviewPage` dispatches to a new future-only renderer when the profile is selected and leaves the current markup path intact otherwise.
+The field is optional with a `legacy` default so all existing artifacts continue to parse and render through their current path. New pages in the next-50 program must explicitly set `editorial_v2`. The route remains the same; `DirectReviewPage` dispatches to a new future-only renderer when the profile is selected and leaves the current markup path intact otherwise.
 
 The implementation will add a scoped `EditorialReviewPage` component and scoped CSS/font classes. It will not change the global `body` font, global background, or legacy class names. The future component owns its own typography, spacing, CTA, disclosure, card, and footer rules.
 
@@ -94,14 +94,14 @@ The implementation will add a scoped `EditorialReviewPage` component and scoped 
 - Render FAQs as accessible `<details>` rows with clear summary affordances and page-specific friction questions.
 - Keep the page to one primary decision CTA per mobile viewport.
 
-## Batch controls for the next 30 pages
+## Batch controls for the next 50 pages
 
 - Store future drafts separately from the published manifest until they pass the existing gates and owner approval. No draft is public by file presence.
 - Build one exemplar first.
 - Cap working batches at three pages until the exemplar and one small batch pass all gates without major rework.
 - Run deterministic uniqueness, compliance, conversion-copy, responsive, and A11Y/static checks before subjective owner review.
 - Run `landing-page-batch-retro` after the exemplar and every batch; convert repeated failures into scanner fixtures or skill/process updates before continuing.
-- Treat “next 30” as a production target, not permission to skip intent viability, evidence, destination continuity, or owner approval.
+- Treat “next 50” as a production target, not permission to skip intent viability, evidence, destination continuity, or owner approval.
 
 ## Source-of-truth changes
 
@@ -109,7 +109,7 @@ The implementation plan must cover:
 
 1. Page schema support for the optional profile and future answer snippet.
 2. A future-only renderer branch with scoped typography, palette, spacing, disclosure, CTA, card, FAQ, and footer rules.
-3. Project rules and drafter contract updates that make `editorial_v2` mandatory for the next-30 batch.
+3. Project rules and drafter contract updates that make `editorial_v2` mandatory for the next-50 batch.
 4. Deterministic scanner checks for future-profile violations and a regression fixture proving legacy artifacts remain untouched.
 5. A docs-only/static validation report. Hosted build and full typecheck remain GitHub/Vercel responsibilities per project rules.
 
@@ -134,4 +134,3 @@ The implementation plan must cover:
 | Long generated CTA labels still overflow | Enforce a future-profile label budget plus `whitespace-nowrap` and static 320px/360px checks. |
 | Batch pages become visually distinct but semantically duplicative | Keep intent/uniqueness gates and the three-page cap; require a distinct buyer decision and evidence need for each page. |
 | Font loading becomes a build dependency | Use the existing Vercel-owned Next.js runtime and keep the fallback stack scoped; validate in hosted CI rather than local install/build. |
-

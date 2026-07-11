@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const targetDir = "src/generated/landing-pages";
+const futureDraftTargetDir = "src/generated/landing-page-drafts/next-50";
 const routePath = "src/app/landing-page-builders/[slug]/page.tsx";
 const componentPath = "src/components/landing/DirectReviewPage.tsx";
 const editorialComponentPath = "src/components/landing/EditorialReviewPage.tsx";
@@ -46,9 +47,18 @@ function landingFiles() {
     .map((file) => ({ file, path: join(targetDir, file), data: readJson(join(targetDir, file)) }));
 }
 
+function editorialDraftFiles() {
+  if (!existsSync(futureDraftTargetDir)) return [];
+  return readdirSync(futureDraftTargetDir)
+    .filter((name) => name.endsWith(".json") && name !== "index.json")
+    .sort()
+    .map((file) => ({ file: join(futureDraftTargetDir, file), path: join(futureDraftTargetDir, file), data: readJson(join(futureDraftTargetDir, file)) }));
+}
+
 export function loadLandingStaticContext() {
   return {
     rows: landingFiles(),
+    editorialRows: editorialDraftFiles(),
     manifest: existsSync(join(targetDir, "index.json")) ? readJson(join(targetDir, "index.json")) : { pages: [] },
     routeSource: readText(routePath),
     componentSource: readText(componentPath),
@@ -224,8 +234,8 @@ function checkEditorialV2(rows, editorialComponentSource, stylesSource, issues) 
       issue(issues, "editorial_answer_snippet_invalid", "Editorial v2 answer_snippet must contain 40–60 words.", row.file);
     }
 
-    const ctaLabel = row.data.hero?.primary_cta_label ?? "";
-    if (ctaLabel.length > 32 || /(?:->|--?>|[↗→⇒])/u.test(ctaLabel)) {
+    const ctaLabels = [row.data.hero?.primary_cta_label, ...(row.data.cta_blocks ?? []).map((cta) => cta.label)];
+    if (ctaLabels.some((ctaLabel) => typeof ctaLabel !== "string" || ctaLabel.length > 32 || /(?:->|--?>|[↗→⇒])/u.test(ctaLabel))) {
       issue(issues, "editorial_cta_label_too_long", "Editorial v2 CTA labels must be at most 32 characters and must not embed arrow glyphs.", row.file);
     }
   }
@@ -235,16 +245,21 @@ function checkEditorialV2(rows, editorialComponentSource, stylesSource, issues) 
   if (!editorialComponentSource.includes("flex items-center justify-between whitespace-nowrap")) {
     issue(issues, "editorial_cta_primitive_missing", "Editorial v2 renderer must use the no-wrap flex CTA primitive.");
   }
-  if (!editorialComponentSource.includes("compact-disclosure") || !editorialComponentSource.includes("full-disclosure")) {
+  const compactDisclosureIndex = editorialComponentSource.indexOf("compact-disclosure");
+  const primaryCtaIndex = editorialComponentSource.indexOf('data-track="primary-cta"');
+  const footerIndex = editorialComponentSource.indexOf("<footer");
+  const fullDisclosureIndex = editorialComponentSource.indexOf("full-disclosure");
+  if (compactDisclosureIndex < 0 || primaryCtaIndex < 0 || compactDisclosureIndex > primaryCtaIndex || footerIndex < 0 || fullDisclosureIndex < 0 || fullDisclosureIndex < footerIndex) {
     issue(issues, "editorial_disclosure_footer_wiring_missing", "Editorial v2 renderer must show compact disclosure near the CTA and full disclosure in the footer.");
   }
-  if (!scopedStyles.startsWith(".landing-editorial-v2")) {
+  if (!scopedStyles.startsWith(".landing-editorial-v2") || /\bbody\s*\{/i.test(scopedStyles)) {
     issue(issues, "editorial_styles_unscoped", "Editorial v2 styles must be scoped under .landing-editorial-v2.");
   }
-  if (/gradient/i.test(futureSource)) {
+  const interactiveSource = `${editorialComponentSource}\n${scopedStyles.match(/[^}]*?(?:cta|button|interactive)[^}]*\}/gi)?.join("\n") ?? ""}`;
+  if (/gradient/i.test(interactiveSource)) {
     issue(issues, "editorial_gradient_interactive", "Editorial v2 interactive primitives must not use gradients.");
   }
-  if (/(position\s*:\s*(?:fixed|sticky)|(?:fixed|sticky)\s+bottom)/i.test(futureSource)) {
+  if (/(?:cta|button|floating|sticky|fixed)[^}]{0,300}(?:position\s*:\s*(?:fixed|sticky)|(?:fixed|sticky)\s+bottom)/i.test(futureSource)) {
     issue(issues, "editorial_sticky_cta", "Editorial v2 must not use fixed or sticky bottom CTA primitives.");
   }
 }
@@ -257,6 +272,7 @@ export function buildLandingStaticReport(mode, context = loadLandingStaticContex
     manifest,
     routeSource,
     componentSource,
+    editorialRows,
     editorialComponentSource,
     stylesSource,
     generatedSource,
@@ -300,19 +316,22 @@ export function buildLandingStaticReport(mode, context = loadLandingStaticContex
       checkPublishReadiness(rows, issues);
       break;
     case "editorial-v2":
-      checkEditorialV2(rows, editorialComponentSource ?? "", stylesSource ?? "", issues);
+      checkEditorialV2([...(editorialRows ?? []), ...rows.filter((row) => row.data?.metadata?.design_profile === "editorial_v2")], editorialComponentSource ?? "", stylesSource ?? "", issues);
       break;
     default:
       issue(issues, "unknown_static_scan_mode", `Unknown scan mode: ${mode ?? "(missing)"}.`);
   }
 
   const blockers = issues.filter((item) => item.severity !== "warning");
+  const scannedCount = mode === "editorial-v2"
+    ? rows.length + (editorialRows ?? []).length
+    : rows.length;
   return {
     schema_version: 1,
     tool: "scan-landing-static",
     check: mode,
     status: blockers.length === 0 ? "pass" : "fail",
-    scanned_count: rows.length,
+    scanned_count: scannedCount,
     issues,
     warnings,
     summary: {
