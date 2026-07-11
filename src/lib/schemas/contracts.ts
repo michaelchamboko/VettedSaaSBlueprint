@@ -15,6 +15,10 @@ function isApprovedAffiliateUrl(url: string) {
       "try.landingi.com",
       "try.leadpages.com",
       "trymoo.moosend.com",
+      "get.carepatron.com",
+      "get.datahawk.co",
+      "free-trial.adcreative.ai",
+      "partners.snowfire.ai",
     ]);
     return (
       host === "partnerstack.com" || host.endsWith(".partnerstack.com") ||
