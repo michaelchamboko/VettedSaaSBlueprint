@@ -27,6 +27,19 @@ The visible ElevenLabs markdown label previously shown as `michaelmedium` is not
 
 Every hold requires, at minimum, an audited product record (`PR`), affiliate-link record (`AL`), program-resource/rules record (`PG`), current destination review (`DR`), material-connection/disclosure record (`MC`), claim/source evidence (`ER`), and declared review basis (`RB`). Owner approval (`OA`) is required before first publication. The supplied URL alone is not sufficient.
 
+## Current GET destination checks
+
+Read-only GET checks on 2026-07-11 reached HTTP 200 responses for all four requested non-404 sources. Tracking parameters were observed in the redirect chain and are intentionally not reproduced here:
+
+| Source | Redirected destination shape | Transport result | Review status |
+|---|---|---:|---|
+| Carepatron | `www.carepatron.com/` | 200 | Current transport check only; owner destination review still required |
+| DataHawk | `datahawk.co/marketplaces/amazon-analytics/` | 200 | Current transport check only; Amazon-specific message match still requires owner review |
+| AdCreative.ai | `www.adcreative.ai/` | 200 | Current transport check only; offer/trial continuity still requires owner review |
+| Snowfire | `www.snowfire.ai/` | 200 | Current transport check only; demo/get-started continuity still requires owner review |
+
+These checks support link-integrity research but do not establish that the links are active in the affiliate program, that the program permits every proposed page angle, or that the destination has been audited for publication.
+
 ## Candidate matrix
 
 | ID | Product | Disposition | Distinct buyer decision to validate |
