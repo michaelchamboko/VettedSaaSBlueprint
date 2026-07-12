@@ -1,0 +1,96 @@
+{
+  "design_profile": "editorial_v2",
+  "robots": "noindex,nofollow",
+  "slug": "adcreative-ai-creative-review-signal",
+  "product_name": "AdCreative.ai",
+  "category": "Creative review",
+  "affiliate_url": "https://free-trial.adcreative.ai/8phdnllve4xi",
+  "title_tag": "AdCreative.ai Creative Review Signal Preview",
+  "meta_description": "A buyer-focused AdCreative.ai preview for checking whether creative scoring adds a useful preflight signal before launch.",
+  "headline": "Can AdCreative.ai add signal to your creative review?",
+  "answer_snippet": "AdCreative.ai's creative scoring can be considered as a preflight signal when a marketer wants a structured way to inspect generated assets before launch. This preview focuses on what a score can add to an existing review process—not a guarantee of click-through rate, awareness, conversion, or campaign performance, and not a substitute for live testing.",
+  "subheadline": "Use the official destination to verify the scoring inputs, platform objective, project setup, and current offer before you treat a score as useful evidence.",
+  "short_disclosure": "We may earn a commission if you later purchase through this link, at no extra cost to you.",
+  "full_disclosure": "VettedSaaSBlueprint may earn a commission if you later purchase through this affiliate link, at no extra cost to you. This is a noindex review preview; destination, program, evidence, compliance, and owner publication records still require completion before public publication.",
+  "risk_reversal": "Treat the score as one review input, then compare it with your own brief, brand constraints, platform context, and live campaign evidence.",
+  "fit_panel": {
+    "problem": "Creative review can become a subjective queue.",
+    "solution": "Check whether a repeatable scoring and annotation step helps your team prioritize assets without pretending it predicts the whole campaign."
+  },
+  "benefits": [
+    {
+      "title": "Turn a subjective pass into a checkpoint",
+      "description": "The official help material describes conversion and engagement scores, giving a marketer a structured signal to discuss before a creative moves toward launch."
+    },
+    {
+      "title": "Keep platform context in the score",
+      "description": "The scoring workflow asks for an ad platform and objective, which is a useful reminder that a creative should be reviewed against the job it is meant to do."
+    },
+    {
+      "title": "Leave room for human revision",
+      "description": "The official guide describes heatmap feedback and recommended actions, so a score can become a prompt for edits rather than a final verdict."
+    }
+  ],
+  "workflow": [
+    {
+      "number": 1,
+      "title": "Set the review context",
+      "description": "Name the platform, objective, audience, and brand constraints before uploading or scoring creative."
+    },
+    {
+      "number": 2,
+      "title": "Compare the signal",
+      "description": "Use the score, heatmap, and suggested actions to identify what deserves a closer human review."
+    },
+    {
+      "number": 3,
+      "title": "Validate in market",
+      "description": "Keep live testing, platform reporting, and the original campaign brief as the final checks on actual performance."
+    }
+  ],
+  "limitations": [
+    {
+      "title": "A score is not a campaign result",
+      "description": "The official help content describes scores as predictions or ratings. Do not present them as guaranteed clicks, awareness, conversions, or revenue."
+    },
+    {
+      "title": "The workflow depends on setup context",
+      "description": "Verify the required brand, project, platform, objective, asset, and account setup before assuming a score is comparable across every creative."
+    }
+  ],
+  "faq": [
+    {
+      "question": "Who is this AdCreative.ai preview for?",
+      "answer": "It is for a marketer deciding whether creative scoring can add a preflight signal to an existing review and testing process."
+    },
+    {
+      "question": "Does a high score guarantee performance?",
+      "answer": "No. A score is a prediction or rating, while live results still depend on audience, offer, platform delivery, budget, and many other conditions."
+    },
+    {
+      "question": "What should I verify before scoring assets?",
+      "answer": "Verify the brand and project setup, the target platform, the campaign objective, the assets being scored, and how your team will act on the result."
+    },
+    {
+      "question": "Is this a hands-on AdCreative.ai test?",
+      "answer": "No. This preview is based on AdCreative.ai's public help documentation and is written as a creative-review checklist, not a claim of first-hand testing."
+    }
+  ],
+  "evidence_notes": [
+    {
+      "label": "Creative scoring overview",
+      "url": "https://help.adcreative.ai/en/articles/8885776-how-does-the-ai-score-your-creatives",
+      "note": "The official help article describes scoring inputs, platform and objective selection, heatmaps, and recommended actions."
+    },
+    {
+      "label": "Creative scoring AI guide",
+      "url": "https://help.adcreative.ai/en/articles/5713632-how-does-the-ai-score-your-creatives",
+      "note": "The official help article describes conversion and engagement scores as ratings intended to support creative selection."
+    },
+    {
+      "label": "AdCreative.ai affiliate source",
+      "url": "https://free-trial.adcreative.ai/8phdnllve4xi",
+      "note": "This is the supplied affiliate source URL; current offer and destination continuity still require owner review."
+    }
+  ]
+}

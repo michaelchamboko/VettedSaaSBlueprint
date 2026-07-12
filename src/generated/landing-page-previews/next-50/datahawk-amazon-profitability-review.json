@@ -1,0 +1,96 @@
+{
+  "design_profile": "editorial_v2",
+  "robots": "noindex,nofollow",
+  "slug": "datahawk-amazon-profitability-review",
+  "product_name": "DataHawk",
+  "category": "Amazon analytics",
+  "affiliate_url": "https://get.datahawk.co/mau0otko9lz4-o5aq3q",
+  "title_tag": "DataHawk Amazon Profitability Review Preview",
+  "meta_description": "A buyer-focused DataHawk preview for checking profitability inputs, cost coverage, and reporting basis before visiting the official destination.",
+  "headline": "Can DataHawk make Amazon profitability easier to reconcile?",
+  "answer_snippet": "DataHawk can help an Amazon operator inspect profitability inputs across revenue, refunds, COGS, Amazon fees, marketing spend, taxes, and adjustments. This preview is for deciding whether your account data and cost inputs are ready for a margin review—not for assuming a dashboard equals accounting truth or that every metric is available without setup.",
+  "subheadline": "Use the official destination to verify the account connections, cost inputs, reporting basis, and product mapping your profitability review will depend on.",
+  "short_disclosure": "We may earn a commission if you later purchase through this link, at no extra cost to you.",
+  "full_disclosure": "VettedSaaSBlueprint may earn a commission if you later purchase through this affiliate link, at no extra cost to you. This is a noindex review preview; destination, program, evidence, compliance, and owner publication records still require completion before public publication.",
+  "risk_reversal": "Treat the destination as the place to verify current account support, plan details, data freshness, and methodology before relying on a margin view.",
+  "fit_panel": {
+    "problem": "Amazon margin questions usually cross several ledgers.",
+    "solution": "Check whether revenue, refunds, costs, fees, advertising, and reporting basis can be reviewed together for the decisions you actually make."
+  },
+  "benefits": [
+    {
+      "title": "Separate revenue from the costs around it",
+      "description": "DataHawk's official guide describes a profitability view that brings together sales, refunds, COGS, Amazon fees, marketing spend, taxes, and adjustments—useful layers to inspect before trusting a margin number."
+    },
+    {
+      "title": "Make COGS a visible checkpoint",
+      "description": "The guide states that uploaded COGS is needed for gross-profit and net-profit calculations, so the page angle keeps cost coverage in the decision rather than hiding it behind a score."
+    },
+    {
+      "title": "Choose the reporting basis deliberately",
+      "description": "DataHawk's glossary distinguishes accrual and recorded dates, giving an Amazon operator a concrete question to resolve before comparing dashboard numbers with activity or settlement records."
+    }
+  ],
+  "workflow": [
+    {
+      "number": 1,
+      "title": "Inventory the inputs",
+      "description": "List the seller, advertising, product-cost, SKU, brand, refund, and fee data that your profitability question requires."
+    },
+    {
+      "number": 2,
+      "title": "Name the accounting basis",
+      "description": "Decide whether the review follows the date revenue was earned or the date Amazon recorded payment, then keep that choice visible."
+    },
+    {
+      "number": 3,
+      "title": "Inspect the destination",
+      "description": "Open DataHawk's official destination and verify current setup, plan, metric definitions, freshness, and export or reporting needs."
+    }
+  ],
+  "limitations": [
+    {
+      "title": "Without cost inputs, the profit view is incomplete",
+      "description": "The official guide says DataHawk can show revenue, refunds, fees, and marketing costs without COGS, but cannot calculate true gross or net profit without the required product-cost data."
+    },
+    {
+      "title": "A dashboard is not an accounting opinion",
+      "description": "Reconcile the definitions, dates, event sources, and account configuration that matter to your reporting process before using a metric for finance or operating decisions."
+    }
+  ],
+  "faq": [
+    {
+      "question": "Who is this DataHawk preview for?",
+      "answer": "It is for an Amazon seller or operator deciding whether the inputs behind a profitability question can be assembled and reviewed in one workflow."
+    },
+    {
+      "question": "Does DataHawk calculate profit without COGS?",
+      "answer": "Its official guide says revenue, refunds, fees, and marketing costs can still appear, but true gross and net profit require product-cost data."
+    },
+    {
+      "question": "What should I verify before relying on a metric?",
+      "answer": "Verify account connections, product mapping, cost coverage, event definitions, date basis, data freshness, and the exact report or export you need."
+    },
+    {
+      "question": "Is this a hands-on DataHawk test?",
+      "answer": "No. This preview is based on DataHawk's public documentation and is written as a profitability-reconciliation checklist, not a claim of first-hand testing."
+    }
+  ],
+  "evidence_notes": [
+    {
+      "label": "Profitability analysis guide",
+      "url": "https://docs.datahawk.co/help-center/data-metrics-guides/finance/profitability-analysis",
+      "note": "The official guide covers revenue, refunds, COGS, Amazon fees, marketing, taxes, setup requirements, and the limits of reporting without COGS."
+    },
+    {
+      "label": "DataHawk glossary",
+      "url": "https://docs.datahawk.co/help-center/glossary",
+      "note": "The official glossary defines the profit ledger, COGS, and accrual versus recorded reporting dates."
+    },
+    {
+      "label": "DataHawk pricing orientation",
+      "url": "https://docs.datahawk.co/welcome/pricing",
+      "note": "The official pricing guide says plan components depend on platform and usage factors; confirm current details on the destination."
+    }
+  ]
+}
