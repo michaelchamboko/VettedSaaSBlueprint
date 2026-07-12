@@ -86,6 +86,43 @@ export const partnerstackProgramResourceSchema = z.object({
   owner_review_status: z.enum(["pending", "approved", "rejected"]).default("pending"),
 });
 
+export const partnerstackProgramRuleSchema = z.object({
+  id: z.string().uuid().optional(),
+  product_id: z.string().uuid().optional().nullable(),
+  partnership_key: z.string().optional().nullable(),
+  program_name: z.string().min(1),
+  paid_ads_allowed: z.boolean().optional().nullable(),
+  brand_bidding_allowed: z.boolean().optional().nullable(),
+  coupon_language_allowed: z.boolean().optional().nullable(),
+  custom_links_enabled: z.boolean().optional().nullable(),
+  deep_links_enabled: z.boolean().optional().nullable(),
+  approved_destinations: z.array(z.string().url()).default([]),
+  required_disclosure: z.string().optional().nullable(),
+  resource_usage_notes: z.string().optional().nullable(),
+  self_referral_allowed: z.boolean().optional().nullable(),
+  raw_terms_source_id: z.string().uuid().optional().nullable(),
+  reviewed: z.boolean().default(false),
+});
+
+export const complianceProfileSchema = z.object({
+  id: z.string().uuid().optional(),
+  product_id: z.string().uuid().optional().nullable(),
+  scope: z.string().min(1).default("product"),
+  required_disclosure: z.string().optional().nullable(),
+  allowed_channels: z.array(z.string()).default(["organic_search"]),
+  disallowed_channels: z.array(z.string()).default(["paid_ads", "brand_bidding", "coupon_pages"]),
+  link_rules: z.record(z.string(), z.any()).default({}),
+  claim_rules: z.record(z.string(), z.any()).default({}),
+  privacy_rules: z.record(z.string(), z.any()).default({
+    minimal_tracking: true,
+    third_party_pixels: false,
+    fingerprinting: false,
+  }),
+  source_usage_rules: z.record(z.string(), z.any()).default({}),
+  status: z.enum(["incomplete", "reviewed", "approved", "complete", "active"]).default("incomplete"),
+  reviewed: z.boolean().default(false),
+});
+
 export const offerPurchaseDestinationReviewSchema = z.object({
   id: z.string().uuid().optional(),
   offer_folder_id: z.string().uuid(),
@@ -200,6 +237,8 @@ export type ProductInput = z.infer<typeof productSchema>;
 export type AffiliateLinkInput = z.infer<typeof affiliateLinkSchema>;
 export type OfferFolderInput = z.infer<typeof offerFolderSchema>;
 export type PartnerstackProgramResourceInput = z.infer<typeof partnerstackProgramResourceSchema>;
+export type PartnerstackProgramRuleInput = z.infer<typeof partnerstackProgramRuleSchema>;
+export type ComplianceProfileInput = z.infer<typeof complianceProfileSchema>;
 export type OfferPurchaseDestinationReviewInput = z.infer<typeof offerPurchaseDestinationReviewSchema>;
 export type ResearchSourceInput = z.infer<typeof researchSourceSchema>;
 export type EvidenceClaimInput = z.infer<typeof evidenceClaimSchema>;
