@@ -1,0 +1,162 @@
+{
+  "id": "lp-ref-0043",
+  "source_url": "https://surferseo.com",
+  "captured_at": "2026-07-14T06:57:22.300Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0043/desktop.webp",
+      "sha256": "a83fc5e5d28d730d82c04e24f8c07cddbc1bc3fac44bcc61aec602333f8bd657",
+      "byte_size": 42218
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0043/mobile.webp",
+      "sha256": "789ff3376495f50af337bec4349cbb39b8fc215f6a6664b94e6303d231442c77",
+      "byte_size": 27628
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 116px with 1040px width.",
+      "media_strategy": "video at 81,792 sized 1278×598."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Inter Variable\", Arial, sans-serif.",
+      "body_style": "Computed body family \"Inter Variable\", Arial, sans-serif at 16px.",
+      "scale": "68px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 600 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Surfer: Your AI Search Visibility OS” at y=3870 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "alternating_story",
+        "composition_notes": "Observed heading “Surfer: Your AI Search Visibility OS” at y=3870 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “One Platform. One Workflow. Full Content Loop.” at y=5616 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "problem_solution",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Elite Visibility System Without the Enterprise Price Tag” at y=13513 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at -900,53.",
+      "label_pattern": "Observed concise action label “Skip to main content”.",
+      "interaction": "Measured solid interactive control sized 162×32."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "23 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "21 animation(s) remained with reduced motion and 8572 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "83.890625px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 101px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto",
+      "alternating_story"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 116,275 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Inter Variable\", Arial, sans-serif, 68px, weight 600; body \"Inter Variable\", Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Surfer: Your AI Search Visibility OS” at y=3870 with 1 column(s) and 1 item(s).",
+          "Observed heading “Surfer: Your AI Search Visibility OS” at y=3870 with 1 column(s) and 1 item(s).",
+          "Observed heading “One Platform. One Workflow. Full Content Loop.” at y=5616 with 1 column(s) and 1 item(s).",
+          "Observed heading “Elite Visibility System Without the Enterprise Price Tag” at y=13513 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "how_it_works:closing_manifesto",
+          "proof_blocks:alternating_story",
+          "closing_cta:closing_manifesto",
+          "problem_solution:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Skip to main content” measured 162×32."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 23 normal-motion animation(s) and 21 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "e86ba1f8015a2d8068d2ebe2404e8d30af7a5dcc0b8d90fef1052394c9bbe970"
+}

@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0087",
+  "source_url": "https://www.dogfoodadvisor.com",
+  "captured_at": "2026-07-14T07:03:05.592Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0087/desktop.webp",
+      "sha256": "95f1743205aaf0c3a795c0e9c07acdb323672460d7bdf2011c35cd3577620bf9",
+      "byte_size": 88720
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0087/mobile.webp",
+      "sha256": "5fa607bf0f52cbc459e44cefe73554dbab194aeaf46a347a107f100b3e433fe7",
+      "byte_size": 32694
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "affiliate-editorial",
+    "product-reviews"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "proof_led",
+      "composition": "Measured proof led composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 320px with 800px width.",
+      "media_strategy": "img at 890,258 sized 255×383."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed \"Source Sans 3\", Helvetica, Arial, sans-serif.",
+      "body_style": "Computed body family \"Source Sans 3\", Helvetica, Arial, sans-serif at 16px.",
+      "scale": "55px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 900 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "proof_blocks",
+        "family": "alternating_story",
+        "composition_notes": "Observed heading “Find the best food for your dog in 60 seconds.” at y=913 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 6,-14000.",
+      "label_pattern": "Observed concise action label “Skip Nav”.",
+      "interaction": "Measured solid interactive control sized 99×49."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 3252 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "70.6875px navigation across 17 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at -14000px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "proof_led"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "alternating_story"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured proof led hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 320,247 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Source Sans 3\", Helvetica, Arial, sans-serif, 55px, weight 900; body \"Source Sans 3\", Helvetica, Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Find the best food for your dog in 60 seconds.” at y=913 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "proof_blocks:alternating_story"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Skip Nav” measured 99×49."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 17 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "a081f0c0976fffd93e21528b10ba47d9403226f0934b5bb0f8297ba665c24e81"
+}

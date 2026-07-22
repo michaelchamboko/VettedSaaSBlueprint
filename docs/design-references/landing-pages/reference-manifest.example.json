@@ -1,0 +1,116 @@
+{
+  "references": [
+    {
+      "id": "lp-ref-0001",
+      "source_url": "https://example.com/replace-with-supplied-reference",
+      "captured_at": "2026-07-14T00:00:00.000Z",
+      "usage_status": "active",
+      "usage_scope": "internal_only",
+      "primary_product_category": "marketing-tools",
+      "category_tags": [
+        "marketing-tools",
+        "creator-tools"
+      ],
+      "observations": {
+        "hero": {
+          "variant": "asymmetric_split",
+          "composition": "Large decision headline paired with a restrained product visual.",
+          "alignment": "Left-aligned copy with offset media.",
+          "media_strategy": "One product-context image rather than a decorative dashboard."
+        },
+        "typography": {
+          "pair": "fraunces_manrope",
+          "display_style": "High-contrast editorial display face.",
+          "body_style": "Compact geometric sans for long-form reading.",
+          "scale": "Large first-viewport headline with restrained section headings.",
+          "weight_contrast": "Display 800 against body 300–500."
+        },
+        "sections": [
+          {
+            "key": "problem_solution",
+            "family": "split_editorial",
+            "composition_notes": "Decision context split between claim and explanation."
+          },
+          {
+            "key": "benefits",
+            "family": "numbered_ledger",
+            "composition_notes": "Benefits read as a vertical evidence ledger."
+          },
+          {
+            "key": "proof_blocks",
+            "family": "proof_strip",
+            "composition_notes": "Proof appears as a bounded horizontal strip."
+          },
+          {
+            "key": "how_it_works",
+            "family": "process_timeline",
+            "composition_notes": "Workflow is expressed as a clear sequence."
+          },
+          {
+            "key": "limitations",
+            "family": "decision_matrix",
+            "composition_notes": "Limitations are compared by impact and mitigation."
+          },
+          {
+            "key": "objection_handling",
+            "family": "objection_accordion",
+            "composition_notes": "Objections remain scannable and progressively disclosed."
+          },
+          {
+            "key": "faq",
+            "family": "alternating_story",
+            "composition_notes": "Questions alternate to avoid a generic repeated stack."
+          },
+          {
+            "key": "closing_cta",
+            "family": "closing_manifesto",
+            "composition_notes": "Final decision and CTA share one strong closing composition."
+          }
+        ],
+        "cta": {
+          "variant": "inline_decision",
+          "placement": "One primary CTA in the hero and one closing decision CTA.",
+          "label_pattern": "Short buyer-decision verb phrase without an embedded arrow.",
+          "interaction": "Solid accent, label and icon kept on one line."
+        },
+        "motion": {
+          "variant": "quiet_stagger",
+          "triggers": "Hero hierarchy on load and sections on viewport entry.",
+          "intensity": "Restrained transform and opacity changes only.",
+          "reduced_motion_behavior": "All content remains visible with motion removed."
+        },
+        "mobile": {
+          "strategy": "copy_first",
+          "stacking": "Headline and answer, decision CTA, then media.",
+          "navigation": "Single-line compact navigation below 80px.",
+          "cta_behavior": "Inline only; no fixed or sticky duplicate CTA.",
+          "overflow_behavior": "No horizontal page overflow; intentional strips use scroll snap."
+        }
+      },
+      "supported_variant_tags": {
+        "hero": ["asymmetric_split"],
+        "typography": ["fraunces_manrope"],
+        "section_variants": [
+          "split_editorial",
+          "numbered_ledger",
+          "proof_strip",
+          "process_timeline",
+          "decision_matrix",
+          "objection_accordion",
+          "alternating_story",
+          "closing_manifesto"
+        ],
+        "cta": ["inline_decision"],
+        "motion": ["quiet_stagger"],
+        "mobile": ["copy_first"]
+      },
+      "reusable_principles": [
+        "Use an editorial hierarchy to make the buyer decision obvious.",
+        "Separate proof, limitations, and action into visibly different rhythms."
+      ],
+      "prohibited_copy_notes": [
+        "Do not copy brand names, logos, copy, imagery, exact palette, proprietary icons, or exact composition measurements."
+      ]
+    }
+  ]
+}

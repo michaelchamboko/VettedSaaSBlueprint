@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0034",
+  "source_url": "https://www.drip.com",
+  "captured_at": "2026-07-14T06:55:47.959Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0034/desktop.webp",
+      "sha256": "cd39d46a425e1ced8f8a1f37bfad27c255688a0a81a41d3a0042664483be92ff",
+      "byte_size": 58922
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0034/mobile.webp",
+      "sha256": "14bb2bfd829e025f5dac91f994321abd57b98574e50f257a0fa9076c6aaaf782",
+      "byte_size": 27826
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "marketing-tools",
+  "category_tags": [
+    "marketing-tools",
+    "growth-tools",
+    "business-software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 550px with 340px width.",
+      "media_strategy": "img at -130,101 sized 292×182."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Styrene A\", Verdana, \"Helvetica Neue\", sans-serif.",
+      "body_style": "Computed body family \"GT Walsheim\", Tahoma, \"Helvetica Neue\", sans-serif at 16px.",
+      "scale": "16px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 400 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “All the ecommerce email power you need. None of the bloat you don't.” at y=79 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 1081,20.",
+      "label_pattern": "Observed concise action label “Demo Drip”.",
+      "interaction": "Measured solid interactive control sized 108×38."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "1 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "4 animation(s) remained with reduced motion and 7814 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "64px navigation across 12 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 13px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 550,836 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Styrene A\", Verdana, \"Helvetica Neue\", sans-serif, 16px, weight 400; body \"GT Walsheim\", Tahoma, \"Helvetica Neue\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “All the ecommerce email power you need. None of the bloat you don't.” at y=79 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Demo Drip” measured 108×38."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 1 normal-motion animation(s) and 4 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 12 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "8615c1095528a993bc227180581107da98d811a27b274398f79c12908940c2b1"
+}

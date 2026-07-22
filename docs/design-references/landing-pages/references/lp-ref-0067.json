@@ -1,0 +1,148 @@
+{
+  "id": "lp-ref-0067",
+  "source_url": "https://www.deel.com",
+  "captured_at": "2026-07-14T07:00:11.373Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0067/desktop.webp",
+      "sha256": "ae8fb72f90f0f1d4c8058093fedbd5b62eb1d202860c6e8f1e797fdd2b6642aa",
+      "byte_size": 85024
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0067/mobile.webp",
+      "sha256": "4260451426d8bc1407ee10d77be9bdb28c1b8a1ea3a3b585b3d54cc52430e967",
+      "byte_size": 27264
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "finance-hr",
+  "category_tags": [
+    "finance-hr",
+    "business-finance",
+    "workforce-operations"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "left heading at 108px with 575px width.",
+      "media_strategy": "img at 727,92 sized 701×774."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed BagossCondensedFont, \"BagossCondensedFont Fallback\", Arial, Helvetica, sans-serif.",
+      "body_style": "Computed body family Inter, \"Inter Fallback\", Arial, Helvetica, sans-serif at 16px.",
+      "scale": "60px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 500 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “The Global People Platform” at y=80 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “One modern experience for today's workforce” at y=3110 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 194,20.",
+      "label_pattern": "Observed concise action label “Solutions”.",
+      "interaction": "Measured solid interactive control sized 95×40."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "2 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "2 animation(s) remained with reduced motion and 5338 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "64px navigation across 1 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 12px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 108,184 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font BagossCondensedFont, \"BagossCondensedFont Fallback\", Arial, Helvetica, sans-serif, 60px, weight 500; body Inter, \"Inter Fallback\", Arial, Helvetica, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “The Global People Platform” at y=80 with 1 column(s) and 1 item(s).",
+          "Observed heading “One modern experience for today's workforce” at y=3110 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Solutions” measured 95×40."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 2 normal-motion animation(s) and 2 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 1 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "e338cd13c8b122a79a44404097f86527944769f06d43c16d2470131373d1cbda"
+}

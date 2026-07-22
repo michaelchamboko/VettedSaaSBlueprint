@@ -1,0 +1,148 @@
+{
+  "id": "lp-ref-0090",
+  "source_url": "https://www.businessnewsdaily.com",
+  "captured_at": "2026-07-14T07:03:05.592Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0090/desktop.webp",
+      "sha256": "f4db6f62f19800a674ed2b5e307d427419e399c5a07f67fdd08df7857341e899",
+      "byte_size": 80284
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0090/mobile.webp",
+      "sha256": "e4248bac0bd3ea992dc2829529bc41ee667c8dab7bc857571ba759679f7c5d7d",
+      "byte_size": 41418
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 0px with 1440px width.",
+      "media_strategy": "img at 466,554 sized 403×227."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed \"Sofia Sans\", \"Sofia Sans Fallback\", sans-serif.",
+      "body_style": "Computed body family Arial, \"Helvetica Neue\", Helvetica, sans-serif at 14px.",
+      "scale": "26px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 800 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Stop overpaying for business software” at y=68 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “OUR BEST PICKScheckmark” at y=458 with 2 column(s) and 2 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 130,310.",
+      "label_pattern": "Observed concise action label “Join Free”.",
+      "interaction": "Measured solid interactive control sized 160×42."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 3259 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "0px navigation across 0 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 433px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 0,410 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Sofia Sans\", \"Sofia Sans Fallback\", sans-serif, 26px, weight 800; body Arial, \"Helvetica Neue\", Helvetica, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Stop overpaying for business software” at y=68 with 1 column(s) and 1 item(s).",
+          "Observed heading “OUR BEST PICKScheckmark” at y=458 with 2 column(s) and 2 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "benefits:closing_manifesto",
+          "how_it_works:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Join Free” measured 160×42."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 0 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "7931fa96244647243b6f53b4619c8662f20097cf1b41bd9dcbbf71bd6c433b64"
+}

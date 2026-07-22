@@ -1,0 +1,148 @@
+{
+  "id": "lp-ref-0072",
+  "source_url": "https://www.bankrate.com",
+  "captured_at": "2026-07-14T07:00:11.373Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0072/desktop.webp",
+      "sha256": "5dd1e1d42f04c6d80aaac574a2fce70c02ab4a18a54e88de916819d85a01321e",
+      "byte_size": 65500
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0072/mobile.webp",
+      "sha256": "5c08b16c699141728ac71f166535c5ca6b7940a066c103d7995329d6e5f2f4ba",
+      "byte_size": 41450
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 227px with 778px width.",
+      "media_strategy": "img at 80,112 sized 1280×600."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed RecifeText, ui-serif, system-ui, serif.",
+      "body_style": "Computed body family \"Instrument Sans\", \"Instrument Sans Fallback\", ui-sans-serif, system-ui, sans-serif at 16px.",
+      "scale": "48px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 500 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “What's your next step?” at y=994 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Who we are and why we exist” at y=4079 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1372,14.",
+      "label_pattern": "Observed concise action label “Search IconClose X Icon”.",
+      "interaction": "Measured solid interactive control sized 44×44."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 4307 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "56px navigation across 21 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 0px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 227,220 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font RecifeText, ui-serif, system-ui, serif, 48px, weight 500; body \"Instrument Sans\", \"Instrument Sans Fallback\", ui-sans-serif, system-ui, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “What's your next step?” at y=994 with 1 column(s) and 1 item(s).",
+          "Observed heading “Who we are and why we exist” at y=4079 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "how_it_works:closing_manifesto",
+          "benefits:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Search IconClose X Icon” measured 44×44."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 21 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "909fe8c992880d203b42b230440a2e1bdb06fa0bbd94e5005b33f0c752183653"
+}

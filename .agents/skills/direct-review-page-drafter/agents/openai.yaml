@@ -1,0 +1,4 @@
+interface:
+  display_name: "Direct Review Page Drafter"
+  short_description: "Draft gated review page JSON."
+  default_prompt: "Use $direct-review-page-drafter to draft direct-review page JSON from an approved VettedSaaSBlueprint intent brief."

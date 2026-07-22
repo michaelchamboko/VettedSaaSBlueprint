@@ -1,0 +1,4 @@
+interface:
+  display_name: "Landing Page Production Orchestrator"
+  short_description: "Enforce the landing-page skill loop before publish readiness."
+  default_prompt: "Use $landing-page-production-orchestrator for the next landing-page production task."

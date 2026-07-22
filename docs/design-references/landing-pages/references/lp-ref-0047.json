@@ -1,0 +1,161 @@
+{
+  "id": "lp-ref-0047",
+  "source_url": "https://www.grammarly.com",
+  "captured_at": "2026-07-14T06:57:22.300Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0047/desktop.webp",
+      "sha256": "c46e4b295448c1447688270ec99d2b230c018bfde4d9b4c94f0b457258d1f96d",
+      "byte_size": 66598
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0047/mobile.webp",
+      "sha256": "74c737c8ddcfb4ff72e140e7cae742de4fb1ec8c0c7d198edf205e7103f33303",
+      "byte_size": 26386
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "proof_led",
+      "composition": "Measured proof led composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 272px with 897px width.",
+      "media_strategy": "img at 81,492 sized 417×249."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed matter, sans-serif.",
+      "body_style": "Computed body family sans-serif at 16px.",
+      "scale": "46px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 670 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Paragraph rewrites” at y=65 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Better writing,better results” at y=1299 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "problem_solution",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Choose the right Grammarly plan” at y=3736 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Great writing gets work done” at y=6841 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 1217,15.",
+      "label_pattern": "Observed concise action label “Get Grammarly It’s free”.",
+      "interaction": "Measured solid interactive control sized 175×34."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "2 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "2 animation(s) remained with reduced motion and 5773 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "65px navigation across 1 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 357px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "proof_led"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured proof led hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 272,121 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font matter, sans-serif, 46px, weight 670; body sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Paragraph rewrites” at y=65 with 1 column(s) and 1 item(s).",
+          "Observed heading “Better writing,better results” at y=1299 with 1 column(s) and 1 item(s).",
+          "Observed heading “Choose the right Grammarly plan” at y=3736 with 1 column(s) and 1 item(s).",
+          "Observed heading “Great writing gets work done” at y=6841 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "proof_blocks:closing_manifesto",
+          "problem_solution:closing_manifesto",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Get Grammarly It’s free” measured 175×34."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 2 normal-motion animation(s) and 2 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 1 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "e0032b53877ef27a8d593c6836386a8554f3240547ed1751b36240bf231fc8e3"
+}

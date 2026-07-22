@@ -1,0 +1,170 @@
+{
+  "id": "lp-ref-0040",
+  "source_url": "https://www.gem.com",
+  "captured_at": "2026-07-14T06:55:47.959Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0040/desktop.webp",
+      "sha256": "66cc4503053af8c3d70256b52c733735beb508a092138503d8f7ebb5bb5ab163",
+      "byte_size": 125602
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0040/mobile.webp",
+      "sha256": "ff3af136f260e917d962c00befdeef76a3366e52943a0eea62b391d366dc8c35",
+      "byte_size": 34318
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "sales-crm",
+  "category_tags": [
+    "sales-crm",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 132px with 608px width.",
+      "media_strategy": "img at 0,0 sized 1440×680."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Society Book\", ui-serif, Georgia, \"Times New Roman\", serif.",
+      "body_style": "Computed body family \"Die Grotesk A\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif at 16px.",
+      "scale": "64px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 450 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "proof_blocks",
+        "family": "alternating_story",
+        "composition_notes": "Observed heading “Hire great people. Show off your success. Gem gives you the AI and data to do both.” at y=680 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “The numbers speak for themselves” at y=1568 with 1 column(s) and 2 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Gem + Your ATS” at y=4827 with 1 column(s) and 0 item(s)."
+      },
+      {
+        "key": "problem_solution",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “The proof is in the pipeline” at y=5993 with 1 column(s) and 2 item(s)."
+      },
+      {
+        "key": "faq",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “FAQ” at y=8517 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 486,30.",
+      "label_pattern": "Observed concise action label “Products”.",
+      "interaction": "Measured solid interactive control sized 112×44."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "2 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 9400 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "83.015625px navigation across 1 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 20px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "alternating_story",
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 132,266 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Society Book\", ui-serif, Georgia, \"Times New Roman\", serif, 64px, weight 450; body \"Die Grotesk A\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Hire great people. Show off your success. Gem gives you the AI and data to do both.” at y=680 with 1 column(s) and 1 item(s).",
+          "Observed heading “The numbers speak for themselves” at y=1568 with 1 column(s) and 2 item(s).",
+          "Observed heading “Gem + Your ATS” at y=4827 with 1 column(s) and 0 item(s).",
+          "Observed heading “The proof is in the pipeline” at y=5993 with 1 column(s) and 2 item(s).",
+          "Observed heading “FAQ” at y=8517 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "proof_blocks:alternating_story",
+          "objection_handling:closing_manifesto",
+          "closing_cta:closing_manifesto",
+          "problem_solution:closing_manifesto",
+          "faq:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Products” measured 112×44."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 2 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 1 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "c327a1ecb8b2150200fe69f05f6630bfed1f8681800b86a1ed550e071433f1c4"
+}

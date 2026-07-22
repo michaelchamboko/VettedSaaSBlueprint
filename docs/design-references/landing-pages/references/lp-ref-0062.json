@@ -1,0 +1,148 @@
+{
+  "id": "lp-ref-0062",
+  "source_url": "https://www.shopify.com",
+  "captured_at": "2026-07-14T06:58:55.542Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0062/desktop.webp",
+      "sha256": "5ca2bb4520629b02ff44912937472d0d3e7c9aa903ec264142faa0458a1d6f5f",
+      "byte_size": 48628
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0062/mobile.webp",
+      "sha256": "670ad0f93d4f401115ccfd6ffe0934b3c40d3a2445437106a9ef93eb68590907",
+      "byte_size": 32606
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "commerce-payments",
+  "category_tags": [
+    "commerce-payments",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 89px with 1px width.",
+      "media_strategy": "video at 0,-1 sized 1440×824."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed NeueHaasGrotesk, Helvetica, Arial, sans-serif.",
+      "body_style": "Computed body family NeueHaasGrotesk, Helvetica, Arial, sans-serif at 16px.",
+      "scale": "96px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 400 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Sell more in more places” at y=2126 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Customize everything with apps” at y=6206 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 8,-80.",
+      "label_pattern": "Observed concise action label “Skip to Content”.",
+      "interaction": "Measured solid interactive control sized 161×44."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "7 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "13 animation(s) remained with reduced motion and 4918 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "72px navigation across 41 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at -80px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 89,295 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font NeueHaasGrotesk, Helvetica, Arial, sans-serif, 96px, weight 400; body NeueHaasGrotesk, Helvetica, Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Sell more in more places” at y=2126 with 1 column(s) and 1 item(s).",
+          "Observed heading “Customize everything with apps” at y=6206 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "benefits:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Skip to Content” measured 161×44."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 7 normal-motion animation(s) and 13 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 41 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "990bca582c9fe8f4af23a7ed5f97c87d6790a5a337e4be6414c990bdce8d3c27"
+}

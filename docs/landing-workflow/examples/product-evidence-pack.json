@@ -1,0 +1,141 @@
+{
+  "schema_version": "ProductEvidencePackV1",
+  "product": {
+    "id": "00000000-0000-4000-8000-00000000c001",
+    "name": "Synthetic Studio",
+    "slug": "synthetic-studio",
+    "category": "workflow-tools",
+    "website_url": null,
+    "description": "Synthetic product used only for landing-workflow documentation and tests.",
+    "primary_audience": "operators who run a small workflow between three internal tools"
+  },
+  "references": {
+    "product_id": "00000000-0000-4000-8000-00000000c001",
+    "affiliate_link_id": "00000000-0000-4000-8000-00000000b001",
+    "offer_folder_id": "00000000-0000-4000-8000-00000000a001",
+    "destination_review_id": "00000000-0000-4000-8000-00000000d001",
+    "program_rule_id": "00000000-0000-4000-8000-00000000e001",
+    "compliance_profile_id": "00000000-0000-4000-8000-00000000f001",
+    "source_ids": [
+      "00000000-0000-4000-8000-00000000a101",
+      "00000000-0000-4000-8000-00000000a102"
+    ],
+    "evidence_claim_ids": [
+      "00000000-0000-4000-8000-00000000a201",
+      "00000000-0000-4000-8000-00000000a202"
+    ],
+    "page_blueprint_ids": [
+      "00000000-0000-4000-8000-000000000101"
+    ]
+  },
+  "affiliate": {
+    "original_url": "https://synthetic.example/start",
+    "link_type": "synthetic-direct",
+    "destination_review": {
+      "id": "00000000-0000-4000-8000-00000000d001",
+      "state": "reviewed",
+      "checked_at": "2026-07-14T08:00:00.000Z",
+      "final_visible_url": "https://synthetic.example/welcome",
+      "redirect_chain": [
+        "https://synthetic.example/start",
+        "https://synthetic.example/welcome"
+      ],
+      "usage_notes": "Synthetic reviewed destination. Owner-controlled publication still required."
+    }
+  },
+  "offer_folder": {
+    "id": "00000000-0000-4000-8000-00000000a001",
+    "name": "Synthetic offer folder"
+  },
+  "program_rules": {
+    "id": "00000000-0000-4000-8000-00000000e001",
+    "program_name": "Synthetic Partner Program",
+    "state": "documented",
+    "required_disclosure": "Synthetic disclosure language for documentation only.",
+    "rules": [
+      { "name": "paid_ads", "value": "disallowed", "usage_notes": "Synthetic rule for documentation." }
+    ],
+    "unknown_reason": null
+  },
+  "compliance_profile": {
+    "id": "00000000-0000-4000-8000-00000000f001",
+    "required_disclosure": "Synthetic disclosure language for documentation only.",
+    "import_notes": "Synthetic profile used to seed deterministic test inputs."
+  },
+  "disclosures": {
+    "short": "Synthetic short disclosure.",
+    "full": "Synthetic full disclosure used only inside landing-workflow examples.",
+    "placement_notes": "Synthetic placement: above the first CTA."
+  },
+  "review_basis": {
+    "basis": "public_research",
+    "summary": "Synthetic review basis for example artifacts only.",
+    "first_hand_boundary": "No first-hand use is claimed."
+  },
+  "sources": [
+    {
+      "id": "00000000-0000-4000-8000-00000000a101",
+      "source_type": "synthetic_docs",
+      "url": "https://docs.synthetic.example/getting-started",
+      "title": "Synthetic getting started",
+      "retrieved_at": "2026-07-14T08:00:00.000Z",
+      "source_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "usage_notes": "Synthetic source used to validate schema."
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000a102",
+      "source_type": "synthetic_pricing",
+      "url": "https://synthetic.example/pricing",
+      "title": "Synthetic pricing",
+      "retrieved_at": "2026-07-14T08:00:00.000Z",
+      "source_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "usage_notes": "Synthetic source used to validate schema."
+    }
+  ],
+  "evidence_claims": [
+    {
+      "id": "00000000-0000-4000-8000-00000000a201",
+      "source_id": "00000000-0000-4000-8000-00000000a101",
+      "claim": "Synthetic Studio documents an onboarding checklist for first-time operators.",
+      "claim_type": "feature",
+      "risk_level": "low",
+      "confidence_score": 0.6,
+      "allowed_wording": "Synthetic Studio publishes an onboarding checklist.",
+      "usage_notes": "Synthetic wording for documentation."
+    },
+    {
+      "id": "00000000-0000-4000-8000-00000000a202",
+      "source_id": "00000000-0000-4000-8000-00000000a102",
+      "claim": "Synthetic Studio lists a single plan in public documentation.",
+      "claim_type": "pricing",
+      "risk_level": "medium",
+      "confidence_score": 0.55,
+      "allowed_wording": "Synthetic Studio publishes a single visible plan.",
+      "usage_notes": "Synthetic wording for documentation."
+    }
+  ],
+  "claim_to_evidence": [
+    {
+      "claim_key": "onboarding-checklist",
+      "evidence_claim_ids": ["00000000-0000-4000-8000-00000000a201"],
+      "usage_notes": "Synthetic claim map."
+    },
+    {
+      "claim_key": "single-plan",
+      "evidence_claim_ids": ["00000000-0000-4000-8000-00000000a202"],
+      "usage_notes": "Synthetic claim map."
+    }
+  ],
+  "prohibited_claims": [
+    "Best for any team.",
+    "Guaranteed outcome for every operator."
+  ],
+  "sibling_context": [],
+  "proposed_buyer_decisions": [
+    {
+      "page_blueprint_id": "00000000-0000-4000-8000-000000000101",
+      "slug": "synthetic-studio-workflow-checklist",
+      "buyer_decision": "Should I inspect Synthetic Studio as a fit for my small workflow before visiting the destination?"
+    }
+  ]
+}

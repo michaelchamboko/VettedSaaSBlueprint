@@ -1,0 +1,140 @@
+{
+  "id": "lp-ref-0013",
+  "source_url": "https://tally.so",
+  "captured_at": "2026-07-14T06:51:50.820Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0013/desktop.webp",
+      "sha256": "f25d2e7840277218f0fbe5d9f4f31c539434f63879d0017c470d326e495a61b9",
+      "byte_size": 36640
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0013/mobile.webp",
+      "sha256": "4dc215067e93dde2d9032b35205ee0540eb3764866cac35cb1023d0f6756d21f",
+      "byte_size": 18664
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 233px with 973px width.",
+      "media_strategy": "img at -48,345 sized 301×1160."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed Inter, \"Inter Fallback\", sans-serif.",
+      "body_style": "Computed body family Inter, \"Inter Fallback\", sans-serif at 16px.",
+      "scale": "64px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 700 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "faq",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “A form builder like no other” at y=60 with 1 column(s) and 11 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at 630,403.",
+      "label_pattern": "Observed concise action label “Create a free form”.",
+      "interaction": "Measured solid interactive control sized 180×36."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "9 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "9 animation(s) remained with reduced motion and 6911 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "60px navigation across 1 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 442px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 233,188 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font Inter, \"Inter Fallback\", sans-serif, 64px, weight 700; body Inter, \"Inter Fallback\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “A form builder like no other” at y=60 with 1 column(s) and 11 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "faq:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Create a free form” measured 180×36."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 9 normal-motion animation(s) and 9 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 1 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "1f2ef309331d863ea0c3ea035a2c2aa66bd2da225fba40d0e69fed764fbfdb54"
+}

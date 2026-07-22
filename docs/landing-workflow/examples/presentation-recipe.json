@@ -1,0 +1,35 @@
+{
+  "hero": "typographic_billboard",
+  "typography": "space_grotesk_dm_sans",
+  "section_order": [
+    "problem_solution",
+    "benefits",
+    "proof_blocks",
+    "how_it_works",
+    "limitations",
+    "objection_handling",
+    "faq",
+    "closing_cta"
+  ],
+  "section_variants": {
+    "problem_solution": "split_editorial",
+    "benefits": "decision_matrix",
+    "proof_blocks": "proof_strip",
+    "how_it_works": "process_timeline",
+    "limitations": "numbered_ledger",
+    "objection_handling": "alternating_story",
+    "faq": "objection_accordion",
+    "closing_cta": "closing_manifesto"
+  },
+  "cta": "inline_decision",
+  "motion": "quiet_stagger",
+  "mobile": "copy_first",
+  "design_dials": {
+    "design_variance": 4,
+    "motion_intensity": 3,
+    "visual_density": 4
+  },
+  "reference_ids": ["lp-ref-0001", "lp-ref-0002"],
+  "recipe_id": "recipe-be0bbb29ff3c87a6",
+  "fingerprint": "be0bbb29ff3c87a6297fe28b932bb29d9ab15fed4d4db455d260d56b6f4664c7"
+}
