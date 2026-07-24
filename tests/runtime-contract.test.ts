@@ -75,8 +75,11 @@ test("rejects missing npm engine and incompatible lockfile format", () => {
     nodeVersionFile: "24\n",
   });
 
-  assert.deepEqual(result.errors, [
-    "package.json engines.npm must be >=11 <12; received missing",
-    "package-lock.json must use lockfileVersion 3; received 2",
-  ]);
+  assert.deepEqual(
+    [...result.errors].sort(),
+    [
+      "package.json engines.npm must be >=11 <12; received missing",
+      "package-lock.json must use lockfileVersion 3; received 2",
+    ].sort(),
+  );
 });

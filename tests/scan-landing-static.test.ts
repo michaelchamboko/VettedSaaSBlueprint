@@ -10,7 +10,7 @@ async function makeCatalogue() {
   return mkdtemp(path.join(os.tmpdir(), "landing-static-catalogue-"));
 }
 
-test("production static scanning fails closed and reports every catalogue entry without complete Oracle provenance", async () => {
+test("production static scanning fails closed and reports every catalogue entry without complete publication provenance", async () => {
   const catalogueDir = await makeCatalogue();
   try {
     await writeFile(path.join(catalogueDir, "index.json"), `${JSON.stringify({
@@ -46,7 +46,7 @@ test("production static scanning fails closed and reports every catalogue entry 
     assert.throws(
       () => loadLandingStaticContext({ inputMode: "production", targetDir: catalogueDir }),
       (error: unknown) => {
-        assert.match(String(error), /invalid Oracle provenance/i);
+        assert.match(String(error), /invalid publication provenance/i);
         assert.match(String(error), /missing-source/i);
         assert.match(String(error), /missing-audit/i);
         assert.match(String(error), /invalid-timestamp/i);

@@ -1,465 +1,101 @@
 # Landing Workflow
 
-## Unattended publication
+## Outcome and authority
 
-The current publication authority is [`unattended-publication.md`](./unattended-publication.md). Any agent may create a structured draft after reading this repository, but only the exact URL allowlist in root `approved-urls.md` may authorize unattended release. Run `npm run landing:workflow:describe -- --json` to discover the machine-readable contract and `npm run landing:allowlist:validate` before processing a manifest.
+The normal workflow begins with one exact affiliate URL and ends only at a verified production page:
 
-This is the canonical workflow authority for execution agents. It describes the existing batch contracts, repository renderer, scanners, and owner controls without changing their implementation. Discover the machine-readable form with `npm run landing:workflow:describe -- --json`.
+`URL -> research -> structured page -> automatic checks and repairs -> GitHub PR -> Vercel preview -> merge -> production -> live verification -> LIVE receipt`
 
-Responsibility boundary: the execution agent creates only constrained structured artifacts; the repository validates and renders them; repository checks evaluate them; the owner approves and publishes.
+Submitting the URL to `npm run landing:run -- --url <exact-https-affiliate-url>` authorizes that complete run. Calling the same command again resumes it. Manual review exists only when the operator explicitly asks for it; it is not a stage in the normal path.
 
-Artifact ownership and exact command metadata are defined by the repository registry and exposed by the description command. `AGENT_WRITABLE` files may be changed only within their existing schemas. `REPOSITORY_GENERATED`, `OWNER_CONTROLLED`, and `READ_ONLY_INPUT` artifacts must not be changed by an execution agent.
+The exact URL is recorded in root `approved-urls.md` and must be preserved byte-for-byte in every affiliate CTA. The URL authorizes release work but never replaces evidence, disclosure, compliance, quality, CI, preview, or production checks.
 
-## Stage: Design direction
+## Coordinator contract
 
-### Input
+The run coordinator stores a `LandingRunV1` record and returns exactly one next action. Its public state is one of:
 
-- `docs/design-references/landing-pages/`
-- `intents/<slug>.json`
+- `WORKING`: research, evidence, authoring, packaging, or verification is in progress.
+- `FIXING`: a failed check has been routed to a bounded repair.
+- `DEPLOYING`: GitHub or Vercel release work is in progress.
+- `LIVE`: the canonical production route passed every live check and the release receipt is recorded.
+- `NEEDS_HELP`: all allowed recoveries were attempted and one precise external action is required.
+- `STOPPED`: the URL was deliberately stopped by the operator.
 
-### Agent may modify
+Completed stages are fingerprinted and retained. A rerun never discards valid upstream work.
 
-- The `intent_brief` artifact category reported by workflow inspection.
+Oracle is optional for this agent-led path. When Oracle is unavailable or not configured, record `oracle_sync: pending` or `not_configured`; Oracle does not block GitHub, Vercel, or `LIVE`.
+## Automatic stage sequence
 
-### Agent must not modify
+### 1. Intake and research
 
-- Design-reference catalogue records or captures.
+- Validate the exact HTTPS affiliate URL and follow redirects without replacing the supplied CTA value.
+- Identify the product honestly and capture current public evidence.
+- Retry temporary source/network failures up to three times.
+- Stop only if the destination remains unusable or the product cannot be identified honestly.
 
-### Command
+**Handoff:** a fingerprinted product evidence pack and exact-URL record move directly to design direction.
 
-- `npm run landing:references:validate`
-- `npm run landing:references:select -- --category <slug> --buyer-decision <text>`
+### 2. Design direction and intent
 
-### Success result
+- Validate the stored reference catalogue.
+- Prefer three approved references with explicit hero/typography, sections/CTA, and motion/mobile roles.
+- If no exact category match exists, use the closest eligible references or approved house style and record the fallback.
+- Produce `DesignDirectionV1`, `PresentationRecipeV1`, and a buyer-specific intent.
 
-- Valid local references and a recorded design direction.
+**Handoff:** a validated intent and recipe move directly to drafting.
 
-### Failure result
+### 3. Draft and preview
 
-- `hold_for_design_direction` or a validation error.
+- Produce structured JSON only; approved repository code renders it.
+- Preserve disclosure and the exact affiliate URL.
+- Render the production-identical noindex preview.
 
-### Stop conditions
+**Handoff:** a fingerprinted page plus desktop/mobile preview evidence moves directly to quality checks.
 
-- References are missing, stale, invalid, unsuitable, or reuse-limited.
+### 4. Quality and repair
 
-### Next action
+- Run visual, uniqueness, compliance, conversion, static, and link checks in order.
+- A failure returns the exact field, reason, and repair action.
+- Run at most two content/design repair rounds.
+- Remove or soften unproved pricing, discount, guarantee, ranking, security, or urgency claims.
+- Use the approved simpler layout when optional imagery, motion, or styling fails.
 
-- Intent.
+Passing conversion output is `eligible_for_release`. A page cannot mark itself published; independent gate records and the final release receipt provide publication authority.
 
-## Stage: Intent
+**Handoff:** matching fingerprints and passing gates move directly to release.
 
-### Input
+### 5. GitHub and Vercel release
 
-- Product evidence pack and intent brief.
+- Create a branch and pull request.
+- Run focused landing checks, tests, type checking, linting, build, and Vercel preview.
+- Verify preview HTTP status, exact CTA, disclosure, responsive rendering, overflow, browser errors, and robots policy.
+- Merge automatically after required checks pass; the existing Vercel Git connection deploys `main`.
+- Verify the production commit, deployment, route, exact CTA, disclosure, robots policy, sitemap, desktop/mobile rendering, browser errors, and HTTP success.
+- Retry temporary GitHub/Vercel failures up to three times.
+- If a real production verification fails, restore the previous working deployment, repair the failed layer, and retry release at most twice. Never manufacture a failure for rollback evidence.
 
-### Agent may modify
+**Handoff:** only a passing canonical production route creates `LandingReleaseReceiptV1` and changes the run to `LIVE`.
 
-- `product_evidence_pack`, `intent_brief`, and `manifest` categories reported by inspection.
+## Legitimate `NEEDS_HELP`
 
-### Agent must not modify
+`NEEDS_HELP` is valid only after the run records every attempted recovery in plain English and one of these remains:
 
-- Owner records, quality receipts, or design-reference inputs.
+- GitHub or Vercel access is unavailable.
+- The affiliate destination is unusable after three checks.
+- The product cannot be identified honestly.
+- A useful compliant page cannot be produced after two repair rounds.
+- Build or deployment still fails after two distinct repairs.
+- A prior working production deployment cannot be restored after a failed release.
 
-### Command
+The report must say what was tried, what happened, the user impact, and the one exact action required.
 
-- `npm run landing:workflow:validate -- --batch-id <uuid>`
+## Commands
 
-### Success result
+```text
+npm run landing:run -- --url <exact-https-affiliate-url>
+npm run landing:workflow:describe -- --json
+npm run landing:allowlist:validate
+npm run landing:references:validate
+```
 
-- Intent gate is `pass`.
-
-### Failure result
-
-- Intent gate is `fail`, `pending`, `blocked`, or `not_run`.
-
-### Stop conditions
-
-- The intent gate is not `pass`.
-
-### Next action
-
-- Draft.
-
-## Stage: Draft
-
-### Input
-
-- Passing intent and design direction.
-
-### Agent may modify
-
-- `draft_artifact` and `manifest` categories reported by inspection.
-
-### Agent must not modify
-
-- Renderer code, CSS, or arbitrary frontend components.
-
-### Command
-
-- `npm run landing:workflow:validate -- --batch-id <uuid>`
-
-### Success result
-
-- Draft gate is `pass` and strict validation succeeds.
-
-### Failure result
-
-- Strict-loader or draft-gate error.
-
-### Stop conditions
-
-- The draft does not validate as the existing PageBlueprint contract.
-
-### Next action
-
-- Preview.
-
-## Stage: Preview
-
-### Input
-
-- Valid draft artifact and registered noindex preview.
-
-### Agent may modify
-
-- No visual QA or preview-registry artifact.
-
-### Agent must not modify
-
-- Preview registry, visual-review result, renderer, analytics behavior, or affiliate URLs.
-
-### Command
-
-- `npm run landing:workflow:visual -- --batch-id <uuid>`
-
-### Success result
-
-- Repository visual QA passes for the production renderer preview.
-
-### Failure result
-
-- Visual QA is missing, fails, or requests revision.
-
-### Stop conditions
-
-- Visual QA is not `pass`; do not begin downstream specialist gates.
-
-### Next action
-
-- Visual QA.
-
-## Stage: Visual QA
-
-### Input
-
-- A registered production-identical noindex preview for a valid draft.
-
-### Agent may modify
-
-- No visual-review artifact.
-
-### Agent must not modify
-
-- Visual-review results, screenshots, preview registry, renderer, or preview analytics settings.
-
-### Command
-
-- `npm run landing:workflow:visual -- --batch-id <uuid>`
-
-### Success result
-
-- Repository visual QA records a passing result.
-
-### Failure result
-
-- Visual QA is `NOT_RUN`, requests revision, or fails.
-
-### Stop conditions
-
-- Visual QA is not passing.
-
-### Next action
-
-- Uniqueness.
-
-## Specialist gate policy
-
-### Input
-
-- Passing visual QA and the page’s structured review artifacts.
-
-### Agent may modify
-
-- `specialist_review` and `manifest` categories reported by inspection.
-
-### Agent must not modify
-
-- Compliance approval, link approval, owner approval, or publication state.
-
-### Command
-
-- `npm run landing:workflow:quality -- --batch-id <uuid> --mode draft`
-
-### Success result
-
-- Uniqueness, compliance, and conversion gates are `pass`; quality receipt passes.
-
-### Failure result
-
-- Any gate or scanner is `fail`, `pending`, `blocked`, or `not_run`.
-
-### Stop conditions
-
-- Do not advance past the first non-passing gate.
-
-### Next action
-
-- Retro.
-
-## Stage: Uniqueness
-
-### Input
-
-- Passing visual QA and the uniqueness review artifact.
-
-### Agent may modify
-
-- The applicable `specialist_review` and `manifest` categories reported by inspection.
-
-### Agent must not modify
-
-- Quality receipts, owner decisions, or publication state.
-
-### Command
-
-- `npm run landing:workflow:validate -- --batch-id <uuid>`
-
-### Success result
-
-- Uniqueness gate is `pass`.
-
-### Failure result
-
-- Uniqueness gate is non-passing.
-
-### Stop conditions
-
-- Do not begin compliance until uniqueness passes.
-
-### Next action
-
-- Compliance.
-
-## Stage: Compliance
-
-### Input
-
-- Passing uniqueness gate and compliance review artifact.
-
-### Agent may modify
-
-- The applicable `specialist_review` and `manifest` categories reported by inspection.
-
-### Agent must not modify
-
-- Compliance approval, link approval, destination approval, owner approval, or publication state.
-
-### Command
-
-- `npm run landing:workflow:validate -- --batch-id <uuid>`
-
-### Success result
-
-- Compliance gate is `pass`.
-
-### Failure result
-
-- Compliance gate is non-passing.
-
-### Stop conditions
-
-- Do not begin conversion until compliance passes.
-
-### Next action
-
-- Conversion.
-
-## Stage: Conversion
-
-### Input
-
-- Passing compliance gate and conversion review artifact.
-
-### Agent may modify
-
-- The applicable `specialist_review` and `manifest` categories reported by inspection.
-
-### Agent must not modify
-
-- Owner approval or publication state.
-
-### Command
-
-- `npm run landing:workflow:validate -- --batch-id <uuid>`
-
-### Success result
-
-- Conversion gate is `pass`.
-
-### Failure result
-
-- Conversion gate is non-passing.
-
-### Stop conditions
-
-- Do not run owner handoff until conversion and quality pass.
-
-### Next action
-
-- Quality.
-
-## Stage: Quality
-
-### Input
-
-- A strictly valid batch with passing upstream gates.
-
-### Agent may modify
-
-- No quality receipt or scanner output.
-
-### Agent must not modify
-
-- Quality receipts, scanner pass results, or visual results.
-
-### Command
-
-- `npm run landing:workflow:quality -- --batch-id <uuid> --mode draft`
-
-### Success result
-
-- Existing batch-scoped scanner workflow writes a current passing receipt.
-
-### Failure result
-
-- Any scanner or Stage 2 gate fails.
-
-### Stop conditions
-
-- Do not proceed while quality is failed, stale, or absent.
-
-### Next action
-
-- Retro.
-
-## Stage: Retro
-
-### Input
-
-- Passing gates and quality receipt.
-
-### Agent may modify
-
-- `batch_retro` and `manifest` categories reported by inspection.
-
-### Agent must not modify
-
-- Owner approval, publication audits, public routes, or publication status.
-
-### Command
-
-- `npm run landing:workflow:inspect -- --batch-id <uuid> --format task`
-
-### Success result
-
-- A task-format owner handoff reports `READY_FOR_OWNER_REVIEW`.
-
-### Failure result
-
-- Retro or an earlier gate remains blocked.
-
-### Stop conditions
-
-- Owner review and publication cannot be performed by an execution agent.
-
-### Next action
-
-- Owner review.
-
-## Stage: Owner review
-
-### Input
-
-- Passing agent-executable gates and a task-format handoff.
-
-### Agent may modify
-
-- No owner-controlled record.
-
-### Agent must not modify
-
-- Owner approval, audit provenance, publication readiness, or public routes.
-
-### Command
-
-- `npm run landing:workflow:inspect -- --batch-id <uuid> --format task`
-
-### Success result
-
-- The owner receives a complete handoff; the repository reports `READY_FOR_OWNER_REVIEW`.
-
-### Failure result
-
-- An earlier gate or retrospective is blocked.
-
-### Stop conditions
-
-- Execution agents must not approve or publish.
-
-### Next action
-
-- Owner-controlled publication decision.
-
-## Stage: Publication
-
-### Input
-
-- Owner-reviewed handoff and durable owner-controlled approval records.
-
-### Agent may modify
-
-- No publication artifact or system state.
-
-### Agent must not modify
-
-- Owner approval, publication approvals, audits, routes, link state, or destination state.
-
-### Command
-
-- No execution-agent command exists for publication.
-
-### Success result
-
-- Owner-controlled systems complete audited publication.
-
-### Failure result
-
-- Owner readiness or publication gate is incomplete.
-
-### Stop conditions
-
-- An execution agent must stop before approval or publication.
-
-### Next action
-
-- None.
-
-## Checks and exit codes
-
-Use `landing:workflow:verify` for a read-only status report. It reports skipped checks as `NOT_RUN` and owner-only actions as `NOT_APPLICABLE`; it never treats their absence as a pass. Inspection returns exit code `0` for a successfully identified blocked batch and exit code `2` for usage or command errors. Validation and delegated quality/visual commands retain their existing nonzero failure behavior.
-
-Preview URLs are `/landing-page-previews/<slug>`. They use the production renderer with `noindex,nofollow`, suppress analytics, and preserve the affiliate destination exactly.
-
-## Legacy compatibility
-
-The existing `codex-batches`, `validate:codex-batch`, `package:codex-batch`, and preview-catalogue exports remain operational. New integrations should use `src/lib/landing-workflow/` and the `landing:workflow:*` commands. No serialized schema, batch ID, hash, generated batch path, or preview route changed in this phase.
+Preview routes use `/landing-page-previews/<slug>` with `noindex,nofollow`, suppressed analytics, and the exact affiliate destination. Public routes use `/landing-page-builders/<slug>` and are accepted only when the tracked release receipt and all referenced fingerprints match.

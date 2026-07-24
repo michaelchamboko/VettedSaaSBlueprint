@@ -64,14 +64,14 @@ test("specialist reviews cannot pass with blocked readiness, failures, rewrites,
   const conversion = {
     schema_version: 1,
     status: "pass" as const,
-    publish_readiness: "eligible_for_owner_review" as const,
+    publish_readiness: "eligible_for_release" as const,
     reason_codes: [],
     hard_gate_failures: [],
     required_rewrites: [],
     recommended_action: "pass",
   };
   assert.equal(codexConversionReviewSchema.safeParse(conversion).success, true);
-  assert.equal(codexConversionReviewSchema.safeParse({ ...conversion, recommended_action: "owner_review" }).success, true);
+  assert.equal(codexConversionReviewSchema.safeParse({ ...conversion, recommended_action: "owner_review" }).success, false);
   assert.equal(codexConversionReviewSchema.safeParse({ ...conversion, publish_readiness: "blocked" }).success, false);
   assert.equal(codexConversionReviewSchema.safeParse({ ...conversion, required_rewrites: ["cta"] }).success, false);
   assert.equal(codexConversionReviewSchema.safeParse({ ...conversion, recommended_action: "reject" }).success, false);
@@ -103,7 +103,7 @@ test("non-passing specialist reviews cannot claim eligibility for the next gate"
   const conversion = {
     schema_version: 1,
     status: "blocked" as const,
-    publish_readiness: "eligible_for_owner_review" as const,
+    publish_readiness: "eligible_for_release" as const,
     reason_codes: ["compliance_blocked"],
     hard_gate_failures: ["compliance_blocked"],
     required_rewrites: [],
@@ -129,7 +129,7 @@ test("V2 specialist reports require one immutable design trace while V1 forms re
   const reviews = [
     [codexUniquenessReviewV2Schema, "codexUniquenessReviewV2", { status: "pass", publish_readiness: "eligible_for_next_gate", reason_codes: [], hard_gate_failures: [], required_changes: [], recommended_action: "pass" }],
     [codexComplianceReviewV2Schema, "codexComplianceReviewV2", { status: "pass", publish_readiness: "eligible_for_conversion_review", reason_codes: [], hard_gate_failures: [], required_changes: [], recommended_action: "pass" }],
-    [codexConversionReviewV2Schema, "codexConversionReviewV2", { status: "pass", publish_readiness: "eligible_for_owner_review", reason_codes: [], hard_gate_failures: [], required_rewrites: [], recommended_action: "pass" }],
+    [codexConversionReviewV2Schema, "codexConversionReviewV2", { status: "pass", publish_readiness: "eligible_for_release", reason_codes: [], hard_gate_failures: [], required_rewrites: [], recommended_action: "pass" }],
   ] as const;
 
   for (const [schema, schemaVersion, review] of reviews) {

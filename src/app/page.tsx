@@ -46,7 +46,7 @@ export default function Home() {
           <div className="section-heading" data-home-motion="reveal">
             <p className="eyebrow">The approved file</p>
             <h2 id="reviews-title">Reviews ready for scrutiny.</h2>
-            <p>Only reviews with completed evidence, compliance, and owner approval appear in this catalogue.</p>
+            <p>Only reviews with completed evidence, passing quality gates, and a verified release receipt appear in this catalogue.</p>
           </div>
           {reviews.length > 0 ? (
             <div className="review-list">{reviews.map((review, index) => <PublicReviewCard key={review.slug} review={review} index={index} />)}</div>

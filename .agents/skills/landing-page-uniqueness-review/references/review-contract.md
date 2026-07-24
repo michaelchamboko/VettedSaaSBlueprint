@@ -125,7 +125,7 @@ Classify before pass/fail:
 | `unsupported_claim_variant` | Page exists mainly to make a risky claim without evidence. | `return_to_intent_brief` or `reject` |
 | `doorway_scaled_variant` | Similar pages targeting related queries and funneling to the same destination. | `reject` or `noindex_draft` |
 
-## Manual Review Tests
+## Independent Review Tests
 
 - Search-result scent test: from title, meta, H1, and subheadline alone, identify the exact buyer task and why this page is different.
 - 10-second scan test: from headings, CTA, benefit titles, limitation titles, and FAQ questions, summarize the distinct decision.

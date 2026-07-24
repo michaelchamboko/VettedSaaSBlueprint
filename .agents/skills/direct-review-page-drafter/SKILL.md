@@ -45,7 +45,7 @@ Read `references/forward-tests.md` when validating, forward-testing, or improvin
 10. Run the final preflight. Emit either page JSON or blocked output. Do not emit partial page JSON when blocked.
 11. Render the production-identical animated noindex preview with fixed `gsap_editorial` motion and require `VisualDesignReviewV1` before handoff; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
 
-Before downstream handoff, missing, stale, invalid, unsuitable, reuse-limited, unsupported-token, recipe/fingerprint-mismatched, or non-passing visual artifacts require `hold_for_design_direction`; do not improvise. Oracle remains required only for audited final approval/publication; it does not block local Stage 0, noindex drafting, or visual preview.
+Before downstream handoff, missing, stale, invalid, unsuitable, reuse-limited, unsupported-token, recipe/fingerprint-mismatched, or non-passing visual artifacts require `hold_for_design_direction`; do not improvise. Oracle synchronization is optional for the agent-led release: record `pending` or `not_configured`, and never block local Stage 0, GitHub/Vercel publication, or live verification on Oracle.
 
 Default output mode is page JSON or blocked output. If the user explicitly asks for a diagnostic verdict instead of JSON, return a concise decision report using the same gates, reason codes, and required fixes.
 
@@ -61,7 +61,7 @@ Block drafting unless all conditions are true:
 - Sibling and published-artifact context is available for duplicate checks.
 - `DesignDirectionV1` and `PresentationRecipeV1` are valid, and selected references satisfy the repository reuse contract.
 
-Block `merge_into_existing`, `hold_for_evidence`, and `reject`. Return blocked output instead of forcing a page JSON draft. Pending owner approval is allowed for a draft, but generated JSON must not self-attest owner approval, compliance pass, publication state, active-link state, or asset approval.
+Block `merge_into_existing`, `hold_for_evidence`, and `reject`. Return blocked output instead of forcing a page JSON draft. A passing draft advances to independent review; generated JSON must not self-attest approval, compliance pass, publication state, active-link state, or asset approval.
 
 Handle `noindex_draft` narrowly:
 
@@ -145,7 +145,7 @@ When blocked, return this envelope only:
 }
 ```
 
-Allowed `next_action` and `recommended_action` values: `return_to_intent_brief`, `hold_for_design_direction`, `resolve_evidence`, `resolve_disclosure`, `resolve_destination`, `resolve_affiliate_link`, `resolve_compliance`, `merge_into_existing`, `return_to_uniqueness_review`, `owner_review`.
+Allowed `next_action` and `recommended_action` values: `return_to_intent_brief`, `hold_for_design_direction`, `resolve_evidence`, `resolve_disclosure`, `resolve_destination`, `resolve_affiliate_link`, `resolve_compliance`, `merge_into_existing`, `return_to_uniqueness_review`.
 
 Use these canonical `reason_codes` where applicable:
 
@@ -165,7 +165,7 @@ Use these canonical `reason_codes` where applicable:
 | `sibling_duplicate_batch` | Sibling artifacts duplicate visible fields or score signatures. |
 | `visible_field_collision` | Title, H1, CTA, benefit, limitation, FAQ, or hero value collides with a sibling. |
 | `internal_process_as_public_proof` | Public copy uses owner/compliance/publishing workflow as proof for a normal product page. |
-| `public_copy_uses_internal_process_proof` | Legacy alias for `internal_process_as_public_proof`; do not introduce it in new manual reviews. |
+| `public_copy_uses_internal_process_proof` | Legacy alias for `internal_process_as_public_proof`; do not introduce it in new independent reviews. |
 | `unsupported_sensitive_claim` | Pricing, discount, guarantee, security, privacy, integration, ranking, competitor, testimonial, urgency, scarcity, or superiority claims lack approved evidence. |
 | `review_basis_overclaim` | Copy implies first-hand testing, independence, verification, trust, recommendation, or best status beyond the review basis. |
 | `cta_destination_mismatch` | CTA language does not match the destination verification action. |

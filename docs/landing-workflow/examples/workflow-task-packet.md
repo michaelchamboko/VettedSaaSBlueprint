@@ -6,7 +6,7 @@ Review the synthetic synthetic-studio-workflow-checklist batch and decide whethe
 
 ## Current state
 
-READY_FOR_OWNER_REVIEW
+ELIGIBLE_FOR_RELEASE
 
 ## Read-only inputs
 
@@ -25,7 +25,7 @@ READY_FOR_OWNER_REVIEW
 
 ## Files or states the agent must not modify
 
-- Do not approve owner review.
+- Do not self-attest release authorization.
 - Do not publish or register a public page.
 - Do not edit quality receipts, visual QA results, preview registry, or owner-controlled records.
 
@@ -48,4 +48,4 @@ READY_FOR_OWNER_REVIEW
 ## Handoff requirements
 
 - Produce this inspection in `--format task` after all agent-executable gates pass.
-- Owner approval and publication are outside the agent's authority.
+- Continue through independent release gates, GitHub, Vercel, and live verification.

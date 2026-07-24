@@ -7,7 +7,7 @@ description: Use when planning, rewriting, batching, or screening affiliate dire
 
 ## Overview
 
-Prove that a direct-review affiliate page deserves to exist before any page JSON or final copy is drafted. The output is a structured intent-viability contract for downstream drafting, uniqueness, compliance, conversion, and owner-approval gates.
+Prove that a direct-review affiliate page deserves to exist before any page JSON or final copy is drafted. The output is a structured intent-viability contract for downstream drafting, uniqueness, compliance, conversion, and independent release gates.
 
 `status: pass` means intent is viable only. It does not mean the page is publish-ready.
 
@@ -48,7 +48,7 @@ Before evidence or intent analysis, run `npm run landing:references:validate` ag
 - Record a `DesignDirectionV1` with reference IDs, entry digests, roles, influenced axes, adopted abstract principles, non-copy boundaries, selection rationale, one-line design read, and structured recipe direction. Convert it to a validated `PresentationRecipeV1` using registered tokens only; never generate page-specific JSX/CSS/JavaScript or silently fall back to Editorial V2, `editorial_v2`, or legacy.
 - Record that the eligible draft must render a production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1` before downstream handoff. A visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
 
-If the catalogue, hashes, selection, reuse history, direction, recipe/fingerprint, or visual report is missing, stale, invalid, unsuitable, or non-passing, return `status: fail` with `recommended_action: hold_for_design_direction`. Do not invent a design direction. Oracle remains required only for audited final approval/publication; it does not block local Stage 0, noindex drafting, or visual preview.
+If the catalogue, hashes, selection, reuse history, direction, recipe/fingerprint, or visual report is missing, stale, invalid, unsuitable, or non-passing, return `status: fail` with `recommended_action: hold_for_design_direction`. Do not invent a design direction. Oracle synchronization is optional for the agent-led release: record `pending` or `not_configured`, and never block local Stage 0, GitHub/Vercel publication, or live verification on Oracle.
 
 ## Workflow
 
@@ -153,7 +153,7 @@ Return structured JSON only with these top-level fields:
 | `record_resolution` | List affiliate link, source, evidence, destination, disclosure/material-connection, approval, and compliance records checked. Mark records unresolved when only generated JSON self-attests them. |
 | `uniqueness_field_plan` | Provide intent stems, not final copy, for title, H1, CTA, first benefit, first limitation, and first FAQ. |
 | `duplicate_fingerprint` | Summarize normalized collisions across title, H1, CTA, proof, benefit, limitation, FAQ, objection, and score patterns. |
-| `downstream_blocks` | Name what drafting, compliance, uniqueness, conversion, or owner-approval gates still need before publication. |
+| `downstream_blocks` | Name what drafting, compliance, uniqueness, conversion, or independent release gates still need before publication. |
 
 Use `hard_fail_flags` as the canonical intent-stage reason-code array when the brief fails. Mirror those codes in `reason_codes` so `landing-page-batch-retro` can preserve upstream failures without inventing new vocabulary.
 

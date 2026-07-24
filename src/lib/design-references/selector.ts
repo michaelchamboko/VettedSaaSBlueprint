@@ -9,6 +9,7 @@ import {
   type ReferenceSelectionHistoryV1 as SelectionHistory,
 } from "./contracts";
 import { differingPresentationAxes, sha256, type PresentationAxis } from "./fingerprint";
+import { normalizeLandingCategories, normalizeLandingCategory } from "../landing-workflow/category-taxonomy";
 
 type SelectionRequest = {
   catalogue: DesignReferenceCatalogueV1;
@@ -188,35 +189,36 @@ export function validateSelectionHistory(input: HistoryValidationInput): string[
 export function selectDesignReferences(request: SelectionRequest):
   | { status: "selected"; design_direction: ReturnType<typeof createDirection>; recipe: PresentationRecipeV1 }
   | { status: "hold_for_design_direction"; reasons: string[] } {
-  const adjacentTags = request.adjacent_category_tags ?? [];
+  const productCategory = normalizeLandingCategory(request.product_category);
+  const adjacentCategoryTags = normalizeLandingCategories(request.adjacent_category_tags ?? []);
   const selectionTime = request.now ?? new Date();
 
   const eligible = request.catalogue.references
     .filter((reference) => reference.usage_status === "active" && Boolean(reference.captures.desktop && reference.captures.mobile))
     .filter((reference) => isNotStale(reference, selectionTime));
   if (eligible.length < 2) {
-    const staleMatch = !eligible.some(() => true) && request.catalogue.references.some(
-      (r) => r.usage_status === "active" && isStale(r.captured_at, selectionTime) && categoryScore(r, request.product_category, adjacentTags) > 0
-    );
+      const staleMatch = !eligible.some(() => true) && request.catalogue.references.some(
+        (r) => r.usage_status === "active" && isStale(r.captured_at, selectionTime) && categoryScore(r, productCategory, adjacentCategoryTags) > 0
+      );
     if (staleMatch) {
       return { status: "hold_for_design_direction", reasons: ["Category coverage exists only in stale references (>365 days old)."] };
     }
     return { status: "hold_for_design_direction", reasons: ["Fewer than two active non-stale references have complete captures."] };
   }
-  if (!eligible.some((reference) => categoryScore(reference, request.product_category, adjacentTags) > 0)) {
+  if (!eligible.some((reference) => categoryScore(reference, productCategory, adjacentCategoryTags) > 0)) {
     return { status: "hold_for_design_direction", reasons: ["No active non-stale reference matches the product category or adjacent tags."] };
   }
   const targetCount = Math.min(3, eligible.length);
   const recentDrafts = request.history?.previous_drafts.slice(-10) ?? [];
   const ordered = [...eligible].sort((left, right) => {
-    const categoryDifference = categoryScore(right, request.product_category, adjacentTags) - categoryScore(left, request.product_category, adjacentTags);
+    const categoryDifference = categoryScore(right, productCategory, adjacentCategoryTags) - categoryScore(left, productCategory, adjacentCategoryTags);
     if (categoryDifference) return categoryDifference;
     const noveltyDifference = recentDrafts.filter((draft) => draft.reference_ids.includes(left.id)).length - recentDrafts.filter((draft) => draft.reference_ids.includes(right.id)).length;
     if (noveltyDifference) return noveltyDifference;
     return left.id.localeCompare(right.id);
   });
   const combinations = candidateCombinations(ordered, targetCount)
-    .filter((combination) => categoryScore(combination[0], request.product_category, adjacentTags) > 0)
+    .filter((combination) => categoryScore(combination[0], productCategory, adjacentCategoryTags) > 0)
     .filter((combination) => {
       const axes = collectiveAxes(combination);
       if (axes.size < 7) return false;
@@ -237,7 +239,7 @@ export function selectDesignReferences(request: SelectionRequest):
     try { recipe = createRecipe(selected, request.buyer_decision); } catch { continue; }
     const historyErrors = request.history ? validateSelectionHistory({ history: request.history, reference_ids: recipe.reference_ids, primary_reference_id: selected[0].id, recipe }) : [];
     if (historyErrors.length) { if (!firstHistoryErrors.length) firstHistoryErrors = historyErrors; continue; }
-    const design_direction = createDirection(selected, request.product_category, adjacentTags, request.buyer_decision, recipe);
+    const design_direction = createDirection(selected, productCategory, adjacentCategoryTags, request.buyer_decision, recipe);
     return { status: "selected", design_direction, recipe };
   }
   return { status: "hold_for_design_direction", reasons: firstHistoryErrors.length ? firstHistoryErrors : ["Selected references cannot produce a complete unique presentation recipe."] };

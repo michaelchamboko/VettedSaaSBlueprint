@@ -1,9 +1,10 @@
 import previewRegistry from "@/generated/landing-page-batches/registry.json";
+import { landingReleasePreviews } from "@/generated/landing-release-previews";
 import type { LoadedCodexLandingBatch } from "@/lib/codex-batches/loader";
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 export type CodexBatchBlueprintPreview = {
-  kind: "blueprint";
+  kind: "blueprint" | "release_candidate";
   batch_id: string;
   page_blueprint_id: string;
   slug: string;
@@ -76,9 +77,19 @@ export function buildCodexBatchPreviewRegistryCatalogue(registry: CodexBatchPrev
 }
 
 const defaultCatalogue = buildCodexBatchPreviewRegistryCatalogue(previewRegistry);
+for (const preview of landingReleasePreviews) {
+  if (defaultCatalogue.has(preview.slug)) {
+    throw new Error(`Duplicate preview slug '${preview.slug}' is ambiguous across preview sources.`);
+  }
+  defaultCatalogue.set(preview.slug, preview);
+}
 
 export function listCodexBatchPreviewRegistryBatchIds() {
-  return [...new Set([...defaultCatalogue.values()].map((preview) => preview.batch_id))].sort();
+  return [...new Set(
+    [...defaultCatalogue.values()]
+      .filter((preview) => preview.kind === "blueprint")
+      .map((preview) => preview.batch_id),
+  )].sort();
 }
 
 export async function listCodexBatchPreviewSlugs() {

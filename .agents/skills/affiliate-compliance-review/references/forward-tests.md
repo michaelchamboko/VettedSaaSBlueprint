@@ -119,4 +119,4 @@ Use $affiliate-compliance-review at .agents/skills/affiliate-compliance-review t
 - `--target` reports only target-specific issues while preserving full scanned count.
 - Reason codes remain stable across 10 reruns.
 - Scanner does not hard-fail neutral official-site pricing caveats unless the page makes a specific price, discount, trial, refund, guarantee, ranking, or urgency claim.
-- Human review still blocks unknown external records even if the scanner finds no copy-level issues.
+- Unknown external records still block the gate even if the scanner finds no copy-level issues; return the exact gap to the evidence-repair route.

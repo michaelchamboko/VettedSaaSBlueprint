@@ -77,7 +77,7 @@ Future next-50 drafts must set `metadata.design_profile: "editorial_v2"`. The re
 - Benefits render as semantic decision cards and FAQs as accessible `<details>` rows. Blind text pills are not a valid component.
 - The short disclosure remains visible before/near the first CTA. The full disclosure and secondary/legal links render in the footer. Unknown disclosure state remains a hard block.
 
-Run `npm run scan:landing:editorial-v2 -- --json` before uniqueness, compliance, conversion, or owner review. Artifacts with the default `legacy` profile are outside this scan and remain visually unchanged.
+Run `npm run scan:landing:editorial-v2 -- --json` before uniqueness, compliance, conversion, or release review. Artifacts with the default `legacy` profile are outside this scan and remain visually unchanged.
 
 ## Evidence Rules
 

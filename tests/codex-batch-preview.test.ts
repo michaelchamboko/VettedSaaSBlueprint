@@ -82,8 +82,8 @@ test("validates registry UUIDs and rejects duplicate preview slugs", () => {
   );
 });
 
-test("zero-batch registry is valid and filesystem-only discovery accepts a custom missing root", async () => {
-  assert.deepEqual(await listCodexBatchPreviewSlugs(), []);
+test("agent release candidate is available for noindex preview without pretending to be a committed batch", async () => {
+  assert.deepEqual(await listCodexBatchPreviewSlugs(), ["elevenlabs-ai-voice-generator"]);
   assert.deepEqual(listCodexBatchPreviewRegistryBatchIds(), []);
   assert.deepEqual(
     await loadCodexBatchPreviewCatalogue({ batchRoot: path.join(process.cwd(), ".stage2", "missing-codex-batches") }),

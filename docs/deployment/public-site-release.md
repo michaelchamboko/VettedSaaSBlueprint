@@ -31,17 +31,17 @@ Application analytics remains disabled unless `ANALYTICS_ENABLED=true` and a
 valid `ANALYTICS_RETENTION_VERIFIED_AT` is configured. Keep analytics disabled
 for the initial release.
 
-## Evidence required before preview approval
+## Evidence required before preview release
 
 Record the following against the reviewed Git SHA:
 
-- owner approval of the rendered brand, email, home address, sole-proprietor
-  wording, email-only contact, no-payment language, and policy effective date
-- legal approval of the privacy notice, terms, affiliate disclosure, editorial
-  policy, full PAIA manual, accessibility statement, and Information Officer evidence
+- the exact allowlisted affiliate URL and its URL fingerprint
+- the independently checked brand, identity, legal, disclosure, and Information
+  Officer configuration used by the build
 - passing intent, uniqueness, compliance, conversion, route, SEO, accessibility,
   responsive, asset, link, and publication-readiness scanner reports
-- audited owner publication evidence for every review exposed by the catalogue
+- a fingerprint-bound `LandingReleaseReceiptV1` for every agent-led review
+  exposed by the catalogue, or the existing audited Oracle publication record
 
 Zero eligible review artifacts is a valid release state. In that state the
 homepage must show the honest empty state, dynamic review routes must not be
@@ -49,25 +49,30 @@ generated, and the sitemap must contain no review URL.
 
 ## Preview procedure
 
-1. Open a draft pull request from the release branch and require all GitHub checks.
-2. Confirm the preview was built from the reviewed Git SHA and reached `READY`.
-3. Record the preview URL and its Vercel deployment/build URL in the release record.
-4. Verify at 360, 768, 1024, and 1440 CSS pixels: navigation, catalogue or empty
+1. The URL-to-live coordinator opens a ready pull request from the release branch.
+2. Require all GitHub checks and confirm the Vercel preview was built from the
+   reviewed Git SHA and reached `READY`.
+3. Record the preview URL and Vercel deployment identity in the release receipt.
+4. Automatically verify at 360, 768, 1024, and 1440 CSS pixels: navigation, catalogue or empty
    state, legal pages, keyboard operation, focus visibility, 200% zoom, reduced
    motion, disclosure proximity, review return navigation, and horizontal overflow.
 5. Confirm no public page links to the owner console and `/admin` remains protected.
+6. If a check fails, repair the named page or release layer and rerun the same
+   coordinator. A preview check is not a routine human handoff.
 
 ## Production procedure
 
-Build the reviewed branch head using Production-scoped Vercel values. Do not
-deploy the dirty local working tree. Confirm that the production-target build:
+After the required checks pass, merge the reviewed pull request automatically
+and let the existing Vercel Git connection deploy `main`. Never deploy a dirty
+local working tree. Confirm that the production deployment:
 
 - reports the same Git SHA as the approved preview
 - passes `npm run validate:public-site` before `next build`
-- reaches `READY` before the canonical alias is assigned
+- reaches `READY` and serves the canonical production alias
 
-Record the production build URL, deployment URL, Git SHA, approvals, and scanner
-evidence. Then assign `https://vetted-saa-s-blueprint.vercel.app` to that deployment.
+Record the production URL, deployment identity, Git SHA, release receipt, and
+scanner evidence. Oracle synchronization may be `pending` or `not_configured`;
+that state does not block a fingerprint-bound agent release.
 
 ## Production smoke checks
 
@@ -91,8 +96,8 @@ application analytics request while analytics is disabled and when GPC or DNT is
 
 ## Rollback
 
-If any production smoke, legal identity, admin isolation, affiliate routing, or
-approved-only indexing check fails, immediately promote the previously `READY`
+Only after a real production smoke, legal identity, admin isolation, affiliate
+routing, or authorized-only indexing failure, restore the previously working
 production deployment. Leave analytics disabled. Record the failed deployment
-URL and failing check, fix the release branch, and repeat preview approval before
-another production promotion.
+and exact check, repair the failed layer, rerun preview verification, and retry
+production at most twice. Do not manufacture a failure merely to demonstrate rollback.

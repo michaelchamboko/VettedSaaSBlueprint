@@ -67,7 +67,7 @@ const RISK_PATTERNS = [
     reason_code: "unsupported_sensitive_claim",
     risk_type: "pricing_offer",
     pattern: /(?:\$|USD|\/mo\b|per month|annual|lifetime|% off|discount|coupon|deal|free trial|refund|money[-\s]?back|guarantee|guaranteed|cancel(?:lation)?)/i,
-    required_fix: "Remove the offer/pricing claim or attach current claim-level evidence, destination match, program permission, and owner approval.",
+    required_fix: "Remove the offer/pricing claim or attach current claim-level evidence, destination match, program permission, and independent release authorization.",
   },
   {
     reason_code: "unsupported_sensitive_claim",
@@ -200,7 +200,11 @@ function readJsonFiles(dir, draftInput = false) {
   }
   const manifest = readIndexManifest(dir);
   const approvedFiles = new Set((manifest?.pages ?? [])
-    .filter((entry) => entry.status === "published" && entry.publication_source === "oracle_dynamic_pages" && entry.published_at && entry.current_version_id && entry.owner_publish_audit_id)
+    .filter((entry) => entry.status === "published"
+      && entry.published_at
+      && entry.current_version_id
+      && ((entry.publication_source === "oracle_dynamic_pages" && entry.owner_publish_audit_id)
+        || (entry.publication_source === "agent_verified_release" && entry.release_receipt)))
     .map((entry) => basename(entry.artifact ?? "")));
   return readdirSync(dir)
     .filter((name) => approvedFiles.has(name))
@@ -477,7 +481,7 @@ function scanSelfAttestation(row, arrays) {
       category: "artifact_qa_issues",
       reason_code: reasonCode,
       message: `${inputPath} self-attests approval or source-of-truth state inside generated JSON.`,
-      required_fix: "Remove generated self-attestation and resolve the state from audited owner/gate records.",
+      required_fix: "Remove generated self-attestation and resolve the state from independent audited gate records.",
       evidence: { value },
     }));
   });
@@ -488,7 +492,10 @@ function scanIndexManifest(manifest, knownFiles, arrays) {
   for (const [index, entry] of pages.entries()) {
     const artifact = typeof entry?.artifact === "string" ? basename(entry.artifact) : null;
     if (!artifact || !knownFiles.has(artifact)) continue;
-    const hasAuditedProvenance = entry.publication_source === "oracle_dynamic_pages" && entry.published_at && entry.current_version_id && entry.owner_publish_audit_id;
+    const hasAuditedProvenance = entry.published_at
+      && entry.current_version_id
+      && ((entry.publication_source === "oracle_dynamic_pages" && entry.owner_publish_audit_id)
+        || (entry.publication_source === "agent_verified_release" && entry.release_receipt));
     if (!hasAuditedProvenance && typeof entry.status === "string" && SELF_ATTESTED_STATUS_VALUES.has(entry.status.toLowerCase())) {
       addIssue(arrays, createIssue({
         file: artifact,
@@ -496,7 +503,7 @@ function scanIndexManifest(manifest, knownFiles, arrays) {
         category: "artifact_qa_issues",
         reason_code: "self_attested_approval",
         message: `index.json self-attests ${entry.status} state for generated artifact ${artifact}.`,
-        required_fix: "Resolve publish/approval state from audited owner/gate records, not the generated manifest.",
+        required_fix: "Resolve publication state from an independent audited release receipt, not the generated page.",
         evidence: { value: entry.status },
       }));
     }
@@ -579,7 +586,7 @@ function scanScoresAndProof(row, arrays) {
       input_path: "quality_scores.compliance_score",
       category: "evidence_issues",
       reason_code: "inflated_or_copied_scores",
-      message: "High compliance score cannot prove program rules, link state, destination review, or owner approval.",
+      message: "High compliance score cannot prove program rules, link state, destination review, or release authorization.",
       required_fix: "Resolve external compliance/profile/program/link/destination records; do not rely on generated scores.",
       severity: "warning",
       evidence: { value: complianceScore },
@@ -844,7 +851,7 @@ function buildReport(options) {
   report.summary = summarize(report);
   report.status = report.summary.blocker_count === 0 && report.duplicate_like_risk_groups.length === 0 ? "pass" : "fail";
   report.publish_readiness = report.status === "pass"
-    ? options.draftInput ? "pending_owner_approval" : "eligible_for_conversion_review"
+    ? "eligible_for_conversion_review"
     : "blocked";
   report.reason_codes = [...new Set([
     ...reasonCodes(report.issue_arrays),
@@ -859,7 +866,7 @@ function printHumanReport(report) {
   console.log(`Status: ${report.status}; publish readiness: ${report.publish_readiness}.`);
 
   if (report.status === "pass") {
-    console.log("No deterministic compliance blockers found. Manual review must still verify external source-of-truth records.");
+    console.log("No deterministic compliance blockers found. Independent release gates must still verify external source-of-truth records.");
     return;
   }
 

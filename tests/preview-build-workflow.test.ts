@@ -7,7 +7,7 @@ const workflowPath = path.join(process.cwd(), ".github", "workflows", "preview-b
 
 test("preview CI keeps five parallel jobs and scans each committed UUID Codex batch in draft mode", async () => {
   const workflow = await readFile(workflowPath, "utf8");
-  const jobs = [...workflow.matchAll(/^  ([a-z][a-z-]+):\n(?=    name:)/gm)].map((match) => match[1]);
+  const jobs = [...workflow.matchAll(/^  ([a-z][a-z-]+):\r?\n(?=    name:)/gm)].map((match) => match[1]);
   assert.deepEqual(jobs, ["typecheck", "lint", "test", "build", "landing-workflow"]);
 
   const landingJob = workflow.slice(workflow.indexOf("  landing-workflow:"));
@@ -18,6 +18,8 @@ test("preview CI keeps five parallel jobs and scans each committed UUID Codex ba
     assert.ok(needsList.includes(required), `landing-workflow needs must include "${required}".`);
   }
   assert.match(landingJob, /landing:quality:production -- --ci-parallel-core --report-dir \.stage2\/landing-quality\/production/);
+  assert.match(landingJob, /git ls-tree -r --name-only HEAD -- src\/generated\/landing-pages/);
+  assert.match(landingJob, /npm run landing:quality:candidate -- --artifact "\$candidate_file"/);
   assert.match(landingJob, /git ls-tree -r --name-only HEAD -- src\/generated\/landing-page-batches/);
   assert.match(landingJob, /src\/generated\/landing-page-batches\/\(\[0-9A-Fa-f\]\{8\}/);
   assert.match(landingJob, /for batch_id in "\$\{batch_ids\[@\]\}"; do/);

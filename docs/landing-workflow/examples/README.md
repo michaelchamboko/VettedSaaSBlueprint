@@ -12,4 +12,4 @@ Validated against the existing repository schemas by `tests/landing-workflow-exa
 | `presentation-recipe.json` | Synthetic presentation recipe. |
 | `page-blueprint.json` | Synthetic PageBlueprint draft. |
 | `validation-failure.json` | Synthetic structured validation-failure result. |
-| `agent-handoff.md` | Completed agent handoff that stops before owner approval. |
+| `agent-handoff.md` | Completed quality handoff that continues to automatic release. |

@@ -1,7 +1,7 @@
 # Agent Handoff — Synthetic Studio
 
 Agent work complete.
-Owner review required.
+Eligible for automatic release.
 No approval or publication action performed.
 
 ## Summary
@@ -10,7 +10,7 @@ The execution agent produced the structured artifacts for a synthetic batch unde
 
 ## Stop point
 
-The agent stopped at the `owner_review` stage. The repository inspection reports `READY_FOR_OWNER_REVIEW`. The owner controls approval, publication, and the public route. The execution agent did not:
+The quality sequence reached `eligible_for_release`. The coordinator continues through the independent release receipt, GitHub, Vercel, and live verification. Generated page JSON did not:
 
 - create or modify any owner-controlled artifact,
 - write quality receipts, scanner results, or visual-review approvals,

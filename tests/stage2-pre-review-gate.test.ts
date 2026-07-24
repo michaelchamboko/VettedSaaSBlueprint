@@ -237,7 +237,7 @@ test("CI parallel-core mode delegates all four core checks without spawning npm 
   }
 });
 
-test("Stage 2 gate rejects complete production reports when the catalogue lacks Oracle provenance", async () => {
+test("Stage 2 gate accepts complete production reports without requiring Oracle provenance", async () => {
   const reportDir = await mkdtemp(path.join(os.tmpdir(), "stage2-reports-"));
   try {
     await writePassingReports(reportDir);
@@ -245,10 +245,8 @@ test("Stage 2 gate rejects complete production reports when the catalogue lacks 
     await writeQualitySummary(reportDir, "production");
     const result = runGate(reportDir, ["--quality-mode", "production", "--quality-summary-file", "landing-quality-summary.json"]);
 
-    assert.notEqual(result.status, 0);
-    assert.match(result.stdout, /invalid Oracle provenance/i);
-    assert.match(result.stdout, /codex-image-workflow-review/i);
-    assert.match(result.stdout, /browse-ai-review/i);
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.doesNotMatch(result.stdout, /Oracle provenance/i);
   } finally {
     await rm(reportDir, { recursive: true, force: true });
   }
@@ -274,7 +272,7 @@ test("Stage 2 gate rejects scanner reports with inconsistent summaries", async (
   }
 });
 
-test("production mode fails closed before a pending owner-approval report can mask invalid provenance", async () => {
+test("production mode rejects the legacy pending owner-approval state", async () => {
   const reportDir = await mkdtemp(path.join(os.tmpdir(), "stage2-reports-"));
   try {
     await writePassingReports(reportDir);
@@ -286,13 +284,13 @@ test("production mode fails closed before a pending owner-approval report can ma
     const result = runGate(reportDir, ["--quality-mode", "production", "--quality-summary-file", "landing-quality-summary.json"]);
 
     assert.notEqual(result.status, 0);
-    assert.match(result.stdout, /invalid Oracle provenance/i);
+    assert.match(result.stdout, /not an advancing URL-to-live state/i);
   } finally {
     await rm(reportDir, { recursive: true, force: true });
   }
 });
 
-test("draft mode permits pending owner approval without treating it as generated approval", async () => {
+test("draft mode rejects the legacy pending owner-approval handoff", async () => {
   const reportDir = await mkdtemp(path.join(os.tmpdir(), "stage2-reports-"));
   try {
     const scope = draftReportScope(reportDir);
@@ -304,7 +302,8 @@ test("draft mode permits pending owner approval without treating it as generated
 
     const result = runGate(reportDir, draftGateArgs(scope));
 
-    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stdout, /not an advancing URL-to-live state/i);
   } finally {
     await rm(reportDir, { recursive: true, force: true });
   }

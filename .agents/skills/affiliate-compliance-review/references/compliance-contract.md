@@ -76,7 +76,7 @@ Allowed values:
 - `publish_readiness`: `blocked`, `eligible_for_conversion_review`
 - `recommended_action`: `pass`, `revise_copy`, `resolve_external_records`, `return_to_drafter`, `reject`, `static_renderer_fix_required`
 
-`publish_readiness` may be `eligible_for_conversion_review` only when every pre-owner hard gate passes, the scanner is pass or report-only with no blockers, and external source-of-truth records prove disclosure, link, program, evidence, and destination states. Missing final owner approval blocks final publication readiness, first publication, high-risk changes, and asset approval, but it does not by itself block pre-owner conversion review unless generated JSON self-attests approval or publication. Do not use compliance output to claim final owner-review eligibility; `conversion-copy-review` owns `eligible_for_owner_review`.
+`publish_readiness` may be `eligible_for_conversion_review` only when every upstream hard gate passes, the scanner is pass or report-only with no blockers, and external source-of-truth records prove disclosure, link, program, evidence, and destination states. Independent exact-URL authorization and any required asset approval must exist before release, but they do not block conversion review unless generated JSON self-attests authorization or publication. Do not use compliance output to claim final release eligibility; `conversion-copy-review` owns `eligible_for_release`.
 
 ## Reason Codes
 
@@ -105,7 +105,7 @@ Use these stable codes. Do not rename a code without a schema version bump.
 | `placeholder_or_self_attested_record` | Generated JSON invents placeholder IDs or approval/compliance/active-link/published state. |
 | `self_attested_approval` | Artifact claims owner approval, compliance pass, published state, owner override, active link, or asset approval. |
 | `visual_asset_unapproved` | Visual asset approval is self-attested or not backed by audited owner records. |
-| `owner_approval_missing` | First publication, major rewrite, strong claim, asset use, or recommendation direction lacks owner approval. |
+| `release_authorization_missing` | The exact URL is absent from the independent allowlist or a requested asset lacks an audited approval record. |
 | `inflated_or_copied_scores` | Scores are high, repeated, or unsupported by proof/evidence records. |
 | `evidence_score_without_proof` | `evidence_score >= 70` but proof blocks or claim-level evidence are missing/unresolved. |
 | `claim_evidence_unresolved` | Source/evidence IDs do not resolve to usage-allowed, current, approved records. |
@@ -144,7 +144,7 @@ Hidden fields such as `proof_blocks`, source IDs, evidence IDs, schema markup, `
 
 Generated page JSON is draft content only. It cannot prove:
 
-- owner approval;
+- independent URL authorization and any required asset approval;
 - compliance pass state;
 - published state;
 - active affiliate link state;
@@ -157,7 +157,7 @@ Generated page JSON is draft content only. It cannot prove:
 
 Generated manifests such as `src/generated/landing-pages/index.json` also cannot prove published state. Treat manifest `status: "published"` or similar generated state as self-attestation unless an audited owner/gate record is supplied.
 
-Require audited records for these states when they are in scope. Missing link, program, source, claim, destination, disclosure, or compliance records block `eligible_for_conversion_review`. Missing final owner approval blocks final publication readiness, not pre-owner conversion review, unless generated JSON self-attests approval or publication.
+Require audited records for these states when they are in scope. Missing link, program, source, claim, destination, disclosure, or compliance records block `eligible_for_conversion_review`. Missing exact-URL authorization blocks release, not pre-release conversion review, unless generated JSON self-attests authorization or publication.
 
 ## FTC Disclosure Rules
 
@@ -215,7 +215,7 @@ A page passes only if:
 - deterministic scanner blockers are absent;
 - visible disclosure is clear and before/near the first CTA;
 - external records resolve link, program, source, evidence, destination, and any asset state used by the draft;
-- final owner approval is resolved when final publication readiness, first publication, high-risk changes, or asset approval is in scope;
+- exact-URL release authorization and any required asset approval are resolved before release;
 - high-risk claims are supported and approved;
 - no generated artifact self-attests approval or publication;
 - rendered/static checks confirm disclosure visibility and sponsored affiliate links;

@@ -20,13 +20,13 @@ Block duplicate, near-duplicate, thin, or same-intent affiliate landing pages be
 
 ## Required References
 
-Read `references/review-contract.md` before manual review. It contains the output contract, reason codes, intent-overlap taxonomy, rendered-field priority, and hard gates.
+Read `references/review-contract.md` before independent semantic review. It contains the output contract, reason codes, intent-overlap taxonomy, rendered-field priority, and hard gates.
 
 Read `references/forward-tests.md` when validating or improving this skill.
 
 ## Deterministic Scan
 
-Run the bundled scanner before manual review:
+Run the bundled scanner before independent semantic review:
 
 ```powershell
 node .agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplicates.mjs src/generated/landing-pages
@@ -40,7 +40,7 @@ The scanner is necessary but not sufficient. It catches exact duplicate fields, 
 
 Before semantic uniqueness, validate the local catalogue and stored desktop/mobile capture hashes with `npm run landing:references:validate`; do not recrawl reference sites. Confirm selection from `npm run landing:references:select -- --category <slug> --buyer-decision <text> [--tags <adjacent-tags>]`: three references by default, or two only when they cover at least four unique design dimensions, including one that matches the product category or an adjacent/neighbor category. Confirm explicit `hero/typography`, `sections/CTA`, and `motion/mobile` roles plus reference IDs, entry digests, adopted abstract principles, non-copy boundaries, rationale, one-line design read, and `DesignDirectionV1`.
 
-Require a valid `PresentationRecipeV1` built only from registered tokens: never accept page-specific JSX/CSS/JavaScript or a silent Editorial V2, `editorial_v2`, or legacy fallback. Require the production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1`; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates. Missing, stale, invalid, unsuitable, reuse-limited, recipe/fingerprint-mismatched, or non-passing Stage 0 artifacts are hard failures: return `hold_for_design_direction`. Oracle remains required only for audited final approval/publication; it does not block local Stage 0, noindex drafting, or visual preview.
+Require a valid `PresentationRecipeV1` built only from registered tokens: never accept page-specific JSX/CSS/JavaScript or a silent Editorial V2, `editorial_v2`, or legacy fallback. Require the production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1`; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates. Missing, stale, invalid, unsuitable, reuse-limited, recipe/fingerprint-mismatched, or non-passing Stage 0 artifacts are hard failures: return `hold_for_design_direction`. Oracle synchronization is optional for the agent-led release: record `pending` or `not_configured`, and never block local Stage 0, GitHub/Vercel publication, or live verification on Oracle.
 
 ## Workflow
 

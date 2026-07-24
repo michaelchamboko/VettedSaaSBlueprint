@@ -36,7 +36,7 @@ test("all landing-production skills fail closed on the ordered local Stage 0 con
     ["a production-identical animated noindex preview with gsap_editorial", /production-identical[\s\S]{0,300}(?:animated )?noindex[\s\S]{0,300}gsap_editorial/i],
     ["a passing VisualDesignReviewV1 before uniqueness, compliance, and conversion", /VisualDesignReviewV1[\s\S]{0,450}(?:status other than `?pass`?|visual pass)[\s\S]{0,650}(?:uniqueness|compliance)[\s\S]{0,450}conversion/i],
     ["hold_for_design_direction when Stage 0 is unavailable or invalid", /hold_for_design_direction/],
-    ["Oracle limited to audited final approval or publication rather than local Stage 0", /Oracle[\s\S]{0,500}(?:final approval|publication)[\s\S]{0,500}(?:does not block|must not block|not block)/i],
+    ["Oracle synchronization optional for the agent-led release", /Oracle[\s\S]{0,500}(?:synchronization|sync)[\s\S]{0,500}(?:optional|never blocks|does not block|must not block|not block)/i],
   ];
 
   for (const [skill, relativePath] of Object.entries(skillPaths)) {

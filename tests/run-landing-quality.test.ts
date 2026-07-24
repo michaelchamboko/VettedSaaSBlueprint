@@ -249,7 +249,7 @@ test("default Stage 2 gate arguments explicitly delegate core checks without cla
   ]);
 });
 
-test("default landing quality preserves specialist reports when production provenance fails closed", async () => {
+test("default landing quality accepts an empty fail-closed production catalogue and preserves specialist reports", async () => {
   const { landingQualityScanners, runLandingQuality } = await loadRunner();
   assert.equal(landingQualityScanners.filter((scanner: { kind: string }) => scanner.kind === "static").length, 13);
   assert.equal(landingQualityScanners.filter((scanner: { kind: string }) => scanner.kind === "specialist").length, 3);
@@ -267,7 +267,7 @@ test("default landing quality preserves specialist reports when production prove
       runStage2Gate: async () => ({ exitCode: 0, stdout: "Stage 2 gate passed", stderr: "" }),
     });
 
-    assert.equal(result.status, "fail");
+    assert.equal(result.status, "pass");
     assert.equal(childCalls.length, 3);
     assert.ok(childCalls.every((call) => call.command === process.execPath));
     assert.ok(childCalls.every((call) => !call.args.includes("npm")));

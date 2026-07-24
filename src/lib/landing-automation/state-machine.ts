@@ -1,10 +1,12 @@
 export type LandingAutomationState =
   | "queued"
   | "researching"
-  | "drafting"
+  | "authoring"
   | "previewing"
   | "quality_review"
+  | "publication_gate"
   | "release_pr"
+  | "deploying"
   | "published"
   | "blocked"
   | "failed"
@@ -12,12 +14,13 @@ export type LandingAutomationState =
 
 export type AutomationEvent =
   | { kind: "start" }
-  | { kind: "research_complete" }
-  | { kind: "draft_complete" }
-  | { kind: "preview_complete" }
+  | { kind: "research_completed" }
+  | { kind: "authoring_completed" }
+  | { kind: "preview_verified" }
   | { kind: "quality_passed" }
   | { kind: "release_pr_opened" }
   | { kind: "release_merged" }
+  | { kind: "deployment_verified" }
   | { kind: "gate_failed" }
   | { kind: "transient_failure" }
   | { kind: "terminal_failure" }
@@ -25,11 +28,13 @@ export type AutomationEvent =
 
 const transitionTable: Record<LandingAutomationState, Partial<Record<LandingAutomationState, true>>> = {
   queued: { researching: true, cancelled: true },
-  researching: { drafting: true, queued: true, blocked: true, failed: true, cancelled: true },
-  drafting: { previewing: true, queued: true, blocked: true, failed: true, cancelled: true },
-  previewing: { quality_review: true, queued: true, blocked: true, failed: true, cancelled: true },
-  quality_review: { release_pr: true, queued: true, blocked: true, failed: true, cancelled: true },
-  release_pr: { published: true, queued: true, blocked: true, failed: true, cancelled: true },
+  researching: { authoring: true, blocked: true, failed: true, cancelled: true },
+  authoring: { previewing: true, blocked: true, failed: true, cancelled: true },
+  previewing: { quality_review: true, blocked: true, failed: true, cancelled: true },
+  quality_review: { publication_gate: true, blocked: true, failed: true, cancelled: true },
+  publication_gate: { release_pr: true, blocked: true, failed: true, cancelled: true },
+  release_pr: { deploying: true, blocked: true, failed: true, cancelled: true },
+  deploying: { published: true, blocked: true, failed: true, cancelled: true },
   published: {},
   blocked: { queued: true, cancelled: true },
   failed: { queued: true, cancelled: true },
@@ -54,12 +59,13 @@ export function nextAutomationState(
 
   const mapped: Partial<Record<AutomationEvent["kind"], LandingAutomationState>> = {
     start: "researching",
-    research_complete: "drafting",
-    draft_complete: "previewing",
-    preview_complete: "quality_review",
+    research_completed: "authoring",
+    authoring_completed: "previewing",
+    preview_verified: "quality_review",
     quality_passed: "release_pr",
     release_pr_opened: "release_pr",
-    release_merged: "published",
+    release_merged: "deploying",
+    deployment_verified: "published",
   };
   const next = mapped[event.kind];
 

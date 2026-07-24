@@ -7,7 +7,7 @@ export default function EditorialPolicyPage() {
   return (
     <LegalDocument
       title="Editorial policy"
-      summary="How evidence, limitations, affiliate relationships, and owner approval shape every published review."
+      summary="How evidence, limitations, affiliate relationships, and verified release gates shape every published review."
       effectiveDate={config.policies.effectiveDate}
       reviewDate={config.policies.reviewDate}
     >
@@ -30,9 +30,9 @@ export default function EditorialPolicyPage() {
         </p>
       </section>
       <section>
-        <h2>Owner approval</h2>
+        <h2>Verified release</h2>
         <p>
-          Drafts pass uniqueness, compliance, conversion, asset, link, and publication-readiness checks before audited owner approval. A review is not public merely because a draft file exists.
+          Drafts pass uniqueness, compliance, conversion, asset, link, preview, and production-readiness checks before a fingerprinted release receipt can make them public. A review is not public merely because a draft file exists.
         </p>
       </section>
       <section>

@@ -283,7 +283,7 @@ function makeReviews() {
     conversion: {
       schema_version: 1,
       status: "pass",
-      publish_readiness: "eligible_for_owner_review",
+      publish_readiness: "eligible_for_release",
       reason_codes: [],
       hard_gate_failures: [],
       required_rewrites: [],

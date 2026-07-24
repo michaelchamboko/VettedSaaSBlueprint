@@ -7,7 +7,7 @@ description: Use when reviewing affiliate landing-page drafts, generated page ar
 
 ## Purpose
 
-Block unsafe affiliate page publication. This is a hard gate for disclosure, claim support, affiliate-link integrity, program rules, destination review, audited owner state, and generated-artifact safety. A compliance pass makes a draft eligible for conversion review; final owner-review eligibility belongs to `conversion-copy-review`.
+Block unsafe affiliate page publication. This is a hard gate for disclosure, claim support, affiliate-link integrity, program rules, destination review, independently audited gate state, and generated-artifact safety. A compliance pass makes a draft eligible for conversion review; final release eligibility belongs to `conversion-copy-review`.
 
 ## Required Inputs
 
@@ -17,7 +17,7 @@ Block unsafe affiliate page publication. This is a hard gate for disclosure, cla
 - Destination review or audited owner override.
 - Evidence/source records: usage-allowed state, claim mapping, freshness, review basis, and approval state.
 - Disclosure plan and rendered/static disclosure evidence when available.
-- Owner approval, asset approval, and publication gate records when the task asks for publication readiness.
+- Independent asset and publication gate records when the task asks for release readiness.
 
 ## Required References
 
@@ -32,7 +32,7 @@ Also inspect these project contracts when relevant:
 
 ## Deterministic Scan
 
-Run the skill-owned scanner before manual review when page artifacts are available:
+Run the skill-owned scanner before independent compliance review when page artifacts are available:
 
 ```bash
 node .agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs src/generated/landing-pages --report-only --json
@@ -46,7 +46,7 @@ The scanner is necessary but not sufficient. It finds deterministic artifact ris
 
 1. Run the scanner and keep its reason codes.
 2. Review rendered and search-visible fields first: title, meta, H1, subheadline, short disclosure, CTA, risk reversal, benefits, how-it-works, limitations, and FAQ.
-3. Check disclosure, claim risk, evidence, PartnerStack link integrity, destination review, artifact QA, final owner approval when publication-readiness is requested, and renderer/static gates.
+3. Check disclosure, claim risk, evidence, PartnerStack link integrity, destination review, artifact QA, independent release authorization when release readiness is requested, and renderer/static gates.
 4. Treat unknown external state as blocked.
 5. Return the structured output from `references/compliance-contract.md`.
 
@@ -57,7 +57,7 @@ Fail publication readiness when:
 - Visible disclosure is missing, weak, conditional, hidden, footer-only, or not before/near the first affiliate CTA.
 - Original PartnerStack/referral URL preservation, active link state, or reviewed mapping is unknown.
 - Program rules, compliance profile, source usage, or destination review state is unknown.
-- Final owner approval state is unknown when the task asks for final publication readiness, first publication, high-risk changes, or asset approval.
+- Independent URL authorization or asset approval state is unknown when the task asks for release readiness or asset use.
 - Hero CTA id and CTA block affiliate id differ without audited mapping.
 - Product, affiliate link, source, evidence, or asset ids are placeholders or unresolved.
 - Page JSON self-attests published state, owner approval, compliance pass, active link, owner override, or asset approval.

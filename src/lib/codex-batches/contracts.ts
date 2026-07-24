@@ -268,7 +268,7 @@ function isAllowedUniquenessPassAction(action: string): boolean {
 }
 
 function isAllowedConversionPassAction(action: string): boolean {
-  return action === "pass" || action === "owner_review";
+  return action === "pass";
 }
 
 export const codexUniquenessReviewSchema = z.object({
@@ -328,15 +328,15 @@ export const codexComplianceReviewSchema = z.object({
 export const codexConversionReviewSchema = z.object({
   schema_version: z.union([z.literal(1), z.string().min(1)]),
   status: z.enum(["pass", "fail", "blocked"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_owner_review"]),
+  publish_readiness: z.enum(["blocked", "eligible_for_release"]),
   reason_codes: z.array(z.string()),
   hard_gate_failures: z.array(z.unknown()),
   required_rewrites: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review", "owner_review"]),
+  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review"]),
 }).passthrough().superRefine((report, context) => {
   if (report.status === "pass") {
-    if (report.publish_readiness !== "eligible_for_owner_review") {
-      context.addIssue({ code: "custom", path: ["publish_readiness"], message: "A passing conversion review must be eligible for owner review." });
+    if (report.publish_readiness !== "eligible_for_release") {
+      context.addIssue({ code: "custom", path: ["publish_readiness"], message: "A passing conversion review must be eligible for release." });
     }
     if (report.hard_gate_failures.length > 0) {
       context.addIssue({ code: "custom", path: ["hard_gate_failures"], message: "A passing conversion review cannot retain hard-gate failures." });
@@ -345,7 +345,7 @@ export const codexConversionReviewSchema = z.object({
       context.addIssue({ code: "custom", path: ["required_rewrites"], message: "A passing conversion review cannot retain required rewrites." });
     }
     if (!isAllowedConversionPassAction(report.recommended_action)) {
-      context.addIssue({ code: "custom", path: ["recommended_action"], message: "A passing conversion review must recommend pass or owner review." });
+      context.addIssue({ code: "custom", path: ["recommended_action"], message: "A passing conversion review must recommend pass." });
     }
   } else if (report.publish_readiness !== "blocked") {
     context.addIssue({ code: "custom", path: ["publish_readiness"], message: "A non-passing conversion review must remain blocked." });
@@ -415,18 +415,18 @@ export const codexComplianceReviewV2Schema = z.object({
 export const codexConversionReviewV2Schema = z.object({
   schema_version: z.literal("codexConversionReviewV2"),
   status: z.enum(["pass", "fail", "blocked"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_owner_review"]),
+  publish_readiness: z.enum(["blocked", "eligible_for_release"]),
   reason_codes: z.array(z.string()),
   hard_gate_failures: z.array(z.unknown()),
   required_rewrites: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review", "owner_review"]),
+  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review"]),
   design_trace: codexDesignTraceV2Schema,
 }).strict().superRefine((report, context) => {
   if (report.status === "pass") {
-    if (report.publish_readiness !== "eligible_for_owner_review") context.addIssue({ code: "custom", path: ["publish_readiness"], message: "A passing conversion review must be eligible for owner review." });
+    if (report.publish_readiness !== "eligible_for_release") context.addIssue({ code: "custom", path: ["publish_readiness"], message: "A passing conversion review must be eligible for release." });
     if (report.hard_gate_failures.length > 0) context.addIssue({ code: "custom", path: ["hard_gate_failures"], message: "A passing conversion review cannot retain hard-gate failures." });
     if (report.required_rewrites.length > 0) context.addIssue({ code: "custom", path: ["required_rewrites"], message: "A passing conversion review cannot retain required rewrites." });
-    if (!isAllowedConversionPassAction(report.recommended_action)) context.addIssue({ code: "custom", path: ["recommended_action"], message: "A passing conversion review must recommend pass or owner review." });
+    if (!isAllowedConversionPassAction(report.recommended_action)) context.addIssue({ code: "custom", path: ["recommended_action"], message: "A passing conversion review must recommend pass." });
   } else if (report.publish_readiness !== "blocked") context.addIssue({ code: "custom", path: ["publish_readiness"], message: "A non-passing conversion review must remain blocked." });
 });
 

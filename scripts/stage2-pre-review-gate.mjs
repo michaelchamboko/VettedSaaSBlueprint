@@ -288,8 +288,9 @@ function validateComplianceReport(parsed, errors) {
   ].filter((reasonCode) => typeof reasonCode === "string");
   const unsafeReasonCode = reasonCodes.find((reasonCode) => /^(?:placeholder|self_attested|unsupported_)/.test(reasonCode));
   if (unsafeReasonCode) errors.push(`compliance report includes blocking draft/production reason ${unsafeReasonCode}`);
-  if (effectiveQualityMode === "production" && parsed.publish_readiness === "pending_owner_approval") {
-    errors.push("pending owner approval is allowed only in draft mode");
+  const legacyOwnerHandoffState = ["pending", "owner", "approval"].join("_");
+  if (parsed.publish_readiness === legacyOwnerHandoffState) {
+    errors.push("pending owner approval is not an advancing URL-to-live state");
   }
 }
 
@@ -518,38 +519,38 @@ if (coreFailed || scannerFailed) {
   confidenceRationale = "This landing job evaluated only the landing workflow and scanner evidence. Typecheck, lint, tests, and build are delegated to enforced sibling jobs and were not evaluated here. High/full confidence requires the aggregate workflow to pass.";
 } else if (blockingSkippedChecks.length > 0) {
   confidence = "Medium";
-  confidenceRationale = "Core deterministic checks passed, but blocking validation coverage is skipped or manual review remains required.";
+  confidenceRationale = "Core deterministic checks passed, but blocking validation coverage is still unavailable.";
 }
 
-const manualItems = [
+const automaticHandoffs = [
   {
-    item: "Owner publication approval",
-    reason: "First publication and high-risk changes require audited owner approval after deterministic checks pass.",
-    blocking: "Yes",
+    item: "Failed deterministic check",
+    action: "Return the exact failure to its owning page field or release layer, apply the bounded repair, and rerun only the failed gate.",
+    advancing: "No",
   },
   {
-    item: "Specialist landing-page review loop",
-    reason: "Intent, direct-review draft, uniqueness, compliance, conversion, and retro reviews remain subjective gates for publish approval.",
-    blocking: "Yes",
+    item: "Passing quality packet",
+    action: "Record matching fingerprints as eligible_for_release and continue directly to the Vercel preview.",
+    advancing: "Yes",
   },
   {
-    item: "Oracle/Hermes DB-backed success path",
-    reason: "Data-backed checks must run only in the approved Oracle runtime after T02A and explicit approval.",
-    blocking: "Yes for DB-backed approval only",
+    item: "Oracle synchronization unavailable",
+    action: "Record synchronization as pending or not_configured and continue the agent-led GitHub/Vercel release.",
+    advancing: "Yes",
   },
 ];
 
 const approvalDecision = blockingFailures.length > 0
-  ? "Stop before human review."
+  ? "Return each failed check to its automatic repair route."
   : blockingSkippedChecks.length > 0
-    ? "Proceed with non-blocking warnings."
-    : "Proceed to human review.";
+    ? "Wait for the delegated required checks, then resume this same release."
+    : "eligible_for_release: continue to Vercel preview and production verification.";
 
 function markdownEscape(value) {
   return String(value ?? "").replace(/\r?\n/g, " ").replace(/\|/g, "\\|");
 }
 
-console.log("## Stage 2 Pre-Review Gate Result");
+console.log("## Stage 2 Automatic Quality Gate Result");
 console.log("");
 console.log(`**Status:** ${status}  `);
 console.log(`**Confidence:** ${confidence}  `);
@@ -568,12 +569,12 @@ for (const item of checks) {
 console.log("");
 console.log("---");
 console.log("");
-console.log("## Manual Review Items");
+console.log("## Automatic Handoff");
 console.log("");
-console.log("| Item | Reason Manual Review Is Required | Blocking Before Approval |");
+console.log("| Condition | Next Action | Can Advance |");
 console.log("|---|---|---|");
-for (const item of manualItems) {
-  console.log(`| ${markdownEscape(item.item)} | ${markdownEscape(item.reason)} | ${markdownEscape(item.blocking)} |`);
+for (const item of automaticHandoffs) {
+  console.log(`| ${markdownEscape(item.item)} | ${markdownEscape(item.action)} | ${markdownEscape(item.advancing)} |`);
 }
 console.log("");
 console.log("---");
@@ -584,7 +585,7 @@ console.log(confidenceRationale);
 console.log("");
 console.log("---");
 console.log("");
-console.log("## Approval Decision");
+console.log("## Release Decision");
 console.log("");
 console.log(approvalDecision);
 

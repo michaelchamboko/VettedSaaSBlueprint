@@ -1,0 +1,28 @@
+{
+  "schema_version": "codexComplianceReviewV2",
+  "status": "pass",
+  "publish_readiness": "eligible_for_conversion_review",
+  "reason_codes": [],
+  "hard_gate_failures": [],
+  "required_changes": [],
+  "recommended_action": "pass",
+  "disclosure_review": {
+    "status": "pass",
+    "summary": "Plain affiliate disclosure is immediately before the first CTA and repeated in full in the footer."
+  },
+  "claim_review": {
+    "status": "pass",
+    "summary": "Every product statement maps to current official documentation; unsupported pricing, discount, guarantee, ranking, security, and performance claims are absent."
+  },
+  "link_review": {
+    "status": "pass",
+    "exact_url": "https://try.elevenlabs.io/izj2b165mcsj",
+    "destination_http_status": 200,
+    "checked_at": "2026-07-24T19:02:00.000Z"
+  },
+  "claims_removed_or_softened": [
+    "Removed all price, discount, free-trial, guarantee, and ranking language.",
+    "Replaced broad audio-quality claims with a recommendation to test a representative script.",
+    "Framed language and accent support as a voice-selection and listening check, not a guaranteed outcome."
+  ]
+}

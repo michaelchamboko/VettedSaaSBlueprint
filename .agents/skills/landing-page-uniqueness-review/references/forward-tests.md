@@ -62,7 +62,7 @@ The Browse AI batch must remain a permanent RED fixture. Correct scanner output 
 - duplicate exact score group
 - near-duplicate visible-copy or composite-fingerprint findings
 
-Correct manual review should classify the batch as `doorway_scaled_variant` or `exact_duplicate` and recommend `merge_into_existing`, `noindex_draft`, or `reject`, not broad publication.
+Correct independent review should classify the batch as `doorway_scaled_variant` or `exact_duplicate` and recommend `merge_into_existing`, `noindex_draft`, or `reject`, not broad publication.
 
 ## Forward-Test Prompts
 

@@ -48,7 +48,7 @@ node .agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplic
 
 | Case | Input pattern | Expected result |
 | --- | --- | --- |
-| Concrete buyer decision | Page names a specific buyer task, audience, constraint, CTA verification action, benefit, limitation, and FAQ friction. | Pass with `publish_readiness: eligible_for_owner_review`. |
+| Concrete buyer decision | Page names a specific buyer task, audience, constraint, CTA verification action, benefit, limitation, and FAQ friction. | Pass with `publish_readiness: eligible_for_release`. |
 | Distinct same-product sibling pair | Two same-product pages differ by actor, trigger, task, evidence need, limitation, FAQ, and CTA verification action. | Pass if prior uniqueness and compliance gates are present. |
 | Sparse evidence conservative copy | Evidence is limited but copy avoids sensitive claims and gives a useful low-risk official-site verification path. | Pass if limitations and owner caveats are explicit. |
 | Same destination, distinct CTA intent | Same affiliate destination is used, but CTA label and visible context match a page-specific verification action. | Pass if IDs are reviewed and CTA copy does not overpromise. |

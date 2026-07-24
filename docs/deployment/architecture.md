@@ -113,18 +113,31 @@ Provider-specific secret variables, such as API keys, are required only for the 
 
 ## Deployment order
 
-1. Provision Oracle Autonomous Database.
-2. Convert `db/schema.sql` into Oracle-compatible DDL and apply it to Oracle Autonomous Database.
-3. Connect the GitHub repository to Vercel.
-4. Add Vercel environment variables.
-5. Deploy the Next.js app on Vercel.
-6. Provision Oracle worker host/container near the Oracle database.
-7. Configure Oracle worker environment variables.
-8. Start Hermes as a managed service.
-9. Create first product, affiliate link, compliance profile, and manual review task.
-10. Use Codex to validate the local design-reference catalogue, select a `DesignDirectionV1`, confirm a product evidence pack, and produce one visually reviewed `reference_composed_v1` animated exemplar preview.
-11. Import the committed batch into Oracle, approve the selected exemplar, export its artifact, and deploy it through Vercel.
+The URL-to-live release lane does not wait for Oracle. Its order is:
+
+1. Connect the GitHub repository to the existing Vercel project and configure
+   the required Preview and Production environment values.
+2. Submit one exact affiliate URL with
+   `npm run landing:run -- --url <exact-affiliate-url>`.
+3. Validate the design catalogue, produce the evidence-backed
+   `reference_composed_v1` page, and run automatic repair and quality checks.
+4. Open the GitHub pull request, verify the Vercel preview, merge after required
+   checks pass, and let the Vercel Git connection deploy `main`.
+5. Verify the canonical production route and record `LIVE`.
+6. Synchronize the durable run to Oracle when Oracle is configured; otherwise
+   record `pending` or `not_configured` without blocking the release.
+
+Oracle Autonomous Database and Hermes can be provisioned independently for
+durable research, scoring, optimization, and later synchronization. Their
+availability is not a prerequisite for the agent-led release receipt path.
 
 ## Local workstation role
 
-The local workstation is the Codex-owned landing-page production environment. It owns the internal design-reference catalogue, deterministic reference selection, structured batch authoring, validation and packaging, focused checks, and bounded production-identical noindex previews with visual review artifacts. Oracle availability does not block those local stages. The workstation does not grant publication authority: Oracle remains canonical for durable records and owner approval, GitHub repeats release gates, and Vercel owns deployment.
+The local workstation is the agent-owned landing-page production environment.
+It owns the internal design-reference catalogue, deterministic reference
+selection, structured authoring, validation and packaging, focused checks, and
+bounded production-identical noindex previews with visual review artifacts. The
+exact URL submission supplies release authorization; independently verified
+fingerprints and `LandingReleaseReceiptV1` supply publication provenance.
+GitHub repeats release gates, Vercel owns deployment, and Oracle remains the
+durable synchronization target when configured.

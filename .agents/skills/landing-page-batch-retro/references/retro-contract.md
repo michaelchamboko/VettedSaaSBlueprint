@@ -58,7 +58,7 @@ Return structured JSON only:
 Allowed values:
 
 - `status`: `pass`, `fail`
-- `publish_readiness_result`: `blocked`, `eligible_for_next_gate`, `eligible_for_conversion_review`, `eligible_for_owner_review`, `approved_by_owner`, `not_applicable`
+- `publish_readiness_result`: `blocked`, `eligible_for_next_gate`, `eligible_for_conversion_review`, `eligible_for_release`, `live`, `not_applicable`
 - `input_readiness.status`: `pass`, `fail`
 - `go_no_go`: `blocked`, `exemplar_only`, `go_with_cap`, `go`
 - `severity`: `critical`, `high`, `medium`, `low`
@@ -162,8 +162,8 @@ Reuse downstream reason codes when possible. Preserve exact upstream reason code
 | `destination_continuity_gap` | Page promise, CTA, or expectation does not match the reviewed destination path. |
 | `generic_objection_faq` | Objections or FAQs are boilerplate rather than page-specific buyer friction. |
 | `generic_limitation` | Limitation is generic or copied instead of building trust for this page angle. |
-| `generic_objections` | Legacy alias for `generic_objection_faq`; do not use in new manual reviews. |
-| `weak_limitations` | Legacy alias for `generic_limitation`; do not use in new manual reviews. |
+| `generic_objections` | Legacy alias for `generic_objection_faq`; do not use in new independent reviews. |
+| `weak_limitations` | Legacy alias for `generic_limitation`; do not use in new independent reviews. |
 | `poor_mobile_scan` | Disclosure, H1, subheadline, CTA, or next-section cue fails the first mobile viewport. |
 | `mobile_scan_unclear` | Conversion alias for `poor_mobile_scan`; preserve if emitted upstream. |
 | `thin_affiliate_review_risk` | Compliance alias for thin affiliate risk; preserve if emitted upstream. |
@@ -183,7 +183,7 @@ Reuse downstream reason codes when possible. Preserve exact upstream reason code
 | Duplicate fields, near-duplicate copy, same-intent siblings, thin variants | `landing-page-uniqueness-review` |
 | Disclosure, claim support, program rules, review-basis overclaim, affiliate link safety | `affiliate-compliance-review` |
 | Hero clarity, CTA fit, mobile scan, objections, limitations, message match | `conversion-copy-review` |
-| Sequence, review packets, owner approval gate, fan-out/fan-in coordination | `landing-page-production-orchestrator` |
+| Sequence, review packets, release-receipt gate, fan-out/fan-in coordination | `landing-page-production-orchestrator` |
 | Exact duplicates, placeholder IDs, CTA mismatch, score/proof mismatches | deterministic scanner/static check |
 | Missing source, evidence, destination, program, or approval records | source-record process or owner decision |
 | Repeated time loss, unclear handoff, skipped checks | process documentation |

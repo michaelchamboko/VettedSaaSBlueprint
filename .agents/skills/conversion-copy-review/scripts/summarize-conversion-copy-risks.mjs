@@ -154,7 +154,11 @@ function readJsonFiles(dir, draftInput = false) {
   if (!existsSync(manifestPath)) return [];
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const approvedFiles = new Set((manifest.pages ?? [])
-    .filter((entry) => entry.status === "published" && entry.publication_source === "oracle_dynamic_pages" && entry.published_at && entry.current_version_id && entry.owner_publish_audit_id)
+    .filter((entry) => entry.status === "published"
+      && entry.published_at
+      && entry.current_version_id
+      && ((entry.publication_source === "oracle_dynamic_pages" && entry.owner_publish_audit_id)
+        || (entry.publication_source === "agent_verified_release" && entry.release_receipt)))
     .map((entry) => basename(entry.artifact ?? "")));
   return readdirSync(dir)
     .filter((name) => approvedFiles.has(name))

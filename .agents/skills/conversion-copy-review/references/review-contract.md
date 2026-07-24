@@ -19,7 +19,7 @@ Conversion review does not approve:
 - Duplicate-page strategy.
 - Legal/compliance state.
 - Evidence, source, affiliate link, or asset records.
-- Owner approval, publication state, or final page JSON.
+- Release authorization, publication state, or final page JSON.
 
 When a fix would change one of those owned states, fail and escalate to the owning gate.
 
@@ -98,7 +98,7 @@ Return structured JSON only:
   "hard_gate_failures": [],
   "required_rewrites": [],
   "boundary_escalations": [],
-  "owner_handoff_notes": [],
+  "release_notes": [],
   "recommended_action": "rewrite_visible_fields",
   "source_recommended_action": "",
   "action_target": null,
@@ -110,10 +110,10 @@ Return structured JSON only:
 Allowed values:
 
 - `status`: `pass`, `fail`, `blocked`
-- `publish_readiness`: `blocked`, `eligible_for_owner_review`
-- `recommended_action`: `pass`, `rewrite_visible_fields`, `return_to_drafter`, `return_to_intent_brief`, `return_to_uniqueness_review`, `return_to_compliance_review`, `resolve_destination_review`, `owner_review`
+- `publish_readiness`: `blocked`, `eligible_for_release`
+- `recommended_action`: `pass`, `rewrite_visible_fields`, `return_to_drafter`, `return_to_intent_brief`, `return_to_uniqueness_review`, `return_to_compliance_review`, `resolve_destination_review`
 
-`publish_readiness` may be `eligible_for_owner_review` only when `status` is `pass`, all prior gate inputs are present, `reason_codes` is empty, `hard_gate_failures` is empty, and no required rewrites remain.
+`publish_readiness` may be `eligible_for_release` only when `status` is `pass`, all prior gate inputs are present, `reason_codes` is empty, `hard_gate_failures` is empty, and no required rewrites remain.
 
 Each finding should include:
 
@@ -127,7 +127,7 @@ Each finding should include:
 }
 ```
 
-Use `severity: "high"` for hard gates, `severity: "medium"` for non-blocking rewrite issues, and `severity: "low"` for owner handoff notes.
+Use `severity: "high"` for hard gates, `severity: "medium"` for non-blocking rewrite issues, and `severity: "low"` for release notes.
 
 ## Canonical Reason Codes
 
@@ -138,7 +138,7 @@ Use `severity: "high"` for hard gates, `severity: "medium"` for non-blocking rew
 | `vague_buyer_decision` | Copy does not name the buyer task, decision, use case, or workflow constraint. |
 | `audience_not_narrowed` | Subheadline or first screen fails to narrow who the page is for and what they should expect. |
 | `internal_process_as_public_proof` | Public copy explains owner review, compliance checks, affiliate vaults, publication gates, or internal workflow more than the product decision. |
-| `site_workflow_over_product_decision` | Legacy scanner alias for `internal_process_as_public_proof`; do not introduce it in new manual reviews. |
+| `site_workflow_over_product_decision` | Legacy scanner alias for `internal_process_as_public_proof`; do not introduce it in new independent reviews. |
 | `generic_benefit_copy` | Benefits describe generic product praise or site mechanics instead of buyer outcomes and product-fit decision factors. |
 | `generic_objection_faq` | FAQ or objections are boilerplate, affiliate disclaimers, or generic reassurance instead of real buyer friction. |
 | `generic_limitation` | Limitations are copied, evasive, or generic, such as "pricing may change," without a page-specific risk. |
@@ -176,9 +176,9 @@ Fail conversion QA when any condition is true:
 - Public copy uses internal governance or site workflow as product proof.
 - Critical value is hidden in non-rendered fields.
 - Copy needs hype, pressure, fake proof, unsupported certainty, or overclaimed independence to feel persuasive.
-- Required rewrites would require rerunning intent, uniqueness, compliance, destination, evidence, link, asset, or owner approval.
+- Required rewrites would require rerunning intent, uniqueness, compliance, destination, evidence, link, or asset gates.
 
-## Manual Review Tests
+## Independent Review Tests
 
 - First-viewport test: from disclosure, H1, subheadline, CTA, and risk reversal alone, identify the buyer, decision, material connection, and next step.
 - 10-second scan test: from headings, CTA, benefit titles, limitations, and FAQ questions, summarize who should click and who should not.

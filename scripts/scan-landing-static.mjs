@@ -34,14 +34,16 @@ function readJson(path) {
   return JSON.parse(readText(path));
 }
 
-function hasOracleProvenance(entry) {
+function hasPublicationProvenance(entry) {
   return entry
     && typeof entry === "object"
     && entry.status === "published"
-    && entry.publication_source === "oracle_dynamic_pages"
     && hasValidTimestamp(entry.published_at)
     && hasText(entry.current_version_id)
-    && hasText(entry.owner_publish_audit_id);
+    && (
+      (entry.publication_source === "oracle_dynamic_pages" && hasText(entry.owner_publish_audit_id))
+      || (entry.publication_source === "agent_verified_release" && hasText(entry.release_receipt))
+    );
 }
 
 function hasValidTimestamp(value) {
@@ -59,12 +61,12 @@ function landingFiles(catalogueDir = targetDir) {
   const entries = Array.isArray(manifest.pages) ? manifest.pages : [];
   const invalidEntries = entries
     .map((entry, index) => ({ entry, index }))
-    .filter(({ entry }) => !hasOracleProvenance(entry));
+    .filter(({ entry }) => !hasPublicationProvenance(entry));
   if (invalidEntries.length > 0) {
-    throw new Error(`Production landing catalogue has invalid Oracle provenance for: ${invalidEntries.map(({ entry, index }) => catalogueEntryName(entry, index)).join(", ")}.`);
+    throw new Error(`Production landing catalogue has invalid publication provenance for: ${invalidEntries.map(({ entry, index }) => catalogueEntryName(entry, index)).join(", ")}.`);
   }
   const approvedFiles = new Set(entries
-    .filter(hasOracleProvenance)
+    .filter(hasPublicationProvenance)
     .map((entry) => entry.artifact));
   return readdirSync(catalogueDir)
     .filter((name) => approvedFiles.has(name))
@@ -139,7 +141,7 @@ function checkRoute(rows, manifest, source, generatedSource, issues, warnings) {
     if (!generatedSource.includes(token)) issue(issues, "generated_source_contract_missing", `Generated landing helper is missing ${token}.`);
   }
   const files = new Set(rows.map((row) => row.file));
-  for (const entry of (manifest.pages ?? []).filter((item) => item.publication_source === "oracle_dynamic_pages")) {
+  for (const entry of (manifest.pages ?? []).filter(hasPublicationProvenance)) {
     if (!files.has(entry.artifact)) issue(issues, "manifest_artifact_missing", `Manifest artifact does not exist: ${entry.artifact}.`, entry.artifact);
     if (entry.path !== `/landing-page-builders/${entry.slug}`) issue(issues, "manifest_path_mismatch", `Manifest path does not match slug ${entry.slug}.`, entry.artifact);
     if (entry.artifact !== `${entry.slug}.json`) warning(warnings, "artifact_slug_name_mismatch", `Artifact name does not match slug ${entry.slug}.`, entry.artifact);
@@ -251,11 +253,17 @@ function checkAssets(rows, issues) {
 
 function checkPublishReadiness(rows, issues) {
   if (rows.length === 0) return;
-  const reviewGate = readText("build-pack/13-review-gate.md");
-  const performanceDoc = readText("build-pack/23-landing-page-workflow-performance-optimization.md");
-  if (!reviewGate.includes("Stage 2 pre-review")) issue(issues, "review_gate_stage2_missing", "Review gate must require Stage 2 pre-review evidence.");
-  if (!performanceDoc.includes("LP-T09-PUBLISH-01")) issue(issues, "publish_microtask_missing", "Publish-readiness micro-task is missing.");
-  if (!performanceDoc.includes("npm run gate:stage2:pre-review")) issue(issues, "stage2_gate_command_missing", "Stage 2 gate command is missing.");
+  const executionContract = readText("planning.md");
+  const workflowContract = readText("docs/landing-workflow/README.md");
+  if (!executionContract.includes("npm run landing:run -- --url <exact-https-affiliate-url>")) {
+    issue(issues, "url_to_live_command_missing", "The active execution contract must expose the single resumable URL-to-live command.");
+  }
+  if (!executionContract.includes("LIVE") || !workflowContract.includes("eligible_for_release")) {
+    issue(issues, "automatic_release_handoff_missing", "The active workflow must advance passing pages through eligible_for_release to verified LIVE state.");
+  }
+  if (!workflowContract.includes("Quality and repair") || !workflowContract.includes("production verification")) {
+    issue(issues, "repair_and_production_contract_missing", "The active workflow must define automatic repair and production verification.");
+  }
 }
 
 function countWords(value) {

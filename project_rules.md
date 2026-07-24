@@ -16,8 +16,8 @@ Step 2 approval does not automatically approve Oracle infrastructure changes, sc
 - Any page publication path must enforce disclosure, active affiliate link, claim-level proof/source records meeting threshold, destination review or audited override, compliance pass state, and exact-URL authorization from `approved-urls.md`. Unattended publication also requires the global kill switch off, caps available, and required CI/preview checks; unknown state blocks publication.
 - Any landing-page creation, rewrite, batch generation, or publication-readiness task must use `.agents/skills/landing-page-production-orchestrator` and the ordered project-local skill loop: `affiliate-page-intent-brief` -> `direct-review-page-drafter` -> `landing-page-uniqueness-review` -> `affiliate-compliance-review` -> `conversion-copy-review` -> unattended gate evaluation; batches and repeated correction loops then require `landing-page-batch-retro` before the next batch.
 - Landing-page uniqueness is a hard gate: pages that differ mainly by keyword, repeat sibling page titles/H1s/CTAs/core benefits/limitations/FAQs without a clear reason, or lack a distinct buyer decision are blocked.
-- Compliance and conversion QA are hard gates before publish-readiness. Unsafe claims, missing disclosure, unknown program rules, weak evidence, generic hero copy, or copied limitations/FAQs block the page.
-- Generated landing-page artifacts must be checked with the uniqueness, compliance, and conversion scanners before publish-readiness review.
+- Compliance and conversion QA are automatic repair gates before release eligibility. Remove or soften unsupported claims, repair missing disclosure and generic copy, and rerun the affected gate up to two times. Unknown program rules or evidence still prevent release when they cannot be resolved honestly after those repairs.
+- Generated landing-page artifacts must be checked with the uniqueness, compliance, and conversion scanners before `eligible_for_release`.
 - Generated page JSON is draft content only. It must not be treated as the source of truth for published state, owner approval, asset approval, active-link state, or compliance pass state.
 - Placeholder-looking IDs, unresolved records, mismatched CTA ids without reviewed mapping, empty proof for scored evidence, and index entries built from file presence block publish-readiness.
 - Each landing-page batch must complete a batch retro before the next batch starts. Recurring failures must become skill updates or explicit deferred decisions.
@@ -31,7 +31,7 @@ Step 2 approval does not automatically approve Oracle infrastructure changes, sc
 - Editorial v2 hero copy must include a 40–60-word `hero.answer_snippet` under the H1. The compact disclosure remains before/near the first CTA; full disclosure and secondary links render in the footer.
 - Benefits must be semantic decision cards and FAQs must use accessible disclosure rows; blind text pills are not allowed.
 - Run `npm run scan:landing:editorial-v2 -- --json` before any next-50 page advances to subjective review. Legacy artifacts are ignored by this profile scan.
-- Keep one exemplar first and cap subsequent batches at three pages until uniqueness, compliance, conversion, and owner-approval gates pass without major rework.
+- Keep one exemplar first and cap subsequent batches at three pages until uniqueness, compliance, conversion, and release gates pass without major rework.
 
 ## Prohibited MVP Scope
 

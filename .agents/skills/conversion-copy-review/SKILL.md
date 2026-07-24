@@ -9,7 +9,7 @@ description: Use when reviewing affiliate landing-page copy for buyer-specific p
 
 Act as the late-stage persuasion QA gate for direct-review affiliate landing pages. A conversion-ready page helps a specific visitor decide whether to click through without hype, hidden material incentives, unsupported certainty, generic affiliate filler, or pressure tactics.
 
-This skill does not approve intent viability, uniqueness, compliance, evidence, affiliate links, assets, owner approval, publication state, or final page JSON. Escalate those issues to the owning gate instead of trying to resolve them here.
+This skill does not approve intent viability, uniqueness, compliance, evidence, affiliate links, assets, publication state, or final page JSON. Route those issues to the owning automatic gate instead of trying to resolve them here.
 
 ## Required Inputs
 
@@ -78,7 +78,7 @@ Return structured JSON only with these top-level fields:
 
 - `schema_version`
 - `status`: `pass`, `fail`, or `blocked`
-- `publish_readiness`: `blocked` or `eligible_for_owner_review`
+- `publish_readiness`: `blocked` or `eligible_for_release`
 - `reason_codes`
 - `review_scope`
 - `scanner_result`
@@ -93,14 +93,14 @@ Return structured JSON only with these top-level fields:
 - `hard_gate_failures`
 - `required_rewrites`
 - `boundary_escalations`
-- `owner_handoff_notes`
+- `release_notes`
 - `recommended_action`
 - `source_recommended_action`
 - `action_target`
 - `handoff_to`
 - `handoff_reason`
 
-Allowed `recommended_action` values: `pass`, `rewrite_visible_fields`, `return_to_drafter`, `return_to_intent_brief`, `return_to_uniqueness_review`, `return_to_compliance_review`, `resolve_destination_review`, and `owner_review`.
+Allowed `recommended_action` values: `pass`, `rewrite_visible_fields`, `return_to_drafter`, `return_to_intent_brief`, `return_to_uniqueness_review`, `return_to_compliance_review`, and `resolve_destination_review`.
 
 ## Rewrite Guidance
 
@@ -112,4 +112,4 @@ Prefer specific, plain-language rewrite requirements. Do not invent final claims
 - Keep paragraphs short.
 - Avoid invented social proof, exaggerated certainty, or broad "best tool" framing.
 - Include an acceptance check for every required rewrite.
-- Escalate rewrites that require new evidence, compliance approval, destination review, uniqueness changes, or owner approval.
+- Route rewrites that require new evidence, compliance review, destination review, or uniqueness changes to the owning gate, then resume this review.

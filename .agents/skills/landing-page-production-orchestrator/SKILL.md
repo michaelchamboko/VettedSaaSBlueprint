@@ -19,19 +19,19 @@ Run this fail-closed sequence before product evidence, intent, drafting, or any 
 4. The eligible drafter converts the intent direction to a validated `PresentationRecipeV1`. It may use only registered presentation tokens; never generate page-specific JSX/CSS/JavaScript or silently fall back to `editorial_v2` or legacy rendering.
 5. After the draft, render the production-identical animated noindex preview with the fixed `gsap_editorial` motion profile and retain `VisualDesignReviewV1`. A visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
 
-Missing, stale, invalid, unsuitable, or reuse-limited Stage 0 artifacts are hard failures. Return `hold_for_design_direction`; do not improvise a generic template. Oracle remains required only for audited final approval/publication; it does not block local Stage 0, noindex drafting, or visual preview.
+When an exact category reference is unavailable, select the closest eligible references or the approved repository house style and record the fallback. Missing, stale, invalid, or reuse-limited references enter the design repair route; stop only when no approved direction can produce a useful accessible page after two repair rounds. Oracle synchronization is optional and never blocks the agent-led GitHub/Vercel release.
 
 ## Required Workflow
 
 1. Complete Stage 0 and use `affiliate-page-intent-brief` to validate evidence and intent with its `DesignDirectionV1`.
 2. Branch on the intent disposition before drafting:
    - Continue to `direct-review-page-drafter` only for `new_page`, `rewrite_existing` with an explicit target, or explicit internal `noindex_draft`.
-   - Stop normal page production for `merge_into_existing`, `hold_for_evidence`, `hold_for_design_direction`, or `reject`; route the work to the named action.
+   - Route `merge_into_existing`, `hold_for_evidence`, or `hold_for_design_direction` to the named repair action. Stop only for `reject` or after the permitted recovery attempts are exhausted.
 3. Use `direct-review-page-drafter` for eligible briefs only, then require the Stage 0 visual pass before `landing-page-uniqueness-review`.
 4. Use `landing-page-uniqueness-review`; continue only when it returns `status: pass` and `publish_readiness: eligible_for_next_gate`.
 5. Use `affiliate-compliance-review`; continue only when it returns `status: pass` and `publish_readiness: eligible_for_conversion_review`.
-6. Use `conversion-copy-review`; continue only when it returns `status: pass` and `publish_readiness: eligible_for_owner_review`.
-7. Require the URL to be present exactly in `approved-urls.md`, then hand off to the unattended gate evaluator and bot-PR release workflow. Omit high-risk public claims; unknown state blocks publication.
+6. Use `conversion-copy-review`; continue only when it returns `status: pass` and `publish_readiness: eligible_for_release`.
+7. Require the URL to be present exactly in `approved-urls.md`, then continue through the unattended gate evaluator, bot PR, Vercel preview, automatic merge, production deployment, live verification, and `LandingReleaseReceiptV1`. Omit or soften unproved high-risk public claims and rerun the affected gate.
 8. Use `landing-page-batch-retro` after every batch or repeated correction loop; update or explicitly defer recurring design failures before another wave.
 
 When generated artifacts exist, run the deterministic scanners owned by uniqueness, compliance, and conversion during their respective gates. Do not skip ahead because the page is "simple" or "just a keyword variant".
@@ -46,14 +46,14 @@ When generated artifacts exist, run the deterministic scanners owned by uniquene
 
 ## Review integration
 
-Use the applicable project-local review skills for intent, uniqueness, compliance, conversion, and retro. Follow the canonical workflow's ownership and stop conditions; review artifacts are not owner approval or publication authority.
+Use the applicable project-local review skills for intent, uniqueness, compliance, conversion, and retro. Follow the canonical workflow's ownership and recovery rules; review artifacts are not publication authority.
 
 ## Handoff Rules
 
 - Treat `status: pass` as gate-specific only. It never means publish-ready until conversion passes and independent unattended gates are recorded.
-- Treat `eligible_for_next_gate`, `eligible_for_conversion_review`, and `eligible_for_owner_review` as different states.
+- Treat `eligible_for_next_gate`, `eligible_for_conversion_review`, and `eligible_for_release` as different states.
 - Do not treat pending allowlist/release evaluation as a drafter or compliance failure unless generated JSON self-attests approval or publication state.
-- Preserve upstream `reason_codes`, `recommended_action`, `action_target`, `required_changes`, scanner summaries, and owner decisions in the final report.
+- Preserve upstream `reason_codes`, `recommended_action`, `action_target`, `required_changes`, scanner summaries, recovery evidence, and release results in the final report.
 
 ## Publish-Readiness Hard Gate
 
@@ -79,5 +79,5 @@ For every page or batch, report:
 - Gate statuses.
 - Files reviewed or generated.
 - Blocking findings.
-- Owner decisions needed.
+- Automatic repairs performed or the one exact external action still needed.
 - Skill/process updates made or deferred.

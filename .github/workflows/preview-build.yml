@@ -1,0 +1,106 @@
+name: Landing release checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm test
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_POLICY_EFFECTIVE_DATE: ${{ vars.PUBLIC_POLICY_EFFECTIVE_DATE }}
+      INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: ${{ vars.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT }}
+      PUBLIC_SITE_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+      VERCEL_ENV: preview
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run gate:public-release
+      - name: Count V2 visual-review pages
+        id: visual-pages
+        run: echo "count=$(npm run --silent landing:visual:count)" >> "$GITHUB_OUTPUT"
+      - name: Install locked Chromium
+        if: steps.visual-pages.outputs.count != '0'
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Run visual validation
+        if: steps.visual-pages.outputs.count != '0'
+        run: npm run landing:visual
+      - name: Upload visual artifacts
+        if: steps.visual-pages.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-visual-artifacts
+          path: .stage2/landing-visual
+      - run: npm run build
+
+  landing-workflow:
+    name: landing-workflow
+    needs: [typecheck, lint, test, build]
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_POLICY_EFFECTIVE_DATE: ${{ vars.PUBLIC_POLICY_EFFECTIVE_DATE }}
+      INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: ${{ vars.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT }}
+      PUBLIC_SITE_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run gate:public-release
+      - name: Validate each agent release candidate
+        shell: bash
+        run: |
+          mapfile -t candidate_files < <(git ls-tree -r --name-only HEAD -- src/generated/landing-pages | sed -nE 's#^src/generated/landing-pages/([^/]+\.json)$#\1#p' | grep -v '^index\.json$' | sort -u)
+          for candidate_file in "${candidate_files[@]}"; do
+            npm run landing:quality:candidate -- --artifact "$candidate_file" --report-dir ".stage2/landing-quality/candidates/${candidate_file%.json}"
+          done
+      - run: npm run landing:quality:production -- --ci-parallel-core --report-dir .stage2/landing-quality/production
+      - name: Validate each committed UUID batch
+        shell: bash
+        run: |
+          mapfile -t batch_ids < <(git ls-tree -r --name-only HEAD -- src/generated/landing-page-batches | sed -nE 's#^src/generated/landing-page-batches/([0-9A-Fa-f]{8}-[0-9A-Fa-f-]{27})/manifest.json$#\1#p' | sort -u)
+          for batch_id in "${batch_ids[@]}"; do
+            npm run landing:quality:draft -- --ci-parallel-core --batch-id "$batch_id" --report-dir ".stage2/landing-quality/batches/$batch_id"
+          done
+      - run: npm run gate:stage2:pre-review -- --ci-parallel-core

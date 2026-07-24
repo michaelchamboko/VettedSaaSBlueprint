@@ -54,7 +54,7 @@ Fail readiness when:
 
 Before summarizing batch results, confirm each wave ran `npm run landing:references:validate` against the local catalogue and stored desktop/mobile capture hashes without recrawling reference sites, then used `npm run landing:references:select -- --category <slug> --buyer-decision <text> [--tags <adjacent-tags>]`. Selection is three references by default; two only when they cover at least four unique design dimensions and include one that matches the product category or an adjacent/neighbor category. Confirm `hero/typography`, `sections/CTA`, and `motion/mobile` roles plus IDs, entry digests, adopted abstract principles, non-copy boundaries, rationale, design read, and `DesignDirectionV1`.
 
-Confirm each direction became a valid `PresentationRecipeV1` with registered tokens only: never accept page-specific JSX/CSS/JavaScript or a silent Editorial V2, `editorial_v2`, or legacy fallback. Confirm a production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1`; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates. Missing, stale, invalid, unsuitable, reuse-limited, recipe/fingerprint-mismatched, or non-passing artifacts require `hold_for_design_direction`. Oracle remains required only for audited final approval/publication; it does not block local Stage 0, noindex drafting, or visual preview.
+Confirm each direction became a valid `PresentationRecipeV1` with registered tokens only: never accept page-specific JSX/CSS/JavaScript or a silent Editorial V2, `editorial_v2`, or legacy fallback. Confirm a production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1`; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates. Missing, stale, invalid, unsuitable, reuse-limited, recipe/fingerprint-mismatched, or non-passing artifacts require `hold_for_design_direction`. Oracle synchronization is optional for the agent-led release: record `pending` or `not_configured`, and never block local Stage 0, GitHub/Vercel publication, or live verification on Oracle.
 
 ## Fan-Out / Fan-In Rules
 
@@ -86,7 +86,7 @@ The main agent owns final synthesis. Normalize reviewer outputs into the failure
 | Exact field collision, near-duplicate copy, same-intent sibling, thin keyword swap, copied score signature | `landing-page-uniqueness-review` or deterministic scanner |
 | Weak disclosure, unknown program rules, unsupported sensitive claim, review-basis overclaim, claim substantiation gap | `affiliate-compliance-review` |
 | Hero decision unclear, CTA intent mismatch, weak mobile scan, generic objections, generic limitations, message-match gap | `conversion-copy-review` |
-| Skipped sequence, missing shared review packet, missing owner approval, unresolved handoff, ignored retro gate | `landing-page-production-orchestrator` |
+| Skipped sequence, missing shared review packet, missing release receipt, unresolved handoff, ignored retro gate | `landing-page-production-orchestrator` |
 | Placeholder IDs, CTA id mismatch, self-attested approvals, high evidence score without proof, repeated static duplicate pattern | deterministic scanner or schema/static check |
 | Missing source/evidence/destination/program records | source-record process or owner decision |
 | Time loss caused by unclear sequence, repeated manual fixes, or poor review packet quality | process documentation |
@@ -137,7 +137,7 @@ Fail the retro when:
 - Shrink to one exemplar when critical/high recurrence, scaled-content risk, thin-affiliate risk, duplicate-intent risk, unsupported claims, or unresolved records recur.
 - Block the next batch when critical failures remain unresolved and are not explicitly owner-accepted with a safe cap.
 - Prefer fewer high-quality pages over broad keyword coverage.
-- Use deterministic checks for structural recurrence and human review for semantic buyer-intent, compliance, and owner-judgment calls.
+- Use deterministic checks for structural recurrence and independent structured review for semantic buyer-intent and compliance decisions.
 - Track whether each ten-page wave achieved unique fingerprints without live per-page browsing.
 
 ## Common Mistakes
