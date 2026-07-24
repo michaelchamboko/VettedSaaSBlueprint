@@ -40,6 +40,7 @@ export async function runDesignReferenceIngestionCli(input: {
   args?: string[];
   catalogueDirectory?: string;
   adapter?: ReferenceCaptureAdapter;
+  ci?: boolean;
   write?: (output: string) => void;
 } = {}) {
   const args = input.args ?? process.argv.slice(2);
@@ -47,7 +48,7 @@ export async function runDesignReferenceIngestionCli(input: {
   const manifestPath = manifestFlag >= 0 ? args[manifestFlag + 1] : undefined;
   if (!manifestPath) throw new Error("--manifest requires a local manifest path.");
   const dryRun = args.includes("--dry-run");
-  const ci = args.includes("--ci") || process.env.CI === "true";
+  const ci = input.ci ?? (args.includes("--ci") || process.env.CI === "true");
   const manifest = JSON.parse(await readFile(path.resolve(manifestPath), "utf8"));
   const adapter = input.adapter ?? (!dryRun && !ci ? await createPlaywrightReferenceCaptureAdapter() : undefined);
   try {

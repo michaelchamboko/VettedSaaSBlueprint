@@ -6,6 +6,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { loadLandingStaticContext } from "../scripts/scan-landing-static.mjs";
+
 const staticChecks = [
   "route",
   "structure",
@@ -24,14 +26,30 @@ const staticChecks = [
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const draftBatchId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
-type ReportScope = { mode: "draft" | "production"; targetDir: string; count: number };
+type ReportScope = {
+  mode: "draft" | "production";
+  targetDir: string;
+  count: number;
+  editorialCount: number;
+};
 
 function productionReportScope(): ReportScope {
-  return { mode: "production", targetDir: "src/generated/landing-pages", count: 0 };
+  const context = loadLandingStaticContext();
+  return {
+    mode: "production",
+    targetDir: "src/generated/landing-pages",
+    count: context.rows.length,
+    editorialCount: context.rows.length + context.editorialRows.length,
+  };
 }
 
 function draftReportScope(reportDir: string): ReportScope {
-  return { mode: "draft", targetDir: path.join(reportDir, "drafts"), count: 1 };
+  return {
+    mode: "draft",
+    targetDir: path.join(reportDir, "drafts"),
+    count: 1,
+    editorialCount: 1,
+  };
 }
 
 function draftGateArgs(scope: ReportScope) {
@@ -163,7 +181,9 @@ async function writeReport(reportDir: string, scan: string, report: unknown) {
 
 async function writePassingReports(reportDir: string, scope = productionReportScope()) {
   for (const check of staticChecks) {
-    await writeReport(reportDir, check, staticReport(check, scope.count, scope));
+    const scannedCount =
+      check === "editorial-v2" ? scope.editorialCount : scope.count;
+    await writeReport(reportDir, check, staticReport(check, scannedCount, scope));
   }
   await writeReport(reportDir, "uniqueness", uniquenessReport(scope.count, scope));
   await writeReport(reportDir, "compliance", complianceReport(scope.count, scope));

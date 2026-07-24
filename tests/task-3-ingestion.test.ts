@@ -164,6 +164,7 @@ test("CLI accepts a mocked capture adapter, uses the exact viewport plan, and cl
   await ingestionCliModule.runDesignReferenceIngestionCli({
     args: ["--manifest", manifestPath],
     catalogueDirectory: directory,
+    ci: false,
     adapter: {
       capture: async (_url, viewport) => {
         captures.push(viewport);

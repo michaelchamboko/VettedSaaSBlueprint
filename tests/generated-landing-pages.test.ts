@@ -6,20 +6,19 @@ import path from "node:path";
 
 import { getLandingPageManifest, getPublishedLandingPage, listPublishedLandingPageParams, listPublishedLandingPageSlugs, loadPublishedLandingPageSummariesFromDirectory } from "../src/lib/generated/landing-pages";
 
-test("unverified local generated artifacts are not exposed as published slugs", () => {
+test("only the verified agent release is exposed as a published slug", () => {
   const slugs = listPublishedLandingPageSlugs();
-  assert.deepEqual(slugs, []);
+  assert.deepEqual(slugs, ["elevenlabs-ai-voice-generator"]);
 });
 
 test("generated slugs param helper returns route params", () => {
   const params = listPublishedLandingPageParams();
-  const hasWorkflow = params.some((entry) => entry.slug === "workflow-tools-review");
-  assert.equal(hasWorkflow, false);
+  assert.deepEqual(params, [{ slug: "elevenlabs-ai-voice-generator" }]);
 });
 
 test("published landing page can be retrieved and is schema-valid", () => {
-  const blueprint = getPublishedLandingPage("workflow-tools-review");
-  assert.equal(blueprint, null);
+  const blueprint = getPublishedLandingPage("elevenlabs-ai-voice-generator");
+  assert.equal(blueprint?.metadata.url_slug, "elevenlabs-ai-voice-generator");
 });
 
 test("non-matching slug returns null", () => {
@@ -31,7 +30,8 @@ test("invalid slug format is blocked", () => {
   const invalid = getPublishedLandingPage("../bad/slug");
   assert.equal(invalid, null);
   const manifest = getLandingPageManifest();
-  assert.equal(manifest.length, 0);
+  assert.equal(manifest.length, 1);
+  assert.equal(manifest[0]?.slug, "elevenlabs-ai-voice-generator");
 });
 
 test("missing generated manifest is a valid empty public catalogue", async () => {
