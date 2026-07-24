@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-07-24T22:04:46.778Z",
+  "pages": [
+    {
+      "slug": "elevenlabs-ai-voice-generator",
+      "title": "ElevenLabs AI Voice Generator: A Practical Fit Check",
+      "artifact": "elevenlabs-ai-voice-generator.json",
+      "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "status": "published",
+      "publication_source": "agent_verified_release",
+      "published_at": "2026-07-24T22:04:46.778Z",
+      "current_version_id": "agent-release-73acf1f",
+      "release_receipt": "releases/elevenlabs-ai-voice-generator/release-receipt.json"
+    }
+  ]
+}
