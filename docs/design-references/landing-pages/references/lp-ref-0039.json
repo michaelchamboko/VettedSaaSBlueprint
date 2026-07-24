@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0039",
+  "source_url": "https://www.clay.com",
+  "captured_at": "2026-07-14T06:55:47.959Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0039/desktop.webp",
+      "sha256": "399db4d2023a1ecac39761e7dc2b44bb3260f94473e653c90beb42fa4c393470",
+      "byte_size": 117122
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0039/mobile.webp",
+      "sha256": "0c16832368a316ae8c7c5447a0b19e9c761a28d60a32948999dce60e402b9877",
+      "byte_size": 49650
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "developer-tools",
+  "category_tags": [
+    "developer-tools",
+    "software-development",
+    "technical-saas"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 128px with 720px width.",
+      "media_strategy": "img at 0,-54 sized 1440×1072."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed Roobertvf, Arial, sans-serif.",
+      "body_style": "Computed body family Roobertvf, Arial, sans-serif at 16px.",
+      "scale": "88px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 575 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Get data from the most complete data marketplace” at y=2815 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at 1144,9.",
+      "label_pattern": "Observed concise action label “Get a demo”.",
+      "interaction": "Measured solid interactive control sized 107×39."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 8479 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "56.984375px navigation across 34 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 8px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 128,604 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font Roobertvf, Arial, sans-serif, 88px, weight 575; body Roobertvf, Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Get data from the most complete data marketplace” at y=2815 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Get a demo” measured 107×39."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 34 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "2f368d38fd19a8558d41cd626868fc8b2f6d1f5c7d84bd37bbb6478312e0dfeb"
+}

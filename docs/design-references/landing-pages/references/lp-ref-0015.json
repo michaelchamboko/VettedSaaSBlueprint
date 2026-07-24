@@ -1,0 +1,162 @@
+{
+  "id": "lp-ref-0015",
+  "source_url": "https://www.airtable.com",
+  "captured_at": "2026-07-14T06:51:50.820Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0015/desktop.webp",
+      "sha256": "b535e0d60db9fa3c72357ac495cbfb33123a125dd182f256d48e4e70852a4153",
+      "byte_size": 32398
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0015/mobile.webp",
+      "sha256": "dac61278742242ffd446c5754aa63d605ec5e1c89260a2d96f6715f765324311",
+      "byte_size": 23678
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "proof_led",
+      "composition": "Measured proof led composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 267px with 907px width.",
+      "media_strategy": "video at 163,444 sized 1114×150."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed Haas, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif.",
+      "body_style": "Computed body family \"Haas Groot Disp\", Haas, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif at 20px.",
+      "scale": "40px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 400 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "proof_blocks",
+        "family": "process_timeline",
+        "composition_notes": "Observed heading “Trusted by 500,000 leading teams” at y=1110 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Sophisticated workflows in minutes, not months” at y=1469 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Sophisticated workflows in minutes, not months” at y=1469 with 2 column(s) and 2 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Start building with AirtableTeams at over 500,000 forward-thinking organizations use Airtable every day. Join them.” at y=6976 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 1018,54.",
+      "label_pattern": "Observed concise action label “Book Demo”.",
+      "interaction": "Measured solid interactive control sized 140×55."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 3907 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "135.6875px navigation across 4 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 70px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "proof_led"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "process_timeline",
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured proof led hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 267,161 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font Haas, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif, 40px, weight 400; body \"Haas Groot Disp\", Haas, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Trusted by 500,000 leading teams” at y=1110 with 1 column(s) and 1 item(s).",
+          "Observed heading “Sophisticated workflows in minutes, not months” at y=1469 with 1 column(s) and 1 item(s).",
+          "Observed heading “Sophisticated workflows in minutes, not months” at y=1469 with 2 column(s) and 2 item(s).",
+          "Observed heading “Start building with AirtableTeams at over 500,000 forward-thinking organizations use Airtable every day. Join them.” at y=6976 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "proof_blocks:process_timeline",
+          "objection_handling:closing_manifesto",
+          "how_it_works:closing_manifesto",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Book Demo” measured 140×55."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 4 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "aa4293b7c8c8ddb98c8f628904f6c97dec75fa8cacf5406b37d1f605ab47e2cd"
+}

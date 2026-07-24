@@ -1,0 +1,188 @@
+{
+  "schema_version": "ProductEvidencePackV1",
+  "product": {
+    "id": "4bd13ca8-2e55-463e-afa9-139c963bc9fd",
+    "name": "ElevenLabs",
+    "slug": "elevenlabs",
+    "category": "AI voice generation",
+    "website_url": "https://elevenlabs.io/",
+    "description": "Voice tools that include a documented text-to-speech workflow.",
+    "primary_audience": "Creators evaluating script-to-audio voice generation"
+  },
+  "references": {
+    "product_id": "4bd13ca8-2e55-463e-afa9-139c963bc9fd",
+    "affiliate_link_id": "faaf525e-8034-446c-b4c9-e4a8b0e7e5bf",
+    "offer_folder_id": "9896fdc0-4778-4ae1-8f42-472277f4b2e7",
+    "destination_review_id": "89d36051-0b92-4ed7-b2de-c7e4a55c382f",
+    "program_rule_id": "d60dae51-01ed-4b35-904b-b003a290d6ca",
+    "compliance_profile_id": "729dcfec-af4b-454d-9033-b98cf10c4e84",
+    "source_ids": [
+      "855af681-520a-4d8e-9ded-855f804643eb",
+      "6f4a6dc2-dbae-40c9-94f5-4ec251bc07f8",
+      "89d36051-0b92-4ed7-b2de-c7e4a55c382f"
+    ],
+    "evidence_claim_ids": [
+      "93734070-1ed6-40c2-8ddc-371e1e20c41c",
+      "577e8a01-c3fd-4c2b-9c02-124891c39ec7",
+      "1e25ff21-8770-4861-a15e-3097e638f1f2"
+    ],
+    "page_blueprint_ids": [
+      "f5f995b5-a52e-4bff-94a2-2cf02bf4a218"
+    ]
+  },
+  "affiliate": {
+    "original_url": "https://try.elevenlabs.io/izj2b165mcsj",
+    "link_type": "affiliate",
+    "destination_review": {
+      "id": "89d36051-0b92-4ed7-b2de-c7e4a55c382f",
+      "state": "reviewed",
+      "checked_at": "2026-07-24T19:02:00.000Z",
+      "final_visible_url": "https://elevenlabs.io/?pscd=try.elevenlabs.io&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=0crPeHNUvN0KXQ&gsxid=0crPeHNUvN0KXQ&gspk=MDViMDMwMTkwYThj",
+      "redirect_chain": [
+        "https://try.elevenlabs.io/izj2b165mcsj",
+        "https://elevenlabs.io/?pscd=try.elevenlabs.io&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=0crPeHNUvN0KXQ&gsxid=0crPeHNUvN0KXQ&gspk=MDViMDMwMTkwYThj"
+      ],
+      "usage_notes": "The exact supplied URL returned HTTP 200 after one redirect. Public CTAs preserve the supplied URL rather than the resolved URL."
+    }
+  },
+  "offer_folder": {
+    "id": "9896fdc0-4778-4ae1-8f42-472277f4b2e7",
+    "name": "ElevenLabs voice tools"
+  },
+  "program_rules": {
+    "id": "d60dae51-01ed-4b35-904b-b003a290d6ca",
+    "program_name": "Conservative exact-URL release profile",
+    "state": "documented",
+    "required_disclosure": "Disclose the affiliate relationship before or near the first CTA.",
+    "rules": [
+      {
+        "name": "exact_url",
+        "value": "allowed",
+        "usage_notes": "Use only the exact operator-supplied affiliate URL."
+      },
+      {
+        "name": "unsupported_commercial_claims",
+        "value": "disallowed",
+        "usage_notes": "Do not state pricing, discounts, guarantees, or trial terms without current claim-level proof."
+      },
+      {
+        "name": "vendor_assets",
+        "value": "disallowed",
+        "usage_notes": "This release uses no copied vendor imagery, logo, or proprietary asset."
+      }
+    ],
+    "unknown_reason": null
+  },
+  "compliance_profile": {
+    "id": "729dcfec-af4b-454d-9033-b98cf10c4e84",
+    "required_disclosure": "We may earn a commission if you use this link, at no extra cost to you.",
+    "import_notes": "Low-risk factual copy only; exact URL, source mapping, disclosure, and live destination are independently checked."
+  },
+  "disclosures": {
+    "short": "We may earn a commission if you use this link, at no extra cost to you.",
+    "full": "This page contains an affiliate link. If you visit ElevenLabs through it and later make a purchase, we may earn a commission at no extra cost to you.",
+    "placement_notes": "Short disclosure is immediately before the first CTA; full disclosure appears in the page footer."
+  },
+  "review_basis": {
+    "basis": "vendor_docs",
+    "summary": "Copy is based on current official ElevenLabs product documentation plus a live affiliate destination check.",
+    "first_hand_boundary": "No hands-on audio-quality claim, endorsement, ranking, price, discount, or guaranteed outcome is made."
+  },
+  "sources": [
+    {
+      "id": "855af681-520a-4d8e-9ded-855f804643eb",
+      "source_type": "official_product_guide",
+      "url": "https://elevenlabs.io/docs/eleven-creative/playground/text-to-speech",
+      "title": "Text to Speech product guide",
+      "retrieved_at": "2026-07-24T18:55:00.000Z",
+      "source_sha256": "8d21c656a6df0786fe0f2f4e67785f41fbb3fd3dc8f02a7747f2af4f70a337a1",
+      "usage_notes": "Supports the documented input, voice selection, optional settings, generate workflow and the need to test model/voice combinations."
+    },
+    {
+      "id": "6f4a6dc2-dbae-40c9-94f5-4ec251bc07f8",
+      "source_type": "official_help_guide",
+      "url": "https://elevenlabs.io/docs/help-center/product/speech-synthesis/text-to-speech/how-do-i-select-the-language-and-accent",
+      "title": "How do I select the language and accent?",
+      "retrieved_at": "2026-07-24T18:55:00.000Z",
+      "source_sha256": "722f3ae7a0bbb80f1fdbb1c5dfd54286cb81f2726ca09b21ab0344ab0c4b1fa2",
+      "usage_notes": "Supports the language-from-text and accent-from-voice limitation and mitigation."
+    },
+    {
+      "id": "89d36051-0b92-4ed7-b2de-c7e4a55c382f",
+      "source_type": "live_destination_check",
+      "url": "https://try.elevenlabs.io/izj2b165mcsj",
+      "title": "Exact affiliate destination check",
+      "retrieved_at": "2026-07-24T19:02:00.000Z",
+      "source_sha256": "1762d2f0dda7e08c26b1349888d7b32a67699f24f415bf41894906145a43ad43",
+      "usage_notes": "Supports active destination and exact CTA preservation only."
+    }
+  ],
+  "evidence_claims": [
+    {
+      "id": "93734070-1ed6-40c2-8ddc-371e1e20c41c",
+      "source_id": "855af681-520a-4d8e-9ded-855f804643eb",
+      "claim": "The documented text-to-speech workflow accepts text, a selected voice, optional settings, and generates audio.",
+      "claim_type": "product_workflow",
+      "risk_level": "low",
+      "confidence_score": 0.96,
+      "allowed_wording": "Enter or paste a representative script, choose a voice, optionally adjust settings, and generate audio for review.",
+      "usage_notes": "Do not turn this into an audio-quality guarantee."
+    },
+    {
+      "id": "577e8a01-c3fd-4c2b-9c02-124891c39ec7",
+      "source_id": "6f4a6dc2-dbae-40c9-94f5-4ec251bc07f8",
+      "claim": "Language follows the text while accent and pronunciation depend on the selected voice.",
+      "claim_type": "product_limitation",
+      "risk_level": "low",
+      "confidence_score": 0.95,
+      "allowed_wording": "Match the selected voice to the target language and preferred accent, then review pronunciation.",
+      "usage_notes": "State this as a test requirement, not guaranteed accent fidelity."
+    },
+    {
+      "id": "1e25ff21-8770-4861-a15e-3097e638f1f2",
+      "source_id": "89d36051-0b92-4ed7-b2de-c7e4a55c382f",
+      "claim": "The exact affiliate URL returned HTTP 200 and resolved to the official ElevenLabs host on 2026-07-24.",
+      "claim_type": "destination_status",
+      "risk_level": "low",
+      "confidence_score": 0.99,
+      "allowed_wording": "Open the official ElevenLabs destination.",
+      "usage_notes": "Recheck during preview and production verification."
+    }
+  ],
+  "claim_to_evidence": [
+    {
+      "claim_key": "documented_workflow",
+      "evidence_claim_ids": [
+        "93734070-1ed6-40c2-8ddc-371e1e20c41c"
+      ],
+      "usage_notes": "Used in benefits, how-it-works, and FAQ."
+    },
+    {
+      "claim_key": "language_voice_fit",
+      "evidence_claim_ids": [
+        "577e8a01-c3fd-4c2b-9c02-124891c39ec7"
+      ],
+      "usage_notes": "Used in benefit, limitation, objection, and FAQ."
+    },
+    {
+      "claim_key": "active_destination",
+      "evidence_claim_ids": [
+        "1e25ff21-8770-4861-a15e-3097e638f1f2"
+      ],
+      "usage_notes": "Used only for CTA destination continuity."
+    }
+  ],
+  "prohibited_claims": [
+    "Any current price, discount, free-trial, refund, or guarantee claim",
+    "Any best, number-one, superiority, or competitor-ranking claim",
+    "Any hands-on testing, independent endorsement, customer-count, or performance claim"
+  ],
+  "sibling_context": [],
+  "proposed_buyer_decisions": [
+    {
+      "page_blueprint_id": "f5f995b5-a52e-4bff-94a2-2cf02bf4a218",
+      "slug": "elevenlabs-ai-voice-generator",
+      "buyer_decision": "Whether ElevenLabs fits a creator who needs script-to-audio voice options and can review pronunciation before publishing."
+    }
+  ]
+}

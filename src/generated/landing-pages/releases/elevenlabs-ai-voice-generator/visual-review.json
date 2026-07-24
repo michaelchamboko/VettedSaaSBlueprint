@@ -1,0 +1,58 @@
+{
+  "schema_version": "VisualDesignReviewV1",
+  "status": "pass",
+  "page_slug": "elevenlabs-ai-voice-generator",
+  "recipe_id": "recipe-ff3cbc78652de19b",
+  "recipe_fingerprint": "ff3cbc78652de19b7e0b32b7d696b81524fad59dbbfdee3dd26eaf4002d70b75",
+  "selected_references": [
+    {
+      "reference_id": "lp-ref-0006",
+      "role": "hero_typography",
+      "entry_digest": "0eb82e428e56a97bfcd2546b47b4f073db795cd338dd5b06ecd72daaf029af3b"
+    },
+    {
+      "reference_id": "lp-ref-0048",
+      "role": "sections_cta",
+      "entry_digest": "bbc9f88944ba30c72d10c1fc83a5b23eed80103158be11cbf55f502a706ae5b0"
+    },
+    {
+      "reference_id": "lp-ref-0001",
+      "role": "motion_mobile",
+      "entry_digest": "d826da67164283cff3a4b36500d72e672a9d353d8ad6f0c0eedec55082e34722"
+    }
+  ],
+  "checks": {
+    "desktop_composition": "pass",
+    "mobile_composition": "pass",
+    "cta_wrapping": "pass",
+    "overlap": "pass",
+    "horizontal_overflow": "pass",
+    "reduced_motion": "pass",
+    "reference_application_without_copying": "pass",
+    "presentation_fingerprint": "pass",
+    "browser_errors": "pass"
+  },
+  "verification": {
+    "checked_at": "2026-07-24T19:23:52.432Z",
+    "preview_url": "http://127.0.0.1:3100/landing-page-previews/elevenlabs-ai-voice-generator",
+    "desktop_viewport": "1440x900",
+    "mobile_viewport": "390x844",
+    "desktop_screenshot": "elevenlabs-preview-desktop-final.png",
+    "mobile_screenshot": "elevenlabs-preview-mobile.png",
+    "desktop_http_status": 200,
+    "mobile_http_status": 200,
+    "exact_affiliate_cta_count": 2,
+    "mobile_page_scroll_width": 390,
+    "mobile_page_client_width": 390,
+    "all_reveal_sections_visible": true,
+    "console_errors": [],
+    "page_errors": [],
+    "request_failures": []
+  },
+  "notes": [
+    "Uses the approved no-image fallback so optional imagery cannot block the page.",
+    "All eight reveal sections became fully visible under realistic scrolling on desktop and mobile.",
+    "The proof-strip section retains contained horizontal card scrolling without creating page-level overflow.",
+    "Reduced-motion mode leaves every section visible with no transform."
+  ]
+}

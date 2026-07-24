@@ -1,0 +1,64 @@
+{
+  "schema_version": "LandingReleaseReceiptV1",
+  "slug": "elevenlabs-ai-voice-generator",
+  "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+  "exact_affiliate_url": "https://try.elevenlabs.io/izj2b165mcsj",
+  "url_fingerprint": "5bd5f93cf3f0fb08d6b4c8936954acb04e872b4eec1752c7612bb3372984ca6c",
+  "authorization": {
+    "source": "approved-urls.md",
+    "exact_url": "https://try.elevenlabs.io/izj2b165mcsj",
+    "url_fingerprint": "5bd5f93cf3f0fb08d6b4c8936954acb04e872b4eec1752c7612bb3372984ca6c"
+  },
+  "artifacts": {
+    "page": {
+      "path": "elevenlabs-ai-voice-generator.json",
+      "sha256": "31bddd2eabf5c442be140691147f6436230a0be205935ace5b29774484ffa4dd"
+    },
+    "product_evidence": {
+      "path": "releases/elevenlabs-ai-voice-generator/product-evidence.json",
+      "sha256": "ad4eea31229ef9a989369849975a9212f65a9505ad15a8ba7ef17645615ef124"
+    },
+    "visual_review": {
+      "path": "releases/elevenlabs-ai-voice-generator/visual-review.json",
+      "sha256": "2c5cf238305a3886d381e943a52eb97fd05c0ef224e11ef6742475cb3d9eda93"
+    },
+    "uniqueness_review": {
+      "path": "releases/elevenlabs-ai-voice-generator/uniqueness-review.json",
+      "sha256": "755975d98e450b8c6c19982633203d74fc2d0103c14a4b09bdf43079ad73519e"
+    },
+    "compliance_review": {
+      "path": "releases/elevenlabs-ai-voice-generator/compliance-review.json",
+      "sha256": "49d372517373662414780d81066f0e786a2b16f380c083a5f65288858408b433"
+    },
+    "conversion_review": {
+      "path": "releases/elevenlabs-ai-voice-generator/conversion-review.json",
+      "sha256": "02e3c19995d92dd78a5e61a8ea81fcfb8a1b9b68e286bc9a797a8a60a0f63faa"
+    },
+    "quality_receipt": {
+      "path": "releases/elevenlabs-ai-voice-generator/quality.json",
+      "sha256": "978f971900dee0e05288f527703386ac46ca926099264baf8d04286943ebfd46"
+    }
+  },
+  "checks": {
+    "product_evidence": true,
+    "visual": true,
+    "uniqueness": true,
+    "compliance": true,
+    "conversion": true,
+    "quality": true,
+    "exact_cta": true,
+    "disclosure": true,
+    "preview": true,
+    "clean_build": true
+  },
+  "release": {
+    "reviewed_commit": "73acf1fc1c233516ba70dd10069fc370826094f5",
+    "preview_url": "https://vetted-saa-s-blueprint-doe6xsj55-michaelchamboko-gravityclaw.vercel.app/landing-page-previews/elevenlabs-ai-voice-generator",
+    "verified_at": "2026-07-24T22:04:46.778Z"
+  },
+  "claims_removed_or_softened": [
+    "Omitted unverified price, discount, free-trial, guarantee, ranking, and performance claims.",
+    "Framed voice quality as a buyer-run pronunciation, pacing, accent, and consistency test instead of asserting an unsupported result."
+  ],
+  "oracle_sync": "not_configured"
+}

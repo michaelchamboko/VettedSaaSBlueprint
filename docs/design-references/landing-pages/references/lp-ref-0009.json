@@ -1,0 +1,155 @@
+{
+  "id": "lp-ref-0009",
+  "source_url": "https://www.figma.com",
+  "captured_at": "2026-07-14T06:50:24.680Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0009/desktop.webp",
+      "sha256": "449e743df4c7b10cc035fb87d0d014a2e2634f7ccc6799928e39d0e20cae0090",
+      "byte_size": 22442
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0009/mobile.webp",
+      "sha256": "7bdd72d2ea2ca3607a7ec4e80018600abbcb2c14b9448226ac1ec1e513f286b9",
+      "byte_size": 14786
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "design-tools",
+  "category_tags": [
+    "design-tools",
+    "productivity",
+    "saas-tools"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 40px with 328px width.",
+      "media_strategy": "img at 430,158 sized 581×700."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed figmaSans, \"figmaSans Fallback\", \"SF Pro Display\", system-ui, helvetica, sans-serif.",
+      "body_style": "Computed body family figmaSans, \"figmaSans Fallback\", \"SF Pro Display\", system-ui, helvetica, sans-serif at 16px.",
+      "scale": "56px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 400 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “One workspace for your entire product development process.” at y=938 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Start with design context. Build with consistency.” at y=4701 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "problem_solution",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “The products you love are designed in Figma” at y=5815 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1048,16.",
+      "label_pattern": "Observed concise action label “Contact sales”.",
+      "interaction": "Measured solid interactive control sized 151×46."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "1 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 2486 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "72px navigation across 1 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 13px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 40,396 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font figmaSans, \"figmaSans Fallback\", \"SF Pro Display\", system-ui, helvetica, sans-serif, 56px, weight 400; body figmaSans, \"figmaSans Fallback\", \"SF Pro Display\", system-ui, helvetica, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “One workspace for your entire product development process.” at y=938 with 1 column(s) and 1 item(s).",
+          "Observed heading “Start with design context. Build with consistency.” at y=4701 with 1 column(s) and 1 item(s).",
+          "Observed heading “The products you love are designed in Figma” at y=5815 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "how_it_works:closing_manifesto",
+          "closing_cta:closing_manifesto",
+          "problem_solution:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Contact sales” measured 151×46."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 1 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 1 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "83f9d63b9282b3fcf6ed355831c283258a6fcb0ab255bc588c18193c4a0bc93f"
+}

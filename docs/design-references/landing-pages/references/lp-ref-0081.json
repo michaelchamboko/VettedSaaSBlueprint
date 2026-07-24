@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0081",
+  "source_url": "https://www.cnet.com",
+  "captured_at": "2026-07-14T07:01:28.466Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0081/desktop.webp",
+      "sha256": "49e35ea4157441b673b8382bb845ee622eec9da58a6dfd877e5e526f28f72314",
+      "byte_size": 65516
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0081/mobile.webp",
+      "sha256": "86a655e987e2298d7990b53236e53cc58e347af9e22f90e137f105251fa578a7",
+      "byte_size": 29660
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "affiliate-editorial",
+    "product-reviews"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "asymmetric_split",
+      "composition": "Measured asymmetric split composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 72px with 1px width.",
+      "media_strategy": "picture at 292,536 sized 645×363."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed monumentgrotesk, sans-serif.",
+      "body_style": "Computed body family monumentgrotesk, sans-serif at 16px.",
+      "scale": "52px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 700 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Today's Deals” at y=512 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1096,311.",
+      "label_pattern": "Observed concise action label “Add as a preferred source on Google”.",
+      "interaction": "Measured solid interactive control sized 200×54."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "3 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "3 animation(s) remained with reduced motion and 14961 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "interleaved",
+      "stacking": "interleaved order derived from H1, media and CTA positions.",
+      "navigation": "80px navigation across 1 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 1251px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "asymmetric_split"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "interleaved"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured asymmetric split hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 72,311 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font monumentgrotesk, sans-serif, 52px, weight 700; body monumentgrotesk, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Today's Deals” at y=512 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "how_it_works:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Add as a preferred source on Google” measured 200×54."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 3 normal-motion animation(s) and 3 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 1 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "15611e70ae1a8a6977a3cce81428cb5ac423752c4dab44a36450a7f28af2bb0d"
+}

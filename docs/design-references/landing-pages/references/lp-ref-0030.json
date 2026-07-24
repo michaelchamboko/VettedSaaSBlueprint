@@ -1,0 +1,162 @@
+{
+  "id": "lp-ref-0030",
+  "source_url": "https://mailchimp.com",
+  "captured_at": "2026-07-14T06:54:56.090Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0030/desktop.webp",
+      "sha256": "9bcbbc74954527ab3b427e5f3c6d4d31a6b3ca3449861b7bd23e36d2c4b9bbd9",
+      "byte_size": 78558
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0030/mobile.webp",
+      "sha256": "459e18814be3ff6d43fc079e2dd325d29d49bddd4462b5d6c75f7d706fa1dea3",
+      "byte_size": 39246
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "marketing-tools",
+  "category_tags": [
+    "marketing-tools",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 240px with 960px width.",
+      "media_strategy": "picture at 0,139 sized 1440×652."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Means Web\", Georgia, Times, \"Times New Roman\", serif.",
+      "body_style": "Computed body family \"Graphik Web\", \"Helvetica Neue\", Helvetica, Arial, Verdana, sans-serif at 16px.",
+      "scale": "64px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 400 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Recommended for your business” at y=791 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Businesses like yours are thriving with Mailchimp” at y=2571 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Try our Standard plan for free!” at y=2951 with 1 column(s) and 2 item(s)."
+      },
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “One marketing platform to unite 300+ apps” at y=3555 with 2 column(s) and 2 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1185,83.",
+      "label_pattern": "Observed concise action label “Log In”.",
+      "interaction": "Measured solid interactive control sized 86×44."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "5 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 7899 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "60px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 73px.",
+      "overflow_behavior": "Document width 989px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 240,194 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Means Web\", Georgia, Times, \"Times New Roman\", serif, 64px, weight 400; body \"Graphik Web\", \"Helvetica Neue\", Helvetica, Arial, Verdana, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Recommended for your business” at y=791 with 1 column(s) and 1 item(s).",
+          "Observed heading “Businesses like yours are thriving with Mailchimp” at y=2571 with 1 column(s) and 1 item(s).",
+          "Observed heading “Try our Standard plan for free!” at y=2951 with 1 column(s) and 2 item(s).",
+          "Observed heading “One marketing platform to unite 300+ apps” at y=3555 with 2 column(s) and 2 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "proof_blocks:closing_manifesto",
+          "closing_cta:closing_manifesto",
+          "benefits:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Log In” measured 86×44."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 5 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 989px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "a65eb77cf3fd98866ce1f955fc3849dda7891be297c5a02d42ac4f4892334626"
+}

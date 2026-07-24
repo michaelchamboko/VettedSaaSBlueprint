@@ -1,0 +1,4 @@
+interface:
+  display_name: "Landing Page Batch Retro"
+  short_description: "Turn batch failures into skill updates."
+  default_prompt: "Use $landing-page-batch-retro to review a landing-page batch and update the process."

@@ -1,0 +1,10 @@
+.env
+.env.*
+Wallet_*/
+Wallet_*.zip
+*.pem
+*.p12
+*.sso
+tnsnames.ora
+sqlnet.ora
+ojdbc.properties

@@ -1,0 +1,155 @@
+{
+  "metadata": {
+    "product_id": "00000000-0000-4000-8000-00000000c001",
+    "page_type": "direct_review",
+    "target_keyword": "synthetic studio review",
+    "search_intent": "commercial investigation",
+    "geo_target": null,
+    "category_slug": "workflow-tools",
+    "url_slug": "synthetic-studio-workflow-checklist",
+    "title_tag": "Synthetic Studio Workflow Checklist Review",
+    "meta_description": "Synthetic review of Synthetic Studio for small workflow owners. Verify setup, limits, and pricing on the destination before you commit.",
+    "canonical_url": "https://synthetic.example/landing-page-builders/synthetic-studio-workflow-checklist",
+    "robots": "noindex,nofollow",
+    "motion_profile": "gsap_editorial",
+    "design_profile": "reference_composed_v1"
+  },
+  "affiliate_disclosure": {
+    "short_disclosure": "Synthetic short disclosure.",
+    "full_disclosure": "Synthetic full disclosure used only inside landing-workflow examples.",
+    "placement": "above_first_cta"
+  },
+  "hero": {
+    "headline": "Synthetic Studio for small workflow checklists",
+    "subheadline": "A buyer-side review of Synthetic Studio for operators who already run a small workflow between three internal tools.",
+    "primary_cta_label": "Check Synthetic Studio fit",
+    "primary_cta_link_id": "00000000-0000-4000-8000-00000000b001",
+    "risk_reversal": "Verify setup, scope, and current plan on Synthetic Studio before you commit to a workflow.",
+    "social_proof_summary": null,
+    "answer_snippet": "Synthetic Studio documents an onboarding checklist and a single visible plan. This page is for an operator deciding whether the documented checklist is worth inspecting before visiting the destination; it does not claim first-hand use, does not promise outcomes, and does not assert approval.",
+    "visual_asset": null
+  },
+  "problem_solution": {
+    "problem": "Small workflow owners do not always have a single checklist to inspect before they commit to a new tool.",
+    "agitation": "Skipping that step usually means the operator re-discovers gaps after they have already paid.",
+    "solution": "Use this page to decide whether Synthetic Studio's documented checklist deserves a closer look."
+  },
+  "benefits": [
+    {
+      "benefit_title": "Documented onboarding checklist",
+      "benefit_description": "Synthetic Studio publishes a checklist for first-time operators, which is a useful artifact to inspect before committing.",
+      "feature_supporting_it": "Onboarding checklist is documented in the help center.",
+      "source_reference_ids": ["00000000-0000-4000-8000-00000000a101", "00000000-0000-4000-8000-00000000a201"],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Single visible plan",
+      "benefit_description": "Synthetic Studio lists a single plan in public documentation, which keeps the price-shape decision narrow.",
+      "feature_supporting_it": "Public pricing page lists one plan.",
+      "source_reference_ids": ["00000000-0000-4000-8000-00000000a102", "00000000-0000-4000-8000-00000000a202"],
+      "visual_asset": null
+    }
+  ],
+  "proof_blocks": [
+    {
+      "proof_type": "source_note",
+      "summary": "Synthetic source notes used to anchor the documented onboarding checklist and pricing claims.",
+      "source_reference_id": "00000000-0000-4000-8000-00000000a101",
+      "evidence_claim_id": "00000000-0000-4000-8000-00000000a201",
+      "confidence_score": 0.6
+    }
+  ],
+  "how_it_works": [
+    { "step_number": 1, "title": "Read the checklist", "description": "Open Synthetic Studio's onboarding checklist and identify the steps that map to your own workflow." },
+    { "step_number": 2, "title": "Compare plan shape", "description": "Compare the single visible plan against the budget and seats you need for a small operator." },
+    { "step_number": 3, "title": "Verify on the destination", "description": "Open the official destination to confirm current plan, regional availability, and any program rules before clicking." }
+  ],
+  "limitations": [
+    {
+      "limitation": "Documented plans can change.",
+      "who_it_affects": "Operators deciding on a multi-month commitment.",
+      "mitigation": "Re-check the public pricing page before you commit; this page does not cache plan details.",
+      "evidence_claim_id": "00000000-0000-4000-8000-00000000a202"
+    }
+  ],
+  "objection_handling": [
+    {
+      "objection": "Is Synthetic Studio worth a closer look without a free trial?",
+      "response": "The decision depends on the documented checklist, the plan shape, and the destination, not on this page.",
+      "source_reference_ids": ["00000000-0000-4000-8000-00000000a101", "00000000-0000-4000-8000-00000000a102"]
+    }
+  ],
+  "cta_blocks": [
+    {
+      "placement": "hero",
+      "label": "Check Synthetic Studio fit",
+      "supporting_text": "Opens the official destination so you can verify the documented checklist directly.",
+      "affiliate_link_id": "00000000-0000-4000-8000-00000000b001"
+    }
+  ],
+  "faq": [
+    {
+      "question": "Who is this Synthetic Studio review for?",
+      "answer": "It is for an operator deciding whether Synthetic Studio's documented checklist is worth a closer look before visiting the destination.",
+      "source_reference_ids": ["00000000-0000-4000-8000-00000000a101"]
+    },
+    {
+      "question": "Does this page claim first-hand use of Synthetic Studio?",
+      "answer": "No. The review basis is public research, not first-hand use.",
+      "source_reference_ids": ["00000000-0000-4000-8000-00000000a101"]
+    },
+    {
+      "question": "What should I verify before clicking through?",
+      "answer": "Verify the current plan, the documented checklist, and any program rules on the official destination.",
+      "source_reference_ids": ["00000000-0000-4000-8000-00000000a101", "00000000-0000-4000-8000-00000000a102"]
+    }
+  ],
+  "schema_markup": {
+    "faq_schema": {},
+    "breadcrumb_schema": {}
+  },
+  "quality_scores": {
+    "evidence_score": 70,
+    "originality_score": 80,
+    "conversion_score": 70,
+    "compliance_score": 80,
+    "readability_score": 80,
+    "seo_safety_score": 80,
+    "overall_score": 76
+  },
+  "presentation": {
+    "hero": "typographic_billboard",
+    "typography": "space_grotesk_dm_sans",
+    "section_order": [
+      "problem_solution",
+      "benefits",
+      "proof_blocks",
+      "how_it_works",
+      "limitations",
+      "objection_handling",
+      "faq",
+      "closing_cta"
+    ],
+    "section_variants": {
+      "problem_solution": "split_editorial",
+      "benefits": "decision_matrix",
+      "proof_blocks": "proof_strip",
+      "how_it_works": "process_timeline",
+      "limitations": "numbered_ledger",
+      "objection_handling": "alternating_story",
+      "faq": "objection_accordion",
+      "closing_cta": "closing_manifesto"
+    },
+    "cta": "inline_decision",
+    "motion": "quiet_stagger",
+    "mobile": "copy_first",
+    "design_dials": {
+      "design_variance": 4,
+      "motion_intensity": 3,
+      "visual_density": 4
+    },
+    "reference_ids": ["lp-ref-0001", "lp-ref-0002"],
+    "recipe_id": "recipe-be0bbb29ff3c87a6",
+    "fingerprint": "be0bbb29ff3c87a6297fe28b932bb29d9ab15fed4d4db455d260d56b6f4664c7"
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "id": "lp-ref-0025",
+  "source_url": "https://www.zendesk.com",
+  "captured_at": "2026-07-14T06:54:56.090Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0025/desktop.webp",
+      "sha256": "13f34f1b6a1a763b80ea626944d30cb4394d6d0ace0d422012ee5f408541c03b",
+      "byte_size": 80630
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0025/mobile.webp",
+      "sha256": "a7f021a85d157ac2a04ee0f9b2f3524e73070021f158584d0a2f99f3f14986b0",
+      "byte_size": 33944
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "asymmetric_split",
+      "composition": "Measured asymmetric split composition around the primary heading and first-viewport media.",
+      "alignment": "left heading at 169px with 656px width.",
+      "media_strategy": "img at 666,3675 sized 200×150."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed \"Vanilla Sans\", Arial, sans-serif.",
+      "body_style": "Computed body family \"Vanilla Sans\", Arial, sans-serif at 16px.",
+      "scale": "14px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 700 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "objection_accordion",
+        "composition_notes": "Observed heading “Move beyond deflection. Deliver real resolutions.” at y=168 with 3 column(s) and 15 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Move beyond deflection. Deliver real resolutions.” at y=184 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Designed for AI-first customer service” at y=5125 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 858,92.",
+      "label_pattern": "Observed concise action label “Pricing”.",
+      "interaction": "Measured solid interactive control sized 77×73."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "3 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "3 animation(s) remained with reduced motion and 6157 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "59.453125px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 136px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "asymmetric_split"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "objection_accordion",
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured asymmetric split hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 169,357 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Vanilla Sans\", Arial, sans-serif, 14px, weight 700; body \"Vanilla Sans\", Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Move beyond deflection. Deliver real resolutions.” at y=168 with 3 column(s) and 15 item(s).",
+          "Observed heading “Move beyond deflection. Deliver real resolutions.” at y=184 with 1 column(s) and 1 item(s).",
+          "Observed heading “Designed for AI-first customer service” at y=5125 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:objection_accordion",
+          "proof_blocks:closing_manifesto",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Pricing” measured 77×73."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 3 normal-motion animation(s) and 3 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "b001e77b267445559fe1970605f11247158ca90423436f027c4f2d0ff92000a3"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Affiliate Page Intent Brief"
+  short_description: "Validate affiliate page intent before drafting."
+  default_prompt: "Use $affiliate-page-intent-brief to screen this landing-page idea before any page JSON is drafted."

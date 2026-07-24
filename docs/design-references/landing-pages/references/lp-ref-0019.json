@@ -1,0 +1,154 @@
+{
+  "id": "lp-ref-0019",
+  "source_url": "https://trello.com",
+  "captured_at": "2026-07-14T06:51:50.820Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0019/desktop.webp",
+      "sha256": "65e01e830b2462c580c80e7398a2f28416c5cbe9f9b7cc74c332cec34d6e707d",
+      "byte_size": 41210
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0019/mobile.webp",
+      "sha256": "c32cc6abc3113946c4ca2f12b3b7139f8e76984defad7dd09a4e98379b676436",
+      "byte_size": 29572
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "left heading at 166px with 538px width.",
+      "media_strategy": "video at 736,272 sized 633×681."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Charlie Display\", sans-serif.",
+      "body_style": "Computed body family \"Charlie Text\", sans-serif at 20px.",
+      "scale": "48px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 500 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Integrations” at y=3020 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “75% of organizations report that Trello delivers value to their business within 30 days.” at y=3487 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Get started with Trello today” at y=4281 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 219,0.",
+      "label_pattern": "Observed concise action label “Features”.",
+      "interaction": "Measured solid interactive control sized 111×60."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 3850 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "70px navigation across 26 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 7px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 166,307 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Charlie Display\", sans-serif, 48px, weight 500; body \"Charlie Text\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Integrations” at y=3020 with 1 column(s) and 1 item(s).",
+          "Observed heading “75% of organizations report that Trello delivers value to their business within 30 days.” at y=3487 with 1 column(s) and 1 item(s).",
+          "Observed heading “Get started with Trello today” at y=4281 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "how_it_works:closing_manifesto",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Features” measured 111×60."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 26 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "e30685aa5f825e3492acd3531a3b6dbaff8842c4ca4f4b197bed0e452a98d092"
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "LandingUniquenessReviewV1",
+  "status": "pass",
+  "publish_readiness": "eligible_for_next_gate",
+  "reason_codes": [],
+  "hard_gate_failures": [],
+  "required_changes": [],
+  "recommended_action": "pass",
+  "buyer_decision": "Whether a creator can turn representative scripts into reviewable voice output while managing voice, accent, pronunciation, pacing, and consistency.",
+  "distinctive_elements": [
+    "The hero frames a testable workflow decision rather than a generic product endorsement.",
+    "Benefits, limitations, objections, and FAQ all resolve to the creator's pre-publication listening test.",
+    "No sibling public landing page currently uses this product, decision, H1, CTA, or limitation set."
+  ],
+  "page_blueprint_id": "f5f995b5-a52e-4bff-94a2-2cf02bf4a218",
+  "slug": "elevenlabs-ai-voice-generator",
+  "draft_byte_sha256": "31bddd2eabf5c442be140691147f6436230a0be205935ace5b29774484ffa4dd",
+  "recipe_id": "recipe-ff3cbc78652de19b",
+  "recipe_fingerprint": "ff3cbc78652de19b7e0b32b7d696b81524fad59dbbfdee3dd26eaf4002d70b75",
+  "catalogue_byte_sha256": "aa08fe54c721c733777950df64b59e6db18a26d24b5194242df1dfb37f409e68"
+}

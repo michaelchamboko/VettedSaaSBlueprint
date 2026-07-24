@@ -1,0 +1,177 @@
+{
+  "id": "lp-ref-0021",
+  "source_url": "https://zapier.com",
+  "captured_at": "2026-07-14T06:54:56.090Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0021/desktop.webp",
+      "sha256": "64432973d741561ed2d9e57fec1de132bd9d5ff1b0ab5218b63071953b1f47b9",
+      "byte_size": 44108
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0021/mobile.webp",
+      "sha256": "62db23dfe2e769e99f481fca2325ed40a69af9a34afd7db6305ba8538fcfe98c",
+      "byte_size": 26758
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "developer-tools",
+    "saas-tools"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 329px with 768px width.",
+      "media_strategy": "video at 97,1560 sized 580×516."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Degular Display\", DegularDisplay, \"DegularDisplay Fallback\", Inter, \"Inter Fallback\", system-ui, ui-sans-serif, sans-serif, sans-serif.",
+      "body_style": "Computed body family Inter, Inter, \"Inter Fallback\", system-ui, ui-sans-serif, sans-serif at 16px.",
+      "scale": "56px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 500 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Trusted by the world’s best companies” at y=56 with 3 column(s) and 8 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "process_timeline",
+        "composition_notes": "Observed heading “Trusted by the world’s best companies” at y=960 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "faq",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Every team has AI. Now they need a system.” at y=1230 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Zapier MCP and SDK.One secure connection.For every AI surface.” at y=2921 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Bring your hardest AI challenge. Leave with a clear path forward.” at y=4632 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "problem_solution",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Built for everyone, from the Fortune 500 to first-time founders” at y=7100 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at 160,10.",
+      "label_pattern": "Observed concise action label “Products”.",
+      "interaction": "Measured solid interactive control sized 97×36."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "50 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "4 animation(s) remained with reduced motion and 11011 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "56px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 330px.",
+      "overflow_behavior": "Document width 375px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto",
+      "process_timeline"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 329,190 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Degular Display\", DegularDisplay, \"DegularDisplay Fallback\", Inter, \"Inter Fallback\", system-ui, ui-sans-serif, sans-serif, sans-serif, 56px, weight 500; body Inter, Inter, \"Inter Fallback\", system-ui, ui-sans-serif, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Trusted by the world’s best companies” at y=56 with 3 column(s) and 8 item(s).",
+          "Observed heading “Trusted by the world’s best companies” at y=960 with 1 column(s) and 1 item(s).",
+          "Observed heading “Every team has AI. Now they need a system.” at y=1230 with 1 column(s) and 1 item(s).",
+          "Observed heading “Zapier MCP and SDK.One secure connection.For every AI surface.” at y=2921 with 1 column(s) and 1 item(s).",
+          "Observed heading “Bring your hardest AI challenge. Leave with a clear path forward.” at y=4632 with 1 column(s) and 1 item(s).",
+          "Observed heading “Built for everyone, from the Fortune 500 to first-time founders” at y=7100 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "proof_blocks:process_timeline",
+          "faq:closing_manifesto",
+          "how_it_works:closing_manifesto",
+          "closing_cta:closing_manifesto",
+          "problem_solution:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Products” measured 97×36."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 50 normal-motion animation(s) and 4 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 375px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "6571d06d237d8c2e5d2140439a6633fa838ff5723fbc0f846256f3dd7edb9fe2"
+}

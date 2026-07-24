@@ -1,0 +1,1906 @@
+{
+  "schema_version": "DesignReferenceSourceRegistryV1",
+  "updated_at": "2026-07-14T07:04:47.957Z",
+  "sources": [
+    {
+      "id": "lp-ref-0001",
+      "ordinal": 1,
+      "name": "Notion",
+      "source_url": "https://www.notion.com",
+      "primary_product_category": "analytics",
+      "category_tags": [
+        "analytics",
+        "data-tools",
+        "business-intelligence"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 2,
+        "resolved_url": "https://www.notion.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0002",
+      "ordinal": 2,
+      "name": "Webflow",
+      "source_url": "https://webflow.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://webflow.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0003",
+      "ordinal": 3,
+      "name": "Framer",
+      "source_url": "https://www.framer.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://www.framer.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0004",
+      "ordinal": 4,
+      "name": "Linear",
+      "source_url": "https://linear.app",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://linear.app/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0005",
+      "ordinal": 5,
+      "name": "Slack",
+      "source_url": "https://slack.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://slack.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0006",
+      "ordinal": 6,
+      "name": "Loom",
+      "source_url": "https://www.loom.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://www.loom.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0007",
+      "ordinal": 7,
+      "name": "Superhuman",
+      "source_url": "https://superhuman.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://superhuman.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0008",
+      "ordinal": 8,
+      "name": "Cursor",
+      "source_url": "https://www.cursor.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://cursor.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0009",
+      "ordinal": 9,
+      "name": "Figma",
+      "source_url": "https://www.figma.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://www.figma.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0010",
+      "ordinal": 10,
+      "name": "Miro",
+      "source_url": "https://miro.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:50:24.680Z",
+        "attempts": 1,
+        "resolved_url": "https://miro.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0011",
+      "ordinal": 11,
+      "name": "Canva",
+      "source_url": "https://www.canva.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://www.canva.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0012",
+      "ordinal": 12,
+      "name": "Typeform",
+      "source_url": "https://www.typeform.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 2,
+        "resolved_url": "https://www.typeform.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0013",
+      "ordinal": 13,
+      "name": "Tally",
+      "source_url": "https://tally.so",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://tally.so/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0014",
+      "ordinal": 14,
+      "name": "Calendly",
+      "source_url": "https://calendly.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://calendly.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0015",
+      "ordinal": 15,
+      "name": "Airtable",
+      "source_url": "https://www.airtable.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://www.airtable.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0016",
+      "ordinal": 16,
+      "name": "Asana",
+      "source_url": "https://asana.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 2,
+        "resolved_url": "https://asana.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0017",
+      "ordinal": 17,
+      "name": "Monday.com",
+      "source_url": "https://monday.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://monday.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0018",
+      "ordinal": 18,
+      "name": "ClickUp",
+      "source_url": "https://clickup.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://clickup.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0019",
+      "ordinal": 19,
+      "name": "Trello",
+      "source_url": "https://trello.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://trello.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0020",
+      "ordinal": 20,
+      "name": "Coda",
+      "source_url": "https://coda.io",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:51:50.820Z",
+        "attempts": 1,
+        "resolved_url": "https://coda.io/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0021",
+      "ordinal": 21,
+      "name": "Zapier",
+      "source_url": "https://zapier.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://zapier.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0022",
+      "ordinal": 22,
+      "name": "Make",
+      "source_url": "https://www.make.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.make.com/en",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0023",
+      "ordinal": 23,
+      "name": "HubSpot",
+      "source_url": "https://www.hubspot.com",
+      "primary_product_category": "analytics",
+      "category_tags": [
+        "analytics",
+        "data-tools",
+        "business-intelligence"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.hubspot.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0024",
+      "ordinal": 24,
+      "name": "Intercom",
+      "source_url": "https://www.intercom.com",
+      "primary_product_category": "video-audio",
+      "category_tags": [
+        "video-audio",
+        "creator-tools",
+        "media-tools"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.intercom.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0025",
+      "ordinal": 25,
+      "name": "Zendesk",
+      "source_url": "https://www.zendesk.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.zendesk.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0026",
+      "ordinal": 26,
+      "name": "Freshworks",
+      "source_url": "https://www.freshworks.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.freshworks.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0027",
+      "ordinal": 27,
+      "name": "Pipedrive",
+      "source_url": "https://www.pipedrive.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.pipedrive.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0028",
+      "ordinal": 28,
+      "name": "Salesforce",
+      "source_url": "https://www.salesforce.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.salesforce.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0029",
+      "ordinal": 29,
+      "name": "ActiveCampaign",
+      "source_url": "https://www.activecampaign.com",
+      "primary_product_category": "video-audio",
+      "category_tags": [
+        "video-audio",
+        "creator-tools",
+        "media-tools"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://www.activecampaign.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0030",
+      "ordinal": 30,
+      "name": "Mailchimp",
+      "source_url": "https://mailchimp.com",
+      "primary_product_category": "sales-crm",
+      "category_tags": [
+        "sales-crm",
+        "sales-tools",
+        "business-software"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:54:56.090Z",
+        "attempts": 1,
+        "resolved_url": "https://mailchimp.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0031",
+      "ordinal": 31,
+      "name": "Kit",
+      "source_url": "https://kit.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://kit.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0032",
+      "ordinal": 32,
+      "name": "Klaviyo",
+      "source_url": "https://www.klaviyo.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://www.klaviyo.com/uk/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0033",
+      "ordinal": 33,
+      "name": "Customer.io",
+      "source_url": "https://customer.io",
+      "primary_product_category": "analytics",
+      "category_tags": [
+        "analytics",
+        "data-tools",
+        "business-intelligence"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://customer.io/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0034",
+      "ordinal": 34,
+      "name": "Drip",
+      "source_url": "https://www.drip.com",
+      "primary_product_category": "marketing-tools",
+      "category_tags": [
+        "marketing-tools",
+        "growth-tools",
+        "business-software"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 2,
+        "resolved_url": "https://www.drip.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0035",
+      "ordinal": 35,
+      "name": "Instantly",
+      "source_url": "https://instantly.ai",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://instantly.ai/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0036",
+      "ordinal": 36,
+      "name": "Smartlead",
+      "source_url": "https://www.smartlead.ai",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://www.smartlead.ai/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0037",
+      "ordinal": 37,
+      "name": "Lavender",
+      "source_url": "https://www.lavender.ai",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://lavender.ai/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0038",
+      "ordinal": 38,
+      "name": "Apollo",
+      "source_url": "https://www.apollo.io",
+      "primary_product_category": "sales-crm",
+      "category_tags": [
+        "sales-crm",
+        "sales-tools",
+        "business-software"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://www.apollo.io/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0039",
+      "ordinal": 39,
+      "name": "Clay",
+      "source_url": "https://www.clay.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://www.clay.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0040",
+      "ordinal": 40,
+      "name": "Gem",
+      "source_url": "https://www.gem.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:55:47.959Z",
+        "attempts": 1,
+        "resolved_url": "https://www.gem.com/?i=1",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0041",
+      "ordinal": 41,
+      "name": "Ahrefs",
+      "source_url": "https://ahrefs.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://ahrefs.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0042",
+      "ordinal": 42,
+      "name": "Semrush",
+      "source_url": "https://www.semrush.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://www.semrush.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0043",
+      "ordinal": 43,
+      "name": "Surfer",
+      "source_url": "https://surferseo.com",
+      "primary_product_category": "analytics",
+      "category_tags": [
+        "analytics",
+        "data-tools",
+        "business-intelligence"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://surferseo.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0044",
+      "ordinal": 44,
+      "name": "Clearscope",
+      "source_url": "https://www.clearscope.io",
+      "primary_product_category": "analytics",
+      "category_tags": [
+        "analytics",
+        "data-tools",
+        "business-intelligence"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://www.clearscope.io/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0045",
+      "ordinal": 45,
+      "name": "Jasper",
+      "source_url": "https://www.jasper.ai",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://www.jasper.ai/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0046",
+      "ordinal": 46,
+      "name": "Copy.ai",
+      "source_url": "https://www.copy.ai",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://www.copy.ai/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0047",
+      "ordinal": 47,
+      "name": "Grammarly",
+      "source_url": "https://www.grammarly.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 2,
+        "resolved_url": "https://www.grammarly.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0048",
+      "ordinal": 48,
+      "name": "Descript",
+      "source_url": "https://www.descript.com",
+      "primary_product_category": "video-audio",
+      "category_tags": [
+        "video-audio",
+        "creator-tools",
+        "media-tools"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://www.descript.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0049",
+      "ordinal": 49,
+      "name": "Riverside",
+      "source_url": "https://riverside.fm",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:41:42.664Z",
+        "attempts": 1,
+        "resolved_url": "https://riverside.com/",
+        "response_status": 200,
+        "failure_reason": "cross_domain_redirect"
+      }
+    },
+    {
+      "id": "lp-ref-0050",
+      "ordinal": 50,
+      "name": "Tella",
+      "source_url": "https://www.tella.tv",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:41:42.664Z",
+        "attempts": 1,
+        "resolved_url": "https://www.tella.com/",
+        "response_status": 200,
+        "failure_reason": "cross_domain_redirect"
+      }
+    },
+    {
+      "id": "lp-ref-0051",
+      "ordinal": 51,
+      "name": "Hotjar",
+      "source_url": "https://www.hotjar.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:42:05.447Z",
+        "attempts": 1,
+        "resolved_url": "https://contentsquare.com/hotjar/?utm_campaign=exp__hj_hp_redirection",
+        "response_status": 200,
+        "failure_reason": "cross_domain_redirect"
+      }
+    },
+    {
+      "id": "lp-ref-0052",
+      "ordinal": 52,
+      "name": "Mixpanel",
+      "source_url": "https://mixpanel.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 1,
+        "resolved_url": "https://mixpanel.com/home/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0053",
+      "ordinal": 53,
+      "name": "Amplitude",
+      "source_url": "https://amplitude.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:57:22.300Z",
+        "attempts": 2,
+        "resolved_url": "https://amplitude.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0054",
+      "ordinal": 54,
+      "name": "Segment",
+      "source_url": "https://segment.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:42:05.447Z",
+        "attempts": 1,
+        "resolved_url": "https://www.twilio.com/en-us/segment",
+        "response_status": 200,
+        "failure_reason": "cross_domain_redirect"
+      }
+    },
+    {
+      "id": "lp-ref-0055",
+      "ordinal": 55,
+      "name": "PostHog",
+      "source_url": "https://posthog.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://posthog.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0056",
+      "ordinal": 56,
+      "name": "Sentry",
+      "source_url": "https://sentry.io",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://sentry.io/welcome/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0057",
+      "ordinal": 57,
+      "name": "Datadog",
+      "source_url": "https://www.datadoghq.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://www.datadoghq.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0058",
+      "ordinal": 58,
+      "name": "Vercel",
+      "source_url": "https://vercel.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://vercel.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0059",
+      "ordinal": 59,
+      "name": "Supabase",
+      "source_url": "https://supabase.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://supabase.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0060",
+      "ordinal": 60,
+      "name": "Retool",
+      "source_url": "https://retool.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://retool.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0061",
+      "ordinal": 61,
+      "name": "Stripe",
+      "source_url": "https://stripe.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://stripe.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0062",
+      "ordinal": 62,
+      "name": "Shopify",
+      "source_url": "https://www.shopify.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://www.shopify.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0063",
+      "ordinal": 63,
+      "name": "Wise",
+      "source_url": "https://wise.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://wise.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0064",
+      "ordinal": 64,
+      "name": "Mercury",
+      "source_url": "https://mercury.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T06:58:55.542Z",
+        "attempts": 1,
+        "resolved_url": "https://mercury.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0065",
+      "ordinal": 65,
+      "name": "Ramp",
+      "source_url": "https://ramp.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://ramp.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0066",
+      "ordinal": 66,
+      "name": "Brex",
+      "source_url": "https://www.brex.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://www.brex.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0067",
+      "ordinal": 67,
+      "name": "Deel",
+      "source_url": "https://www.deel.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 2,
+        "resolved_url": "https://www.deel.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0068",
+      "ordinal": 68,
+      "name": "Gusto",
+      "source_url": "https://gusto.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://gusto.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0069",
+      "ordinal": 69,
+      "name": "Rippling",
+      "source_url": "https://www.rippling.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 2,
+        "resolved_url": "https://www.rippling.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0070",
+      "ordinal": 70,
+      "name": "Atlassian",
+      "source_url": "https://www.atlassian.com",
+      "primary_product_category": "analytics",
+      "category_tags": [
+        "analytics",
+        "data-tools",
+        "business-intelligence"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 2,
+        "resolved_url": "https://www.atlassian.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0071",
+      "ordinal": 71,
+      "name": "NerdWallet",
+      "source_url": "https://www.nerdwallet.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://www.nerdwallet.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0072",
+      "ordinal": 72,
+      "name": "Bankrate",
+      "source_url": "https://www.bankrate.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://www.bankrate.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0073",
+      "ordinal": 73,
+      "name": "Investopedia",
+      "source_url": "https://www.investopedia.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://www.investopedia.com/",
+        "response_status": 402,
+        "failure_reason": "http_error"
+      }
+    },
+    {
+      "id": "lp-ref-0074",
+      "ordinal": 74,
+      "name": "Forbes Advisor",
+      "source_url": "https://www.forbes.com/advisor",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:00:11.373Z",
+        "attempts": 1,
+        "resolved_url": "https://www.forbes.com/advisor/",
+        "response_status": 403,
+        "failure_reason": "http_error"
+      }
+    },
+    {
+      "id": "lp-ref-0075",
+      "ordinal": 75,
+      "name": "The Points Guy",
+      "source_url": "https://thepointsguy.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://thepointsguy.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0076",
+      "ordinal": 76,
+      "name": "Skyscanner",
+      "source_url": "https://www.skyscanner.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.skyscanner.com/sttc/px/captcha-v2/index.html?url=Lz8=&uuid=d84be537-7f51-11f1-8a32-3e58f446ec2f&vid=",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0077",
+      "ordinal": 77,
+      "name": "Wirecutter",
+      "source_url": "https://www.nytimes.com/wirecutter",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.nytimes.com/wirecutter",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0078",
+      "ordinal": 78,
+      "name": "PCPartPicker",
+      "source_url": "https://pcpartpicker.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://pcpartpicker.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0079",
+      "ordinal": 79,
+      "name": "TechRadar",
+      "source_url": "https://www.techradar.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.techradar.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0080",
+      "ordinal": 80,
+      "name": "Tom's Guide",
+      "source_url": "https://www.tomsguide.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 2,
+        "resolved_url": "https://www.tomsguide.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0081",
+      "ordinal": 81,
+      "name": "CNET",
+      "source_url": "https://www.cnet.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.cnet.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0082",
+      "ordinal": 82,
+      "name": "Trusted Reviews",
+      "source_url": "https://www.trustedreviews.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.trustedreviews.com/",
+        "response_status": 200,
+        "failure_reason": "insufficient_design_evidence"
+      }
+    },
+    {
+      "id": "lp-ref-0083",
+      "ordinal": 83,
+      "name": "Consumer Reports",
+      "source_url": "https://www.consumerreports.org",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.consumerreports.org/",
+        "response_status": 403,
+        "failure_reason": "http_error"
+      }
+    },
+    {
+      "id": "lp-ref-0084",
+      "ordinal": 84,
+      "name": "Good Housekeeping",
+      "source_url": "https://www.goodhousekeeping.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:01:28.466Z",
+        "attempts": 1,
+        "resolved_url": "https://www.goodhousekeeping.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0085",
+      "ordinal": 85,
+      "name": "Gear Patrol",
+      "source_url": "https://www.gearpatrol.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.gearpatrol.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0086",
+      "ordinal": 86,
+      "name": "SafeWise",
+      "source_url": "https://www.safewise.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.safewise.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0087",
+      "ordinal": 87,
+      "name": "Dog Food Advisor",
+      "source_url": "https://www.dogfoodadvisor.com",
+      "primary_product_category": "comparison-media",
+      "category_tags": [
+        "comparison-media",
+        "affiliate-editorial",
+        "product-reviews"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.dogfoodadvisor.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0088",
+      "ordinal": 88,
+      "name": "Verywell Fit",
+      "source_url": "https://www.verywellfit.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.verywellfit.com/",
+        "response_status": 402,
+        "failure_reason": "http_error"
+      }
+    },
+    {
+      "id": "lp-ref-0089",
+      "ordinal": 89,
+      "name": "Minimalist Baker",
+      "source_url": "https://minimalistbaker.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://minimalistbaker.com/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0090",
+      "ordinal": 90,
+      "name": "Business News Daily",
+      "source_url": "https://www.businessnewsdaily.com",
+      "primary_product_category": "developer-tools",
+      "category_tags": [
+        "developer-tools",
+        "software-development",
+        "technical-saas"
+      ],
+      "audit": {
+        "status": "active",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.businessnewsdaily.com/",
+        "response_status": 200,
+        "failure_reason": null
+      }
+    },
+    {
+      "id": "lp-ref-0091",
+      "ordinal": 91,
+      "name": "WebsiteSetup",
+      "source_url": "https://websitesetup.org",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://websitesetup.org/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0092",
+      "ordinal": 92,
+      "name": "The Penny Hoarder",
+      "source_url": "https://www.thepennyhoarder.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.thepennyhoarder.com/?__cf_chl_rt_tk=SYfi0P8B.jdrMx3wwmaLeOOAafb9EKU6pilKrWBcMxA-1784012605-1.0.1.1-7jTOZnqyjoaUXbGzBaVlFoKTliZKirGWoVncxQI40QU",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0093",
+      "ordinal": 93,
+      "name": "Home Grounds",
+      "source_url": "https://www.homegrounds.co",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.homegrounds.co/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0094",
+      "ordinal": 94,
+      "name": "Ruled.me",
+      "source_url": "https://www.ruled.me",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:05.592Z",
+        "attempts": 1,
+        "resolved_url": "https://www.ruled.me/",
+        "response_status": 200,
+        "failure_reason": "classification_low_confidence"
+      }
+    },
+    {
+      "id": "lp-ref-0095",
+      "ordinal": 95,
+      "name": "OutdoorGearLab",
+      "source_url": "https://www.outdoorgearlab.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:55.129Z",
+        "attempts": 2,
+        "resolved_url": null,
+        "response_status": null,
+        "failure_reason": "network_timeout"
+      }
+    },
+    {
+      "id": "lp-ref-0096",
+      "ordinal": 96,
+      "name": "Reviewed",
+      "source_url": "https://reviewed.usatoday.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T06:43:33.241Z",
+        "attempts": 1,
+        "resolved_url": "https://www.reviewed.com/",
+        "response_status": 200,
+        "failure_reason": "cross_domain_redirect"
+      }
+    },
+    {
+      "id": "lp-ref-0097",
+      "ordinal": 97,
+      "name": "G2",
+      "source_url": "https://www.g2.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:55.129Z",
+        "attempts": 1,
+        "resolved_url": "https://www.g2.com/",
+        "response_status": 403,
+        "failure_reason": "http_error"
+      }
+    },
+    {
+      "id": "lp-ref-0098",
+      "ordinal": 98,
+      "name": "Capterra",
+      "source_url": "https://www.capterra.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:55.129Z",
+        "attempts": 1,
+        "resolved_url": "https://www.capterra.com/",
+        "response_status": 403,
+        "failure_reason": "http_error"
+      }
+    },
+    {
+      "id": "lp-ref-0099",
+      "ordinal": 99,
+      "name": "TrustRadius",
+      "source_url": "https://www.trustradius.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:55.129Z",
+        "attempts": 1,
+        "resolved_url": "https://www.trustradius.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    },
+    {
+      "id": "lp-ref-0100",
+      "ordinal": 100,
+      "name": "Product Hunt",
+      "source_url": "https://www.producthunt.com",
+      "primary_product_category": "unclassified",
+      "category_tags": [
+        "unclassified"
+      ],
+      "audit": {
+        "status": "unavailable",
+        "audited_at": "2026-07-14T07:03:55.129Z",
+        "attempts": 1,
+        "resolved_url": "https://www.producthunt.com/",
+        "response_status": 403,
+        "failure_reason": "bot_challenge"
+      }
+    }
+  ]
+}

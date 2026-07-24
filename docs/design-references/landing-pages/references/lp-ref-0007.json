@@ -1,0 +1,148 @@
+{
+  "id": "lp-ref-0007",
+  "source_url": "https://superhuman.com",
+  "captured_at": "2026-07-14T06:50:24.680Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0007/desktop.webp",
+      "sha256": "5d38a8492868416f5a6f0eda0bb5fb28189817c3637de12e6c16f92f9fac1cb3",
+      "byte_size": 78656
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0007/mobile.webp",
+      "sha256": "b689e69199dbeabc8d6b098e9555fa79e8ff3e62f285d96e8ea56055b08d6e91",
+      "byte_size": 21864
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "affiliate-editorial",
+    "product-reviews"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 270px with 900px width.",
+      "media_strategy": "video at 0,0 sized 1440×900."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed \"Super Sans VF\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif.",
+      "body_style": "Computed body family \"Super Sans VF\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif at 16px.",
+      "scale": "64px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 540 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "proof_blocks",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Mail, Docs, and AI that works in every app and tab” at y=139 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Your Superhuman suite” at y=1070 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "full_width_close",
+      "placement": "Primary visible CTA at 32,8.",
+      "label_pattern": "Observed concise action label “Looking for Superhuman Mail?Learn more”.",
+      "interaction": "Measured solid interactive control sized 1376×64."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "12 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "9 animation(s) remained with reduced motion and 3710 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "67px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 8px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "full_width_close"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed full width close decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 270,155 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Super Sans VF\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif, 64px, weight 540; body \"Super Sans VF\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Mail, Docs, and AI that works in every app and tab” at y=139 with 1 column(s) and 1 item(s).",
+          "Observed heading “Your Superhuman suite” at y=1070 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "proof_blocks:closing_manifesto",
+          "objection_handling:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Looking for Superhuman Mail?Learn more” measured 1376×64."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 12 normal-motion animation(s) and 9 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "f775041b5e6f6129f73ac32ad4c3bff52443369684ec15ab23bc81c552ac5983"
+}

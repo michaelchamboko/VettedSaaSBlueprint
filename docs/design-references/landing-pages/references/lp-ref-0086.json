@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0086",
+  "source_url": "https://www.safewise.com",
+  "captured_at": "2026-07-14T07:03:05.592Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0086/desktop.webp",
+      "sha256": "6d19facdcd19f164ed716da42dd8d65eb391f1f6fb927ab8d4ff7fe4db5b442e",
+      "byte_size": 46768
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0086/mobile.webp",
+      "sha256": "4646ae23ee8a38ffc8ba9c7b060b17523c7402f25dc223aa8b9104f08d418ddd",
+      "byte_size": 23048
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "affiliate-editorial",
+    "product-reviews"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "left heading at 180px with 340px width.",
+      "media_strategy": "img at 550,171 sized 710×406."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed \"Nunito Sans\", sans-serif.",
+      "body_style": "Computed body family \"Open Sans\", sans-serif at 16px.",
+      "scale": "42px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 800 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Find the safest city in your state” at y=100 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at 0,-38.",
+      "label_pattern": "Observed concise action label “skip to main content”.",
+      "interaction": "Measured solid interactive control sized 169×38."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 9571 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "0px navigation across 0 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at -38px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 180,244 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font \"Nunito Sans\", sans-serif, 42px, weight 800; body \"Open Sans\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Find the safest city in your state” at y=100 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “skip to main content” measured 169×38."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 0 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "1b4d010835c64c00493c9d089837e9fcd935ce267414ed52bea08fb65e1ca120"
+}

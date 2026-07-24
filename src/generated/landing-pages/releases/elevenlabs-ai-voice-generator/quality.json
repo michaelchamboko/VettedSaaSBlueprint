@@ -1,0 +1,82 @@
+{
+  "schema_version": "LandingReleaseQualityV1",
+  "status": "pass",
+  "page_slug": "elevenlabs-ai-voice-generator",
+  "checked_at": "2026-07-24T19:23:52.432Z",
+  "checks": [
+    {
+      "name": "focused_contract_tests",
+      "status": "pass",
+      "evidence": "26 focused coordinator, receipt, exemplar, preview, report-consistency, and instruction tests passed with 0 failures."
+    },
+    {
+      "name": "candidate_quality",
+      "status": "pass",
+      "evidence": "All 13 static and 3 specialist candidate scanners passed; failed_checks was empty."
+    },
+    {
+      "name": "typecheck",
+      "status": "pass",
+      "evidence": "next typegen and tsc --noEmit completed successfully."
+    },
+    {
+      "name": "lint",
+      "status": "pass",
+      "evidence": "ESLint completed with 0 errors. Existing non-blocking warnings remain recorded in command output."
+    },
+    {
+      "name": "production_build",
+      "status": "pass",
+      "evidence": "Next.js 16.2.7 production build completed and generated 52 pages, including the ElevenLabs preview and deployment identity API."
+    },
+    {
+      "name": "destination",
+      "status": "pass",
+      "evidence": "The exact supplied URL returned HTTP 200 after one redirect to the official ElevenLabs site; the CTA value was not replaced."
+    },
+    {
+      "name": "desktop_preview",
+      "status": "pass",
+      "evidence": "The 1440x900 production build returned HTTP 200, revealed all eight sections, contained both exact CTAs, showed disclosure, and produced no console, page, or request errors."
+    },
+    {
+      "name": "mobile_preview",
+      "status": "pass",
+      "evidence": "The 390x844 production build returned HTTP 200; both CTAs fit, page-level horizontal scrolling was impossible after motion settled, all sections revealed, and browser errors were empty."
+    },
+    {
+      "name": "reduced_motion",
+      "status": "pass",
+      "evidence": "With prefers-reduced-motion enabled, all eight sections remained fully visible with no transforms and no browser errors."
+    },
+    {
+      "name": "preview_robots",
+      "status": "pass",
+      "evidence": "The preview route emitted noindex, nofollow."
+    }
+  ],
+  "recovery_attempts": [
+    {
+      "attempt": "Run a clean local production build.",
+      "outcome": "Compilation succeeded but PAIA prerendering stopped because two required public-policy dates were absent locally."
+    },
+    {
+      "attempt": "Rerun with the repository's documented non-secret local date fixtures while leaving Vercel configuration untouched.",
+      "outcome": "The production build completed successfully."
+    },
+    {
+      "attempt": "Run the legacy draft-quality command.",
+      "outcome": "The command rejected the release candidate because it accepts only a Codex batch folder."
+    },
+    {
+      "attempt": "Add and run the agent-release candidate quality command.",
+      "outcome": "All sixteen candidate checks completed and passed with durable JSON reports."
+    }
+  ],
+  "claims_removed_or_softened": [
+    "Omitted pricing, discount, free-trial, guarantee, ranking, and performance claims because the captured evidence did not prove them.",
+    "Framed voice quality as a buyer-run test of pronunciation, pacing, accent, and consistency rather than promising a natural or production-ready result."
+  ],
+  "oracle_sync": "not_configured",
+  "updated_at": "2026-07-24T19:23:52.432Z"
+}

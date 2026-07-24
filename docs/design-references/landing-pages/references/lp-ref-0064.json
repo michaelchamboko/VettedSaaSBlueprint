@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0064",
+  "source_url": "https://mercury.com",
+  "captured_at": "2026-07-14T06:58:55.542Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0064/desktop.webp",
+      "sha256": "639f82b1bf17223b433ae70900d8de01850f444c324df0b10cd27666b60d9ec7",
+      "byte_size": 164596
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0064/mobile.webp",
+      "sha256": "9c220ddd31b23db336707324031cc4487a4b08495c757631b4afc7baf377fd84",
+      "byte_size": 37556
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "finance-hr",
+  "category_tags": [
+    "finance-hr",
+    "business-finance",
+    "workforce-operations"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 384px with 672px width.",
+      "media_strategy": "video at 0,-2250 sized 1440×900."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed arcadiaDisplay, \"arcadiaDisplay Fallback\".",
+      "body_style": "Computed body family arcadia, \"arcadia Fallback\" at 16px.",
+      "scale": "49.3472px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 480 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Apply online in 10 minutes” at y=5752 with 1 column(s) and 0 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at 120,-1864.",
+      "label_pattern": "Observed concise action label “Business banking & more”.",
+      "interaction": "Measured solid interactive control sized 496×35."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "10 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "10 animation(s) remained with reduced motion and 5872 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "media_first",
+      "stacking": "media first order derived from H1, media and CTA positions.",
+      "navigation": "844px navigation across 6 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at -1794px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "media_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 384,144 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font arcadiaDisplay, \"arcadiaDisplay Fallback\", 49.3472px, weight 480; body arcadia, \"arcadia Fallback\"."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Apply online in 10 minutes” at y=5752 with 1 column(s) and 0 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Business banking & more” measured 496×35."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 10 normal-motion animation(s) and 10 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 6 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "631a8756d2be7626ae658363ca992bdd83b582bddb45a09bcc91caf61a85bb43"
+}

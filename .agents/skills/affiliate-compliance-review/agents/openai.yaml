@@ -1,0 +1,4 @@
+interface:
+  display_name: "Affiliate Compliance Review"
+  short_description: "Block unsafe affiliate page publication."
+  default_prompt: "Use $affiliate-compliance-review to review affiliate page artifacts for compliance and publication-readiness blockers."

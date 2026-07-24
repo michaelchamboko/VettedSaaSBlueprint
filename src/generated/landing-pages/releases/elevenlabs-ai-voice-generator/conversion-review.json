@@ -1,0 +1,21 @@
+{
+  "schema_version": "codexConversionReviewV2",
+  "status": "pass",
+  "publish_readiness": "eligible_for_release",
+  "reason_codes": [],
+  "hard_gate_failures": [],
+  "required_rewrites": [],
+  "recommended_action": "pass",
+  "hero_findings": [
+    "The H1 names a concrete fit decision and the answer snippet explains the evaluation method."
+  ],
+  "cta_findings": [
+    "The first CTA promises only access to the official voice tools and preserves the exact supplied destination."
+  ],
+  "mobile_scan_findings": [
+    "Disclosure, decision, expectation, and CTA are present in the hero sequence; rendered verification remains part of the visual gate."
+  ],
+  "trust_findings": [
+    "Two practical limitations and a no-commercial-terms FAQ reduce pressure and set a clear verification step."
+  ]
+}
