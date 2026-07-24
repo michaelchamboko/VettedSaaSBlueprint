@@ -3,6 +3,10 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const workflow = readFileSync(".github/workflows/preview-build.yml", "utf8");
+const productionWorkflow = readFileSync(
+  ".github/workflows/landing-production-verify.yml",
+  "utf8",
+);
 const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
   scripts: Record<string, string>;
 };
@@ -64,4 +68,19 @@ test("public release validation runs before build and Stage 2 reporting", () => 
 test("workflow does not create or target another hosting project", () => {
   assert.doesNotMatch(workflow, /vercel\s+(?:link|project|deploy)|create[_ -]?project|sites[_ -]?project/i);
   assert.match(releaseRunbook, /existing Vercel project\s+`vetted-saa-s-blueprint`/);
+});
+
+test("automatic production verification uses the canonical public origin", () => {
+  assert.match(
+    productionWorkflow,
+    /CANONICAL_ORIGIN:\s*https:\/\/vetted-saa-s-blueprint\.vercel\.app/,
+  );
+  assert.match(
+    productionWorkflow,
+    /url="\$\{MANUAL_URL:-\$CANONICAL_ORIGIN\}"/,
+  );
+  assert.doesNotMatch(
+    productionWorkflow,
+    /url="\$\{MANUAL_URL:-\$DEPLOYMENT_URL\}"/,
+  );
 });

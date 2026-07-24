@@ -40,10 +40,10 @@ jobs:
         env:
           MANUAL_URL: ${{ inputs.production_url }}
           MANUAL_SHA: ${{ inputs.expected_commit_sha }}
-          DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url }}
+          CANONICAL_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
           DEPLOYMENT_SHA: ${{ github.event.deployment.sha }}
         run: |
-          url="${MANUAL_URL:-$DEPLOYMENT_URL}"
+          url="${MANUAL_URL:-$CANONICAL_ORIGIN}"
           sha="${MANUAL_SHA:-$DEPLOYMENT_SHA}"
           test -n "$url" && test -n "$sha"
           case "$url" in https://*) ;; *) exit 1 ;; esac
