@@ -18,6 +18,7 @@ Block unsafe affiliate page publication. This is a hard gate for disclosure, cla
 - Evidence/source records: usage-allowed state, claim mapping, freshness, review basis, and approval state.
 - Disclosure plan and rendered/static disclosure evidence when available.
 - Independent asset and publication gate records when the task asks for release readiness.
+- For `agent_verified_release`, the `LandingReleaseReceiptV1` plus every receipt-bound evidence/review artifact.
 
 ## Required References
 
@@ -42,6 +43,8 @@ Use `--target <filename>` for one page. Use `--report-only` while researching or
 
 The scanner is necessary but not sufficient. It finds deterministic artifact risks; it cannot prove external source-of-truth records, legal compliance, or rendered mobile visibility by itself.
 
+For an agent-led production release, the scanner accepts external link, program-rule, and destination state only when the release receipt matches the catalogue entry and exact allowlisted URL, every referenced artifact fingerprint verifies, product evidence resolves the page proof records, and the independent compliance review proves the active exact destination. A missing, mismatched, or altered receipt remains a hard failure.
+
 ## Workflow
 
 1. Run the scanner and keep its reason codes.
@@ -58,6 +61,7 @@ Fail publication readiness when:
 - Original PartnerStack/referral URL preservation, active link state, or reviewed mapping is unknown.
 - Program rules, compliance profile, source usage, or destination review state is unknown.
 - Independent URL authorization or asset approval state is unknown when the task asks for release readiness or asset use.
+- An agent release receipt or any receipt-bound evidence is missing, mismatched, altered, or cannot resolve the exact affiliate URL, program rules, destination review, and page proof records.
 - Hero CTA id and CTA block affiliate id differ without audited mapping.
 - Product, affiliate link, source, evidence, or asset ids are placeholders or unresolved.
 - Page JSON self-attests published state, owner approval, compliance pass, active link, owner override, or asset approval.

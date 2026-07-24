@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
+  cp,
   mkdir,
   mkdtemp,
   readFile,
@@ -17,6 +19,28 @@ import { fingerprint } from "@/lib/landing-automation/run";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 const exactUrl = "https://try.elevenlabs.io/izj2b165mcsj";
+const complianceScannerPath = path.resolve(
+  ".agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs",
+);
+
+function runComplianceScanner(directory: string) {
+  const result = spawnSync(
+    process.execPath,
+    [complianceScannerPath, directory, "--json"],
+    {
+      cwd: process.cwd(),
+      encoding: "utf8",
+    },
+  );
+  return {
+    ...result,
+    report: JSON.parse(result.stdout) as {
+      status: string;
+      reason_codes: string[];
+      issue_arrays: Record<string, Array<{ message: string }>>;
+    },
+  };
+}
 
 async function writeJson(filePath: string, value: unknown): Promise<string> {
   await mkdir(path.dirname(filePath), { recursive: true });
@@ -172,5 +196,41 @@ test("production scanners recognize independently verified agent releases", asyn
       /agent_verified_release[\s\S]{0,240}release_receipt|release_receipt[\s\S]{0,240}agent_verified_release/,
       scannerPath,
     );
+  }
+});
+
+test("production compliance accepts a complete receipt-bound agent release", () => {
+  const result = runComplianceScanner(
+    path.resolve("src/generated/landing-pages"),
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(result.report.status, "pass");
+});
+
+test("production compliance rejects altered receipt-bound external evidence", async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "tampered-compliance-release-"),
+  );
+  try {
+    await cp(path.resolve("src/generated/landing-pages"), directory, {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(
+        directory,
+        "releases/elevenlabs-ai-voice-generator/product-evidence.json",
+      ),
+      '{"tampered":true}\n',
+      "utf8",
+    );
+
+    const result = runComplianceScanner(directory);
+    assert.notEqual(result.status, 0);
+    assert.ok(
+      result.report.reason_codes.includes("release_authorization_missing"),
+    );
+    assert.match(JSON.stringify(result.report.issue_arrays), /fingerprint/i);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 });

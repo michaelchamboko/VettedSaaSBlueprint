@@ -71,6 +71,7 @@ Why: it has conditional disclosure, placeholder IDs, generated JSON self-attesti
 
 ## Synthetic RED Cases
 
+- Agent receipt tamper: change any receipt-bound page, product-evidence, review, or quality artifact after the receipt is written; expect `release_authorization_missing` with a fingerprint mismatch.
 - Weak disclosure: `Some links on this page are affiliate links.`
 - Conditional disclosure: `This page may include affiliate links if an offer is attached.`
 - Missing placement: disclosure not `above_first_cta`.
@@ -89,6 +90,7 @@ Why: it has conditional disclosure, placeholder IDs, generated JSON self-attesti
 
 A page can pass only when all of these are true:
 
+- An `agent_verified_release` may supply external state through a valid `LandingReleaseReceiptV1` whose exact URL is independently allowlisted and whose product evidence, reviews, quality receipt, and page fingerprints all verify.
 - Short disclosure clearly says commission, earn, paid, compensated, or referral fee.
 - Disclosure is before/near first CTA on mobile and desktop.
 - Hero CTA and CTA block use the same reviewed affiliate link ID or have audited mapping.

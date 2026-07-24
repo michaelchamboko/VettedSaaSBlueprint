@@ -157,6 +157,8 @@ Generated page JSON is draft content only. It cannot prove:
 
 Generated manifests such as `src/generated/landing-pages/index.json` also cannot prove published state. Treat manifest `status: "published"` or similar generated state as self-attestation unless an audited owner/gate record is supplied.
 
+For `publication_source: "agent_verified_release"`, a `LandingReleaseReceiptV1` is the independent gate record only when its catalogue identity, exact allowlisted URL, reviewed commit, checks, and every artifact fingerprint verify. Its bound product-evidence and compliance-review artifacts must resolve active link state, documented program rules, current destination review, and claim-level proof records. Missing or altered receipt evidence fails with `release_authorization_missing`; the manifest alone never satisfies the gate.
+
 Require audited records for these states when they are in scope. Missing link, program, source, claim, destination, disclosure, or compliance records block `eligible_for_conversion_review`. Missing exact-URL authorization blocks release, not pre-release conversion review, unless generated JSON self-attests authorization or publication.
 
 ## FTC Disclosure Rules

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 
 const SCORE_KEYS = [
   "evidence_score",
@@ -20,6 +21,29 @@ const ISSUE_ARRAYS = [
   "destination_issues",
   "artifact_qa_issues",
   "renderer_static_issues",
+];
+
+const RELEASE_ARTIFACT_KEYS = [
+  "page",
+  "product_evidence",
+  "visual_review",
+  "uniqueness_review",
+  "compliance_review",
+  "conversion_review",
+  "quality_receipt",
+];
+
+const RELEASE_CHECK_KEYS = [
+  "product_evidence",
+  "visual",
+  "uniqueness",
+  "compliance",
+  "conversion",
+  "quality",
+  "exact_cta",
+  "disclosure",
+  "preview",
+  "clean_build",
 ];
 
 const ALLOWED_AFFILIATE_HOSTS = new Set([
@@ -226,6 +250,225 @@ function readIndexManifest(dir) {
     if (error?.code === "ENOENT") return null;
     throw new Error(`Failed to parse index.json: ${error.message}`);
   }
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function resolveEvidencePath(dir, value) {
+  if (
+    typeof value !== "string"
+    || !/^[a-zA-Z0-9][a-zA-Z0-9._/-]*\.json$/.test(value)
+    || value.includes("\\")
+    || value.split("/").some((segment) => !segment || segment === "..")
+  ) {
+    throw new Error(`unsafe release evidence path ${JSON.stringify(value)}`);
+  }
+  const root = resolve(dir);
+  const candidate = resolve(root, value);
+  const pathFromRoot = relative(root, candidate);
+  if (pathFromRoot.startsWith("..") || isAbsolute(pathFromRoot)) {
+    throw new Error(`release evidence path escapes catalogue root: ${value}`);
+  }
+  return candidate;
+}
+
+function readApprovedUrlSet() {
+  const allowlistPath = resolve(process.cwd(), "approved-urls.md");
+  if (!existsSync(allowlistPath)) return new Set();
+  return new Set(
+    readFileSync(allowlistPath, "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.match(/^\s*-\s+(https:\/\/\S+)\s*$/)?.[1] ?? null)
+      .filter(Boolean),
+  );
+}
+
+function isHttpsUrl(value) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function hasValidDate(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
+function validateAgentReleaseEvidence(dir, entry) {
+  const errors = [];
+  let receipt = null;
+  const artifactData = {};
+  const addError = (message) => errors.push(message);
+
+  try {
+    const receiptPath = resolveEvidencePath(dir, entry.release_receipt);
+    receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+  } catch (error) {
+    addError(`release receipt could not be read: ${error.message}`);
+  }
+
+  if (!receipt || typeof receipt !== "object") {
+    return { valid: false, errors, exactUrl: null };
+  }
+
+  const exactUrl = receipt.exact_affiliate_url;
+  if (receipt.schema_version !== "LandingReleaseReceiptV1") {
+    addError("release receipt schema_version is not LandingReleaseReceiptV1");
+  }
+  if (
+    receipt.slug !== entry.slug
+    || receipt.path !== entry.path
+    || entry.path !== `/landing-page-builders/${entry.slug}`
+  ) {
+    addError("release receipt identity does not match the catalogue entry");
+  }
+  if (!isHttpsUrl(exactUrl)) {
+    addError("release receipt exact affiliate URL is not HTTPS");
+  }
+  if (
+    receipt.authorization?.source !== "approved-urls.md"
+    || receipt.authorization?.exact_url !== exactUrl
+    || receipt.authorization?.url_fingerprint !== receipt.url_fingerprint
+    || sha256(exactUrl ?? "") !== receipt.url_fingerprint
+  ) {
+    addError("release receipt exact URL authorization or fingerprint does not match");
+  }
+  if (!readApprovedUrlSet().has(exactUrl)) {
+    addError("release receipt exact affiliate URL is absent from approved-urls.md");
+  }
+  if (
+    !/^[a-f0-9]{40}$/.test(receipt.release?.reviewed_commit ?? "")
+    || !isHttpsUrl(receipt.release?.preview_url)
+    || !hasValidDate(receipt.release?.verified_at)
+  ) {
+    addError("release receipt reviewed commit or preview verification is invalid");
+  }
+  for (const key of RELEASE_CHECK_KEYS) {
+    if (receipt.checks?.[key] !== true) {
+      addError(`release receipt check ${key} is not true`);
+    }
+  }
+
+  for (const key of RELEASE_ARTIFACT_KEYS) {
+    const reference = receipt.artifacts?.[key];
+    if (
+      !reference
+      || typeof reference.path !== "string"
+      || !/^[a-f0-9]{64}$/.test(reference.sha256 ?? "")
+    ) {
+      addError(`release artifact ${key} reference is invalid`);
+      continue;
+    }
+    if (key === "page" && reference.path !== entry.artifact) {
+      addError("release receipt page path does not match the catalogue artifact");
+    }
+    try {
+      const artifactPath = resolveEvidencePath(dir, reference.path);
+      const bytes = readFileSync(artifactPath);
+      const actual = sha256(bytes);
+      if (actual !== reference.sha256) {
+        addError(
+          `release artifact ${key} fingerprint mismatch: expected ${reference.sha256}, received ${actual}`,
+        );
+        continue;
+      }
+      artifactData[key] = JSON.parse(bytes.toString("utf8"));
+    } catch (error) {
+      addError(`release artifact ${key} could not be verified: ${error.message}`);
+    }
+  }
+
+  const page = artifactData.page;
+  const productEvidence = artifactData.product_evidence;
+  const complianceReview = artifactData.compliance_review;
+  if (!page || page.metadata?.url_slug !== entry.slug) {
+    addError("release page identity is missing or mismatched");
+  }
+
+  const affiliate = productEvidence?.affiliate;
+  const destination = affiliate?.destination_review;
+  if (affiliate?.original_url !== exactUrl) {
+    addError("product evidence does not preserve the exact affiliate URL");
+  }
+  if (
+    destination?.state !== "reviewed"
+    || !hasValidDate(destination?.checked_at)
+    || !isHttpsUrl(destination?.final_visible_url)
+    || destination?.redirect_chain?.[0] !== exactUrl
+  ) {
+    addError("product evidence does not contain a current reviewed destination chain");
+  }
+
+  const programRules = productEvidence?.program_rules;
+  const exactUrlRule = programRules?.rules?.find(
+    (rule) => rule?.name === "exact_url",
+  );
+  if (
+    programRules?.state !== "documented"
+    || programRules?.unknown_reason
+    || exactUrlRule?.value !== "allowed"
+  ) {
+    addError("product evidence does not contain documented exact-URL program rules");
+  }
+
+  const sources = new Map(
+    (productEvidence?.sources ?? []).map((source) => [source?.id, source]),
+  );
+  const claims = new Map(
+    (productEvidence?.evidence_claims ?? []).map((claim) => [
+      claim?.id,
+      claim,
+    ]),
+  );
+  for (const [index, proof] of (page?.proof_blocks ?? []).entries()) {
+    const source = sources.get(proof?.source_reference_id);
+    const claim = claims.get(proof?.evidence_claim_id);
+    if (!source || !claim || claim.source_id !== source.id) {
+      addError(`page proof block ${index} does not resolve in product evidence`);
+    }
+  }
+
+  if (
+    complianceReview?.status !== "pass"
+    || complianceReview?.publish_readiness !== "eligible_for_conversion_review"
+    || (complianceReview?.reason_codes ?? []).length !== 0
+    || complianceReview?.link_review?.exact_url !== exactUrl
+    || !Number.isInteger(complianceReview?.link_review?.destination_http_status)
+    || complianceReview.link_review.destination_http_status < 200
+    || complianceReview.link_review.destination_http_status >= 400
+    || !hasValidDate(complianceReview?.link_review?.checked_at)
+  ) {
+    addError("independent compliance review does not prove the exact active destination");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    exactUrl,
+    receipt,
+    productEvidence,
+    complianceReview,
+  };
+}
+
+function readAgentReleaseEvidence(dir, manifest) {
+  const evidenceByArtifact = new Map();
+  for (const entry of manifest?.pages ?? []) {
+    if (
+      entry?.publication_source !== "agent_verified_release"
+      || typeof entry.artifact !== "string"
+    ) {
+      continue;
+    }
+    evidenceByArtifact.set(
+      basename(entry.artifact),
+      validateAgentReleaseEvidence(dir, entry),
+    );
+  }
+  return evidenceByArtifact;
 }
 
 function normalizeText(value) {
@@ -658,7 +901,12 @@ function isApprovedAffiliateUrl(url) {
   }
 }
 
-function scanEmbeddedLinkState(row, arrays, draftInput = false) {
+function scanEmbeddedLinkState(
+  row,
+  arrays,
+  draftInput = false,
+  releaseEvidence = null,
+) {
   const links = [];
   walk(row.data, (key, value, inputPath) => {
     if (typeof value !== "string") return;
@@ -680,7 +928,7 @@ function scanEmbeddedLinkState(row, arrays, draftInput = false) {
     }
   }
 
-  if (hasAffiliateCta(row.data) && !draftInput) {
+  if (hasAffiliateCta(row.data) && !draftInput && !releaseEvidence?.valid) {
     addIssue(arrays, createIssue({
       file: row.file,
       input_path: "cta_blocks",
@@ -700,9 +948,14 @@ function scanEmbeddedLinkState(row, arrays, draftInput = false) {
   }
 }
 
-function scanDestinationAndRenderer(row, arrays, draftInput = false) {
+function scanDestinationAndRenderer(
+  row,
+  arrays,
+  draftInput = false,
+  releaseEvidence = null,
+) {
   if (!hasAffiliateCta(row.data)) return;
-  if (!draftInput) {
+  if (!draftInput && !releaseEvidence?.valid) {
     addIssue(arrays, createIssue({
       file: row.file,
       input_path: "destination_review",
@@ -724,7 +977,20 @@ function scanDestinationAndRenderer(row, arrays, draftInput = false) {
   }
 }
 
-function scanPage(row, draftInput = false) {
+function scanReleaseEvidence(row, arrays, releaseEvidence) {
+  if (!releaseEvidence || releaseEvidence.valid) return;
+  addIssue(arrays, createIssue({
+    file: row.file,
+    input_path: "release_receipt",
+    category: "artifact_qa_issues",
+    reason_code: "release_authorization_missing",
+    message: `Agent release evidence is invalid: ${releaseEvidence.errors.join("; ")}.`,
+    required_fix: "Repair or regenerate the receipt-bound evidence and rerun the production compliance gate.",
+    evidence: { errors: releaseEvidence.errors },
+  }));
+}
+
+function scanPage(row, draftInput = false, releaseEvidence = null) {
   const arrays = Object.fromEntries(ISSUE_ARRAYS.map((name) => [name, []]));
   scanDisclosure(row, arrays);
   scanCta(row, arrays);
@@ -732,8 +998,9 @@ function scanPage(row, draftInput = false) {
   scanSelfAttestation(row, arrays);
   scanScoresAndProof(row, arrays);
   scanClaims(row, arrays);
-  scanEmbeddedLinkState(row, arrays, draftInput);
-  scanDestinationAndRenderer(row, arrays, draftInput);
+  scanReleaseEvidence(row, arrays, releaseEvidence);
+  scanEmbeddedLinkState(row, arrays, draftInput, releaseEvidence);
+  scanDestinationAndRenderer(row, arrays, draftInput, releaseEvidence);
   return arrays;
 }
 
@@ -810,13 +1077,20 @@ function summarize(report) {
 function buildReport(options) {
   const rows = readJsonFiles(options.targetDir, options.draftInput);
   const manifest = options.draftInput ? null : readIndexManifest(options.targetDir);
+  const releaseEvidence = options.draftInput
+    ? new Map()
+    : readAgentReleaseEvidence(options.targetDir, manifest);
   if (options.target && !rows.some((row) => row.file === options.target)) {
     throw new Error(`Target file not found: ${options.target}`);
   }
 
   const allIssueArrays = Object.fromEntries(ISSUE_ARRAYS.map((name) => [name, []]));
   for (const row of rows) {
-    const pageIssues = scanPage(row, options.draftInput);
+    const pageIssues = scanPage(
+      row,
+      options.draftInput,
+      releaseEvidence.get(row.file) ?? null,
+    );
     mergeIssueArrays(allIssueArrays, pageIssues);
   }
   scanIndexManifest(manifest, new Set(rows.map((row) => row.file)), allIssueArrays);
