@@ -12,7 +12,7 @@
   "artifacts": {
     "page": {
       "path": "elevenlabs-ai-voice-generator.json",
-      "sha256": "31bddd2eabf5c442be140691147f6436230a0be205935ace5b29774484ffa4dd"
+      "sha256": "896360a776c5103982ebd28bdd20ca41d21aea60235fedc9de341ce65cbe5135"
     },
     "product_evidence": {
       "path": "releases/elevenlabs-ai-voice-generator/product-evidence.json",

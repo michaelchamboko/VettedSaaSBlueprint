@@ -49,7 +49,7 @@ jobs:
     env:
       PUBLIC_POLICY_EFFECTIVE_DATE: ${{ vars.PUBLIC_POLICY_EFFECTIVE_DATE }}
       INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: ${{ vars.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT }}
-      PUBLIC_SITE_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+      PUBLIC_SITE_ORIGIN: https://vettedsaasblueprint.online
       VERCEL_ENV: preview
     steps:
       - uses: actions/checkout@v4
@@ -81,7 +81,7 @@ jobs:
     env:
       PUBLIC_POLICY_EFFECTIVE_DATE: ${{ vars.PUBLIC_POLICY_EFFECTIVE_DATE }}
       INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: ${{ vars.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT }}
-      PUBLIC_SITE_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+      PUBLIC_SITE_ORIGIN: https://vettedsaasblueprint.online
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

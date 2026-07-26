@@ -53,7 +53,7 @@ test("build and final workflow gates receive release values", () => {
 
     assert.match(job, /PUBLIC_POLICY_EFFECTIVE_DATE:\s*\$\{\{ vars\.PUBLIC_POLICY_EFFECTIVE_DATE \}\}/);
     assert.match(job, /INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT:\s*\$\{\{ vars\.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT \}\}/);
-    assert.match(job, /PUBLIC_SITE_ORIGIN:\s*https:\/\/vetted-saa-s-blueprint\.vercel\.app/);
+    assert.match(job, /PUBLIC_SITE_ORIGIN:\s*https:\/\/vettedsaasblueprint\.online/);
   }
 });
 
@@ -73,7 +73,7 @@ test("workflow does not create or target another hosting project", () => {
 test("automatic production verification uses the canonical public origin", () => {
   assert.match(
     productionWorkflow,
-    /CANONICAL_ORIGIN:\s*https:\/\/vetted-saa-s-blueprint\.vercel\.app/,
+    /CANONICAL_ORIGIN:\s*https:\/\/vettedsaasblueprint\.online/,
   );
   assert.match(
     productionWorkflow,
