@@ -161,7 +161,7 @@ test("LIVE requires exact CTA, disclosure, responsive checks, and production ide
         now: "2026-07-24T08:20:00.000Z",
         result: {
           canonical_url:
-            "https://vetted-saa-s-blueprint.vercel.app/landing-page-builders/elevenlabs-ai-voice-generator",
+            "https://vettedsaasblueprint.online/landing-page-builders/elevenlabs-ai-voice-generator",
           deployment_id: "dpl_test",
           production_commit: "a".repeat(40),
           http_ok: true,
@@ -182,7 +182,7 @@ test("LIVE requires exact CTA, disclosure, responsive checks, and production ide
     now: "2026-07-24T08:21:00.000Z",
     result: {
       canonical_url:
-        "https://vetted-saa-s-blueprint.vercel.app/landing-page-builders/elevenlabs-ai-voice-generator",
+        "https://vettedsaasblueprint.online/landing-page-builders/elevenlabs-ai-voice-generator",
       deployment_id: "dpl_test",
       production_commit: "a".repeat(40),
       http_ok: true,
