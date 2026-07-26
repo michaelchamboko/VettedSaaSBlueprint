@@ -40,7 +40,7 @@ jobs:
         env:
           MANUAL_URL: ${{ inputs.production_url }}
           MANUAL_SHA: ${{ inputs.expected_commit_sha }}
-          CANONICAL_ORIGIN: https://vetted-saa-s-blueprint.vercel.app
+          CANONICAL_ORIGIN: https://vettedsaasblueprint.online
           DEPLOYMENT_SHA: ${{ github.event.deployment.sha }}
         run: |
           url="${MANUAL_URL:-$CANONICAL_ORIGIN}"
