@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { z } from "zod";
 
-const DEFAULT_ORIGIN = "https://vetted-saa-s-blueprint.vercel.app";
+const DEFAULT_ORIGIN = "https://vettedsaasblueprint.online";
 
 const environmentSchema = z.object({
   PUBLIC_SITE_ORIGIN: z.string().optional(),
