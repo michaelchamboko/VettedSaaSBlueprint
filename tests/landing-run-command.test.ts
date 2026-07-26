@@ -53,6 +53,47 @@ test("landing:run accepts only the URL and emits one resumable next action", asy
   }
 });
 
+test("landing:run lets research replace a partner-host slug with the identified product slug", async () => {
+  const repositoryRoot = await mkdtemp(path.join(os.tmpdir(), "landing-command-"));
+  const moosendUrl = "https://trymoo.moosend.com/michaelmedium";
+  try {
+    await writeFile(
+      path.join(repositoryRoot, "approved-urls.md"),
+      "# Approved affiliate URLs\n\n",
+      "utf8",
+    );
+
+    const created = await runLandingCommand(
+      ["--url", moosendUrl, "--repository-root", repositoryRoot],
+      {
+        write: () => {},
+        now: () => "2026-07-26T10:00:00.000Z",
+      },
+    );
+    assert.equal(created.page_slug, "trymoo-review");
+
+    const renamed = await runLandingCommand(
+      [
+        "--url",
+        moosendUrl,
+        "--slug",
+        "moosend-email-marketing-automation",
+        "--repository-root",
+        repositoryRoot,
+      ],
+      {
+        write: () => {},
+        now: () => "2026-07-26T10:05:00.000Z",
+      },
+    );
+
+    assert.equal(renamed.created, false);
+    assert.equal(renamed.page_slug, "moosend-email-marketing-automation");
+  } finally {
+    await rm(repositoryRoot, { recursive: true, force: true });
+  }
+});
+
 test("package exposes the canonical landing:run command", async () => {
   const packageJson = JSON.parse(
     await readFile(path.resolve(process.cwd(), "package.json"), "utf8"),
