@@ -58,7 +58,7 @@ test("robots allows the public site while excluding owner and API surfaces", () 
   const rules = Array.isArray(result.rules) ? result.rules : [result.rules];
   const disallowed = rules.flatMap((rule) => rule.disallow ?? []);
 
-  assert.equal(result.sitemap, "https://vetted-saa-s-blueprint.vercel.app/sitemap.xml");
+  assert.equal(result.sitemap, "https://vettedsaasblueprint.online/sitemap.xml");
   assert.ok(disallowed.includes("/admin/"));
   assert.ok(disallowed.includes("/api/"));
 });
