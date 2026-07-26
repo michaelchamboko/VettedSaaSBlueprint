@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "product_id": "bfafbea6-ec2b-4757-921e-c9b7248f1a79",
+    "page_type": "direct_review",
+    "target_keyword": "moosend email marketing automation",
+    "search_intent": "commercial investigation",
+    "geo_target": null,
+    "category_slug": "marketing-tools",
+    "url_slug": "moosend-email-marketing-automation",
+    "title_tag": "Moosend Email Marketing Automation: A Practical Fit Check",
+    "meta_description": "A plain-English Moosend fit check for small teams comparing campaign setup, audience segmentation, and repeatable email follow-up.",
+    "canonical_url": "https://vetted-saa-s-blueprint.vercel.app/landing-page-builders/moosend-email-marketing-automation",
+    "robots": "index,follow",
+    "motion_profile": "gsap_editorial",
+    "design_profile": "reference_composed_v1"
+  },
+  "affiliate_disclosure": {
+    "short_disclosure": "We may earn a commission if you use this link, at no extra cost to you.",
+    "full_disclosure": "This page contains an affiliate link. If you visit Moosend through it and later make a purchase, we may earn a commission at no extra cost to you. The commission does not change the fit questions or limitations described here.",
+    "placement": "above_first_cta"
+  },
+  "hero": {
+    "headline": "Decide whether Moosend fits your campaign workflow",
+    "subheadline": "For small marketing teams that need to build emails, segment an audience, and set up repeatable follow-up without making their first campaign a one-off.",
+    "primary_cta_label": "Explore Moosend tools",
+    "primary_cta_link_id": "9de95544-339f-4ed3-8c5c-e421e855de09",
+    "risk_reversal": "Use one real campaign brief and a small audience segment before moving a broader list or automation into the platform.",
+    "social_proof_summary": null,
+    "answer_snippet": "Moosend is worth exploring if your team needs one place to build email campaigns, group subscribers by useful audience signals, and plan repeatable follow-up. The practical fit check is to map one real campaign, one audience segment, and one automation need before moving a larger list or workflow.",
+    "visual_asset": null
+  },
+  "problem_solution": {
+    "problem": "A feature list can make email platforms look interchangeable even when the real decision is whether your team can turn one campaign into repeatable follow-up.",
+    "agitation": "If audience grouping and follow-up rules are not clear in the first setup, teams can end up with a one-off send rather than a process they can reuse.",
+    "solution": "Use Moosend as a fit check for one real campaign: define the audience, set the message goal, and see whether its campaign and automation tools match the follow-up you need."
+  },
+  "benefits": [
+    {
+      "benefit_title": "Map campaign work before you import everything",
+      "benefit_description": "Moosend lists email marketing and automation tools, so the first evaluation can start with a real campaign brief rather than a generic demo.",
+      "feature_supporting_it": "Email marketing and marketing automation",
+      "source_reference_ids": ["d96c78b5-e35f-4005-80cc-fee5dda7e8ac"],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Group subscribers around a real campaign question",
+      "benefit_description": "Its documentation describes segments built from custom fields and campaign activity, which makes it possible to test a targeted campaign with a defined subset of subscribers.",
+      "feature_supporting_it": "Audience segments based on custom fields and campaign activity",
+      "source_reference_ids": ["2a6206cc-c19a-4ae1-af02-0245c880a55d"],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Check whether repeatable follow-up is practical",
+      "benefit_description": "Evaluate automation beside campaign functions before moving a larger list or workflow.",
+      "feature_supporting_it": "Marketing automation tools",
+      "source_reference_ids": ["d96c78b5-e35f-4005-80cc-fee5dda7e8ac"],
+      "visual_asset": null
+    }
+  ],
+  "proof_blocks": [
+    {
+      "proof_type": "official product page",
+      "summary": "Moosend's product site lists email marketing automation, landing pages, subscription forms, an AI Writer, A/B testing, reports, and SMTP.",
+      "source_reference_id": "d96c78b5-e35f-4005-80cc-fee5dda7e8ac",
+      "evidence_claim_id": "6537a872-fa97-4766-841f-477ee0352abd",
+      "confidence_score": 0.95
+    },
+    {
+      "proof_type": "official documentation",
+      "summary": "Moosend documents audience segments based on custom fields and user activity, including campaign activity, for targeted campaigns.",
+      "source_reference_id": "2a6206cc-c19a-4ae1-af02-0245c880a55d",
+      "evidence_claim_id": "02becb30-1718-493b-95f4-18d7fbd9a079",
+      "confidence_score": 0.95
+    },
+    {
+      "proof_type": "live destination check",
+      "summary": "The supplied affiliate URL resolved to Moosend's official site while retaining the supplied tracking parameters.",
+      "source_reference_id": "1c3218ed-7e96-4898-be30-debab27e7543",
+      "evidence_claim_id": "ee451ec7-d899-42f0-819e-1747cde4d456",
+      "confidence_score": 0.99
+    }
+  ],
+  "how_it_works": [
+    {"step_number": 1, "title": "Choose one campaign outcome", "description": "Start with a single recipient action and message goal that your team actually needs to run."},
+    {"step_number": 2, "title": "Define the audience signals", "description": "Use the custom-field and campaign-activity signals that matter for that campaign, rather than attempting to organize every subscriber at once."},
+    {"step_number": 3, "title": "Evaluate the follow-up path", "description": "Check whether the campaign and automation tools make the next message or action clear enough to become a repeatable workflow."}
+  ],
+  "limitations": [
+    {"limitation": "The first workflow still needs clear audience data", "who_it_affects": "Teams whose subscriber data is inconsistent or missing the fields needed to distinguish campaign audiences", "mitigation": "Begin with one small list and the few audience signals that directly support the campaign question.", "evidence_claim_id": "02becb30-1718-493b-95f4-18d7fbd9a079"},
+    {"limitation": "A broad feature list is not a workflow design", "who_it_affects": "Teams expecting a platform to choose their campaign goal, offer, timing, or follow-up logic", "mitigation": "Map the campaign goal, audience, trigger, and next message before deciding whether the platform fits the workflow.", "evidence_claim_id": "6537a872-fa97-4766-841f-477ee0352abd"}
+  ],
+  "objection_handling": [
+    {"objection": "Can a small team start with one campaign?", "response": "That is the most useful way to evaluate fit: choose one real campaign, define the target audience, and decide what should happen after the initial send before expanding the workflow.", "source_reference_ids": ["d96c78b5-e35f-4005-80cc-fee5dda7e8ac", "2a6206cc-c19a-4ae1-af02-0245c880a55d"]},
+    {"objection": "Can I target only part of my subscriber list?", "response": "Moosend's documentation describes segments based on custom fields and campaign activity. Confirm that the fields and activity signals you need are present in your own data before relying on that setup.", "source_reference_ids": ["2a6206cc-c19a-4ae1-af02-0245c880a55d"]}
+  ],
+  "cta_blocks": [{"placement": "closing", "label": "Explore Moosend tools", "supporting_text": "The next useful step is to map one real campaign and audience—not to make a purchase decision.", "affiliate_link_id": "9de95544-339f-4ed3-8c5c-e421e855de09"}],
+  "faq": [
+    {"question": "What should a small team check first?", "answer": "Start with one campaign outcome, the audience signals you need to distinguish, and the follow-up that should happen after the first message.", "source_reference_ids": ["d96c78b5-e35f-4005-80cc-fee5dda7e8ac"]},
+    {"question": "Can I target a campaign to a subset of subscribers?", "answer": "Moosend documents segments based on custom fields and user activity, including campaign activity. Confirm that your data contains the signals you need before building the campaign.", "source_reference_ids": ["2a6206cc-c19a-4ae1-af02-0245c880a55d"]},
+    {"question": "What should I bring into a first test?", "answer": "Bring a real campaign brief, a small representative audience, and a clear idea of the next message or action that should follow the campaign.", "source_reference_ids": ["d96c78b5-e35f-4005-80cc-fee5dda7e8ac", "2a6206cc-c19a-4ae1-af02-0245c880a55d"]},
+    {"question": "Where should I confirm current account terms?", "answer": "Commercial terms can change. Check the current options on the official Moosend destination before making a decision.", "source_reference_ids": ["1c3218ed-7e96-4898-be30-debab27e7543"]}
+  ],
+  "schema_markup": {"faq_schema": {}, "breadcrumb_schema": {}},
+  "quality_scores": {"evidence_score": 79, "originality_score": 97, "conversion_score": 81, "compliance_score": 80, "readability_score": 86, "seo_safety_score": 78, "overall_score": 82},
+  "presentation": {
+    "hero": "media_first_offset", "typography": "dm_serif_instrument_sans", "section_order": ["problem_solution", "benefits", "proof_blocks", "how_it_works", "limitations", "objection_handling", "faq", "closing_cta"],
+    "section_variants": {"problem_solution": "closing_manifesto", "benefits": "alternating_story", "proof_blocks": "decision_matrix", "how_it_works": "split_editorial", "limitations": "proof_strip", "objection_handling": "process_timeline", "faq": "objection_accordion", "closing_cta": "numbered_ledger"},
+    "cta": "inline_decision", "motion": "split_reveal", "mobile": "media_first", "design_dials": {"design_variance": 7, "motion_intensity": 6, "visual_density": 4},
+    "reference_ids": ["lp-ref-0002", "lp-ref-0029", "lp-ref-0030"], "recipe_id": "recipe-662a33eca8703470", "fingerprint": "662a33eca8703470e24b62360f7231e9ca03c0d395c00d9f843d2c17882843b2"
+  }
+}

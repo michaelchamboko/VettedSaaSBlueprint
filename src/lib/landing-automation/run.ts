@@ -572,10 +572,21 @@ export async function loadOrCreateLandingRun(
     if (
       existing.schema_version !== "LandingRunV1" ||
       existing.exact_url !== exactUrl ||
-      existing.url_fingerprint !== urlFingerprint ||
-      existing.page_slug !== slug
+      existing.url_fingerprint !== urlFingerprint
     ) {
       throw new Error("Stored landing run identity does not match this exact URL and slug.");
+    }
+    if (existing.page_slug !== slug) {
+      if (existing.state !== "WORKING" || existing.stage !== "research") {
+        throw new Error("A landing run slug can only be corrected while research is in progress.");
+      }
+      const renamed: LandingRunV1 = {
+        ...existing,
+        page_slug: slug,
+        updated_at: input.now ?? new Date().toISOString(),
+      };
+      await persistRun(runFile, renamed);
+      return { created: false, run: renamed, run_file: runFile };
     }
     return { created: false, run: existing, run_file: runFile };
   } catch (error) {

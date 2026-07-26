@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-24T22:04:46.778Z",
+  "generated_at": "2026-07-26T00:00:00.000Z",
   "pages": [
     {
       "slug": "elevenlabs-ai-voice-generator",
@@ -11,6 +11,17 @@
       "published_at": "2026-07-24T22:04:46.778Z",
       "current_version_id": "agent-release-73acf1f",
       "release_receipt": "releases/elevenlabs-ai-voice-generator/release-receipt.json"
+    },
+    {
+      "slug": "moosend-email-marketing-automation",
+      "title": "Moosend Email Marketing Automation: A Practical Fit Check",
+      "artifact": "moosend-email-marketing-automation.json",
+      "path": "/landing-page-builders/moosend-email-marketing-automation",
+      "status": "published",
+      "publication_source": "agent_verified_release",
+      "published_at": "2026-07-26T00:00:00.000Z",
+      "current_version_id": "agent-release-pending",
+      "release_receipt": "releases/moosend-email-marketing-automation/release-receipt.json"
     }
   ]
 }

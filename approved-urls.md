@@ -14,3 +14,4 @@ content, or removes a large group of URLs without the explicit CI override.
 - https://try.elevenlabs.io/izj2b165mcsj
 - https://free-trial.adcreative.ai/8phdnllve4xi
 - https://partners.snowfire.ai/j1a8kovs1uez
+- https://trymoo.moosend.com/michaelmedium
