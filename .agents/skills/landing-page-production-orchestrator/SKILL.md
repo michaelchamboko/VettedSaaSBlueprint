@@ -19,7 +19,7 @@ Run this fail-closed sequence before product evidence, intent, drafting, or any 
 4. The eligible drafter converts the intent direction to a validated `PresentationRecipeV1`. It may use only registered presentation tokens; never generate page-specific JSX/CSS/JavaScript or silently fall back to `editorial_v2` or legacy rendering.
 5. After the draft, render the production-identical animated noindex preview with the fixed `gsap_editorial` motion profile and retain `VisualDesignReviewV1`. A visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
 
-When an exact category reference is unavailable, select the closest eligible references or the approved repository house style and record the fallback. Missing, stale, invalid, or reuse-limited references enter the design repair route; stop only when no approved direction can produce a useful accessible page after two repair rounds. Oracle synchronization is optional and never blocks the agent-led GitHub/Vercel release.
+When an exact category reference is unavailable, select the closest eligible references or the approved repository house style and record the fallback. Missing, stale, invalid, or reuse-limited references enter the design repair route; stop only when no approved direction can produce a useful accessible page after two repair rounds. Neon Postgres remains the durable workflow authority, and Oracle-hosted Hermes remains mandatory for product identity and research.
 
 ## Required Workflow
 

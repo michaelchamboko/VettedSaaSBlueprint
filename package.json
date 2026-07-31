@@ -47,6 +47,7 @@
     "hermes": "tsx hermes/worker.ts",
     "landing:run": "tsx scripts/landing-run.ts",
     "landing:allowlist:validate": "tsx scripts/validate-approved-urls.ts",
+    "landing:research:preflight": "tsx scripts/validate-landing-research-preflight.ts",
     "landing:workflow:describe": "tsx scripts/describe-landing-workflow.ts",
     "verify:runtime-contract": "node scripts/verify-runtime-contract.mjs"
   },

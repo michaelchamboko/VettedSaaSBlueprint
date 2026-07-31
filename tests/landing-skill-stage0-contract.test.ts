@@ -36,7 +36,7 @@ test("all landing-production skills fail closed on the ordered local Stage 0 con
     ["a production-identical animated noindex preview with gsap_editorial", /production-identical[\s\S]{0,300}(?:animated )?noindex[\s\S]{0,300}gsap_editorial/i],
     ["a passing VisualDesignReviewV1 before uniqueness, compliance, and conversion", /VisualDesignReviewV1[\s\S]{0,450}(?:status other than `?pass`?|visual pass)[\s\S]{0,650}(?:uniqueness|compliance)[\s\S]{0,450}conversion/i],
     ["hold_for_design_direction when Stage 0 is unavailable or invalid", /hold_for_design_direction/],
-    ["Oracle synchronization optional for the agent-led release", /Oracle[\s\S]{0,500}(?:synchronization|sync)[\s\S]{0,500}(?:optional|never blocks|does not block|must not block|not block)/i],
+    ["Neon durable authority with mandatory Hermes product identity and research", /Neon Postgres[\s\S]{0,500}durable[\s\S]{0,500}authority[\s\S]{0,500}Hermes[\s\S]{0,500}mandatory[\s\S]{0,500}product identity[\s\S]{0,500}research/i],
   ];
 
   for (const [skill, relativePath] of Object.entries(skillPaths)) {

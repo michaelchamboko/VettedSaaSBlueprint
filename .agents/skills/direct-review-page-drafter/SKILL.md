@@ -45,7 +45,7 @@ Read `references/forward-tests.md` when validating, forward-testing, or improvin
 10. Run the final preflight. Emit either page JSON or blocked output. Do not emit partial page JSON when blocked.
 11. Render the production-identical animated noindex preview with fixed `gsap_editorial` motion and require `VisualDesignReviewV1` before handoff; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
 
-Before downstream handoff, missing, stale, invalid, unsuitable, reuse-limited, unsupported-token, recipe/fingerprint-mismatched, or non-passing visual artifacts require `hold_for_design_direction`; do not improvise. Oracle synchronization is optional for the agent-led release: record `pending` or `not_configured`, and never block local Stage 0, GitHub/Vercel publication, or live verification on Oracle.
+Before downstream handoff, missing, stale, invalid, unsuitable, reuse-limited, unsupported-token, recipe/fingerprint-mismatched, or non-passing visual artifacts require `hold_for_design_direction`; do not improvise. Neon Postgres is the durable workflow authority, and Oracle-hosted Hermes is mandatory for product identity and research; local artifacts are not substitutes.
 
 Default output mode is page JSON or blocked output. If the user explicitly asks for a diagnostic verdict instead of JSON, return a concise decision report using the same gates, reason codes, and required fixes.
 

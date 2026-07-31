@@ -61,7 +61,7 @@ test("active landing instructions do not stop a normal URL run for human approva
   assert.deepEqual(failures, []);
 });
 
-test("active landing instructions define URL input as release authorization", () => {
+test("active landing instructions define URL input as release authorization with durable Neon authority", () => {
   const authority = readFileSync(
     path.resolve(repositoryRoot, "docs/landing-workflow/unattended-publication.md"),
     "utf8",
@@ -69,5 +69,6 @@ test("active landing instructions define URL input as release authorization", ()
 
   assert.match(authority, /submitting (?:an|the) exact .*url.*authoriz(?:es|ation).*production/i);
   assert.match(authority, /eligible_for_release/);
-  assert.match(authority, /oracle.*(?:pending|unavailable).*does not block/i);
+  assert.match(authority, /Neon Postgres.*durable.*authority/i);
+  assert.match(authority, /no job may advance.*publish.*until.*Postgres/i);
 });

@@ -48,7 +48,7 @@ Before evidence or intent analysis, run `npm run landing:references:validate` ag
 - Record a `DesignDirectionV1` with reference IDs, entry digests, roles, influenced axes, adopted abstract principles, non-copy boundaries, selection rationale, one-line design read, and structured recipe direction. Convert it to a validated `PresentationRecipeV1` using registered tokens only; never generate page-specific JSX/CSS/JavaScript or silently fall back to Editorial V2, `editorial_v2`, or legacy.
 - Record that the eligible draft must render a production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1` before downstream handoff. A visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
 
-If the catalogue, hashes, selection, reuse history, direction, recipe/fingerprint, or visual report is missing, stale, invalid, unsuitable, or non-passing, return `status: fail` with `recommended_action: hold_for_design_direction`. Do not invent a design direction. Oracle synchronization is optional for the agent-led release: record `pending` or `not_configured`, and never block local Stage 0, GitHub/Vercel publication, or live verification on Oracle.
+If the catalogue, hashes, selection, reuse history, direction, recipe/fingerprint, or visual report is missing, stale, invalid, unsuitable, or non-passing, return `status: fail` with `recommended_action: hold_for_design_direction`. Do not invent a design direction. Neon Postgres is the durable workflow authority, and Oracle-hosted Hermes is mandatory for product identity and research; local artifacts are not substitutes.
 
 ## Workflow
 

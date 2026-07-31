@@ -8,11 +8,11 @@ This repository implements the Controlled Affiliate Intelligence Loop from `docs
 - Build only owner/admin surfaces and anonymous public landing-page visitor flows.
 - Do not add public signup, teams, tenants, seats, billing, roles, or third-party identity providers unless the operator changes direction.
 
-## Step 2 Execution Order
+## Database Execution Order
 
 - Follow `build-pack/11-task-graph.md`.
-- Complete `T02A - Oracle Database Connectivity Readiness` before schema migration or DB-connected Hermes work.
-- Do not apply database schema until the approved Oracle connection path has passed a read-only verification query.
+- Complete the Neon connectivity readiness probe before schema migration or DB-connected Hermes work.
+- Do not apply database schema until the approved Neon connection path has passed a read-only verification query.
 - Keep task changes small enough to review independently.
 
 ## Oracle Guardrails
@@ -35,6 +35,14 @@ This repository implements the Controlled Affiliate Intelligence Loop from `docs
 - Public tracking remains minimal first-party only: page view, CTA click, affiliate click, link error, and FAQ expand.
 - Do not add third-party pixels, fingerprinting, raw IP storage, remarketing, newsletter capture, or profiling in MVP.
 
+## Orchestration Delivery Contract
+
+- Landing orchestration, CI, deployment verification, workflow-state, gate, recovery, and agent-instruction improvements are incomplete while local, untracked, unpushed, or unmerged.
+- Scheduled landing automation starts from current remote `main`. A disposable worktree is scratch space, never authority.
+- Repair repository process defects through a focused branch, checks, PR, merge, and Git-backed deployment when production behavior changes before retrying the failed stage.
+- Stop on missing credentials, approved service access, compliance certainty, or Hermes/Neon authority. Never weaken gates, substitute local research, or manufacture `LIVE` evidence.
+- Keep orchestration status, conflicts, recovery state, and activation proof in root `planning.md`.
+
 ## Landing Page Production Skill Loop
 
 - Use `.agents/skills/landing-page-production-orchestrator` for any landing-page creation, rewrite, batch generation, or publication-readiness task.
@@ -52,13 +60,13 @@ This repository implements the Controlled Affiliate Intelligence Loop from `docs
 - Build one exemplar page before broad batches. Cap batches at three pages until the skill loop passes without major rework.
 - Store versioned product packs, intents, drafts, independent review reports, retro, and timings under `src/generated/landing-page-batches/<batch-id>/`. Keep review reports separate from page JSON.
 - Local batch validation, deterministic packaging, focused tests, and production-identical noindex preview work are permitted. Previews must use the production editorial renderer and fixed `gsap_editorial` motion profile, suppress production analytics, and never self-attest approval or publication state.
-- Oracle outages do not block the agent-led URL-to-live path. Record Oracle synchronization as `pending` and continue with the durable tracked release receipt; GitHub CI and Vercel remain the release and deployment authority. Oracle remains authoritative for Oracle-backed records when configured and may synchronize later.
+- Neon Postgres is the durable central workflow authority. During a Neon outage, workers may finish an already-dispatched idempotent side effect, but no job may advance, publish, or report completion until the fenced Postgres transaction records the result. Pause and resume from durable state; never fall back to local files or agent-authored receipts.
 
 ## Dependency Ownership
 
 - Vercel owns Next.js application dependencies.
-- Oracle Autonomous Database owns durable data.
-- Oracle Hermes owns research, evidence, scoring, optimization, artifact-export, and Scrapling runtime dependencies; it does not own page drafting.
+- Neon Postgres owns durable workflow and publication data.
+- The Oracle-hosted Hermes worker owns research, evidence, scoring, optimization, artifact-export, and Scrapling runtime dependencies; it does not own durable workflow state or page drafting.
 - AI provider SDKs belong only to isolated provider wrapper modules in the runtime that executes them.
 - The local workstation owns Codex batch authoring, deterministic batch validation/packaging, focused tests, type generation/typecheck, and production-identical noindex previews. Use a local preview server only when needed for bounded visual QA.
-- GitHub repeats application and landing-quality validation from a clean checkout; Vercel performs the release build and deployment. Approved Oracle runtime checks remain required for database/Hermes work.
+- GitHub repeats application and landing-quality validation from a clean checkout; Vercel performs the release build and deployment. Approved Neon database checks and Oracle-hosted Hermes runtime checks remain required at their respective boundaries.
