@@ -12,6 +12,7 @@ const helperPath = path.join(root, "src", "lib", "landing", "reference-composed.
 const directReviewPath = path.join(root, "src", "components", "landing", "DirectReviewPage.tsx");
 const motionPath = path.join(root, "src", "components", "landing", "LandingPageMotion.tsx");
 const cssPath = path.join(root, "src", "app", "globals.css");
+const layoutPath = path.join(root, "src", "app", "layout.tsx");
 
 function source(filePath: string) {
   assert.ok(fs.existsSync(filePath), `expected ${path.relative(root, filePath)} to exist`);
@@ -93,10 +94,13 @@ test("whitespace-only answer differences do not duplicate the reference hero cop
 
 test("renderer exposes every controlled recipe axis and four local font pairs", () => {
   const renderer = source(referenceComposedPath);
+  const css = source(cssPath);
   for (const value of [
     "data-design-profile", "data-recipe-id", "data-fingerprint", "data-hero-variant", "data-typography-pair", "data-cta-variant", "data-motion-variant", "data-mobile-strategy",
-    "fraunces_manrope", "archivo_source_sans", "dm_serif_instrument_sans", "space_grotesk_dm_sans",
   ]) assert.match(renderer, new RegExp(value));
+  for (const value of [
+    "fraunces_manrope", "archivo_source_sans", "dm_serif_instrument_sans", "space_grotesk_dm_sans",
+  ]) assert.match(css, new RegExp(value));
 });
 
 test("all hero and section-family compositions have distinct selectors", () => {
@@ -131,9 +135,10 @@ test("motion variants are root-scoped, reduced-motion safe, and cleanup GSAP con
 test("reference renderer uses the approved font, concise hero, and private visual metadata", () => {
   const renderer = source(referenceComposedPath);
   const css = source(cssPath);
+  const layout = source(layoutPath);
 
-  assert.match(renderer, /Archivo_Black/);
-  assert.doesNotMatch(renderer, /\bArchivo\s*,/);
+  assert.match(layout, /@fontsource\/archivo-black\/latin-400\.css/);
+  assert.match(css, /--font-reference-archivo-black:\s*"Archivo Black"/);
   assert.match(renderer, /showSubheadline/);
   assert.match(renderer, /throw new Error\("reference_composed_v1 pages require a hero answer snippet\."\)/);
   assert.match(renderer, /figcaption className="sr-only"/);

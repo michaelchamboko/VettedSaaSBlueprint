@@ -1,24 +1,11 @@
-import { DM_Sans, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 
 import type { EditorialV2Preview } from "@/lib/generated/editorial-v2-previews";
 
-const editorialDisplay = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-editorial-display",
-  display: "swap",
-});
-
-const editorialBody = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-editorial-body",
-  display: "swap",
-});
-
 export function EditorialV2PreviewPage({ preview }: { preview: EditorialV2Preview }) {
   return (
     <main
-      className={`${editorialDisplay.variable} ${editorialBody.variable} landing-editorial-v2 min-h-screen bg-[#0d0d0d] text-[#f2f0e9]`}
+      className="landing-editorial-v2 min-h-screen bg-[#0d0d0d] text-[#f2f0e9]"
       data-preview="editorial-v2"
       data-preview-slug={preview.slug}
     >
