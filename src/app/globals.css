@@ -209,6 +209,8 @@ button, input, textarea, select { font: inherit; }
 }
 
 .landing-editorial-v2 {
+  --font-editorial-display: "Space Grotesk Variable", ui-sans-serif, sans-serif;
+  --font-editorial-body: "DM Sans Variable", ui-sans-serif, sans-serif;
   --editorial-accent: #e7ff5a;
   --editorial-surface: #151515;
   --editorial-line: rgba(242, 240, 233, .18);
@@ -288,6 +290,14 @@ button, input, textarea, select { font: inherit; }
 }
 
 .landing-reference-composed {
+  --font-reference-fraunces: "Fraunces Variable", Georgia, serif;
+  --font-reference-manrope: "Manrope Variable", ui-sans-serif, sans-serif;
+  --font-reference-archivo-black: "Archivo Black", Impact, sans-serif;
+  --font-reference-source-sans: "Source Sans 3 Variable", ui-sans-serif, sans-serif;
+  --font-reference-dm-serif: "DM Serif Display", Georgia, serif;
+  --font-reference-instrument-sans: "Instrument Sans Variable", ui-sans-serif, sans-serif;
+  --font-reference-space-grotesk: "Space Grotesk Variable", ui-sans-serif, sans-serif;
+  --font-reference-dm-sans: "DM Sans Variable", ui-sans-serif, sans-serif;
   --reference-ink: #f5f4ef;
   --reference-muted: #a9aaa4;
   --reference-line: #343530;

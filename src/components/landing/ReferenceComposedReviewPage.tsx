@@ -1,13 +1,3 @@
-import {
-  Archivo_Black,
-  DM_Sans,
-  DM_Serif_Display,
-  Fraunces,
-  Instrument_Sans,
-  Manrope,
-  Source_Sans_3,
-  Space_Grotesk,
-} from "next/font/google";
 import Link from "next/link";
 
 import type { PageBlueprint } from "@/lib/schemas/contracts";
@@ -16,22 +6,6 @@ import { getRenderableSectionOrder, shouldRenderReferenceSubheadline, type Refer
 import type { LandingPageRenderMode } from "./DirectReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
 import { OracleTracking } from "./OracleTracking";
-
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-reference-fraunces", display: "swap" });
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-reference-manrope", display: "swap" });
-const archivoBlack = Archivo_Black({ subsets: ["latin"], weight: "400", variable: "--font-reference-archivo-black", display: "swap" });
-const sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-reference-source-sans", display: "swap" });
-const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: "400", variable: "--font-reference-dm-serif", display: "swap" });
-const instrumentSans = Instrument_Sans({ subsets: ["latin"], variable: "--font-reference-instrument-sans", display: "swap" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-reference-space-grotesk", display: "swap" });
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-reference-dm-sans", display: "swap" });
-
-const fontPairClasses = {
-  fraunces_manrope: `${fraunces.variable} ${manrope.variable}`,
-  archivo_source_sans: `${archivoBlack.variable} ${sourceSans.variable}`,
-  dm_serif_instrument_sans: `${dmSerif.variable} ${instrumentSans.variable}`,
-  space_grotesk_dm_sans: `${spaceGrotesk.variable} ${dmSans.variable}`,
-} as const;
 
 function affiliateUrl(linkId: string, override?: string) {
   return override ?? `/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
@@ -123,7 +97,7 @@ export function ReferenceComposedReviewPage({
 
   return (
     <main
-      className={`${fontPairClasses[presentation.typography]} landing-reference-composed`}
+      className="landing-reference-composed"
       data-motion-root={blueprint.metadata.url_slug}
       data-design-profile="reference_composed_v1"
       data-recipe-id={presentation.recipe_id}

@@ -1,4 +1,3 @@
-import { DM_Sans, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 
 import type { PageBlueprint } from "@/lib/schemas/contracts";
@@ -6,18 +5,6 @@ import type { PageBlueprint } from "@/lib/schemas/contracts";
 import type { LandingPageRenderMode } from "./DirectReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
 import { OracleTracking } from "./OracleTracking";
-
-const editorialDisplay = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-editorial-display",
-  display: "swap",
-});
-
-const editorialBody = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-editorial-body",
-  display: "swap",
-});
 
 function buildAffiliateUrl(linkId: string) {
   return `/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
@@ -43,7 +30,7 @@ export function EditorialReviewPage({
 
   return (
     <main
-      className={`${editorialDisplay.variable} ${editorialBody.variable} landing-editorial-v2 min-h-screen bg-[#0d0d0d] text-[#f2f0e9]`}
+      className="landing-editorial-v2 min-h-screen bg-[#0d0d0d] text-[#f2f0e9]"
       data-motion-root={blueprint.metadata.url_slug}
       data-motion-profile={blueprint.metadata.motion_profile}
     >
