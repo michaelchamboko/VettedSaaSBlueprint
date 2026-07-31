@@ -2,12 +2,22 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+type DeploymentEnvironment = {
+  readonly VERCEL_ENV?: string;
+  readonly VERCEL_GIT_COMMIT_SHA?: string;
+};
+
+export function deploymentMetadata(environment?: DeploymentEnvironment) {
+  const source = environment ?? process.env;
+  return {
+    commitSha: source.VERCEL_GIT_COMMIT_SHA?.trim() || null,
+    environment: source.VERCEL_ENV?.trim() || "local",
+  };
+}
+
 export function GET() {
   return NextResponse.json(
-    {
-      commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
-      environment: process.env.VERCEL_ENV ?? "local",
-    },
+    deploymentMetadata(),
     { headers: { "Cache-Control": "no-store" } },
   );
 }

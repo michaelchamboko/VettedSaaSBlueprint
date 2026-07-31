@@ -39,6 +39,13 @@ remains blocked until the four named authorities are configured outside source.
 No Hermes research or Neon workflow transition has been claimed from the
 preflight implementation.
 
+Deployment recovery on 2026-08-01 removed all landing `next/font/google`
+imports through merged PR #8 and pinned local Fontsource packages. Vercel
+system-environment exposure is enabled for the existing project so
+`/api/deployment` can bind a Git-backed production deployment to its reviewed
+commit. Blank commit metadata is normalized to `null`; only an exact SHA match
+from the independent production verifier counts as activation proof.
+
 ## Zero recurring approval
 
 - Submitting the exact URL is the recurring authorization to create the page, add the URL to `approved-urls.md` when absent, create and merge the GitHub change, deploy to the existing Vercel project, verify production, repair failures, and restore the previous production deployment when necessary.
