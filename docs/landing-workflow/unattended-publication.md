@@ -8,7 +8,7 @@ Unknown, missing, ambiguous, stale, or failed state enters a bounded repair rout
 
 Passing quality output is `eligible_for_release`, not a human-review handoff. The independent `LandingReleaseReceiptV1` binds the exact authorized URL, reviewed commit, artifact fingerprints, check results, and verified deployment.
 
-Oracle synchronization is optional for this path. Oracle pending or unavailable does not block GitHub/Vercel release; the receipt records `oracle_sync` as `pending` or `not_configured` and synchronization may complete later.
+Neon Postgres is the durable workflow authority. No job may advance or publish until the result is recorded in Postgres by the fenced transaction. The Oracle-hosted Hermes worker is mandatory for product identity and research; local research and local receipts are not substitutes.
 
 ## Manifest grammar
 

@@ -12,7 +12,7 @@ The exact URL is recorded in root `approved-urls.md` and must be preserved byte-
 
 ## Coordinator contract
 
-The run coordinator stores a `LandingRunV1` record and returns exactly one next action. Its public state is one of:
+The run coordinator stores a durable `LandingRunV1` record in Neon Postgres and returns exactly one next action. Its public state is one of:
 
 - `WORKING`: research, evidence, authoring, packaging, or verification is in progress.
 - `FIXING`: a failed check has been routed to a bounded repair.
@@ -23,7 +23,7 @@ The run coordinator stores a `LandingRunV1` record and returns exactly one next 
 
 Completed stages are fingerprinted and retained. A rerun never discards valid upstream work.
 
-Oracle is optional for this agent-led path. When Oracle is unavailable or not configured, record `oracle_sync: pending` or `not_configured`; Oracle does not block GitHub, Vercel, or `LIVE`.
+Neon Postgres is the durable workflow authority. No job may advance or publish until the result is recorded in Postgres by the fenced transaction. The Oracle-hosted Hermes worker is mandatory for `product_identity` and `research`; local research and local receipts are not substitutes.
 ## Automatic stage sequence
 
 ### 1. Intake and research
@@ -93,6 +93,7 @@ The report must say what was tried, what happened, the user impact, and the one 
 
 ```text
 npm run landing:run -- --url <exact-https-affiliate-url>
+npm run landing:research:preflight
 npm run landing:workflow:describe -- --json
 npm run landing:allowlist:validate
 npm run landing:references:validate

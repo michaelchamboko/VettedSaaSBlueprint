@@ -18,6 +18,27 @@ npm run landing:run -- --url <exact-https-affiliate-url>
 
 Running the same command again resumes the existing URL run. The command must return one current state and one exact next action.
 
+## Durable authority and research prep
+
+Neon Postgres is the sole durable workflow and publication authority. The
+Oracle-hosted Hermes worker owns product identity and research compute but may
+not advance state from local files or receipts. Before research dispatch, run:
+
+```text
+npm run landing:research:preflight
+```
+
+The preflight validates `approved-urls.md` and reports whether the control Neon
+credential, least-privilege Oracle-worker Neon credential, and both approved
+Hermes executor contracts are configured. It never prints their values. A
+blocked preflight is an exact external configuration blocker, not permission to
+substitute local research.
+
+Status on 2026-07-31: the repository preflight is implemented. Activation
+remains blocked until the four named authorities are configured outside source.
+No Hermes research or Neon workflow transition has been claimed from the
+preflight implementation.
+
 ## Zero recurring approval
 
 - Submitting the exact URL is the recurring authorization to create the page, add the URL to `approved-urls.md` when absent, create and merge the GitHub change, deploy to the existing Vercel project, verify production, repair failures, and restore the previous production deployment when necessary.
@@ -31,7 +52,7 @@ Running the same command again resumes the existing URL run. The command must re
 - Repair page content or design at most twice per failed quality cycle.
 - Remove or soften unproved pricing, discount, guarantee, ranking, security, or urgency claims and continue.
 - Use the closest approved design references or approved house style when no exact category match exists.
-- If Oracle is unavailable, record `oracle_sync: pending` and continue through GitHub and Vercel. A normal landing-page run must not become an Oracle repair task.
+- If Neon or an approved Hermes executor is unavailable, pause at the durable stage and report the exact missing authority. Do not substitute local state or research.
 - If production verification fails, restore the previous working deployment, repair the failed layer, and retry at most twice.
 
 ## Legitimate stop
@@ -39,6 +60,7 @@ Running the same command again resumes the existing URL run. The command must re
 `NEEDS_HELP` is allowed only when the run records what it tried and one of these remains true:
 
 - GitHub or Vercel access is unavailable.
+- The required Neon authority or approved Hermes research executor is unavailable.
 - The exact affiliate URL remains unusable after three checks.
 - The product cannot be identified honestly from public evidence.
 - A useful compliant page cannot be produced after two repair cycles.
