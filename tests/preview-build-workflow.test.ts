@@ -8,7 +8,7 @@ const workflowPath = path.join(process.cwd(), ".github", "workflows", "preview-b
 test("preview CI keeps five parallel jobs and scans each committed UUID Codex batch in draft mode", async () => {
   const workflow = await readFile(workflowPath, "utf8");
   const jobs = [...workflow.matchAll(/^  ([a-z][a-z-]+):\r?\n(?=    name:)/gm)].map((match) => match[1]);
-  assert.deepEqual(jobs, ["typecheck", "lint", "test", "build", "landing-workflow"]);
+  assert.deepEqual(jobs, ["typecheck", "lint", "test", "research-contract", "worker-bundle", "build", "landing-workflow"]);
 
   const landingJob = workflow.slice(workflow.indexOf("  landing-workflow:"));
   const needsMatch = landingJob.match(/^    needs:\s*\[([^\]]+)\]/m);

@@ -9,11 +9,14 @@ const REQUIRED_CONFIGURATION = [
 
 type RequiredConfigurationName = (typeof REQUIRED_CONFIGURATION)[number];
 
+export type LandingResearchPreflightChecks = Partial<Record<RequiredConfigurationName, boolean>>;
+
 export type LandingResearchPreflightResult = {
   blockers: string[];
   configuration: Array<{
     configured: boolean;
     name: RequiredConfigurationName;
+    validated: boolean;
   }>;
   manifestDigest: string;
   status: "blocked" | "ready";
@@ -28,11 +31,13 @@ export type LandingResearchPreflightResult = {
 export function inspectLandingResearchPreflight(
   approvedUrlsMarkdown: string,
   environment: Readonly<Record<string, string | undefined>>,
+  checks: LandingResearchPreflightChecks = {},
 ): LandingResearchPreflightResult {
   const manifest = parseApprovedUrls(approvedUrlsMarkdown);
   const configuration = REQUIRED_CONFIGURATION.map((name) => ({
     configured: Boolean(environment[name]?.trim()),
     name,
+    validated: Boolean(environment[name]?.trim()) && checks[name] === true,
   }));
   const blockers: string[] = [];
 
@@ -42,6 +47,7 @@ export function inspectLandingResearchPreflight(
 
   for (const item of configuration) {
     if (!item.configured) blockers.push(`${item.name} is missing.`);
+    else if (!item.validated) blockers.push(`${item.name} has not passed its authority probe.`);
   }
 
   return {

@@ -1,6 +1,6 @@
 # Unattended landing-page publication
 
-Submitting the exact affiliate URL through `npm run landing:run -- --url <url>` authorizes the complete normal production run. The coordinator records it in `approved-urls.md`, and each active markdown bullet may result in at most one canonical public landing page. The URL string, including tracking parameters, is preserved exactly.
+Submitting an exact affiliate URL for recurring research is permitted only when the byte-for-byte URL is already present in `approved-urls.md`; the Neon control transaction records the manifest digest and source commit alongside the job. Local run files never authorize or advance it. The URL string, including tracking parameters, is preserved exactly.
 
 An allowlisted URL is not a permission to bypass safety. Automation may open a bot PR and publish only when independent durable records prove: research evidence passed, compliance passed, the page artifact has resolved evidence and CTA mappings with no placeholder identifiers, required visual/uniqueness/conversion reviews passed, daily limits remain, the global kill switch is off, and required CI plus preview deployment pass.
 
@@ -22,6 +22,10 @@ Only HTTPS URLs are accepted. Fragments, embedded credentials, duplicate exact U
 
 ## Agent contract
 
-Any repository-capable agent may run `npm run landing:run -- --url <url>`. The coordinator validates the manifest, resumes durable state, routes failed checks to repairs, creates the GitHub change, verifies Vercel preview and production, and records `LIVE`. The agent remains responsible for performing the returned next action until the run is live or a legitimate `NEEDS_HELP` result is recorded.
+Any repository-capable agent may run
+`npm run landing:research:prep -- --url <exact-url>` for an allowlisted URL.
+The command validates the manifest and resumes durable Neon state. It must stop
+with the exact missing authority when Neon or an approved Hermes executor is
+unavailable; it may not substitute local research or claim publication.
 
 The startup wave is one exemplar, then three calibration pages. After a clean calibration batch, a wave is capped at ten URLs, with provider calls retried at most three times for transient failures and semantic repair capped at two attempts.

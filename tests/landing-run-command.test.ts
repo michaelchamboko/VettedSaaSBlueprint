@@ -1,102 +1,30 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { runLandingCommand } from "../scripts/landing-run";
 
 const affiliateUrl = "https://try.elevenlabs.io/izj2b165mcsj";
 
-test("landing:run accepts only the URL and emits one resumable next action", async () => {
-  const repositoryRoot = await mkdtemp(path.join(os.tmpdir(), "landing-command-"));
-  try {
-    await writeFile(
-      path.join(repositoryRoot, "approved-urls.md"),
-      "# Approved affiliate URLs\n\n",
-      "utf8",
-    );
-    const output: string[] = [];
-    const result = await runLandingCommand(
-      ["--url", affiliateUrl, "--repository-root", repositoryRoot],
-      {
-        write: (value) => output.push(value),
-        now: () => "2026-07-24T10:00:00.000Z",
-      },
-    );
-
-    assert.equal(output.length, 1);
-    assert.equal(result.state, "WORKING");
-    assert.equal(result.stage, "research");
-    assert.equal(result.page_slug, "elevenlabs-ai-voice-generator");
-    assert.equal(result.next_action.kind, "verify_destination_and_research");
-
-    const allowlist = await readFile(
-      path.join(repositoryRoot, "approved-urls.md"),
-      "utf8",
-    );
-    assert.match(allowlist, /https:\/\/try\.elevenlabs\.io\/izj2b165mcsj/);
-
-    const resumedOutput: string[] = [];
-    const resumed = await runLandingCommand(
-      ["--url", affiliateUrl, "--repository-root", repositoryRoot],
-      {
-        write: (value) => resumedOutput.push(value),
-        now: () => "2026-07-24T11:00:00.000Z",
-      },
-    );
-    assert.equal(resumed.created, false);
-    assert.equal(resumed.run_id, result.run_id);
-    assert.equal(resumedOutput.length, 1);
-  } finally {
-    await rm(repositoryRoot, { recursive: true, force: true });
-  }
+test("landing:run fails closed when the Neon control authority is absent", async () => {
+  await assert.rejects(
+    () => runLandingCommand(["--url", affiliateUrl]),
+    /LANDING_CONTROL_DATABASE_URL is missing/,
+  );
 });
 
-test("landing:run lets research replace a partner-host slug with the identified product slug", async () => {
-  const repositoryRoot = await mkdtemp(path.join(os.tmpdir(), "landing-command-"));
-  const moosendUrl = "https://trymoo.moosend.com/michaelmedium";
-  try {
-    await writeFile(
-      path.join(repositoryRoot, "approved-urls.md"),
-      "# Approved affiliate URLs\n\n",
-      "utf8",
-    );
-
-    const created = await runLandingCommand(
-      ["--url", moosendUrl, "--repository-root", repositoryRoot],
-      {
-        write: () => {},
-        now: () => "2026-07-26T10:00:00.000Z",
-      },
-    );
-    assert.equal(created.page_slug, "trymoo-review");
-
-    const renamed = await runLandingCommand(
-      [
-        "--url",
-        moosendUrl,
-        "--slug",
-        "moosend-email-marketing-automation",
-        "--repository-root",
-        repositoryRoot,
-      ],
-      {
-        write: () => {},
-        now: () => "2026-07-26T10:05:00.000Z",
-      },
-    );
-
-    assert.equal(renamed.created, false);
-    assert.equal(renamed.page_slug, "moosend-email-marketing-automation");
-  } finally {
-    await rm(repositoryRoot, { recursive: true, force: true });
-  }
+test("landing:run rejects local event-file advancement", async () => {
+  await assert.rejects(
+    () => runLandingCommand(["--url", affiliateUrl, "--event-file", "event.json"]),
+    /Local event files cannot advance/,
+  );
 });
 
-test("package exposes the canonical landing:run command", async () => {
+test("package exposes durable research and landing commands", async () => {
   const packageJson = JSON.parse(
-    await readFile(path.resolve(process.cwd(), "package.json"), "utf8"),
+    await readFile(new URL("../package.json", import.meta.url), "utf8"),
   ) as { scripts?: Record<string, string> };
   assert.equal(packageJson.scripts?.["landing:run"], "tsx scripts/landing-run.ts");
+  assert.equal(packageJson.scripts?.["landing:research:prep"], "tsx scripts/landing-research-prep.ts");
+  assert.equal(packageJson.scripts?.["landing:research:status"], "tsx scripts/landing-research-status.ts");
 });

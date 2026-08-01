@@ -6,7 +6,11 @@ The normal workflow begins with one exact affiliate URL and ends only at a verif
 
 `URL -> research -> structured page -> automatic checks and repairs -> GitHub PR -> Vercel preview -> merge -> production -> live verification -> LIVE receipt`
 
-Submitting the URL to `npm run landing:run -- --url <exact-https-affiliate-url>` authorizes that complete run. Calling the same command again resumes it. Manual review exists only when the operator explicitly asks for it; it is not a stage in the normal path.
+The recurring research job accepts only an exact URL already present in
+`approved-urls.md`. Use `npm run landing:research:prep -- --url <exact-https-affiliate-url>`
+to create or resume its durable Neon job. `landing:run` is also Neon-backed and
+fails closed when the control authority is unavailable; local event files and
+local run JSON cannot advance workflow state.
 
 The exact URL is recorded in root `approved-urls.md` and must be preserved byte-for-byte in every affiliate CTA. The URL authorizes release work but never replaces evidence, disclosure, compliance, quality, CI, preview, or production checks.
 

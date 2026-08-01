@@ -1,0 +1,36 @@
+[Unit]
+Description=VettedSaaSBlueprint Hermes research worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vettedsaas-hermes-research
+Group=vettedsaas-hermes-research
+WorkingDirectory=/opt/vettedsaas/hermes-research-worker/current
+ExecStart=/usr/bin/node /opt/vettedsaas/hermes-research-worker/current/hermes-landing-worker.mjs
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=LANDING_ORACLE_WORKER_DATABASE_URL_FILE=%d/worker-db-url
+Environment=HERMES_PRODUCT_IDENTITY_COMMAND=/opt/vettedsaas/hermes-research-worker/current/hermes-product-identity.mjs
+Environment=HERMES_LANDING_RESEARCH_COMMAND=/opt/vettedsaas/hermes-research-worker/current/hermes-landing-research.mjs
+LoadCredential=worker-db-url:/etc/vettedsaas/hermes-research-worker/worker-db-url
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/opt/vettedsaas/hermes-research-worker/state
+UMask=0077
+LimitNOFILE=1024
+LimitNPROC=64
+
+[Install]
+WantedBy=multi-user.target

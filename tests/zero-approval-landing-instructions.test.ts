@@ -67,7 +67,7 @@ test("active landing instructions define URL input as release authorization with
     "utf8",
   );
 
-  assert.match(authority, /submitting (?:an|the) exact .*url.*authoriz(?:es|ation).*production/i);
+  assert.match(authority, /submitting (?:an|the) exact .*url.*approved-urls\.md/i);
   assert.match(authority, /eligible_for_release/);
   assert.match(authority, /Neon Postgres.*durable.*authority/i);
   assert.match(authority, /no job may advance.*publish.*until.*Postgres/i);
