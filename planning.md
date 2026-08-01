@@ -166,7 +166,8 @@ durable evidence, and the existing GitHub, Vercel, and
 this implementation.
 
 **Acceptance checks:** cover exact URL preservation, duplicate rejection,
-deterministic/idempotent receipt construction, no dispatch on blocked preflight,
-and preservation of existing preview noindex/not-published behavior. Jimmy's
-matrix gates the resulting PR; Fizz verifies its Vercel provenance if a preview
-is produced by a later evidence-backed change.
+deterministic receipt construction, and re-submit idempotency with the same
+Neon job IDs (not only matching receipt text). They also prove no dispatch on
+blocked preflight and preserve existing preview noindex/not-published behavior.
+Jimmy's matrix gates the resulting PR; Fizz verifies its Vercel provenance if a
+preview is produced by a later evidence-backed change.
