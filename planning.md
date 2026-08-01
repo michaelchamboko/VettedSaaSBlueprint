@@ -130,3 +130,43 @@ V001 has no jobs or artifacts.
 
 These are external authority/deployment blockers, not permission to substitute
 local research or claim completion.
+
+## Approved five-URL batch intake design (2026-08-01)
+
+**Goal:** turn an owner-supplied, already allowlisted batch into durable Neon
+research jobs without creating a second workflow or treating a preview as a
+published page.
+
+**Authorized batch:** Carepatron, DataHawk, ElevenLabs, AdCreative.ai, and
+Snowfire are byte-for-byte entries in `approved-urls.md`. The omitted Moosend
+entry is outside this batch and remains unchanged.
+
+**Repository addition:** `npm run landing:batch:submit -- --url <exact-url>`
+may repeat `--url` up to five times. It rejects an empty batch, duplicate URLs,
+and any string not exactly present in the parsed manifest. Before dispatch it
+runs the same authority probes as `landing:research:preflight`; a blocked
+preflight exits nonzero without creating any Neon job. When ready, it calls only
+`dispatchLandingResearch` once per input in supplied order. Its receipt contains
+the manifest digest, source commit, and an input-order-stable list of exact URL,
+fingerprint, job ID, state, and current stage. The `created` flag and timestamps
+are excluded so an idempotent re-submit has the same receipt.
+
+**Preview boundary:** this batch command creates research jobs only. It creates
+no page blueprint, `index.json` entry, PR, or deployment. The current
+ElevenLabs preview remains a legacy review artifact, not LIVE proof. A preview
+candidate for any URL requires an independently validated, provenance-bearing
+blueprint from the authorized Hermes/Neon path; raw URLs and local research may
+not supply it. All previews remain noindex, analytics-off, and distinct from
+`landing-page-builders` production routes.
+
+**Publication boundary:** LIVE remains blocked until V001 and both Neon roles
+are provisioned, the two Hermes command probes pass, one exact-URL canary yields
+durable evidence, and the existing GitHub, Vercel, and
+`landing:verify:deployment` receipts pass. No deployment or merge is part of
+this implementation.
+
+**Acceptance checks:** cover exact URL preservation, duplicate rejection,
+deterministic/idempotent receipt construction, no dispatch on blocked preflight,
+and preservation of existing preview noindex/not-published behavior. Jimmy's
+matrix gates the resulting PR; Fizz verifies its Vercel provenance if a preview
+is produced by a later evidence-backed change.
