@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 
 import { HomepageMotion } from "@/components/public/HomepageMotion";
 import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { PublicReviewCard } from "@/components/public/PublicReviewCard";
 import { listPublishedLandingPageSummaries } from "@/lib/generated/landing-pages";
+import { getStudioCategories } from "@/lib/studio-catalogue";
 
 const vettingPrinciples = [
   ["Evidence before adjectives", "Claims need a traceable source. If the evidence is thin, the wording stays modest."],
@@ -17,6 +19,7 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default function Home() {
   const reviews = listPublishedLandingPageSummaries();
+  const studioCategories = getStudioCategories();
 
   return (
     <PublicPageShell>
@@ -56,6 +59,24 @@ export default function Home() {
               <p>No reviews are publicly approved yet. VettedSaaSBlueprint publishes a review only after evidence, compliance, and owner checks are complete.</p>
             </div>
           )}
+        </section>
+
+        <section className="home-section studio-catalogue" id="studio" aria-labelledby="studio-title">
+          <div className="section-heading" data-home-motion="reveal">
+            <p className="eyebrow">The field guide</p>
+            <h2 id="studio-title">Choose a category. Find a sharper angle.</h2>
+            <p>Twenty-five short, image-led briefs organised by the decision each product helps a team make.</p>
+          </div>
+          <div className="studio-category-list">
+            {studioCategories.map((category) => (
+              <article className="studio-category" key={category.slug} data-home-motion="review-card" style={{ "--studio-accent": category.accent } as CSSProperties}>
+                <div><p className="eyebrow">{category.label}</p><h3>{category.productName}</h3><p>{category.description}</p></div>
+                <nav aria-label={`${category.productName} briefs`}>
+                  {category.pages.map((page) => <Link key={page.slug} href={page.path}>{page.variant.label}<span aria-hidden="true">↗</span></Link>)}
+                </nav>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="home-section vetting-section" id="how-we-vet" aria-labelledby="vetting-title">
