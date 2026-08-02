@@ -1,91 +1,185 @@
-# URL-to-Live Landing Automation
+# VettedSaaSBlueprint — Hermes Research Authority Repair
 
-## Outcome
+## Decision
 
-Giving a repository-capable AI agent one exact affiliate URL authorizes the complete normal run:
+Research preparation is not activated. The current checkout is `main` at
+`60286e7e3815f6a05a53ee087fc65555ad61f819`; the remote main commit matches and
+the tracked worktree was clean before this repair branch. The only pre-existing
+untracked file, `PLAN (36).md`, is unrelated and remains untouched.
 
-`URL -> research -> structured page -> automatic checks and repairs -> GitHub change -> Vercel preview -> production deployment -> live verification -> recorded result`
+Hermes gateway, dashboard, and workspace services on Oracle are healthy, but no
+approved product-identity/research executors or landing Neon credentials are
+configured. Live Neon project `winter-truth-98410571` contains an unowned P001
+central schema with `central_orchestrator_v1` disabled, global kill switch true,
+zero landing jobs/attempts, and an unscoped legacy claim function. No local file,
+generated note, or legacy Hermes queue is workflow authority.
 
-A draft, preview, plan, review report, pull request, successful build, or deployment request is not completion. Completion is `LIVE`: the canonical Vercel route responds successfully, renders the reviewed page, shows the affiliate disclosure, preserves the exact affiliate URL on every CTA, passes desktop and mobile verification, and records the production commit and deployment.
+## Authorized URL manifest
 
-## One entry point
+`approved-urls.md` is the sole recurring authorization source. Current entries:
 
-Run:
+- `https://get.carepatron.com/michaelmedium`
+- `https://get.datahawk.co/mau0otko9lz4-o5aq3q`
+- `https://try.elevenlabs.io/izj2b165mcsj`
+- `https://free-trial.adcreative.ai/8phdnllve4xi`
+- `https://partners.snowfire.ai/j1a8kovs1uez`
+- `https://trymoo.moosend.com/michaelmedium`
 
-```text
-npm run landing:run -- --url <exact-https-affiliate-url>
-```
+Manifest file SHA-256: `5A7280AFC5F13BB1C92C1B8216A6705088D454C2B414EA7E8F44A552757E2021`.
+Parser manifest digest: `67f0c458444ad4b4a1f8c4fd491d7de04eb16a0429866826ea701530faacefea`.
+URLs must remain byte-for-byte identical, including tracking parameters.
 
-Running the same command again resumes the existing URL run. The command must return one current state and one exact next action.
+## Authority model
 
-## Durable authority and research prep
+- `landing_control_v2` is the Git-owned Neon schema introduced by V001. The
+  unowned public P001 schema remains disabled and untouched for rollback evidence.
+- `research_prep_v1` owns only `url_validation → product_identity → research`.
+  It terminates at `RESEARCH_COMPLETE`; it cannot create drafts, PRs, deploy, or
+  publish.
+- `central_orchestrator_v2` remains disabled until a later publication gate.
+- Control uses `LANDING_CONTROL_DATABASE_URL`; Oracle receives only
+  `LANDING_ORACLE_WORKER_DATABASE_URL`.
+- The worker can execute only fenced research functions. It has no table DML,
+  settings, migration, publication, GitHub, Vercel, or legacy `generation_jobs`
+  authority.
+- Local `.stage2` files, process-local repositories, event files, `oracle_sync`,
+  generated receipts, and placeholder Scrapling plans are diagnostics or legacy
+  compatibility only.
+- The canonical resumable production entrypoint remains
+  `npm run landing:run -- --url <exact-https-affiliate-url>`; it is Neon-backed
+  and cannot report `LIVE` while the publication pipeline is disabled.
 
-Neon Postgres is the sole durable workflow and publication authority. The
-Oracle-hosted Hermes worker owns product identity and research compute but may
-not advance state from local files or receipts. Before research dispatch, run:
+## Implemented repository changes on this branch
 
-```text
-npm run landing:research:preflight
-```
+- `db/neon-landing-control-v001.sql`: clean Neon schema, role-scoped functions,
+  URL reconciliation/dispatch, leases, heartbeats, artifact persistence,
+  completion/failure fencing, disabled defaults, and migration checksum.
+- `src/lib/landing-research/contracts.ts`: executor, identity, evidence, and
+  snapshot schemas with strict URL/fingerprint/size checks.
+- `src/lib/landing-research/network-safety.ts`: public HTTPS, DNS/private-range,
+  redirect-depth, credential, fragment, and downgrade checks.
+- `src/lib/landing-research/executor.ts`: absolute-path, shell-free, bounded,
+  timeout-controlled JSON executor boundary.
+- `src/lib/landing-research/neon.ts`: control and worker clients using only
+  parameterized queries and approved Neon functions.
+- `scripts/landing-research-prep.ts`, `scripts/landing-research-status.ts`, and
+  `hermes/landing-research-worker.ts`: durable dispatch/status/worker paths.
+- `hermes/executors/`: fixed product-identity and research Hermes command
+  adapters with capability probes.
+- `scripts/landing-run.ts`: no longer accepts local event advancement or local
+  run authority; it delegates to Neon-backed research dispatch.
+- `docs/landing-workflow/README.md` and
+  `docs/landing-workflow/unattended-publication.md`: exact-manifest and
+  Neon-authority rules.
 
-The preflight validates `approved-urls.md` and reports whether the control Neon
-credential, least-privilege Oracle-worker Neon credential, and both approved
-Hermes executor contracts are configured. It never prints their values. A
-blocked preflight is an exact external configuration blocker, not permission to
-substitute local research.
+## Contract decisions
 
-Status on 2026-07-31: the repository preflight is implemented. Activation
-remains blocked until the four named authorities are configured outside source.
-No Hermes research or Neon workflow transition has been claimed from the
-preflight implementation.
+Hermes emits `HermesProductIdentityV1`, `HermesResearchEvidenceV1`, and
+`ResearchSourceSnapshotBundleV1`. It does not fabricate the existing
+`ProductEvidencePackV1`, whose offer/compliance/page-blueprint UUIDs belong to
+later Neon-owned drafting stages. A deterministic downstream assembler may
+construct that pack only after those references exist.
 
-Deployment recovery on 2026-08-01 removed all landing `next/font/google`
-imports through merged PR #8 and pinned local Fontsource packages. Vercel
-system-environment exposure is enabled for the existing project so
-`/api/deployment` can bind a Git-backed production deployment to its reviewed
-commit. Blank commit metadata is normalized to `null`; only an exact SHA match
-from the independent production verifier counts as activation proof.
+Executor output is exactly one JSON object on stdout. Identity timeout is 120s
+with a 1 MiB output cap; research timeout is 900s with an 8 MiB cap. Snapshots
+are limited to 20 sources, 512 KiB normalized text per source, and 8 MiB per
+job. Authenticated/paywalled scraping, executable content, private destinations,
+and secret-bearing captures are rejected. Raw capture retention is 30 days;
+hashes, timestamps, trust tier, and deletion tombstones remain auditable.
 
-## Zero recurring approval
+## Delivery gates
 
-- Submitting the exact URL is the recurring authorization to create the page, add the URL to `approved-urls.md` when absent, create and merge the GitHub change, deploy to the existing Vercel project, verify production, repair failures, and restore the previous production deployment when necessary.
-- Normal URL runs never stop at a human-review or publication-handoff stage.
-- Manual review is an exception used only when the operator explicitly requests it.
-- Zero approval does not remove disclosure, evidence, link-integrity, quality, CI, preview, or live verification checks. Those checks repair and continue whenever a safe repair exists.
+1. Finish focused branch checks and update this document with receipts.
+2. Open a focused PR, merge only after clean-checkout CI passes, and record the
+   merge SHA and migration checksum.
+3. Apply V001 only through an approved Neon migration credential on a disposable
+   Neon branch first. Production Neon application requires separate approval.
+4. Deploy the exact merged worker artifact only after separate Oracle approval;
+   do not modify existing Hermes services or `/michael-core/hermes`.
+5. Run `--probe`, then one exact ElevenLabs canary with no other claimable jobs.
+   Temporarily approve only `research_prep_v1` and clear its kill switch; restore
+   pipeline disabled and kill switch true immediately after the canary.
+6. Accept only a durable identity artifact plus evidence/snapshot artifacts,
+   complete lease/event hashes, zero downstream records, and independent
+   verification of the final state.
+7. After acceptance, process the remaining five URLs in bounded batches. Keep
+   publication disabled until its own gates and canary are independently proven.
 
-## Automatic recovery
+## Acceptance and rollback
 
-- Retry temporary source or network failures at most three times.
-- Repair page content or design at most twice per failed quality cycle.
-- Remove or soften unproved pricing, discount, guarantee, ranking, security, or urgency claims and continue.
-- Use the closest approved design references or approved house style when no exact category match exists.
-- If Neon or an approved Hermes executor is unavailable, pause at the durable stage and report the exact missing authority. Do not substitute local state or research.
-- If production verification fails, restore the previous working deployment, repair the failed layer, and retry at most twice.
+Required tests cover concurrent one-winner claims, stale lease/epoch/token
+rejection, malformed/oversized output, exact URL mismatch, missing or tampered
+snapshots, role-denial, kill-switch races, restart recovery, SSRF/DNS-rebinding,
+redirect safety, secret redaction, and inability of local files or legacy APIs to
+change Neon state.
 
-## Legitimate stop
+On failure: set the kill switch, disable `research_prep_v1`, stop/mask only the
+new worker, revoke/rotate its credential, preserve failed attempts and hashes,
+and forward-fix the additive schema. Destructive rollback is permitted only when
+V001 has no jobs or artifacts.
 
-`NEEDS_HELP` is allowed only when the run records what it tried and one of these remains true:
+## Current blockers
 
-- GitHub or Vercel access is unavailable.
-- The required Neon authority or approved Hermes research executor is unavailable.
-- The exact affiliate URL remains unusable after three checks.
-- The product cannot be identified honestly from public evidence.
-- A useful compliant page cannot be produced after two repair cycles.
-- Build or deployment still fails after two distinct repairs.
-- The previous production deployment cannot be restored after a failed release.
+- `LANDING_CONTROL_DATABASE_URL` is absent from the local environment.
+- `LANDING_ORACLE_WORKER_DATABASE_URL` is absent from Oracle services.
+- `HERMES_PRODUCT_IDENTITY_COMMAND` and `HERMES_LANDING_RESEARCH_COMMAND` are
+  absent; wrappers exist in Git but are not deployed or capability-probed.
+- V001 has not been applied to a disposable or production Neon branch.
+- No Oracle worker artifact, credential, service account, systemd unit, monitor,
+  or canary receipt exists.
 
-The report must use plain English and include: what was attempted, what happened, what was repaired or retried, the user impact, and the one exact human action required.
+These are external authority/deployment blockers, not permission to substitute
+local research or claim completion.
 
-## Current exemplar
+## Approved five-URL batch intake design (2026-08-01)
 
-The first proof is the approved ElevenLabs URL:
+**Goal:** turn an owner-supplied, already allowlisted batch into durable Neon
+research jobs without creating a second workflow or treating a preview as a
+published page.
 
-```text
-https://try.elevenlabs.io/izj2b165mcsj
-```
+**Authorized batch:** Carepatron, DataHawk, ElevenLabs, AdCreative.ai, and
+Snowfire are byte-for-byte entries in `approved-urls.md`. The omitted Moosend
+entry is outside this batch and remains unchanged.
 
-Expected production route:
+**Repository addition:** `npm run landing:batch:submit -- --url <exact-url>`
+may repeat `--url` up to five times. Inputs must be a non-empty, duplicate-free
+subset of this explicit closed batch: Carepatron, DataHawk, ElevenLabs,
+AdCreative.ai, and Snowfire. The omitted Moosend URL is not a valid batch input,
+despite being present in `approved-urls.md`. Each input must also be byte-for-byte
+present in the parsed manifest. Before dispatch it runs the same authority probes
+as `landing:research:preflight`; a blocked preflight exits nonzero without
+creating any Neon job. When ready, it calls only `dispatchLandingResearch` once
+per input in supplied order. It emits an immutable `BatchSubmissionReceiptV1`
+containing only the manifest digest, source commit, and an input-order-stable list
+of exact URL, fingerprint, and Neon job ID. The `created` flag, timestamps,
+state, and current stage are excluded. A re-submit has the same receipt and job
+IDs only for the same supplied inputs, manifest digest, and source commit (the
+same inputs to Neon `input_digest`); a changed manifest or commit is a new
+dispatch context. Any observed job state/stage is a separate mutable status
+report and is never release-receipt evidence.
 
-```text
-/landing-page-builders/elevenlabs-ai-voice-generator
-```
+**Preview boundary:** this batch command creates research jobs only. It creates
+no page blueprint, `index.json` entry, PR, or deployment. The current
+ElevenLabs preview remains a legacy review artifact, not LIVE proof. A preview
+candidate for any URL requires an independently validated, provenance-bearing
+blueprint from the authorized Hermes/Neon path; raw URLs and local research may
+not supply it. All previews remain noindex, analytics-off, and distinct from
+`landing-page-builders` production routes.
+
+**Publication boundary:** LIVE remains blocked until V001 and both Neon roles
+are provisioned, the two Hermes command probes pass, one exact-URL canary yields
+durable evidence, and the existing GitHub, Vercel, and
+`landing:verify:deployment` receipts pass. No deployment or merge is part of
+this implementation.
+
+**Acceptance checks:** cover exact URL preservation, closed-batch rejection of
+Moosend and any other manifest entry outside the five named URLs, duplicate
+rejection, immutable deterministic receipt construction, and re-submit
+idempotency with the same Neon job IDs (not only matching receipt text) for
+identical inputs, manifest digest, and source commit. A simulated mid-batch
+failure must resume without duplicating the already-dispatched jobs. They also
+prove no dispatch on blocked preflight, zero page artifacts/PRs/preview
+deployments from batch submission, and preserve existing preview
+noindex/not-published behavior. Jimmy's matrix gates the resulting PR; Fizz
+verifies its Vercel provenance if a preview is produced by a later
+evidence-backed change.

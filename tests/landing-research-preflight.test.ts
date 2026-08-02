@@ -14,6 +14,11 @@ test("research preflight is ready only when Neon and both approved Hermes execut
     LANDING_ORACLE_WORKER_DATABASE_URL: "postgresql://worker-secret",
     HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\approved\\product-identity.exe",
     HERMES_LANDING_RESEARCH_COMMAND: "C:\\approved\\landing-research.exe",
+  }, {
+    LANDING_CONTROL_DATABASE_URL: true,
+    LANDING_ORACLE_WORKER_DATABASE_URL: true,
+    HERMES_PRODUCT_IDENTITY_COMMAND: true,
+    HERMES_LANDING_RESEARCH_COMMAND: true,
   });
 
   assert.equal(result.status, "ready");
@@ -32,11 +37,26 @@ test("research preflight reports exact missing configuration names without expos
 
   assert.equal(result.status, "blocked");
   assert.deepEqual(result.blockers, [
+    "LANDING_CONTROL_DATABASE_URL has not passed its authority probe.",
     "LANDING_ORACLE_WORKER_DATABASE_URL is missing.",
+    "HERMES_PRODUCT_IDENTITY_COMMAND has not passed its authority probe.",
     "HERMES_LANDING_RESEARCH_COMMAND is missing.",
   ]);
   assert.doesNotMatch(serialized, /postgresql:\/\//);
   assert.doesNotMatch(serialized, /must-not-appear/);
+});
+
+test("research preflight refuses configured authorities that have not passed probes", () => {
+  const result = inspectLandingResearchPreflight(approvedUrls, {
+    LANDING_CONTROL_DATABASE_URL: "postgresql://control",
+    LANDING_ORACLE_WORKER_DATABASE_URL: "postgresql://worker",
+    HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\approved\\identity.exe",
+    HERMES_LANDING_RESEARCH_COMMAND: "C:\\approved\\research.exe",
+  });
+
+  assert.equal(result.status, "blocked");
+  assert.equal(result.blockers.length, 4);
+  assert.ok(result.blockers.every((blocker) => blocker.includes("authority probe")));
 });
 
 test("research preflight blocks an empty authorization manifest", () => {
