@@ -142,16 +142,21 @@ Snowfire are byte-for-byte entries in `approved-urls.md`. The omitted Moosend
 entry is outside this batch and remains unchanged.
 
 **Repository addition:** `npm run landing:batch:submit -- --url <exact-url>`
-may repeat `--url` up to five times. It rejects an empty batch, duplicate URLs,
-and any string not exactly present in the parsed manifest. Before dispatch it
-runs the same authority probes as `landing:research:preflight`; a blocked
-preflight exits nonzero without creating any Neon job. When ready, it calls only
-`dispatchLandingResearch` once per input in supplied order. It emits an
-immutable `BatchSubmissionReceiptV1` containing only the manifest digest, source
-commit, and an input-order-stable list of exact URL, fingerprint, and Neon job
-ID. The `created` flag, timestamps, state, and current stage are excluded so an
-idempotent re-submit has the same receipt. Any observed job state/stage is a
-separate mutable status report and is never release-receipt evidence.
+may repeat `--url` up to five times. Inputs must be a non-empty, duplicate-free
+subset of this explicit closed batch: Carepatron, DataHawk, ElevenLabs,
+AdCreative.ai, and Snowfire. The omitted Moosend URL is not a valid batch input,
+despite being present in `approved-urls.md`. Each input must also be byte-for-byte
+present in the parsed manifest. Before dispatch it runs the same authority probes
+as `landing:research:preflight`; a blocked preflight exits nonzero without
+creating any Neon job. When ready, it calls only `dispatchLandingResearch` once
+per input in supplied order. It emits an immutable `BatchSubmissionReceiptV1`
+containing only the manifest digest, source commit, and an input-order-stable list
+of exact URL, fingerprint, and Neon job ID. The `created` flag, timestamps,
+state, and current stage are excluded. A re-submit has the same receipt and job
+IDs only for the same supplied inputs, manifest digest, and source commit (the
+same inputs to Neon `input_digest`); a changed manifest or commit is a new
+dispatch context. Any observed job state/stage is a separate mutable status
+report and is never release-receipt evidence.
 
 **Preview boundary:** this batch command creates research jobs only. It creates
 no page blueprint, `index.json` entry, PR, or deployment. The current
@@ -167,10 +172,14 @@ durable evidence, and the existing GitHub, Vercel, and
 `landing:verify:deployment` receipts pass. No deployment or merge is part of
 this implementation.
 
-**Acceptance checks:** cover exact URL preservation, duplicate rejection,
-immutable deterministic receipt construction, and re-submit idempotency with the
-same Neon job IDs (not only matching receipt text). They also prove no dispatch
-on blocked preflight, zero page artifacts/PRs/preview deployments from batch
-submission, and preserve existing preview noindex/not-published behavior.
-Jimmy's matrix gates the resulting PR; Fizz verifies its Vercel provenance if a
-preview is produced by a later evidence-backed change.
+**Acceptance checks:** cover exact URL preservation, closed-batch rejection of
+Moosend and any other manifest entry outside the five named URLs, duplicate
+rejection, immutable deterministic receipt construction, and re-submit
+idempotency with the same Neon job IDs (not only matching receipt text) for
+identical inputs, manifest digest, and source commit. A simulated mid-batch
+failure must resume without duplicating the already-dispatched jobs. They also
+prove no dispatch on blocked preflight, zero page artifacts/PRs/preview
+deployments from batch submission, and preserve existing preview
+noindex/not-published behavior. Jimmy's matrix gates the resulting PR; Fizz
+verifies its Vercel provenance if a preview is produced by a later
+evidence-backed change.
