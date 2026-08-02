@@ -202,6 +202,12 @@ function isApprovedVisual(asset) {
   return asset?.approval_status === "approved" && asset?.approved_by_owner === true;
 }
 
+function isRenderablePreviewDraftVisual(page, asset) {
+  return page?.metadata?.robots === "noindex,nofollow"
+    && asset?.approval_status === "draft"
+    && asset?.approved_by_owner !== true;
+}
+
 function renderedTextEntries(page) {
   const entries = [
     ["metadata.title_tag", page.metadata?.title_tag],
@@ -358,7 +364,7 @@ function textIssueChecks(row) {
         "Generated artifact self-attests asset approval; conversion review must rely on audited owner/gate records.",
       ));
     }
-    if (!isApprovedVisual(asset) && (asset.alt_text || asset.prompt_summary)) {
+    if (!isApprovedVisual(asset) && !isRenderablePreviewDraftVisual(page, asset) && (asset.alt_text || asset.prompt_summary)) {
       issues.push(issue(
         row.file,
         "hidden_value_dependency",
