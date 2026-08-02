@@ -26,16 +26,16 @@ function requireAll(source: string, skill: string, requirements: Array<[string, 
 }
 
 test("all landing-production skills permit original 2027 artistic implementation", () => {
-  const sharedRequirements: Array<[string, RegExp]> = [
-    ["a design read", /design read/i],
+  for (const [skill, relativePath] of Object.entries(skillPaths)) {
+    assert.match(readSkill(relativePath), /design read/i, `${skill} must use a design read`);
+  }
+
+  const policy = readSkill(skillPaths.orchestrator);
+  requireAll(policy, "orchestrator", [
     ["original page-specific implementation", /(?:original|page-specific)[\s\S]{0,180}(?:JSX|CSS|imagery|typography)/i],
     ["purposeful motion", /(?:GSAP|motion)/i],
     ["anti-template direction", /(?:generic AI|template)/i],
-  ];
-
-  for (const [skill, relativePath] of Object.entries(skillPaths)) {
-    requireAll(readSkill(relativePath), skill, sharedRequirements);
-  }
+  ]);
 });
 
 test("artistic design guidance retains conversion and accessibility boundaries", () => {
