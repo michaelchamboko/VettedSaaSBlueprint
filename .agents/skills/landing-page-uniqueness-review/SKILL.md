@@ -38,7 +38,7 @@ The scanner is necessary but not sufficient. It catches exact duplicate fields, 
 
 ## Design Review
 
-Review the rendered page when available. Original art direction, custom JSX/CSS, generated imagery, and product-specific GSAP motion are valid. Judge whether the hierarchy is clear, CTA remains usable, reduced-motion is respected, and the page avoids generic template repetition. Do not block a page for missing reference catalogues, presentation recipes, fingerprints, or fixed motion profiles.
+Review the rendered page when available. Use the design read as context when it is supplied. Original art direction, custom JSX/CSS, generated imagery, and product-specific GSAP motion are valid. Judge whether the hierarchy is clear, CTA remains usable, reduced-motion is respected, and the page avoids generic template repetition. Do not block a page for missing reference catalogues, presentation recipes, fingerprints, or fixed motion profiles.
 
 ## Workflow
 
