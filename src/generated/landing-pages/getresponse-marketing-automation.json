@@ -1,0 +1,202 @@
+{
+  "metadata": {
+    "product_id": "6304e1c1-cad3-435d-bb70-633a2d74ee2d",
+    "page_type": "direct_review",
+    "target_keyword": "getresponse marketing automation",
+    "search_intent": "commercial investigation",
+    "geo_target": null,
+    "category_slug": "marketing-tools",
+    "url_slug": "getresponse-marketing-automation",
+    "title_tag": "GetResponse Marketing Automation: A Lifecycle Fit Check",
+    "meta_description": "A practical fit check for marketers evaluating behavior-based automation, segmentation, and lifecycle follow-up in GetResponse.",
+    "canonical_url": null,
+    "robots": "noindex,nofollow",
+    "motion_profile": "gsap_editorial",
+    "design_profile": "reference_composed_v1"
+  },
+  "affiliate_disclosure": {
+    "short_disclosure": "We may earn a commission if you use this link, at no extra cost to you.",
+    "full_disclosure": "This page contains an affiliate link. If you visit GetResponse through it and later make a purchase, we may earn a commission at no extra cost to you. The commission does not change the fit questions or limitations described here.",
+    "placement": "above_first_cta"
+  },
+  "hero": {
+    "headline": "Is GetResponse a fit for your next automation workflow?",
+    "subheadline": "For marketers who need to turn subscriber behavior into useful follow-up without treating every campaign as a separate project.",
+    "primary_cta_label": "Inspect automation tools",
+    "primary_cta_link_id": "a3d3bd8d-126d-4ab0-ab06-508712fa0d60",
+    "risk_reversal": "Before deciding, compare one real lifecycle journey with the current workflow options and terms on the official site.",
+    "social_proof_summary": null,
+    "answer_snippet": "GetResponse is worth assessing when your team wants to turn subscriber behavior into more deliberate follow-up rather than rely on isolated campaigns. Its official marketing automation overview describes workflows, behavior-based rules, and segmentation. The useful next step is to match one real lifecycle journey to those controls before you commit.",
+    "visual_asset": {
+      "asset_type": "codex_generated_image",
+      "asset_url": "/generated/getresponse-marketing-automation-workflow-v1.png",
+      "alt_text": "Abstract connected workflow cards joined by a luminous signal path.",
+      "prompt_summary": "Original abstract workflow sculpture for a noindex GetResponse candidate preview; no product branding or copied interface imagery.",
+      "generation_tool": "codex_image_generation",
+      "approval_status": "draft",
+      "approved_by_owner": false
+    }
+  },
+  "problem_solution": {
+    "problem": "Campaign tools can look interchangeable when the real decision is whether a team can turn audience signals into a clear next action.",
+    "agitation": "Without a defined trigger, audience, and follow-up path, automation can add complexity without making a lifecycle journey easier to manage.",
+    "solution": "Use one real lifecycle journey to assess GetResponse: identify the behavior that matters, the audience it affects, and the follow-up your team needs to review."
+  },
+  "benefits": [
+    {
+      "benefit_title": "Start with behavior, not a blank campaign",
+      "benefit_description": "GetResponse describes behavior-based automation that can use conditions, filters, and events. A useful fit check is whether those controls match a real subscriber signal your team already uses.",
+      "feature_supporting_it": "Behavior-based automation",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Map a repeatable lifecycle path",
+      "benefit_description": "The official overview describes prebuilt and custom workflows, including examples for new subscribers, abandoned carts, and product recommendations. Review one lifecycle use case before broadening the scope.",
+      "feature_supporting_it": "Prebuilt and custom workflows",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Keep the audience decision visible",
+      "benefit_description": "GetResponse describes contact profiles, tagging, scoring, and segmentation. Confirm the audience information your workflow needs is available before you rely on the automation path.",
+      "feature_supporting_it": "Contact profiles, tagging, scoring, and segmentation",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"],
+      "visual_asset": null
+    }
+  ],
+  "proof_blocks": [
+    {
+      "proof_type": "official product page",
+      "summary": "GetResponse's Marketing Automation page describes workflows, behavior-based conditions and events, contact segmentation, and lifecycle examples.",
+      "source_reference_id": "b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1",
+      "evidence_claim_id": "1e8b4b0f-2ef7-4c4a-83b6-36f84291da66",
+      "confidence_score": 0.9
+    }
+  ],
+  "how_it_works": [
+    {
+      "step_number": 1,
+      "title": "Choose one subscriber signal",
+      "description": "Start with a subscriber behavior that should change the next message, not a feature list or a generic campaign idea."
+    },
+    {
+      "step_number": 2,
+      "title": "Map the audience and follow-up",
+      "description": "Define who should receive the next action, what data identifies that group, and what the next step needs to accomplish."
+    },
+    {
+      "step_number": 3,
+      "title": "Verify the official workflow options",
+      "description": "Use the official destination to compare that journey with the current workflow controls before moving a broader lifecycle path."
+    }
+  ],
+  "limitations": [
+    {
+      "limitation": "Automation does not choose the lifecycle strategy",
+      "who_it_affects": "Teams that have not defined the behavior, audience, or follow-up they want to automate.",
+      "mitigation": "Write down one trigger, one audience, and one next action before evaluating the workflow controls.",
+      "evidence_claim_id": "1e8b4b0f-2ef7-4c4a-83b6-36f84291da66"
+    },
+    {
+      "limitation": "Audience quality still matters",
+      "who_it_affects": "Teams whose contact data does not yet capture the signals needed to distinguish lifecycle journeys.",
+      "mitigation": "Check the tags, profile fields, and behavior events available to your team before relying on a segmentation-driven path.",
+      "evidence_claim_id": "f3dc90c4-b83e-4bd7-a4df-da5196b33ec2"
+    }
+  ],
+  "objection_handling": [
+    {
+      "objection": "Can we start with a single journey instead of redesigning everything?",
+      "response": "That is the safer fit check. Choose one subscriber moment, one audience, and one follow-up path, then compare it with the current official workflow options.",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"]
+    },
+    {
+      "objection": "Do the automation controls cover the behavior we care about?",
+      "response": "GetResponse describes conditions, filters, and events for behavior-based automation. Verify that the exact behavior and audience signals your team needs are represented on the official destination.",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"]
+    }
+  ],
+  "cta_blocks": [
+    {
+      "placement": "hero",
+      "label": "Inspect automation tools",
+      "supporting_text": "Open the official GetResponse page to compare one real lifecycle journey with the current workflow options.",
+      "affiliate_link_id": "a3d3bd8d-126d-4ab0-ab06-508712fa0d60"
+    }
+  ],
+  "faq": [
+    {
+      "question": "What should we check before using marketing automation?",
+      "answer": "Begin with the subscriber behavior that should trigger a next action, the audience it applies to, and the follow-up that should happen after that signal.",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"]
+    },
+    {
+      "question": "Does GetResponse describe behavior-based automation?",
+      "answer": "Its official overview describes conditions, filters, and events for behavior-based automation. Check that the signals you use fit the current product controls.",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"]
+    },
+    {
+      "question": "Can we evaluate a workflow before moving a broad lifecycle path?",
+      "answer": "Use a single real journey as the test: the trigger, the intended audience, and the next message or action. That keeps the decision tied to actual work rather than generic features.",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"]
+    },
+    {
+      "question": "Where should we verify current product details?",
+      "answer": "Use the official GetResponse destination linked from this page to verify the current workflow options and commercial terms before making a decision.",
+      "source_reference_ids": ["b2a83c36-773e-4ff4-92d8-2a8f0e5d9ee1"]
+    }
+  ],
+  "schema_markup": {
+    "faq_schema": {},
+    "breadcrumb_schema": {}
+  },
+  "quality_scores": {
+    "evidence_score": 82,
+    "originality_score": 94,
+    "conversion_score": 84,
+    "compliance_score": 90,
+    "readability_score": 88,
+    "seo_safety_score": 88,
+    "overall_score": 87
+  },
+  "presentation": {
+    "hero": "media_first_offset",
+    "typography": "dm_serif_instrument_sans",
+    "section_order": [
+      "problem_solution",
+      "benefits",
+      "proof_blocks",
+      "how_it_works",
+      "limitations",
+      "objection_handling",
+      "faq",
+      "closing_cta"
+    ],
+    "section_variants": {
+      "problem_solution": "closing_manifesto",
+      "benefits": "numbered_ledger",
+      "proof_blocks": "alternating_story",
+      "how_it_works": "process_timeline",
+      "limitations": "split_editorial",
+      "objection_handling": "proof_strip",
+      "faq": "decision_matrix",
+      "closing_cta": "objection_accordion"
+    },
+    "cta": "inline_decision",
+    "motion": "split_reveal",
+    "mobile": "media_first",
+    "design_dials": {
+      "design_variance": 7,
+      "motion_intensity": 6,
+      "visual_density": 4
+    },
+    "reference_ids": [
+      "lp-ref-0002",
+      "lp-ref-0029",
+      "lp-ref-0030"
+    ],
+    "recipe_id": "recipe-981d9c193d381585",
+    "fingerprint": "981d9c193d38158531e32716343f9623934dd25eba2fcd696ddb54f45061284e"
+  }
+}

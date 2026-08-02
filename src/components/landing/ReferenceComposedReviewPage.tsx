@@ -11,8 +11,12 @@ function affiliateUrl(linkId: string, override?: string) {
   return override ?? `/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
 }
 
-function isApprovedVisual(visual: PageBlueprint["hero"]["visual_asset"]) {
-  return visual?.approval_status === "approved" && visual.approved_by_owner ? visual : null;
+function getRenderableVisual(
+  visual: PageBlueprint["hero"]["visual_asset"],
+  mode: LandingPageRenderMode,
+) {
+  if (visual?.approval_status === "approved" && visual.approved_by_owner) return visual;
+  return mode === "preview" && visual?.approval_status === "draft" ? visual : null;
 }
 
 function Arrow() {
@@ -90,7 +94,7 @@ export function ReferenceComposedReviewPage({
   }
 
   const { presentation } = blueprint;
-  const visual = isApprovedVisual(blueprint.hero.visual_asset);
+  const visual = getRenderableVisual(blueprint.hero.visual_asset, mode);
   const answerSnippet = blueprint.hero.answer_snippet;
   const showSubheadline = shouldRenderReferenceSubheadline(answerSnippet, blueprint.hero.subheadline);
   const sections = getRenderableSectionOrder(blueprint);

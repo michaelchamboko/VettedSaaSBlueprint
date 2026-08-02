@@ -15,3 +15,4 @@ content, or removes a large group of URLs without the explicit CI override.
 - https://free-trial.adcreative.ai/8phdnllve4xi
 - https://partners.snowfire.ai/j1a8kovs1uez
 - https://trymoo.moosend.com/michaelmedium
+- https://try.getresponsetoday.com/smypvzu98eko-kfze15

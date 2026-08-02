@@ -3,12 +3,10 @@ import { once } from "node:events";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import sharp from "sharp";
 
 import { canonicalJsonStringify, loadCodexLandingBatch, sha256Hex, type LoadedCodexLandingBatch } from "../src/lib/codex-batches/loader";
 import { DesignReferenceCatalogueV1, type DesignReferenceCatalogueV1 as DesignReferenceCatalogue } from "../src/lib/design-references/contracts";
 import { listCodexBatchPreviewRegistryBatchIds } from "../src/lib/generated/codex-batch-previews";
-import { createSharpContactSheetAdapter } from "../src/lib/landing-visual/contact-sheet";
 import { runLandingVisualReview, type VisualBrowserAdapter, type VisualCapture, type VisualMeasurements, type VisualPage } from "../src/lib/landing-visual/runner";
 
 const UUID_V4_PATTERN = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
@@ -215,7 +213,7 @@ async function measureDom(capture: Pick<VisualCapture, "reducedMotion">): Promis
 }
 
 export function convertPlaywrightPngToWebp(png: Buffer): Promise<Buffer> {
-  return sharp(png).webp({ quality: 82 }).toBuffer();
+  return import("sharp").then(({ default: sharp }) => sharp(png).webp({ quality: 82 }).toBuffer());
 }
 
 async function createPlaywrightAdapter(): Promise<{ browser: { close(): Promise<void> }; adapter: VisualBrowserAdapter }> {
@@ -258,6 +256,7 @@ export async function runLandingVisualCli(options: { batchRoot?: string; catalog
   }
   if (process.env.LANDING_VISUAL_FORBID_SERVER === "1") throw new Error("Preview server startup was forbidden for this run.");
   const { browser, adapter } = await createPlaywrightAdapter();
+  const { createSharpContactSheetAdapter } = await import("../src/lib/landing-visual/contact-sheet");
   try {
     return await withBuiltPreviewServer(async (baseUrl) => Promise.all(candidates.map((candidate) => runLandingVisualReview({ batchId: candidate.batchId, pages: candidate.pages, baseUrl, outputRoot, browser: adapter, contactSheet: createSharpContactSheetAdapter() }))));
   } finally {

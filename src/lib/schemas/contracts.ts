@@ -17,6 +17,7 @@ function isApprovedAffiliateUrl(url: string) {
       "try.landingi.com",
       "try.leadpages.com",
       "trymoo.moosend.com",
+      "try.getresponsetoday.com",
       "get.carepatron.com",
       "get.datahawk.co",
       "free-trial.adcreative.ai",

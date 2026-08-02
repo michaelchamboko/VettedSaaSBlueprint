@@ -1,4 +1,5 @@
 import blueprint from "./landing-pages/elevenlabs-ai-voice-generator.json";
+import getResponseBlueprint from "./landing-pages/getresponse-marketing-automation.json";
 
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 
@@ -10,5 +11,13 @@ export const landingReleasePreviews = [
     slug: "elevenlabs-ai-voice-generator",
     affiliate_url: "https://try.elevenlabs.io/izj2b165mcsj",
     blueprint: blueprint as PageBlueprint,
+  },
+  {
+    kind: "release_candidate" as const,
+    batch_id: "8f956c6e-8d0e-44d4-bcb2-d0dcd2eb6d04",
+    page_blueprint_id: "0f4f0fb0-a04e-4373-a836-7b0256b75dc4",
+    slug: "getresponse-marketing-automation",
+    affiliate_url: "https://try.getresponsetoday.com/smypvzu98eko-kfze15",
+    blueprint: getResponseBlueprint as PageBlueprint,
   },
 ];
