@@ -32,7 +32,7 @@ Read `references/forward-tests.md` when validating this skill, improving this sk
 - Time spent by page and by phase when available.
 - List of recurring failures or repeated correction loops.
 - Prior retro outputs, prior deferrals, and prior skill/process updates when available.
-- Local catalogue validation output, selected-reference history, `DesignDirectionV1`, `PresentationRecipeV1`, fingerprints, noindex preview artifacts, and `VisualDesignReviewV1` for every drafted page.
+- Rendered desktop/mobile evidence and the design read for every drafted page when available.
 
 ## Input-Readiness Gate
 
@@ -50,11 +50,9 @@ Fail readiness when:
 - Prior deferrals or prior fixes are unknown when the same failure recurs.
 - Stage 0 artifacts, selected-reference history, recipe/fingerprint evidence, or visual reports are missing for generated drafts.
 
-## Stage 0 Design Failure Review (mandatory)
+## Artistic Design Retro
 
-Before summarizing batch results, confirm each wave ran `npm run landing:references:validate` against the local catalogue and stored desktop/mobile capture hashes without recrawling reference sites, then used `npm run landing:references:select -- --category <slug> --buyer-decision <text> [--tags <adjacent-tags>]`. Selection is three references by default; two only when they cover at least four unique design dimensions and include one that matches the product category or an adjacent/neighbor category. Confirm `hero/typography`, `sections/CTA`, and `motion/mobile` roles plus IDs, entry digests, adopted abstract principles, non-copy boundaries, rationale, design read, and `DesignDirectionV1`.
-
-Confirm each direction became a valid `PresentationRecipeV1` with registered tokens only: never accept page-specific JSX/CSS/JavaScript or a silent Editorial V2, `editorial_v2`, or legacy fallback. Confirm a production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1`; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates. Missing, stale, invalid, unsuitable, reuse-limited, recipe/fingerprint-mismatched, or non-passing artifacts require `hold_for_design_direction`. Neon Postgres is the durable workflow authority, and Oracle-hosted Hermes is mandatory for product identity and research; local artifacts are not substitutes.
+Review each new page against the 2027 artistic standard: a distinct design read, original visual system, usable motion, no generic template treatment, responsive hierarchy, and a visible conversion action. Record design failures as implementation lessons, not recipe or reference-catalogue blockers.
 
 ## Fan-Out / Fan-In Rules
 
