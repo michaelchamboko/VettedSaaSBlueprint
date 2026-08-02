@@ -39,16 +39,9 @@ If required inputs are missing, return `status: fail`, `recommended_action: hold
 
 Unknown compliance, claim support, material connection, disclosure placement, review basis, destination review, or PartnerStack preservation blocks the brief.
 
-## Stage 0: DesignDirectionV1 (mandatory for `reference_composed_v1`)
+## Design Read: 2027 Artistic Standard
 
-Before evidence or intent analysis, run `npm run landing:references:validate` against the local catalogue and stored desktop/mobile capture hashes; do not recrawl reference sites. Then run `npm run landing:references:select -- --category <slug> --buyer-decision <text> [--tags <adjacent-tags>]`.
-
-- Select three references by default. Select two only when they cover at least four unique design dimensions, with at least one reference that matches the product category or an adjacent/neighbor category.
-- Use the repository selection contract for complementarity, novelty, and reuse history. Assign `hero/typography`, `sections/CTA`, and `motion/mobile` roles.
-- Record a `DesignDirectionV1` with reference IDs, entry digests, roles, influenced axes, adopted abstract principles, non-copy boundaries, selection rationale, one-line design read, and structured recipe direction. Convert it to a validated `PresentationRecipeV1` using registered tokens only; never generate page-specific JSX/CSS/JavaScript or silently fall back to Editorial V2, `editorial_v2`, or legacy.
-- Record that the eligible draft must render a production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1` before downstream handoff. A visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
-
-If the catalogue, hashes, selection, reuse history, direction, recipe/fingerprint, or visual report is missing, stale, invalid, unsuitable, or non-passing, return `status: fail` with `recommended_action: hold_for_design_direction`. Do not invent a design direction. Neon Postgres is the durable workflow authority, and Oracle-hosted Hermes is mandatory for product identity and research; local artifacts are not substitutes.
+Record a one-line design read: audience, conversion moment, visual attitude, and motion intent. Use `design-taste-frontend` to avoid generic AI templates. Page-specific JSX/CSS, image direction, typography, and GSAP motion are allowed. The design read informs implementation; it is not an approval artifact or a release gate. Missing references, recipes, fingerprints, or a fixed motion profile never block an otherwise evidenced page.
 
 ## Workflow
 
@@ -71,8 +64,7 @@ For forward-test scenarios and calibration cases, read `references/forward-tests
 Return structured JSON only with these top-level fields:
 
 - `schema_version`
-- `design_direction`: the validated `DesignDirectionV1`, including its selected references, roles, influence limits, non-copy boundaries, design read, and recipe direction.
-- `presentation_recipe`: the validated `PresentationRecipeV1` with its derived recipe id and fingerprint.
+- `design_read`: audience, conversion moment, visual attitude, and motion intent.
 - `status`: `pass` or `fail`
 - `recommended_action`: `new_page`, `rewrite_existing`, `merge_into_existing`, `hold_for_evidence`, `hold_for_design_direction`, `noindex_draft`, or `reject`
 - `reason_codes`
@@ -177,7 +169,6 @@ Fail the brief when any condition is true:
 - Destination review is missing without explicit owner override.
 - CTA is generic, hype-driven, or does not ask the visitor to verify a specific thing on the official site.
 - PartnerStack URL or tracking preservation is uncertain.
-- Stage 0 has missing/invalid/stale capture hashes, unsuitable category coverage, reuse-limit violations, unsupported tokens, recipe/fingerprint mismatch, or no passing `VisualDesignReviewV1`.
 - Mobile-first decision path is unclear.
 - Objections, limitations, or FAQ stems are generic or copied.
 - Persuasion depends on urgency, fake proof, pressure, concealment, or dark-pattern logic.

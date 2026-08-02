@@ -23,7 +23,7 @@ Do not validate whether a keyword deserves a page, draft React/CSS/runtime layou
 - Existing sibling page summaries and closest published artifacts.
 - Rewrite target when `recommended_action` is `rewrite_existing`.
 - Intent `action_target` when `recommended_action` is `rewrite_existing`, `merge_into_existing`, or `noindex_draft`.
-- Validated Stage 0 `DesignDirectionV1`, selected-reference history, and `PresentationRecipeV1` requirements; `VisualDesignReviewV1` is required before downstream handoff.
+- A concise design read describing audience, conversion moment, visual attitude, and motion intent.
 
 ## Required References
 
@@ -33,9 +33,8 @@ Read `references/forward-tests.md` when validating, forward-testing, or improvin
 
 ## Workflow
 
-1. Run the mandatory Stage 0 gate before drafting: run `npm run landing:references:validate` against the local catalogue and stored desktop/mobile capture hashes; do not recrawl reference sites. Run `npm run landing:references:select -- --category <slug> --buyer-decision <text> [--tags <adjacent-tags>]`.
-2. Select three references by default; select two only when they cover at least four unique design dimensions, with at least one reference that matches the product category or an adjacent/neighbor category. Assign `hero/typography`, `sections/CTA`, and `motion/mobile` roles and require the intent's IDs, entry digests, adopted abstract principles, non-copy boundaries, rationale, design read, and `DesignDirectionV1`.
-3. Convert the direction to a validated `PresentationRecipeV1` using registered tokens only. Never generate page-specific JSX/CSS/JavaScript or silently fall back to Editorial V2, `editorial_v2`, or legacy.
+1. Record a concise 2027 artistic design read before drafting. Use `design-taste-frontend` to select hierarchy, whitespace, imagery, typography, and motion appropriate to the buyer and conversion moment.
+2. Build original page-specific JSX/CSS, image art direction, and GSAP motion when they improve the experience. Do not default to generic card grids, centered dark-gradient heroes, or feature-essay templates.
 4. Run the input-readiness gate.
 5. Build a claim manifest from `claim_inventory`, `claim_to_evidence_map`, `source_to_section_map`, `record_resolution`, `review_basis`, and `unsupported_claims_to_avoid`.
 6. Compare sibling and published artifacts before drafting visible copy.
@@ -43,9 +42,9 @@ Read `references/forward-tests.md` when validating, forward-testing, or improvin
 8. Draft renderer-visible fields first: hero, fallback problem/solution, benefits, limitations, how-it-works when useful, and FAQ.
 9. Add proof, objection, CTA, schema-markup, and quality-score fields only when their supporting inputs are resolved.
 10. Run the final preflight. Emit either page JSON or blocked output. Do not emit partial page JSON when blocked.
-11. Render the production-identical animated noindex preview with fixed `gsap_editorial` motion and require `VisualDesignReviewV1` before handoff; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates.
+11. Inspect desktop and mobile rendering when available. Motion must preserve CTA access and honor `prefers-reduced-motion`.
 
-Before downstream handoff, missing, stale, invalid, unsuitable, reuse-limited, unsupported-token, recipe/fingerprint-mismatched, or non-passing visual artifacts require `hold_for_design_direction`; do not improvise. Neon Postgres is the durable workflow authority, and Oracle-hosted Hermes is mandatory for product identity and research; local artifacts are not substitutes.
+Before downstream handoff, resolve evidence, disclosure, affiliate-link, accessibility, and uniqueness blockers. Original art direction is not a blocker.
 
 Default output mode is page JSON or blocked output. If the user explicitly asks for a diagnostic verdict instead of JSON, return a concise decision report using the same gates, reason codes, and required fixes.
 
@@ -59,7 +58,7 @@ Block drafting unless all conditions are true:
 - `record_resolution` proves affiliate, source, evidence, destination, disclosure, and compliance inputs outside generated page JSON.
 - `required_changes` does not include evidence, disclosure, destination, compliance, affiliate-link, or uniqueness blockers.
 - Sibling and published-artifact context is available for duplicate checks.
-- `DesignDirectionV1` and `PresentationRecipeV1` are valid, and selected references satisfy the repository reuse contract.
+- The design read is clear and the rendered hierarchy keeps the CTA and disclosure usable.
 
 Block `merge_into_existing`, `hold_for_evidence`, and `reject`. Return blocked output instead of forcing a page JSON draft. A passing draft advances to independent review; generated JSON must not self-attest approval, compliance pass, publication state, active-link state, or asset approval.
 
@@ -83,28 +82,15 @@ Handle `noindex_draft` narrowly:
 - Keep copy concise and scannable: short H1, 1-2 sentence subheadline, short benefit cards, and FAQ answers that answer directly in the first sentence.
 - Treat `quality_scores` as provisional signals derived from resolved evidence. Never copy score signatures across sibling drafts without explicit justification.
 
-## Reference-Composed Presentation Contract
+## Artistic Presentation Contract
 
-For every new Stage 0 draft, set `metadata.design_profile` to `reference_composed_v1` and attach the validated `PresentationRecipeV1`. Never silently use `editorial_v2` or legacy as a generic fallback.
-
-For `reference_composed_v1` drafts:
-
-- Use a loaded geometric display/body font pairing, a dark monochrome palette, one solid accent, and an 8px spacing grid in the renderer-visible design contract.
-- Include a 40–60-word `hero.answer_snippet` directly under the H1. The snippet must answer the buyer decision without unsupported claims.
-- Keep the CTA label at 32 characters or fewer; never place arrow glyphs or `->` fragments inside generated CTA labels.
-- Render one static primary CTA with separate label and arrow/icon children using `flex items-center justify-between whitespace-nowrap`. Do not add fixed, sticky, floating, or gradient CTA primitives.
-- Keep a compact disclosure before/near the first CTA and place the full disclosure plus secondary links in the footer. Preserve `affiliate_disclosure.placement: "above_first_cta"`.
-- Use semantic decision cards for benefits and accessible disclosure rows for FAQs. Do not generate blind text pills.
-
-The recipe/fingerprint validation and passing `VisualDesignReviewV1` are hard pre-review gates. Do not hand off a new draft until they pass; then use the existing uniqueness, compliance, and conversion gates in order.
+Each new draft uses an original visual system. Custom composition, typography, imagery, and GSAP motion are first-class implementation choices. Preserve semantic structure, CTA clarity, disclosure visibility, keyboard access, contrast, and reduced-motion behavior; do not reintroduce a token registry or fixed presentation profile as a release gate.
 
 ## Hard Gates
 
 Fail and return blocked output when any condition is true:
 
 - The brief is not eligible under the input-readiness gate.
-- Stage 0 cannot supply a valid local catalogue selection, design direction, or recipe/fingerprint. Return `hold_for_design_direction`.
-- Before uniqueness handoff, the required visual review is missing or does not pass. Return `hold_for_design_direction`.
 - Required fields cannot be traced to approved brief fields and source records.
 - Visible sections could fit a sibling page with only keyword swaps.
 - Title, H1, CTA, first benefit, first limitation, first FAQ, or score signature repeats a sibling without explicit merge/justification.

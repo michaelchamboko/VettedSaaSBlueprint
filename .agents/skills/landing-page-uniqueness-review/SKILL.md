@@ -16,7 +16,7 @@ Block duplicate, near-duplicate, thin, or same-intent affiliate landing pages be
 - Approved intent brief when available.
 - Existing duplicate-script output when already run.
 - Any reviewed merge/noindex/rewrite justification.
-- Validated `DesignDirectionV1`, `PresentationRecipeV1`, selected-reference history, and `VisualDesignReviewV1`.
+- A rendered page or preview when available, used to assess visible-copy and layout repetition.
 
 ## Required References
 
@@ -36,15 +36,13 @@ Use `--report-only` to avoid a failing exit during investigation. Use `--json` f
 
 The scanner is necessary but not sufficient. It catches exact duplicate fields, near-duplicate visible copy, visible-page fingerprint similarity, near-copied scores, placeholder IDs, CTA mismatches, high evidence scores without proof, internal-process proof language, weak disclosure text, and generated self-approval. Manual intent review still decides whether a page has a distinct buyer decision.
 
-## Stage 0 Presentation Review (mandatory)
+## Design Review
 
-Before semantic uniqueness, validate the local catalogue and stored desktop/mobile capture hashes with `npm run landing:references:validate`; do not recrawl reference sites. Confirm selection from `npm run landing:references:select -- --category <slug> --buyer-decision <text> [--tags <adjacent-tags>]`: three references by default, or two only when they cover at least four unique design dimensions, including one that matches the product category or an adjacent/neighbor category. Confirm explicit `hero/typography`, `sections/CTA`, and `motion/mobile` roles plus reference IDs, entry digests, adopted abstract principles, non-copy boundaries, rationale, one-line design read, and `DesignDirectionV1`.
-
-Require a valid `PresentationRecipeV1` built only from registered tokens: never accept page-specific JSX/CSS/JavaScript or a silent Editorial V2, `editorial_v2`, or legacy fallback. Require the production-identical animated noindex preview with fixed `gsap_editorial` motion and `VisualDesignReviewV1`; a visual status other than `pass` blocks uniqueness, compliance, and conversion gates. Missing, stale, invalid, unsuitable, reuse-limited, recipe/fingerprint-mismatched, or non-passing Stage 0 artifacts are hard failures: return `hold_for_design_direction`. Neon Postgres is the durable workflow authority, and Oracle-hosted Hermes is mandatory for product identity and research; local artifacts are not substitutes.
+Review the rendered page when available. Original art direction, custom JSX/CSS, generated imagery, and product-specific GSAP motion are valid. Judge whether the hierarchy is clear, CTA remains usable, reduced-motion is respected, and the page avoids generic template repetition. Do not block a page for missing reference catalogues, presentation recipes, fingerprints, or fixed motion profiles.
 
 ## Workflow
 
-1. Complete the Stage 0 presentation review before the deterministic scan.
+1. Review the visible page and its buyer decision before the deterministic scan.
 2. Run the deterministic scan against the batch or artifact directory.
 3. Read the target page, the closest sibling pages, and the approved intent brief when available.
 4. Review both semantic uniqueness and the seven-axis presentation fingerprint.
