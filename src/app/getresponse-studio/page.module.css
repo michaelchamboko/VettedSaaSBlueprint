@@ -48,7 +48,7 @@
 .disclosure { max-width: 310px; margin: 14px 0 0; font-size: 12px; line-height: 1.35; }
 
 .artwork { margin: 0; overflow: hidden; border: 1px solid #111111; }
-.artwork img { display: block; width: 100%; min-height: 510px; object-fit: cover; }
+.artwork img { display: block; width: 100%; min-height: 510px; object-fit: cover; transform-origin: 50% 50%; }
 
 .checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; padding: 42px 0 70px; border-top: 1px solid #111111; }
 .checks article { padding: 18px 28px 18px 0; border-right: 1px solid #111111; }
@@ -62,6 +62,10 @@
 .footer p { max-width: 440px; margin: 0; }
 .footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
 .footer a { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  .artwork img { transform: none !important; }
+}
 
 @media (max-width: 760px) {
   .nav { align-items: flex-start; gap: 12px; flex-direction: column; }
