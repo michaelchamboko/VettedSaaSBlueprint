@@ -147,6 +147,13 @@ test("reference renderer uses the approved font, concise hero, and private visua
   assert.match(css, /font-size:\s*clamp\(62px, 10vw, 112px\)/);
 });
 
+test("reference previews can render a draft visual without treating it as production-approved", () => {
+  const renderer = source(referenceComposedPath);
+
+  assert.match(renderer, /mode === "preview" && visual\?\.approval_status === "draft"/);
+  assert.match(renderer, /visual\?\.approval_status === "approved" && visual\.approved_by_owner/);
+});
+
 test("all 64 section-key and family combinations use the shared entry composition", () => {
   const renderer = source(referenceComposedPath);
   const css = source(cssPath);
