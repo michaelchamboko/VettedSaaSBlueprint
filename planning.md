@@ -2,17 +2,19 @@
 
 ## Decision
 
-Research preparation is not activated. The current checkout is `main` at
-`60286e7e3815f6a05a53ee087fc65555ad61f819`; the remote main commit matches and
-the tracked worktree was clean before this repair branch. The only pre-existing
-untracked file, `PLAN (36).md`, is unrelated and remains untouched.
+Research preparation is not activated. Fetched remote `main` is
+`b8e21bba7d0a1009f6742e83d4cc16bd400337c8`, and local `main` matches it. The
+operator checkout is on `codex/getresponse-artistic-landing-20260802`, two
+commits behind remote `main`, with 5 unstaged and 31 untracked entries; it was
+left untouched. Research-prep checks ran from a clean disposable worktree at
+the fetched remote commit.
 
-Hermes gateway, dashboard, and workspace services on Oracle are healthy, but no
-approved product-identity/research executors or landing Neon credentials are
-configured. Live Neon project `winter-truth-98410571` contains an unowned P001
-central schema with `central_orchestrator_v1` disabled, global kill switch true,
-zero landing jobs/attempts, and an unscoped legacy claim function. No local file,
-generated note, or legacy Hermes queue is workflow authority.
+The last independently recorded Oracle/Neon audit found healthy Hermes gateway,
+dashboard, and workspace services plus an unowned P001 central schema with
+`central_orchestrator_v1` disabled and its global kill switch enabled. This run
+could not refresh either external state because the approved credentials and
+executors are absent. No local file, generated note, or legacy Hermes queue is
+workflow authority.
 
 ## Authorized URL manifest
 
@@ -24,9 +26,10 @@ generated note, or legacy Hermes queue is workflow authority.
 - `https://free-trial.adcreative.ai/8phdnllve4xi`
 - `https://partners.snowfire.ai/j1a8kovs1uez`
 - `https://trymoo.moosend.com/michaelmedium`
+- `https://try.getresponsetoday.com/smypvzu98eko-kfze15`
 
-Manifest file SHA-256: `5A7280AFC5F13BB1C92C1B8216A6705088D454C2B414EA7E8F44A552757E2021`.
-Parser manifest digest: `67f0c458444ad4b4a1f8c4fd491d7de04eb16a0429866826ea701530faacefea`.
+Manifest file SHA-256: `92D0E250749C10E1993DAF59D28C30D8914618C1C5428A23CCDAE9091220FDBE`.
+Parser manifest digest: `d426f1b2dcafd812c33937645dcc6995d8d25a93f9179492eb3911c77ed68088`.
 URLs must remain byte-for-byte identical, including tracking parameters.
 
 ## Authority model
@@ -120,16 +123,35 @@ V001 has no jobs or artifacts.
 
 ## Current blockers
 
-- `LANDING_CONTROL_DATABASE_URL` is absent from the local environment.
-- `LANDING_ORACLE_WORKER_DATABASE_URL` is absent from Oracle services.
+- `LANDING_CONTROL_DATABASE_URL` and `LANDING_ORACLE_WORKER_DATABASE_URL` are
+  absent from the nightly automation environment, so current durable Neon state
+  cannot be queried and no research job can be dispatched.
 - `HERMES_PRODUCT_IDENTITY_COMMAND` and `HERMES_LANDING_RESEARCH_COMMAND` are
-  absent; wrappers exist in Git but are not deployed or capability-probed.
-- V001 has not been applied to a disposable or production Neon branch.
-- No Oracle worker artifact, credential, service account, systemd unit, monitor,
-  or canary receipt exists.
+  absent from the nightly automation environment. Wrappers exist in Git, but
+  current Oracle deployment and capability probes cannot be verified.
+- This run has no current evidence that V001 was applied to a disposable or
+  production Neon branch.
+- This run has no current Oracle worker artifact, credential, service account,
+  systemd unit, monitor, or canary receipt evidence.
 
 These are external authority/deployment blockers, not permission to substitute
 local research or claim completion.
+
+## Nightly research-prep verification (2026-08-04)
+
+- `landing:allowlist:validate` passed with seven exact URLs and manifest digest
+  `d426f1b2dcafd812c33937645dcc6995d8d25a93f9179492eb3911c77ed68088`.
+- `landing:references:validate` passed.
+- `landing:research:preflight` failed closed on the four missing named
+  authorities above. No Neon query, Hermes executor, job advancement, research,
+  draft, release, deployment, or publication occurred.
+- Carepatron, DataHawk, AdCreative.ai, Snowfire, and GetResponse have no tracked
+  product-evidence artifact. ElevenLabs has three sources/three claims retrieved
+  2026-07-24; Moosend has three sources/three claims retrieved 2026-07-26. Both
+  legacy receipts report `oracle_sync: not_configured`.
+- No tracked `ResearchSourceSnapshotBundleV1` exists for any of the seven URLs.
+  Therefore all seven remain research-blocked and ineligible for downstream
+  drafting or publication.
 
 ## Approved five-URL batch intake design (2026-08-01)
 
@@ -139,15 +161,15 @@ published page.
 
 **Authorized batch:** Carepatron, DataHawk, ElevenLabs, AdCreative.ai, and
 Snowfire are byte-for-byte entries in `approved-urls.md`. The omitted Moosend
-entry is outside this batch and remains unchanged.
+and GetResponse entries are outside this batch and remain unchanged.
 
 **Repository addition:** `npm run landing:batch:submit -- --url <exact-url>`
 may repeat `--url` up to five times. Inputs must be a non-empty, duplicate-free
 subset of this explicit closed batch: Carepatron, DataHawk, ElevenLabs,
-AdCreative.ai, and Snowfire. The omitted Moosend URL is not a valid batch input,
-despite being present in `approved-urls.md`. Each input must also be byte-for-byte
-present in the parsed manifest. Before dispatch it runs the same authority probes
-as `landing:research:preflight`; a blocked preflight exits nonzero without
+AdCreative.ai, and Snowfire. The omitted Moosend and GetResponse URLs are not
+valid batch inputs, despite being present in `approved-urls.md`. Each input must
+also be byte-for-byte present in the parsed manifest. Before dispatch it runs
+the same authority probes as `landing:research:preflight`; a blocked preflight exits nonzero without
 creating any Neon job. When ready, it calls only `dispatchLandingResearch` once
 per input in supplied order. It emits an immutable `BatchSubmissionReceiptV1`
 containing only the manifest digest, source commit, and an input-order-stable list
