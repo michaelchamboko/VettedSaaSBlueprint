@@ -205,3 +205,36 @@ deployments from batch submission, and preserve existing preview
 noindex/not-published behavior. Jimmy's matrix gates the resulting PR; Fizz
 verifies its Vercel provenance if a preview is produced by a later
 evidence-backed change.
+
+## Daily delivery recovery evidence (2026-08-05)
+
+- Fetched remote `main` is `ae103c4a66577cf0d8bf2349961f8eeca5fc9e19`.
+  The operator checkout was preserved untouched on its dirty GetResponse branch;
+  recovery ran from a clean disposable worktree.
+- `approved-urls.md` contains seven exact URLs. File SHA-256 is
+  `92D0E250749C10E1993DAF59D28C30D8914618C1C5428A23CCDAE9091220FDBE`;
+  parser digest is
+  `d426f1b2dcafd812c33937645dcc6995d8d25a93f9179492eb3911c77ed68088`.
+- The latest 22:30 research preparation and midnight publication both failed
+  closed on absent Neon control/worker authorities and absent approved Hermes
+  identity/research executors. Fresh preflight reproduced all four blockers.
+- Live Neon contains only applied migration `P001`; `central_orchestrator_v1`
+  is disabled, the global kill switch is true, and landing jobs, attempts,
+  artifacts, gate receipts, publications, and outbox rows are all zero.
+  `landing_control_v2`/V001 is not installed, so no durable landing state can
+  be resumed.
+- Existing ElevenLabs and Moosend public routes remain healthy on Vercel
+  production deployment `dpl_854eX3oKRaxD3wYGFpoZFfg7PCQo`: Git source,
+  `main`, exact SHA `ae103c4a66577cf0d8bf2349961f8eeca5fc9e19`, READY,
+  no alias error, matching `/api/deployment`, exact CTAs, disclosure,
+  index/follow canonicals, and sitemap entries.
+- Recovery found a separate repository defect: V001 source verification was
+  checkout-line-ending dependent and failed on Windows CRLF despite the
+  committed LF checksum being correct. Branch
+  `codex/fix-neon-migration-checksum-windows-20260805` normalizes line endings
+  before hashing and adds an LF/CRLF regression test. The canonical V001 digest
+  remains `465b260db0a7cb68d556e79ca9c4a7aa20daa46966badd59bcedb8d1f2bc31aa`.
+- The next externally enabled action is unchanged: provision approved Neon
+  migration/control/least-privilege worker authorities, deploy and probe both
+  approved Hermes executors through the private Oracle path, apply V001 first
+  on a disposable Neon branch, then run one fenced exact-URL research canary.
