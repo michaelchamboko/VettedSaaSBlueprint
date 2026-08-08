@@ -5,6 +5,10 @@ description: Use when creating, rewriting, batching, reviewing, or marking direc
 
 # Landing Page Production Orchestrator
 
+## Visibility-page routing
+
+This skill is direct-review-specific. When the task targets one of the approved VisibilityPageV1 paths, hand off before Stage 0 to `visibility-page-production-orchestrator`. Do not adapt direct-review affiliate, CTA, receipt, or allowlist requirements to visibility pages; their sibling Neon workflow owns publication authority.
+
 ## Overview
 
 Use the canonical workflow authority at `docs/landing-workflow/README.md` and `docs/landing-workflow/unattended-publication.md` for release ownership, command discovery, deterministic inspection, and unattended boundaries. A page is publish-ready only when its claims, affiliate destination, disclosure, accessibility, release checks, and deployment verification pass.

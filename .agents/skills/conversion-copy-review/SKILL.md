@@ -5,6 +5,10 @@ description: Use when reviewing affiliate landing-page copy for buyer-specific p
 
 # Conversion Copy Review
 
+## Visibility-page extension
+
+For VisibilityPageV1 content, assess whether the internal route to the relevant audited review is a useful next step, not an affiliate CTA. Do not recommend external commercial CTAs or pressure language. Keep alternatives and comparisons neutral unless their approved symmetric evidence permits narrower wording. Generated copy never establishes Neon publication authority.
+
 ## Overview
 
 Act as the late-stage persuasion QA gate for direct-review affiliate landing pages. A conversion-ready page helps a specific visitor decide whether to click through without hype, hidden material incentives, unsupported certainty, generic affiliate filler, or pressure tactics.

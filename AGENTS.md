@@ -62,6 +62,14 @@ This repository implements the Controlled Affiliate Intelligence Loop from `docs
 - Local batch validation, deterministic packaging, focused tests, and production-identical noindex preview work are permitted. Previews must use the production editorial renderer and fixed `gsap_editorial` motion profile, suppress production analytics, and never self-attest approval or publication state.
 - Neon Postgres is the durable central workflow authority. During a Neon outage, workers may finish an already-dispatched idempotent side effect, but no job may advance, publish, or report completion until the fenced Postgres transaction records the result. Pause and resume from durable state; never fall back to local files or agent-authored receipts.
 
+## Visibility Page Production Skill Loop
+
+- Visibility pages are the exact ten approved non-affiliate editorial support paths governed by `VisibilityPageV1`; they are not direct-review pages and must never widen `PageBlueprint`, `LandingReleaseReceiptV1`, or `approved-urls.md`.
+- Use `.agents/skills/visibility-page-production-orchestrator` for any visibility-page draft, rewrite, publication-readiness task, or refresh. Follow its ordered loop: Stage 0 -> `visibility-page-intent-brief` -> `visibility-page-drafter` -> production-identical noindex preview -> `visibility-page-visual-review` -> visibility extensions of uniqueness, compliance, and conversion review -> batch retro -> Neon owner approval and release gates.
+- Visibility artifacts contain no affiliate URL or external commercial CTA. They may link internally to audited direct reviews and cite ordinary HTTPS sources. The direct review remains the sole owner of its exact affiliate URL and outbound CTA.
+- Alternatives and comparisons require a manual claim-level approval matrix. No winner, ranking, price/value conclusion, hands-on result, or performance conclusion is permitted without fresh, symmetric approved evidence.
+- Neon is the sole publication authority. A Git artifact, local receipt, preview, or deployment cannot make a visibility page indexable. Expired evidence must fail closed at request time, including discovery surfaces, even while a worker, outbox, or redeploy is unavailable.
+
 ## Dependency Ownership
 
 - Vercel owns Next.js application dependencies.

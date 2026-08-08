@@ -5,6 +5,10 @@ description: Use when a landing-page batch finishes, reviews find repeated failu
 
 # Landing Page Batch Retro
 
+## Visibility-page extension
+
+When reviewing a VisibilityPageV1 batch, include expiry failures, source-matrix asymmetry, noindex-under-review behavior, discovery-link safety, and Neon publication-state mismatches in the failure ledger. A Git artifact, preview, or local receipt never establishes Neon publication authority. Do not advance a visibility wave until the prior wave's retro is durably recorded.
+
 ## Overview
 
 Turn repeated landing-page corrections into durable process controls before another batch starts. Treat repeated corrections as process failures: the failure must be fixed, converted into a stronger control, explicitly deferred with owner-facing risk, or accepted with a capped next batch.
