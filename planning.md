@@ -49,6 +49,8 @@
 
 The owner authorized implementation on 2026-08-08. Source work is in progress from clean origin/main commit 5923ad2551b1c21e6473eb21aeebe2f9228ac07b on codex/visibility-clusters. Activation/publication cannot pass TASK-005 or any release packet until IMP-001 is resolved, and global completion cannot pass until IMP-002 access plus the day-56 observation are satisfied.
 
+For existing direct-review pages, the unchanged resumable URL-to-live command is `npm run landing:run -- --url <exact-https-affiliate-url>`. VisibilityPageV1 pages use their separate Neon authority workflow and do not alter that direct-review contract.
+
 ## Executive Summary
 
 Build ten genuinely useful, evidence-led visibility pages as two tightly connected topical clusters around the two audited reviews already live on the site. Preserve the existing direct-review and exact-affiliate-URL system. Add a narrow sibling visibility-page system with typed JSON content, approved code renderers, a type-aware quality loop, and Neon-backed publication authority. Publish one exemplar, then one three-page calibration batch, then three bounded waves of three, two, and one page.
