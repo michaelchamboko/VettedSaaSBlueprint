@@ -5,6 +5,10 @@ description: Use when reviewing VettedSaaSBlueprint direct-review affiliate land
 
 # Landing Page Uniqueness Review
 
+## Visibility-page extension
+
+For VisibilityPageV1 work, accept only the visibility-specific brief, draft, evidence matrix, and rendered noindex preview. Evaluate distinct buyer decision, link-graph role, visible-field overlap, and page-kind composition; do not require a direct affiliate CTA. Fail any direct affiliate URL, external commercial CTA, keyword-only variant, unsupported comparison winner, or stale evidence. Neon Postgres remains publication authority.
+
 ## Purpose
 
 Block duplicate, near-duplicate, thin, or same-intent affiliate landing pages before compliance or conversion review. A page passes only when its rendered copy, buyer decision, evidence need, CTA action, limitation, FAQ friction, and score pattern prove a distinct reason to exist.

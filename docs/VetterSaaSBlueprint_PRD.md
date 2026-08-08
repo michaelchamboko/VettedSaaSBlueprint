@@ -972,6 +972,16 @@ This amendment supersedes prior recurring owner-approval requirements for landin
 
 An allowlisted URL does not waive evidence, disclosure, destination, compliance, artifact-integrity, visual, uniqueness, conversion, CI, preview, cap, or global kill-switch requirements. Missing, unknown, ambiguous, stale, or failed state blocks publication. High-risk public claims (specific pricing, discounts, trials, guarantees/refunds, competitor comparisons, rankings, and performance conclusions) are omitted from unattended pages rather than routed for owner approval. URL removal noindexes immediately and archives after seven days; broad deletion requires an explicit CI override.
 
+### Visibility Pages Amendment
+
+The following ten non-affiliate editorial support paths are an approved, deliberately narrow extension to the direct-review MVP: two category hubs, two alternatives pages, two comparisons, three guides, and one vendor-neutral calculator. They exist to help visitors make a bounded decision and to link internally to the two already-audited direct reviews; they do not own or reuse any affiliate URL.
+
+Visibility pages are governed by the sibling `VisibilityPageV1` contract and a separate Neon visibility-publication workflow. Do not widen `PageBlueprint`, `LandingReleaseReceiptV1`, the direct-review manifest, or exact URL authorization. Committed JSON is draft content, not publication authority. Indexable publication requires a Neon authorization, current evidence and gate artifacts, manual owner approval for the page type and every comparison/alternatives claim matrix, a reviewed Git commit, preview evidence, deployment verification, and a durable LIVE record.
+
+Every visible material claim must resolve to a source, source hash, retrieved time, review-by/expiry time, allowed wording, and the required approval. Comparisons and alternatives require a symmetric claim matrix and must not name a winner, ranking, price/value conclusion, hands-on result, or performance conclusion without that evidence and approval. A missing, malformed, or expired visible claim removes the page from discovery and serves a neutral noindex under-review response at request time.
+
+Visibility pages may use ordinary HTTPS citations and same-origin internal links only. They must contain no direct affiliate URL, affiliate redirect, external commercial CTA, tracking parameter, raw HTML/MDX, generated JSX/CSS/JavaScript, or self-authored structured data. The calculator is user-input-only: it must not embed vendor pricing, persist input, serialize input into URLs, or send input to analytics.
+
 ```text
 1. Admin creates product.
 2. Admin adds affiliate link.

@@ -5,6 +5,10 @@ description: Use when reviewing affiliate landing-page drafts, generated page ar
 
 # Affiliate Compliance Review
 
+## Visibility-page extension
+
+VisibilityPageV1 pages have no direct affiliate URL and Neon Postgres remains publication authority. Verify that all links are same-origin editorial links or ordinary HTTPS citations, not affiliate redirects. Alternatives and comparisons require symmetric, fresh claim evidence and manual approval. Block winner, ranking, price/value, hands-on, security, policy, integration, limitation, or performance claims without claim-level evidence and approved wording. At expiry, require neutral noindex under-review behavior rather than stale content.
+
 ## Purpose
 
 Block unsafe affiliate page publication. This is a hard gate for disclosure, claim support, affiliate-link integrity, program rules, destination review, independently audited gate state, and generated-artifact safety. A compliance pass makes a draft eligible for conversion review; final release eligibility belongs to `conversion-copy-review`.
