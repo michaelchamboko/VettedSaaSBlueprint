@@ -14,6 +14,7 @@ import {
 
 const publicRoutes = [
   "/",
+  "/blog",
   "/privacy",
   "/terms",
   "/contact",

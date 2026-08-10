@@ -17,6 +17,7 @@ test("sitemap contains the public home and every legal route", () => {
 
   assert.deepEqual(paths, [
     "/",
+    "/blog",
     "/privacy",
     "/terms",
     "/contact",

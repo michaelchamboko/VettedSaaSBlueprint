@@ -26,7 +26,7 @@ export default function Home() {
       <div data-home-motion-root>
         <section className="home-hero" data-home-motion="hero">
           <div className="home-hero__edition" data-home-motion="hero-support">
-            <span>Independent review journal</span><span>Johannesburg · 2026</span>
+            <span>Independent review journal</span><span>Johannesburg · London · New York · Singapore · Sydney · 2026</span>
           </div>
           <h1 aria-label="Software decisions, vetted with receipts">
             <span className="hero-line-mask"><span data-home-motion="hero-line">Software decisions,</span></span>
