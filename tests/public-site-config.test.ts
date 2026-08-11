@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  assertGitBackedProductionDeployment,
   assertPublicLaunchReady,
   getPublicLaunchBlockers,
   loadPublicSiteConfig,
@@ -82,5 +83,32 @@ test("canonical origin is HTTPS and normalized", () => {
     getPublicLaunchBlockers(
       loadPublicSiteConfig({ ...readyEnv, PUBLIC_SITE_ORIGIN: "http://example.com" }),
     ).some((blocker) => blocker.includes("HTTPS origin")),
+  );
+});
+
+test("production builds require clean main Git provenance", () => {
+  assert.throws(
+    () => assertGitBackedProductionDeployment({ VERCEL_ENV: "production" }),
+    /VERCEL_GIT_COMMIT_SHA/,
+  );
+  assert.throws(
+    () =>
+      assertGitBackedProductionDeployment({
+        VERCEL_ENV: "production",
+        VERCEL_GIT_COMMIT_REF: "codex/daily-saas-blog",
+        VERCEL_GIT_COMMIT_SHA: "d7c333d8ae224a79d9da42ef9c09bf45500d1060",
+      }),
+    /main/,
+  );
+
+  assert.doesNotThrow(() =>
+    assertGitBackedProductionDeployment({ VERCEL_ENV: "preview" }),
+  );
+  assert.doesNotThrow(() =>
+    assertGitBackedProductionDeployment({
+      VERCEL_ENV: "production",
+      VERCEL_GIT_COMMIT_REF: "main",
+      VERCEL_GIT_COMMIT_SHA: "d7629784f22332872db7995d8522e7245c70abfc",
+    }),
   );
 });

@@ -158,6 +158,23 @@ export function assertPublicLaunchReady(config: PublicSiteConfig): void {
   }
 }
 
+export function assertGitBackedProductionDeployment(
+  env: Record<string, string | undefined> = process.env,
+): void {
+  if (env.VERCEL_ENV?.trim() !== "production") return;
+
+  const commitSha = env.VERCEL_GIT_COMMIT_SHA?.trim() ?? "";
+  if (!/^[0-9a-f]{40}$/i.test(commitSha)) {
+    throw new Error(
+      "Production deployment requires a valid VERCEL_GIT_COMMIT_SHA from Vercel's Git integration.",
+    );
+  }
+
+  if (env.VERCEL_GIT_COMMIT_REF?.trim() !== "main") {
+    throw new Error("Production deployment must originate from the main Git ref.");
+  }
+}
+
 export function publicSiteMetadata(config: PublicSiteConfig): Metadata {
   const title = "VettedSaaSBlueprint — Practical SaaS reviews";
   const description =
