@@ -2,14 +2,11 @@ import { parseApprovedUrls } from "./approved-urls";
 
 const REQUIRED_CONFIGURATION = [
   "LANDING_CONTROL_DATABASE_URL",
-  "LANDING_ORACLE_WORKER_DATABASE_URL",
-  "HERMES_PRODUCT_IDENTITY_COMMAND",
-  "HERMES_LANDING_RESEARCH_COMMAND",
 ] as const;
 
 type RequiredConfigurationName = (typeof REQUIRED_CONFIGURATION)[number];
 
-export type LandingResearchPreflightChecks = Partial<Record<RequiredConfigurationName, boolean>>;
+export type LandingResearchPreflightChecks = Partial<Record<RequiredConfigurationName | "WORKER_CAPABILITY", boolean>>;
 
 export type LandingResearchPreflightResult = {
   blockers: string[];
@@ -48,6 +45,9 @@ export function inspectLandingResearchPreflight(
   for (const item of configuration) {
     if (!item.configured) blockers.push(`${item.name} is missing.`);
     else if (!item.validated) blockers.push(`${item.name} has not passed its authority probe.`);
+  }
+  if (checks.WORKER_CAPABILITY !== true) {
+    blockers.push("Oracle Hermes worker capability is unavailable or stale.");
   }
 
   return {

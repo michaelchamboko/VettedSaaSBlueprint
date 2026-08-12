@@ -53,6 +53,7 @@ jobs:
       - run: npm ci
       - run: npm run verify:runtime-contract
       - run: npm run neon:migration:verify
+      - run: npm run neon:research-authority:verify
       - run: npm test -- --test-name-pattern='research|landing:run'
 
   worker-bundle:
@@ -65,6 +66,7 @@ jobs:
       - run: npm ci
       - run: npm run hermes:landing-worker:bundle
       - run: node --check .stage2/hermes-worker/hermes-landing-worker.mjs
+      - run: node -e "const m=require('./.stage2/hermes-worker/bundle-manifest.json'); if (!/^[a-f0-9]{64}$/.test(m.bundle_sha256)) process.exit(1)"
       - run: node .stage2/hermes-worker/hermes-product-identity.mjs --probe
       - run: node .stage2/hermes-worker/hermes-landing-research.mjs --probe
 

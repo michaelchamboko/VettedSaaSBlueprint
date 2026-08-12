@@ -54,6 +54,9 @@
     "hermes:landing-worker:bundle": "node scripts/build-hermes-worker.mjs",
     "neon:migration:apply": "tsx scripts/verify-neon-migration.ts --apply",
     "neon:migration:verify": "tsx scripts/verify-neon-migration-source.ts",
+    "neon:research-authority:verify": "tsx scripts/verify-neon-landing-research-authority-source.ts",
+    "neon:research-authority:apply": "tsx scripts/apply-neon-research-authority-migration.ts --apply",
+    "landing:research:activate": "tsx scripts/activate-landing-research.ts",
     "landing:workflow:describe": "tsx scripts/describe-landing-workflow.ts",
     "verify:runtime-contract": "node scripts/verify-runtime-contract.mjs"
   },

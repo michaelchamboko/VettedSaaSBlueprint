@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { isAbsolute } from "node:path";
+import { extname, isAbsolute } from "node:path";
 
 export type ExecutorExitCode = 65 | 75 | 78;
 
@@ -22,14 +22,34 @@ export type ApprovedExecutorOptions = {
   environment?: Record<string, string | undefined>;
 };
 
+export type ApprovedExecutorInvocation = {
+  args: string[];
+  command: string;
+};
+
+/**
+ * Resolves one approved executable path without ever parsing a shell command.
+ * Bundled ESM executors are scripts, so they must be launched by Node rather
+ * than relying on deployment-specific execute bits or shebangs.
+ */
+export function resolveApprovedExecutorInvocation(commandPath: string): ApprovedExecutorInvocation {
+  if (!isAbsolute(commandPath) || /[\r\n;&|`$]/.test(commandPath)) {
+    throw new ExecutorError("Executor command must be an absolute path without shell syntax.", { exitCode: 78 });
+  }
+  if (extname(commandPath).toLowerCase() === ".mjs") {
+    return { command: process.execPath, args: [commandPath] };
+  }
+  return { command: commandPath, args: [] };
+}
+
 export async function runApprovedExecutor<T>(
   commandPath: string,
   request: unknown,
   options: ApprovedExecutorOptions,
   parse: (value: unknown) => T,
 ): Promise<T> {
-  if (!isAbsolute(commandPath)) throw new ExecutorError("Executor command must be an absolute path.", { exitCode: 78 });
-  const child = spawn(commandPath, [], {
+  const invocation = resolveApprovedExecutorInvocation(commandPath);
+  const child = spawn(invocation.command, invocation.args, {
     shell: false,
     windowsHide: true,
     env: { NODE_ENV: process.env.NODE_ENV ?? "production", ...(options.environment ?? {}) },
