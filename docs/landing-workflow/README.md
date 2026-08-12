@@ -2,21 +2,31 @@
 
 ## Outcome and authority
 
-The normal workflow begins with one exact affiliate URL and ends only at a verified production page:
+The intended normal workflow begins with one exact affiliate URL and ends only at a verified production page:
 
 `URL -> research -> structured page -> automatic checks and repairs -> GitHub PR -> Vercel preview -> merge -> production -> live verification -> LIVE receipt`
 
 The recurring research job accepts only an exact URL already present in
 `approved-urls.md`. Use `npm run landing:research:prep -- --url <exact-https-affiliate-url>`
-to create or resume its durable Neon job. `landing:run` is also Neon-backed and
-fails closed when the control authority is unavailable; local event files and
-local run JSON cannot advance workflow state.
+to create or resume its durable Neon job. Today, `landing:run` dispatches only
+the V001 research path and fails closed when the control authority is
+unavailable; local event files and local run JSON cannot advance workflow state.
+V001 ends at `RESEARCH_COMPLETE`. It does not create a page, PR, deployment, or
+release receipt.
 
 The exact URL is recorded in root `approved-urls.md` and must be preserved byte-for-byte in every affiliate CTA. The URL authorizes release work but never replaces evidence, disclosure, compliance, quality, CI, preview, or production checks.
 
-## Coordinator contract
+## Authority and readiness contract
 
-The run coordinator stores a durable `LandingRunV1` record in Neon Postgres and returns exactly one next action. Its public state is one of:
+V001 is the durable research authority. Its only terminal readiness state is
+`RESEARCH_READY`, represented by the durable V001 job state
+`RESEARCH_COMPLETE`. It is not `PUBLICATION_READY` and never `LIVE`.
+
+LP002 is the required additive publication coordinator. Until LP002 is applied,
+disabled-by-default, and independently verified, the release stages below are
+the target contract, not executable `landing:run` behavior. LP002 must store a
+durable coordinator record in Neon Postgres, return exactly one next action, and
+use these public readiness states:
 
 - `WORKING`: research, evidence, authoring, packaging, or verification is in progress.
 - `FIXING`: a failed check has been routed to a bounded repair.
