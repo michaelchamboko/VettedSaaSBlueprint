@@ -8,55 +8,44 @@ const approvedUrls = `
 - https://partner.example.com/second?campaign=exact-value
 `;
 
-test("research preflight is ready only when Neon and both approved Hermes executors are configured", () => {
+test("controller preflight is ready only when Neon control authority and a durable worker capability are available", () => {
   const result = inspectLandingResearchPreflight(approvedUrls, {
     LANDING_CONTROL_DATABASE_URL: "postgresql://control-secret",
-    LANDING_ORACLE_WORKER_DATABASE_URL: "postgresql://worker-secret",
-    HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\approved\\product-identity.exe",
-    HERMES_LANDING_RESEARCH_COMMAND: "C:\\approved\\landing-research.exe",
   }, {
     LANDING_CONTROL_DATABASE_URL: true,
-    LANDING_ORACLE_WORKER_DATABASE_URL: true,
-    HERMES_PRODUCT_IDENTITY_COMMAND: true,
-    HERMES_LANDING_RESEARCH_COMMAND: true,
+    WORKER_CAPABILITY: true,
   });
 
   assert.equal(result.status, "ready");
   assert.equal(result.urlCount, 2);
   assert.deepEqual(result.blockers, []);
-  assert.equal(result.configuration.every((item) => item.configured), true);
+  assert.equal(result.configuration[0]?.configured, true);
 });
 
 test("research preflight reports exact missing configuration names without exposing configured values", () => {
   const result = inspectLandingResearchPreflight(approvedUrls, {
     LANDING_CONTROL_DATABASE_URL: "postgresql://must-not-appear",
-    LANDING_ORACLE_WORKER_DATABASE_URL: " ",
-    HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\must-not-appear\\identity.exe",
   });
   const serialized = JSON.stringify(result);
 
   assert.equal(result.status, "blocked");
   assert.deepEqual(result.blockers, [
     "LANDING_CONTROL_DATABASE_URL has not passed its authority probe.",
-    "LANDING_ORACLE_WORKER_DATABASE_URL is missing.",
-    "HERMES_PRODUCT_IDENTITY_COMMAND has not passed its authority probe.",
-    "HERMES_LANDING_RESEARCH_COMMAND is missing.",
+    "Oracle Hermes worker capability is unavailable or stale.",
   ]);
   assert.doesNotMatch(serialized, /postgresql:\/\//);
   assert.doesNotMatch(serialized, /must-not-appear/);
 });
 
-test("research preflight refuses configured authorities that have not passed probes", () => {
+test("controller preflight refuses configured control authority and stale worker capability", () => {
   const result = inspectLandingResearchPreflight(approvedUrls, {
     LANDING_CONTROL_DATABASE_URL: "postgresql://control",
-    LANDING_ORACLE_WORKER_DATABASE_URL: "postgresql://worker",
-    HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\approved\\identity.exe",
-    HERMES_LANDING_RESEARCH_COMMAND: "C:\\approved\\research.exe",
   });
 
   assert.equal(result.status, "blocked");
-  assert.equal(result.blockers.length, 4);
-  assert.ok(result.blockers.every((blocker) => blocker.includes("authority probe")));
+  assert.equal(result.blockers.length, 2);
+  assert.ok(result.blockers.some((blocker) => blocker.includes("authority probe")));
+  assert.ok(result.blockers.some((blocker) => blocker.includes("worker capability")));
 });
 
 test("research preflight blocks an empty authorization manifest", () => {

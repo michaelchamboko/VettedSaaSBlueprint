@@ -1,55 +1,225 @@
-# VettedSaaSBlueprint Visibility Clusters — Planning and Execution Document
+# VettedSaaSBlueprint Visibility Clusters and Hermes Research Authority — Planning and Execution Document
 
 ## Plan metadata
 
 - protocol_version: 3.5
 - model_routing_policy_version: 1.0
-- plan_version: 1.0.0
+- plan_version: 1.1.0
 - document_state: IMPLEMENTATION ACTIVE
-- implementation_state: IN PROGRESS
-- plan_approval_state: OWNER AUTHORIZED IMPLEMENTATION
+- implementation_state: SOURCE REMEDIATION IMPLEMENTED; EXTERNAL PROOF PENDING
+- plan_approval_state: OWNER AUTHORIZED V1.1 IMPLEMENTATION ON 2026-08-12
 - activation_state: EXTERNAL ACTION REQUIRED
 - completion_gate_status: NOT STARTED
 - planning_model_route: ROUTE-PREMIUM-REASONING
 - planning_route_reason: Public content-contract expansion, affiliate compliance, Neon workflow authority, external worker integration, production release, and rollback require cross-system reasoning.
 - default_implementation_model_route: ROUTE-STANDARD-REASONING
 - current_model_route: ROUTE-PREMIUM-REASONING
-- current_model_route_reason: Governance and fail-closed visibility foundations are being implemented as bounded source changes.
+- current_model_route_reason: Plan amendment resolves a cross-host Neon/Oracle authority defect, security boundary, migration dependency, and release-blocking activation sequence.
 - model_escalation_count: 0
-- base_commit: 5923ad2551b1c21e6473eb21aeebe2f9228ac07b
-- current_head: 5923ad2551b1c21e6473eb21aeebe2f9228ac07b
-- current_checkout_head_observed: 5923ad2551b1c21e6473eb21aeebe2f9228ac07b
-- current_branch_observed: codex/visibility-clusters
-- current_worktree_state: CLEAN ORIGIN/MAIN BASE BEFORE IMPLEMENTATION; SOURCE CHANGES NOW UNCOMMITTED IN ISOLATED WORKTREE
-- current_environment_fingerprint: windows-10.0.26200|pwsh-7.6.4|node-24.18.0|npm-12.0.0-unsupported|clean-worktree-no-local-node-modules
-- last_verified_commit: 5923ad2551b1c21e6473eb21aeebe2f9228ac07b
-- best_verified_commit: 5923ad2551b1c21e6473eb21aeebe2f9228ac07b
-- total_mandatory_tasks: 18
+- base_commit: b5a1a64733eef1036e593cdb1cf6d0123b286f88
+- current_head: b5a1a64733eef1036e593cdb1cf6d0123b286f88
+- current_checkout_head_observed: b5a1a64733eef1036e593cdb1cf6d0123b286f88
+- current_branch_observed: codex/hermes-authority-remediation-plan-20260812
+- current_worktree_state: CLEAN REMOTE-MAIN BASE BEFORE PLAN AMENDMENT; PLANNING.MD IS THE ONLY INTENDED CHANGE
+- current_environment_fingerprint: windows-10.0.26200|pwsh-7.6.4|node-24.18.0|isolated-worktree|neon-read-only-control-plane-observed
+- last_verified_commit: b5a1a64733eef1036e593cdb1cf6d0123b286f88
+- best_verified_commit: b5a1a64733eef1036e593cdb1cf6d0123b286f88
+- total_mandatory_tasks: 27
 - verified_mandatory_tasks: 0
-- remaining_mandatory_tasks: 18
-- total_mandatory_acceptance_criteria: 20
+- remaining_mandatory_tasks: 27
+- total_mandatory_acceptance_criteria: 28
 - verified_mandatory_acceptance_criteria: 0
-- remaining_mandatory_acceptance_criteria: 20
-- current_task: TASK-001
-- current_acceptance_id: AC-AUTH-001
+- remaining_mandatory_acceptance_criteria: 28
+- current_task: TASK-024
+- current_acceptance_id: AC-HRA-DB-001
 - loop_iteration: 1
 - no_progress_count: 0
-- strategy_fingerprint: plan-v1-sibling-visibility-neon-authority
+- strategy_fingerprint: plan-v1.1-neon-mediated-hermes-capability-authority
 - active_impediment: IMP-001; IMP-002
 - recovery_tier: 5
 - recovery_iteration: 0
 - resume_state: IMPLEMENTATION ACTIVE
-- last_progress_at: 2026-08-08T21:49:17+02:00
-- updated_at: 2026-08-08T21:49:17+02:00
-- next_action: Complete TASK-001 characterization evidence and begin sibling source-only TASK-002, TASK-003, and TASK-006 work. Do not apply a database migration, configure Hermes, or publish a visibility page until IMP-001 is separately approved and proven.
+- last_progress_at: 2026-08-12T12:21:10+02:00
+- updated_at: 2026-08-12T12:21:10+02:00
+- next_action: Complete independent review and Git delivery of TASK-019 through TASK-023 source changes. Then request the separately scoped disposable Neon and Oracle runtime authority for TASK-024. Do not apply a migration, configure Oracle, activate research, dispatch a URL, draft, or publish until that authority is granted.
 - plan_owner: VettedSaaSBlueprint operator
 - implementation_owner: One named repository-capable implementer per packet
 - verification_owner: A distinct named reviewer per packet
 - production_origin: https://vettedsaasblueprint.online
 
-The owner authorized implementation on 2026-08-08. Source work is in progress from clean origin/main commit 5923ad2551b1c21e6473eb21aeebe2f9228ac07b on codex/visibility-clusters. Activation/publication cannot pass TASK-005 or any release packet until IMP-001 is resolved, and global completion cannot pass until IMP-002 access plus the day-56 observation are satisfied.
+The owner authorized plan version 1.0.0 implementation on 2026-08-08. Amendment v1.1.0 is a material authority and task-denominator change and is not implementation-authorized until the operator explicitly approves it. The v1.0.0 authorization remains historical and valid only for nonconflicting work; execution is paused at the amendment gate to avoid parallel plans or incompatible process repair. Activation/publication cannot pass TASK-005 or any release packet until IMP-001 and TASK-019 through TASK-027 are resolved, and global completion cannot pass until IMP-002 access plus the day-56 observation are satisfied.
 
 For existing direct-review pages, the unchanged resumable URL-to-live command is `npm run landing:run -- --url <exact-https-affiliate-url>`. VisibilityPageV1 pages use their separate Neon authority workflow and do not alter that direct-review contract.
+
+## Plan Amendment v1.1.0 — Hermes Research Authority Remediation
+
+### Decision and scope
+
+The best solution is not to place four missing values into the nightly workstation environment. The control-plane preflight currently treats Oracle-local executable paths as if they were workstation-local, the checked-in `.mjs` executor paths are invoked as binaries without a Node interpreter, the live Neon project has not applied the landing-control V001 migration, and no reviewed activation command exists for the disabled pipeline and kill switch. Configuring values alone would either continue to fail or create a false-positive preflight against the wrong machine.
+
+Amendment v1.1.0 adds the smallest durable authority bridge:
+
+1. Oracle keeps sole ownership of Hermes executor paths and probes them locally.
+2. The Oracle worker writes a fenced, non-secret capability heartbeat to Neon through a least-privilege function.
+3. The workstation control preflight reads that fresh Neon capability record instead of attempting to execute Oracle-local paths.
+4. A protected repository activation command enables research only when exact migration, worker, bundle, executor-contract, and kill-switch preconditions pass in one transaction.
+5. The source repair is delivered through a focused PR and merge before any external deployment or production activation.
+6. A disposable Neon branch and approved Oracle runtime prove the contract before production; Oracle, systemd, networking, packages, storage, and `/michael-core/hermes` remain untouched without separate approval.
+7. One exact URL from `approved-urls.md` is the production canary. The remaining exact URLs enter research only after the canary produces fresh durable product identity, research evidence, and `ResearchSourceSnapshotBundleV1` artifacts in Neon.
+
+This amendment does not authorize credentials, database mutation, Oracle changes, service changes, URL dispatch, drafting, publication, or release. It is a remediation plan awaiting owner approval.
+
+### Current evidence snapshot
+
+- Remote-main and isolated planning base: `b5a1a64733eef1036e593cdb1cf6d0123b286f88` on 2026-08-12.
+- Authorization source: seven exact HTTPS affiliate URLs in root `approved-urls.md`; SHA-256 `92D0E250749C10E1993DAF59D28C30D8914618C1C5428A23CCDAE9091220FDBE`.
+- Local authority presence, recorded as booleans only: `LANDING_CONTROL_DATABASE_URL=false`, `LANDING_ORACLE_WORKER_DATABASE_URL=false`, `HERMES_PRODUCT_IDENTITY_COMMAND=false`, `HERMES_LANDING_RESEARCH_COMMAND=false`.
+- Live Neon read-only observation on project `VettedSaaSBlueprint`, primary branch `main`, PostgreSQL 17: only migration `P001` is recorded as applied; `central_orchestrator_v1` is disabled; `global_kill_switch` is true; landing job count is zero; `ResearchSourceSnapshotBundleV1` artifact count is zero.
+- Repository source contains the V001 landing-control migration, product-identity executor, landing-research executor, worker, bundle builder, focused tests, and systemd source. Source is present; production authority and deployment proof are absent.
+- `scripts/build-hermes-worker.mjs` emits `.mjs` bundles, while both executor launch and preflight use the configured path as the executable. The checked-in systemd environment points those variables directly to `.mjs` files, so the source contract lacks a proven interpreter invocation.
+- `landing:research:preflight` probes the two executor commands in its own process environment. In the nightly workstation job this cannot prove the Oracle worker that actually owns and runs Hermes.
+- V001 creates NOLOGIN privilege roles and seeds research disabled with the kill switch on. It does not provision external login principals, deploy the Oracle bundle, or provide a reviewed activation command.
+- No product page was drafted, no job was dispatched, no artifact receipt was manufactured, and no live/publication state was advanced during planning.
+
+### Amendment source register
+
+| ID | Source | Authority and use | Freshness/result |
+|---|---|---|---|
+| SRC-017 | Owner remediation request and preceding nightly report | Defines the four observed blockers and plan-only scope | Current 2026-08-12 |
+| SRC-018 | `approved-urls.md` at remote main | Sole recurring exact-URL authority | Seven URLs; current hash recorded above |
+| SRC-019 | `hermes/landing-research-worker.ts` and executor modules | Actual worker, probe, launch, lease, persist, and completion behavior | Current at `b5a1a647` |
+| SRC-020 | `scripts/validate-landing-research-preflight.ts` and `src/lib/landing-research/executor.ts` | Demonstrates workstation-local command probing and direct path execution | Current at `b5a1a647` |
+| SRC-021 | `scripts/build-hermes-worker.mjs` and `ops/systemd/vettedsaas-hermes-research-worker.service` | Demonstrates `.mjs` bundle output and configured runtime paths | Current at `b5a1a647` |
+| SRC-022 | `db/neon-landing-control-v001.sql` and rollback | Defines durable roles, functions, disabled pipeline, and kill-switch defaults | Source verifier previously passes; production row absent |
+| SRC-023 | Read-only Neon project/table/status inspection | Current durable control-plane truth | Observed 2026-08-12; P001 only, disabled, killed, zero jobs/artifacts |
+| SRC-024 | Git history for durable Hermes authority (`ad47cbf`) and preflight (`1156f6c`) | Confirms partial source implementation and intent | Historical commits, rechecked against current main |
+| SRC-025 | GitNexus 1.6.9 index and symbol context | Current caller/callee and workflow blast-radius map | 2,692 nodes, 6,100 edges, 211 flows at `b5a1a647`; full-text query degraded but symbol context succeeded |
+| SRC-026 | Official Neon branching, database-role, and protected-branch documentation | Supports disposable branch rehearsal and least-privilege role strategy | Checked 2026-08-12 |
+| SRC-027 | Repository planning protocol v3.5, AGENTS.md, landing workflow docs, and orchestrator skill | Defines Full-profile, single-plan, fail-closed, external-authority, and delivery gates | Current repository/operator authority |
+
+### Bounded research assignments RSH-011 through RSH-020
+
+| ID | Independent lens | Finding | Planning consequence |
+|---|---|---|---|
+| RSH-011 | Repository execution path and code graph | Controller dispatch reaches Neon reconciliation; worker alone claims and runs product identity/research | Preserve controller/worker separation and make Neon the only cross-host rendezvous |
+| RSH-012 | Database migration and role boundary | Live production has P001 only; V001 source exists but is unapplied; V001 roles are NOLOGIN | Plan explicit V001 rehearsal/application plus separately provisioned login principals; never infer authority from source |
+| RSH-013 | Oracle bundle/runtime invocation | `.mjs` bundles have no proven executable wrapper while source launches paths directly | Add one shared interpreter-aware invocation resolver and Linux bundle smoke test |
+| RSH-014 | Automation/preflight semantics | Workstation preflight cannot prove Oracle-local commands | Replace local command checks with fresh Neon worker capability status; keep executor probes on Oracle |
+| RSH-015 | CI coverage versus production | CI proves `--probe` on built bundles but not deployed path, systemd environment, role access, heartbeat, or Hermes CLI output | Add deployment-manifest, disposable runtime, and post-deploy canary gates |
+| RSH-016 | Security and secrets | Control, migration, and worker duties require separate privileges; output must remain names/hashes/booleans only | Add negative privilege tests, redacted receipts, credential rotation/rollback instructions |
+| RSH-017 | Reliability and fencing | Existing leases/idempotency are useful, but no durable worker availability/capability authority exists | Add expiring worker registration with lease/fencing and fail closed when stale |
+| RSH-018 | Prior implementation/history | Source repair was merged previously but never activated or proven against production authority | Treat source presence as partial implementation, not completion; require Git-backed deployment evidence |
+| RSH-019 | Candidate feasibility | Env-only and manual SQL approaches are faster but non-durable and cannot prove cross-host capability | Select the Neon-mediated capability bridge and protected activation command |
+| RSH-020 | Adversarial falsification | A stale heartbeat, wrong bundle hash, wrong repository SHA, executable probe failure, unavailable Hermes CLI, or revoked role could otherwise appear ready | Encode each as a negative test and activation refusal condition |
+
+Sequential independent lenses were used because no delegation authority was granted for this planning turn. Each assignment uses a distinct evidence boundary and result; no result is counted as implementation proof.
+
+### Hypotheses, alternatives, and distinguishing tests
+
+| Candidate | Hypothesis | Distinguishing test | Decision |
+|---|---|---|---|
+| A — Configure four values only | The pipeline is blocked only by absent workstation environment | Run current preflight with Oracle paths and inspect live Neon migration/pipeline state | Rejected: wrong-host probing, absent V001, disabled pipeline, and `.mjs` invocation defect remain |
+| B — Manually apply SQL and edit systemd | Direct operator action is sufficient | Attempt to reproduce, audit, rollback, and rerun from current remote main | Rejected: non-repeatable, bypasses reviewed Git delivery, and requires ungranted Oracle authority |
+| C — Modify or replace `/michael-core/hermes` | Hermes core must change to satisfy the contracts | Probe repository adapter contract against the existing approved CLI | Rejected unless the bounded adapter probe proves incompatibility; explicit guardrail forbids this expansion |
+| D — Run Hermes executors on the workstation | Local executors can stand in for Oracle | Compare resulting capability/deployment identity with the designated worker owner | Rejected: violates dependency ownership and would produce false authority |
+| E — Neon-mediated worker capability plus protected activation | Oracle can prove local capability once, Neon can durably expose freshness, and controller can fail closed | Disposable V001+R001, role-negative tests, wrong-hash/stale-heartbeat tests, real worker probe, and one exact-URL canary | Selected: smallest design that proves the correct host without weakening gates |
+
+### Council deliberation
+
+#### Question and context
+
+What is the simplest safe remediation that lets nightly Hermes research resume from durable Neon state when the workstation lacks control/worker credentials and Oracle-local executor commands, without changing Hermes core or weakening publication gates?
+
+#### Stage 1 — Independent answers
+
+**Einstein — Constraint-first simplification.** The four missing values are symptoms, not the invariant. The invariant is that only the Oracle worker can prove its local Hermes executors, while only Neon can communicate that fact durably to the workstation. Add a worker capability lease in Neon, have the worker register only after local database and executor probes pass, and make the controller require a fresh matching lease. Fix `.mjs` execution once in a shared resolver. Everything else—activation, canary, and rollback—should be conditional on those two facts.
+
+**Leonardo — Systems composition.** Treat this as three surfaces: controller, durable state, and worker. Give each one an observable contract and a single owner. The worker emits a minimal capability portrait—repository SHA, bundle hash, contract versions, health, expiry—through a security-definer function; Neon holds it; the controller reads it. A protected activation command composes migration identity, worker portrait, pipeline state, and kill switch into one decision. Show the composition in status output without exposing paths or secrets.
+
+**Curie — Empirical proof.** Do not design from the error strings alone. First reproduce the `.mjs` launch failure and the wrong-host preflight behavior with focused fixtures. Then apply V001 and an additive capability migration to a disposable Neon branch, create least-privilege login principals, and run the actual built worker against the approved Hermes CLI. Inject stale heartbeat, wrong hash, revoked privilege, lease loss, and malformed executor output. Production activation is warranted only after the negative controls fail closed and a one-URL canary persists all three required artifacts.
+
+**Lovelace — Executable contract.** Introduce `WorkerCapabilityV1` and an additive R001 migration with register, heartbeat, inspect, and deactivate functions. Centralize command resolution so absolute `.mjs` paths execute through Node and all other approved executables remain shell-free. Split preflight into `controller` and `worker` modes; controller mode never executes Hermes, worker mode never has migration authority. Add `landing:research:activate --check` and a separately authorized `--apply` transaction. Pin every state change to source migration hashes, repository SHA, and bundle manifest hash.
+
+**Confucius — Governance and reversibility.** The repair succeeds only if operators cannot accidentally turn source readiness into production authority. Keep the global kill switch on through source merge and disposable proof. Require separate recorded approval for production Neon changes and Oracle deployment. Activate only after an independent reviewer sees redacted evidence, and canary one allowlisted URL before the remaining URLs. The first rollback action is kill-switch reactivation, not destructive schema removal; preserve durable evidence for audit.
+
+#### Stage 2 — Blind review
+
+Neutral labels: A=Einstein, B=Leonardo, C=Curie, D=Lovelace, E=Confucius.
+
+**Einstein ranks the other four:**
+
+1. D — Strongest executable boundary, but it should state heartbeat expiry and replacement-worker fencing explicitly.
+2. C — Excellent falsification discipline, but it risks delaying the source repair unless the test matrix stays bounded.
+3. E — Correct governance, but it leaves the controller/worker contract underspecified.
+4. B — Clear composition, but a capability portrait without exact activation and fencing semantics could become decorative telemetry.
+
+**Leonardo ranks the other four:**
+
+1. D — It turns the architecture into concrete interfaces, though the operator-facing status projection needs equal emphasis.
+2. A — It identifies the irreducible invariant, though it compresses deployment and role proof too aggressively.
+3. E — It protects authority well, though it says little about repairing the current executable mismatch.
+4. C — Its experiments are valuable, but they do not by themselves define the durable interface that future automation will consume.
+
+**Curie ranks the other four:**
+
+1. D — It is most testable, but every claimed hash binding must be verified against independently computed bytes.
+2. A — It is parsimonious, but assumes a worker registration is trustworthy before specifying negative privilege tests.
+3. E — It provides safe sequencing, but human review alone cannot detect a stale or impersonated worker.
+4. B — It is visually coherent, but “health” is too ambiguous without adversarial failure cases.
+
+**Lovelace ranks the other four:**
+
+1. A — It captures the correct invariant, but needs a versioned schema and command surface to prevent drift.
+2. C — It supplies the missing negative suite, but should separate source CI from externally authorized runtime validation.
+3. E — It makes activation reversible, but the exact database transaction and identities remain unstated.
+4. B — It names the right components, but a portrait model alone does not guarantee lease fencing or command safety.
+
+**Confucius ranks the other four:**
+
+1. D — It best enforces separation of duties, but `--apply` must remain outside unattended default execution.
+2. A — It rejects symptom treatment correctly, but does not spell out the owner approval boundary.
+3. C — It earns confidence empirically, but testing the actual Oracle runtime still requires separate authority.
+4. B — It improves observability, but operators also need an explicit stop and rollback procedure.
+
+#### Stage 3 — Debate
+
+The council converged on four non-negotiables: executor probes occur only on the worker host; Neon holds a short-lived fenced capability record; activation is an explicit protected transaction; and one allowlisted URL proves the production path before batch research. The main disagreement was whether a capability record is needless schema. Candidate A was tested against the current topology and failed because a workstation cannot prove Oracle-local files. The council therefore accepted the small R001 extension as necessary, but bounded it to one table or equivalent durable record, four security-definer operations, no secret/path fields, an expiry, a worker identity, repository SHA, bundle hash, and contract versions. Curie's broader integrity concerns are retained as negative tests; database-side recomputation of all artifact payload hashes is deferred unless canary evidence shows the trusted worker boundary is insufficient.
+
+#### Stage 4 — Chair’s verdict
+
+Adopt Candidate E with Lovelace's executable contract, Curie's negative controls, and Confucius's approval/rollback boundary. Reject env-only configuration, local stand-ins, manual production SQL, and Hermes-core changes. Source implementation is nine bounded tasks. Production work remains fail-closed until the owner separately approves Neon and Oracle actions. Success means the workstation can obtain a fresh, hash-bound worker capability from Neon; the approved Oracle worker can run both repository executors; a protected activation transaction succeeds; one exact URL reaches `RESEARCH_COMPLETE` with current durable artifacts; and no page drafting or publication begins in this remediation.
+
+### Frozen remediation architecture
+
+```mermaid
+flowchart LR
+    C["Nightly controller on workstation"] -->|"control-role functions only"| N["Neon durable authority"]
+    W["Oracle Hermes worker"] -->|"worker-role register heartbeat claim persist"| N
+    W -->|"local interpreter-aware launch"| P["Product identity executor"]
+    W -->|"local interpreter-aware launch"| R["Landing research executor"]
+    P --> H["Existing approved Hermes CLI/runtime"]
+    R --> H
+    N -->|"fresh WorkerCapabilityV1 only"| C
+    A["Protected activation command"] -->|"migration role plus explicit apply"| N
+    N -->|"fenced job claim"| W
+```
+
+`WorkerCapabilityV1` contains only a generated worker identity, repository SHA, bundle manifest SHA-256, product-identity contract version, research contract version, status enum, fencing generation, observed timestamp, and expiry. It contains no command path, hostname, connection string, token, wallet path, raw environment value, provider credential, or Hermes request/response content.
+
+The controller preflight passes only when V001 and R001 identities match source, pipeline state is known, the kill switch is known, a healthy capability is unexpired, repository/bundle/contract identities match the approved deployment manifest, and the control role can call only its approved functions. Worker preflight passes only when the worker role can probe Neon, both local approved executors pass `--probe`, the Hermes adapter contract passes a bounded non-secret fixture, and registration/heartbeat succeeds. Neither preflight activates the pipeline.
+
+Activation uses an explicit `--apply` path with a migration credential and an independent approval receipt. In one transaction it locks the relevant settings/pipeline/capability rows, rechecks source migration hashes and worker freshness, records the approved repository and bundle identities, changes `research_prep_v1` to approved, clears the research-specific switch, verifies every non-research pipeline is disabled, and only then clears the existing global master switch required by V001 claims. Every downstream publish gate and pipeline remains disabled or independently gated. Default execution is `--check` and read-only.
+
+### Security, recovery, and rollback invariants
+
+- Control, worker, and migration credentials are separate; login principals inherit only the existing or new NOLOGIN privilege roles they require.
+- Negative tests must prove the controller cannot register capability, claim work, persist artifacts, or activate; the worker cannot migrate, activate, publish, or write tables directly; and public/application roles cannot access the capability record.
+- A worker heartbeat expires automatically and cannot be renewed with an old fencing generation after replacement or deactivation.
+- The first operational rollback is to set the global master and research-specific switches true through the protected function and stop new claims; durable jobs, events, evidence, and artifacts are retained.
+- Source rollback reverts the PR through normal Git review. Database rollback may remove R001 only on a disposable branch or when its rollback verifier proves there are no capability or research records; production evidence is never destructively removed merely to simplify rollback.
+- Any real Hermes CLI incompatibility is reported as an external blocker. It does not authorize modifying `/michael-core/hermes`, installing packages, or changing Oracle/systemd/networking without separate approval.
+- The seven URLs remain byte-for-byte as authorized. The remediation command accepts only an exact current allowlist entry and preserves every tracking parameter.
+
 
 ## Executive Summary
 
@@ -120,11 +290,10 @@ The plan deliberately rejects ten bespoke TSX pages, a widened direct-review sch
 
 ### Repository and deployment
 
-- The current checkout is not a safe base: it is on codex/getresponse-artistic-landing-20260802 at 7a996aa and is five commits behind origin/main 5923ad2, with five tracked modifications and thirty-one untracked files.
-- The dirty homepage predates the origin/main studio catalogue and would overwrite later work. Its header fragment changes also conflict with PublicHeader.
-- The dirty landing manifest contains unsupported publication fields and paths; the current loader can convert a catalogue parse failure into an empty public catalogue.
-- The clean origin/main commit 5923ad2 is also the commit reported by production /api/deployment on 2026-08-08. GitHub production verification run 31025668122 passed for that commit.
-- Implementation must begin in a new isolated worktree from freshly fetched origin/main. The current dirty worktree, its untracked PLAN (36).md, and its unrelated modifications are preserved untouched.
+- The operator checkout is not a safe base: it remains on `codex/getresponse-artistic-landing-20260802` at `7a996aa`, is seven commits behind remote main `b5a1a647`, and contains extensive user-owned tracked and untracked changes.
+- Historical v1.0.0 inspection found dirty homepage/header and landing-manifest changes that would overwrite or conflict with tracked source; those user-owned changes remain outside this plan.
+- Production `/api/deployment` and GitHub production verification run 31025668122 reported commit `5923ad2` on 2026-08-08. This is historical release evidence, not proof that current remote main `b5a1a647` is deployed.
+- Implementation must begin in a new isolated worktree from freshly fetched remote main. The current dirty worktree and all unrelated modifications are preserved untouched.
 - Node is available locally, but npm 12.0.0 is outside package.json's supported npm range. Local full install/build/typecheck is prohibited by project_rules.md and is not accepted as release evidence.
 
 ### Live site
@@ -165,9 +334,9 @@ Observed against https://vettedsaasblueprint.online on 2026-08-08:
 | SRC-004 | project_rules.md | Repository authority | Current origin/main | Controls hosted verification and public content gates | No local full build; evidence before publication |
 | SRC-005 | docs/VetterSaaSBlueprint_PRD.md | Product authority | Current origin/main | Defines MVP boundary, high-risk claims, approval, pricing, privacy | New page types require explicit amendment and manual approval |
 | SRC-006 | approved-urls.md | Exact URL authority | Current origin/main; must be rehashed at execution | Sole recurring affiliate URL authority | One exact URL per canonical affiliate page |
-| SRC-007 | src/lib/schemas/contracts.ts and src/lib/generated/landing-pages.ts | Executable contract | origin/main 5923ad2 | Proves direct-review coupling and receipt semantics | Do not widen PageBlueprint |
-| SRC-008 | direct-review routes, renderers, scanners, tests | Executable behavior | origin/main 5923ad2 | Shows route/render/verification blast radius | Add sibling system and related-link adapter |
-| SRC-009 | db/neon-landing-control-v001.sql and workflow docs | Durable workflow source | origin/main 5923ad2; deployment unproven | Proves V001 research-only boundary and migration order | Add V002; never alter V001 checksum |
+| SRC-007 | src/lib/schemas/contracts.ts and src/lib/generated/landing-pages.ts | Executable contract | remote main `b5a1a647` | Proves direct-review coupling and receipt semantics | Do not widen PageBlueprint |
+| SRC-008 | direct-review routes, renderers, scanners, tests | Executable behavior | remote main `b5a1a647` | Shows route/render/verification blast radius | Add sibling system and related-link adapter |
+| SRC-009 | db/neon-landing-control-v001.sql and workflow docs | Durable workflow source | remote main `b5a1a647`; production row absent | Proves V001 research-only boundary and migration order | Add R001 for worker capability and V002 for visibility; never alter V001 checksum |
 | SRC-010 | production HTTP, sitemap, HTML, /api/deployment | Runtime evidence | Observed 2026-08-08 | Establishes live topology and exact production SHA | Ten targets missing; two reviews live; studio dominates home |
 | SRC-011 | GitHub production verification run 31025668122 | Hosted release evidence | 2026-08-08 | Confirms origin/main production verification at 5923ad2 | Base is production-aligned |
 | SRC-012 | Git status, log, origin/main, focused source inspection | Repository evidence | 2026-08-08 | Proves unsafe dirty checkout and clean base | New worktree required |
@@ -182,17 +351,17 @@ Observed against https://vettedsaasblueprint.online on 2026-08-08:
 |---|---|---|---|---|---|---|
 | SRC-001 | This task, 2026-08-08 | VettedSaaSBlueprint operator | Defines desired outcome and exact ten paths | Current primary requirement | Supports page scope and plan-only stop; does not authorize publication claims | Nonsecret; requirements and acceptance scope |
 | SRC-002 | C:\Users\micha\.buzz\REPOS\Antigravity Applications Created\REPOSITORY-PLANNING-PROTOCOL-v3.5-MODEL-ROUTED-SPARK-READY.md | Protocol author/operator | Defines planning method | Current supplied process authority | Supports Full/Level 3 research, routing, validation, and loop; does not define product behavior | Nonsecret; planning control |
-| SRC-003 | Repository root AGENTS.md at origin/main 5923ad2 | Repository owner | Controls implementation and release | Current repository authority | Supports Neon, exact URL, Stage 0, gate, privacy, and Oracle rules; direct-review wording needs approved extension | Nonsecret; policy and task boundaries |
-| SRC-004 | Repository project_rules.md at origin/main 5923ad2 | Repository owner | Controls verification environment | Current repository authority | Supports hosted full checks and evidence gates; does not authorize new page types | Nonsecret; verification placement |
-| SRC-005 | docs/VetterSaaSBlueprint_PRD.md at origin/main 5923ad2 | Product owner | Defines product/public-content boundary | Current, requiring versioned amendment | Supports exclusions, manual approvals, claim classes, privacy, and pricing; conflicts with requested scope until amended | Nonsecret; product requirements |
-| SRC-006 | approved-urls.md at origin/main 5923ad2 | Product owner | Exact affiliate destination authority | Current but rehash at execution | Supports authorized exact URLs only; does not authorize a second canonical page or new claims | Sensitive commercial tracking values; compare byte-for-byte and never normalize |
-| SRC-007 | src/lib/schemas/contracts.ts and src/lib/generated/landing-pages.ts at 5923ad2 | Repository | Defines executable direct-review schema/loader | Current executable authority | Supports direct_review coupling and receipt behavior; does not support visibility kinds | Nonsecret code; architecture boundary |
-| SRC-008 | Landing routes/renderers/scanners/tests at 5923ad2 | Repository | Defines producers, consumers, and regression perimeter | Current executable authority | Supports blast-radius claims; scanner coverage is direct-review-specific | Nonsecret code; file/task/test scope |
-| SRC-009 | db/neon-landing-control-v001.sql and workflow docs at 5923ad2 | Repository/database owner | Defines durable workflow baseline | Source current; deployment state unverified | Supports V001 research-only, schema order, and checksum requirement; cannot prove live installation | Database schema is nonsecret; use redacted probes for runtime |
-| SRC-010 | https://vettedsaasblueprint.online, 2026-08-08 | Production operator | Establishes runtime behavior | Current observation bound to 5923ad2 | Supports 404s, routes, links, sitemap, studio, and metadata observations; can drift after deploy | Public data; runtime baseline |
+| SRC-003 | Repository root AGENTS.md at remote main `b5a1a647` | Repository owner | Controls implementation and release | Current repository authority | Supports Neon, exact URL, Stage 0, gate, privacy, and Oracle rules; direct-review wording needs approved extension | Nonsecret; policy and task boundaries |
+| SRC-004 | Repository project_rules.md at remote main `b5a1a647` | Repository owner | Controls verification environment | Current repository authority | Supports hosted full checks and evidence gates; does not authorize new page types | Nonsecret; verification placement |
+| SRC-005 | docs/VetterSaaSBlueprint_PRD.md at remote main `b5a1a647` | Product owner | Defines product/public-content boundary | Current, requiring versioned amendment | Supports exclusions, manual approvals, claim classes, privacy, and pricing; conflicts with requested scope until amended | Nonsecret; product requirements |
+| SRC-006 | approved-urls.md at remote main `b5a1a647` | Product owner | Exact affiliate destination authority | Current hash recorded in v1.1.0 amendment; rehash at execution | Supports authorized exact URLs only; does not authorize a second canonical page or new claims | Sensitive commercial tracking values; compare byte-for-byte and never normalize |
+| SRC-007 | src/lib/schemas/contracts.ts and src/lib/generated/landing-pages.ts at remote main `b5a1a647` | Repository | Defines executable direct-review schema/loader | Current executable authority | Supports direct_review coupling and receipt behavior; does not support visibility kinds | Nonsecret code; architecture boundary |
+| SRC-008 | Landing routes/renderers/scanners/tests at remote main `b5a1a647` | Repository | Defines producers, consumers, and regression perimeter | Current executable authority | Supports blast-radius claims; scanner coverage is direct-review-specific | Nonsecret code; file/task/test scope |
+| SRC-009 | db/neon-landing-control-v001.sql and workflow docs at remote main `b5a1a647` | Repository/database owner | Defines durable workflow baseline | Source current; production V001 row confirmed absent 2026-08-12 | Supports V001 research-only, schema order, and checksum requirement; cannot prove installation from source | Database schema is nonsecret; use redacted probes for runtime |
+| SRC-010 | https://vettedsaasblueprint.online, 2026-08-08 | Production operator | Establishes runtime behavior | Historical observation bound to 5923ad2 | Supports the original 404, route, link, sitemap, studio, and metadata baseline only; must be refreshed before release | Public data; historical runtime baseline |
 | SRC-011 | GitHub run 31025668122, 2026-08-08 | Repository CI | Establishes hosted verification | Current for 5923ad2 only | Supports successful production verification at that SHA; not evidence for future changes | Repository metadata; release baseline |
 | SRC-012 | Local git/source inspection, 2026-08-08 | Current workstation/operator | Establishes checkout risk | Current at plan creation; must recheck | Supports dirty/stale checkout and conflict claims; local state can change | Local paths/status only; preserve user work |
-| SRC-013 | GitNexus 1.6.9 index VettedSaaSBlueprint-plan-origin-main, 2026-08-08 | Planning process | Cross-checks code graph | Derived from clean 5923ad2; disposable | Supports call edges and cluster counts; FTS query was unavailable, so critical edges were verified in source | Nonsecret derived graph; impact analysis only |
+| SRC-013 | GitNexus 1.6.9 indexes, refreshed 2026-08-12 | Planning process | Cross-checks code graph | Current amendment index derived from clean `b5a1a647`; disposable | Supports dispatcher/preflight/Neon/worker call edges; FTS query was unavailable, so critical edges were verified in source | Nonsecret derived graph; impact analysis only |
 | SRC-014 | Google Search Central pages listed below, retrieved 2026-08-08 | Google | Defines search eligibility guidance | Current official docs; may evolve | Supports crawlability, sitemap, helpful-content, review, and schema guidance; never guarantees ranking/indexing | Public docs; requirements and limitations |
 | SRC-015 | Next.js official docs listed below, retrieved 2026-08-08 | Vercel/Next.js | Defines framework metadata/JSON-LD behavior | Current for installed Next 16 family | Supports metadata, sitemap, JSON-LD, and component boundaries; implementation must still match installed types | Public docs; interface/test design |
 | SRC-016 | Root planning.md before this replacement, last material state 2026-08-05 | Prior planning process | Historical unresolved authority context | Superseded as current plan | Supports prior V001/Hermes/Neon caution only; branch, commit, and runtime facts are stale | Nonsecret historical context; reconciliation only |
@@ -221,7 +390,7 @@ Official references:
 
 ### Duplicate and Version Reconciliation
 
-- Repository code family: clean origin/main 5923ad2 is the planning base; current dirty HEAD 7a996aa and its untracked variants are preserved but superseded for implementation.
+- Repository code family: clean remote main `b5a1a647` is the amendment planning base; dirty operator HEAD `7a996aa` and its variants are preserved but superseded for implementation.
 - Plan family: this document supersedes the old Hermes Research Authority Repair as the sole mutable root plan while retaining its still-relevant caution that no local artifact replaces Neon/Hermes authority.
 - Runtime family: production /api/deployment at 5923ad2 is current evidence for 2026-08-08; GitHub run 31025668122 corroborates that SHA but does not prove future releases.
 - Database family: V001 migration source is authoritative in Git; whether it is installed in the intended Neon environment is unresolved until the read-only probe.
@@ -726,16 +895,36 @@ Owner approval of this planning document authorizes implementation of the archit
 | AC-SEQ-001 | Exemplar, calibration, later waves, owner approval, live verification, and retro order is enforced durably | Neon state-machine integration tests and receipts |
 | AC-REL-001 | Clean SHA passes hosted checks, Vercel preview, controlled production deploy, canonical verification, and tested rollback | GitHub/Vercel/Neon release packet |
 | AC-OBS-001 | Search Console baseline, per-wave day 0, and final-release day 7/28/56 observations are recorded without claiming guaranteed rankings | Read-only property-bound ledger, URL inspection receipts, elapsed-window dates, and independent verification |
+| AC-HRA-AUTH-001 | Controller, Neon, and worker authority are separated; no workstation-local executor path can attest Oracle capability | Architecture tests, command-mode tests, and independent policy review |
+| AC-HRA-DB-001 | Exact V001 and additive R001 source identities pass on disposable Neon; worker capability is fenced, expiring, least-privilege, and non-secret | Migration verifier, schema diff, role-negative suite, stale/replacement-worker tests, and rollback refusal tests |
+| AC-HRA-WORKER-001 | The built Oracle worker resolves `.mjs` through Node, probes both approved executors locally, validates the existing Hermes adapter contract, and maintains a fresh matching capability | Linux bundle smoke, approved Oracle probe, heartbeat expiry/replacement tests, and redacted manifest receipt |
+| AC-HRA-CONTROL-001 | Controller preflight reads durable capability from Neon and activation defaults read-only; apply refuses any migration, hash, contract, freshness, role, or kill-switch mismatch | Focused preflight/activation tests and disposable transaction canary |
+| AC-HRA-SEC-001 | Control, worker, and migration principals have no excess table/function authority and no output contains credentials, paths, tokens, wallet data, or raw environment values | Privilege matrix, denied-operation suite, and log scanner |
+| AC-HRA-DELIVERY-001 | Every process repair is reviewed, checked, merged to remote main, and—where runtime behavior changes—deployed from that Git SHA before activation | Focused CI, PR/merge evidence, bundle manifest, and Git-backed deployment receipt |
+| AC-HRA-CANARY-001 | One exact approved URL reaches `RESEARCH_COMPLETE` through the production worker with fresh `HermesProductIdentityV1`, `HermesResearchEvidenceV1`, and `ResearchSourceSnapshotBundleV1` artifacts durably recorded in Neon | Read-only Neon status/artifact query, source-sample review, lease/event trace, and no-publication assertion |
+| AC-HRA-HANDOFF-001 | After canary success, all seven exact URLs have current research readiness or a precise durable blocker, and publication receives only the next Neon-authorized action | Seven-URL status matrix, freshness/expiry checks, and independent publication-readiness handoff review |
 
-Denominator invariant at plan version 1.0.0:
+Denominator invariant at plan version 1.1.0:
 
-- 18 = 0 verified tasks + 18 remaining tasks
-- 20 = 0 verified acceptance criteria + 20 remaining acceptance criteria
+- 27 = 0 verified tasks + 27 remaining tasks
+- 28 = 0 verified acceptance criteria + 28 remaining acceptance criteria
 
 ## Dependency graph and wave order
 
 ```mermaid
 flowchart LR
+    T19["TASK-019 Remediation characterization"] --> T20["TASK-020 Neon R001 capability authority"]
+    T19 --> T21["TASK-021 Worker invocation and registration"]
+    T19 --> T22["TASK-022 Controller preflight and activation"]
+    T20 --> T24["TASK-024 Disposable Neon/Oracle proof"]
+    T21 --> T23["TASK-023 CI and deployment contract"]
+    T22 --> T23
+    T20 --> T23
+    T23 --> T24
+    T24 --> T25["TASK-025 PR merge and source delivery"]
+    T25 --> T26["TASK-026 Production authority activation"]
+    T26 --> T27["TASK-027 Exact-URL research canary and handoff"]
+    T27 --> T5
     T1["TASK-001 Governance and clean base"] --> T2["TASK-002 V002 migration"]
     T1 --> T3["TASK-003 Workflow contracts"]
     T1 --> T4["TASK-004 Hermes visibility executor"]
@@ -760,7 +949,7 @@ flowchart LR
     T17 --> T18["TASK-018 Search observation"]
 ```
 
-Critical path: TASK-001 → TASK-002/TASK-003/TASK-004/TASK-006/TASK-007 → TASK-005 → TASK-008 → TASK-009 → TASK-010 → TASK-011 → TASK-012 → TASK-013 → TASK-014 → TASK-015 → TASK-016 → TASK-017 → TASK-018.
+Critical path for the newly exposed prerequisite: TASK-019 → TASK-020/TASK-021/TASK-022 → TASK-023 → TASK-024 → TASK-025 → TASK-026 → TASK-027. The visibility path then remains TASK-001 → TASK-002/TASK-003/TASK-004/TASK-006/TASK-007 → TASK-005 → TASK-008 → TASK-009 → TASK-010 → TASK-011 → TASK-012 → TASK-013 → TASK-014 → TASK-015 → TASK-016 → TASK-017 → TASK-018. TASK-005 cannot pass until TASK-027 proves the shared direct-review research authority.
 
 Safe parallelism after TASK-001 freezes contracts:
 
@@ -770,6 +959,8 @@ Safe parallelism after TASK-001 freezes contracts:
 - Reviewers may independently inspect visual, evidence, uniqueness, compliance, and conversion artifacts.
 - Only one owner edits migrations, manifests, workflow state, shared renderers, homepage/header/sitemap, CI workflows, or publication records at a time.
 - No agent may publish, approve its own work, or edit the current dirty checkout.
+- TASK-020, TASK-021, and TASK-022 may use separate isolated worktrees after TASK-019 freezes interfaces, but one integration owner resolves all shared contracts before TASK-023.
+- TASK-026 and TASK-027 are serial external-authority packets; they may not overlap with migration, worker replacement, pipeline activation, or publication work.
 
 ## Task index
 
@@ -779,7 +970,7 @@ Safe parallelism after TASK-001 freezes contracts:
 | TASK-002 | PREMIUM | TASK-001 | AC-NEON-001, AC-RESEARCH-001, AC-SEQ-001 | Additive V002 source, freshness, and rollback verified |
 | TASK-003 | STANDARD | TASK-001 | AC-NEON-001, AC-RESEARCH-001, AC-PUB-001, AC-SEQ-001 | App workflow/freshness mirror and protected clients |
 | TASK-004 | PREMIUM | TASK-001 | AC-RESEARCH-001 | Approved visibility research executor |
-| TASK-005 | PREMIUM | TASK-002,003,004 | AC-NEON-001, AC-RESEARCH-001, AC-PUB-001, AC-SEQ-001 | Disposable Neon/Oracle end-to-end and freshness canary |
+| TASK-005 | PREMIUM | TASK-002,003,004,027 | AC-NEON-001, AC-RESEARCH-001, AC-PUB-001, AC-SEQ-001 | Disposable Neon/Oracle visibility end-to-end after shared research authority is proven |
 | TASK-006 | STANDARD | TASK-001 | AC-CONTRACT-001, AC-RESEARCH-001, AC-INTENT-001 | Exact typed catalogue and loader |
 | TASK-007 | STANDARD | TASK-006 | AC-VALUE-001, AC-META-001, AC-SCHEMA-001, AC-PREVIEW-001, AC-CALC-001 | Shared page system and previews |
 | TASK-008 | STANDARD | TASK-005,007 | AC-RESEARCH-001, AC-PUB-001, AC-PRIV-001, AC-VIS-001, AC-PREVIEW-001, AC-REL-001 | Validation, freshness, visual, deployment and CI gates |
@@ -793,6 +984,15 @@ Safe parallelism after TASK-001 freezes contracts:
 | TASK-016 | STANDARD | TASK-015 | AC-CALC-001, AC-VALUE-001, AC-PRIV-001, AC-SEQ-001, AC-OBS-001 | Calculator LIVE plus day-0 receipt |
 | TASK-017 | PREMIUM | TASK-016 | AC-LINK-001, AC-META-001, AC-SITEMAP-001, AC-SCHEMA-001, AC-REG-001, AC-STUDIO-001, AC-REL-001 | Final graph, production and rollback verified |
 | TASK-018 | STANDARD | TASK-017 | AC-OBS-001 | Day 7/28/56 observation ledger and independent AC-OBS verification completed |
+| TASK-019 | PREMIUM | Owner approval of v1.1.0 | AC-HRA-AUTH-001 | Characterization freezes the correct cross-host contract and regression boundary |
+| TASK-020 | PREMIUM | TASK-019 | AC-HRA-DB-001, AC-HRA-SEC-001 | Additive R001 capability authority passes disposable source and privilege verification |
+| TASK-021 | STANDARD | TASK-019 | AC-HRA-WORKER-001, AC-HRA-SEC-001 | Interpreter-aware executors and fenced worker registration pass focused tests |
+| TASK-022 | PREMIUM | TASK-019 | AC-HRA-AUTH-001, AC-HRA-CONTROL-001, AC-HRA-SEC-001 | Neon-mediated controller preflight and protected activation contract pass focused tests |
+| TASK-023 | STANDARD | TASK-020,021,022 | AC-HRA-WORKER-001, AC-HRA-CONTROL-001, AC-HRA-DELIVERY-001 | CI, bundle manifest, deployment source, runbook, and rollback contract agree |
+| TASK-024 | PREMIUM | TASK-023 plus separate disposable Neon/Oracle approval | AC-HRA-DB-001, AC-HRA-WORKER-001, AC-HRA-CONTROL-001, AC-HRA-SEC-001 | Disposable end-to-end and every negative control pass without production mutation |
+| TASK-025 | STANDARD | TASK-024 | AC-HRA-DELIVERY-001 | Focused repair is independently reviewed, merged, and source artifacts are Git-backed |
+| TASK-026 | PREMIUM | TASK-025 plus separate production authority | AC-HRA-DB-001, AC-HRA-WORKER-001, AC-HRA-CONTROL-001, AC-HRA-SEC-001, AC-HRA-DELIVERY-001 | Production V001/R001, principals, worker deployment, capability, and research activation are proven |
+| TASK-027 | PREMIUM | TASK-026 | AC-HRA-CANARY-001, AC-HRA-HANDOFF-001, AC-RESEARCH-001 | One canary then the exact seven-URL research matrix reaches durable readiness or precise blockers |
 
 ## Detailed task packets
 
@@ -880,7 +1080,7 @@ Safe parallelism after TASK-001 freezes contracts:
 - Route: ROUTE-PREMIUM-REASONING.
 - Verifier: distinct database/release operator using ROUTE-PREMIUM-REASONING.
 - Acceptance IDs: AC-NEON-001, AC-RESEARCH-001, AC-PUB-001, AC-SEQ-001.
-- Dependencies: TASK-002, TASK-003, TASK-004, external approvals.
+- Dependencies: TASK-002, TASK-003, TASK-004, TASK-027, and visibility-specific external approvals.
 - Allowed scope: read-only production probe; approved disposable Neon branch; approved visibility worker bundle; protected secret configuration.
 - Forbidden scope: production migration without separate approval; revealing credentials; weakening kill switches; Oracle platform changes.
 - Implementation:
@@ -1154,10 +1354,186 @@ Safe parallelism after TASK-001 freezes contracts:
 - Definition of done: the complete baseline/day-0/day-7/day-28/day-56 ledger exists and the distinct analytics verifier passes AC-OBS-001 at the current deployed SHA/environment. The task does not run or decide the global completion predicate.
 - Recovery/escalation boundary: no Search Console access or incomplete elapsed window does not roll back safe pages; it preserves IMP-002, leaves TASK-018/AC-OBS-001 unverified, schedules the exact next checkpoint, and never declares IMPLEMENTATION COMPLETE.
 
+### TASK-019 — Freeze the Hermes authority contract with failing characterization
+
+- Initial state at plan version 1.1.0: unverified and approval-blocked; top metadata is authoritative.
+- Route: ROUTE-PREMIUM-REASONING because this freezes a cross-host security and workflow boundary.
+- Verifier: independent repository/worker reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-AUTH-001.
+- Dependencies: explicit owner approval of amendment v1.1.0.
+- Allowed files: focused existing preflight/executor/worker tests, a new worker-capability contract fixture, planning.md receipts.
+- Forbidden files/actions: production credentials, Neon mutation, Oracle access/change, broad refactor, `approved-urls.md` edits, drafting, publication.
+- Implementation:
+  1. Re-prove remote main, isolated clean base, current allowlist hash, and authority-variable presence as safe booleans.
+  2. Add failing tests proving a controller on one host cannot establish an Oracle-local executor path and a raw `.mjs` path is not a portable executable contract.
+  3. Freeze `WorkerCapabilityV1`, controller-mode preflight, worker-mode preflight, activation refusal reasons, freshness window, fencing generation, and redacted status fields.
+  4. Capture current direct-review prep/worker behavior so R001 changes cannot bypass URL equality, pipeline, lease, artifact, or completion gates.
+- Decisive checks: focused tests fail for the two confirmed defects and pass for unchanged allowlist/state-machine invariants; reviewer confirms no production mutation.
+- Definition of done: the defect and target interfaces are executable, narrow, and independently reviewed before implementation.
+- Recovery boundary: any need to change Hermes core, Oracle platform, or publication semantics returns to plan change control.
+
+### TASK-020 — Add the fenced Neon R001 worker-capability authority
+
+- Initial state at plan version 1.1.0: unverified.
+- Route: ROUTE-PREMIUM-REASONING.
+- Verifier: independent PostgreSQL/security reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-DB-001, AC-HRA-SEC-001.
+- Dependencies: TASK-019.
+- Allowed files: `db/neon-landing-research-authority-r001.sql`, its rollback, source verifier, migration test fixtures, protected database contract types, planning.md.
+- Forbidden files/actions: modifying V001 bytes/checksum, production database, public APIs, direct table grants, secret storage, publication state changes.
+- Implementation:
+  1. Require the exact approved V001 migration identity before R001 applies.
+  2. Add the minimal capability relation and security-definer register, heartbeat, inspect, deactivate, and activation-check functions with locked `search_path`, explicit grants, fencing generation, and bounded expiry.
+  3. Add a research-specific kill-switch setting while retaining the existing global kill switch as master authority.
+  4. Return only safe capability and refusal fields; prevent storage of paths, hostnames, credentials, provider data, raw environment, or research payloads.
+  5. Make rollback refuse when capability, job, event, or research artifact history exists; preserve V001 and durable evidence.
+- Decisive checks: deterministic source hash; disposable migration/rollback; stale heartbeat, replacement worker, old fence, wrong hash/version, direct DML, wrong-role, and secret-shape rejection tests.
+- Definition of done: R001 is additive, least-privilege, fail-closed, and independently proven on a disposable Neon branch.
+- Recovery boundary: any need for a public capability endpoint, direct write grant, or V001 mutation requires replanning.
+
+### TASK-021 — Repair executor invocation and register worker capability
+
+- Initial state at plan version 1.1.0: unverified.
+- Route: ROUTE-STANDARD-REASONING; escalate to premium on Hermes adapter incompatibility.
+- Verifier: independent worker/runtime reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-WORKER-001, AC-HRA-SEC-001.
+- Dependencies: TASK-019.
+- Allowed files: `hermes/executors/**`, `hermes/landing-research-worker.ts`, `src/lib/landing-research/**`, focused tests and fixtures.
+- Forbidden files/actions: `/michael-core/hermes`, provider SDK coupling, shell command strings, package installation, Oracle/systemd changes, credential logging.
+- Implementation:
+  1. Add one shared `resolveApprovedExecutorInvocation` helper: absolute `.mjs` paths execute as `process.execPath <path>`; approved non-module binaries execute directly; shell fragments and relative paths are rejected.
+  2. Reuse the helper for executor `--probe` and actual structured-JSON invocation so behavior cannot drift.
+  3. On worker startup, probe worker-role Neon access, both executors, and a bounded non-secret Hermes adapter fixture before registering capability.
+  4. Heartbeat with the current fence, source SHA, manifest hash, and contract versions; stop claiming on heartbeat failure, stale generation, deactivation, or identity mismatch.
+  5. Preserve existing lease, idempotency, artifact, state-transition, and fail-closed behavior.
+- Decisive checks: Windows and Linux-style path fixtures, paths with spaces, relative/shell rejection, malformed output, timeout, signal, heartbeat loss, replacement fence, and clean shutdown tests.
+- Definition of done: the worker proves its own local runtime and Neon holds only a fresh, exact, non-secret capability record.
+- Recovery boundary: if the installed approved Hermes CLI cannot satisfy the adapter fixture, stop with its safe contract error and request separate authority; do not modify Hermes core.
+
+### TASK-022 — Split controller preflight and add protected activation
+
+- Initial state at plan version 1.1.0: unverified.
+- Route: ROUTE-PREMIUM-REASONING.
+- Verifier: independent orchestration/security reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-AUTH-001, AC-HRA-CONTROL-001, AC-HRA-SEC-001.
+- Dependencies: TASK-019.
+- Allowed files: `scripts/validate-landing-research-preflight.ts`, a new protected activation script, package scripts, Neon client/contracts, focused tests, docs, planning.md.
+- Forbidden files/actions: workstation executor execution, default mutation, raw SQL activation outside the protected command, env-value logging, dispatch, drafting, publication.
+- Implementation:
+  1. Make controller preflight require only the control credential and call the read-only V001/R001 probe plus capability inspection functions.
+  2. Emit migration, pipeline, kill-switch, worker freshness, repository/bundle/contract match, and refusal reason as hashes/enums/booleans only.
+  3. Add `landing:research:activate --check` as the default read-only command; require explicit `--apply`, migration credential, current approved source/manifest identities, fresh worker capability, all non-research pipelines disabled, and an approval reference for mutation.
+  4. Lock and recheck every prerequisite transactionally, approve `research_prep_v1`, clear the research-specific switch, and clear the global master switch only when all other pipelines are disabled and no publication can advance.
+  5. Add an explicit deactivate command that sets the global master and research switches true before disabling research; make it idempotent.
+- Decisive checks: wrong role, missing V001/R001, stale worker, wrong SHA/hash/version, active unrelated pipeline, concurrent replacement, default no-mutation, apply success, and idempotent deactivate tests.
+- Definition of done: workstation readiness is a durable Neon observation of the correct worker, and activation cannot happen accidentally or partially.
+- Recovery boundary: any pressure to restore workstation-local executor values or bypass a missing worker heartbeat is rejected.
+
+### TASK-023 — Align CI, bundle manifest, deployment source, and runbooks
+
+- Initial state at plan version 1.1.0: unverified.
+- Route: ROUTE-STANDARD-REASONING.
+- Verifier: independent CI/deployment reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-WORKER-001, AC-HRA-CONTROL-001, AC-HRA-DELIVERY-001.
+- Dependencies: TASK-020, TASK-021, TASK-022.
+- Allowed files: bundle builder, package scripts, focused GitHub workflows, `ops/systemd` source, deployment/workflow docs, checks, planning.md.
+- Forbidden files/actions: live Oracle files/services, network/firewall/packages/storage, credentials, production deploy, direct main push, unrelated CI changes.
+- Implementation:
+  1. Emit a deterministic bundle manifest containing file hashes, repository SHA, Node contract, and executor contract versions.
+  2. Make hosted CI build the worker, run both probes through the same invocation resolver, verify the manifest, run R001 source/role tests, and prove controller/worker preflight separation.
+  3. Correct checked-in systemd source to reference the deployed bundle consistently while keeping secrets in the approved environment path; do not apply the unit in this task.
+  4. Update the runbook with disposable proof, production approval boundary, deploy, probe, activate, canary, deactivate, and redacted evidence steps.
+  5. Add a static assertion that no runbook or unit changes `/michael-core/hermes` or Oracle platform configuration.
+- Decisive checks: clean bundle build in hosted CI, manifest verification, probe smoke, workflow validation, runbook command lint, and independent diff review.
+- Definition of done: repository source describes one reproducible deployable runtime and cannot confuse CI probe success with Oracle deployment success.
+- Recovery boundary: if the desired runtime requires package/systemd/platform change, stop and request the separately scoped approval.
+
+### TASK-024 — Prove the full contract on disposable Neon and approved Oracle runtime
+
+- Initial state at plan version 1.1.0: unverified and externally approval-blocked.
+- Route: ROUTE-PREMIUM-REASONING.
+- Verifier: independent database/runtime/security reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-DB-001, AC-HRA-WORKER-001, AC-HRA-CONTROL-001, AC-HRA-SEC-001.
+- Dependencies: TASK-023 plus explicit disposable Neon and bounded Oracle execution approval.
+- Allowed actions: create an isolated Neon branch, apply V001/R001 there, create temporary least-privilege login principals through approved secret handling, stage the built bundle outside `/michael-core/hermes`, run bounded probes/canary, and remove or archive disposable resources through the approved path.
+- Forbidden actions: production database mutation, Oracle platform/systemd/package/network/storage change, Hermes-core change, printing credentials/paths, public deployment, publication.
+- Implementation:
+  1. Create a disposable child branch from current production and record branch identity without connection material.
+  2. Apply/verify V001 then R001; prove role negatives, activation refusals, heartbeat expiry/replacement, and rollback behavior.
+  3. Run the exact built bundle and existing Hermes CLI contract fixture in an approved scratch location on Oracle.
+  4. Register capability, activate research in the disposable database, dispatch one synthetic non-affiliate fixture, persist all required artifact classes, then deactivate.
+  5. Compare schema to parent, retain redacted evidence, and remove the disposable branch only through the approved recoverable workflow.
+- Decisive checks: all negative controls fail closed; one disposable job completes; no production IDs/state change; reviewer signs the evidence matrix.
+- Definition of done: the exact merged candidate works across real Neon and Oracle boundaries before source delivery is finalized.
+- Recovery boundary: any external refusal or missing access preserves the source-ready state and exact blocker; it is not bypassed locally.
+
+### TASK-025 — Deliver the repository process repair
+
+- Initial state at plan version 1.1.0: unverified.
+- Route: ROUTE-STANDARD-REASONING.
+- Verifier: independent code/operations reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-DELIVERY-001.
+- Dependencies: TASK-024.
+- Allowed actions/files: intended remediation files only, focused commit, `codex/` branch, PR, hosted checks, review fixes, merge through repository policy, post-merge source verification.
+- Forbidden actions: broad staging, unrelated dirty-checkout files, direct protected-main push, production database/Oracle changes, preview/publication claims.
+- Implementation:
+  1. Inspect the isolated tree and stage only named remediation files.
+  2. Run focused checks; commit with source and test evidence; push the branch and open a ready PR.
+  3. Obtain independent review, resolve actionable findings, and require all hosted checks.
+  4. Merge through the accepted repository path and verify remote main contains the exact commit/files and reproducible bundle manifest.
+  5. Update planning.md with PR, merge SHA, check, and artifact evidence; do not mark runtime deployment complete.
+- Decisive checks: scoped diff/stage, PR review, hosted green checks, merged remote-main SHA, post-merge clean checkout bundle verification.
+- Definition of done: the process repair is no longer local, untracked, unpushed, or unmerged.
+- Recovery boundary: check/review failure reopens its owning source task; merge conflict uses a fresh remote-main worktree and never overwrites user changes.
+
+### TASK-026 — Provision and activate production authority
+
+- Initial state at plan version 1.1.0: unverified and externally approval-blocked.
+- Route: ROUTE-PREMIUM-REASONING.
+- Verifier: distinct production database and Oracle runtime reviewers.
+- Acceptance IDs: AC-HRA-DB-001, AC-HRA-WORKER-001, AC-HRA-CONTROL-001, AC-HRA-SEC-001, AC-HRA-DELIVERY-001.
+- Dependencies: TASK-025 plus explicit production Neon credential/role approval and separate Oracle deployment/service approval.
+- Allowed actions: apply exact merged V001/R001 through the approved migration path, provision least-privilege login principals, deploy the exact merged bundle to the approved existing application location, configure the approved secret path, probe, register capability, and explicitly activate research.
+- Forbidden actions: `/michael-core/hermes` modification, instance/network/firewall/storage/package change, unreviewed systemd change, broad database owner use by workers/controllers, secret output, URL dispatch before all checks.
+- Implementation:
+  1. Re-probe production and stop on any unexpected migration/hash/schema/state drift.
+  2. Apply V001 then R001 with migration authority; verify source hashes and negative privilege matrix before distributing credentials.
+  3. Deploy the exact Git-backed bundle/manifest under the separately approved Oracle path and configure only the named worker credential and local executor paths.
+  4. Run worker probe, establish a fresh capability heartbeat, and confirm the controller sees the same source/bundle/contracts through Neon.
+  5. Run activation `--check`, obtain independent approval evidence, run explicit `--apply`, and verify all non-research pipelines remain disabled and publication cannot advance.
+- Decisive checks: current production read-only status, migration rows/hashes, denied-operation matrix, Git SHA/manifest match, fresh capability, activation event, global/research switch and pipeline matrix, zero dispatched jobs before TASK-027.
+- Definition of done: production research authority is live, narrow, Git-backed, and still idle; no URL or page state has advanced.
+- Recovery boundary: any mismatch immediately deactivates research, preserves evidence, and reopens the owning task; no manual SQL or local receipt substitutes.
+
+### TASK-027 — Run one production canary and prepare the seven-URL handoff
+
+- Initial state at plan version 1.1.0: unverified.
+- Route: ROUTE-PREMIUM-REASONING.
+- Verifier: independent evidence/publication-readiness reviewer using ROUTE-PREMIUM-REASONING.
+- Acceptance IDs: AC-HRA-CANARY-001, AC-HRA-HANDOFF-001, AC-RESEARCH-001.
+- Dependencies: TASK-026.
+- Allowed actions: current remote-main clean disposable controller checkout, exact URLs from current `approved-urls.md`, `landing:research:prep/status`, read-only Neon evidence queries, bounded source review, planning.md receipts.
+- Forbidden actions: URL normalization or tracking-parameter change, non-allowlisted research, page drafting, reviews downstream of research, release receipt creation, deployment, publication, `LIVE` marking.
+- Implementation:
+  1. Recompute the allowlist hash and select the first exact URL as canary unless an existing durable job requires deterministic resume for another exact entry.
+  2. Dispatch through the approved command only; observe durable state, leases, retries, events, and capability freshness without manufacturing receipts.
+  3. Require current, resolvable `HermesProductIdentityV1`, `HermesResearchEvidenceV1`, and `ResearchSourceSnapshotBundleV1`; sample citations/claims and reject stale, inaccessible, malformed, or mismatched evidence.
+  4. On canary pass, dispatch or resume the remaining six exact URLs within the repository cap and produce a seven-row durable status/freshness/blocker matrix.
+  5. Hand publication the exact next Neon-enabled action per URL; keep any unknown compliance/evidence state blocked and do not begin drafting in this task.
+- Decisive checks: exact URL byte comparison, Neon job/artifact/event query, artifact digest and freshness validation, retry/cap audit, no-publication-state query, independent source sample.
+- Definition of done: every authorized URL has current durable research inputs or one precise external/durable blocker, and publication can resume only from the recorded Neon state.
+- Recovery boundary: canary failure deactivates research when systemic, quarantines only the affected job when data-specific, records the exact blocker, and prevents batch dispatch or publication.
+
 ## File impact map
 
 Expected additions:
 
+- db/neon-landing-research-authority-r001.sql
+- db/neon-landing-research-authority-r001-rollback.sql
+- scripts/verify-neon-landing-research-authority-source.ts
+- scripts/activate-landing-research.ts
+- src/lib/landing-research/worker-capability.ts
+- focused R001, invocation, preflight, activation, privilege, bundle-manifest, and deployment-contract tests
 - db/neon-landing-control-v002-visibility.sql
 - db/neon-landing-control-v002-visibility-rollback.sql
 - scripts/verify-neon-visibility-migration-source.ts
@@ -1526,26 +1902,34 @@ The canonical loop survives context compaction, process restarts, model changes,
 | AC-SEQ-001 | TASK-002, TASK-003, TASK-005, TASK-010 through TASK-016 | Unverified at plan v1.0.0 creation |
 | AC-REL-001 | TASK-008, TASK-010, TASK-017 | Unverified at plan v1.0.0 creation |
 | AC-OBS-001 | TASK-009, TASK-010, TASK-012, TASK-014, TASK-015, TASK-016, TASK-018 | Unverified at plan v1.0.0 creation |
+| AC-HRA-AUTH-001 | TASK-019, TASK-022 | Added and unverified at plan v1.1.0 |
+| AC-HRA-DB-001 | TASK-020, TASK-024, TASK-026 | Added and unverified at plan v1.1.0 |
+| AC-HRA-WORKER-001 | TASK-021, TASK-023, TASK-024, TASK-026 | Added and unverified at plan v1.1.0 |
+| AC-HRA-CONTROL-001 | TASK-022, TASK-023, TASK-024, TASK-026 | Added and unverified at plan v1.1.0 |
+| AC-HRA-SEC-001 | TASK-020, TASK-021, TASK-022, TASK-024, TASK-026 | Added and unverified at plan v1.1.0 |
+| AC-HRA-DELIVERY-001 | TASK-023, TASK-025, TASK-026 | Added and unverified at plan v1.1.0 |
+| AC-HRA-CANARY-001 | TASK-027 | Added and unverified at plan v1.1.0 |
+| AC-HRA-HANDOFF-001 | TASK-027 | Added and unverified at plan v1.1.0 |
 
-No acceptance criterion is orphaned. TASK-017 is the final release/rollback packet through the ten-page production outcome. After TASK-018 and AC-OBS-001 are independently verified and both denominators reach zero, the outer canonical loop alone invokes final gates and the global completion predicate.
+No acceptance criterion is orphaned. TASK-019 through TASK-027 repair and activate the shared direct-review research prerequisite before TASK-005 can pass. TASK-017 is the final release/rollback packet through the ten-page production outcome. After TASK-018 and AC-OBS-001 are independently verified and both denominators reach zero, the outer canonical loop alone invokes final gates and the global completion predicate.
 
 ## Impediment register
 
 ### IMP-001 — External Neon and Oracle authority is not configured
 
-- Initial evidence at plan version 1.0.0: active impediment; top metadata is authoritative.
-- Severity: release-blocking. TASK-001 through TASK-004, TASK-006, and TASK-007 remain independently executable; TASK-008 onward cannot verify against the protected Neon build projection until resolution.
-- Evidence: repository planning records V001 as unapplied; the current process exposes none of the required migration/control/visibility role URL names as configured, and no approved Hermes visibility executor is present. This must be freshly reprobed because historical records may be stale.
+- Initial evidence at plan version 1.0.0, refreshed and expanded at plan version 1.1.0: active impediment; top metadata is authoritative.
+- Severity: research-, release-, and shared-visibility-prerequisite blocking. After v1.1.0 approval, TASK-019 through TASK-025 are source/disposable work; TASK-026, TASK-027, TASK-005, and all later research/release packets remain blocked until their stated external authority exists.
+- Current evidence: production Neon read-only inspection on 2026-08-12 records only P001, a disabled `central_orchestrator_v1`, `global_kill_switch=true`, zero landing jobs, and zero `ResearchSourceSnapshotBundleV1` artifacts. V001 and R001 are absent. The automation environment has none of the four authority names present. Repository source contains the direct-review worker/executors, but current preflight attempts workstation-local executor probes, checked-in `.mjs` paths lack a proven interpreter invocation, and no protected activation command exists.
 - Required external action:
-  1. Authorize a disposable Neon branch and approved migration credential through the existing secret path.
-  2. Authorize the isolated HERMES_VISIBILITY_RESEARCH_COMMAND bundle; do not authorize Oracle platform or /michael-core/hermes changes.
-  3. Provide protected least-privilege connection identities for control, research, author, release, and build contexts.
-  4. Identify the protected owner-approval identity/path.
-  5. After disposable proof, separately approve production V001/V002 migration and worker activation.
-- Exact safe resume action: run the read-only probe; verify V001 identity/checksum; apply V001 if approved and absent on disposable only; apply V002; keep both kill switches true; run TASK-005 canary; attach redacted receipts to planning.md.
+  1. First approve or reject plan amendment v1.1.0; this permits source work only.
+  2. For TASK-024, separately authorize a disposable Neon child branch, approved migration credential, temporary least-privilege principals, and bounded Oracle scratch execution of the Git-built bundle; do not authorize platform or `/michael-core/hermes` changes.
+  3. For TASK-026, after merge and disposable proof, separately authorize production V001/R001 application, protected control/worker/migration login principals, exact Git-backed bundle deployment, approved secret-path configuration, and only the required service deployment action.
+  4. Identify the distinct activation approver and retain the R001/global kill switches until capability and negative-control evidence pass.
+  5. Visibility TASK-005 later requires its own V002 visibility migration and visibility executor authority; direct-review R001 does not silently authorize that scope.
+- Exact safe resume action: after owner approval, execute TASK-019 characterization from clean current remote main. Do not request credentials or touch external systems until the source contract reaches TASK-024. At production, verify P001/V001/R001 exact hashes, deploy the merged manifest, establish a fresh worker capability, run activation check/apply, then begin TASK-027 canary.
 - Prohibited recovery: local JSON/receipt authority, hard-coded publication state, weakened gate, leaked credential, unapproved production migration, or direct Oracle modification.
 - Recovery tier: 5, external prerequisite.
-- Best verified state: source architecture and plan at origin/main 5923ad2; no migration or activation claimed.
+- Best verified state: read-only production authority snapshot plus source architecture and plan at remote-main `b5a1a647`; no migration, deployment, activation, dispatch, drafting, or publication claimed.
 
 ### IMP-002 — Search Console access and elapsed observation windows
 
@@ -1595,6 +1979,11 @@ A vendor-specific calculator, direct affiliate CTA, additional page, new analyti
 | RISK-013 Search visibility does not improve | Medium/Medium | Useful artifacts, crawlable graph, baseline and checkpoints | Diagnose query/page fit at days 28/56; amend evidence-led plan | SEO observer |
 | RISK-014 Workflow/credential logs expose secrets | Low/Critical | Stage-specific roles, redaction, name/hash/boolean-only receipts | Log scan and credential rotation incident path | Security owner |
 | RISK-015 Search Console access or elapsed checkpoint is unavailable | High/Low for release; High for completion | IMP-002, per-wave day-0 receipts, resumable dated checkpoints | Keep AC-OBS open without rolling back safe pages or claiming completion | Operator/SEO observer |
+| RISK-016 Workstation-local preflight falsely attests Oracle capability | High/Critical | Controller reads only fresh Neon `WorkerCapabilityV1`; worker probes locally | Wrong-host and stale-capability tests; activation refusal | Orchestration owner |
+| RISK-017 `.mjs` executor path cannot launch on Oracle | High/High | Shared interpreter-aware invocation resolver and Linux bundle smoke | Worker probe refusal; no capability registration | Worker owner |
+| RISK-018 Stale or replaced worker remains eligible | Medium/Critical | Expiry, fencing generation, deactivate function, exact source/manifest identity | Replacement/stale-heartbeat negative tests; kill switch | Database/worker owners |
+| RISK-019 Global switch activation opens unrelated pipeline | Medium/Critical | Require every non-research pipeline disabled in the locked activation transaction | Pipeline matrix query before/after; immediate idempotent deactivate | Activation approver |
+| RISK-020 Source repair is mistaken for deployed authority | High/High | Separate TASK-025 merge evidence from TASK-026 runtime evidence | No capability/activation status means blocked regardless of CI | Release verifier |
 
 ## Plan validation
 
@@ -1602,44 +1991,44 @@ A vendor-specific calculator, direct affiliate CTA, additional page, new analyti
 
 | Gate | Result | Evidence |
 |---|---|---|
-| SRC-01 | PASS | User, repository, prior-plan, external-document, runtime, CI, local-state, and code-graph sources are inventoried in SRC-001 through SRC-016 |
+| SRC-01 | PASS | User, repository, prior-plan, external-document, runtime, CI, local-state, code-graph, and current Neon sources are inventoried in SRC-001 through SRC-027 |
 | SRC-02 | PASS | The source authority details record location, version/date, owner, relevance, authority/state, supported claims, limitations, sensitivity, and intended use |
-| SRC-03 | PASS | Current owner request, origin/main, and production evidence supersede stale plan and dirty-checkout variants; V001 source and deployment state remain explicitly distinct |
-| SRC-04 | PASS | PRD conflict, Git-only authority rejection, stale live database state, unsupported competitor evidence, FTS limitation, and missing external credentials are recorded |
+| SRC-03 | PASS | Current owner request, remote main `b5a1a647`, and 2026-08-12 read-only Neon evidence supersede stale plan, memory, and dirty-checkout variants; V001 source and deployment state remain explicitly distinct |
+| SRC-04 | PASS | PRD conflict, Git-only authority rejection, current P001-only production state, wrong-host preflight, `.mjs` invocation gap, FTS limitation, and missing external credentials are recorded |
 | SRC-05 | PASS | Credential values and personal data are excluded; URL/database/runtime handling is minimised and redacted |
-| SRC-06 | PASS | Material conflicts were resolved by the stricter current owner/repository authority; no unanswered user choice is needed to choose the safe architecture |
-| SRC-07 | PASS | The source-use map ties material architectural, compliance, data, search, and release decisions to source IDs with limitations |
+| SRC-06 | PASS | Material conflicts were resolved by the stricter current owner/repository authority; architecture is decided, while owner approval and later external actions remain explicit gates rather than hidden design choices |
+| SRC-07 | PASS | The source-use map plus amendment register ties material architectural, compliance, data, worker, activation, search, and release decisions to source IDs with limitations |
 | SRC-08 | PASS | All planning source intake and research synthesis is embedded in this single root planning.md; disposable graph data is not a competing plan or authority |
 
 ### Discovery gates
 
 | Gate | Result | Evidence |
 |---|---|---|
-| DISC-01 | PASS | Repository identity, origin/main 5923ad2, current dirty HEAD 7a996aa, worktree state, and repository instructions were verified |
+| DISC-01 | PASS | Repository identity, remote main `b5a1a647`, preserved dirty operator checkout, clean isolated amendment worktree, and repository instructions were verified |
 | DISC-02 | PASS | Current production was reproduced through /api/deployment, homepage, review routes, sitemap, and all ten target 404 responses |
 | DISC-03 | PASS | The capability-gap chain connects absent routes and sparse topical links to the required content, discovery, evidence, and publication systems |
 | DISC-04 | PASS | Entry points, outputs, producers, consumers, shared renderers, sitemap, studio, CI, Neon, Hermes, and regression perimeter are identified |
 | DISC-05 | PASS | The old root plan, dirty partial work, origin/main studio work, and current production were reconciled without overwriting user changes |
 | DISC-06 | PASS | Installed Next 16.2.11, React 19.2.7, Zod 4.4.3, TypeScript 6.0.3 and relevant official Google/Next behavior were verified; zero new dependencies are required |
-| DISC-07 | PASS | No material unexplained code, contract, evidence, workflow, release, compliance, or operational surface remains; external activation and observation inputs are IMP-001 and IMP-002 |
+| DISC-07 | PASS | Direct-review worker/control boundaries, current Neon state, executor packaging, activation gap, and external authority are explained; activation and observation inputs remain IMP-001 and IMP-002 |
 | DISC-08 | PASS | Complete business outcome, ten mandatory paths, supporting remediation, non-goals, and no-ranking-guarantee boundary are defined |
 | DISC-09 | PASS | PRD/request, Git/Neon authority, dirty/origin variants, and initial feasibility conflicts were resolved through current authority and corrective RSH-009B |
-| DISC-10 | PASS | GitNexus was refreshed for clean origin/main and important call edges were verified in source; its unavailable FTS query did not affect dependency tracing |
+| DISC-10 | PASS | GitNexus 1.6.9 indexed `b5a1a647` and important dispatcher/preflight/Neon/worker symbol edges were verified; unavailable FTS did not affect source-level dependency tracing |
 
 ### Solution gates
 
 | Gate | Result | Evidence |
 |---|---|---|
-| SOL-01 | PASS | Ten bounded independent assignments plus corrective feasibility research completed |
-| SOL-02 | PASS | Independent source/runtime evidence is reported separately from advisor agreement |
+| SOL-01 | PASS | Original ten assignments plus amendment RSH-011 through RSH-020 completed as distinct evidence lenses |
+| SOL-02 | PASS | Current repository/Neon/runtime evidence is reported separately from the five-advisor council agreement |
 | SOL-03 | PASS | Bespoke TSX, sibling typed system, PageBlueprint widening, and hubs-only/static variants were evaluated |
-| SOL-04 | PASS | Executable contracts, runtime topology, PRD, and Neon rules distinguish and support the selected sibling system |
-| SOL-05 | PASS | Minority/adversarial findings rejected Git-only publication, changed the exemplar order, and added studio/Neon constraints |
-| SOL-06 | PASS | Typed content plus fenced Neon projection reaches the actual missing-content and authority mechanism |
+| SOL-04 | PASS | Wrong-host, interpreter, migration, role, freshness, hash, fencing, and activation tests distinguish and support the Neon-mediated capability bridge |
+| SOL-05 | PASS | Minority/adversarial findings reject env-only setup, local Hermes stand-ins, manual SQL/systemd, and premature batch dispatch |
+| SOL-06 | PASS | R001 capability authority plus worker-local probes reaches the actual missing cross-host proof without changing Hermes core |
 | SOL-07 | PASS | Existing Next/React/Zod/Playwright/pg capabilities suffice; origin/main architecture and an additive V002 are feasible |
-| SOL-08 | PASS | Compatibility, security, data, migration, deployment race, verification, and versioned rollback are explicitly designed |
-| SOL-09 | PASS | Candidate survived adversarial falsification only after the no-database publication recommendation was withdrawn |
-| SOL-10 | PASS | No high-impact choice is left to an implementer; IMP-001 and IMP-002 have exact external actions and safe boundaries |
+| SOL-08 | PASS | Compatibility, security, data minimization, migration, worker replacement, activation race, Git delivery, canary, and rollback are explicitly designed |
+| SOL-09 | PASS | Candidate survived adversarial falsification only after env-only setup and workstation-local executor attestation were withdrawn |
+| SOL-10 | PASS | No high-impact implementation choice is left open; owner approval and IMP-001/IMP-002 external actions have exact boundaries |
 | SOL-11 | PASS | PRD expansion, affiliate mode, manual approvals, calculator policy, and owner/publication authority decisions are resolved in the governance amendment |
 
 ### Route gates
@@ -1664,19 +2053,19 @@ A vendor-specific calculator, direct affiliate CTA, additional page, new analyti
 | PLAN-01 | PASS | Every requirement maps through the acceptance inventory and traceability table to implementation and independent verification |
 | PLAN-02 | PASS | Every task maps to acceptance IDs, source-backed solution boundaries, frozen interfaces, implementation scope, and decisive tests |
 | PLAN-03 | PASS | VisibilityPath, content/evidence blocks, workflow states, artifacts, roles, batch rules, and authority boundaries freeze before safe parallel work |
-| PLAN-04 | PASS | Eighteen tasks are bounded, context-safe, testable, reviewable, committable, and include recovery triggers |
+| PLAN-04 | PASS | Twenty-seven tasks are bounded, context-safe, testable, reviewable, committable, and include recovery triggers |
 | PLAN-05 | PASS | Regression, malformed/stale inputs, race behavior, zero/large calculator cases, pre-existing dirty work, and production failures are covered |
 | PLAN-06 | PASS | Security, privacy, data ownership, compatibility, migration, deployment, rollback, release, and observation are covered |
 | PLAN-07 | PASS | The dependency graph is acyclic and shared-file ownership rules prevent unsafe parallel overlap |
 | PLAN-08 | PASS | No implementation choice, hidden mandatory deferral, unsupported precision, unrelated refactor, or unbounded page expansion remains |
-| PLAN-09 | PASS | RSH-010 inspected underlying evidence and attempted to disprove completeness; the exact-file follow-up is recorded before final handoff |
-| PLAN-10 | PASS | Independent adversarial re-audit of substantive plan blob 86998bc514eb79e3209feb7855a76c74ba95e288 found no remaining Critical or Important contradiction; this row/timestamp update was explicitly authorized |
+| PLAN-09 | PASS | RSH-010 and amendment RSH-020 inspected underlying evidence and attempted to disprove completeness; wrong-host, stale-worker, wrong-hash, privilege, and activation cases are explicit |
+| PLAN-10 | PASS | Five independent council answers, blind cross-ranking, debate, and chair verdict converged on the selected architecture while preserving criticisms as tests and approval gates |
 | PLAN-11 | PASS | This single planning.md contains sources, research, architecture, requirements, interfaces, packets, commands, evidence, release, rollback, impediment, loop, and rehydration |
-| PLAN-12 | PASS WITH IMPEDIMENT | IMP-001 does not prevent clean source implementation/noindex previews but blocks activation/publication; IMP-002 blocks only final observation/completion; both have exact actions |
+| PLAN-12 | USER ACTION REQUIRED WITH IMPEDIMENT | Amendment source implementation waits for owner approval; afterward IMP-001 permits TASK-019 through TASK-025 but blocks production TASK-026/TASK-027 and publication, while IMP-002 blocks final observation/completion |
 | PLAN-13 | NOT APPLICABLE | Tier 4 exhaustive evidence recovery was not triggered; ordinary Full-profile research established a viable solution |
 | PLAN-14 | PASS | The versioned Part I evidence loop is embedded verbatim and is executable without the external protocol |
 | PLAN-15 | PASS | Top metadata is the sole mutable state; task/traceability states are creation-time snapshots and future receipts are append-only |
-| PLAN-16 | PASS | Complete 18-task and 20-acceptance inventories, invariants, named change approver, old/new denominator preservation, and replacement-verification rules exist |
+| PLAN-16 | PASS | Complete 27-task and 28-acceptance inventories, invariants, named change approver, old/new denominator preservation, and replacement-verification rules exist |
 | PLAN-17 | PASS | The embedded loop selects the highest-priority unmet acceptance ID and then its first dependency-ready task, adding minimal coverage under change control when absent |
 | PLAN-18 | PASS | Every task and acceptance has a decisive check and distinct verifier; stale evidence reopening is mandatory |
 | PLAN-19 | PASS | Two materially different no-progress strategies trigger focused replanning or recovery-tier escalation |
@@ -1692,11 +2081,11 @@ Append one receipt after each implementation or recovery iteration. Do not edit 
 
 ```yaml
 iteration: 1
-timestamp_utc: 2026-08-08T00:00:00Z
-plan_version: 1.0.0
-task_id: TASK-001
+timestamp_utc: 2026-08-12T00:00:00Z
+plan_version: 1.1.0
+task_id: TASK-019
 acceptance_ids_advanced:
-  - AC-AUTH-001
+  - AC-HRA-AUTH-001
 implementer: named-person-or-agent
 implementer_route: ROUTE-PREMIUM-REASONING
 verifier: distinct-named-person-or-agent
@@ -1716,8 +2105,8 @@ newly_verified_tasks: 0
 newly_verified_acceptance_ids: 0
 impediment_change: none-or-exact-change
 denominator_check:
-  tasks: "18 = verified + remaining"
-  acceptance: "20 = verified + remaining"
+  tasks: "27 = verified + remaining"
+  acceptance: "28 = verified + remaining"
 best_verified_commit: 40-character-sha
 next_exact_action: one executable action
 ```
@@ -1732,16 +2121,25 @@ A fresh implementer must:
 2. Inspect git status, branch, HEAD, origin/main, worktrees, and diff. Never assume the current checkout is the planned clean worktree.
 3. Record current_head and current_environment_fingerprint only in top metadata.
 4. Recalculate both denominators and reopen evidence bound to another HEAD/environment.
-5. Reconcile approved-urls.md byte-for-byte and verify the two live review paths.
-6. Read the current Neon probe/impediment record without exposing secrets.
+5. Reconcile approved-urls.md byte-for-byte, record its hash, and verify the two live review paths.
+6. Read the current Neon probe/impediment and `WorkerCapabilityV1` record without exposing secrets; source files and historical receipts are never durable runtime authority.
 7. Confirm the current task's dependencies, allowed/forbidden files, route, verifier, and decisive check.
-8. Continue unaffected work when IMP-001 or IMP-002 remains; do not cross IMP-001's publication boundary or claim final completion before IMP-002.
+8. Require v1.1.0 approval before TASK-019; continue only its dependency-ready source work when IMP-001 remains, do not cross TASK-024/TASK-026 external-approval boundaries, and do not claim final completion before IMP-002.
 9. Execute one bounded task, self-test, inspect diff, obtain distinct verification, and append one receipt.
 10. Report preview, eligible, deploying, LIVE, blocked, and rolled back as distinct states.
 
 ## Planning completion statement
 
-This plan covers the ten-page visibility objective, its governance conflict, evidence burden, user value, code architecture, durable workflow, internal linking, technical SEO, studio remediation, testing, privacy, CI, production verification, measurement, and rollback. Implementation began on 2026-08-08 in a clean isolated worktree. Activation/publication remain externally blocked by IMP-001 until Neon and Oracle authority is supplied and proven; global completion remains blocked by IMP-002 until read-only Search Console access and the day-56 observation are satisfied. No page, migration, deployment, or external system has been changed by this source-only implementation start.
+This single plan covers the ten-page visibility objective and the newly exposed Hermes research-authority prerequisite: governance, evidence, code architecture, Neon durability, Oracle worker capability, least privilege, activation, exact-URL canary, CI/Git delivery, publication gates, measurement, and rollback. Plan version 1.0.0 implementation history is retained below. Amendment v1.1.0 source work is now implemented but remains unverified until independent review and Git delivery. Production activation/publication remain externally blocked by IMP-001 until V001/R001, credentials, the Git-backed worker, and canary evidence are separately authorized and proven; global completion remains blocked by IMP-002 until read-only Search Console access and the day-56 observation are satisfied. This source packet did not migrate, deploy, configure Oracle, dispatch, draft, publish, or alter an external system.
+
+## Implementation receipt — Hermes authority source packet
+
+- Timestamp: 2026-08-12; base: remote main `b5a1a64733eef1036e593cdb1cf6d0123b286f88`; isolated branch: `codex/hermes-authority-remediation-plan-20260812`.
+- Scope: source implementation for TASK-019 through TASK-023 only. Added R001 capability migration and guarded rollback, controller-only preflight, shared `.mjs` invocation resolver, worker-local executor probes and capability registration, explicit activation check/apply command, deterministic bundle manifest, CI source/bundle checks, and focused tests.
+- Self-verification: 16 focused landing/Hermes/migration tests passed; V001 and R001 source verifiers passed; bundled worker syntax, bundle manifest, and both executor probes passed; `git diff --check` passed.
+- Broader local suite: `npm test` was attempted but is not acceptance evidence in this isolated worktree. It failed in pre-existing generated-page/visual-cli cases because child processes resolve a missing worktree-local `node_modules/tsx` path and release fixtures are absent; the Hermes-focused suite above remained green. Hosted clean-checkout CI is the required delivery gate.
+- Boundary: no Neon migration was applied, no Oracle service/config/runtime was changed, no credential value was read or emitted, no URL was dispatched, and no publication state advanced.
+- Remaining gates: independent review plus merged remote-main delivery; then separate disposable Neon and bounded Oracle authority for TASK-024. No task or acceptance criterion is yet independently verified.
 
 ## Implementation receipt — iteration 1
 

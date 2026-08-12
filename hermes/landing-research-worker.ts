@@ -1,5 +1,6 @@
-import { randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { promisify } from "node:util";
 
 import { assertSafePublicHttpsUrl } from "../src/lib/landing-research/network-safety";
 import {
@@ -9,11 +10,12 @@ import {
   canonicalJsonDigest,
   type HermesExecutorRequestV1,
 } from "../src/lib/landing-research/contracts";
-import { ExecutorError, runApprovedExecutor } from "../src/lib/landing-research/executor";
+import { ExecutorError, resolveApprovedExecutorInvocation, runApprovedExecutor } from "../src/lib/landing-research/executor";
 import { createNeonPool, NeonResearchWorker, type ClaimedResearchStage } from "../src/lib/landing-research/neon";
 
 const IDENTITY_TIMEOUT_MS = 120_000;
 const RESEARCH_TIMEOUT_MS = 900_000;
+const execFileAsync = promisify(execFile);
 
 function requiredEnvironment(name: string): string {
   const value = process.env[name]?.trim();
@@ -26,7 +28,28 @@ function safeExecutorEnvironment(): Record<string, string | undefined> {
 }
 
 function workerId(): string {
-  return process.env.HERMES_LANDING_WORKER_ID?.trim() || `oracle-hermes-research-${randomUUID()}`;
+  return requiredMatch("HERMES_LANDING_WORKER_ID", /^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$/);
+}
+
+function requiredMatch(name: string, expression: RegExp): string {
+  const value = requiredEnvironment(name);
+  if (!expression.test(value)) throw new Error(`${name} is invalid.`);
+  return value;
+}
+
+async function probeExecutor(commandPath: string, capability: "hermes_product_identity" | "hermes_research"): Promise<void> {
+  const invocation = resolveApprovedExecutorInvocation(commandPath);
+  const result = await execFileAsync(invocation.command, [...invocation.args, "--probe"], {
+    shell: false,
+    timeout: 5_000,
+    maxBuffer: 64 * 1024,
+    windowsHide: true,
+    env: { NODE_ENV: process.env.NODE_ENV ?? "production", ...safeExecutorEnvironment() },
+  });
+  const output = result.stdout.trim();
+  if (!output || output.includes("\n")) throw new Error(`${capability} probe returned invalid output.`);
+  const parsed = hermesExecutorCapabilitiesSchema.safeParse(JSON.parse(output));
+  if (!parsed.success || parsed.data.capability !== capability) throw new Error(`${capability} probe did not satisfy the approved contract.`);
 }
 
 async function processClaim(db: NeonResearchWorker, claim: ClaimedResearchStage, idCommand: string, researchCommand: string): Promise<void> {
@@ -86,10 +109,24 @@ async function main(): Promise<void> {
   try {
     if (process.argv.includes("--probe")) {
       await db.probe();
+      await probeExecutor(idCommand, "hermes_product_identity");
+      await probeExecutor(researchCommand, "hermes_research");
       process.stdout.write(`${JSON.stringify(hermesExecutorCapabilitiesSchema.parse({ schema_version: "HermesExecutorCapabilitiesV1", capability: "hermes_research", contract_version: "HermesResearchContractV1", supports: ["--probe", "stdin-json"] }))}\n`);
       return;
     }
+    const sourceCommitSha = requiredMatch("HERMES_WORKER_SOURCE_COMMIT_SHA", /^[a-f0-9]{40}$/);
+    const bundleSha256 = requiredMatch("HERMES_WORKER_BUNDLE_SHA256", /^[a-f0-9]{64}$/);
+    const fenceGeneration = BigInt(requiredMatch("HERMES_WORKER_FENCE_GENERATION", /^[1-9][0-9]*$/));
     do {
+      const registered = await db.registerCapability({
+        workerId: id,
+        fenceGeneration,
+        sourceCommitSha,
+        bundleSha256,
+        identityContractVersion: "HermesResearchContractV1",
+        researchContractVersion: "HermesResearchContractV1",
+      });
+      if (!registered) throw new Error("Neon rejected the worker capability fence generation.");
       const claim = await db.claim(id);
       if (!claim) {
         if (process.argv.includes("--once")) return;

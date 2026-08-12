@@ -38,6 +38,25 @@ export type ResearchJobStatus = {
 
 export type ResearchDispatchResult = ResearchJobStatus & { created: boolean };
 
+export type FreshWorkerCapability = {
+  bundle_sha256: string;
+  expires_at: string;
+  fence_generation: string;
+  identity_contract_version: string;
+  research_contract_version: string;
+  source_commit_sha: string;
+  worker_id: string;
+};
+
+export type WorkerCapabilityRegistration = {
+  bundleSha256: string;
+  fenceGeneration: bigint;
+  identityContractVersion: string;
+  researchContractVersion: string;
+  sourceCommitSha: string;
+  workerId: string;
+};
+
 export class NeonResearchControl {
   constructor(private readonly pool: Pool) {}
 
@@ -67,6 +86,13 @@ export class NeonResearchControl {
     return result.rows;
   }
 
+  async freshWorkerCapability(): Promise<FreshWorkerCapability | null> {
+    const result = await this.pool.query<FreshWorkerCapability>(
+      `select * from ${SCHEMA}.inspect_fresh_worker_capability()`,
+    );
+    return result.rows[0] ?? null;
+  }
+
   async close(): Promise<void> {
     await this.pool.end();
   }
@@ -92,6 +118,21 @@ export class NeonResearchWorker {
     await this.pool.query("select 1");
     const result = await this.pool.query<{ probe_worker: boolean }>(`select ${SCHEMA}.probe_worker()`);
     if (!result.rows[0]?.probe_worker) throw new Error("Neon landing_control_v2 worker authority is not installed.");
+  }
+
+  async registerCapability(capability: WorkerCapabilityRegistration): Promise<boolean> {
+    const result = await this.pool.query<{ register_worker_capability: boolean }>(
+      `select ${SCHEMA}.register_worker_capability($1, $2::bigint, $3, $4, $5, $6, 120)`,
+      [
+        capability.workerId,
+        capability.fenceGeneration.toString(),
+        capability.sourceCommitSha,
+        capability.bundleSha256,
+        capability.identityContractVersion,
+        capability.researchContractVersion,
+      ],
+    );
+    return result.rows[0]?.register_worker_capability === true;
   }
 
   async claim(workerId: string): Promise<ClaimedResearchStage | null> {
