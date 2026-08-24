@@ -100,6 +100,7 @@ button, input, textarea, select { font: inherit; }
 
 .review-list { border-top: 1px solid var(--ink); }
 .review-card { display: grid; grid-template-columns: minmax(5rem, .3fr) 2fr; gap: 2rem; padding: clamp(2rem, 4vw, 4rem) 0; border-bottom: 1px solid var(--rule); }
+.review-list > .review-card:last-child { border-bottom: 0; }
 .review-card__index { color: var(--clay); font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 7vw, 7rem); line-height: .8; }
 .review-card__body { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem 3rem; }
 .review-card__body > .eyebrow, .review-card__body > h3 { grid-column: 1 / -1; }
@@ -111,7 +112,7 @@ button, input, textarea, select { font: inherit; }
 .review-card__signals dt { color: var(--clay); font-size: .62rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .review-card__signals dd { margin: .35rem 0 0; font-size: .82rem; line-height: 1.5; }
 .text-link { align-self: end; justify-self: start; border-bottom: 1px solid currentColor; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.empty-review-state { display: grid; grid-template-columns: minmax(7rem, .6fr) 2fr; align-items: start; gap: 2rem; padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.empty-review-state { display: grid; grid-template-columns: minmax(7rem, .6fr) 2fr; align-items: start; gap: 2rem; padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--ink); }
 .empty-review-state span { color: var(--clay); font-family: Georgia, "Times New Roman", serif; font-size: clamp(4rem, 10vw, 9rem); line-height: .75; }
 .empty-review-state p { max-width: 46rem; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.5rem, 3vw, 2.8rem); line-height: 1.15; letter-spacing: -.025em; }
 
