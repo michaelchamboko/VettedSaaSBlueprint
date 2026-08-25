@@ -70,8 +70,9 @@ async function main() {
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         brokenImages: [...document.images].filter((image) => image.complete && image.naturalWidth === 0).map((image) => image.currentSrc || image.src),
         blogNav: Boolean(document.querySelector('nav a[href="/blog"]')),
+        brandMentionsInTitle: document.title.match(/VettedSaaSBlueprint/g)?.length ?? 0,
       }));
-      if (indexCheck.h1 !== 1 || indexCheck.links < 10 || indexCheck.overflow > 1 || indexCheck.brokenImages.length || !indexCheck.blogNav) {
+      if (indexCheck.h1 !== 1 || indexCheck.links < 10 || indexCheck.overflow > 1 || indexCheck.brokenImages.length || !indexCheck.blogNav || indexCheck.brandMentionsInTitle !== 1) {
         throw new Error(`Blog index failed ${viewport.name} checks: ${JSON.stringify(indexCheck)}`);
       }
       await page.screenshot({ path: path.join(output, `blog-index-${viewport.name}.png`), fullPage: true });
@@ -91,10 +92,11 @@ async function main() {
             faqs: document.querySelectorAll(".blog-faq details").length,
             overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
             brokenImages: [...document.images].filter((image) => image.complete && image.naturalWidth === 0).map((image) => image.currentSrc || image.src),
+            brandMentionsInTitle: document.title.match(/VettedSaaSBlueprint/g)?.length ?? 0,
             schemas,
           };
         });
-        if (check.h1 !== 1 || !check.article || check.sources < 3 || check.faqs < 3 || check.overflow > 1 || check.brokenImages.length || !["Article", "FAQPage", "BreadcrumbList"].every((type) => check.schemas.includes(type))) {
+        if (check.h1 !== 1 || !check.article || check.sources < 3 || check.faqs < 3 || check.overflow > 1 || check.brokenImages.length || check.brandMentionsInTitle !== 1 || !["Article", "FAQPage", "BreadcrumbList"].every((type) => check.schemas.includes(type))) {
           throw new Error(`${post.slug} failed ${viewport.name} checks: ${JSON.stringify(check)}`);
         }
         results.push({ slug: post.slug, viewport: viewport.name, ...check });

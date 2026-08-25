@@ -6,7 +6,7 @@ import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { listPublishedBlogPosts } from "@/lib/blog/catalogue";
 
 export const metadata: Metadata = {
-  title: "Evidence-led SaaS buying guides | VettedSaaSBlueprint",
+  title: "Evidence-led SaaS buying guides",
   description: "Practical, source-led guides for testing software, data, controls, and buying claims before a team commits.",
   alternates: { canonical: "/blog" },
 };

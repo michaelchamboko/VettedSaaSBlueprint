@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const post = getPublishedBlogPost((await params).slug);
   if (!post) return { title: "Article not found" };
   return {
-    title: `${post.title} | VettedSaaSBlueprint`,
+    title: post.title,
     description: post.description,
     alternates: { canonical: post.canonicalPath },
     openGraph: {

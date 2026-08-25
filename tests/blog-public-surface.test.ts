@@ -23,6 +23,8 @@ test("blog routes provide metadata, article schema, FAQs, and static params", ()
   assert.match(article, /Article/);
   assert.match(structuredData, /FAQPage/);
   assert.match(structuredData, /BreadcrumbList/);
+  assert.doesNotMatch(index, /title:.*VettedSaaSBlueprint/);
+  assert.doesNotMatch(article, /title:.*VettedSaaSBlueprint/);
 });
 
 test("blog discovery is included in sitemap, RSS, robots, and llms.txt", () => {
