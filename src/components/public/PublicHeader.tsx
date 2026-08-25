@@ -9,6 +9,7 @@ export function PublicHeader() {
       </Link>
       <nav aria-label="Primary navigation">
         <Link href="/#reviews">Reviews</Link>
+        <Link href="/blog">Blog</Link>
         <Link href="/#how-we-vet">How we vet</Link>
         <Link href="/editorial-policy">Editorial policy</Link>
         <Link href="/affiliate-disclosure">Affiliate disclosure</Link>

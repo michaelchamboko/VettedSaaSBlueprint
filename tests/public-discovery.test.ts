@@ -24,6 +24,7 @@ test("sitemap contains the public home and every legal route", () => {
     "/editorial-policy",
     "/paia",
     "/accessibility",
+    "/blog",
   ]);
   assert.ok(entries.slice(1).every((entry) => entry.lastModified === "2027-07-10"));
 });

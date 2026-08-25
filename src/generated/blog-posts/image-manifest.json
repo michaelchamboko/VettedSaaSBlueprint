@@ -1,0 +1,18 @@
+{
+  "generator": "OpenAI built-in imagegen",
+  "generatedAt": "2026-08-25T18:17:05.000Z",
+  "mode": "photorealistic editorial photography",
+  "sharedDirection": "Warm cream paper, charcoal ink, muted sage and restrained terracotta; natural daylight; documentary realism; no readable text, logos, watermarks, fake UI, neon, or invented metrics.",
+  "assets": [
+    {"article":"production-ready-ai-voice-cloning-checklist","heroPrompt":"Audio producer reviewing a voice waveform and consent checklist in a controlled studio.","figurePrompt":"Headphones, scripts, waveform printouts, recorder, and pencil in an evidence workspace."},
+    {"article":"email-automation-workflow-fit","heroPrompt":"Marketing operator arranging physical event cards into an email workflow.","figurePrompt":"Overhead customer event map with cards, connecting lines, notebook, and keyboard."},
+    {"article":"ecommerce-segmentation-data-audit","heroPrompt":"Ecommerce analyst checking audience cards against order and product records.","figurePrompt":"Field map linking customer, product, order, refund, and consent records."},
+    {"article":"practice-management-migration-checklist","heroPrompt":"Clinic operations team privately reconciling migration records.","figurePrompt":"Migration folders, reconciliation checklist, encrypted drive, calendar, and pencil."},
+    {"article":"marketplace-profit-data-quality","heroPrompt":"Marketplace operator reconciling invoices, fees, inventory notes, and calculator.","figurePrompt":"Layered order, fee, advertising, return, and inventory cost records."},
+    {"article":"ai-creative-score-validation","heroPrompt":"Creative team comparing concepts against a controlled experiment plan.","figurePrompt":"Evidence board for predictions, control, results, and learning."},
+    {"article":"ai-dubbing-localization-qa","heroPrompt":"Localization team reviewing multilingual audio against timed video context.","figurePrompt":"Audio drive, headphones, caption timelines, glossary cards, and approvals."},
+    {"article":"patient-portal-launch-controls","heroPrompt":"Clinic administrator testing a portal launch checklist in private.","figurePrompt":"Accessible patient journey cards for identity, messages, records, support, and recovery."},
+    {"article":"governed-enterprise-ai-evidence-chain","heroPrompt":"Cross-functional governance team connecting evidence and reviewing an approval packet.","figurePrompt":"Versioned records for purpose, data, tests, controls, monitoring, and approval."},
+    {"article":"abandoned-cart-event-readiness","heroPrompt":"Ecommerce operator tracing a cart event through a controlled email workflow.","figurePrompt":"Cart, identity, consent, completion, message, and measurement event chain."}
+  ]
+}

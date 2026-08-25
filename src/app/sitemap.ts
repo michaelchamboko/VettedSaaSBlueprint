@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { listPublishedBlogPosts } from "@/lib/blog/catalogue";
+import type { BlogPost } from "@/lib/blog/contracts";
 import {
   listPublishedLandingPageSummaries,
   type PublicReviewSummary,
@@ -21,12 +23,14 @@ const publicRoutes = [
   "/editorial-policy",
   "/paia",
   "/accessibility",
+  "/blog",
 ] as const;
 
 export function buildPublicSitemap(
   config: PublicSiteConfig,
   reviews: PublicReviewSummary[],
   visibility: VisibilityPublicationSummary[] = [],
+  blog: BlogPost[] = [],
 ): MetadataRoute.Sitemap {
   const staticEntries = publicRoutes.map<MetadataRoute.Sitemap[number]>(
     (route) => ({
@@ -48,7 +52,13 @@ export function buildPublicSitemap(
     changeFrequency: "weekly",
   }));
 
-  return [...staticEntries, ...reviewEntries, ...visibilityEntries];
+  const blogEntries = blog.map<MetadataRoute.Sitemap[number]>((post) => ({
+    url: new URL(post.canonicalPath, config.canonicalOrigin).toString(),
+    lastModified: post.modifiedAt,
+    changeFrequency: "monthly",
+  }));
+
+  return [...staticEntries, ...reviewEntries, ...visibilityEntries, ...blogEntries];
 }
 
 export const dynamic = "force-dynamic";
@@ -59,5 +69,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     loadPublicSiteConfig(),
     listPublishedLandingPageSummaries(),
     listPublishedVisibilityPageSummaries(),
+    listPublishedBlogPosts(),
   );
 }
