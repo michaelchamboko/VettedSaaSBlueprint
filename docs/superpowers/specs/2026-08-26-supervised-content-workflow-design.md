@@ -7,24 +7,26 @@ Replace the unfinished infrastructure-dependent landing workflow with one superv
 The active workflow must not require:
 
 - Neon as workflow or publication authority.
-- Oracle or Hermes as the research executor.
+- Oracle as an application database, publication store, analytics store, or runtime dependency.
+- Hermes as a local or remote worker.
 - LP002 or another durable publication coordinator.
+- GitHub Actions, hosted runners, bot publication, required checks, or workflow artifact uploads.
 
 These dependencies created a permanent pre-research block without improving the accuracy of the two pages that were actually published.
 
 ## Outcome
 
-An operator can give an approved agent one buyer decision and receive a review or cluster candidate within a bounded session. The agent gathers current evidence, labels uncertainty honestly, produces structured repository artifacts, runs one consolidated content-quality gate, and releases through the existing GitHub and Vercel path.
+An operator can give an approved agent one buyer decision and receive a review or cluster candidate within a bounded session. The agent gathers current evidence, labels uncertainty honestly, produces structured repository artifacts, runs one consolidated content-quality gate, and releases through GitHub source control and Vercel deployment.
 
 The target flow is:
 
-`buyer decision -> bounded evidence sprint -> structured content -> consolidated quality gate -> GitHub/Vercel release -> live verification`
+`buyer decision -> bounded evidence sprint -> structured content -> consolidated quality gate -> Git merge -> Vercel deploy -> live verification`
 
 ## Scope
 
-This change owns direct-review and visibility-cluster content production. It removes active landing-workflow code, commands, tests, skills, and documentation that exist only to impose the three deleted dependencies.
+This change owns the complete static-site publication path. It removes active code, commands, tests, skills, workflows, database assets, and documentation that depend on the deleted infrastructure.
 
-It does not remove Neon from unrelated application data features, Oracle from unrelated infrastructure, or Vercel from hosting. Git history remains the historical record; active documentation must not instruct agents to restore the retired control plane.
+The resulting product is a static-first public content site. It has no application database, admin or authentication surface, remote worker, job queue, analytics ingestion endpoint, or GitHub-hosted CI requirement. GitHub stores and merges source; Vercel builds and deploys `main`. Git history remains the archive; active documentation must not instruct agents to restore the retired systems.
 
 ## Four-stage workflow
 
@@ -65,13 +67,13 @@ The validator returns `pass`, `repair`, or `blocked`, with field-level findings.
 Use a normal Git-backed release:
 
 1. Commit the structured evidence and content artifacts.
-2. Open the repository's accepted pull-request path.
-3. Run focused tests, type checking, linting, build, and a Vercel preview.
+2. Run focused tests, type checking, linting, and build locally in a clean worktree.
+3. Push or merge through the repository's accepted Git path and inspect the Vercel preview when one is produced.
 4. Verify disclosure, exact CTA, canonical and robots values, desktop/mobile rendering, links, and browser health.
 5. Merge and allow the Vercel Git integration to deploy `main`.
 6. Verify the canonical production route and sitemap entry.
 
-The merge commit, deployed commit, and live verification result are sufficient release evidence. No separate database publication authority or coordinator receipt is required.
+The merge commit, deployed commit, and live verification result are sufficient release evidence. No database publication authority, coordinator receipt, GitHub Actions check, or runner artifact is required.
 
 ## Error handling
 
@@ -89,27 +91,30 @@ Implementation will:
 - replace the fourteen-stage landing registry with the four stages above;
 - replace the active workflow documentation and skill instructions;
 - remove landing research commands, contracts, migrations, worker code, operational files, and tests whose sole purpose is Neon, Oracle/Hermes, or LP002 authority;
+- remove the Oracle application database, admin/auth surfaces, database-backed tracking and redirect routes, database publication code, schemas, migrations, drivers, and environment variables;
+- remove GitHub Actions workflows, hosted-runner expectations, bot publication, and workflow artifact handling;
 - remove the obsolete authority sections from active planning material;
 - add a bounded evidence contract and consolidated quality result;
 - adapt direct reviews and visibility clusters to the shared supervised workflow; and
-- preserve existing published pages, affiliate URLs, disclosures, metadata, and release receipts as historical publication artifacts.
+- preserve existing published pages, affiliate URLs, disclosures, metadata, and useful release history while migrating render-time data to repository files.
 
 ## Verification
 
 The change is complete only when:
 
-- repository search finds no active landing or cluster requirement for Neon authority, Oracle/Hermes research, or LP002;
+- repository search finds no active requirement or runtime dependency for Neon, Oracle, Hermes, LP002, GitHub Actions, or hosted runners;
 - the workflow description exposes exactly four stages;
 - a fixture can move from buyer decision to release eligibility without database or remote-worker configuration;
 - unsupported high-risk claims fail or are omitted;
 - exact affiliate URLs and disclosure remain enforced;
 - existing published review and blog tests pass;
-- focused workflow tests, type checking, linting, and build pass; and
+- focused workflow tests, type checking, linting, and build pass locally from a clean checkout; and
 - the Git-backed Vercel deployment is verified after merge.
 
 ## Explicit non-goals
 
 - Fully autonomous unattended publishing.
 - Reintroducing a workflow database or remote research worker.
+- Reintroducing application database, admin/auth, database analytics, or GitHub Actions infrastructure.
 - Fabricating hands-on evidence when product access is unavailable.
 - Weakening affiliate disclosure, evidence accuracy, accessibility, or deployment verification.
