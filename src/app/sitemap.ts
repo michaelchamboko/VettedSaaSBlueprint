@@ -36,7 +36,6 @@ export function buildPublicSitemap(
     (route) => ({
       url: new URL(route, config.canonicalOrigin).toString(),
       changeFrequency: route === "/" ? "weekly" : "monthly",
-      ...(route === "/" ? {} : { lastModified: config.policies.reviewDate }),
     }),
   );
 

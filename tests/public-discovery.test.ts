@@ -26,7 +26,7 @@ test("sitemap contains the public home and every legal route", () => {
     "/accessibility",
     "/blog",
   ]);
-  assert.ok(entries.slice(1).every((entry) => entry.lastModified === "2027-07-10"));
+  assert.ok(entries.every((entry) => entry.lastModified === undefined));
 });
 
 test("sitemap includes only review summaries supplied by the audited publication catalogue", () => {
