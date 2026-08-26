@@ -12,6 +12,7 @@ export function PublicHeader() {
         <Link href="/#how-we-vet">How we vet</Link>
         <Link href="/editorial-policy">Editorial policy</Link>
         <Link href="/affiliate-disclosure">Affiliate disclosure</Link>
+        <Link href="/blog">Blog</Link>
       </nav>
     </header>
   );
