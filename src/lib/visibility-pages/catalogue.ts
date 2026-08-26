@@ -96,7 +96,7 @@ export function loadPublishedVisibilityPagesFromDirectories(
     const authority = projections.get(entry.path);
     if (!authority || authority.id !== entry.id) continue;
     if (authority.artifact_sha256 !== entry.artifact_sha256 || authority.evidence_sha256 !== entry.evidence_sha256) {
-      throw new Error(`Neon projection hash mismatch for "${entry.path}".`);
+      throw new Error(`Visibility projection hash mismatch for "${entry.path}".`);
     }
 
     const artifactPath = resolveSafeJson(generatedDirectory, entry.artifact);
@@ -113,7 +113,7 @@ export function loadPublishedVisibilityPagesFromDirectories(
     }
     const expiry = earliestExpiry(evidence, page.claim_ids);
     if (expiry !== authority.earliest_expires_at) {
-      throw new Error(`Neon projection expiry mismatch for "${entry.path}".`);
+      throw new Error(`Visibility projection expiry mismatch for "${entry.path}".`);
     }
     published.push({
       page,

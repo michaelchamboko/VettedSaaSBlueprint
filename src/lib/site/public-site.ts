@@ -7,8 +7,6 @@ const environmentSchema = z.object({
   PUBLIC_SITE_ORIGIN: z.string().optional(),
   PUBLIC_POLICY_EFFECTIVE_DATE: z.string().optional(),
   INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: z.string().optional(),
-  ANALYTICS_ENABLED: z.string().optional(),
-  ANALYTICS_RETENTION_VERIFIED_AT: z.string().optional(),
 });
 
 export type PublicSiteConfig = {
@@ -33,11 +31,6 @@ export type PublicSiteConfig = {
       country: "South Africa";
     };
   };
-  analytics: {
-    enabled: boolean;
-    rawEventRetentionDays: 90;
-    aggregateRetentionMonths: 24;
-  };
   policies: {
     effectiveDate: string;
     reviewDate: string;
@@ -59,7 +52,7 @@ function isIsoCalendarDate(value: string): boolean {
 }
 
 function isIsoTimestamp(value: string): boolean {
-  return z.string().datetime({ offset: true }).safeParse(value).success;
+  return Number.isFinite(Date.parse(value));
 }
 
 function reviewDateFor(effectiveDate: string): string {
@@ -95,7 +88,6 @@ export function loadPublicSiteConfig(
   const effectiveDate = parsed.PUBLIC_POLICY_EFFECTIVE_DATE ?? "";
   const registrationConfirmedAt =
     parsed.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT ?? "";
-  const retentionVerifiedAt = parsed.ANALYTICS_RETENTION_VERIFIED_AT ?? "";
 
   return {
     brandName: "VettedSaaSBlueprint",
@@ -118,13 +110,6 @@ export function loadPublicSiteConfig(
         province: "Gauteng",
         country: "South Africa",
       },
-    },
-    analytics: {
-      enabled:
-        parsed.ANALYTICS_ENABLED === "true" &&
-        isIsoTimestamp(retentionVerifiedAt),
-      rawEventRetentionDays: 90,
-      aggregateRetentionMonths: 24,
     },
     policies: {
       effectiveDate,

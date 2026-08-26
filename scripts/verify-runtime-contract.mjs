@@ -8,12 +8,11 @@ const expectedNodeEngine = "24.x";
 const expectedNpmEngine = ">=11 <12";
 const expectedLockfileVersion = 3;
 
-export function validateRuntimeContract({ packageJson, packageLock, workflowText, nodeVersionFile }) {
+export function validateRuntimeContract({ packageJson, packageLock, nodeVersionFile }) {
   const errors = [];
   const sections = ["dependencies", "devDependencies"];
   const safePackageJson = packageJson ?? {};
   const safePackageLock = packageLock ?? {};
-  const safeWorkflowText = typeof workflowText === "string" ? workflowText : "";
 
   if (safePackageLock?.lockfileVersion !== expectedLockfileVersion) {
     errors.push(
@@ -48,10 +47,6 @@ export function validateRuntimeContract({ packageJson, packageLock, workflowText
     errors.push(`.nvmrc must contain 24; received ${normalizedNodeVersion || "missing"}`);
   }
 
-  const runtimeValues = [...safeWorkflowText.matchAll(/node-version:\s*([0-9]+)/g)].map((match) => match[1]);
-  if (runtimeValues.length === 0 || runtimeValues.some((value) => value !== expectedNodeVersion)) {
-    errors.push(".github/workflows/preview-build.yml contains node-version values other than 24");
-  }
   return { errors };
 }
 
@@ -59,13 +54,11 @@ function main() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   let packageJson;
   let packageLock;
-  let workflowText;
   let nodeVersionFile;
 
   try {
     packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
     packageLock = JSON.parse(readFileSync(path.join(root, "package-lock.json"), "utf8"));
-    workflowText = readFileSync(path.join(root, ".github/workflows/preview-build.yml"), "utf8");
     nodeVersionFile = readFileSync(path.join(root, ".nvmrc"), "utf8");
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
@@ -73,7 +66,7 @@ function main() {
     return;
   }
 
-  const { errors } = validateRuntimeContract({ packageJson, packageLock, workflowText, nodeVersionFile });
+  const { errors } = validateRuntimeContract({ packageJson, packageLock, nodeVersionFile });
 
   if (errors.length > 0) {
     for (const error of errors) console.error(error);

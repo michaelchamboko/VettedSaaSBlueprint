@@ -51,7 +51,7 @@ test("discovery omits a page at its expiry boundary", () => {
 });
 
 test("visibility content rejects raw markup and affiliate destinations", () => {
-  assert.throws(() => assertNoAffiliateUrl("https://example.com/r/affiliate"));
+  assert.throws(() => assertNoAffiliateUrl("https://example.com/affiliate-redirect"));
   assert.ok(!visibilityPageSchema.safeParse({
     schema_version: "VisibilityPageV1",
     id: "safe-page",

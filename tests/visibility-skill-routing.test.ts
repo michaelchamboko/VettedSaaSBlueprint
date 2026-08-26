@@ -18,13 +18,13 @@ test("visibility skills exist and prohibit direct affiliate ownership", () => {
     const source = readFileSync(file, "utf8");
     assert.match(source, /VisibilityPageV1/);
     assert.match(source, /no direct affiliate URL/i);
-    assert.match(source, /Neon.*publication authority/i);
+    assert.doesNotMatch(source, /Neon|Oracle|Hermes/i);
   }
 });
 
-test("governance keeps the direct-review contract isolated", () => {
+test("governance keeps visibility content separate from affiliate reviews", () => {
   const prd = readFileSync(path.join(root, "docs/VetterSaaSBlueprint_PRD.md"), "utf8");
-  assert.match(prd, /Visibility Pages Amendment/);
-  assert.match(prd, /Do not widen .*PageBlueprint.*LandingReleaseReceiptV1/i);
-  assert.match(prd, /manual owner approval/i);
+  assert.match(prd, /category guides/i);
+  assert.match(prd, /Exact approved affiliate URLs are rendered directly/i);
+  assert.match(prd, /There is no public account, private admin surface, database, worker, queue, or analytics ingestion runtime/i);
 });

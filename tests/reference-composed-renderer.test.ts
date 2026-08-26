@@ -40,9 +40,9 @@ test("profile selection routes all three renderers while preview inputs stay ref
   assert.doesNotMatch(directReview, /if \(mode === "preview" && !affiliateUrlOverride\)/);
   const editorialBranch = directReview.match(/design_profile === "editorial_v2"\) \{([\s\S]*?)\r?\n  \}\r?\n  if \(blueprint\.metadata\.design_profile === "reference_composed_v1"/);
   assert.ok(editorialBranch);
-  assert.doesNotMatch(editorialBranch[1], /mode=\{mode\}|affiliateUrlOverride/);
+  assert.match(editorialBranch[1], /affiliateUrlOverride=\{affiliateUrlOverride\}/);
   assert.match(directReview, /design_profile === "reference_composed_v1"[\s\S]*?<ReferenceComposedReviewPage[\s\S]*?mode=\{mode\}[\s\S]*?affiliateUrlOverride=\{affiliateUrlOverride\}/);
-  assert.doesNotMatch(directReview, /const affiliateUrl = affiliateUrlOverride \?\?/);
+  assert.match(directReview, /const affiliateUrl = affiliateUrlOverride \?\?/);
   assert.doesNotMatch(directReview, /mode !== "preview" \? \(\s*<OracleTracking/);
 });
 

@@ -534,8 +534,8 @@ const automaticHandoffs = [
     advancing: "Yes",
   },
   {
-    item: "Oracle synchronization unavailable",
-    action: "Record synchronization as pending or not_configured and continue the agent-led GitHub/Vercel release.",
+    item: "External synchronization unavailable",
+    action: "Record synchronization as pending or not_configured and continue the agent-led Git/Vercel release.",
     advancing: "Yes",
   },
 ];
@@ -543,7 +543,7 @@ const automaticHandoffs = [
 const approvalDecision = blockingFailures.length > 0
   ? "Return each failed check to its automatic repair route."
   : blockingSkippedChecks.length > 0
-    ? "Wait for the delegated required checks, then resume this same release."
+    ? "Run the required validation from a clean worktree, then resume this same release."
     : "eligible_for_release: continue to Vercel preview and production verification.";
 
 function markdownEscape(value) {

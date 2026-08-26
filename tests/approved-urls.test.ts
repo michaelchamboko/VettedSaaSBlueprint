@@ -5,7 +5,7 @@ import {
   ApprovedUrlsParseError,
   diffApprovedUrls,
   parseApprovedUrls,
-} from "@/lib/landing-automation/approved-urls";
+} from "@/lib/affiliate/approved-urls";
 
 test("approved URLs manifest accepts exact HTTPS URLs without rewriting tracking parameters", () => {
     const manifest = parseApprovedUrls(`

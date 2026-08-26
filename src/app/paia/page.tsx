@@ -101,12 +101,12 @@ export default function PaiaPage() {
           <h2>6. Subjects and categories of records</h2>
           <ul>
             <li><strong>Editorial and research:</strong> evidence sources, product notes, structured drafts, review versions, limitations, corrections, and approval records.</li>
-            <li><strong>Affiliate operations:</strong> approved destination links, network records, offer evidence, click aggregates, and commission statements.</li>
+            <li><strong>Affiliate operations:</strong> approved destination links, network records, offer evidence, and commission statements.</li>
             <li><strong>Website operations:</strong> source code, deployment records, security and error logs, configuration records, and accessibility checks.</li>
             <li><strong>Governance and compliance:</strong> policies, PAIA requests and outcomes, POPIA requests, audit logs, retention records, and Information Officer administration.</li>
             <li><strong>Communications:</strong> editorial corrections, privacy enquiries, accessibility feedback, PAIA correspondence, and vendor correspondence.</li>
             <li><strong>Financial and tax:</strong> lawful income, expense, banking, invoice, affiliate-payment, and tax-supporting records.</li>
-            <li><strong>Service providers:</strong> hosting, database, domain, software, and professional-service agreements and correspondence.</li>
+            <li><strong>Service providers:</strong> hosting, domain, software, and professional-service agreements and correspondence.</li>
           </ul>
         </section>
 
@@ -114,24 +114,23 @@ export default function PaiaPage() {
           <h2>7. POPIA processing description</h2>
           <h3>Purposes</h3>
           <p>
-            Personal information may be processed to operate and secure the publication, respond to enquiries and rights requests, maintain reliable affiliate links, improve content in aggregate, administer service-provider and affiliate relationships, keep lawful financial and tax records, and meet legal obligations.
+            Personal information may be processed to respond to enquiries and rights requests, maintain reliable affiliate links, administer service-provider and affiliate relationships, keep lawful financial and tax records, and meet legal obligations.
           </p>
           <h3>Categories of data subjects</h3>
           <ul>
             <li>Public website visitors.</li>
             <li>People who send editorial, privacy, accessibility, or PAIA enquiries.</li>
-            <li>Vendor, affiliate-network, hosting, database, and professional-service contacts.</li>
-            <li>The sole proprietor and authorised administrators.</li>
+            <li>Vendor, affiliate-network, hosting, and professional-service contacts.</li>
+            <li>The sole proprietor.</li>
           </ul>
           <h3>Personal-information categories</h3>
           <ul>
             <li>Names, business roles, email addresses, correspondence, and request records.</li>
-            <li>Limited first-party event data if analytics are enabled, including page URL, referrer, user agent, event type, link identifier, and time. The application stores no raw IP address or IP hash.</li>
             <li>Account, security, audit, financial, tax, and affiliate-payment records where lawfully required.</li>
           </ul>
           <h3>Recipient categories</h3>
           <p>
-            Information may be supplied only as necessary to hosting and infrastructure providers such as Vercel, Oracle storage and worker services, affiliate networks such as PartnerStack, destination vendors after a visitor chooses to click, professional advisers, regulators, or lawful authorities.
+            Information may be supplied only as necessary to hosting providers such as Vercel, affiliate networks such as PartnerStack, destination vendors after a visitor chooses to click, professional advisers, regulators, or lawful authorities.
           </p>
           <h3>Cross-border flows</h3>
           <p>
@@ -139,7 +138,7 @@ export default function PaiaPage() {
           </p>
           <h3>Security safeguards</h3>
           <p>
-            Safeguards include access restriction, owner authentication, secret separation, audited publication controls, data minimisation, privacy-signal suppression, retention limits, dependency and deployment checks, encryption provided by service platforms, backups where appropriate, and incident review. Safeguards are reviewed as risks and services change.
+            Safeguards include access restriction, secret separation, repository review, data minimisation, retention limits, dependency and deployment checks, encryption provided by service platforms, backups where appropriate, and incident review. Safeguards are reviewed as risks and services change.
           </p>
         </section>
 

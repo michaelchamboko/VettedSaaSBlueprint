@@ -11,9 +11,7 @@ const activeInstructionPaths = [
   "planning.md",
   "docs/deployment/architecture.md",
   "docs/deployment/public-site-release.md",
-  "docs/deployment/scrapling-oracle-runner.md",
   "docs/landing-workflow/README.md",
-  "docs/landing-workflow/unattended-publication.md",
   ".agents/skills/landing-page-production-orchestrator/SKILL.md",
   ".agents/skills/conversion-copy-review/SKILL.md",
   ".agents/skills/affiliate-compliance-review/SKILL.md",
@@ -61,14 +59,13 @@ test("active landing instructions do not stop a normal URL run for human approva
   assert.deepEqual(failures, []);
 });
 
-test("active landing instructions define URL input as release authorization with durable Neon authority", () => {
-  const authority = readFileSync(
-    path.resolve(repositoryRoot, "docs/landing-workflow/unattended-publication.md"),
-    "utf8",
-  );
+test("active landing instructions define the database-free supervised release path", () => {
+  const authority = readFileSync(path.resolve(repositoryRoot, "docs/landing-workflow/README.md"), "utf8");
 
-  assert.match(authority, /submitting (?:an|the) exact .*url.*approved-urls\.md/i);
-  assert.match(authority, /eligible_for_release/);
-  assert.match(authority, /Neon Postgres.*durable.*authority/i);
-  assert.match(authority, /no job may advance.*publish.*until.*Postgres/i);
+  assert.match(authority, /decide/i);
+  assert.match(authority, /evidence/i);
+  assert.match(authority, /quality/i);
+  assert.match(authority, /release/i);
+  assert.match(authority, /Vercel/i);
+  assert.doesNotMatch(authority, /Neon|Oracle|Hermes|Postgres/i);
 });

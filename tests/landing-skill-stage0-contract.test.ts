@@ -25,31 +25,27 @@ function requireAll(source: string, skill: string, requirements: Array<[string, 
   }
 }
 
-test("all landing-production skills permit original 2027 artistic implementation", () => {
-  for (const [skill, relativePath] of Object.entries(skillPaths)) {
-    assert.match(readSkill(relativePath), /design read/i, `${skill} must use a design read`);
-  }
-
+test("landing-production skills keep design advisory and preserve implementation boundaries", () => {
   const policy = readSkill(skillPaths.orchestrator);
   requireAll(policy, "orchestrator", [
-    ["original page-specific implementation", /(?:original|page-specific)[\s\S]{0,180}(?:JSX|CSS|imagery|typography)/i],
-    ["purposeful motion", /(?:GSAP|motion)/i],
-    ["anti-template direction", /(?:generic AI|template)/i],
+    ["four supervised stages", /decide[\s\S]*evidence[\s\S]*quality[\s\S]*release/i],
+    ["Vercel release verification", /Vercel deployment/i],
+    ["specialist reviews are repair inputs", /repair inputs/i],
   ]);
 });
 
-test("artistic design guidance retains conversion and accessibility boundaries", () => {
+test("design guidance remains a repair lens with conversion and accessibility boundaries", () => {
   const uniqueness = readSkill(skillPaths.uniqueness);
   requireAll(uniqueness, "uniqueness", [
-    ["CTA usability", /CTA[\s\S]{0,120}(?:usable|access)/i],
-    ["reduced-motion support", /reduced-motion/i],
-    ["no generic template repetition", /generic template/i],
+    ["distinct buyer question", /distinct buyer question/i],
+    ["evidence-backed verdict", /verdict[\s\S]{0,80}evidence/i],
+    ["no independent publication authority", /Do not control publication independently/i],
   ]);
 
   const retro = readSkill(skillPaths.retro);
   requireAll(retro, "retro", [
-    ["original visual systems", /original visual system/i],
-    ["responsive hierarchy", /responsive hierarchy/i],
-    ["conversion action", /conversion action/i],
+    ["conditional recurrence", /same stable failure repeats/i],
+    ["smallest workflow improvement", /smallest workflow improvement/i],
+    ["not a routine blocker", /Do not block ordinary content publication/i],
   ]);
 });

@@ -36,7 +36,7 @@
     },
     "quality_receipt": {
       "path": "releases/elevenlabs-ai-voice-generator/quality.json",
-      "sha256": "978f971900dee0e05288f527703386ac46ca926099264baf8d04286943ebfd46"
+      "sha256": "191a62c967956648182f81582e29f34ccd47e49a1934c8e405815b43a316b8d8"
     }
   },
   "checks": {
@@ -59,6 +59,5 @@
   "claims_removed_or_softened": [
     "Omitted unverified price, discount, free-trial, guarantee, ranking, and performance claims.",
     "Framed voice quality as a buyer-run pronunciation, pacing, accent, and consistency test instead of asserting an unsupported result."
-  ],
-  "oracle_sync": "not_configured"
+  ]
 }

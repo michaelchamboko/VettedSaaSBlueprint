@@ -227,8 +227,8 @@ function readJsonFiles(dir, draftInput = false) {
     .filter((entry) => entry.status === "published"
       && entry.published_at
       && entry.current_version_id
-      && ((entry.publication_source === "oracle_dynamic_pages" && entry.owner_publish_audit_id)
-        || (entry.publication_source === "agent_verified_release" && entry.release_receipt)))
+      && entry.publication_source === "agent_verified_release"
+      && entry.release_receipt)
     .map((entry) => basename(entry.artifact ?? "")));
   return readdirSync(dir)
     .filter((name) => approvedFiles.has(name))
@@ -737,8 +737,8 @@ function scanIndexManifest(manifest, knownFiles, arrays) {
     if (!artifact || !knownFiles.has(artifact)) continue;
     const hasAuditedProvenance = entry.published_at
       && entry.current_version_id
-      && ((entry.publication_source === "oracle_dynamic_pages" && entry.owner_publish_audit_id)
-        || (entry.publication_source === "agent_verified_release" && entry.release_receipt));
+      && entry.publication_source === "agent_verified_release"
+      && entry.release_receipt;
     if (!hasAuditedProvenance && typeof entry.status === "string" && SELF_ATTESTED_STATUS_VALUES.has(entry.status.toLowerCase())) {
       addIssue(arrays, createIssue({
         file: artifact,

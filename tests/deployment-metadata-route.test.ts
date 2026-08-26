@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { deploymentMetadata } from "../src/app/api/deployment/route";
+import { deploymentMetadata } from "../src/lib/site/deployment-metadata";
 
 test("deployment metadata rejects blank provenance and preserves a reviewed SHA", () => {
   assert.deepEqual(

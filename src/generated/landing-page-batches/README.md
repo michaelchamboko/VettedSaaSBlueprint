@@ -46,9 +46,8 @@ Use `npm run package:codex-batch -- --batch-id <uuid>` to emit the deterministic
 import packet under `.stage2/codex-batches/<batch-id>/`.
 
 Generated files are draft evidence only. They must never claim publication,
-active-link, asset-approval, or compliance-approved state. Oracle may provide
-audited records when configured; the agent-led path instead binds release
-authority to an independently verified `LandingReleaseReceiptV1`. New previews
-use the production editorial renderer and fixed `gsap_editorial` motion profile
-while the preview route stays `noindex,nofollow` and suppresses production
-analytics.
+active-link, asset-approval, or compliance-approved state. The supervised path
+binds release authority to an independently verified `LandingReleaseReceiptV1`.
+New previews use the production editorial renderer and fixed `gsap_editorial`
+motion profile while the preview route stays `noindex,nofollow` and suppresses
+production analytics.

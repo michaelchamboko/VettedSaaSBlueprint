@@ -3,30 +3,26 @@ import Link from "next/link";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { EditorialReviewPage } from "./EditorialReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
-import { OracleTracking } from "./OracleTracking";
 import { ReferenceComposedReviewPage } from "./ReferenceComposedReviewPage";
 
 export type LandingPageRenderMode = "production" | "preview";
 
 export function DirectReviewPage({
   blueprint,
-  analyticsEnabled = false,
   mode = "production",
   affiliateUrlOverride,
 }: {
   blueprint: PageBlueprint;
-  analyticsEnabled?: boolean;
   mode?: LandingPageRenderMode;
   affiliateUrlOverride?: string;
 }) {
   if (blueprint.metadata.design_profile === "editorial_v2") {
-    return <EditorialReviewPage blueprint={blueprint} analyticsEnabled={analyticsEnabled} />;
+    return <EditorialReviewPage blueprint={blueprint} affiliateUrlOverride={affiliateUrlOverride} />;
   }
   if (blueprint.metadata.design_profile === "reference_composed_v1") {
     return (
       <ReferenceComposedReviewPage
         blueprint={blueprint}
-        analyticsEnabled={mode !== "preview" ? analyticsEnabled : false}
         mode={mode}
         affiliateUrlOverride={affiliateUrlOverride}
       />
@@ -38,9 +34,7 @@ export function DirectReviewPage({
       ? blueprint.hero.visual_asset
       : null;
 
-  const affiliateUrl = `/r/affiliate?${new URLSearchParams({
-    linkId: blueprint.hero.primary_cta_link_id,
-  }).toString()}`;
+  const affiliateUrl = affiliateUrlOverride ?? "#affiliate-link-unavailable";
 
   return (
     <main
@@ -161,7 +155,6 @@ export function DirectReviewPage({
         <Link href="/affiliate-disclosure">Affiliate disclosure</Link>
         <Link href="/contact">Contact</Link>
       </footer>
-      <OracleTracking enabled={analyticsEnabled} pageSlug={blueprint.metadata.url_slug} ctaLinkId={blueprint.hero.primary_cta_link_id} />
     </main>
   );
 }

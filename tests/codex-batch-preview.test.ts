@@ -115,15 +115,14 @@ test("preview route remains static and noindex while using the production render
   assert.match(source, /EditorialV2PreviewPage/);
 });
 
-test("preview mode uses the exact destination and omits Oracle tracking while retaining GSAP", () => {
+test("preview mode uses the exact destination without tracking while retaining GSAP", () => {
   const componentRoot = path.join(process.cwd(), "src", "components", "landing");
   const direct = fs.readFileSync(path.join(componentRoot, "DirectReviewPage.tsx"), "utf8");
   const editorial = fs.readFileSync(path.join(componentRoot, "EditorialReviewPage.tsx"), "utf8");
   for (const source of [direct, editorial]) {
     assert.match(source, /affiliateUrlOverride/);
-    assert.match(source, /mode\s*!==\s*["']preview["']/);
     assert.match(source, /LandingPageMotion/);
-    assert.match(source, /OracleTracking/);
+    assert.doesNotMatch(source, /OracleTracking|\/r\/affiliate/);
   }
   assert.match(direct, /mode={mode}/);
   assert.match(direct, /affiliateUrlOverride={affiliateUrlOverride}/);

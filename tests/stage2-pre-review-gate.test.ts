@@ -257,7 +257,7 @@ test("CI parallel-core mode delegates all four core checks without spawning npm 
   }
 });
 
-test("Stage 2 gate accepts complete production reports without requiring Oracle provenance", async () => {
+test("Stage 2 gate accepts complete production reports without requiring external database provenance", async () => {
   const reportDir = await mkdtemp(path.join(os.tmpdir(), "stage2-reports-"));
   try {
     await writePassingReports(reportDir);
@@ -266,7 +266,7 @@ test("Stage 2 gate accepts complete production reports without requiring Oracle 
     const result = runGate(reportDir, ["--quality-mode", "production", "--quality-summary-file", "landing-quality-summary.json"]);
 
     assert.equal(result.status, 0, result.stderr || result.stdout);
-    assert.doesNotMatch(result.stdout, /Oracle provenance/i);
+    assert.doesNotMatch(result.stdout, /database provenance/i);
   } finally {
     await rm(reportDir, { recursive: true, force: true });
   }

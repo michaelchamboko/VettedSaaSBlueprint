@@ -19,7 +19,7 @@ export type OpenAiCompatibleStructuredLlmOptions = {
 };
 
 /**
- * Provider-specific HTTP mapping stays here. Application and Hermes code use
+ * Provider-specific HTTP mapping stays here. Application code uses
  * only StructuredLlmService and never import a provider SDK.
  */
 export class OpenAiCompatibleStructuredLlm implements StructuredLlmService {

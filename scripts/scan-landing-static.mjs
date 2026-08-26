@@ -40,10 +40,8 @@ function hasPublicationProvenance(entry) {
     && entry.status === "published"
     && hasValidTimestamp(entry.published_at)
     && hasText(entry.current_version_id)
-    && (
-      (entry.publication_source === "oracle_dynamic_pages" && hasText(entry.owner_publish_audit_id))
-      || (entry.publication_source === "agent_verified_release" && hasText(entry.release_receipt))
-    );
+    && entry.publication_source === "agent_verified_release"
+    && hasText(entry.release_receipt);
 }
 
 function hasValidTimestamp(value) {
@@ -197,7 +195,7 @@ function checkSeo(rows, routeSource, issues, warnings) {
 
 function checkLinks(componentSource, editorialComponentSource, rows, issues) {
   for (const [renderer, source] of [["DirectReviewPage", componentSource], ["EditorialReviewPage", editorialComponentSource]]) {
-    for (const token of ["/r/affiliate?", "data-link-id"]) {
+    for (const token of ["affiliateUrlOverride", "data-link-id"]) {
       if (!source.includes(token)) issue(issues, "affiliate_link_wiring_missing", `${renderer} is missing ${token}.`);
     }
     if (!/rel=["'](?:nofollow\s+sponsored|sponsored\s+nofollow|sponsored)["']/.test(source)) {
@@ -212,8 +210,8 @@ function checkForms(componentSource, issues) {
 }
 
 function checkConversion(componentSource, issues) {
-  for (const token of ['data-track="primary-cta"', "OracleTracking", "ctaLinkId", "pageSlug"]) {
-    if (!componentSource.includes(token)) issue(issues, "conversion_tracking_missing", `DirectReviewPage is missing ${token}.`);
+  for (const token of ['data-track="primary-cta"', "affiliateUrlOverride"]) {
+    if (!componentSource.includes(token)) issue(issues, "conversion_signal_missing", `DirectReviewPage is missing ${token}.`);
   }
   if (/googletagmanager|facebook\.net|doubleclick|analytics\.js|gtag\(/i.test(componentSource)) issue(issues, "third_party_pixel_detected", "Third-party tracking indicator found in landing renderer.");
 }
@@ -253,16 +251,11 @@ function checkAssets(rows, issues) {
 
 function checkPublishReadiness(rows, issues) {
   if (rows.length === 0) return;
-  const executionContract = readText("planning.md");
   const workflowContract = readText("docs/landing-workflow/README.md");
-  if (!executionContract.includes("npm run landing:run -- --url <exact-https-affiliate-url>")) {
-    issue(issues, "url_to_live_command_missing", "The active execution contract must expose the single resumable URL-to-live command.");
-  }
-  if (!executionContract.includes("LIVE") || !workflowContract.includes("eligible_for_release")) {
-    issue(issues, "automatic_release_handoff_missing", "The active workflow must advance passing pages through eligible_for_release to verified LIVE state.");
-  }
-  if (!workflowContract.includes("Quality and repair") || !workflowContract.includes("production verification")) {
-    issue(issues, "repair_and_production_contract_missing", "The active workflow must define automatic repair and production verification.");
+  for (const stage of ["**Decide**", "**Evidence**", "**Quality**", "**Release**"]) {
+    if (!workflowContract.includes(stage)) {
+      issue(issues, "supervised_workflow_stage_missing", `The active workflow is missing ${stage}.`);
+    }
   }
 }
 

@@ -51,19 +51,15 @@ test("all legal and trust routes have unique self-referencing metadata", () => {
 test("privacy notice describes actual collection, processing, retention, and rights", () => {
   const page = source(routeFiles.privacy);
   for (const requirement of [
-    "page_view",
-    "cta_click",
-    "affiliate_click",
-    "link_error",
-    "faq_expand",
+    "does not operate application-level visitor analytics",
+    "event ingestion",
     "no raw IP",
     "no IP hash",
     "legitimate interests",
     "Vercel",
-    "Oracle",
     "PartnerStack",
-    "90 days",
-    "24 months",
+    "sets no application analytics records",
+    "no nonessential analytics or advertising cookies",
     "Global Privacy Control",
     "Do Not Track",
     "access",
@@ -75,6 +71,7 @@ test("privacy notice describes actual collection, processing, retention, and rig
   ]) {
     assert.ok(page.includes(requirement), `privacy notice should include ${requirement}`);
   }
+  assert.doesNotMatch(page, /Oracle|page_view|cta_click|affiliate_click|link_error|faq_expand/);
 });
 
 test("terms clearly exclude selling, payments, and vendor responsibility", () => {

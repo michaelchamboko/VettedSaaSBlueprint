@@ -10,7 +10,7 @@
 
 ## Contract checks
 
-Run `npm run verify:runtime-contract` before any install, test, build, or deployment review. It verifies the direct manifest versions, lockfile versions, Node policy, `.nvmrc`, and GitHub Actions runtime.
+Run `npm run verify:runtime-contract` before any install, test, build, or deployment review. It verifies the direct manifest versions, lockfile versions, Node policy, and `.nvmrc`.
 
 ## Allowed baseline maintenance
 

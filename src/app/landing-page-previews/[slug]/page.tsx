@@ -40,7 +40,6 @@ export default async function LandingPagePreview({ params }: { params: Promise<{
     return (
       <DirectReviewPage
         blueprint={batchPreview.blueprint}
-        analyticsEnabled={false}
         mode="preview"
         affiliateUrlOverride={batchPreview.affiliate_url}
       />

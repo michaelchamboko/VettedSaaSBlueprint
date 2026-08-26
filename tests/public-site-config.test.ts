@@ -57,20 +57,6 @@ test("release readiness requires the policy date and Information Officer confirm
   assert.throws(() => assertPublicLaunchReady(config), /PUBLIC_POLICY_EFFECTIVE_DATE[\s\S]*INFORMATION_OFFICER/);
 });
 
-test("analytics stays disabled until retention verification is valid", () => {
-  const unverified = loadPublicSiteConfig({ ...readyEnv, ANALYTICS_ENABLED: "true" });
-  const verified = loadPublicSiteConfig({
-    ...readyEnv,
-    ANALYTICS_ENABLED: "true",
-    ANALYTICS_RETENTION_VERIFIED_AT: "2026-07-10T09:00:00.000Z",
-  });
-
-  assert.equal(unverified.analytics.enabled, false);
-  assert.equal(verified.analytics.enabled, true);
-  assert.equal(verified.analytics.rawEventRetentionDays, 90);
-  assert.equal(verified.analytics.aggregateRetentionMonths, 24);
-});
-
 test("canonical origin is HTTPS and normalized", () => {
   assert.equal(
     loadPublicSiteConfig({

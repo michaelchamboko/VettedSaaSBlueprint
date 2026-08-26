@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { parseApprovedUrls } from "../src/lib/landing-automation/approved-urls";
+import { parseApprovedUrls } from "../src/lib/affiliate/approved-urls";
 
 async function main(): Promise<void> {
   const manifestPath = resolve(process.cwd(), "approved-urls.md");
