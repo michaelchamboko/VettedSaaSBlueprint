@@ -9,6 +9,7 @@ test("the public shell exposes Blog in primary and footer navigation", () => {
   const footer = read("src/components/public/PublicFooter.tsx");
 
   assert.match(header, /href="\/blog"[^>]*>Blog</);
+  assert.match(header, /href="\/affiliate-disclosure"[^>]*>Affiliate disclosure<\/Link>\s*<Link href="\/blog">Blog<\/Link>/);
   assert.match(footer, /\["Blog", "\/blog"\]/);
 });
 
