@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "Affiliate disclosure",
+  description: "How affiliate commissions support VettedSaaSBlueprint while preserving evidence-led editorial independence.",
+  alternates: { canonical: "/affiliate-disclosure" },
+  openGraph: { title: "Affiliate disclosure", description: "How affiliate commissions support VettedSaaSBlueprint while preserving evidence-led editorial independence.", url: "/affiliate-disclosure" },
+  robots: { index: true, follow: true },
+};
 
 export default function AffiliateDisclosurePage() {
   const config = loadPublicSiteConfig();
