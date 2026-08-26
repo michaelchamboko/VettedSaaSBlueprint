@@ -25,6 +25,29 @@ test("all legal and trust routes use the shared legal document", () => {
   }
 });
 
+test("all legal and trust routes have unique self-referencing metadata", () => {
+  const titles = new Set<string>();
+  const descriptions = new Set<string>();
+
+  for (const [name, path] of Object.entries(routeFiles)) {
+    const page = source(path);
+    const route = `/${path.split("/")[2]}`;
+    const title = page.match(/title:\s*"([^"]+)"/)?.[1];
+    const description = page.match(/description:\s*"([^"]+)"/)?.[1];
+
+    assert.match(page, /export const metadata: Metadata/, `${name} should export metadata`);
+    assert.ok(title, `${name} should have a title`);
+    assert.ok(description, `${name} should have a description`);
+    assert.match(page, new RegExp(`canonical:\\s*"${route}"`), `${name} should self-canonicalize`);
+    assert.match(page, new RegExp(`url:\\s*"${route}"`), `${name} should set its social URL`);
+    titles.add(title);
+    descriptions.add(description);
+  }
+
+  assert.equal(titles.size, Object.keys(routeFiles).length);
+  assert.equal(descriptions.size, Object.keys(routeFiles).length);
+});
+
 test("privacy notice describes actual collection, processing, retention, and rights", () => {
   const page = source(routeFiles.privacy);
   for (const requirement of [

@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import { loadPublicSiteConfig, PUBLIC_OPERATOR_STATEMENT } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "Privacy notice",
+  description: "How VettedSaaSBlueprint handles personal information, privacy choices, retention, and POPIA rights.",
+  alternates: { canonical: "/privacy" },
+  openGraph: { title: "Privacy notice", description: "How VettedSaaSBlueprint handles personal information, privacy choices, retention, and POPIA rights.", url: "/privacy" },
+  robots: { index: true, follow: true },
+};
 
 export default function PrivacyPage() {
   const config = loadPublicSiteConfig();

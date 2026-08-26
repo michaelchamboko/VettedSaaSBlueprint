@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import {
   assertPublicLaunchReady,
   loadPublicSiteConfig,
 } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "PAIA manual",
+  description: "The Section 51 PAIA manual for VettedSaaSBlueprint, a South African private body and sole proprietorship.",
+  alternates: { canonical: "/paia" },
+  openGraph: { title: "PAIA manual", description: "The Section 51 PAIA manual for VettedSaaSBlueprint, a South African private body and sole proprietorship.", url: "/paia" },
+  robots: { index: true, follow: true },
+};
 
 export default function PaiaPage() {
   const config = loadPublicSiteConfig();

@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "Terms of use",
+  description: "Terms for using VettedSaaSBlueprint, including editorial limitations, affiliate links, and vendor responsibility.",
+  alternates: { canonical: "/terms" },
+  openGraph: { title: "Terms of use", description: "Terms for using VettedSaaSBlueprint, including editorial limitations, affiliate links, and vendor responsibility.", url: "/terms" },
+  robots: { index: true, follow: true },
+};
 
 export default function TermsPage() {
   const config = loadPublicSiteConfig();
