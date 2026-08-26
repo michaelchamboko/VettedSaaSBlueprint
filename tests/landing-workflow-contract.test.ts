@@ -7,14 +7,13 @@ import {
 } from "@/lib/landing-workflow/registry";
 import { landingWorkflowResultSchema } from "@/lib/landing-workflow/contracts";
 
-test("workflow registry defines fourteen exact stage definitions", () => {
-  assert.equal(landingWorkflowRegistry.length, 14);
-});
+test("workflow registry defines the four supervised stages", () => {
+  const ids: LandingWorkflowStageId[] = ["decide", "evidence", "quality", "release"];
 
-test("registry contains the required unattended stages", () => {
-  type UnattendedLandingWorkflowStageId = Exclude<LandingWorkflowStageId, "t12_release">;
+  assert.deepEqual(landingWorkflowRegistry.map((stage) => stage.id), ids);
+  assert.ok(landingWorkflowRegistry.every((stage) => stage.owner === "Supervised agent"));
 
-  const expected: UnattendedLandingWorkflowStageId[] = [
+  const retiredIds = [
     "t0_design_direction",
     "t1_affiliate_intent",
     "t2_direct_review",
@@ -27,11 +26,11 @@ test("registry contains the required unattended stages", () => {
     "t9_publish_gates",
     "t10_pr_prepare",
     "t11_ci_preview",
+    "t12_release",
     "t13_postmortem",
   ];
-  const ids = landingWorkflowRegistry.filter((stage) => stage.unattended).map((stage) => stage.id);
-  for (const value of expected) {
-    assert.ok(ids.includes(value));
+  for (const retiredId of retiredIds) {
+    assert.ok(!landingWorkflowRegistry.some((stage) => stage.id === retiredId));
   }
 });
 
