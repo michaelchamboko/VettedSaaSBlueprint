@@ -6,6 +6,7 @@ import {
   assertPublicLaunchReady,
   getPublicLaunchBlockers,
   loadPublicSiteConfig,
+  publicSiteMetadata,
 } from "../src/lib/site/public-site";
 
 const readyEnv = {
@@ -83,6 +84,15 @@ test("canonical origin is HTTPS and normalized", () => {
     getPublicLaunchBlockers(
       loadPublicSiteConfig({ ...readyEnv, PUBLIC_SITE_ORIGIN: "http://example.com" }),
     ).some((blocker) => blocker.includes("HTTPS origin")),
+  );
+});
+
+test("public metadata includes the Google site verification token", () => {
+  const metadata = publicSiteMetadata(loadPublicSiteConfig(readyEnv));
+
+  assert.equal(
+    metadata.verification?.google,
+    "yXL5P6NXRbp4b0oDBYQe1b-UWD0B6Jj9cBeFpLosONQ",
   );
 });
 

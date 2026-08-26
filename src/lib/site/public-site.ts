@@ -187,6 +187,9 @@ export function publicSiteMetadata(config: PublicSiteConfig): Metadata {
       template: `%s | ${config.brandName}`,
     },
     description,
+    verification: {
+      google: "yXL5P6NXRbp4b0oDBYQe1b-UWD0B6Jj9cBeFpLosONQ",
+    },
     openGraph: {
       type: "website",
       siteName: config.brandName,
