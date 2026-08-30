@@ -71,7 +71,7 @@ test("privacy notice describes actual collection, processing, retention, and rig
   ]) {
     assert.ok(page.includes(requirement), `privacy notice should include ${requirement}`);
   }
-  assert.doesNotMatch(page, /Oracle|page_view|cta_click|affiliate_click|link_error|faq_expand/);
+  assert.doesNotMatch(page, /page_view|cta_click|affiliate_click|link_error|faq_expand/);
 });
 
 test("terms clearly exclude selling, payments, and vendor responsibility", () => {

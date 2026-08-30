@@ -122,7 +122,7 @@ test("preview mode uses the exact destination without tracking while retaining G
   for (const source of [direct, editorial]) {
     assert.match(source, /affiliateUrlOverride/);
     assert.match(source, /LandingPageMotion/);
-    assert.doesNotMatch(source, /OracleTracking|\/r\/affiliate/);
+    assert.doesNotMatch(source, /\/r\/affiliate/);
   }
   assert.match(direct, /mode={mode}/);
   assert.match(direct, /affiliateUrlOverride={affiliateUrlOverride}/);

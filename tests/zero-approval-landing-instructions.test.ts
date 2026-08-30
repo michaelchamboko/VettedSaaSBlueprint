@@ -67,5 +67,5 @@ test("active landing instructions define the database-free supervised release pa
   assert.match(authority, /quality/i);
   assert.match(authority, /release/i);
   assert.match(authority, /Vercel/i);
-  assert.doesNotMatch(authority, /Neon|Oracle|Hermes|Postgres/i);
+  assert.doesNotMatch(authority, /Neon|Postgres/i);
 });

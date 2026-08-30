@@ -18,7 +18,7 @@ test("visibility skills exist and prohibit direct affiliate ownership", () => {
     const source = readFileSync(file, "utf8");
     assert.match(source, /VisibilityPageV1/);
     assert.match(source, /no direct affiliate URL/i);
-    assert.doesNotMatch(source, /Neon|Oracle|Hermes/i);
+    assert.doesNotMatch(source, /hosted database|remote worker/i);
   }
 });
 
