@@ -1015,7 +1015,7 @@ def ensure_v2_fields(state: dict[str, Any], capabilities: dict[str, Any], root: 
 
 
 def v2_workspace_root(root: Path) -> Path:
-    return root.parent / ".globalsetup-worktrees" / root.name
+    return root / ".worktrees"
 
 
 def run_git(argv: list[str], cwd: Path) -> str:

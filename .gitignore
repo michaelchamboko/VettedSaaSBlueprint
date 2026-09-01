@@ -1,5 +1,6 @@
 .gitnexus/
 .globalsetup-backups/
+.worktrees/
 build-pack/runtime/
 .scratch/
 .claude/
