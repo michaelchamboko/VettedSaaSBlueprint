@@ -1,0 +1,15 @@
+.gitnexus/
+.globalsetup-backups/
+build-pack/runtime/
+.scratch/
+.claude/
+CLAUDE.md
+node_modules/
+.next/
+*.tsbuildinfo
+*.log
+**/__pycache__/
+.opencode/goals/**/*.lock/
+.env
+.env.local
+.vercel/

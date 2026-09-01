@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "python": {
+    "required": true,
+    "minimum_version": "3.10",
+    "observed_version": "3.11.15"
+  },
+  "workspace": {
+    "integration_branch": "codex/vetted-saas-integration",
+    "serial": true
+  },
+  "graph": {
+    "required": false,
+    "provider": "disabled",
+    "reason": "GitNexus is not commercially authorized; deterministic source and import checks are the required fallback."
+  }
+}

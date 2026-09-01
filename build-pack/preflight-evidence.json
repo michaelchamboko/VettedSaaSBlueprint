@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "repository": {
+    "root": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy",
+    "status": "# branch.oid (initial)\n# branch.head main\n? .agents/\n? .githooks/\n? .gitignore\n? .gitnexusrc\n? AGENTS.md\n? GLOBALSETUP_APPLICATION_INSTRUCTION.md\n? build-pack/\n? docs/\n? planning.md\n? scripts/\n? tests/",
+    "remotes": "",
+    "worktrees": "worktree C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy\nHEAD 0000000000000000000000000000000000000000\nbranch refs/heads/main",
+    "publication_baseline": "absent"
+  },
+  "prerequisites": {
+    "git": "git version 2.55.0.windows.2",
+    "python": "3.11.15",
+    "node": "v24.18.0",
+    "npm": "12.0.0",
+    "gitnexus_installed": "not queried; provider disabled"
+  },
+  "globalsetup": {
+    "commit": "7bc03227e78a838c19f8a28d082b1d46e7e2f288",
+    "release_status": "unreleased-main",
+    "source": "https://github.com/michaelchamboko/globalsetup",
+    "upstream_tests": "46 passed in 195.444s"
+  },
+  "local_runtime": {
+    "installation_scope": "this-repository-only",
+    "source_snapshot": "7bc03227e78a838c19f8a28d082b1d46e7e2f288",
+    "external_source_modified": false,
+    "generic_adaptations": [
+      "optional disabled graph provider with no executable graph commands",
+      "hash-bound proposed sources remain explicitly non-executable"
+    ]
+  },
+  "gitnexus": {
+    "candidate_version": "1.6.10",
+    "license": "PolyForm-Noncommercial-1.0.0",
+    "commercial_project": true,
+    "eligible": false,
+    "decision": "disabled in local capabilities; do not install, acknowledge, or execute"
+  },
+  "publication_baseline_evidence": {
+    "github_main_commit": "956e3a830ea7c11ae4867635ff2edf8c5865c856",
+    "vercel_production_deployment": "dpl_E6HTSnuzu8BK4qCnjJZoZ8xPQH3Q",
+    "vercel_production_url": "https://vetted-saa-s-blueprint-fszaa5ej7-michaelchamboko-gravityclaw.vercel.app"
+  },
+  "source_intake": {
+    "source_count": 12,
+    "heading_count": 1424,
+    "manifest_sha256": "0ff15ab1723ae38f53e9f97a09519f765ebf0a930bd0089ef140a212ec03f0ac",
+    "claim_count": 791,
+    "directive_count": 8
+  }
+}

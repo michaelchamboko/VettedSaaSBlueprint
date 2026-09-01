@@ -1,0 +1,113 @@
+# Checks build pack completeness (PowerShell).
+
+Write-Host "Validating build-pack documents..."
+$missing = 0
+$statePath = "build-pack\execution-state.json"
+$state = if (Test-Path -LiteralPath $statePath) { Get-Content -Raw -LiteralPath $statePath | ConvertFrom-Json } else { $null }
+$isV2 = $null -ne $state -and $state.schema_version -eq 2
+
+$legacyFiles = @(
+  "00-confirmed-prd-summary.md",
+  "01-prd-review-checklist.md",
+  "02-build-brief.md",
+  "03-implementation-contract.md",
+  "04-existing-codebase-discovery.md",
+  "05-architecture-map.md",
+  "06-database-contract.md",
+  "07-api-contract.md",
+  "08-ui-contract.md",
+  "09-permissions-contract.md",
+  "10-implementation-plan.md",
+  "11-task-graph.md",
+  "12-test-plan.md",
+  "13-review-gate.md",
+  "14-rollback-plan.md",
+  "15-pre-ship-checklist.md",
+  "16-definition-of-done.md"
+)
+$v2Files = @(
+  "00-source-to-build-review.md",
+  "04-existing-codebase-discovery.md",
+  "05-architecture-map.md",
+  "10-implementation-plan.md",
+  "11-task-graph.md",
+  "12-test-plan.md",
+  "13-review-gate.md",
+  "14-rollback-plan.md",
+  "16-definition-of-done.md",
+  "PREFLIGHT_AND_MUTATION_PLAN.md",
+  "capabilities.json",
+  "execution-state.json",
+  "grommet-approval.json",
+  "preflight-evidence.json",
+  "requirements.json",
+  "source-manifest.json",
+  "capabilities.schema.json",
+  "execution-state.schema.json",
+  "source-manifest.schema.json",
+  "requirements.schema.json",
+  "grommet-approval.schema.json"
+)
+$files = if ($isV2) { $v2Files } else { $legacyFiles }
+
+foreach ($file in $files) {
+    $path = "build-pack\$file"
+    if (!(Test-Path $path)) {
+        Write-Host "[missing] $path" -ForegroundColor Red
+        $missing++
+    } else {
+        $content = Get-Content $path -Raw
+        if ($content -match "<!-- TODO -->" -or $content -match "\[TODO\]") {
+            Write-Host "[placeholder] $path contains placeholder markers" -ForegroundColor Yellow
+        } else {
+            Write-Host "[ok] $path is present" -ForegroundColor Green
+        }
+    }
+}
+
+if ($missing -eq 0) {
+    if ($isV2) {
+        $taskCards = @(Get-ChildItem "build-pack\tasks" -Filter "*.md" -File -ErrorAction SilentlyContinue)
+        if ($taskCards.Count -lt 1) {
+            Write-Host "[missing] at least one build-pack\tasks\*.md task card" -ForegroundColor Red
+            exit 1
+        }
+    } else {
+      $buildPlanFiles = @(
+      "build-pack\build-plans\01-build-plan-index.md",
+      "build-pack\build-plans\02-ui-ux-build-plan.md"
+      )
+
+      foreach ($buildPlan in $buildPlanFiles) {
+        if (!(Test-Path $buildPlan)) {
+            Write-Host "[missing] $buildPlan" -ForegroundColor Red
+            exit 1
+        }
+      }
+
+      $modulePlans = Get-ChildItem "build-pack\module-plans" -Filter "M-*.md" -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike "M-000-*" }
+      if ($modulePlans.Count -lt 1) {
+        Write-Host "[missing] real build-pack\module-plans\M-*.md module plans beyond the M-000 template" -ForegroundColor Red
+        exit 1
+      }
+    }
+    $python = $null
+    foreach ($candidateName in @("python3", "python")) {
+        $candidate = Get-Command $candidateName -ErrorAction SilentlyContinue
+        if ($candidate) {
+            & $candidate.Source -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)" *> $null
+            if ($LASTEXITCODE -eq 0) { $python = $candidate; break }
+        }
+    }
+    if (!$python) {
+        Write-Host "[missing] Python 3.10 or newer is required to validate execution state" -ForegroundColor Red
+        exit 1
+    }
+    & $python.Source "scripts\build-runner.py" --root . validate
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "[ok] Build pack documents and executable task state are valid" -ForegroundColor Green
+    exit 0
+} else {
+    Write-Host "[missing] $missing build pack file(s)" -ForegroundColor Red
+    exit 1
+}

@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-08-02T19:00:00.000Z",
+  "pages": [
+    {
+      "slug": "elevenlabs-ai-voice-generator",
+      "title": "ElevenLabs AI Voice Generator: A Practical Fit Check",
+      "artifact": "elevenlabs-ai-voice-generator.json",
+      "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "status": "published",
+      "publication_source": "agent_verified_release",
+      "published_at": "2026-07-24T22:04:46.778Z",
+      "current_version_id": "agent-release-73acf1f",
+      "release_receipt": "releases/elevenlabs-ai-voice-generator/release-receipt.json",
+      "category_slug": "ai-voice-generation"
+    },
+    {
+      "slug": "moosend-email-marketing-automation",
+      "title": "Moosend Email Marketing Automation: A Practical Fit Check",
+      "artifact": "moosend-email-marketing-automation.json",
+      "path": "/landing-page-builders/moosend-email-marketing-automation",
+      "status": "published",
+      "publication_source": "agent_verified_release",
+      "published_at": "2026-07-26T00:00:00.000Z",
+      "current_version_id": "agent-release-pending",
+      "release_receipt": "releases/moosend-email-marketing-automation/release-receipt.json",
+      "category_slug": "email-marketing-automation"
+    },
+    {
+      "slug": "getresponse-studio",
+      "title": "GetResponse: Lifecycle Automation in Motion",
+      "artifact": "getresponse-studio.json",
+      "path": "/getresponse-studio",
+      "status": "published",
+      "publication_source": "artistic_studio",
+      "published_at": "2026-08-02T19:25:00.000Z",
+      "current_version_id": "studio-release-7a996aa",
+      "release_receipt": null,
+      "category_slug": "marketing-tools"
+    }
+  ]
+}

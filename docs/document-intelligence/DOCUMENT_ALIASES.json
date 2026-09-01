@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "aliases": {
+    "Vetted-SaaS-Blueprint-Master-PRD-v1.md": "D05"
+  },
+  "rule": "Aliases resolve navigation only. The raw stale reference remains a finding and is never silently rewritten."
+}
