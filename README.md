@@ -1,49 +1,41 @@
-# GlobalSetup / Controlled Affiliate Intelligence Loop
+# Vetted SaaS Blueprint
 
-This repository is the source blueprint for the PRD in `docs/VetterSaaSBlueprint_PRD.md`.
+This repository is the Spec Kit, application, local automation, and production-deployment workspace for Vetted SaaS Blueprint.
 
-This is a **single-operator personal marketing tool**, not a public SaaS application. The only authenticated human user is the owner/operator; public visitors are anonymous landing-page visitors.
+The application is a single-operator content and decision-support system:
 
-The project is not intended to make the local folder the runtime. Dependencies and services are installed where the PRD assigns responsibility:
+- Vercel builds and serves the Next.js application.
+- The configured PostgreSQL-compatible `DATABASE_URL` stores persistent application and automation records.
+- Codex desktop runs the four project-scoped research, editorial, optimisation, and watchdog schedules on the operator's computer.
+- Local verified commits deploy directly to Vercel production.
 
-- Vercel builds and runs the Next.js application.
-- Oracle Autonomous Database stores durable product, evidence, page, job, tracking, and audit data.
-- Oracle runs the long-lived Hermes worker and Scrapling research process.
-- The local workstation is for source editing, documentation, review, and optional preview only.
+## Repository contents
 
-## Current repo contents
+- `src/app` — Next.js App Router routes and authenticated administration pages.
+- `src/components` — shared public and administrative components.
+- `src/lib` — content, evidence, automation, authentication, database, and tracking contracts.
+- `scripts` — deterministic validation, automation, and deployment commands.
+- `planning.md` — the single planning and execution authority.
+- `docs/document-intelligence` — source inventory and stable source identifiers.
 
-- `src/app` — Next.js App Router control plane, public page routes, and API routes.
-- `src/components` — Fixed landing-page components that render structured JSON.
-- `src/lib` — PRD contracts, compliance gates, Hermes auth, and tracking helpers.
-- `db/schema.sql` — draft database schema; Step 2 must convert it to Oracle Autonomous Database DDL before applying.
-- `hermes/worker.ts` — Oracle-side Hermes worker skeleton.
-- `docs/deployment/dependency-ownership.md` — Defines where dependencies are installed and owned.
-- `docs/deployment/architecture.md` — Defines Vercel and Oracle deployment responsibilities.
+## Local verification
 
-## Deployment-first setup
+Use Node 24 and npm 12.0.2, then run:
 
-1. Provision Oracle Autonomous Database, preferably Always Free Autonomous Transaction Processing for MVP.
-2. Convert `db/schema.sql` to Oracle-compatible DDL and apply it to Oracle Autonomous Database.
-3. Connect `michaelchamboko/VettedSaaSBlueprint` to the Vercel project serving your expected production URL (historically `https://vetted-saa-s-blueprint.vercel.app`).
-4. Configure Vercel environment variables from `.env.example` using non-secret deployment/runtime values.
-5. Let Vercel install `package.json` dependencies during deployment.
-6. Provision the Oracle Hermes worker environment near the Oracle database.
-7. Install Hermes/Scrapling worker dependencies on Oracle, not in the local repo folder.
-8. Start Hermes as a managed Oracle service after the Vercel app is live.
-9. Run initial runtime smoke checks against the active deployment URL for `/`, `/admin/login`, and Hermes endpoints once auth is configured.
+```powershell
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run validate:public-site
+npm run build
+```
 
-## Optional local preview
+Secrets remain outside Git. Persistent features use `DATABASE_URL`; authentication uses `APP_USER`, `APP_PASSWORD_HASH`, and `SESSION_SECRET`.
 
-Local dependency installation is optional and only for developer preview or validation. It is not part of the required deployment path.
+## Production boundary
 
-If you choose to preview locally, install dependencies locally at your discretion and do not commit `node_modules`.
-
-## MVP boundaries
-
-- AI outputs structured JSON only; React layout is fixed in code.
-- First publication and high-risk changes require manual approval.
-- Affiliate links preserve original PartnerStack referral URLs.
-- Tracking is minimal first-party event storage.
-- Scrapling crawlers belong to the Oracle Hermes environment.
-- Vercel serverless functions must not become the 24/7 research worker.
+- Production deployment is direct to the existing Vercel project.
+- Automatic release is limited to validated structured-content JSON.
+- Dependencies, routes, authentication, migrations, rankings, prices, affiliate claims, and conflicting evidence require owner review.
+- Tracking is minimal, first-party, and resilient when its configured endpoint is unavailable.

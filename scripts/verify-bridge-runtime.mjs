@@ -21,8 +21,8 @@ for (const directive of graph.directives) expectedNodes.set(identifier(`directiv
 const actualNodes = new Map();
 for (const file of await fs.readdir(path.join(bridgeRoot, 'nodes'))) {
   if (!file.endsWith('.mjs')) continue;
-  const module = await import(pathToFileURL(path.join(bridgeRoot, 'nodes', file)).href);
-  for (const [name, fn] of Object.entries(module)) {
+  const bridgeModule = await import(pathToFileURL(path.join(bridgeRoot, 'nodes', file)).href);
+  for (const [name, fn] of Object.entries(bridgeModule)) {
     if (typeof fn !== 'function') throw new Error(`Non-function node export: ${file}:${name}`);
     actualNodes.set(name, fn());
   }
@@ -39,8 +39,8 @@ const edgeById = new Map(graph.relationships.map((edge) => [edge.id, edge]));
 const observedEdges = new Map();
 for (const file of await fs.readdir(path.join(bridgeRoot, 'relationships'))) {
   if (!file.endsWith('.mjs')) continue;
-  const module = await import(pathToFileURL(path.join(bridgeRoot, 'relationships', file)).href);
-  for (const [name, fn] of Object.entries(module)) {
+  const bridgeModule = await import(pathToFileURL(path.join(bridgeRoot, 'relationships', file)).href);
+  for (const [name, fn] of Object.entries(bridgeModule)) {
     if (typeof fn !== 'function') throw new Error(`Non-function relationship export: ${file}:${name}`);
     const value = fn();
     const expectedName = identifier(`relation_${value.id}`);

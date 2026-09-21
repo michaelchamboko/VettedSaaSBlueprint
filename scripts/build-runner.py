@@ -818,7 +818,7 @@ V2_TASK_KEYS = {
     "id", "title", "status", "dependencies", "risk", "risk_assessment", "source_changes",
     "requirement_ids", "context_files", "validation", "evidence", "model_route", "context_packet",
     "baseline_commit", "workspace", "operation_phase", "evidence_refs", "publication", "review",
-    "blocker", "external_evidence", "verification_history", "started_at", "verified_at", "integrated_at",
+    "blocker", "blocker_history", "external_evidence", "verification_history", "started_at", "verified_at", "integrated_at",
     "published_at", "completed_at", "verified_commit", "integration_commit", "extensions",
 }
 
@@ -904,11 +904,12 @@ def validate_v2_requirement_sources(
             raise ContractError(f"requirement {requirement.get('id', '<unknown>')} has an unknown source section")
         authorities.add(source_authorities[key])
     proposed = "proposed" in authorities
-    if proposed and requirement.get("status") != "separate-authority-required":
+    owner_authorized = requirement.get("owner_authorized_phase_one") is True
+    if proposed and not owner_authorized and requirement.get("status") != "separate-authority-required":
         raise ContractError(
             f"requirement {requirement.get('id', '<unknown>')} sourced from a proposal must require separate authority"
         )
-    return proposed
+    return proposed and not owner_authorized
 
 
 def validate_v2_task_authority(task: dict[str, Any], deferred_requirement_ids: set[str]) -> None:
@@ -1015,11 +1016,27 @@ def ensure_v2_fields(state: dict[str, Any], capabilities: dict[str, Any], root: 
 
 
 def v2_workspace_root(root: Path) -> Path:
-    return root / ".worktrees"
+    # A BuildRunner task can be executed from a clean Git worktree.  In that
+    # case ``root/.worktrees`` would nest worktrees inside the task checkout
+    # and duplicate the integration branch.  Always anchor managed worktrees
+    # at the repository's common Git directory instead.
+    result = run_argv(
+        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        root,
+        timeout=120,
+    )
+    if result.returncode != 0:
+        raise ContractError(output_tail(result.stderr or result.stdout))
+    common_dir = Path(result.stdout.strip())
+    return common_dir.parent / ".worktrees"
 
 
 def run_git(argv: list[str], cwd: Path) -> str:
-    result = run_argv(["git", *argv], cwd, timeout=120)
+    # BuildRunner may inspect a managed worktree created by the interactive
+    # Windows owner while the current process runs under the sandbox account.
+    # Scope the trust exception to this exact command; never mutate global Git
+    # configuration.
+    result = run_argv(["git", "-c", f"safe.directory={cwd}", *argv], cwd, timeout=120)
     if result.returncode != 0:
         raise ContractError(output_tail(result.stderr or result.stdout))
     return result.stdout.strip()
@@ -1027,12 +1044,19 @@ def run_git(argv: list[str], cwd: Path) -> str:
 
 def v2_ensure_integration(root: Path, capabilities: dict[str, Any]) -> Path:
     workspace_root = v2_workspace_root(root)
+    branch = capabilities.get("workspace", {}).get("integration_branch", "globalsetup/integration")
+    worktrees = run_git(["worktree", "list", "--porcelain"], root).splitlines()
+    current_path: Path | None = None
+    for line in worktrees:
+        if line.startswith("worktree "):
+            current_path = Path(line.removeprefix("worktree "))
+        elif line == f"branch refs/heads/{branch}" and current_path is not None:
+            return current_path
     integration = workspace_root / "integration"
     if integration.exists():
         return integration
     workspace_root.mkdir(parents=True, exist_ok=True)
     base = run_git(["rev-parse", "HEAD"], root)
-    branch = capabilities.get("workspace", {}).get("integration_branch", "globalsetup/integration")
     run_git(["worktree", "add", "-b", branch, str(integration), base], root)
     return integration
 
@@ -1046,7 +1070,10 @@ def v2_start(state: dict[str, Any], capabilities: dict[str, Any], root: Path, st
         raise ContractError(f"task {task_id} is not ready")
     graph_status(root, capabilities)
     integration = v2_ensure_integration(root, capabilities)
-    base = run_git(["rev-parse", "HEAD"], integration)
+    # The task must start from the checked-out authority, not from a managed
+    # integration worktree which may be retained from an older recovery run.
+    # Integration is a merge destination only.
+    base = run_git(["rev-parse", "HEAD"], root)
     path = v2_workspace_root(root) / task_id
     if path.exists():
         raise ContractError(f"managed task worktree already exists: {path}")
@@ -1168,6 +1195,31 @@ def v2_reconcile(state: dict[str, Any]) -> None:
         if task["status"] in {"done", "in_progress", "verified", "integrated", "published"} or task.get("blocker"):
             continue
         task["status"] = "ready" if all(mapping[dep]["status"] == "done" for dep in task.get("dependencies", [])) else "blocked"
+
+
+def v2_block(state: dict[str, Any], state_path: Path, task_id: str, reason: str) -> dict[str, Any]:
+    task = get_task(state, task_id)
+    if task.get("status") == "done":
+        raise ContractError(f"task {task_id} is done and cannot be blocked")
+    task.update({"status": "blocked", "blocker": {"reason": reason, "recorded_at": now_utc()}})
+    write_json_atomic(state_path, state)
+    return task
+
+
+def v2_unblock(state: dict[str, Any], state_path: Path, task_id: str, resolution: str) -> dict[str, Any]:
+    task = get_task(state, task_id)
+    blocker = task.get("blocker")
+    if task.get("status") != "blocked" or not isinstance(blocker, dict):
+        raise ContractError(f"task {task_id} does not have an active explicit blocker")
+    task.setdefault("blocker_history", []).append({**blocker, "resolution": resolution, "resolved_at": now_utc()})
+    task.pop("blocker", None)
+    task.pop("workspace", None)
+    task.pop("baseline_commit", None)
+    task.pop("started_at", None)
+    task["operation_phase"] = "prepared"
+    v2_reconcile(state)
+    write_json_atomic(state_path, state)
+    return task
 
 
 def v2_impact(state: dict[str, Any], root: Path, state_path: Path) -> dict[str, Any]:
@@ -1410,6 +1462,10 @@ def main() -> int:
                     v2_reconcile(state)
                     write_json_atomic(state_path, state)
                     result = task
+                elif args.command == "block":
+                    result = v2_block(state, state_path, args.task_id, args.reason)
+                elif args.command == "unblock":
+                    result = v2_unblock(state, state_path, args.task_id, args.resolution)
                 else:
                     raise ContractError(f"command {args.command} is not available for schema_version 2")
                 emit_result(args.command, result)
