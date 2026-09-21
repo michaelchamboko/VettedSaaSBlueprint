@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description: "Contact VettedSaaSBlueprint about editorial corrections, privacy, accessibility, or PAIA requests.",
+  alternates: { canonical: "/contact" },
+  openGraph: { title: "Contact", description: "Contact VettedSaaSBlueprint about editorial corrections, privacy, accessibility, or PAIA requests.", url: "/contact" },
+  robots: { index: true, follow: true },
+};
 
 export default function ContactPage() {
   const config = loadPublicSiteConfig();

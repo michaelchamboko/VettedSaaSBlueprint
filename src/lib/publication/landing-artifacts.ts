@@ -10,7 +10,7 @@ export type PublishedLandingArtifactIndexEntry = {
   artifact: string;
   path: string;
   status: "published";
-  publication_source: "oracle_dynamic_pages";
+  publication_source: "generated_pages";
   published_at: string;
   current_version_id: string;
   owner_publish_audit_id: string;
@@ -94,7 +94,7 @@ export function buildPublishedLandingArtifactsPayload(
       artifact: artifactName,
       path: pagePath,
       status: "published",
-      publication_source: "oracle_dynamic_pages",
+      publication_source: "generated_pages",
       published_at: publishedAt,
       current_version_id: currentVersionId,
       owner_publish_audit_id: ownerPublishAuditId,

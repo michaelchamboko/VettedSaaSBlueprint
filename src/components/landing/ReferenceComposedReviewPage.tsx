@@ -5,10 +5,9 @@ import { getRenderableSectionOrder, shouldRenderReferenceSubheadline, type Refer
 
 import type { LandingPageRenderMode } from "./DirectReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
-import { OracleTracking } from "./OracleTracking";
 
 function affiliateUrl(linkId: string, override?: string) {
-  return override ?? `/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
+  return override ?? "#affiliate-link-unavailable";
 }
 
 function getRenderableVisual(
@@ -77,12 +76,10 @@ function SectionContent({ sectionKey, blueprint, affiliateUrlOverride }: {
 
 export function ReferenceComposedReviewPage({
   blueprint,
-  analyticsEnabled = false,
   mode = "production",
   affiliateUrlOverride,
 }: {
   blueprint: PageBlueprint;
-  analyticsEnabled?: boolean;
   mode?: LandingPageRenderMode;
   affiliateUrlOverride?: string;
 }) {
@@ -142,7 +139,6 @@ export function ReferenceComposedReviewPage({
         </footer>
       </div>
       {blueprint.metadata.motion_profile === "gsap_editorial" ? <LandingPageMotion pageSlug={blueprint.metadata.url_slug} variant={presentation.motion} /> : null}
-      {mode !== "preview" ? <OracleTracking enabled={analyticsEnabled} pageSlug={blueprint.metadata.url_slug} ctaLinkId={blueprint.hero.primary_cta_link_id} /> : null}
     </main>
   );
 }

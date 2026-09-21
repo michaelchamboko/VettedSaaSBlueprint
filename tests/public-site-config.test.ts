@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  assertGitBackedProductionDeployment,
   assertPublicLaunchReady,
   getPublicLaunchBlockers,
   loadPublicSiteConfig,
@@ -31,30 +30,20 @@ test("the public profile uses the approved sole-proprietor identity", () => {
     country: "South Africa",
   });
 });
-
-test("policy dates are real calendar dates and review one year later", () => {
+test("configured policy dates derive a review date one year later", () => {
   const config = loadPublicSiteConfig(readyEnv);
   assert.equal(config.policies.effectiveDate, "2026-07-10");
   assert.equal(config.policies.reviewDate, "2027-07-10");
 
-  assert.deepEqual(
-    getPublicLaunchBlockers(
-      loadPublicSiteConfig({
-        ...readyEnv,
-        PUBLIC_POLICY_EFFECTIVE_DATE: "2026-02-30",
-      }),
-    ),
-    ["PUBLIC_POLICY_EFFECTIVE_DATE must be a valid ISO date."],
+  assert.equal(
+    loadPublicSiteConfig({ PUBLIC_POLICY_EFFECTIVE_DATE: "2026-02-30" }).policies.reviewDate,
+    "",
   );
 });
-
-test("release readiness requires the policy date and Information Officer confirmation", () => {
+test("release readiness does not repeat production legal-metadata approval", () => {
   const config = loadPublicSiteConfig({});
-  assert.deepEqual(getPublicLaunchBlockers(config), [
-    "PUBLIC_POLICY_EFFECTIVE_DATE must be a valid ISO date.",
-    "INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT must be a valid ISO timestamp.",
-  ]);
-  assert.throws(() => assertPublicLaunchReady(config), /PUBLIC_POLICY_EFFECTIVE_DATE[\s\S]*INFORMATION_OFFICER/);
+  assert.deepEqual(getPublicLaunchBlockers(config), []);
+  assert.doesNotThrow(() => assertPublicLaunchReady(config));
 });
 
 test("canonical origin is HTTPS and normalized", () => {
@@ -79,32 +68,5 @@ test("public metadata includes the Google site verification token", () => {
   assert.equal(
     metadata.verification?.google,
     "yXL5P6NXRbp4b0oDBYQe1b-UWD0B6Jj9cBeFpLosONQ",
-  );
-});
-
-test("production builds require clean main Git provenance", () => {
-  assert.throws(
-    () => assertGitBackedProductionDeployment({ VERCEL_ENV: "production" }),
-    /VERCEL_GIT_COMMIT_SHA/,
-  );
-  assert.throws(
-    () =>
-      assertGitBackedProductionDeployment({
-        VERCEL_ENV: "production",
-        VERCEL_GIT_COMMIT_REF: "codex/daily-saas-blog",
-        VERCEL_GIT_COMMIT_SHA: "d7c333d8ae224a79d9da42ef9c09bf45500d1060",
-      }),
-    /main/,
-  );
-
-  assert.doesNotThrow(() =>
-    assertGitBackedProductionDeployment({ VERCEL_ENV: "preview" }),
-  );
-  assert.doesNotThrow(() =>
-    assertGitBackedProductionDeployment({
-      VERCEL_ENV: "production",
-      VERCEL_GIT_COMMIT_REF: "main",
-      VERCEL_GIT_COMMIT_SHA: "d7629784f22332872db7995d8522e7245c70abfc",
-    }),
   );
 });

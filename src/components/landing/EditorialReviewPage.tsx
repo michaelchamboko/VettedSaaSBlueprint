@@ -4,20 +4,13 @@ import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 import type { LandingPageRenderMode } from "./DirectReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
-import { OracleTracking } from "./OracleTracking";
-
-function buildAffiliateUrl(linkId: string) {
-  return `/r/affiliate?${new URLSearchParams({ linkId }).toString()}`;
-}
 
 export function EditorialReviewPage({
   blueprint,
-  analyticsEnabled = false,
   mode = "production",
   affiliateUrlOverride,
 }: {
   blueprint: PageBlueprint;
-  analyticsEnabled?: boolean;
   mode?: LandingPageRenderMode;
   affiliateUrlOverride?: string;
 }) {
@@ -26,7 +19,7 @@ export function EditorialReviewPage({
       ? blueprint.hero.visual_asset
       : null;
   const answerSnippet = blueprint.hero.answer_snippet ?? blueprint.hero.subheadline;
-  const affiliateUrl = affiliateUrlOverride ?? buildAffiliateUrl(blueprint.hero.primary_cta_link_id);
+  const affiliateUrl = affiliateUrlOverride ?? "#affiliate-link-unavailable";
 
   return (
     <main
@@ -163,9 +156,6 @@ export function EditorialReviewPage({
       </div>
 
       {blueprint.metadata.motion_profile === "gsap_editorial" ? <LandingPageMotion pageSlug={blueprint.metadata.url_slug} /> : null}
-      {mode !== "preview" ? (
-        <OracleTracking enabled={analyticsEnabled} pageSlug={blueprint.metadata.url_slug} ctaLinkId={blueprint.hero.primary_cta_link_id} />
-      ) : null}
     </main>
   );
 }

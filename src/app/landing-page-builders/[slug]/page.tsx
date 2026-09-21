@@ -35,11 +35,9 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const published = getPublishedLandingPageRecord(slug);
   if (!published) notFound();
-  const config = loadPublicSiteConfig();
   return (
     <DirectReviewPage
       blueprint={published.blueprint}
-      analyticsEnabled={config.analytics.enabled}
       affiliateUrlOverride={published.exactAffiliateUrl ?? undefined}
     />
   );

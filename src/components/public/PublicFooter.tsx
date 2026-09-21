@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const legalLinks = [
+  ["Blog", "/blog"],
   ["Privacy", "/privacy"],
   ["Terms", "/terms"],
   ["Contact", "/contact"],

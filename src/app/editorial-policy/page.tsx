@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "Editorial policy",
+  description: "How VettedSaaSBlueprint evaluates evidence, limitations, affiliate relationships, corrections, and release quality.",
+  alternates: { canonical: "/editorial-policy" },
+  openGraph: { title: "Editorial policy", description: "How VettedSaaSBlueprint evaluates evidence, limitations, affiliate relationships, corrections, and release quality.", url: "/editorial-policy" },
+  robots: { index: true, follow: true },
+};
 
 export default function EditorialPolicyPage() {
   const config = loadPublicSiteConfig();

@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/public/LegalDocument";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+
+export const metadata: Metadata = {
+  title: "Accessibility statement",
+  description: "VettedSaaSBlueprint's accessibility goals, supported interactions, and process for reporting barriers.",
+  alternates: { canonical: "/accessibility" },
+  openGraph: { title: "Accessibility statement", description: "VettedSaaSBlueprint's accessibility goals, supported interactions, and process for reporting barriers.", url: "/accessibility" },
+  robots: { index: true, follow: true },
+};
 
 export default function AccessibilityPage() {
   const config = loadPublicSiteConfig();

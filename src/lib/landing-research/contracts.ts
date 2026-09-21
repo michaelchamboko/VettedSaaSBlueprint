@@ -1,14 +1,14 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 
-export const HERMES_RESEARCH_CONTRACT_VERSION = "HermesResearchContractV1" as const;
+export const AUTOMATION_RESEARCH_CONTRACT_VERSION = "AutomationResearchContractV1" as const;
 
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 const httpsUrlSchema = z.string().url().refine((value) => new URL(value).protocol === "https:", "HTTPS URL required.");
 
-export const hermesExecutorRequestSchema = z.object({
-  schema_version: z.literal(HERMES_RESEARCH_CONTRACT_VERSION),
-  capability: z.enum(["hermes_product_identity", "hermes_research"]),
+export const automationExecutorRequestSchema = z.object({
+  schema_version: z.literal(AUTOMATION_RESEARCH_CONTRACT_VERSION),
+  capability: z.enum(["product_identity", "research"]),
   job_id: z.string().uuid(),
   stage_attempt_id: z.string().uuid(),
   exact_url: httpsUrlSchema,
@@ -47,8 +47,8 @@ export const researchSourceSnapshotBundleSchema = z.object({
   }
 });
 
-export const hermesProductIdentitySchema = z.object({
-  schema_version: z.literal("HermesProductIdentityV1"),
+export const automationProductIdentitySchema = z.object({
+  schema_version: z.literal("AutomationProductIdentityV1"),
   exact_url: httpsUrlSchema,
   url_fingerprint: sha256Schema,
   product_name: z.string().min(1).max(240),
@@ -60,8 +60,8 @@ export const hermesProductIdentitySchema = z.object({
   limitations: z.array(z.string().min(1).max(500)).max(20),
 }).strict();
 
-export const hermesResearchEvidenceSchema = z.object({
-  schema_version: z.literal("HermesResearchEvidenceV1"),
+export const automationResearchEvidenceSchema = z.object({
+  schema_version: z.literal("AutomationResearchEvidenceV1"),
   exact_url: httpsUrlSchema,
   url_fingerprint: sha256Schema,
   claims: z.array(z.object({
@@ -83,23 +83,23 @@ export const hermesResearchEvidenceSchema = z.object({
   recommendations: z.array(z.string().min(1).max(1000)).max(20),
 }).strict();
 
-export const hermesExecutorResponseSchema = z.object({
-  schema_version: z.literal(HERMES_RESEARCH_CONTRACT_VERSION),
-  capability: z.enum(["hermes_product_identity", "hermes_research"]),
+export const automationExecutorResponseSchema = z.object({
+  schema_version: z.literal(AUTOMATION_RESEARCH_CONTRACT_VERSION),
+  capability: z.enum(["product_identity", "research"]),
   job_id: z.string().uuid(),
   stage_attempt_id: z.string().uuid(),
   exact_url: httpsUrlSchema,
   url_fingerprint: sha256Schema,
   input_digest: sha256Schema,
-  product_identity: hermesProductIdentitySchema.optional(),
-  research_evidence: hermesResearchEvidenceSchema.optional(),
+  product_identity: automationProductIdentitySchema.optional(),
+  research_evidence: automationResearchEvidenceSchema.optional(),
   snapshots: researchSourceSnapshotBundleSchema.optional(),
   completed_at: z.string().datetime({ offset: true }),
 }).strict().superRefine((response, context) => {
-  if (response.capability === "hermes_product_identity" && !response.product_identity) {
+  if (response.capability === "product_identity" && !response.product_identity) {
     context.addIssue({ code: "custom", path: ["product_identity"], message: "Product identity output is required." });
   }
-  if (response.capability === "hermes_research" && (!response.research_evidence || !response.snapshots)) {
+  if (response.capability === "research" && (!response.research_evidence || !response.snapshots)) {
     context.addIssue({ code: "custom", path: ["research_evidence"], message: "Research evidence and snapshots are required." });
   }
   if (response.product_identity && response.product_identity.exact_url !== response.exact_url) {
@@ -110,17 +110,17 @@ export const hermesExecutorResponseSchema = z.object({
   }
 });
 
-export const hermesExecutorCapabilitiesSchema = z.object({
-  schema_version: z.literal("HermesExecutorCapabilitiesV1"),
-  capability: z.enum(["hermes_product_identity", "hermes_research"]),
-  contract_version: z.literal(HERMES_RESEARCH_CONTRACT_VERSION),
+export const automationExecutorCapabilitiesSchema = z.object({
+  schema_version: z.literal("AutomationExecutorCapabilitiesV1"),
+  capability: z.enum(["product_identity", "research"]),
+  contract_version: z.literal(AUTOMATION_RESEARCH_CONTRACT_VERSION),
   supports: z.array(z.enum(["--probe", "stdin-json"])).min(2),
 }).strict();
 
-export type HermesExecutorRequestV1 = z.infer<typeof hermesExecutorRequestSchema>;
-export type HermesExecutorResponseV1 = z.infer<typeof hermesExecutorResponseSchema>;
-export type HermesProductIdentityV1 = z.infer<typeof hermesProductIdentitySchema>;
-export type HermesResearchEvidenceV1 = z.infer<typeof hermesResearchEvidenceSchema>;
+export type AutomationExecutorRequestV1 = z.infer<typeof automationExecutorRequestSchema>;
+export type AutomationExecutorResponseV1 = z.infer<typeof automationExecutorResponseSchema>;
+export type AutomationProductIdentityV1 = z.infer<typeof automationProductIdentitySchema>;
+export type AutomationResearchEvidenceV1 = z.infer<typeof automationResearchEvidenceSchema>;
 export type ResearchSourceSnapshotBundleV1 = z.infer<typeof researchSourceSnapshotBundleSchema>;
 
 export function exactUrlFingerprint(exactUrl: string): string {

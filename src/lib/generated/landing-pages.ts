@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 
-import { parseApprovedUrls } from "@/lib/landing-automation/approved-urls";
+import { parseApprovedUrls } from "@/lib/affiliate/approved-urls";
 import {
   pageBlueprintSchema,
   type PageBlueprint,
@@ -35,20 +35,12 @@ const baseManifestPageSchema = z.object({
   current_version_id: z.string().min(1),
 });
 
-const oracleManifestPageSchema = baseManifestPageSchema.extend({
-  publication_source: z.literal("oracle_dynamic_pages"),
-  owner_publish_audit_id: z.string().min(1),
-});
-
 const agentManifestPageSchema = baseManifestPageSchema.extend({
   publication_source: z.literal("agent_verified_release"),
   release_receipt: safeRelativeJsonPathSchema,
 });
 
-const manifestPageSchema = z.discriminatedUnion("publication_source", [
-  oracleManifestPageSchema,
-  agentManifestPageSchema,
-]);
+const manifestPageSchema = agentManifestPageSchema;
 
 const landingPageManifestSchema = z.object({
   generated_at: z.string().optional(),
@@ -112,7 +104,6 @@ const landingReleaseReceiptSchema = z
       })
       .strict(),
     claims_removed_or_softened: z.array(z.string()),
-    oracle_sync: z.enum(["complete", "pending", "not_configured"]),
   })
   .strict();
 
@@ -178,10 +169,12 @@ function verifyFingerprint(
   if (!existsSync(artifactPath)) {
     throw new Error(`Missing ${label} release evidence "${reference.path}".`);
   }
-  const actual = sha256(readFileSync(artifactPath));
-  if (actual !== reference.sha256) {
+  const raw = readFileSync(artifactPath);
+  const rawFingerprint = sha256(raw);
+  const normalizedFingerprint = sha256(raw.toString("utf8").replace(/\r\n/g, "\n"));
+  if (rawFingerprint !== reference.sha256 && normalizedFingerprint !== reference.sha256) {
     throw new Error(
-      `Release fingerprint mismatch for ${label}: expected ${reference.sha256}, received ${actual}.`,
+      `Release fingerprint mismatch for ${label}: expected ${reference.sha256}, received ${rawFingerprint}.`,
     );
   }
 }
@@ -272,40 +265,13 @@ function loadCatalogue(directory: string): Catalogue {
   const summaries: PublicReviewSummary[] = [];
 
   for (const entry of manifest) {
-    let published: PublishedLandingPage;
-    if (entry.publication_source === "agent_verified_release") {
-      const { blueprint, receipt } = verifyAgentRelease(directory, entry);
-      published = {
-        blueprint,
-        exactAffiliateUrl: receipt.exact_affiliate_url,
-        publicationSource: entry.publication_source,
-        releaseReceipt: receipt,
-      };
-    } else {
-      const artifactPath = resolveArtifactPath(directory, entry.artifact);
-      if (!existsSync(artifactPath)) {
-        throw new Error(
-          `Missing generated landing artifact "${entry.artifact}".`,
-        );
-      }
-      const blueprint = pageBlueprintSchema.parse(
-        parseJsonFile<unknown>(artifactPath),
-      );
-      if (
-        blueprint.metadata.url_slug !== entry.slug ||
-        entry.path !== `/landing-page-builders/${entry.slug}`
-      ) {
-        throw new Error(
-          `Manifest and artifact identity mismatch for "${entry.slug}".`,
-        );
-      }
-      published = {
-        blueprint,
-        exactAffiliateUrl: null,
-        publicationSource: entry.publication_source,
-        releaseReceipt: null,
-      };
-    }
+    const { blueprint, receipt } = verifyAgentRelease(directory, entry);
+    const published: PublishedLandingPage = {
+      blueprint,
+      exactAffiliateUrl: receipt.exact_affiliate_url,
+      publicationSource: entry.publication_source,
+      releaseReceipt: receipt,
+    };
 
     pages.set(entry.slug, published);
     summaries.push({

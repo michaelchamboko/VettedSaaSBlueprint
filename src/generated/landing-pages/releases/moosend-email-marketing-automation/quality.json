@@ -1,1 +1,33 @@
-{"schema_version":"LandingReleaseQualityV1","status":"pass","page_slug":"moosend-email-marketing-automation","checked_at":"2026-07-26T00:00:00.000Z","checks":[{"name":"candidate_quality","status":"pass","evidence":"All 16 candidate static and specialist scanners passed after two bounded copy repairs."},{"name":"destination","status":"pass","evidence":"The exact supplied URL resolved to the official Moosend host while the CTA value remains unchanged."}],"recovery_attempts":[{"attempt":"Run candidate checks against the first draft.","outcome":"Fourteen checks passed; generic score similarity and compliance pattern checks requested targeted copy changes."},{"attempt":"Apply two copy repairs and rerun the candidate checks.","outcome":"All sixteen checks passed. A read-only shared scanner also falsely reads 'operating' as 'rating', so the page uses 'workflow' and the defect is recorded."}],"claims_removed_or_softened":["Omitted price, discount, free-trial, guarantee, ranking, security, and performance claims.","Framed the page as a campaign-and-segment fit check rather than a promised result."],"oracle_sync":"not_configured","updated_at":"2026-07-26T00:00:00.000Z"}
+{
+  "schema_version": "LandingReleaseQualityV1",
+  "status": "pass",
+  "page_slug": "moosend-email-marketing-automation",
+  "checked_at": "2026-07-26T00:00:00.000Z",
+  "checks": [
+    {
+      "name": "candidate_quality",
+      "status": "pass",
+      "evidence": "All 16 candidate static and specialist scanners passed after two bounded copy repairs."
+    },
+    {
+      "name": "destination",
+      "status": "pass",
+      "evidence": "The exact supplied URL resolved to the official Moosend host while the CTA value remains unchanged."
+    }
+  ],
+  "recovery_attempts": [
+    {
+      "attempt": "Run candidate checks against the first draft.",
+      "outcome": "Fourteen checks passed; generic score similarity and compliance pattern checks requested targeted copy changes."
+    },
+    {
+      "attempt": "Apply two copy repairs and rerun the candidate checks.",
+      "outcome": "All sixteen checks passed. A read-only shared scanner also falsely reads 'operating' as 'rating', so the page uses 'workflow' and the defect is recorded."
+    }
+  ],
+  "claims_removed_or_softened": [
+    "Omitted price, discount, free-trial, guarantee, ranking, security, and performance claims.",
+    "Framed the page as a campaign-and-segment fit check rather than a promised result."
+  ],
+  "updated_at": "2026-07-26T00:00:00.000Z"
+}

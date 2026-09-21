@@ -21,7 +21,7 @@ export type LandingRunStage =
   | "production_verification"
   | "complete";
 
-export type OracleSyncState = "complete" | "pending" | "not_configured";
+export type PublicationSyncState = "complete" | "pending" | "not_configured";
 
 export type LandingRunNextAction = {
   kind:
@@ -102,7 +102,7 @@ export type LandingRunV1 = {
   };
   preview_result: LandingPreviewResult | null;
   production_result: LandingProductionResult | null;
-  oracle_sync: OracleSyncState;
+  publication_sync: PublicationSyncState;
   recovery_evidence: RecoveryEvidence[];
   created_at: string;
   updated_at: string;
@@ -165,7 +165,7 @@ export type LandingRunEvent =
       now: string;
       evidence: PlainEnglishEvidence;
     }
-  | { kind: "oracle_sync_updated"; now: string; state: OracleSyncState }
+  | { kind: "publication_sync_updated"; now: string; state: PublicationSyncState }
   | { kind: "stop"; now: string; reason: string };
 
 export type LoadOrCreateLandingRunInput = {
@@ -173,7 +173,7 @@ export type LoadOrCreateLandingRunInput = {
   exactUrl: string;
   slug: string;
   now?: string;
-  oracleConfigured?: boolean;
+  databaseConfigured?: boolean;
 };
 
 export type LoadOrCreateLandingRunResult = {
@@ -297,7 +297,7 @@ export function advanceLandingRun(
   run: LandingRunV1,
   event: LandingRunEvent,
 ): LandingRunV1 {
-  if (event.kind !== "oracle_sync_updated") assertRunCanAdvance(run);
+  if (event.kind !== "publication_sync_updated") assertRunCanAdvance(run);
 
   const updated: LandingRunV1 = {
     ...run,
@@ -517,8 +517,8 @@ export function advanceLandingRun(
         ),
       };
 
-    case "oracle_sync_updated":
-      return { ...updated, oracle_sync: event.state };
+    case "publication_sync_updated":
+      return { ...updated, publication_sync: event.state };
 
     case "stop":
       return {
@@ -616,7 +616,7 @@ export async function loadOrCreateLandingRun(
     review_fingerprints: {},
     preview_result: null,
     production_result: null,
-    oracle_sync: input.oracleConfigured ? "pending" : "not_configured",
+    publication_sync: input.databaseConfigured ? "pending" : "not_configured",
     recovery_evidence: [],
     created_at: now,
     updated_at: now,

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 
 export async function verifyOwnerPassword(password: string) {
-  const hashedPassword = process.env.ORACLE_APP_PASSWORD;
+  const hashedPassword = process.env.APP_PASSWORD_HASH;
   if (!hashedPassword) return false;
   return bcrypt.compare(password, hashedPassword);
 }

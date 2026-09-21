@@ -25,6 +25,9 @@ test("sitemap contains the public home and every legal route", () => {
     "/paia",
     "/accessibility",
     "/blog",
+    "/decision-hub",
+    "/solution-hub",
+    "/scenarios",
   ]);
   assert.ok(entries.every((entry) => entry.lastModified === undefined));
 });

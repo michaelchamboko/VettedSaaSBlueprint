@@ -141,7 +141,7 @@ export function StudioPage({ config }: StudioPageProps) {
   return (
     <main className="studio-page" ref={pageRef}>
       <header className="studio-nav" data-studio-nav>
-        <Link href="/" className="studio-brand">VettedSaaSBlueprint</Link>
+        <Link href={"/" as never} className="studio-brand">VettedSaaSBlueprint</Link>
         <span>{config.productName} / studio brief</span>
       </header>
 

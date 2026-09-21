@@ -1,157 +1,61 @@
-import oracledb from "oracledb";
-import type { Metadata, Result } from "oracledb";
+import type { PoolClient, QueryResultRow } from "pg";
+
 import { getPool } from "./client";
 
-type TaggedTemplateResult = {
-  sql: string;
-  binds: unknown[];
-};
+type TaggedTemplateResult = { sql: string; binds: unknown[] };
 
-function parseTemplate(
-  strings: TemplateStringsArray,
-  values: unknown[]
-): TaggedTemplateResult {
+function parseTemplate(strings: TemplateStringsArray, values: unknown[]): TaggedTemplateResult {
   let sql = "";
   const binds: unknown[] = [];
-
-  for (let i = 0; i < strings.length; i++) {
-    sql += strings[i];
-    if (i < values.length) {
-      binds.push(values[i]);
-      sql += `:${binds.length}`;
+  for (let index = 0; index < strings.length; index += 1) {
+    sql += strings[index];
+    if (index < values.length) {
+      binds.push(values[index]);
+      sql += `$${binds.length}`;
     }
   }
-
   return { sql, binds };
 }
 
-function convertOracleSyntax(sql: string): string {
-  let converted = sql;
-
-  converted = converted.replace(/\bnow\(\)/g, "SYSTIMESTAMP");
-
-  converted = converted.replace(
-    /interval\s+'(\d+)\s+(\w+)'/g,
-    (_match, value: string, unit: string) => {
-      const oracleUnit = unit.toUpperCase().replace(/S$/, "");
-      return `NUMTODSINTERVAL(${value}, '${oracleUnit}')`;
-    }
-  );
-
-  converted = converted.replace(
-    /::text\[\]/g,
-    ""
-  );
-
-  converted = converted.replace(
-    /\s+limit\s+(\d+)\s*$/i,
-    (_match, count: string) => ` FETCH FIRST ${count} ROWS ONLY`,
-  );
-
-  return converted;
+function normalizePlaceholders(sql: string): string {
+  return sql.replace(/:(\d+)/g, (_match, index: string) => `$${index}`);
 }
 
-async function normalizeOracleValue(value: unknown): Promise<unknown> {
-  if (value && typeof value === "object" && "getData" in value && typeof (value as { getData?: unknown }).getData === "function") {
-    return (value as { getData: () => Promise<unknown> }).getData();
-  }
-  return value;
+function rows(result: { rows: QueryResultRow[] }): Record<string, unknown>[] {
+  return result.rows as Record<string, unknown>[];
 }
 
-async function mapRows(result: Result<unknown>): Promise<Record<string, unknown>[]> {
-  if (!result.rows || result.rows.length === 0) return [];
-
-  const columns = result.metaData?.map((c: Metadata<unknown>) => c.name.toLowerCase()) ?? [];
-  return Promise.all(result.rows.map(async (row: unknown) => {
-    const obj: Record<string, unknown> = {};
-    if (Array.isArray(row)) {
-      await Promise.all(columns.map(async (col: string, i: number) => {
-        obj[col] = await normalizeOracleValue(row[i]);
-      }));
-    }
-    return obj;
-  }));
+export async function executeQuery(sql: string, binds: unknown[] = []): Promise<{ rows: Record<string, unknown>[] }> {
+  return { rows: rows(await getPool().query(normalizePlaceholders(sql), binds)) };
 }
 
-export async function executeQuery(
-  sql: string,
-  binds: unknown[] = []
-): Promise<{ rows: Record<string, unknown>[] }> {
-  const pool = await getPool();
-  const connection = await pool.getConnection();
-  try {
-    const converted = convertOracleSyntax(sql);
-    const result = await connection.execute(converted, binds, {
-      outFormat: oracledb.OUT_FORMAT_ARRAY,
-      autoCommit: true,
-    });
-    return { rows: await mapRows(result) };
-  } finally {
-    await connection.close();
-  }
-}
-
-export type TransactionSql = (
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-) => Promise<{ rows: Record<string, unknown>[] }>;
-
+export type TransactionSql = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>;
 export type TransactionRunner = <T>(work: (tx: TransactionSql) => Promise<T>) => Promise<T>;
-
-export type TransactionConnection = {
-  execute(
-    sql: string,
-    binds?: unknown[],
-    options?: unknown,
-  ): Promise<Result<unknown>>;
-  commit(): Promise<void>;
-  rollback(): Promise<void>;
-  close(): Promise<void>;
-};
-
+export type TransactionConnection = Pick<PoolClient, "query" | "release">;
 type TransactionConnectionFactory = () => Promise<TransactionConnection>;
 
-export async function withTransaction<T>(
-  work: (tx: TransactionSql) => Promise<T>,
-  getConnection: TransactionConnectionFactory = async () => {
-    const pool = await getPool();
-    return (await pool.getConnection()) as unknown as TransactionConnection;
-  },
-): Promise<T> {
+export async function withTransaction<T>(work: (tx: TransactionSql) => Promise<T>, getConnection: TransactionConnectionFactory = () => getPool().connect()): Promise<T> {
   const connection = await getConnection();
-
   const tx: TransactionSql = async (strings, ...values) => {
-    const { sql: query, binds } = parseTemplate(strings, values);
-    const result = await connection.execute(convertOracleSyntax(query), binds, {
-      outFormat: oracledb.OUT_FORMAT_ARRAY,
-      autoCommit: false,
-    });
-    return { rows: await mapRows(result) };
+    const query = parseTemplate(strings, values);
+    return { rows: rows(await connection.query(query.sql, query.binds)) };
   };
-
   try {
+    await connection.query("begin");
     const result = await work(tx);
-    await connection.commit();
+    await connection.query("commit");
     return result;
   } catch (error) {
-    await connection.rollback();
+    await connection.query("rollback");
     throw error;
   } finally {
-    await connection.close();
+    connection.release();
   }
 }
 
-export async function executeReturning(
-  sql: string,
-  binds: unknown[] = []
-): Promise<{ rows: Record<string, unknown>[] }> {
-  return executeQuery(sql, binds);
-}
+export const executeReturning = executeQuery;
 
-export function sql(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-): Promise<{ rows: Record<string, unknown>[] }> {
-  const { sql: query, binds } = parseTemplate(strings, values);
-  return executeQuery(query, binds);
+export function sql(strings: TemplateStringsArray, ...values: unknown[]): Promise<{ rows: Record<string, unknown>[] }> {
+  const query = parseTemplate(strings, values);
+  return executeQuery(query.sql, query.binds);
 }

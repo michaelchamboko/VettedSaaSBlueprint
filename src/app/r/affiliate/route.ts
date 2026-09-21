@@ -1,4 +1,4 @@
-import { buildOracleAffiliateRedirectUrl, buildOracleEventIngestUrl, buildOracleTrackingPayload } from "@/lib/tracking/oracle-public-endpoints";
+import { buildPublicAffiliateRedirectUrl, buildPublicEventIngestUrl, buildPublicTrackingPayload } from "@/lib/tracking/public-tracking-endpoints";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
 import { publicTrackingAllowed } from "@/lib/tracking/privacy";
 
@@ -13,14 +13,14 @@ function buildFallback(request: Request, linkId: string) {
 
 async function sendAffiliateTracking(base: string, linkId: string) {
   try {
-    const eventPayload = buildOracleTrackingPayload(
+    const eventPayload = buildPublicTrackingPayload(
       {
         event_type: "affiliate_click",
         link_id: linkId,
       },
       "affiliate_click",
     );
-    const response = await fetch(buildOracleEventIngestUrl(base), {
+    const response = await fetch(buildPublicEventIngestUrl(base), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(eventPayload),
@@ -37,10 +37,10 @@ export async function GET(request: Request) {
   const linkId = requestUrl.searchParams.get("linkId");
   if (!linkId) return Response.json({ error: "linkId required" }, { status: 400 });
 
-  const base = process.env.NEXT_PUBLIC_ORACLE_PUBLIC_BASE_URL?.trim();
+  const base = process.env.NEXT_PUBLIC_TRACKING_BASE_URL?.trim();
   try {
     if (base) {
-      const redirectTarget = new URL(buildOracleAffiliateRedirectUrl(linkId, base));
+      const redirectTarget = new URL(buildPublicAffiliateRedirectUrl(linkId, base));
       if (publicTrackingAllowed(request, loadPublicSiteConfig())) {
         await sendAffiliateTracking(base, linkId);
       }

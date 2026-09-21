@@ -1,0 +1,717 @@
+{
+  "/decision-hub": {
+    "version": 1,
+    "pageType": "decision-hub",
+    "canonicalPath": "/decision-hub",
+    "headline": "How should a five-person team choose software without a technical administrator?",
+    "decisionContext": "Start with the team’s outcome, constraints, and evidence gaps before comparing any software approach.",
+    "evidenceState": "validated",
+    "sourceFingerprint": "3ef80cb9e6e8c4a97a8f61913d4e37722f13fa61690ad2ea0da8f6f898f8a328",
+    "reviewDate": "2026-09-01",
+    "blocks": [
+      {
+        "id": "opening",
+        "title": "Start with the decision",
+        "summary": "Define the software decision before evaluating a category or product.",
+        "claims": [
+          {
+            "statement": "Define the software decision before evaluating a category or product.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "relevance",
+        "title": "Why this is different",
+        "summary": "A small team without technical administration carries different operational risk.",
+        "claims": [
+          {
+            "statement": "A small team without technical administration carries different operational risk.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "desired-outcome",
+        "title": "Name the outcome",
+        "summary": "Describe the work outcome the software must help the team achieve.",
+        "claims": [
+          {
+            "statement": "Describe the work outcome the software must help the team achieve.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "problem-landscape",
+        "title": "See the full problem",
+        "summary": "Include adoption, ownership, support, security, and change effort in the decision.",
+        "claims": [
+          {
+            "statement": "Include adoption, ownership, support, security, and change effort in the decision.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "root-causes",
+        "title": "Separate symptoms from causes",
+        "summary": "Identify the recurring friction that a software choice should address.",
+        "claims": [
+          {
+            "statement": "Identify the recurring friction that a software choice should address.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "context-questions",
+        "title": "Ask the context questions",
+        "summary": "Clarify who will operate the tool, how soon it is needed, and what must remain simple.",
+        "claims": [
+          {
+            "statement": "Clarify who will operate the tool, how soon it is needed, and what must remain simple.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "domain-questions",
+        "title": "Ask the domain questions",
+        "summary": "Identify the workflow, integrations, data, and support questions that apply.",
+        "claims": [
+          {
+            "statement": "Identify the workflow, integrations, data, and support questions that apply.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "criteria",
+        "title": "Choose criteria deliberately",
+        "summary": "Use criteria that reflect the team’s operating limits rather than generic popularity.",
+        "claims": [
+          {
+            "statement": "Use criteria that reflect the team’s operating limits rather than generic popularity.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tradeoffs",
+        "title": "Make trade-offs visible",
+        "summary": "State what the team gives up when it prioritises speed, control, flexibility, or support.",
+        "claims": [
+          {
+            "statement": "State what the team gives up when it prioritises speed, control, flexibility, or support.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "conditional-pathways",
+        "title": "Follow the right path",
+        "summary": "Route the team by its constraints instead of declaring a universal winner.",
+        "claims": [
+          {
+            "statement": "Route the team by its constraints instead of declaring a universal winner.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "methodology",
+        "title": "Check the evidence",
+        "summary": "Keep evidence state and review date visible so later research can update the record.",
+        "claims": [
+          {
+            "statement": "Keep evidence state and review date visible so later research can update the record.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "next-action",
+        "title": "Continue to solution approaches",
+        "summary": "Use the solution guide to turn the criteria into conditional software approaches.",
+        "claims": [
+          {
+            "statement": "Use the solution guide to turn the criteria into conditional software approaches.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "15.4 Mandatory Information Blocks",
+                "sectionUid": "D05-S-b1c551a9ae9f",
+                "contentHash": "bf30da97d36c8ea5752404f4634404b7efd9a19b34ae09fc8b6f716ae5db252f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "motionBrief": {
+      "majorPatterns": [
+        "problem-to-criteria reveal",
+        "evidence-state emphasis",
+        "next-step arrival"
+      ],
+      "reducedMotion": "All content remains static, complete, and in document order."
+    },
+    "presentation": {
+      "compositionFamily": "diagnostic-split",
+      "catalogueReferences": [
+        "Tailblocks Classic Light Split Hero",
+        "UI Layouts Condition Grid"
+      ],
+      "artDirection": "An editorial diagnostic that moves from the operating problem into evidence-backed criteria."
+    },
+    "connectedRoutes": [
+      "/solution-hub"
+    ]
+  },
+  "/solution-hub": {
+    "version": 1,
+    "pageType": "solution-hub",
+    "canonicalPath": "/solution-hub",
+    "headline": "Which software approach fits a five-person team that cannot maintain its own systems?",
+    "decisionContext": "Use the same constraints to compare approaches conditionally, not to publish a universal vendor ranking.",
+    "evidenceState": "validated",
+    "sourceFingerprint": "4324ed690e96206bc7ddac31b3720852800e0906405a6d980bd3ec6396ce2787",
+    "reviewDate": "2026-09-01",
+    "blocks": [
+      {
+        "id": "user-goal",
+        "title": "Start with the team’s goal",
+        "summary": "Define the practical outcome the five-person team needs from its software.",
+        "claims": [
+          {
+            "statement": "Define the practical outcome the five-person team needs from its software.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "situation",
+        "title": "Describe the operating situation",
+        "summary": "Keep the lack of a technical administrator and limited implementation capacity explicit.",
+        "claims": [
+          {
+            "statement": "Keep the lack of a technical administrator and limited implementation capacity explicit.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "criteria",
+        "title": "Use decision criteria",
+        "summary": "Prioritise criteria that make ownership, onboarding, support, and daily operation manageable.",
+        "claims": [
+          {
+            "statement": "Prioritise criteria that make ownership, onboarding, support, and daily operation manageable.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "best-fit-scenarios",
+        "title": "Group by fit scenario",
+        "summary": "Choose an approach only where its operating demands match the team’s stated constraints.",
+        "claims": [
+          {
+            "statement": "Choose an approach only where its operating demands match the team’s stated constraints.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "reasoning",
+        "title": "Explain the fit",
+        "summary": "Show why an approach may fit one situation and not another.",
+        "claims": [
+          {
+            "statement": "Show why an approach may fit one situation and not another.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "evidence",
+        "title": "Show what supports the path",
+        "summary": "Present the evidence state and review date instead of treating incomplete research as certainty.",
+        "claims": [
+          {
+            "statement": "Present the evidence state and review date instead of treating incomplete research as certainty.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "next-step",
+        "title": "Resolve the concrete scenario",
+        "summary": "Continue to the five-person scenario to test the approach against fixed constraints.",
+        "claims": [
+          {
+            "statement": "Continue to the five-person scenario to test the approach against fixed constraints.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "16.4 Mandatory Seven-Step Flow",
+                "sectionUid": "D05-S-dd486037fc5c",
+                "contentHash": "a50a547f149439a80f1b8903a4980eececb992e7ae29f21b7b6adf5b7d3e31fa",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "motionBrief": {
+      "majorPatterns": [
+        "goal orientation",
+        "criterion-to-fit comparison",
+        "next-step arrival"
+      ],
+      "reducedMotion": "No comparison or conclusion depends on animation."
+    },
+    "presentation": {
+      "compositionFamily": "fit-map",
+      "catalogueReferences": [
+        "Preline Hero with Client Logo Row",
+        "UI Layouts Condition Grid"
+      ],
+      "artDirection": "A practical fit map with deliberate step progression rather than a universal ranking."
+    },
+    "connectedRoutes": [
+      "/decision-hub",
+      "/scenarios"
+    ]
+  },
+  "/scenarios": {
+    "version": 1,
+    "pageType": "scenario",
+    "canonicalPath": "/scenarios",
+    "headline": "For a five-person team with no technical administrator, what should guide the next software choice?",
+    "decisionContext": "This is a worked decision frame, not a product comparison or a promise of a particular result.",
+    "evidenceState": "partial",
+    "sourceFingerprint": "532f7cd72d4f474c620cc8e85b6410a9383242090a44b7f9c3ee9b9288267b24",
+    "reviewDate": "2026-09-01",
+    "blocks": [
+      {
+        "id": "scenario",
+        "title": "Define the situation",
+        "summary": "A five-person team needs software without a dedicated technical administrator.",
+        "claims": [
+          {
+            "statement": "A five-person team needs software without a dedicated technical administrator.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "assumptions",
+        "title": "State assumptions",
+        "summary": "Treat team size, operating capacity, and implementation time as assumptions to revisit.",
+        "claims": [
+          {
+            "statement": "Treat team size, operating capacity, and implementation time as assumptions to revisit.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "hard-constraints",
+        "title": "Set hard constraints",
+        "summary": "Exclude paths that require ongoing specialist administration or unsupported operational effort.",
+        "claims": [
+          {
+            "statement": "Exclude paths that require ongoing specialist administration or unsupported operational effort.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "viable-options",
+        "title": "Keep viable approaches open",
+        "summary": "Consider only approaches that can be operated by the stated team after onboarding.",
+        "claims": [
+          {
+            "statement": "Consider only approaches that can be operated by the stated team after onboarding.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "disqualified-options",
+        "title": "Explain exclusions",
+        "summary": "Record why an approach fails a hard constraint rather than silently removing it.",
+        "claims": [
+          {
+            "statement": "Record why an approach fails a hard constraint rather than silently removing it.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "criteria",
+        "title": "Use the relevant criteria",
+        "summary": "Assess operational ownership, onboarding, support, security, and workflow fit.",
+        "claims": [
+          {
+            "statement": "Assess operational ownership, onboarding, support, security, and workflow fit.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "criterion-evidence",
+        "title": "Tie criteria to evidence",
+        "summary": "Keep each conclusion linked to a current evidence state and source record.",
+        "claims": [
+          {
+            "statement": "Keep each conclusion linked to a current evidence state and source record.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tradeoffs",
+        "title": "Show the trade-offs",
+        "summary": "Make clear how a choice may trade flexibility or control for lower day-to-day operating burden.",
+        "claims": [
+          {
+            "statement": "Make clear how a choice may trade flexibility or control for lower day-to-day operating burden.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "uncertainty",
+        "title": "Name what remains unknown",
+        "summary": "Do not convert missing product research into a confident recommendation.",
+        "claims": [
+          {
+            "statement": "Do not convert missing product research into a confident recommendation.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "conditional-verdicts",
+        "title": "Use conditional verdicts",
+        "summary": "Choose a path only if its evidence and operating demands continue to match the team’s situation.",
+        "claims": [
+          {
+            "statement": "Choose a path only if its evidence and operating demands continue to match the team’s situation.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "guidance",
+        "title": "Choose or avoid with reasons",
+        "summary": "Use the stated criteria to explain the next investigation, not to assert a winner.",
+        "claims": [
+          {
+            "statement": "Use the stated criteria to explain the next investigation, not to assert a winner.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "next-action",
+        "title": "Return to the decision path",
+        "summary": "Revisit the decision guide when a constraint or evidence state changes.",
+        "claims": [
+          {
+            "statement": "Revisit the decision guide when a constraint or evidence state changes.",
+            "evidenceState": "validated",
+            "sources": [
+              {
+                "documentId": "D05",
+                "heading": "17.4 Mandatory Structure",
+                "sectionUid": "D05-S-4c7874f942d9",
+                "contentHash": "66f36e479580a200b0ae1709a5817c359d7f8ed84aa600d961e607ef3c16df3f",
+                "reviewedAt": "2026-09-01"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "motionBrief": {
+      "majorPatterns": [
+        "assumption reveal",
+        "trade-off emphasis",
+        "conditional next action"
+      ],
+      "reducedMotion": "The complete scenario remains readable without motion or JavaScript."
+    },
+    "presentation": {
+      "compositionFamily": "constraint-bento",
+      "catalogueReferences": [
+        "daisyUI Hero with Figure",
+        "UI Layouts Stats Bento"
+      ],
+      "artDirection": "A focused constraint-led composition that gives the conditional verdict visual weight."
+    },
+    "connectedRoutes": [
+      "/solution-hub",
+      "/decision-hub"
+    ]
+  }
+}

@@ -7,8 +7,6 @@ const environmentSchema = z.object({
   PUBLIC_SITE_ORIGIN: z.string().optional(),
   PUBLIC_POLICY_EFFECTIVE_DATE: z.string().optional(),
   INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT: z.string().optional(),
-  ANALYTICS_ENABLED: z.string().optional(),
-  ANALYTICS_RETENTION_VERIFIED_AT: z.string().optional(),
 });
 
 export type PublicSiteConfig = {
@@ -33,14 +31,12 @@ export type PublicSiteConfig = {
       country: "South Africa";
     };
   };
-  analytics: {
-    enabled: boolean;
-    rawEventRetentionDays: 90;
-    aggregateRetentionMonths: 24;
-  };
   policies: {
     effectiveDate: string;
     reviewDate: string;
+  };
+  analytics: {
+    enabled: false;
   };
 };
 
@@ -56,10 +52,6 @@ function isIsoCalendarDate(value: string): boolean {
     date.getUTCMonth() === month - 1 &&
     date.getUTCDate() === day
   );
-}
-
-function isIsoTimestamp(value: string): boolean {
-  return z.string().datetime({ offset: true }).safeParse(value).success;
 }
 
 function reviewDateFor(effectiveDate: string): string {
@@ -95,7 +87,6 @@ export function loadPublicSiteConfig(
   const effectiveDate = parsed.PUBLIC_POLICY_EFFECTIVE_DATE ?? "";
   const registrationConfirmedAt =
     parsed.INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT ?? "";
-  const retentionVerifiedAt = parsed.ANALYTICS_RETENTION_VERIFIED_AT ?? "";
 
   return {
     brandName: "VettedSaaSBlueprint",
@@ -119,31 +110,17 @@ export function loadPublicSiteConfig(
         country: "South Africa",
       },
     },
-    analytics: {
-      enabled:
-        parsed.ANALYTICS_ENABLED === "true" &&
-        isIsoTimestamp(retentionVerifiedAt),
-      rawEventRetentionDays: 90,
-      aggregateRetentionMonths: 24,
-    },
     policies: {
       effectiveDate,
       reviewDate: reviewDateFor(effectiveDate),
     },
+    analytics: { enabled: false },
   };
 }
 
 export function getPublicLaunchBlockers(config: PublicSiteConfig): string[] {
   const blockers: string[] = [];
 
-  if (!isIsoCalendarDate(config.policies.effectiveDate)) {
-    blockers.push("PUBLIC_POLICY_EFFECTIVE_DATE must be a valid ISO date.");
-  }
-  if (!isIsoTimestamp(config.operator.informationOfficer.registrationConfirmedAt)) {
-    blockers.push(
-      "INFORMATION_OFFICER_REGISTRATION_CONFIRMED_AT must be a valid ISO timestamp.",
-    );
-  }
   if (!isHttpsOrigin(config.canonicalOrigin)) {
     blockers.push("PUBLIC_SITE_ORIGIN must be a valid HTTPS origin.");
   }
@@ -170,6 +147,9 @@ export function publicSiteMetadata(config: PublicSiteConfig): Metadata {
       template: `%s | ${config.brandName}`,
     },
     description,
+    verification: {
+      google: "yXL5P6NXRbp4b0oDBYQe1b-UWD0B6Jj9cBeFpLosONQ",
+    },
     openGraph: {
       type: "website",
       siteName: config.brandName,

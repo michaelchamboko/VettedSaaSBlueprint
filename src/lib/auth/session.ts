@@ -6,7 +6,7 @@ const sessions = new Map<string, SessionRecord>();
 const attempts = new Map<string, number[]>();
 
 function getSessionSecret() {
-  return process.env.ORACLE_SESSION_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.SESSION_SECRET;
+  return process.env.SESSION_SECRET ?? process.env.NEXTAUTH_SECRET;
 }
 
 function encodeUtf8(value: string) {

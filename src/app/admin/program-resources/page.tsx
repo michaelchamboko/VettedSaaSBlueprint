@@ -4,7 +4,7 @@ export default function ProgramResourcesPage() {
       <header className="max-w-3xl">
         <h1 className="text-3xl font-semibold">PartnerStack Program Resources</h1>
         <p className="mt-3 text-sm text-slate-300">
-          Intake PDFs, screenshots, links, and notes for each offer folder so Hermes can later analyze them into draft rules.
+          Intake PDFs, screenshots, links, and notes for each offer folder so the local automation can later analyse them into draft rules.
         </p>
       </header>
 
@@ -49,7 +49,7 @@ export default function ProgramResourcesPage() {
 
         <aside className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-300">
           <h2 className="text-lg font-medium text-white">Resource intake rules</h2>
-          <p>Program resources keep manual notes, source links, and storage pointers in Oracle metadata.</p>
+          <p>Program resources keep manual notes, source links, and storage pointers in application metadata.</p>
           <p>Extracted rules stay in draft or review state until the owner approves them.</p>
           <p>Large files can point to approved object storage instead of database storage.</p>
         </aside>

@@ -1,11 +1,11 @@
-import { buildOracleTrackingPayload, normalizeEventType, buildOracleEventIngestUrl } from "@/lib/tracking/oracle-public-endpoints";
+import { buildPublicTrackingPayload, normalizeEventType, buildPublicEventIngestUrl } from "@/lib/tracking/public-tracking-endpoints";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
 import { publicTrackingAllowed } from "@/lib/tracking/privacy";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-async function forwardToOracle(url: string, payload: Record<string, unknown>) {
+async function forwardEvent(url: string, payload: Record<string, unknown>) {
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -25,16 +25,16 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid or missing event_type" }, { status: 400 });
   }
 
-  const payload = buildOracleTrackingPayload(raw, eventType ?? "page_view");
-  const base = process.env.NEXT_PUBLIC_ORACLE_PUBLIC_BASE_URL;
+  const payload = buildPublicTrackingPayload(raw, eventType ?? "page_view");
+  const base = process.env.NEXT_PUBLIC_TRACKING_BASE_URL;
 
   if (base) {
     try {
-      const target = buildOracleEventIngestUrl(base);
-      const forwarded = await forwardToOracle(target, payload);
+      const target = buildPublicEventIngestUrl(base);
+      const forwarded = await forwardEvent(target, payload);
       if (forwarded) return Response.json({ event: payload }, { status: 201 });
     } catch {
-      // keep behavior stable if Oracle ingest is temporarily unavailable
+      // keep behavior stable if tracking ingest is temporarily unavailable
     }
   }
 
