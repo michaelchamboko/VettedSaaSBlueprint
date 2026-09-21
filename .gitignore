@@ -6,6 +6,8 @@ build-pack/runtime/
 .claude/
 CLAUDE.md
 node_modules/
+.automation/
+node_modules.incomplete-recovery/
 .next/
 *.tsbuildinfo
 *.log
@@ -14,3 +16,10 @@ node_modules/
 .env
 .env.local
 .vercel/
+.vercel
+.env*
+.opencode/
+.stage2/
+.impeccable/
+.freebuff/
+.hermes/
