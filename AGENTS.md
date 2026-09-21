@@ -19,6 +19,13 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 - Do not reinterpret reduced-motion requirements as minimal motion.
 - Do not weaken commercial intent or let it silently override evidence, disclosure, ranking independence, or anti-deception requirements.
 
+## Automation non-deviation rule
+
+- Automation is bound to the approved repository contract, schedule manifest, tracked prompts, and selected BuildRunner packet. Do not add a prerequisite, service, release channel, workflow stage, or capability by inference.
+- Before proposing a change, inspect `AGENTS.md`, `planning.md`, the selected packet, source-intelligence records, and the affected automation code. If the defined flow can continue, continue without asking.
+- Ask the product owner only when a specific, documented stage cannot proceed because a required authority, input, or external state is genuinely absent. State that exact blocker and no invented remedy.
+- A manual canary exercises the existing sequence in its own window. It must not modify scheduled times or weaken evidence, receipt, quality, or deployment gates.
+
 ## Repository boundaries
 
 - GitNexus is a navigation and impact-analysis aid, not semantic authority.
@@ -30,9 +37,9 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 
 ## Execution workflow
 
-1. Select the smallest unblocked vertical slice from `build-pack/10-implementation-plan.md`.
+1. Select the smallest dependency-ready BuildRunner packet embedded in `planning.md` and materialised in `build-pack/execution-state.json`; `planning.md` is the only planning authority.
 2. Read the slice's exact source sections and stable identifiers before implementation.
-3. Refresh GitNexus before impact-sensitive work and use it to identify affected code and tests.
+3. Refresh GitNexus before impact-sensitive work only when it indexes the selected checkout. When it resolves a worktree to another checkout, record deterministic source hashes and use `rg`, TypeScript imports, route inventories, and affected-test checks instead. Commercial activation remains fail-closed until licence rights are recorded.
 4. Implement the slice with its automated checks and production-facing acceptance criteria.
 5. Deploy Phase One and later release slices to Vercel through the repository deployment configuration.
 6. Verify the deployed URLs independently of worker self-reporting and record the deployment receipt.
@@ -48,7 +55,7 @@ Run this workflow when source documents or their derived intelligence change:
 4. Record cross-document relationships and unresolved findings in the explicit relationship map.
 5. Run `scripts/verify-document-intelligence.ps1`, then the stable-UID impact command before proposing a later document amendment. Commit-delta detection remains unavailable while the baseline commit is deferred.
 
-Refresh GitNexus with `powershell -NoProfile -File scripts/refresh-gitnexus.ps1`. The wrapper pins GitNexus 1.6.9 and the repository-level `.gitnexusrc` enforces index-only mode so refreshes cannot inject tool-specific authority files.
+During the owner-authorized non-commercial implementation phase, GitNexus may be refreshed with `powershell -NoProfile -File scripts/refresh-gitnexus.ps1` only when it targets the selected checkout. The wrapper pins GitNexus 1.6.10 and the repository-level `.gitnexusrc` enforces index-only mode so refreshes cannot inject tool-specific authority files. It remains navigation evidence, never semantic authority.
 
 ## Affiliate-copy capability gate
 

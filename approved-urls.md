@@ -16,3 +16,6 @@ content, or removes a large group of URLs without the explicit CI override.
 - https://partners.snowfire.ai/j1a8kovs1uez
 - https://trymoo.moosend.com/michaelmedium
 - https://try.getresponsetoday.com/smypvzu98eko-kfze15
+- https://referral.flippa.com/vettedsaasblueprint
+- https://join.glideapps.com/9r1tcciij70r
+- https://manychat.partnerlinks.io/vettedsaasblueprint 

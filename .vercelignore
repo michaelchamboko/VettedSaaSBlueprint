@@ -1,5 +1,13 @@
 .env
 .env.*
+.gitnexus/
+.next/
+node_modules/
+node_modules.incomplete-recovery/
+.scratch/
+.globalsetup-backups/
+.worktrees/
+build-pack/runtime/
 Wallet_*/
 Wallet_*.zip
 *.pem
