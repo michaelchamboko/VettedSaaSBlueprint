@@ -1,0 +1,10 @@
+{
+  "name": "validate:public-site",
+  "phase": "release",
+  "stdout": "\n> validate:public-site\n> tsx scripts/validate-public-site.ts\n\nPublic site release configuration and buyer publications are valid. { sets: 9, pages: 27, prototypes: 26 }\n",
+  "stderr": "",
+  "exitCode": 0,
+  "elapsedMs": 2885,
+  "completedAt": "2026-09-15T14:14:19.593Z",
+  "evidenceHash": "44efff6786fefa9b36f2e12b37e5ec1f5e229bef0bc6b304c101910d02b97572"
+}

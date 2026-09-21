@@ -1,0 +1,154 @@
+{
+ "program": "Gelato",
+ "affiliate_landing": "https://try.gelato.com/vettedsaasblueprint 302-redirects (verified via curl, 2026-09-14) to https://www.gelato.com/print-on-demand with PartnerStack tracking params (utm_source=affiliate&utm_medium=affiliate&utm_source=partnerstack, ps_partner_key, ps_xid). The landing page is Gelato's standard POD marketing page, not a bespoke affiliate offer.",
+ "what_it_is": "Gelato is a print-on-demand (POD) fulfilment platform: sellers connect an ecommerce store (or the API), upload designs, and Gelato routes each customer order to a print partner near the delivery address, where the product is printed, packaged and shipped direct to the customer. It is free to use with no commission on sales; the seller pays per-order product + shipping costs. Marketing claims: 'zero-inventory business model', 'world's largest print-on-demand network', 24/7 support (https://www.gelato.com/print-on-demand, accessed 2026-09-14). Company: Gelato founded 2007; HQ Oslo, Norway with major operations in Ljubljana, Slovenia (https://printsgram.com/print-on-demand/suppliers/gelato third-party; official about page https://www.gelato.com/about).",
+ "features": [
+  {
+   "name": "Local-production order routing",
+   "doc_url": "https://www.gelato.com/print-on-demand",
+   "accessed": "2026-09-14",
+   "establishes": "Orders are automatically routed to the nearest print partner; page claims '90% of all orders are produced locally' and '90% of orders arrive within 5 days of ordering'; which products are produced in which countries is per the product catalog.",
+   "limits": "These are vendor marketing statistics, not audited SLAs; delivery times are explicitly 'estimates and cannot be guaranteed' (https://www.gelato.com/shipping-and-delivery)."
+  },
+  {
+   "name": "Free plan + pay-per-order model",
+   "doc_url": "https://www.gelato.com/pricing",
+   "accessed": "2026-09-14",
+   "establishes": "'No upfront fees... no additional fees or commission'; customer pays your price, you pay Gelato product + shipping per order; no minimum orders; accepts cards, PayPal, multiple currencies; VAT/tax flagged at checkout.",
+   "limits": "Free plan caps: 2 connected ecommerce stores, 2 account users, no product discounts, no premium mockups/AI tools (https://www.gelato.com/subscription-plans; https://support.gelato.com/en/articles/8996310)."
+  },
+  {
+   "name": "Gelato+ subscription (discounts + tools)",
+   "doc_url": "https://www.gelato.com/subscription-plans",
+   "accessed": "2026-09-14",
+   "establishes": "$29.99/mo billed monthly or $19.99/mo billed annually ($239.88/yr); 'up to 33% off products'; unlocks Personalization Studio, Magic Mockups, Price Navigator, Velocity Switch (AI product-mapping migration), premium mockups, stock media, branded labels/inserts, more stores/users; 14-day trial; cancel anytime from dashboard.",
+   "limits": "Discount ceiling is 'up to' 33% and 'may vary per market'; per-article help.gelato comparison lists Gelato+ at max 10 stores / 5 users while the marketing table says 'Unlimited' — figures conflict (https://support.gelato.com/en/articles/8996298 vs https://www.gelato.com/subscription-plans)."
+  },
+  {
+   "name": "Platinum (enterprise) tier",
+   "doc_url": "https://www.gelato.com/subscription-plans",
+   "accessed": "2026-09-14",
+   "establishes": "Custom pricing with bespoke discounts, rewards program, dedicated implementation service; sales-led personalized pricing, price matching and free samples offered (https://www.gelato.com/pricing).",
+   "limits": "No published price; terms negotiated."
+  },
+  {
+   "name": "Integrations: Shopify, Etsy, WooCommerce, Wix, Squarespace, BigCommerce, TikTok Shop, Amazon (beta), Order Desk, direct API, manual dashboard orders",
+   "doc_url": "https://www.gelato.com/integrations",
+   "accessed": "2026-09-14",
+   "establishes": "One-click platform connections with product publishing and automatic order import; TikTok Shop limited to US & UK sellers; Amazon listed as beta; REST API with webhooks (base https://order.gelatoapis.com).",
+   "limits": "Some Shopify-specific features (live shipping rates & express, personalization-button customisation, mockup download) require Gelato+ (https://support.gelato.com/en/articles/8996298)."
+  },
+  {
+   "name": "Gelato REST API",
+   "doc_url": "https://dashboard.gelato.com/docs/get-started/",
+   "accessed": "2026-09-14",
+   "establishes": "API key via API Portal (X-API-KEY header, HTTPS, JSON); endpoints split across order/product/shipment/ecommerce subdomains; quotes and test orders available pre-integration; file formats JPEG/PNG/SVG/PDF, PDF/X recommended; catalog, pricing and region-availability endpoints exposed.",
+   "limits": "API access is not documented as gated by subscription tier, but API Terms (https://www.gelato.com/legal/api-terms) state no availability guarantee ('do not guarantee... uninterrupted or error-free'), no liability for late delivery, and once an order is placed it cannot be changed or cancelled."
+  },
+  {
+   "name": "Print quality controls",
+   "doc_url": "https://support.gelato.com/en/articles/8996349-what-are-the-design-requirements-for-pdf-uploads",
+   "accessed": "2026-09-14",
+   "establishes": "'Gelato standard' machine calibration rolled out to all print partners; documented file requirements (150–300 dpi, 4 mm bleed, embedded fonts, CMYK/sRGB guidance per product, no crop marks); DTG-specific guidance (https://support.gelato.com/en/articles/8996354) incl. garment-cotton-content effects and white-ink rules; optional file quality check by production team before printing (https://support.gelato.com/en/articles/9587707).",
+   "limits": "Official quality-guarantee article concedes 'printing is a chemical process and 100% consistency cannot be achieved'; colour variations from machine/paper/humidity factors are 'within acceptable tolerance levels and not covered under our quality guarantee' (https://support.gelato.com/en/articles/8996072)."
+  },
+  {
+   "name": "Quality guarantee & replacements",
+   "doc_url": "https://support.gelato.com/en/articles/8996072-what-is-your-return-policy-and-quality-guarantee",
+   "accessed": "2026-09-14",
+   "establishes": "Report within 30 days; validated claims → complimentary replacement, else refund; damage/quantity errors/lack of quality covered when not caused by customer artwork; lost-in-transit replacements within 30 days of estimated delivery.",
+   "limits": "No returns and no return address (products are personalised/made-to-order); returned-to-sender orders require placing a new order and paying shipping again; 'Report Problem' needs dashboard permission."
+  },
+  {
+   "name": "Branding / white label",
+   "doc_url": "https://www.gelato.com/white-label-products",
+   "accessed": "2026-09-14",
+   "establishes": "Branded packaging inserts and labels 'start at $0.49 each' (https://www.gelato.com/print-on-demand); white-label catalogue with custom packaging promoted.",
+   "limits": "Branded labels and packaging inserts are listed as poster-only on the free-vs-Gelato+ comparison and are a Gelato+ feature, not free-tier (https://support.gelato.com/en/articles/8996310)."
+  }
+ ],
+ "documented_limitations": [
+  "Vendor network numbers are inconsistent across its own pages on the same day: '250+ print providers across 32 countries' (https://www.gelato.com/print-on-demand), '250+ production partners in 32 countries' (https://www.gelato.com/how-gelato-works), '100+ production partners worldwide' on the integrations API blurb (https://www.gelato.com/integrations), and older cached copy of the same URL said '140+/130+'. Treat the headline count as marketing, verify hub coverage for your specific products/countries in the product catalog.",
+  "Local production is best-effort, not guaranteed: 'While Gelato strives to produce orders as close to the delivery address as possible, factors like stock availability, production capacity, and logistics determine the optimal production location' (https://support.gelato.com/en/articles/8996174-getting-started-with-shipping); older page states 87% local production, current claims 90%.",
+  "Delivery times and shipping costs are 'estimates and cannot be guaranteed' (https://www.gelato.com/shipping-and-delivery); API Terms disclaim liability for late delivery (https://www.gelato.com/legal/api-terms).",
+  "Colour consistency: variations due to machine type/settings, paper, humidity, cleaning cycles are explicitly excluded from the quality guarantee (https://support.gelato.com/en/articles/8996072).",
+  "No returns/return address; made-to-order goods; customers who change their mind are the seller's problem.",
+  "Orders cannot be changed or cancelled once placed (API Terms §8 Returns clause, https://www.gelato.com/legal/api-terms).",
+  "No uptime/SLA guarantee for platform or API (https://www.gelato.com/legal/api-terms).",
+  "Free tier caps (2 stores/2 users) and gates the tools most differentiators depend on: Personalization Studio, live shipping rates on Shopify, premium mockups, stock images (Shutterstock), AI tools, branded inserts (https://support.gelato.com/en/articles/8996310).",
+  "DTG apparel constraints documented by Gelato: no white ink on white/natural garments, semi-transparency prints poorly, dark-on-dark and neon discouraged, blends below ~80% cotton reduce vibrancy (https://support.gelato.com/en/articles/8996354; https://support.gelato.com/en/articles/9587707).",
+  "Large/bulk orders ship on pallets over 28 kg requiring forklift/loading bay; heavy orders split at ~7 kg (https://gelato.com/en-US/api/faq).",
+  "Out-of-stock handling exists as documented error paths (order hold, frame/hanger out of stock, region unavailability endpoints), i.e. partner stock is not guaranteed (https://support.gelato.com/en/collections/10267617-order-errors-and-issues)."
+ ],
+ "pricing_facts": [
+  {
+   "plan_or_model": "Free plan",
+   "price": "$0/forever — pay per order: product cost + shipping; no commission",
+   "url": "https://www.gelato.com/subscription-plans",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Gelato+ Monthly",
+   "price": "$29.99/month (billed monthly), up to 33% product discounts, 14-day trial, cancel anytime",
+   "url": "https://www.gelato.com/subscription-plans",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Gelato+ Annual",
+   "price": "$19.99/month billed annually ($239.88/yr; page says saves $120/yr)",
+   "url": "https://www.gelato.com/subscription-plans",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Gelato+ GBP pricing",
+   "price": "£24.99/month monthly; £16.66/month annual (£199.99/yr)",
+   "url": "https://support.gelato.com/en/articles/8996313-how-much-does-gelato-subscription-cost",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Platinum",
+   "price": "Custom pricing (sales-led; personalized pricing, price matching, free samples)",
+   "url": "https://www.gelato.com/pricing",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Example per-item price (calculator default): Premium Matte Paper Wooden Framed Poster 30x40cm, ship to USA",
+   "price": "Product $40.30 + shipping $13.90 = $54.20 (excl. taxes)",
+   "url": "https://www.gelato.com/pricing",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Example per-item price (delivery page): 'Ready to Hang' poster, ship to United Kingdom",
+   "price": "Product €20.76 + Economy €5.08 (3-4 days) or Express €6.43 (3 days)",
+   "url": "https://www.gelato.com/shipping-and-delivery",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Branded packaging inserts & labels",
+   "price": "from $0.49 each (Gelato+ feature; listed for posters)",
+   "url": "https://www.gelato.com/print-on-demand",
+   "accessed": "2026-09-14"
+  },
+  {
+   "plan_or_model": "Seller sign-up offer",
+   "price": "30% off first order, capped at €50 (T&C apply)",
+   "url": "https://www.gelato.com/pricing",
+   "accessed": "2026-09-14"
+  }
+ ],
+ "network_facts": "Production network (as claimed on pages fetched 2026-09-14): 250+ print providers/production partners across 32 countries in Europe, Middle East & Africa (incl. UK, Germany, France, Poland, Türkiye, South Africa, UAE), Asia-Pacific (Australia, China, India, Japan, Korea, Malaysia, NZ, Singapore) and Americas (USA, Canada, Mexico, Brazil, Chile); 10+ million orders fulfilled claims on integrations page; 40+–60+ shipping/logistics partners incl. DHL, FedEx, Royal Mail, Blue Dart, ZTO Express. Model: order routed automatically to partner nearest the delivery address; delivery time includes production + shipping; Standard/Economy vs Express options in most countries. Integrations: Shopify, Etsy, WooCommerce, Wix, Squarespace, BigCommerce, TikTok Shop (US/UK only), Amazon (beta), Order Desk, direct REST API (order/product/shipment/ecommerce.gelatoapis.com, X-API-KEY, webhooks) and manual dashboard orders (https://www.gelato.com/integrations; https://www.gelato.com/shipping-and-delivery; https://dashboard.gelato.com/docs/). Note internal inconsistencies in hub counts (see documented_limitations).",
+ "commercial_terms_notes": "No commission on sales; no upfront fees; no minimum orders (https://www.gelato.com/pricing). Payment: cards, PayPal, multi-currency wallet with auto top-up; USD/EUR/GBP/JPY etc. VAT/tax shown at checkout where applicable. Subscription is no-commitment, cancel anytime from dashboard; prorated refund on Gelato+ cancellation per terms, but no refund where termination results from breach. API Terms: no SLA guarantee; no liability for late delivery; orders immutable once placed; no returns of personalised goods. Quality guarantee = validated-claim replacement or refund, 30-day reporting window; colour-variation exclusions as documented.",
+ "best_fit_situation": "A creator or small merchant selling personalised or design-led products (posters/wall art, cards, calendars, photo books, DTG apparel) to a geographically dispersed customership — especially cross-border EU/UK/US/AU — who wants no inventory risk, no platform commission, short local delivery windows, and can absorb that real unit economics are product+shipping per order (so margin control lives in your retail price, not in wholesale volume deals). API availability and Shopify/Etsy auto-import suit sellers who want fulfilment invisible to their storefront.",
+ "poor_fit_situation": "Sellers whose brand depends on deep custom packaging (branded boxes, labels beyond poster inserts), tight colour-critical print matching across reorders (explicitly excluded from guarantee), high-volume negotiated wholesale pricing without talking to sales (Platinum is sales-led), single-country low-price commodities where Printify/Printful-style base costs may undercut, any business needing returns/resale of unsold stock (no returns supported), or teams wanting guaranteed platform/API uptime and delivery SLAs in writing.",
+ "open_questions_for_a_pilot": [
+  "Actual per-product base cost + shipping for OUR top 5 SKUs and top 3 destination countries from the logged-in dashboard (public pages show only calculator defaults; discounts 'up to 33%' vary per market).",
+  "Real-world colour/size consistency: order the same DTG tee and framed poster from two different production countries and compare against a competitor's output.",
+  "What % of OUR product x destination combinations are actually produced locally (product-catalog region availability endpoint / API catalog query).",
+  "Does Gelato+ annual break even at projected volume: (monthly product spend × effective discount) vs $19.99 — confirm the effective discount on our specific products, not the headline 33%.",
+  "Branding ceiling: beyond poster inserts/labels at $0.49+, what branded-packaging options exist for apparel, and are they available in our production countries.",
+  "Order-failure path in practice: how out-of-stock at the nearest partner is handled (auto-reroute vs hold), replacement turnaround time, and refund speed when QA validates a claim.",
+  "Etsy/TikTok/Amazon channel specifics: which product categories each integration supports and where order-import latency bites.",
+  "VAT/tax obligations for our registered country vs production countries (Gelato says it notifies at checkout; confirm handling of intra-EU distance selling).",
+  "Free-plan limits in practice: does the 2-store cap block multi-market storefronts, and are '10 stores/5 users' (help article) vs 'Unlimited' (marketing table) reconcilable in writing?"
+ ]
+}

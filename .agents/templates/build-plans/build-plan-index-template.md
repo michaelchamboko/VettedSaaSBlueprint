@@ -8,8 +8,8 @@ Make the Step 2 build visible at a modular level before task cards are executed.
 
 | Module | Build Area | Runtime Owner | Validation Location | Primary Tasks |
 | --- | --- | --- | --- | --- |
-| M01 | [module name] | [GitHub/Vercel/Oracle/etc.] | [validation location] | [task ids] |
-| M02 | [module name] | [GitHub/Vercel/Oracle/etc.] | [validation location] | [task ids] |
+| M01 | [module name] | [GitHub/Vercel/database/etc.] | [validation location] | [task ids] |
+| M02 | [module name] | [GitHub/Vercel/database/etc.] | [validation location] | [task ids] |
 
 ## Required Plan Cross-References
 

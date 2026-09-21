@@ -1,0 +1,13 @@
+{
+  "at": "2026-09-15T13:50:26.668Z",
+  "files": {
+    "docs/document-intelligence/DESIGN_STANDARDS.json": "da9bf197eb42f47f718c4d1054ec4df42c552ea4cc619d7977c22e9ca07631a5",
+    "scripts/verify-levo-motion.ts": "9a1c236df700850715d73b8116ed8a63dc5eb3c95dc2798d81bf27ae10e86898",
+    "src/app/landing-page-previews/levo-motion-study/page.tsx": "c14a10ad69ac7ff59f2e8dae76bacb093fd1f39ff059eb551f5c87810976e728",
+    "src/components/public/LevoStudy.module.css": "732c036c4eeca3b03dc3e16a76c086227aaadde88f633c539f3b6d4da463e7af",
+    "src/components/public/LevoStudyDiagram.tsx": "0bc61eec3b6ec9154dcfa851676e5d97996d92367ea9256e2c7ab05424df0ed1",
+    "src/components/public/LevoStudyMotion.tsx": "223336d676c488312eb3464ee8dfd1e71285b509122fa39fe516f53bcf01c91e",
+    "tests/levo-motion-preview.test.ts": "a7a86d185080c862eb2cdc2b62bf3df14154ba259ba46d5478c7c9d81b112319"
+  },
+  "note": "Final sources verified by six release checks, targeted final lint and production-build browser verification."
+}

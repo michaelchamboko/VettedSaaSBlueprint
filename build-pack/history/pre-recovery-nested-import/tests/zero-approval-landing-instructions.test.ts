@@ -11,7 +11,7 @@ const activeInstructionPaths = [
   "planning.md",
   "docs/deployment/architecture.md",
   "docs/deployment/public-site-release.md",
-  "docs/deployment/scrapling-oracle-runner.md",
+  "docs/deployment/scrapling-storage-runner.md",
   "docs/landing-workflow/README.md",
   "docs/landing-workflow/unattended-publication.md",
   ".agents/skills/landing-page-production-orchestrator/SKILL.md",

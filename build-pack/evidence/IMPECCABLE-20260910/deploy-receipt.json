@@ -1,0 +1,55 @@
+{
+  "task": "install-impeccable-and-update-three-trend-pages",
+  "owner_directive": "User (2026-09-10): install https://github.com/michaelchamboko/impeccable.git, update all three pages, ensure deployed to Vercel. This approves the previously deferred impeccable tooling decision.",
+  "completed_at": "2026-09-10T12:59:03+00:00",
+  "installation": {
+    "method": "npx impeccable install --providers=opencode --scope=project",
+    "skill_path": ".opencode/skills/impeccable (skill v4.3.1)",
+    "detector_engine": ".opencode/skills/impeccable/scripts/bin/windows-x64/impeccable.exe (v0.1.5, deterministic, no API key)",
+    "config": ".impeccable/config.json (shared house overrides with reasons)",
+    "context_loading": "impeccable context run once per session per SKILL.md; NO_PRODUCT_MD respected via SCOPED_EXISTING_ALLOWED (narrow refinement of incumbent pages, init offered afterward and deferred to owner because PRODUCT.md requires an owner interview)"
+  },
+  "review_method": {
+    "assessment_A": "Isolated design-review sub-agent (per critique protocol): Nielsen scores, specificity verdict, P1-P3 findings. Key findings: uncapped 130-140ch body measure (P1); findings not resolving to Sources (P2); off-system badge colors mis-signalling vendor-claim/forecast as conflicting/insufficient (P2); mobile journey-nav overflow (P3); peak-end sag at bibliography wall (P3).",
+    "assessment_B": "impeccable detect --json on rendered pages (run only after Assessment A per protocol).",
+    "bounded_rounds": "Fixes applied in one batch plus one micro-correction pass (eyebrow size + text-node keys); verification then stopped per skill round ceiling."
+  },
+  "page_updates_applied": [
+    "Body measure capped: .journey-page p/ul/sources max-width 44rem (65-75ch target).",
+    "Evidence tier chips rebuilt as house-token .trend-tier pills (11.2px, solid clay = primary source, outline = reported/vendor/estimate) with a legend sentence; mis-signed borrowed semantic colors removed from trend pages.",
+    "Findings now cite numbered in-page anchors S1..Sn linking to #sN source entries; the duplicate 'OpenAI' publisher ambiguity resolved.",
+    "Hero eyebrow shortened to 'Trend report' and bumped to .7rem on journey pages (fixes 10.56px all-caps label + 33/38-char uppercase findings).",
+    "Report titles trimmed to display-disciplined forms ('AI agents crossed from demo to deployment', 'Per-seat budgets, per-token bills', 'AI-native or AI bolt-on?'); full titles remain in SEO descriptions.",
+    "Display tracking lifted from -.055em to -.04em on journey-hero h1 (craft-floor tracking floor).",
+    "Mobile journey-nav stacks under 540px (overflow: clip no longer cuts the links).",
+    "Themed ::selection (clay on paper-strong) per craft-floor browser-surfaces rule.",
+    "Stable keys replaced (index-scoped) removing text.slice collision risk.",
+    "GSAP motion retained: reading-progress signature + block/finding/close reveals, all behind prefers-reduced-motion: no-preference."
+  ],
+  "documented_house_overrides_in_ignores": [
+    "hero-eyebrow-chip (rule): journal identity places an eyebrow above every document heading",
+    "overused-font=Inter (value): incumbent public-site body stack pending owner type ratification (Doc 04 §34.2)"
+  ],
+  "findings_left_visible_not_laundered": [
+    "undersized-ui-text 10.88px on site-wide footer legal nav (owner typography decision)",
+    "dark-glow #22d3ee from studio/landing stylesheet (not trend DOM)",
+    "journey-evidence-state 10.56px on the three pre-existing decision pages (untouched; same review owed to them)"
+  ],
+  "automation_integration": {
+    "AGENTS.md": "Public-page design gate now binds the impeccable bounded review flow to every public-page ship.",
+    "DESIGN_STANDARDS.json": "impeccable block records version, flow, overrides, and house debt.",
+    "eslint.config.mjs": ".opencode/skills/** and .impeccable/** ignored (vendor tooling out of first-party lint scope; warnings returned to the 54 pre-install baseline)."
+  },
+  "checks_and_deploy": {
+    "typecheck": "exit 0",
+    "trend_tests": "5 pass / 0 fail",
+    "lint": "0 errors, 54 pre-existing warnings",
+    "design_standards_gate": "passed (7 page types, 8 patterns, 53 routes)",
+    "next_build": "exit 0",
+    "vercel": "production deploy 7rayolyn8 READY, aliased to https://vettedsaasblueprint.online; build ran validate:public-site && verify:design-standards && next build"
+  },
+  "post_deploy_independent_verification": {
+    "method": "curl of all three live pages, byte-safe marker checks on HTML and the linked CSS chunk",
+    "results": "3x HTTP 200; trend-tier chips, S1 anchors + #s2 links, motion hooks, eyebrow bump, 44rem measure cap, and -.04em tracking all present in production markup/CSS"
+  }
+}

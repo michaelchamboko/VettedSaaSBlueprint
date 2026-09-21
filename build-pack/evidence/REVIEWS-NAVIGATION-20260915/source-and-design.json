@@ -1,0 +1,64 @@
+{
+  "commit": "900a85a2f3c1ea0c886dbe9d38e5c24d6741ad34",
+  "parent": "9ffb9362715c5b23ed208c3360a5ca0281bb7ee5",
+  "design": {
+    "read": "Editorial software buying journal; extend existing paper, ink, clay and Georgia identity with a calmer browse hierarchy.",
+    "dials": {
+      "variance": 6,
+      "motion": 5,
+      "density": 3
+    },
+    "pageTypes": {
+      "/": "home",
+      "/reviews": "decision-journey",
+      "/site-map": "decision-journey"
+    },
+    "patterns": [
+      "home-entrance-timeline",
+      "home-section-reveal",
+      "home-review-card-batch-reveal",
+      "trend-block-reveal"
+    ],
+    "reducedMotion": "static visible content",
+    "assessmentA": "32/40; two findings fixed",
+    "assessmentB": "zero static detector findings; browser fallback, no mutable overlay"
+  },
+  "sourceAuthority": [
+    {
+      "document": "docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md",
+      "heading": "13.5 Stable URLs and indexing",
+      "uid": "D03-S-289c34ddbcf4"
+    },
+    {
+      "document": "docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md",
+      "heading": "35 Source and Reference Register",
+      "uid": "D04-S-77a07562db66"
+    }
+  ],
+  "files": {
+    "docs/document-intelligence/DESIGN_STANDARDS.json": "0f4a8e8dc573e84c7f1fe1ac249231cb0c9c5cb215040ec1ec8c3db92c2ecc14",
+    "scripts/verify-review-navigation.ts": "c699efe24ecc5f0d1a10325b7fc90ebf86e0de80ff1c556ecc69b0a109279189",
+    "src/app/page.tsx": "0c5ec7507fb1aa4ce14305e97b02eb8d893290cb6505d3b06fd235aac5073b99",
+    "src/app/reviews/page.tsx": "d9f6dbaa4dabc50a832561b2f5a7bf653169952e538ab5665a6d0d7e887099be",
+    "src/app/site-map/page.tsx": "829405fb44165f5d16814e5e7b14a407bcbffa28c80defbcc422fff71cb3c5ae",
+    "src/components/public/PublicFooter.tsx": "061a209a64e71819d5f04787c40db9aab96d09780e65af6abfac2e6a9499b792",
+    "src/components/public/PublicHeader.tsx": "a96d76017fcf3b9aa0962a811a3d5f7d9156151377d3d662eba509e4748e8889",
+    "src/components/public/PublicPageShell.tsx": "04a2e3b56b891256bec4849a5c104eeb538051c643bb31795d9b6d66a1a4bab9",
+    "src/components/public/ReviewLibrary.css": "609343cc331fefd3eb273605422b2c208a8aae340a9dda381fc83a44d90b4abd",
+    "src/components/public/ReviewLibrary.tsx": "3d10870be945115ecac29ec9b126e8e2adb42a342f85e3ed42f3fea3908c7d30",
+    "src/lib/site/publication-registry.ts": "c65cada5ef8eb39e323cfe05606dc795840b3369c9ccacdd5c8ef1fee2e57ce5",
+    "src/lib/site/review-library.ts": "5f1c77ecc9c201f3421b9fdbf9bf762a47c3f8919dfc70f1114b90dc2f46dbbe",
+    "tests/home-section-separators.test.ts": "e35f18c9d5fb48c8305de8bf6b5b0e7a648f0cb0044c34412771c5da371fe33c",
+    "tests/public-discovery.test.ts": "e18ae7794e8ba8e89a3d3f98b22a1fadfda50f2ae260b74ce7665f925c826f4f",
+    "tests/public-legal-pages.test.ts": "830c0a79c3767c0247fd38a983731cdfd1ec084716e1383a761c70c41e950b0c",
+    "tests/review-library.test.ts": "b52462bd5c6804302349aa95de2944a9f83d3d44468556212f6c5cd47405cefb",
+    "scripts/verify-decision-journey-production.ts": "9334a703c82812fd304f5730201f915b5abb8a6ca986b29d507bf1384e1cca9d"
+  },
+  "limits": [
+    "Actual search-engine indexing is not verified by a Search Console inspection.",
+    "GitNexus wrapper blocked by Windows script policy; direct import and source impact inspection used.",
+    "Existing studio, preview, admin and API surfaces remain outside publication index."
+  ],
+  "previousAttemptCommit": "31deba148e88f590629390516b1e119798d839f2",
+  "recovery": "First attempt rolled back after networkidle timeouts; load-event verifier independently reviewed and validated on restored production before retry."
+}

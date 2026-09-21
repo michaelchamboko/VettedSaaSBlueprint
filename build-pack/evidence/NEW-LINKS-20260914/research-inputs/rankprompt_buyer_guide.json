@@ -1,0 +1,86 @@
+{
+  "program": "RankPrompt",
+  "affiliate_landing": "https://join.rankprompt.com/vettedsaasblueprint → 302 to https://app.rankprompt.com/signup with ps_partner_key/ps_xid (PartnerStack-style) and gspk/gsxid query params (verified via curl trace, 2026-09-14). Note: rankprompt.com/partners says partner links are 'powered by GrowSumo' (https://rankprompt.com/partners/), while the join.rankprompt.com subdomain and ps_* params follow the PartnerStack pattern; the /partners page itself states 30% lifetime recurring commission, 60-day cookie window, monthly payouts (https://rankprompt.com/partners/). The bare join.rankprompt.com path returns 404 on HEAD but redirects correctly on GET.",
+  "what_it_is": "An AI search visibility (AEO/GEO) platform: it queries AI engines (ChatGPT, Perplexity, Google AI Mode/AI Overviews, Claude as standard bundle; Gemini, Grok, ChatGPT 5.5, Claude Search as premium add-ons) with prompts generated for your brand, scores where you appear or are cited, then layers on AI article generation (Content Studio, ~10 credits/article, 8 content types), citation outreach emails, technical SEO audits, scheduled reports, an 'Agent Mode' copilot, white-label/agency client portals, and a developer surface (REST /v1 API, MCP server at https://mcp.rankprompt.com/mcp, webhooks). Sources: https://rankprompt.com/platform, https://rankprompt.com/about/, https://rankprompt.com/changelog/, https://help.rankprompt.com/en/articles/16-understanding-credits",
+  "who_makes_it": "Rank Prompt LLC, 4000 Ponce de Leon #470, Miami, FL 33146 (https://rankprompt.com/terms/, last updated 12 Mar 2026; governing law Miami-Dade, Florida). Co-founders/partners per https://rankprompt.com/about/: Nazareno Castro Bay, Trevor Anderson, Ethan Kramer, Kristopher Cole Feigl; Tomas Marengo listed as Founding Engineer. LinkedIn says ~8 employees, HQ Coral Gables/Miami, team spread US + Argentina (https://linkedin.com/company/rankprompt). Product began as an internal agency tool (https://rankprompt.com/about/); publicly launched 16 Jun 2025 (https://www.prnewswire.com/news-releases/rank-prompt-launches-as-pioneering-platform-to-optimize-brand-visibility-in-ai-search-engines-302481610.html).",
+  "features": [
+    {
+      "name": "AI visibility monitoring across 6 engines",
+      "doc_url": "https://help.rankprompt.com/en/articles/23-report-configuration-options",
+      "accessed": true,
+      "establishes": "Prompt-level tracking with country, city and language targeting; 4 standard engines bundled at 1 credit/prompt, each premium engine (Gemini, Grok, ChatGPT 5.5, Claude Search) adds +1 credit/prompt; premium engines require Starter or higher",
+      "limits": "Monthly credit allowance caps volume (150/500/1,000/2,000 by plan); credits reset monthly and do not roll over"
+    },
+    {
+      "name": "AI Content Studio (article generation)",
+      "doc_url": "https://rankprompt.com/content-generation",
+      "accessed": true,
+      "establishes": "8 content formats (comparison, ranked list, location page, case study, product deep-dive, FAQ, statistics roundup, glossary) with AI images, schema markup, rich-text editing, WordPress/GitHub publishing",
+      "limits": "10 credits per article on all plans (Starter = ~15 articles/mo)"
+    },
+    {
+      "name": "Citation & email outreach",
+      "doc_url": "https://help.rankprompt.com/en/articles/16-understanding-credits",
+      "accessed": true,
+      "establishes": "Contact discovery (1 credit/3 URLs), AI email drafting (1 credit), backlink verification (1 credit); sending itself is free",
+      "limits": "Email campaigns & sequences only from Pro tier and above (https://rankprompt.com/pricing)"
+    },
+    {
+      "name": "Agent Mode (AI copilot)",
+      "doc_url": "https://rankprompt.com/pricing",
+      "accessed": true,
+      "establishes": "Natural-language querying of your visibility data; billed in USD of underlying model API cost",
+      "limits": "Monthly AI budget per plan: $5 Starter / $10 Pro / $15 Agency / $25 Agency Plus; extra budget bought by converting report credits, resets at cycle end"
+    },
+    {
+      "name": "Developer API, MCP server & webhooks",
+      "doc_url": "https://rankprompt.com/changelog/",
+      "accessed": true,
+      "establishes": "Public REST /v1, OAuth MCP connector, outbound webhooks shipped in v7 (September 2026)",
+      "limits": "API request caps by plan: 10k/mo Starter, 25k Pro, 50k Agency, 100k Agency Plus (https://rankprompt.com/pricing)"
+    },
+    {
+      "name": "Agency white-label suite & client portal",
+      "doc_url": "https://rankprompt.com/pricing",
+      "accessed": true,
+      "establishes": "White-label reports from Agency tier; Agency Plus ($299/mo) adds app on own domain, 100 client logins, approvals workflow, prospecting, lead widget",
+      "limits": "Team seats capped: none on Starter, 2 Pro, 10 Agency, 25 Agency Plus"
+    }
+  ],
+  "documented_limitations": [
+    "Refunds only within 24 hours of a charge and 'at our discretion'; after 24 hours no refunds at all, annual plans are not prorated on cancellation, credit top-ups are non-refundable, and forgotten trial cancellations are not refundable (https://rankprompt.com/terms/ §6; https://rankprompt.com/pricing FAQ).",
+    "Trial requires a credit card and auto-converts to paid (https://rankprompt.com/terms/ §3).",
+    "Credits don't roll over; top-ups cost $18/50, $35/100, $65/200 (https://rankprompt.com/pricing FAQ).",
+    "No unlimited plan at any tier; everything is credit-metered (https://checkthat.ai/brands/rank-prompt/reviews, third-party).",
+    "Only 2 verified G2 reviews (4.3/5); G2 flags insufficient reviews for buying insight (https://www.g2.com/products/rankprompt/reviews) — while the vendor homepage widget advertises '4.9/5 reviews on G2' (https://rankprompt.com), a discrepancy to treat with caution.",
+    "Negative early user review: r/seotodolist, 24 Sep 2025, '$30 for Broken Features and Bad Data' — claims features were 'coming soon' and rank checks disagreed with live ChatGPT UI; the same thread contains a partially defending reply (https://www.reddit.com/r/seotodolist/comments/1npod0b/rankprompt_review_30_for_broken_features_and_bad/).",
+    "Third-party review caveat: 'actual effectiveness depends heavily on implementation accuracy and update frequency — factors difficult to verify without testing' (https://trytested.com/tools/rank-prompt).",
+    "docs.rankprompt.com does not resolve; developer docs live on the main site (https://rankprompt.com/changelog/ lists API reference under rankprompt.com)."
+  ],
+  "pricing_facts": [
+    "Free tier: $0, first full AI visibility report, no card, up to 3 brands (https://rankprompt.com/pricing).",
+    "Monthly list prices: Starter $49, Pro $89, Agency $149, Agency Plus $299 (https://help.rankprompt.com/en/articles/15-plans-and-pricing; pricing page shows same via FAQ).",
+    "Annual = 20% off: $39.17/$71.25/$119.17/$239.17 per month billed annually ($470/$855/$1,430/$2,870 per year) (https://rankprompt.com/pricing).",
+    "Credit allowances: 150/500/1,000/2,000 per month; brand caps 10/100/500/1,000 (https://rankprompt.com/pricing).",
+    "7-day free trial with 50 one-time trial credits on all paid plans; card required; no charge if cancelled during trial (https://rankprompt.com/terms/ §3, §6).",
+    "Upgrade = immediate + Stripe proration; downgrade = at period end (https://rankprompt.com/pricing FAQ, https://rankprompt.com/terms/ §4).",
+    "Payments via Stripe only (all major cards/debit) (https://rankprompt.com/pricing FAQ).",
+    "PR launch (Jun 2025) advertised entry at $29/month — entry price has since risen to $49 (https://www.prnewswire.com/news-releases/rank-prompt-launches-as-pioneering-platform-to-optimize-brand-visibility-in-ai-search-engines-302481610.html).",
+    "Affiliate terms: 30% lifetime recurring, 60-day cookie, monthly payouts (https://rankprompt.com/partners/)."
+  ],
+  "trust_signals": "Founded: site's own llm-info page says 2024 (https://rankprompt.com/llm-info); changelog v1 'Early December 2024' (https://rankprompt.com/changelog/); PRNewswire public launch 16 Jun 2025; a third-party page says 'founded mid-2025' (https://checkthat.ai/brands/rank-prompt/reviews) — treat 'built 2024, launched publicly June 2025' as the reconciled version. Team: 4 named co-founders + founding engineer on https://rankprompt.com/about/, ~8 employees per LinkedIn. Reviews: G2 4.3/5 on only 2 reviews (https://www.g2.com/products/rankprompt/reviews); no Trustpilot presence found; one hostile + one mixed Reddit thread. Marketplaces: no AppSumo or other LTD marketplace presence found. Fast release cadence (v1 Dec 2024 → v8 Sep 2026) is real but the company remains a small (≈8-person) young startup; claims like 'Trusted by teams and agencies' and example logos (e.g. Adidas on https://rankprompt.com/platform) are marketing mockups unless independently confirmed.",
+  "best_fit_situation": "A small marketing/SEO team or solo agency that (a) already produces content and wants a repeatable loop for measuring and improving how ChatGPT/Perplexity/Claude/AI Mode describe their brand, (b) has modest monthly volume (≈150 prompts or 15 articles) fits Starter at $49, and (c) values white-label client reporting — the Agency/Agency Plus tiers and the 30% affiliate program are clearly aimed at exactly that reseller workflow (https://rankprompt.com/pricing, https://rankprompt.com/partners/).",
+  "poor_fit_situation": "Buyers who need traditional search rank tracking as their core metric (this is AI-answer visibility first), teams wanting unlimited/unmetered AI content (no unlimited tier, credits don't roll over), anyone who cannot tolerate a 24-hour refund window with card-required auto-renewal, or enterprise buyers needing maturity and proven review base — with 2 G2 reviews and ~8 staff, there is little independent evidence of large-scale reliability (https://www.g2.com/products/rankprompt/reviews, https://rankprompt.com/terms/).",
+  "open_questions_for_a_pilot": [
+    "Do standard-bundle 'AI Mode' and 'ChatGPT' readings match what your team actually sees in the live UIs? (the Sep 2025 Reddit complaint alleges 'Not Ranked' vs live #1 discrepancy)",
+    "What is the real credit burn for your prompt cadence (weekly vs monthly scans across engines) before picking Starter vs Pro?",
+    "Does the $5–$25 Agent Mode budget cover your expected copilot usage, and what does topping it up cost in practice?",
+    "Is 'Real-Scan' browser capture (claimed by https://checkthat.ai/brands/rank-prompt/reviews) actually enabled on your tier, and does it change accuracy vs API-only? (not verifiable on public docs)",
+    "How does support respond to a trial-conversion refund inside the 24-hour discretionary window? (terms say 'at our discretion')",
+    "Are the 50 free trial credits enough to evaluate a report + a few articles, given an article alone costs 10?",
+    "Is the affiliate stack PartnerStack or GrowSumo? Signup URL carries ps_partner_key/ps_xid params, but the partners page says 'powered by GrowSumo' — payout/attribution mechanics for the vettedsaasblueprint link were not verifiable externally.",
+    "No published SOC 2/security posture or subprocessor list was found — relevant if client data is sensitive.",
+    "Case studies page exists in the footer (https://rankprompt.com) but no named customer evidence was verified during this research."
+  ],
+  "transparency_level": "MODERATE — the product is young (public launch June 2025, ~8 staff) but unusually well-documented for its age: self-serve pricing page, Intercom help centre with exact credit cost tables, dated changelog (v1–v8), full ToS with explicit refund terms, and a public llm-info page. What could NOT be verified: exact founding year is inconsistent (2024 per vendor, 'mid-2025' per one third-party); actual AI-scan accuracy vs live UIs; named customer references behind the 'Trusted by teams' claim; G2 '4.9/5' homepage widget vs the 4.3/5-on-2-reviews shown on G2 itself; which affiliate network processes payouts (PartnerStack-style URL params vs 'powered by GrowSumo' copy); what the free 3-brand tier gates beyond the first report; internal help docs requiring login; and any security certifications. The app itself (app.rankprompt.com/signup) is client-rendered and exposes no content to unauthenticated crawlers, so gating had to be assessed from public docs only."
+}

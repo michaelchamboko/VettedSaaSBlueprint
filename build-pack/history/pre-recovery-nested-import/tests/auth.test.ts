@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-process.env.ORACLE_SESSION_SECRET = "test-secret";
-process.env.ORACLE_APP_PASSWORD = "$2a$12$C6UzMDM.H6dfI/f/IKcEeO8JYjR4n8Qy2zHqV5C4D1f4p5Qv5uF7K";
+process.env.STORAGE_SESSION_SECRET = "test-secret";
+process.env.STORAGE_APP_PASSWORD = "$2a$12$C6UzMDM.H6dfI/f/IKcEeO8JYjR4n8Qy2zHqV5C4D1f4p5Qv5uF7K";
 
 let session: typeof import("../src/lib/auth/session");
 let password: typeof import("../src/lib/auth/password");

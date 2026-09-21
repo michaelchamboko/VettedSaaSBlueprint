@@ -1,0 +1,45 @@
+{
+  "task": "approved-urls-affiliate-pathway-on-trend-pages",
+  "owner_directive": "User (2026-09-10): review the approved URLs and use them when creating content so that we can make money.",
+  "completed_at": "2026-09-10T13:48:00+00:00",
+  "capability_gate": {
+    "file": "docs/document-intelligence/DOMAIN_QUERY_EVIDENCE.md",
+    "sections_read": ["External Hormozi-skills review (line 86)", "Affiliate-safe Hormozi output map (94)", "Affiliate-safe Hormozi invocation chain (113)", "Mandatory adaptations before page use (177)", "Acceptance boundary (202)"],
+    "hormozi_skills_invoked": false,
+    "reason": "No mapped Hormozi skill is installed in this environment and the review forbids wholesale installation; copy here is locally drafted and therefore treated purely as a proposal that had to pass the local acceptance boundary. No skill output was simulated or attributed."
+  },
+  "approved_urls_review": {
+    "file": "approved-urls.md",
+    "entries": 7,
+    "all_https_bullets": true,
+    "coverage": "Six of seven programs are now reachable from trend pages through their vetted review pages (Carepatron, ElevenLabs, AdCreative.ai, Snowfire, Moosend, GetResponse). DataHawk was deliberately NOT wired: its published positioning (marketplace analytics) supports no evidence-honest fit line on the three current trend threads; inventing one would breach the gate. Owner opportunity: a future pricing/consolidation trend or comparison slice can carry it.",
+    "url_integrity": "Trend pages contain zero raw affiliate destinations; the exact approved URLs live only in their receipt-gated review pages (verified: /landing-page-builders/elevenlabs-conversational-ai-v4 serves https://try.elevenlabs.io/izj2b165mcsj; moosend release receipt matches https://trymoo.moosend.com/michaelmedium; all 22 static review pages hardcode the approved bullets verbatim)."
+  },
+  "monetization_design": {
+    "pattern": "evidence -> findings -> 'Where this meets a vetted decision' (conditional fit, disclosure adjacent, internal link to vetted review) -> sources -> boundaries",
+    "anchors": ["D04-S-058f980dea13 affiliate action after evidence", "D05-S-5f4ed2cdc87a disclosure", "D05-S-8b31a6de2a36 ranking independence", "D04-S-1497bdd3519d CTA language"],
+    "per_report_links": { "ai-agents": ["elevenlabs-conversational-ai-v4", "adcreative-ai-generation-v1"], "saas-pricing": ["moosend-email-marketing-automation", "getresponse-studio"], "ai-native-vs-bolt-on": ["carepatron-practice-management-v1", "snowfire-developer-sync-v3"] }
+  },
+  "acceptance_boundary_checklist": {
+    "declared_page_type": "trend-report (registered in DESIGN_STANDARDS.json)",
+    "traceable_claims": "all trend findings cite dated sources; fitLines describe only what each linked review page verifiably contains",
+    "visible_uncertainty": "boundaries section retained and updated truthfully (affiliate pathway disclosed)",
+    "approved_cta_and_disclosure": "disclosure paragraph sits directly above the first review link on every page; links are the journal's own receipt-gated pages",
+    "schema": "unchanged (no new schema proposed)",
+    "trust_and_content_qa": "isolated design critique + one detector pass per the public-page design gate",
+    "analytics": "unchanged; affiliate clicks continue to be tracked at the review-page layer (/r/affiliate where Oracle is configured, static hrefs otherwise)"
+  },
+  "review_findings_fixed_in_batch": [
+    "Carepatron fitLine removed an asserted 'compliance posture' not present on its review page (over-claim caught by critique)",
+    "Moosend fitLine stopped asserting the review 'states the plans' (the page defers commercial terms to the vendor)",
+    "Product label no longer reuses the amber evidence-state pill (mis-signalled 'partial evidence'); neutral .trend-review-program label added",
+    "Boundary copy updated from 'no affiliate links' to the accurate authorized-destination disclosure"
+  ],
+  "detector_outcome": "No new page-level findings; remaining output is recorded site-wide debt only (footer legal-nav 10.88px, shared-bundle studio/reference styles) and the documented em-dash advisory (house editorial voice, pinned override).",
+  "checks": { "typecheck": 0, "trend_tests": "6 pass / 0 fail", "lint_errors": 0, "design_gate": "passed", "build": 0 },
+  "deploy": {
+    "production_alias": "https://vettedsaasblueprint.online",
+    "verified_live": "all three /trends/* pages 200 with review section + disclosure markers; zero non-source external links (affiliate-destination leakage check passed); downstream ElevenLabs review page serves the exact approved URL with tracking parameter intact"
+  },
+  "revenue_path_summary": "Trend traffic (SEO-indexed, sitemap-listed) -> vetted review page -> approved PartnerStack/trial destination with preserved tracking params -> commission; disclosure and independence statements on both layers."
+}

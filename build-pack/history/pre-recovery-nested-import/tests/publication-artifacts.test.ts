@@ -20,7 +20,7 @@ test("publication artifact writer creates committed artifacts and manifest", asy
             artifact: "workflow-tools-review.json",
             path: "/landing-page-builders/workflow-tools-review",
             status: "published",
-            publication_source: "oracle_dynamic_pages",
+            publication_source: "generated_pages",
             published_at: "2026-06-25T00:00:00.000Z",
             current_version_id: "22222222-2222-2222-2222-222222222222",
             owner_publish_audit_id: "33333333-3333-3333-3333-333333333333",
@@ -54,7 +54,7 @@ test("publication artifact writer creates committed artifacts and manifest", asy
   }
 });
 
-test("publication artifact payload builder accepts Oracle-style rows", () => {
+test("publication artifact payload builder accepts Storage-style rows", () => {
   const payload = buildPublishedLandingArtifactsPayload(
     [
       {
@@ -75,7 +75,7 @@ test("publication artifact payload builder accepts Oracle-style rows", () => {
   assert.equal(payload.index.pages[0].slug, "workflow-tools-review");
   assert.equal(payload.index.pages[0].artifact, "workflow-tools-review.json");
   assert.equal(payload.index.pages[0].path, "/landing-page-builders/workflow-tools-review");
-  assert.equal(payload.index.pages[0].publication_source, "oracle_dynamic_pages");
+  assert.equal(payload.index.pages[0].publication_source, "generated_pages");
   assert.equal(payload.index.pages[0].current_version_id, "22222222-2222-2222-2222-222222222222");
   assert.deepEqual(payload.artifacts["workflow-tools-review"], sampleBlueprint);
 });

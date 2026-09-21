@@ -3,10 +3,31 @@
   "imported_at": "2026-09-01T07:04:25.7521203Z",
   "source_repository": "https://github.com/michaelchamboko/VettedSaaSBlueprint.git",
   "source_commit": "956e3a830ea7c11ae4867635ff2edf8c5865c856",
+  "source_commit_timestamp": "2026-08-30T22:06:04+02:00",
+  "source_tree": "ef0bac506f5ed67c2c2add6dade7917ac06186f0",
+  "source_path_trees": {
+    "scripts": "80cfe4909ccf56a32986d1afe0e7b4ab695c15ce",
+    "tests": "bd72ef8713566bf0febcdf432e9e920ccb465bc5",
+    "approved-urls.md": "304f4737b0a4945a55156ddaaed5ba52e4f6bcaa",
+    "src": "f9c6ce38621a5690ef5113b561587ec94239d8fb",
+    "public": "67b969070ed492a33faf7ceaeacdca8503fe1f33",
+    "docs/landing-workflow": "bd50e20787035fbe42d35c92167bae6c9217ed4c",
+    "docs/design-references": "1f95d7da9ba7457770cb132f8453b5e1301ac8ca",
+    "project_rules.md": "d322d206478ba89030f2c654d078628d111703bf",
+    "docs/VetterSaaSBlueprint_PRD.md": "a469f9420eec786d1cfd15d110ab98248666c792",
+    "docs/deployment": "eb92ed2d68eb86e808e3367a84facf16eccc33cb"
+  },
   "included": [
     "scripts",
     "tests",
-    "approved-urls.md"
+    "approved-urls.md",
+    "src",
+    "public",
+    "docs/landing-workflow",
+    "docs/design-references",
+    "project_rules.md",
+    "docs/VetterSaaSBlueprint_PRD.md",
+    "docs/deployment"
   ],
   "excluded": [
     ".git",
@@ -18,5 +39,9 @@
     "db",
     "hermes"
   ],
-  "historical_recovery_snapshot": "build-pack/history/pre-recovery-nested-import"
+  "historical_recovery_snapshot": "build-pack/history/pre-recovery-nested-import",
+  "verification": {
+    "method": "git ls-tree -r <immutable-commit> -- scripts tests approved-urls.md src public docs/landing-workflow docs/design-references project_rules.md docs/VetterSaaSBlueprint_PRD.md docs/deployment",
+    "result": "matched immutable source trees; historical nested import retained only for recovery audit"
+  }
 }

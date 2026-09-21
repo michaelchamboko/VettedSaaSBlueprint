@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "origin": "https://vettedsaasblueprint.online",
+  "checks": [
+    "Homepage text, navigation, sitemap and keyboard dropdown preserved",
+    "Scroll-linked text progresses and reverses while remaining fully visible",
+    "Responsive resize, short landscape, static reduced-motion and no-JavaScript fallbacks pass"
+  ],
+  "at": "2026-09-15T14:19:07.760Z"
+}

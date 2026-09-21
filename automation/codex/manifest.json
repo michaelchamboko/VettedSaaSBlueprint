@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "timezone": "Africa/Johannesburg",
+  "workingDirectory": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\phase-two",
+  "runtimeDirectory": ".automation",
+  "tasks": [
+    {
+      "id": "vetted-saas-daily-research",
+      "type": "research",
+      "timeSast": "02:00",
+      "promptFile": "automation/codex/daily-research.md",
+      "promptSha256": "f33be96dd7ca979e17906b89cc40e5fa33bdabeaf72c27ae5c99569f7790e84b",
+      "desktopBootstrap": "Load automation/codex/daily-research.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
+    },
+    {
+      "id": "vetted-saas-editorial-brief",
+      "type": "editorial_brief",
+      "timeSast": "06:00",
+      "promptFile": "automation/codex/editorial-brief.md",
+      "promptSha256": "714417a1acb45485f8e5ed5d24f0af6cb5575849622f1fe4a115411adad89b45",
+      "desktopBootstrap": "Load automation/codex/editorial-brief.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
+    },
+    {
+      "id": "vetted-saas-optimisation",
+      "type": "optimise",
+      "timeSast": "20:00",
+      "promptFile": "automation/codex/optimisation.md",
+      "promptSha256": "b7b967e4aca23ee735e313e47517126fae548c93defb7a34062227ad190feb3f",
+      "desktopBootstrap": "Load automation/codex/optimisation.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
+    },
+    {
+      "id": "vetted-saas-production-watchdog",
+      "type": "watchdog",
+      "timeSast": "23:00",
+      "promptFile": "automation/codex/production-watchdog.md",
+      "promptSha256": "eac426da51eb03b6efd3ae7302b9c39c053b28df37a674263edd3e6f28bddefc",
+      "desktopBootstrap": "Load automation/codex/production-watchdog.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
+    }
+  ]
+}

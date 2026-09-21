@@ -1,0 +1,26 @@
+{"details":{"baseline":"72aeb601e80078d9f3fb203247dd899587c03baf","command":"start","task_id":"RCV-001"},"operation":"e70b83b68b9747f7aa6ac43b","phase":"prepared","recorded_at":"2026-09-01T07:20:46+00:00"}
+{"details":{"workspace":"C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-001"},"operation":"e70b83b68b9747f7aa6ac43b","phase":"executed","recorded_at":"2026-09-01T07:20:46+00:00"}
+{"details":{"state":"in_progress"},"operation":"e70b83b68b9747f7aa6ac43b","phase":"committed","recorded_at":"2026-09-01T07:20:46+00:00"}
+{"details":{"command":"verify","task_id":"RCV-001"},"operation":"bc37c9d59b532b3a3e5e23f6","phase":"prepared","recorded_at":"2026-09-01T07:26:11+00:00"}
+{"details":{"receipt":"build-pack/evidence/RCV-001/bc37c9d59b532b3a3e5e23f6.json"},"operation":"bc37c9d59b532b3a3e5e23f6","phase":"committed","recorded_at":"2026-09-01T07:26:13+00:00"}
+{"details":{"command":"integrate","task_id":"RCV-001"},"operation":"5d9934beda463faa15b99c14","phase":"prepared","recorded_at":"2026-09-01T07:26:52+00:00"}
+{"details":{"integration_commit":"b49bbc45100e172424f6c5586d866cef78cf5590"},"operation":"5d9934beda463faa15b99c14","phase":"committed","recorded_at":"2026-09-01T07:26:53+00:00"}
+{"details":{"baseline":"b49bbc45100e172424f6c5586d866cef78cf5590","command":"start","task_id":"RCV-002"},"operation":"2fc1096fa883cecd0719f918","phase":"prepared","recorded_at":"2026-09-01T07:27:35+00:00"}
+{"details":{"workspace":"C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-002"},"operation":"2fc1096fa883cecd0719f918","phase":"executed","recorded_at":"2026-09-01T07:27:35+00:00"}
+{"details":{"state":"in_progress"},"operation":"2fc1096fa883cecd0719f918","phase":"committed","recorded_at":"2026-09-01T07:27:35+00:00"}
+{"details":{"command":"verify","task_id":"RCV-002"},"operation":"c2950f67deca7d1f88e4d122","phase":"prepared","recorded_at":"2026-09-01T07:30:24+00:00"}
+{"details":{"receipt":"build-pack/evidence/RCV-002/c2950f67deca7d1f88e4d122.json"},"operation":"c2950f67deca7d1f88e4d122","phase":"committed","recorded_at":"2026-09-01T07:30:24+00:00"}
+{"details":{"command":"integrate","task_id":"RCV-002"},"operation":"b935bff01c424d0de1be4475","phase":"prepared","recorded_at":"2026-09-01T07:30:25+00:00"}
+{"details":{"integration_commit":"f5881ba9b3147a8f4f31b59842c6425e7778b42c"},"operation":"b935bff01c424d0de1be4475","phase":"committed","recorded_at":"2026-09-01T07:30:26+00:00"}
+{"details":{"baseline":"f5881ba9b3147a8f4f31b59842c6425e7778b42c","command":"start","task_id":"RCV-003"},"operation":"28c1f7a60044904deba260ae","phase":"prepared","recorded_at":"2026-09-01T07:30:55+00:00"}
+{"details":{"workspace":"C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-003"},"operation":"28c1f7a60044904deba260ae","phase":"executed","recorded_at":"2026-09-01T07:30:55+00:00"}
+{"details":{"state":"in_progress"},"operation":"28c1f7a60044904deba260ae","phase":"committed","recorded_at":"2026-09-01T07:30:55+00:00"}
+{"details":{"command":"verify","task_id":"RCV-003"},"operation":"6a5d1ee5cd2fca026a628976","phase":"prepared","recorded_at":"2026-09-01T07:37:36+00:00"}
+{"details":{"command":"verify","task_id":"RCV-003"},"operation":"79083699957b126b461e8c68","phase":"prepared","recorded_at":"2026-09-01T07:38:26+00:00"}
+{"details":{"command":"verify","task_id":"RCV-003"},"operation":"e8d63c9630407eabe26a2b40","phase":"prepared","recorded_at":"2026-09-01T07:39:14+00:00"}
+{"details":{"receipt":"build-pack/evidence/RCV-003/e8d63c9630407eabe26a2b40.json"},"operation":"e8d63c9630407eabe26a2b40","phase":"committed","recorded_at":"2026-09-01T07:39:38+00:00"}
+{"details":{"command":"integrate","task_id":"RCV-003"},"operation":"644265b2821fc5395476a21e","phase":"prepared","recorded_at":"2026-09-01T07:40:01+00:00"}
+{"details":{"integration_commit":"1dae0693a66cd4329d3fe8cc416ea21619b00994"},"operation":"644265b2821fc5395476a21e","phase":"committed","recorded_at":"2026-09-01T07:40:01+00:00"}
+{"details":{"baseline":"1dae0693a66cd4329d3fe8cc416ea21619b00994","command":"start","task_id":"RCV-004"},"operation":"b84a660d223e90ff63853914","phase":"prepared","recorded_at":"2026-09-01T07:41:28+00:00"}
+{"details":{"workspace":"C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-004"},"operation":"b84a660d223e90ff63853914","phase":"executed","recorded_at":"2026-09-01T07:41:28+00:00"}
+{"details":{"state":"in_progress"},"operation":"b84a660d223e90ff63853914","phase":"committed","recorded_at":"2026-09-01T07:41:29+00:00"}

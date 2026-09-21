@@ -113,7 +113,7 @@ async function createAgentReleaseCatalogue(directory: string) {
       verified_at: "2026-07-24T10:00:00.000Z",
     },
     claims_removed_or_softened: [],
-    oracle_sync: "not_configured",
+    publication_sync: "not_configured",
   });
 
   await writeJson(path.join(directory, "index.json"), {

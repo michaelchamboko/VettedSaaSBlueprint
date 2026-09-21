@@ -1,0 +1,11 @@
+{
+  "at": "2026-09-15T14:35:53.067Z",
+  "files": {
+    "docs/document-intelligence/DESIGN_STANDARDS.json": "b604af543b376a8e36bd98935f4c640d812e92f438df240df72b0e87c04d00e0",
+    "scripts/verify-home-text-motion.ts": "64222ea32cdc4b73b2879ff0ef03eb03096a70fce1a6053485d65721b0ab5873",
+    "src/app/globals.css": "3903414f553449b00096d3578849b3c6eccbd650d467d8d77bca2fb88b14946b",
+    "src/app/page.tsx": "f4e7b2d1d63611e4628710589caa1780962cda2ac081ba6e6509ec06adb8964a",
+    "src/components/public/HomepageMotion.tsx": "c5f4cb2046f68275a74fef38d843f98fe39d6016fc61711d90ce0b88d5ec261b"
+  },
+  "note": "Source hashes captured before six release gates; local browser verification and independent rendered critique passed."
+}

@@ -1,0 +1,113 @@
+{
+  "program": "DataHawk",
+  "affiliate_landing": "Verified 2026-09-14: https://get.datahawk.co/u16b7nx1heil-hn4x1o issues a single 301/302 to https://datahawk.co/platform/ with PartnerStack tracking params (pscd=get.datahawk.co, ps_partner_key, ps_xid) — HTTP 200 at final URL. Affiliate programme page: https://datahawk.co/affiliate-program/ (15% lifetime commissions, 'typical clients sign up for one-year minimums and usually exceed five figures', self-reported on their own page).",
+  "what_it_is": "Unified marketplace analytics platform for Amazon and Walmart sellers/brands/agencies: public storefront data (rank, price, BSR, reviews counts, sales estimates) plus private Seller/Vendor/Ads API data, delivered via dashboards (Power BI, Looker Studio), managed Snowflake/BigQuery exports, and an AI layer (Sherlock anomaly/diagnosis agent, currently waitlist beta). Self-description: 'end-to-end eCommerce analytics platform that automatically gathers every datapoint from Amazon and Walmart' (https://datahawk.co/faqs/, accessed 2026-09-14). Homepage title also says 'Shopify Growth' (https://datahawk.co/) but no Shopify analytics product page exists (/marketplaces/shopify-analytics/ returns 404) — Shopify coverage UNVERIFIED.",
+  "features": [
+    {
+      "name": "Keyword rank tracking (standard)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-setup/keywords-tracking",
+      "accessed": "2026-09-14",
+      "establishes": "Scans the first 5 pages of Amazon search results daily per tracked keyword; records organic rank plus basic info on every product in the results; refresh daily with possible delay for last 24h.",
+      "limits": "Depth capped at 5 SERP pages; organic ranks only at standard tier; keyword data is forward-looking only (no historical backfill; 'No historical data possible', products-tracking/keywords-tracking docs)."
+    },
+    {
+      "name": "Premium Keywords (sponsored rank)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-setup/premium-keywords-tracking",
+      "accessed": "2026-09-14",
+      "establishes": "Optional paid add-on; adds Sponsored Products/Brands rank (1 sponsored page depth) on top of 5 organic pages; 'Premium Keywords cost more (5x more than a Standard Keywords)'. Standard Sponsored Rank data was retired 8 July 2025 'due to Amazon's evolving content policies and detection mechanisms'; without Premium, no Amazon sponsored rank data at all. Walmart Sponsored Ranks unaffected.",
+      "limits": "5x unit price; quote via 'Contact us'; the retirement note signals collection fragility under Amazon's anti-scanning measures."
+    },
+    {
+      "name": "Product tracking (Amazon & Walmart ASIN/item level)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-setup/products-tracking",
+      "accessed": "2026-09-14",
+      "establishes": "Daily snapshot per product: title, price, star rating, number of ratings, BSR per category, buy-box seller count, buy-box ownership, out-of-stock, variations, A+ status, plus computed Estimated Monthly Sales, Competitiveness Score, Listing Quality Score. All Amazon regions (NA: US/CA/MX/BR; EU: UK/DE/IT/FR/ES/NL/AE/SE/IN/PL; Far East: JP/SG/AU) and Walmart.",
+      "limits": "Country-specific — same product tracked in multiple marketplaces counts as multiple tracked products (pricing unit implication); collection only starts when you add it (no historical data)."
+    },
+    {
+      "name": "Category / market tracking (competitor landscape)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-setup/categories-tracking",
+      "accessed": "2026-09-14",
+      "establishes": "Daily snapshot of top 100 products per category (rank, price, rating, ratings count, estimated sales) with up to 2 years of history from DataHawk's per-marketplace collection start; feeds Market Intelligence dashboard (brand share, unit/revenue estimates).",
+      "limits": "Amazon only (not Walmart); top-100 ceiling; per-marketplace counting as separate tracked units."
+    },
+    {
+      "name": "Amazon sales estimates (methodology disclosed)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-metrics-guides/competition/amz-sales-estimates",
+      "accessed": "2026-09-14",
+      "establishes": "V7 model (released 15 June 2026, reprocessed 2024+ history): family-level estimate from parent BSR, allocated to child ASINs via public purchase signals (cart/quote evidence, conservative fallback, equal split); calibrated per category; confidence tiers by marketplace (High: US, GB, DE, FR, IT, ES, CA, JP, IN, MX, TR, AE, SA, IE, BR, EG; Moderate: AU, SE, BE, NL, PL, SG).",
+      "limits": "Site states 'Estimates are approximations, not exact figures'; revenue depends on captured price accuracy; flash sales/stockouts cause smoothed spikes. Marketing page self-reports customer confidence 'anywhere between 90% to 50%... concentration in the ballpark of 80%' (https://datahawk.co/use-cases/amazon-sales-estimates/, accessed 2026-09-14) — an unverified, unaudited claim. Legacy public description of the model says it uses daily review-count velocity, product age and assumed 3% review rate, plus BSR/keyword positions ('proprietary... secret sauce') — same URL."
+    },
+    {
+      "name": "Automated competitor detection",
+      "doc_url": "https://docs.datahawk.co/help-center/data-metrics-guides/competition/auto-competitors-detection",
+      "accessed": "2026-09-14",
+      "establishes": "Daily scans; weekly scoring of co-occurrence (listing pages, keyword results, categories), title similarity, price proximity, category overlap, shared keywords; only 90%+ confidence pairs included; refresh daily if tracked before noon UTC.",
+      "limits": "'Works for approximately 95% of tracked products'; favours precision over recall ('fewer but more relevant competitors'); new competitors only added weekly; empty results need category/keyword context fixed manually."
+    },
+    {
+      "name": "Review/ratings monitoring (partial — no dedicated review-intelligence module)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-setup/products-tracking",
+      "accessed": "2026-09-14",
+      "establishes": "Captures star rating and number-of-ratings daily per tracked product, and 'review counts' are listed in the public-data set (https://docs.datahawk.co/help-center/data-metrics-guides/foundation/how-datahawk-sources-data); brand-image page covers MAP/reseller/content-change alerts (https://datahawk.co/overview/retain-brand-image/).",
+      "limits": "No sentiment/topic review-analysis feature found anywhere in docs (searched full llms.txt index of docs.datahawk.co) or site pages; for teams whose core need is review-text intelligence this is not evidenced."
+    },
+    {
+      "name": "Search Query Performance / Brand Analytics integration",
+      "doc_url": "https://docs.datahawk.co/help-center/data-metrics-guides/search/brand-analytics-sqp",
+      "accessed": "2026-09-14",
+      "establishes": "Surfaces Amazon Brand Analytics family (Search Catalog Performance, SQP, Search Terms, Market Basket, Repeat Purchases) for brand-registered sellers/vendors; requires Brand Registry + account connection.",
+      "limits": "Gated on being a brand-registered seller/vendor; docs caution it 'is not a replacement for advertising performance, ranking, or profit reporting'."
+    },
+    {
+      "name": "Private-data connectors (Seller/Vendor/Ads; Walmart Marketplace/Connect)",
+      "doc_url": "https://docs.datahawk.co/help-center/data-metrics-guides/foundation/how-datahawk-sources-data",
+      "accessed": "2026-09-14",
+      "establishes": "SP-API seller data, Ads API, Vendor Central, Walmart Marketplace (US) + Walmart Connect ads; works without any account connection for public data.",
+      "limits": "Delays disclosed: seller orders D+1–D+3, advertising D+2, vendor metrics weekly; per-marketplace connections do not cascade (US account ≠ UK data); ad history backfill only 60 days (FAQ)."
+    },
+    {
+      "name": "Sherlock AI agent + MCP",
+      "doc_url": "https://datahawk.co/sherlock/waitlist/ and https://datahawk.co/mcp/",
+      "accessed": "2026-09-14",
+      "establishes": "AI agent detecting/explaining performance changes; beta 'open to a limited group' via waitlist; MCP server to connect AI tools to Amazon data.",
+      "limits": "Not GA — waitlist only as of access date."
+    }
+  ],
+  "documented_limitations": [
+    "No historical backfill for product/keyword tracking: 'forward-moving only' (https://datahawk.co/faqs/); category tracking up to 2 years; private sales up to 2 years; advertising last 60 days only.",
+    "Sponsored-rank collection for Amazon is fragile: standard sponsored data retired 8 Jul 2025 'due to Amazon's evolving content policies and detection mechanisms'; only the 5x-priced Premium Keywords add-on collects it (https://docs.datahawk.co/help-center/data-setup/premium-keywords-tracking).",
+    "Keyword suggestions work for ~90% of tracked products and English-speaking marketplaces only (US, GB, CA, AU, SG, IN, AE) (https://docs.datahawk.co/help-center/data-metrics-guides/search/keyword-research).",
+    "Keyword Placement dataset collection 'paused since August 2023' — legacy only (same URL).",
+    "Category tracking is Amazon-only, top 100 per category (https://docs.datahawk.co/help-center/data-setup/categories-tracking).",
+    "Auto competitor detection covers ~95% of tracked products, weekly additions, 90%+ confidence threshold (https://docs.datahawk.co/help-center/data-metrics-guides/competition/auto-competitors-detection).",
+    "Sales estimates are 'approximations, not exact figures' with per-marketplace confidence tiers (https://docs.datahawk.co/help-center/data-metrics-guides/competition/amz-sales-estimates).",
+    "Daily collection window 12AM–6AM UTC; 'there may be a delay in updating the data from the last 24 hours' — i.e. D-1, not intraday (https://datahawk.co/faqs/, keywords-tracking doc).",
+    "Search-volume history starts 1 May 2024 (most marketplaces) / 15 Aug 2024 (AE, SG); does not backfill before tracking date (keyword-research doc)."
+  ],
+  "pricing_facts": [
+    "No public prices. Pricing page: 'Custom pricing available with annual plans tailored to your business' — quote via demo booking only (https://datahawk.co/pricing/, accessed 2026-09-14).",
+    "Pricing structure per FAQ: 'Plans scale with the number of marketplace accounts connected and units bought to track product, keywords and categories'; agencies/enterprise get custom quotes bundling managed DBs, white-labelling, premium support (https://datahawk.co/faqs/).",
+    "Premium Keywords units cost 5x Standard Keyword units (https://docs.datahawk.co/help-center/data-setup/premium-keywords-tracking).",
+    "No free trial: 'Most customers begin with a guided proof-of-concept'; a 'paid Proof of Concept' is offered pre-contract (https://datahawk.co/faqs/).",
+    "Contract length: 'one-year minimums and usually exceed five figures' per client — self-reported on their affiliate page (https://datahawk.co/affiliate-program/). Currency/typical bands beyond that: UNVERIFIED.",
+    "On-Demand Sources (custom data integrations) are 'delivered as a paid add-on through our Professional Services team' (https://docs.datahawk.co/help-center/data-setup/on-demand-sources, per docs index).",
+    "Custom dashboards/solutions and dedicated PM listed as '(paid service)' on the pricing page."
+  ],
+  "data_coverage": "Marketplaces: Amazon (all major marketplaces: NA US/CA/MX/BR; EU GB/DE/FR/IT/ES/NL/SE/PL/TR/IE/SA/AE/IN; Far East JP/SG/AU) and Walmart (US; Marketplace + Connect ads). Shopify appears only in the homepage title tag — no product page found (UNVERIFIED). Collection method (disclosed): daily automated scraping of Amazon/Walmart public storefronts (listings, price, buy box, BSR, ratings, SERPs) + official APIs for private data (Amazon SP-API, Ads API, Vendor Central; Walmart APIs) with explicit authorisation (https://docs.datahawk.co/help-center/data-metrics-guides/foundation/how-datahawk-sources-data). Refresh: public data daily ~12AM–6AM UTC (D-1); keyword ranks daily, 5 SERP pages; seller orders D+1–D+3; ads D+1 (D+2 API delay); vendor weekly; hosted Snowflake/BigQuery destinations refresh daily; each marketplace configured independently.",
+  "free_tools": "Evidence of free self-serve tools is thin as of 2026-09-14: /free-tools and similar paths return 404; the legacy 'Amazon Sales Estimator' landing page (https://datahawk.co/market/amazon-sales-estimator/) 301-redirects to a gated marketing/use-case page (https://datahawk.co/use-cases/amazon-sales-estimates/) whose tool links point to analytics.datahawk.co/signin — no working no-login ASIN checker was found. Remaining free access: demo booking (https://datahawk.co/demo/), Sherlock beta waitlist (https://datahawk.co/sherlock/waitlist/), docs/help centre, blog and whitepapers. The old 'browse 3M products' free estimator claim (https://datahawk.co/market/) could not be exercised without sign-in — UNVERIFIED whether any free tier survives inside the app.",
+  "best_fit_situation": "A multi-ASIN Amazon (± Walmart US) brand or an agency managing several client accounts that needs: daily rank/price/BSR/buy-box monitoring across hundreds-to-thousands of ASINs and keywords without scraping anything itself; competitor and category market-share estimates (2-year history on category tracking); and wants the raw data in its own BI stack (managed Snowflake/BigQuery, Power BI/Looker Studio/Sheets connectors, full export, 'no lock-in' positioning). At that scale, manual spreadsheets break down on collection volume and per-marketplace coverage.",
+  "poor_fit_situation": "A small single-marketplace team (tens of ASINs) that: can maintain a keyword/rank spreadsheet weekly; cannot absorb an annual, quote-only, likely five-figure-plus contract with no self-serve tier, no free trial (only a paid POC) and no visible prices; needs intraday (not D-1) rank/price data; needs sub-5-page SERP depth or deep sponsored-position history; or whose core requirement is review-text sentiment analysis — no such module is documented. Also a poor fit for teams wanting a cheap PPC-only tool; alternatives with transparent pricing exist (e.g. third-party comparison https://revenuegeeks.com/software/datahawk/pricing notes the lack of transparent pricing as a deterrent — third-party, UNVERIFIED).",
+  "open_questions_for_a_pilot": [
+    "Actual quote: cost per product/keyword/category unit at your volume, and what 'units' precisely mean per marketplace (multi-country multiplication).",
+    "Is there any self-serve/free tier or sandbox beyond the paid POC, and what does the POC cost?",
+    "V7 sales-estimate accuracy against your own known sell-through in your category (site's 50–90% 'customer-reported' band is unaudited marketing).",
+    "Reliability/durability of Premium Keywords sponsored-rank collection given the 2025 standard-tier retirement episode.",
+    "Whether any review-text/sentiment capability exists in non-public modules (AI Copywriter 'review' hits are about editorial review, not customer reviews).",
+    "Contract terms: 1-year minimum confirmed? auto-renew, data access/export retention after cancellation (docs claim full data ownership — verify exit path).",
+    "Alert latency in practice: how quickly the 12AM–6AM UTC collection reaches dashboards and Slack/email alerts.",
+    "Coverage of Walmart non-US or Shopify expansion claims (title-tag mention with no product page).",
+    "Dashboard UX for agency multi-client workspaces (role permissions, white-labeling) during POC.",
+    "Minimum viable tracking set: what can be cut (e.g. skip Premium, skip category tracking) without breaking core rank+price monitoring."
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "status": "production_verified",
+  "deployment": {
+    "deploymentId": "dpl_2PHp1T1H7Q1MQZYeKeWDTE7eW3Kw",
+    "url": "https://vetted-saa-s-blueprint-d4hqy1na4-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "900a85a2f3c1ea0c886dbe9d38e5c24d6741ad34",
+    "ready": true
+  },
+  "verification": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.automation\\publisher-v4\\reviews-navigation-20260915\\production-verification.json",
+  "verificationHash": "f0700eff82b75da8333d72847aa3212205047a54fe721f56558bde1a465255a7",
+  "source": "review navigation and discovery",
+  "files": [
+    "docs/document-intelligence/DESIGN_STANDARDS.json",
+    "scripts/verify-decision-journey-production.ts",
+    "scripts/verify-review-navigation.ts",
+    "src/app/page.tsx",
+    "src/app/reviews/page.tsx",
+    "src/app/site-map/page.tsx",
+    "src/components/public/PublicFooter.tsx",
+    "src/components/public/PublicHeader.tsx",
+    "src/components/public/PublicPageShell.tsx",
+    "src/components/public/ReviewLibrary.css",
+    "src/components/public/ReviewLibrary.tsx",
+    "src/lib/site/publication-registry.ts",
+    "src/lib/site/review-library.ts",
+    "tests/home-section-separators.test.ts",
+    "tests/public-discovery.test.ts",
+    "tests/public-legal-pages.test.ts",
+    "tests/review-library.test.ts"
+  ],
+  "baseline": {
+    "deploymentId": "dpl_1CetnCRb52CcFK6bY5pjBWax8ifF",
+    "url": "https://vetted-saa-s-blueprint-d860lya89-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "9ffb9362715c5b23ed208c3360a5ca0281bb7ee5",
+    "ready": true
+  },
+  "at": "2026-09-15T06:13:35.956Z"
+}

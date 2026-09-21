@@ -1,0 +1,48 @@
+{
+  "task": "trending-pages-motion-and-design-gate",
+  "trigger": "Owner review of DEPLOY-20260910-TRENDS: pages shipped static and without the taste/impeccable design tooling; owner directed 'both: wire gate, then redeploy animated pages' (2026-09-10).",
+  "deployed_at": "2026-09-10T11:15:53+00:00",
+  "deployment_id_url": "https://vetted-saa-s-blueprint-wlf8tqvdh-michaelchamboko-gravityclaw.vercel.app",
+  "production_alias": "https://vettedsaasblueprint.online",
+  "design_skill": {
+    "invoked": "design-taste-frontend (installed derivative of taste-skill, cited by Doc 04 §35 D04-S-77a07562db66)",
+    "design_read": "Editorial trend reports inside an established review-journal identity (paper/ink/clay tokens, Georgia display, light theme lock).",
+    "dials": { "variance": 6, "motion": 4, "density": 3 },
+    "emdash_note": "House copy style (existing pages and titles) uses spaced em-dashes; the skill's zero-em-dash default was overridden for brand consistency. Owner may reverse.",
+    "impeccable": "https://github.com/michaelchamboko/impeccable is referenced by Doc 04 §35 but not installed; review-command integration deferred as an owner tooling decision (recorded in DESIGN_STANDARDS.json and AGENTS.md)."
+  },
+  "motion_added": [
+    { "pattern": "trend-reading-progress", "purpose": "shows scroll progress through evidence-dense reports", "guard": "gsap.matchMedia prefers-reduced-motion: no-preference; CSS scaleX(0) default so no-JS/reduced visitors see nothing" },
+    { "pattern": "trend-block-reveal", "purpose": "unpacks the argument in readable stages (batch ScrollTrigger)", "guard": "same matchMedia gate; gsap.from so content renders first in HTML" },
+    { "pattern": "trend-evidence-reveal", "purpose": "staggers claim/citation pairs as findings unfold", "guard": "same" },
+    { "pattern": "trend-completion-reveal", "purpose": "deliberate completion moment for sources, boundaries, next-step nav", "guard": "same" }
+  ],
+  "automation_wired": [
+    "docs/document-intelligence/DESIGN_STANDARDS.json — page-type registry, per-type taste dials, 8 approved motion patterns with purpose + reduced-motion + delaysContent metadata (DS-MOT-001..006).",
+    "scripts/verify-design-standards.mjs — deterministic gate: every src/app page route maps to exactly one page type; required-signature types bind motion components that carry the reduced-motion guard and hook attribute; pattern metadata validated.",
+    "vercel.json buildCommand now runs validate:public-site && verify:design-standards && next build (confirmed executing in the Vercel build log).",
+    "package.json: npm run verify:design-standards.",
+    "AGENTS.md: new 'Public-page design gate' section (written per writing-for-agents guidance) mandating the taste skill, vault patterns only, and the deploy gate; impeccable integration flagged as pending owner approval."
+  ],
+  "checks": {
+    "typecheck": "exit 0",
+    "lint": "0 errors (54 pre-existing warnings unchanged)",
+    "design_gate": "passed: 7 page types, 8 approved patterns, 53 routes mapped; 1 recorded warning: decision-journey DS-MOT-002 awaiting owner decision",
+    "local_build": "exit 0",
+    "vercel_build": "gates + TypeScript + 85 static pages pass"
+  },
+  "post_deploy_independent_verification": {
+    "method": "curl against production alias, checking SSR markup and shipped JS",
+    "results": [
+      "/trends/ai-agents 200: data-trend-motion-root, block, finding, close hooks and trend-reading-progress bar present; motion chunk contains 'prefers-reduced-motion: no-preference' guard",
+      "/trends/saas-pricing 200: hooks present",
+      "/trends/ai-native-vs-bolt-on 200: hooks present"
+    ]
+  },
+  "unresolved_for_owner": [
+    "Motion library standardization (Doc 04 §34 open decision 6): GSAP precedent followed; needs ratification.",
+    "decision-journey pages (/decision-hub, /solution-hub, /scenarios) still lack a signature interaction (same shortfall this slice corrected for trend pages).",
+    "Impeccable installation + review-command integration.",
+    "UI and Motion Vault curation session (Doc 04 §33) — DESIGN_STANDARDS.json is a seed, not the final vault."
+  ]
+}

@@ -3,8 +3,8 @@
 **Owner**: [Lead Agent / Developer]
 **Status**: [Proposed / Approved / Complete]
 **Module ID**: [M-001]
-**Target Runtime**: [github / vercel / oracle / approved-runtime / docs-only]
-**Validation Location**: [github / vercel / oracle / approved-runtime / local-docs-only]
+**Target Runtime**: [github / vercel / database / approved-runtime / docs-only]
+**Validation Location**: [github / vercel / database / approved-runtime / local-docs-only]
 
 ## Overview
 
@@ -22,7 +22,7 @@
 
 ## Runtime Boundary
 
-- Intended build/deploy location: [e.g. Vercel, Oracle, Render]
+- Intended build/deploy location: [e.g. Vercel, managed database, Render]
 - Local workstation role: [source editing/docs only unless explicit local-preview opt-in]
 - Local build/install exception: [No by default / approval reference]
 

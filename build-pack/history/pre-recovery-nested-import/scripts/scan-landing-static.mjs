@@ -41,7 +41,7 @@ function hasPublicationProvenance(entry) {
     && hasValidTimestamp(entry.published_at)
     && hasText(entry.current_version_id)
     && (
-      (entry.publication_source === "oracle_dynamic_pages" && hasText(entry.owner_publish_audit_id))
+      (entry.publication_source === "generated_pages" && hasText(entry.owner_publish_audit_id))
       || (entry.publication_source === "agent_verified_release" && hasText(entry.release_receipt))
     );
 }
@@ -212,7 +212,7 @@ function checkForms(componentSource, issues) {
 }
 
 function checkConversion(componentSource, issues) {
-  for (const token of ['data-track="primary-cta"', "OracleTracking", "ctaLinkId", "pageSlug"]) {
+  for (const token of ['data-track="primary-cta"', "PublicTracking", "ctaLinkId", "pageSlug"]) {
     if (!componentSource.includes(token)) issue(issues, "conversion_tracking_missing", `DirectReviewPage is missing ${token}.`);
   }
   if (/googletagmanager|facebook\.net|doubleclick|analytics\.js|gtag\(/i.test(componentSource)) issue(issues, "third_party_pixel_detected", "Third-party tracking indicator found in landing renderer.");

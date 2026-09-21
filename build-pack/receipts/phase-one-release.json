@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "phase": "P1",
+  "status": "verified",
+  "verified_at": "2026-09-01T12:11:52.4007610Z",
+  "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
+  "dependency_lock_sha256": "f568c168596b939794f8dcd8cf556ad80379b4c95dadaf771c4cf41e81483e30",
+  "local_build_id": "sBoRy_7lPWmtAh0oQg899",
+  "environment_fingerprint": "eaf4112b725d29f6d356ea8fab2c0147353e7612f50c1f23373fbe02c6d2597e",
+  "environment": {
+    "node": "24.x",
+    "npm": "12.0.2",
+    "next": "16.3.4",
+    "react": "19.2.7",
+    "typescript": "6.0.3",
+    "vercel_project_id": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "vercel_project": "vetted-saa-s-blueprint",
+    "production_domain": "https://vettedsaasblueprint.online"
+  },
+  "deployment": {
+    "id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
+    "state": "READY",
+    "target": "production",
+    "url": "https://vetted-saa-s-blueprint-7mq6zlsst-michaelchamboko-gravityclaw.vercel.app",
+    "inspector_url": "https://vercel.com/michaelchamboko-gravityclaw/vetted-saa-s-blueprint/CWr7EUjipJJpwJKCjQp3jPArucbJ",
+    "custom_domain": "https://vettedsaasblueprint.online",
+    "install_command": "npx --yes npm@12.0.2 ci",
+    "build_command": "npm run validate:public-site && next build"
+  },
+  "repository_checks": {
+    "clean_install": "passed",
+    "audit": "0 vulnerabilities",
+    "lint": "passed with 0 errors and 15 inherited warnings",
+    "typecheck": "passed",
+    "tests": "246 total, 243 passed, 0 failed, 3 expected Windows privilege skips",
+    "public_site_validator": "passed",
+    "next_production_build": "passed",
+    "vercel_production_build": "passed"
+  },
+  "gitnexus": {
+    "mode": "index-only",
+    "version": "1.6.10",
+    "indexed_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
+    "files": 605,
+    "nodes": 17124,
+    "edges": 25252,
+    "clusters": 1023,
+    "flows": 116
+  },
+  "browser_verification": {
+    "desktop": "passed",
+    "mobile_390x844": "passed",
+    "reduced_motion": "passed",
+    "javascript_disabled": "passed",
+    "homepage_discovery": "passed",
+    "sitemap": "passed",
+    "console_errors": 0,
+    "page_errors": 0,
+    "horizontal_overflow_failures": 0
+  },
+  "performance": {
+    "profile": "Playwright Chromium, 1440x900, cold isolated context per route, live production network, no synthetic throttling",
+    "targets": {
+      "lcp_ms": 2500,
+      "inp_ms": 200,
+      "cls": 0.1
+    },
+    "results": [
+      {
+        "path": "/decision-hub",
+        "status": 200,
+        "lcp_ms": 832,
+        "inp_ms": 40,
+        "cls": 0
+      },
+      {
+        "path": "/solution-hub",
+        "status": 200,
+        "lcp_ms": 300,
+        "inp_ms": 24,
+        "cls": 0
+      },
+      {
+        "path": "/scenarios",
+        "status": 200,
+        "lcp_ms": 320,
+        "inp_ms": 32,
+        "cls": 0
+      }
+    ]
+  },
+  "production_urls": [
+    {
+      "name": "Decision Hub",
+      "url": "https://vettedsaasblueprint.online/decision-hub",
+      "status": 200
+    },
+    {
+      "name": "Solution Hub",
+      "url": "https://vettedsaasblueprint.online/solution-hub",
+      "status": 200
+    },
+    {
+      "name": "Decision Scenario",
+      "url": "https://vettedsaasblueprint.online/scenarios",
+      "status": 200
+    }
+  ],
+  "task_evidence": {
+    "P1-PLAN-001": "One planning authority and the 799 requirement / 799 acceptance denominators validate.",
+    "RCV-002R": "Immutable baseline manifest and active-test reconciliation are present.",
+    "RCV-004": "Pinned npm 12 toolchain, zero-vulnerability audit, lint, typecheck, tests, validator, and build pass.",
+    "P1-CONTENT-001": "DecisionJourneyRecordV1 content resolves to stable source UIDs, hashes, evidence states, and review dates.",
+    "P1-UI-001": "All three static-first routes expose complete principal content without JavaScript.",
+    "P1-MOTION-001": "Desktop, mobile, reduced-motion, cleanup, focus, and no-JavaScript paths pass.",
+    "P1-DISCOVERY-001": "Primary navigation, homepage cards, reciprocal links, canonicals, and sitemap discovery pass.",
+    "P1-VERIFY-001": "Repository gates plus live desktop, mobile, reduced-motion, no-JavaScript, and performance checks pass.",
+    "P1-RELEASE-001": "Vercel deployment is READY, production-aliased, and all custom-domain URLs return expected content."
+  }
+}

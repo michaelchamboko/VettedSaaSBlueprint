@@ -1,0 +1,4 @@
+interface:
+  display_name: "Landing Page Uniqueness Review"
+  short_description: "Block duplicate affiliate page variants."
+  default_prompt: "Use $landing-page-uniqueness-review to review these landing-page artifacts for duplicate intent and publish-readiness blockers."

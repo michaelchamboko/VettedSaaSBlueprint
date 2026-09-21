@@ -23,7 +23,7 @@ Task cards must declare where validation runs:
 
 - `github`: source updates, branches, pull requests, and manual code review only; no GitHub Actions runners
 - `vercel`: install/build/deploy logs for Vercel-hosted applications
-- `oracle`: Oracle database, Hermes, and worker checks
+- `database`: database and worker checks
 - `render`, `supabase`, `neon`, or another explicitly approved runtime
 - `local-docs-only`: markdown/template validation that does not install dependencies or build an app
 

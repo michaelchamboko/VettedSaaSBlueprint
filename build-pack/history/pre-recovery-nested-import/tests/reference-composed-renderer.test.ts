@@ -43,7 +43,7 @@ test("profile selection routes all three renderers while preview inputs stay ref
   assert.doesNotMatch(editorialBranch[1], /mode=\{mode\}|affiliateUrlOverride/);
   assert.match(directReview, /design_profile === "reference_composed_v1"[\s\S]*?<ReferenceComposedReviewPage[\s\S]*?mode=\{mode\}[\s\S]*?affiliateUrlOverride=\{affiliateUrlOverride\}/);
   assert.doesNotMatch(directReview, /const affiliateUrl = affiliateUrlOverride \?\?/);
-  assert.doesNotMatch(directReview, /mode !== "preview" \? \(\s*<OracleTracking/);
+  assert.doesNotMatch(directReview, /mode !== "preview" \? \(\s*<PublicTracking/);
 });
 
 test("section order preserves the recipe order while skipping empty optional collections", async () => {

@@ -1,0 +1,80 @@
+{
+  "status": "deployed_verified_reconciled",
+  "deployment": {
+    "deploymentId": "dpl_2PHp1T1H7Q1MQZYeKeWDTE7eW3Kw",
+    "url": "https://vetted-saa-s-blueprint-d4hqy1na4-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "900a85a2f3c1ea0c886dbe9d38e5c24d6741ad34",
+    "ready": true
+  },
+  "urls": [
+    "https://vettedsaasblueprint.online/#reviews",
+    "https://vettedsaasblueprint.online/reviews",
+    "https://vettedsaasblueprint.online/site-map"
+  ],
+  "coverage": {
+    "standaloneReviews": 2,
+    "comparisonGuides": 9,
+    "publicPages": 45
+  },
+  "verification": {
+    "production": true,
+    "discovery": true,
+    "canonicalAndAutomation": true,
+    "tests": {
+      "passed": 321,
+      "skipped": 3,
+      "failed": 0
+    },
+    "releaseChecks": "all six passed",
+    "affiliateDestinations": "unchanged"
+  },
+  "indexing": "All45 public URLs discoverable, HTTP200, canonical and sitemap checks passed; actual search-engine indexing not confirmed.",
+  "evidence": [
+    {
+      "file": "receipt.json",
+      "sha256": "d1ce49820501b1b64834d10dc7e0b715266c83b2a660aaa2a3a9bca4a697de49"
+    },
+    {
+      "file": "production-verification.json",
+      "sha256": "f0700eff82b75da8333d72847aa3212205047a54fe721f56558bde1a465255a7"
+    },
+    {
+      "file": "discovery-verification.json",
+      "sha256": "6ebaa1920adcf39a0ef9c9bd9bb2590d9fda581ef3ae2fe9ab61041e75d9486b"
+    },
+    {
+      "file": "reconciliation.json",
+      "sha256": "8b0c29eaa561268af5f32dccfa4b302760feb296c6b630e48fad8454a1d5c74e"
+    },
+    {
+      "file": "source-and-design.json",
+      "sha256": "cc71c2894110765524f3ce96c10d23e3bb7f03379fd0a20919e55c6d30e31901"
+    },
+    {
+      "file": "production-interaction.json",
+      "sha256": "0aa58ec5a233adb4c2fb5734c3bc67199ae58e4836f9fe82e4ffd404aa29f178"
+    },
+    {
+      "file": "independent-production-http.json",
+      "sha256": "e305817bcbfd39e414326d933fe00ddced4f0d4d79f02a2b70f832d3380cdfb9"
+    },
+    {
+      "file": "implementation-review.md",
+      "sha256": "b0d2e1ce7b89c4cff770f8beb48a8ae18ffc37ad8800502d33cc035817b499ee"
+    },
+    {
+      "file": "design-review.md",
+      "sha256": "32904d6e0575f71d95f7eed8f52d5de5019e133407c30e740907e844c7a53ec2"
+    },
+    {
+      "file": "impeccable-b.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "impeccable-b-summary.md",
+      "sha256": "ef30d56e4102c8a4eec505b6402888c906e2f3c7f615c693207fd40bda5c60ad"
+    }
+  ],
+  "createdAt": "2026-09-15T06:16:09.981Z"
+}

@@ -1,0 +1,193 @@
+{
+  "origin": "https://vettedsaasblueprint.online",
+  "verifiedAt": "2026-09-15T06:13:35.819Z",
+  "passed": true,
+  "publicPages": 45,
+  "libraryEntries": 11,
+  "checks": [
+    {
+      "path": "/",
+      "passed": true
+    },
+    {
+      "path": "/reviews",
+      "passed": true
+    },
+    {
+      "path": "/site-map",
+      "passed": true
+    },
+    {
+      "path": "/privacy",
+      "passed": true
+    },
+    {
+      "path": "/terms",
+      "passed": true
+    },
+    {
+      "path": "/contact",
+      "passed": true
+    },
+    {
+      "path": "/affiliate-disclosure",
+      "passed": true
+    },
+    {
+      "path": "/editorial-policy",
+      "passed": true
+    },
+    {
+      "path": "/paia",
+      "passed": true
+    },
+    {
+      "path": "/accessibility",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub",
+      "passed": true
+    },
+    {
+      "path": "/scenarios",
+      "passed": true
+    },
+    {
+      "path": "/trends/ai-agents",
+      "passed": true
+    },
+    {
+      "path": "/trends/saas-pricing",
+      "passed": true
+    },
+    {
+      "path": "/trends/ai-native-vs-bolt-on",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/ai-ad-creative",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/ai-ad-creative",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/ai-ad-creative",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/ai-search-visibility",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/ai-search-visibility",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/ai-search-visibility",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/amazon-marketplace-analytics",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/amazon-marketplace-analytics",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/amazon-marketplace-analytics",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/amazon-wasted-ad-spend",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/amazon-wasted-ad-spend",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/amazon-wasted-ad-spend",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/marketing-automation",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/marketing-automation",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/marketing-automation",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/print-on-demand",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/print-on-demand",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/print-on-demand",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/selling-an-online-business",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/selling-an-online-business",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/selling-an-online-business",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/social-media-automation",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/social-media-automation",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/social-media-automation",
+      "passed": true
+    },
+    {
+      "path": "/decision-hub/video-localization",
+      "passed": true
+    },
+    {
+      "path": "/solution-hub/video-localization",
+      "passed": true
+    },
+    {
+      "path": "/scenarios/video-localization",
+      "passed": true
+    },
+    {
+      "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "passed": true
+    },
+    {
+      "path": "/landing-page-builders/moosend-email-marketing-automation",
+      "passed": true
+    },
+    {
+      "path": "discovery, sitemap, JSON-LD and robots",
+      "passed": true
+    }
+  ]
+}

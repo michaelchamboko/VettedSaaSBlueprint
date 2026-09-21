@@ -48,7 +48,7 @@ Mirror these exact repository-relative paths into the execution state's `context
 
 ## Testing Plan & Verification
 
-* **Task-Tier Validation**: `[kind: command, location: local, argv: [...]]` or `[kind: receipt, location: vercel/oracle/approved-runtime]`
+* **Task-Tier Validation**: `[kind: command, location: local, argv: [...]]` or `[kind: receipt, location: vercel/database/approved-runtime]`
 * **Affected-Tier Validation**: `[Required for medium/high risk; declare kind and location, otherwise N/A]`
 * **Full-Tier Validation**: `[Required for high risk; declare kind and location, otherwise N/A]`
 * **Expected Output**: `[Successful exit code 0 or positive verification indicator]`

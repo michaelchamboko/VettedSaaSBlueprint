@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "origin": "https://vettedsaasblueprint.online",
+  "route": "/landing-page-previews/levo-motion-study",
+  "checkedAt": "2026-09-15T13:56:20.817Z",
+  "checks": [
+    "homepage, navigation and sitemap preserved",
+    "server-rendered content, noindex, diagram structure, dropdown and destinations",
+    "responsive layout, viewport-fit pinning, complete and reversed scroll drawing",
+    "reduced-motion and no-JavaScript static fallbacks; no page errors"
+  ],
+  "screenshots": [
+    "preview-1440x900.png",
+    "preview-390x844.png",
+    "preview-320x700.png",
+    "preview-844x390.png",
+    "workflow-start.png",
+    "workflow-midpoint.png",
+    "workflow-complete.png",
+    "workflow-reverse.png",
+    "reduced-motion.png",
+    "no-javascript.png"
+  ]
+}

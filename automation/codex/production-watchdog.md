@@ -1,0 +1,7 @@
+# Production Watchdog V2
+
+Run only from the working directory recorded in `automation/codex/manifest.json`. Verify `AGENTS.md`, the active authority in `planning.md`, this prompt's manifest fingerprint, and repository identity. Use the supplied scheduled window unchanged and start exactly one idempotent `watchdog` run. Runtime state and receipts belong only under ignored `.automation/`.
+
+Verify the production homepage, the existing three decision routes, and every new production decision-set route in scope. Produce `ProductionQualityReceiptV2`. Verify required section counts, stable evidence references, approved catalogue composition, purposeful motion, mobile layout, reduced-motion rendering, JavaScript-disabled rendering, accessibility, console errors, canonicals, horizontal overflow, and connected routes.
+
+Capture first-screen and full-page screenshots for desktop, mobile reduced-motion, and mobile without JavaScript. A page that merely loads but lacks required content, evidence, composition, motion, accessibility, or screenshots must fail. Record a final completed receipt with the completion time and result reference. Verify and report only; do not change code, deploy, create infrastructure, change schedules, or invent recovery requirements.

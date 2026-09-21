@@ -1,0 +1,66 @@
+{
+  "recordedAt": "2026-09-11T12:10:07Z",
+  "status": "released_verified",
+  "authority": "Owner explicitly requested today's research and release of three high-quality animated pages",
+  "deployment": {
+    "id": "dpl_F85LSSUHExU8i9oWUCoWhe7WveZD",
+    "state": "READY",
+    "url": "https://vetted-saa-s-blueprint-14gfijxff-michaelchamboko-gravityclaw.vercel.app",
+    "alias": "https://vettedsaasblueprint.online",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "method": "Existing project, direct local Vercel production deployment"
+  },
+  "source": {
+    "head": "72aeb601e80078d9f3fb203247dd899587c03baf",
+    "dirtyCheckout": true,
+    "note": "Preserved pre-existing user changes; deployed working snapshot, not a clean commit. No remote configured; no commit or GitHub push.",
+    "sha256": {
+      "src/lib/decision-journey/video-localization.ts": "62c72184aef6617d0b5f15a3b50206ec37757a603bca916f5f77d75b85c07fe2",
+      "src/components/public/LocalizationJourney.tsx": "b2dc27731eb369bfbfff88429c5d9e1b81d656287c80d138bdb5e6e0086cc295",
+      "src/components/public/LocalizationMotion.tsx": "659c8596d7861c29821df318a6192edc837a838395b05a6f57989edf3806578b",
+      "src/components/public/LocalizationJourney.module.css": "db3f200e7beef03a3a99ba1025f9fc9bb51f56c2af48d8ff22d517b301bcd121"
+    }
+  },
+  "routes": ["/decision-hub/video-localization", "/solution-hub/video-localization", "/scenarios/video-localization"],
+  "research": {
+    "window": "2026-09-11",
+    "officialSources": 5,
+    "evidenceOutcome": "partial",
+    "researchRunId": "b058b04f-6f2f-41ad-9f62-39dab980588f",
+    "editorialRunId": "9b9f58ea-aa79-40ff-b46b-c80d362b2718",
+    "states": "completed in designated Phase Two local store",
+    "limits": "Documentation research, not hands-on testing, measured buyer demand, or revenue forecasting"
+  },
+  "commercial": {
+    "approvedUrl": "https://try.elevenlabs.io/izj2b165mcsj",
+    "placements": ["Solution Hub", "Decision Scenario"],
+    "disclosure": "Adjacent commission disclosure, sponsored nofollow; explicit commercial-use and Beta exclusion cautions",
+    "correction": "Legacy review path returned404; removed that detour and verified exact approved direct URL on final production pages"
+  },
+  "design": {
+    "designRead": "Existing paper, ink and clay editorial system; Georgia display; native scrolling",
+    "dials": {"variance": 6, "motion": 5, "density": 4},
+    "pageType": "decision-journey",
+    "patterns": ["trend-reading-progress", "trend-block-reveal", "trend-evidence-reveal"],
+    "reducedMotion": "Static, visible content; no GSAP animation",
+    "isolatedCritique": "Good30/36, no outstanding priority issues; recommendation anchor and comparison table refined; final CTA source review passed",
+    "detector": "One isolated impeccable detect --json pass: zero findings on component and three route files; CSS-module traversal unconfirmed",
+    "existingWarning": "DS-MOT-002 remains open for prior decision-journey signature decision; new instances bind approved patterns"
+  },
+  "verification": {
+    "localBuild": "passed webpack production build",
+    "hostedBuild": "passed public-site validation, design standards, Turbopack build and TypeScript",
+    "focusedTests": "11 passed; final affiliate correction tests2 passed",
+    "lint": "No errors;54 pre-existing warnings",
+    "productionBrowserVerifiedAt": "2026-09-11T12:09:30.617Z",
+    "productionBrowserCases": {"total": 12, "passed": 12, "profiles": ["desktop", "mobile", "reduced motion", "JavaScript disabled"]},
+    "browserAssertions": "HTTP200, no horizontal overflow, one h1,12/7/12 sections, valid canonical and source anchors, no invisible sections or browser errors, changing scroll progress only under normal motion",
+    "productionLinkChecks": "7 passed: homepage discovery, previous three marketing pages, two exact affiliate placements, sitemap",
+    "artifacts": ".automation/video-localization-2026-09-11-production/verification.json and links.json with screenshots"
+  },
+  "followUps": [
+    "Urgent dependency security review: npm audit --omit=dev reports5 advisories,1 moderate,3 high,1 critical, including Next16.2.11. No dependency change or claim of exploitability assessment in this release.",
+    "GitNexus refresh blocked by PowerShell script policy; direct imports, source and tests used for bounded impact inspection.",
+    "Commercial outcomes are unmeasured; do not claim conversion or revenue uplift."
+  ]
+}

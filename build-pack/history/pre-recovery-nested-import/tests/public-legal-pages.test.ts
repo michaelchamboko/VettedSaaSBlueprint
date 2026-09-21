@@ -37,7 +37,7 @@ test("privacy notice describes actual collection, processing, retention, and rig
     "no IP hash",
     "legitimate interests",
     "Vercel",
-    "Oracle",
+    "Storage",
     "PartnerStack",
     "90 days",
     "24 months",

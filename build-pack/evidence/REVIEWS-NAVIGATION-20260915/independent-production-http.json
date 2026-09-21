@@ -1,0 +1,308 @@
+{
+  "timestamp": "2026-09-15T06:13:34.837Z",
+  "deployment": "dpl_2PHp1T1H7Q1MQZYeKeWDTE7eW3Kw",
+  "commit": "900a85a2f3c1ea0c886dbe9d38e5c24d6741ad34",
+  "verdict": "PASS: independent production HTTP status, robots headers and server markup",
+  "browser": {
+    "status": "owned-by-root",
+    "scope": "Interactive and mobile browser checks intentionally excluded from this HTTP assessment; root owns separate evidence."
+  },
+  "http": {
+    "count": 45,
+    "all200": true,
+    "noIndexingHeaders": true,
+    "routes": [
+      {
+        "path": "/",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/reviews",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/site-map",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/privacy",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/terms",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/contact",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/affiliate-disclosure",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/editorial-policy",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/paia",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/accessibility",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/trends/ai-agents",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/trends/saas-pricing",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/trends/ai-native-vs-bolt-on",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/ai-ad-creative",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/ai-ad-creative",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/ai-ad-creative",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/ai-search-visibility",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/ai-search-visibility",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/ai-search-visibility",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/amazon-marketplace-analytics",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/amazon-marketplace-analytics",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/amazon-marketplace-analytics",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/amazon-wasted-ad-spend",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/amazon-wasted-ad-spend",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/amazon-wasted-ad-spend",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/marketing-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/marketing-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/marketing-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/print-on-demand",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/print-on-demand",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/print-on-demand",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/selling-an-online-business",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/selling-an-online-business",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/selling-an-online-business",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/social-media-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/social-media-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/social-media-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/decision-hub/video-localization",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/solution-hub/video-localization",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/scenarios/video-localization",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      },
+      {
+        "path": "/landing-page-builders/moosend-email-marketing-automation",
+        "status": 200,
+        "xRobotsTag": null,
+        "blocked": false
+      }
+    ]
+  },
+  "markup": {
+    "reviewsTitle": "Software Reviews &amp; Comparisons | Vetted SaaS Blueprint",
+    "reviewArticleCount": 11,
+    "homeReviewSectionFound": true,
+    "homeTopicLinks": [
+      "/solution-hub/ai-ad-creative",
+      "/solution-hub/ai-search-visibility",
+      "/solution-hub/amazon-marketplace-analytics",
+      "/solution-hub/amazon-wasted-ad-spend",
+      "/solution-hub/marketing-automation",
+      "/solution-hub/print-on-demand",
+      "/solution-hub/selling-an-online-business",
+      "/solution-hub/social-media-automation",
+      "/solution-hub/video-localization"
+    ],
+    "homeReviewLinks": [
+      "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "/landing-page-builders/moosend-email-marketing-automation"
+    ],
+    "directoryMainAnchors": 46
+  }
+}

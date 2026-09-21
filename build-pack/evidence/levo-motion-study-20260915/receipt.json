@@ -1,0 +1,30 @@
+{
+  "status": "production_verified",
+  "deployment": {
+    "deploymentId": "dpl_C4iPdkAhX1BqcWYAEZkfLN5rt1Yu",
+    "url": "https://vetted-saa-s-blueprint-j1176fm5n-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "ea3ba1e3dd8d4cc3d3894484f7228b505e793e4f",
+    "ready": true
+  },
+  "verification": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.automation\\publisher-v4\\levo-motion-study-20260915\\production-verification.json",
+  "verificationHash": "53efaddfa18b967db6e779d831e8eb4ac8ca38b9eca68999e6fee8efbcaa4c3e",
+  "source": "motion preview",
+  "files": [
+    "docs/document-intelligence/DESIGN_STANDARDS.json",
+    "scripts/verify-levo-motion.ts",
+    "src/app/landing-page-previews/levo-motion-study/page.tsx",
+    "src/components/public/LevoStudy.module.css",
+    "src/components/public/LevoStudyDiagram.tsx",
+    "src/components/public/LevoStudyMotion.tsx",
+    "tests/levo-motion-preview.test.ts"
+  ],
+  "baseline": {
+    "deploymentId": "dpl_2PHp1T1H7Q1MQZYeKeWDTE7eW3Kw",
+    "url": "https://vetted-saa-s-blueprint-d4hqy1na4-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "900a85a2f3c1ea0c886dbe9d38e5c24d6741ad34",
+    "ready": true
+  },
+  "at": "2026-09-15T13:56:27.420Z"
+}

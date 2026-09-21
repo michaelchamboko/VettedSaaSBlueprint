@@ -11,12 +11,12 @@ const approvedUrls = `
 test("research preflight is ready only when Neon and both approved Hermes executors are configured", () => {
   const result = inspectLandingResearchPreflight(approvedUrls, {
     LANDING_CONTROL_DATABASE_URL: "postgresql://control-secret",
-    LANDING_ORACLE_WORKER_DATABASE_URL: "postgresql://worker-secret",
+    LANDING_AUTOMATION_DATABASE_URL: "postgresql://worker-secret",
     HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\approved\\product-identity.exe",
     HERMES_LANDING_RESEARCH_COMMAND: "C:\\approved\\landing-research.exe",
   }, {
     LANDING_CONTROL_DATABASE_URL: true,
-    LANDING_ORACLE_WORKER_DATABASE_URL: true,
+    LANDING_AUTOMATION_DATABASE_URL: true,
     HERMES_PRODUCT_IDENTITY_COMMAND: true,
     HERMES_LANDING_RESEARCH_COMMAND: true,
   });
@@ -30,7 +30,7 @@ test("research preflight is ready only when Neon and both approved Hermes execut
 test("research preflight reports exact missing configuration names without exposing configured values", () => {
   const result = inspectLandingResearchPreflight(approvedUrls, {
     LANDING_CONTROL_DATABASE_URL: "postgresql://must-not-appear",
-    LANDING_ORACLE_WORKER_DATABASE_URL: " ",
+    LANDING_AUTOMATION_DATABASE_URL: " ",
     HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\must-not-appear\\identity.exe",
   });
   const serialized = JSON.stringify(result);
@@ -38,7 +38,7 @@ test("research preflight reports exact missing configuration names without expos
   assert.equal(result.status, "blocked");
   assert.deepEqual(result.blockers, [
     "LANDING_CONTROL_DATABASE_URL has not passed its authority probe.",
-    "LANDING_ORACLE_WORKER_DATABASE_URL is missing.",
+    "LANDING_AUTOMATION_DATABASE_URL is missing.",
     "HERMES_PRODUCT_IDENTITY_COMMAND has not passed its authority probe.",
     "HERMES_LANDING_RESEARCH_COMMAND is missing.",
   ]);
@@ -49,7 +49,7 @@ test("research preflight reports exact missing configuration names without expos
 test("research preflight refuses configured authorities that have not passed probes", () => {
   const result = inspectLandingResearchPreflight(approvedUrls, {
     LANDING_CONTROL_DATABASE_URL: "postgresql://control",
-    LANDING_ORACLE_WORKER_DATABASE_URL: "postgresql://worker",
+    LANDING_AUTOMATION_DATABASE_URL: "postgresql://worker",
     HERMES_PRODUCT_IDENTITY_COMMAND: "C:\\approved\\identity.exe",
     HERMES_LANDING_RESEARCH_COMMAND: "C:\\approved\\research.exe",
   });

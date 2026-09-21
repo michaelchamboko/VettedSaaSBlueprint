@@ -1,0 +1,22 @@
+{
+  "task_id": "RCV-001",
+  "commit": "d330ba4d797ef76cb35c1e3b6dc4c86ed76c69ea",
+  "evidence": [
+    {
+      "name": "BuildRunner schema check",
+      "kind": "command",
+      "exit_code": 0,
+      "verified_at": "2026-09-01T07:26:12+00:00",
+      "stdout": "{\n  \"ok\": true,\n  \"command\": \"validate\",\n  \"result\": {\n    \"status\": \"valid\",\n    \"schema_version\": 2,\n    \"candidate_digest\": \"a939e1059617546d00c7a5bc37db799d55b3c69691f6b78c33c9483982d2c6e0\"\n  }\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "execution-state generator syntax",
+      "kind": "command",
+      "exit_code": 0,
+      "verified_at": "2026-09-01T07:26:12+00:00",
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

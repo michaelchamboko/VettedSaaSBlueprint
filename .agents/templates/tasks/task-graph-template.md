@@ -11,7 +11,7 @@ BuildRunner state in `build-pack/execution-state.json` is authoritative. Status 
 
 | Module ID | Module Plan | Responsibility | Validation Location |
 |-----------|-------------|----------------|---------------------|
-| M-001 | `build-pack/module-plans/M-001-[name].md` | [responsibility] | [github/vercel/oracle/local-docs-only] |
+| M-001 | `build-pack/module-plans/M-001-[name].md` | [responsibility] | [github/vercel/database/local-docs-only] |
 
 ## Foundation Tasks
 

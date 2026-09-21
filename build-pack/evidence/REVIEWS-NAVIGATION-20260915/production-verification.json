@@ -1,0 +1,43 @@
+{
+  "version": 4,
+  "bindings": {
+    "contentHash": "12cd5351443723b03348b4b7cbc2582d15417779b8c0cf24c155eeb8af06f172",
+    "evidenceHash": "07e438556b0c2a12547621592cd54e020f38aa81a37c938b7e7ecca0e64c1bf6",
+    "configHash": "d076d8c6d6cf2c5c0ca7b32618dd23dab14e4a66002be700be53102cae437e44"
+  },
+  "createdAt": "2026-09-15T06:13:30.115Z",
+  "actorId": "independent-implementation-verifier",
+  "transcript": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.automation\\publisher-v4\\reviews-navigation-20260915\\production-verification-evidence\\checks.json",
+  "transcriptHash": "2376f78273222fff06f1f7a1ca10930371c444ea85d45a46ea575821355cf011",
+  "kind": "production",
+  "deployment": {
+    "deploymentId": "dpl_2PHp1T1H7Q1MQZYeKeWDTE7eW3Kw",
+    "url": "https://vetted-saa-s-blueprint-d4hqy1na4-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "900a85a2f3c1ea0c886dbe9d38e5c24d6741ad34",
+    "ready": true
+  },
+  "passed": true,
+  "routes": [
+    {
+      "path": "/decision-hub/ai-ad-creative",
+      "status": 200,
+      "canonical": "https://vettedsaasblueprint.online/decision-hub/ai-ad-creative",
+      "contentHash": "12cd5351443723b03348b4b7cbc2582d15417779b8c0cf24c155eeb8af06f172"
+    },
+    {
+      "path": "/solution-hub/ai-ad-creative",
+      "status": 200,
+      "canonical": "https://vettedsaasblueprint.online/solution-hub/ai-ad-creative",
+      "contentHash": "12cd5351443723b03348b4b7cbc2582d15417779b8c0cf24c155eeb8af06f172"
+    },
+    {
+      "path": "/scenarios/ai-ad-creative",
+      "status": 200,
+      "canonical": "https://vettedsaasblueprint.online/scenarios/ai-ad-creative",
+      "contentHash": "12cd5351443723b03348b4b7cbc2582d15417779b8c0cf24c155eeb8af06f172"
+    }
+  ],
+  "buyerPathsPassed": true,
+  "checkedOrigin": "https://vettedsaasblueprint.online"
+}

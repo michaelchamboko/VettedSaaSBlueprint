@@ -534,7 +534,7 @@ const automaticHandoffs = [
     advancing: "Yes",
   },
   {
-    item: "Oracle synchronization unavailable",
+    item: "Storage synchronization unavailable",
     action: "Record synchronization as pending or not_configured and continue the agent-led GitHub/Vercel release.",
     advancing: "Yes",
   },

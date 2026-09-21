@@ -1,0 +1,48 @@
+{
+  "task": "marketing-automation-decision-journey-monetized",
+  "owner_directive": "User (2026-09-10): do research and create three additional pages (hub, solution, etc.) centered on the approved URLs so we can advertise and make money.",
+  "completed_at": "2026-09-10T15:05:00+00:00",
+  "pages_created": [
+    "https://vettedsaasblueprint.online/decision-hub/marketing-automation",
+    "https://vettedsaasblueprint.online/solution-hub/marketing-automation",
+    "https://vettedsaasblueprint.online/scenarios/marketing-automation"
+  ],
+  "contract_compliance": {
+    "page_types": "The three pages are instances of the authorized Decision Hub / Solution Hub / Decision Scenario taxonomy (D07-S-64cb6b73237d), rendered through the existing connected-journey contract and shared DecisionJourneyPage component; no new page type was invented and no generic landing template used (Mandatory adaptations table).",
+    "affiliate_copy_gate": "DOMAIN_QUERY_EVIDENCE sections re-applied: no Hormozi skill invocation (none installed; wholesale install forbidden), copy drafted locally as a proposal and gated through the acceptance boundary.",
+    "evidence_to_action_order": "Affiliate next-actions render only on the Solution Hub and Scenario, after option blocks and evidence; the Decision Hub carries no commercial action (D04-S-058f980dea13).",
+    "disclosure": "Commission/independence statement sits directly above the first affiliate-adjacent link, plus the standing affiliate-disclosure link (D05-S-5f4ed2cdc87a).",
+    "url_integrity": "Approved URLs are never duplicated on the journey pages; they live only in the receipt-gated review pages (Moosend exact_affiliate_url trymoo.moosend.com/michaelmedium and ElevenLabs try.elevenlabs.io/izj2b165mcsj verified verbatim in release receipts)."
+  },
+  "programs_centered": {
+    "included": ["Moosend (route 1: recurring campaign automation)", "ElevenLabs (route 2: repetitive content production)"],
+    "excluded_with_reason": "DataHawk, Carepatron, Snowfire, AdCreative, and GetResponse-marketing-automation lack release-gated evidence artifacts (only noindex studio pages or unreleased blueprints), so no product claim about them could pass the claim-evidence gate; their own decision journeys require their evidence to pass release first. A non-affiliate 'stay manual' route is included to preserve ranking independence and de-pressure the recommendation."
+  },
+  "research": {
+    "external_sources_cited": [
+      "HubSpot 2026 State of Marketing (blog.hubspot.com, accessed 2026-09-10) - 86.4% AI adoption, ROI measurement top challenge",
+      "Data-Mania 2026 MOps automation benchmarks (accessed 2026-09-10) - 87% broad use vs 9% fully automated journeys, 48.6% expertise barrier",
+      "Designloud 2026 small business marketing survey (accessed 2026-09-10) - 62% limited staff; labeled as smaller self-published survey in page states (partial)"
+    ],
+    "internal_sources_cited": "D01-H022, D05-H023, D05-H127, D06-H018, D07-H032, D08-H082 (existing contract UIDs), plus release-evidence claim IDs (02becb30, 93734070, 577e8a01) and blueprint limitation/mitigation strings quoted verbatim."
+  },
+  "bounded_review_outcome": {
+    "caught_and_fixed_before_deploy": [
+      "Two fabricated verbatim quotes for release receipts (replaced with exact_affiliate_url strings that are actually in the receipts)",
+      "Two Moosend limitation/mitigation quotes misattributed to product-evidence.json (re-cited to the blueprint where they live)",
+      "Data-Mania quote truncation fixed; stray added period removed from prohibited_claims quote",
+      "tone='dark' on new pages was a silent no-op (public-site--dark tokens undefined; dark footer + muted-ink = 3.1:1 contrast fail) - new pages ship light; dark-tone defect logged as house debt affecting the pre-existing journey trio",
+      "CTA labels shortened to remove 34-char uppercase body string (e.g. 'Open the voice review')",
+      "Action-card contrast verified on light paper (~5.7:1 muted text)"
+    ],
+    "detector_final": "Page-level findings clear. Remaining detector output is documented shared debt only: journey-evidence-state badges 10.56px (journey family, incl. flagship pages), footer legal-nav 10.88px, shared-bundle studio/reference styles (dark-glow, Fraunces, side-tab), house em-dash voice."
+  },
+  "checks": {
+    "typecheck": 0,
+    "journey_tests": "4 pass / 0 fail (flagship contract unchanged; new tests assert verbatim-quote traceability and receipt-backed next actions only)",
+    "lint_errors": 0,
+    "design_gate": "passed (56 routes; decision-journey wildcard routes registered)",
+    "vercel_build": "gates + build pass; 3 pages prerendered",
+    "live_verification": "3x HTTP 200 with Qualified next actions, disclosure sentence, and both review links in production HTML"
+  }
+}

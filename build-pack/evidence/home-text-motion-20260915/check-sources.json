@@ -1,0 +1,9 @@
+{
+  "at": "2026-09-15T14:08:27.198Z",
+  "files": {
+    "docs/document-intelligence/DESIGN_STANDARDS.json": "0841a938d5a8cece27b8c8878623f56aeda00be3354bed81c174445341c7f4ba",
+    "scripts/verify-home-text-motion.ts": "3f8817b728b92f7881d51f208fa4cfb0376a9be2f63244a0a80de51868da9024",
+    "src/components/public/HomepageMotion.tsx": "68e5cad2f155bb4e54590ca8ecbb523cd0b1821170564e8544c94e1c19247211"
+  },
+  "note": "Source hashes captured before six release gates; live browser verification passed after deployment."
+}

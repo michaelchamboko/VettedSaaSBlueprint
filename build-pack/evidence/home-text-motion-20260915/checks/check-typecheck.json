@@ -1,0 +1,10 @@
+{
+  "name": "typecheck",
+  "phase": "release",
+  "stdout": "\n> typecheck\n> next typegen && tsc --noEmit\n\nGenerating route types...\n✓ Types generated successfully\n",
+  "stderr": "",
+  "exitCode": 0,
+  "elapsedMs": 46804,
+  "completedAt": "2026-09-15T14:11:15.569Z",
+  "evidenceHash": "1994fd6fe346f4a2f114087e32340db03c4e1f8261d4bf4675ae488259e52334"
+}

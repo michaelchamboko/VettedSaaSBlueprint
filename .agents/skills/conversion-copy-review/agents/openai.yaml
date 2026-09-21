@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conversion Copy Review"
+  short_description: "Gate affiliate copy for buyer persuasion."
+  default_prompt: "Use $conversion-copy-review to return structured conversion QA JSON for this affiliate landing-page draft."

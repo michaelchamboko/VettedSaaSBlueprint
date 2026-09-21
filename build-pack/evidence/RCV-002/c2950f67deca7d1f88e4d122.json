@@ -1,0 +1,22 @@
+{
+  "task_id": "RCV-002",
+  "commit": "0f63484b0369f50afa06b4a34c5a5a50734662ec",
+  "evidence": [
+    {
+      "name": "immutable baseline manifest",
+      "kind": "command",
+      "exit_code": 0,
+      "verified_at": "2026-09-01T07:30:24+00:00",
+      "stdout": "{\"status\":\"pass\",\"source_commit\":\"956e3a830ea7c11ae4867635ff2edf8c5865c856\",\"source_tree\":\"ef0bac506f5ed67c2c2add6dade7917ac06186f0\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "baseline verifier syntax",
+      "kind": "command",
+      "exit_code": 0,
+      "verified_at": "2026-09-01T07:30:24+00:00",
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

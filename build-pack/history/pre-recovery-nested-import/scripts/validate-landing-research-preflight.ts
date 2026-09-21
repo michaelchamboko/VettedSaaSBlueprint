@@ -45,7 +45,7 @@ async function main(): Promise<void> {
   const markdown = await readFile(resolve(process.cwd(), "approved-urls.md"), "utf8");
   const checks: LandingResearchPreflightChecks = {
     LANDING_CONTROL_DATABASE_URL: await probeDatabase(process.env.LANDING_CONTROL_DATABASE_URL, "LANDING_CONTROL_DATABASE_URL", "probe_control"),
-    LANDING_ORACLE_WORKER_DATABASE_URL: await probeDatabase(process.env.LANDING_ORACLE_WORKER_DATABASE_URL, "LANDING_ORACLE_WORKER_DATABASE_URL", "probe_worker"),
+    LANDING_AUTOMATION_DATABASE_URL: await probeDatabase(process.env.LANDING_AUTOMATION_DATABASE_URL, "LANDING_AUTOMATION_DATABASE_URL", "probe_worker"),
     HERMES_PRODUCT_IDENTITY_COMMAND: await probeCommand(process.env.HERMES_PRODUCT_IDENTITY_COMMAND ?? "", "hermes_product_identity"),
     HERMES_LANDING_RESEARCH_COMMAND: await probeCommand(process.env.HERMES_LANDING_RESEARCH_COMMAND ?? "", "hermes_research"),
   };

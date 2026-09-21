@@ -25,7 +25,7 @@ async function withTempRepository(
   }
 }
 
-test("one exact URL creates a durable non-Oracle run and resumes it", async () => {
+test("one exact URL creates a durable non-Storage run and resumes it", async () => {
   await withTempRepository(async (repositoryRoot) => {
     const first = await loadOrCreateLandingRun({
       repositoryRoot,
@@ -37,7 +37,7 @@ test("one exact URL creates a durable non-Oracle run and resumes it", async () =
     assert.equal(first.created, true);
     assert.equal(first.run.state, "WORKING");
     assert.equal(first.run.stage, "research");
-    assert.equal(first.run.oracle_sync, "not_configured");
+    assert.equal(first.run.publication_sync, "not_configured");
     assert.equal(first.run.next_action.kind, "verify_destination_and_research");
     assert.match(first.run.url_fingerprint, /^[a-f0-9]{64}$/);
 
@@ -218,7 +218,7 @@ function makeRun(): LandingRunV1 {
     review_fingerprints: {},
     preview_result: null,
     production_result: null,
-    oracle_sync: "not_configured",
+    publication_sync: "not_configured",
     recovery_evidence: [],
     created_at: "2026-07-24T08:00:00.000Z",
     updated_at: "2026-07-24T08:00:00.000Z",

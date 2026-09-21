@@ -1,0 +1,22 @@
+{
+  "task_id": "RCV-003",
+  "commit": "652600199d84b2392cd8f80aa72faab762fe4251",
+  "evidence": [
+    {
+      "name": "task checks",
+      "kind": "command",
+      "exit_code": 0,
+      "verified_at": "2026-09-01T07:39:32+00:00",
+      "stdout": " to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n\nC:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-003\\src\\components\\landing\\StudioPage.tsx\n  166:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element\n\nC:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-003\\src\\lib\\auth\\session.ts\n  16:10  warning  'decodeUtf8' is defined but never used  @typescript-eslint/no-unused-vars\n\nC:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-003\\src\\lib\\design-references\\contracts.ts\n  108:25  warning  '_ignored' is assigned a value but never used             @typescript-eslint/no-unused-vars\n  157:22  warning  '_ignoredId' is assigned a value but never used           @typescript-eslint/no-unused-vars\n  157:47  warning  '_ignoredFingerprint' is assigned a value but never used  @typescript-eslint/no-unused-vars\n\nC:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-003\\src\\lib\\landing-automation\\repository.ts\n  553:11  warning  'record' is assigned a value but never used  @typescript-eslint/no-unused-vars\n\nC:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\RCV-003\\tests\\task-3-ingestion.test.ts\n  50:7  warning  'captures' is assigned a value but never used  @typescript-eslint/no-unused-vars\n\n✖ 14 problems (0 errors, 14 warnings)\n\n",
+      "stderr": "npm notice run lint\nnpm notice run eslint .\n"
+    },
+    {
+      "name": "affected checks",
+      "kind": "command",
+      "exit_code": 0,
+      "verified_at": "2026-09-01T07:39:38+00:00",
+      "stdout": "Generating route types...\n✓ Types generated successfully\n",
+      "stderr": "npm notice run typecheck\nnpm notice run next typegen && tsc --noEmit\n"
+    }
+  ]
+}

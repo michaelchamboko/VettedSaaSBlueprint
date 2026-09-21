@@ -1,0 +1,26 @@
+{
+  "status": "production_verified",
+  "deployment": {
+    "deploymentId": "dpl_6iVUACKRCtuTEhVLCQWNvzJS2Txe",
+    "url": "https://vetted-saa-s-blueprint-a2tx59lxp-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "803f5101e62fe282457858a9dfc94634e2ae6340",
+    "ready": true
+  },
+  "verification": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.automation\\publisher-v4\\home-text-motion-20260915\\production-verification.json",
+  "verificationHash": "e2f4bcb7c2137c570427cbda72a4731fca9159b9d74857a1392e1200111a2df5",
+  "source": "homepage text motion",
+  "files": [
+    "docs/document-intelligence/DESIGN_STANDARDS.json",
+    "scripts/verify-home-text-motion.ts",
+    "src/components/public/HomepageMotion.tsx"
+  ],
+  "baseline": {
+    "deploymentId": "dpl_C4iPdkAhX1BqcWYAEZkfLN5rt1Yu",
+    "url": "https://vetted-saa-s-blueprint-j1176fm5n-michaelchamboko-gravityclaw.vercel.app",
+    "projectId": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "commit": "ea3ba1e3dd8d4cc3d3894484f7228b505e793e4f",
+    "ready": true
+  },
+  "at": "2026-09-15T14:19:08.059Z"
+}

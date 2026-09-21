@@ -1,0 +1,10 @@
+{
+  "name": "verify:design-standards",
+  "phase": "release",
+  "stdout": "\n> verify:design-standards\n> node scripts/verify-design-standards.mjs\n\nDesign standards gate passed: 7 page types, 12 approved motion patterns, 59 public routes mapped.\n",
+  "stderr": "",
+  "exitCode": 0,
+  "elapsedMs": 1497,
+  "completedAt": "2026-09-15T14:42:17.978Z",
+  "evidenceHash": "b7134bdac0fd208220a6181aec1e803a49fc9f989fbd6ca4541b4bc5a9a5fa65"
+}
