@@ -1,0 +1,156 @@
+{
+  "id": "lp-ref-0027",
+  "source_url": "https://www.pipedrive.com",
+  "captured_at": "2026-07-14T06:54:56.090Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0027/desktop.webp",
+      "sha256": "a9e3ee20242059b36ee64f3c69fdac2083a2193ada55392f4bfcbeeb43473c32",
+      "byte_size": 78638
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0027/mobile.webp",
+      "sha256": "35fdbf1efec72106d1f7348c7a8be5fd5fcfdb97ae9683528d7558bcbef63c47",
+      "byte_size": 33172
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "comparison-media",
+  "category_tags": [
+    "comparison-media",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "asymmetric_split",
+      "composition": "Measured asymmetric split composition around the primary heading and first-viewport media.",
+      "alignment": "left heading at 48px with 652px width.",
+      "media_strategy": "img at 740,214 sized 652×543."
+    },
+    "typography": {
+      "pair": "fraunces_manrope",
+      "display_style": "Closest approved pair to computed Haffer, \"Haffer Fallback\", sans-serif.",
+      "body_style": "Computed body family Inter, \"Inter fallback\", sans-serif at 16px.",
+      "scale": "52px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 700 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Chat with Nora, our AI Sales Advisor” at y=1215 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "process_timeline",
+        "composition_notes": "Observed heading “See how Pipedrive is helping customers” at y=2624 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "how_it_works",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Easily manage leads and deals” at y=4582 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1267,23.",
+      "label_pattern": "Observed concise action label “Try it free”.",
+      "interaction": "Measured solid interactive control sized 125×42."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "4 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "3 animation(s) remained with reduced motion and 10458 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "72px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 16px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "asymmetric_split"
+    ],
+    "typography": [
+      "fraunces_manrope"
+    ],
+    "section_variants": [
+      "closing_manifesto",
+      "process_timeline"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured asymmetric split hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 48,168 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font Haffer, \"Haffer Fallback\", sans-serif, 52px, weight 700; body Inter, \"Inter fallback\", sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Chat with Nora, our AI Sales Advisor” at y=1215 with 1 column(s) and 1 item(s).",
+          "Observed heading “See how Pipedrive is helping customers” at y=2624 with 1 column(s) and 1 item(s).",
+          "Observed heading “Easily manage leads and deals” at y=4582 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "benefits:closing_manifesto",
+          "proof_blocks:process_timeline",
+          "how_it_works:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Try it free” measured 125×42."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 4 normal-motion animation(s) and 3 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "4a1aa91ecbec4f52e65a72c5e767cf9223f8b1af3e4d8f3283a3e846edd6f5b9"
+}

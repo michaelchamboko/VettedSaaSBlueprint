@@ -1,0 +1,39 @@
+{
+  "schema_version": "landing_workflow_validation_v1",
+  "batch_id": "00000000-0000-4000-8000-00000000bb00",
+  "result": "FAIL",
+  "summary_state": "BLOCKED",
+  "blockers": [
+    {
+      "code": "BATCH_ID_INVALID",
+      "category": "workflow",
+      "message": "Batch ID must be a lowercase UUID.",
+      "artifact_kind": "batch",
+      "path": "src/generated/landing-page-batches/00000000-0000-4000-8000-00000000bb00",
+      "json_pointer": "",
+      "severity": "ERROR",
+      "owner": "AGENT_WRITABLE",
+      "remediation": "Use a lowercase UUID v4 directory under src/generated/landing-page-batches/.",
+      "blocking_stage": "intent"
+    },
+    {
+      "code": "MANIFEST_INVALID",
+      "category": "validation",
+      "message": "manifest.json is missing the product pack reference.",
+      "artifact_kind": "manifest",
+      "path": "src/generated/landing-page-batches/<batch-id>/manifest.json",
+      "json_pointer": "/product_pack",
+      "severity": "ERROR",
+      "owner": "AGENT_WRITABLE",
+      "remediation": "Restore the product_pack reference and re-run npm run landing:workflow:validate.",
+      "blocking_stage": "intent"
+    }
+  ],
+  "owner_actions_required": [],
+  "next_action": {
+    "order": 1,
+    "action": "Resolve intent",
+    "command": "npm run landing:workflow:validate -- --batch-id 00000000-0000-4000-8000-00000000bb00",
+    "success_condition": "Validation completes with status PASS and intent gate is pass."
+  }
+}

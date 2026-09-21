@@ -1,0 +1,169 @@
+{
+  "id": "lp-ref-0045",
+  "source_url": "https://www.jasper.ai",
+  "captured_at": "2026-07-14T06:57:22.300Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0045/desktop.webp",
+      "sha256": "8b041aa5be3695538c2e2ce1454966bbd3e5b9a5ed2bb6e6a10ed872986bee9d",
+      "byte_size": 37368
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0045/mobile.webp",
+      "sha256": "0744d1a1bf41089fc494e7cebf6048e3649eec69b3201d56f72cf7bf7f81dca8",
+      "byte_size": 28290
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "marketing-tools",
+  "category_tags": [
+    "marketing-tools",
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 362px with 716px width.",
+      "media_strategy": "canvas at 0,546 sized 1440×420."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed Feature, Georgia, sans-serif.",
+      "body_style": "Computed body family \"ABC ROM\", Arial, sans-serif at 16px.",
+      "scale": "80px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 450 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “The execution platform for intelligent marketing” at y=1262 with 2 column(s) and 3 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Proven strategies, real results” at y=3487 with 2 column(s) and 3 item(s)."
+      },
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Solutions for every marketer” at y=4828 with 2 column(s) and 3 item(s)."
+      },
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Enterprise-grade security, quality outputs” at y=5954 with 2 column(s) and 2 item(s)."
+      },
+      {
+        "key": "faq",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Frequently asked questions about Jasper” at y=8890 with 6 column(s) and 2 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 738,458.",
+      "label_pattern": "Observed concise action label “Get A DemoGet A DemoGet A Demo”.",
+      "interaction": "Measured solid interactive control sized 141×48."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "3 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "2 animation(s) remained with reduced motion and 8890 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "interleaved",
+      "stacking": "interleaved order derived from H1, media and CTA positions.",
+      "navigation": "0px navigation across 0 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 379px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "interleaved"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 362,215 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font Feature, Georgia, sans-serif, 80px, weight 450; body \"ABC ROM\", Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “The execution platform for intelligent marketing” at y=1262 with 2 column(s) and 3 item(s).",
+          "Observed heading “Proven strategies, real results” at y=3487 with 2 column(s) and 3 item(s).",
+          "Observed heading “Solutions for every marketer” at y=4828 with 2 column(s) and 3 item(s).",
+          "Observed heading “Enterprise-grade security, quality outputs” at y=5954 with 2 column(s) and 2 item(s).",
+          "Observed heading “Frequently asked questions about Jasper” at y=8890 with 6 column(s) and 2 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "closing_cta:closing_manifesto",
+          "proof_blocks:closing_manifesto",
+          "benefits:closing_manifesto",
+          "objection_handling:closing_manifesto",
+          "faq:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Get A DemoGet A DemoGet A Demo” measured 141×48."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 3 normal-motion animation(s) and 2 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 0 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "ba1b5cbb15169a9ae4a496b363440d9c85661b0713b7332323216fe26aa3c5d0"
+}

@@ -1,0 +1,39 @@
+{
+  "design_read": "Synthetic direction: read by setting the buyer checklist above the fold and pushing CTA into a compact split.",
+  "selection_rationale": "Two reference_composed_v1 references were selected so the design covers the hero typography, section order, CTA, motion, and mobile axes without duplicating any axis.",
+  "product_category": "workflow-tools",
+  "adjacent_category_tags": ["saas-tools"],
+  "references": [
+    {
+      "reference_id": "lp-ref-0001",
+      "entry_digest": "16a46db11a4e9cda1f29e6a4db52e9eb86cd1a7049b611b74eca79106bf48cd0",
+      "role": "hero_typography",
+      "adopted_principles": [
+        "Keep the headline short and one-sentence.",
+        "Place a tight disclosure under the H1."
+      ],
+      "influenced_axes": ["hero", "typography"]
+    },
+    {
+      "reference_id": "lp-ref-0002",
+      "entry_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "role": "sections_cta",
+      "adopted_principles": [
+        "Use a single inline decision CTA.",
+        "Keep the closing manifesto free of fixed or floating CTA primitives."
+      ],
+      "influenced_axes": ["section_order", "cta"]
+    }
+  ],
+  "design_dials": {
+    "design_variance": 4,
+    "motion_intensity": 3,
+    "visual_density": 4
+  },
+  "prohibited_elements": [
+    "Floating or fixed CTA.",
+    "Animated arrow inside the CTA label."
+  ],
+  "recipe_id": "recipe-be0bbb29ff3c87a6",
+  "fingerprint": "be0bbb29ff3c87a6297fe28b932bb29d9ab15fed4d4db455d260d56b6f4664c7"
+}

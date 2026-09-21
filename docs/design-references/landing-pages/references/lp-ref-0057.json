@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0057",
+  "source_url": "https://www.datadoghq.com",
+  "captured_at": "2026-07-14T06:58:55.542Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0057/desktop.webp",
+      "sha256": "9bc7414f6f07207c61fcd02c5e8129067cf20d19f28363bcd66494f878c50c92",
+      "byte_size": 76018
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0057/mobile.webp",
+      "sha256": "7d2fe658c3766d99fcbeb5f7a3f9e91332f5500e7e9cc14b67c044a69375c1a3",
+      "byte_size": 26636
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "developer-tools",
+  "category_tags": [
+    "developer-tools",
+    "software-development",
+    "technical-saas"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 64px with 1312px width.",
+      "media_strategy": "video at 64,315 sized 1312×738."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed NationalWeb, Helvetica, Arial, sans-serif.",
+      "body_style": "Computed body family NationalWeb, Helvetica, Arial, sans-serif at 22px.",
+      "scale": "68px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 600 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "objection_accordion",
+        "composition_notes": "Observed heading “Products” at y=2345 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1180,43.",
+      "label_pattern": "Observed concise action label “GET STARTED FREE Free Trial”.",
+      "interaction": "Measured solid interactive control sized 196×44."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 3573 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "60px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 13px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "objection_accordion"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 64,209 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font NationalWeb, Helvetica, Arial, sans-serif, 68px, weight 600; body NationalWeb, Helvetica, Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Products” at y=2345 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:objection_accordion"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “GET STARTED FREE Free Trial” measured 196×44."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "7ccec8c2c0bba8afef0a767cba67e6ba155bd150b3b171b1b2960e9142f338d3"
+}

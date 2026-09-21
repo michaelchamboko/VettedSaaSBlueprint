@@ -1,0 +1,170 @@
+{
+  "schema": "design-standards-v1",
+  "generatedFor": "Deterministic design gate for hand-written public pages. Complements the generated-landing-page pipeline (scan:landing:*).",
+  "sourceAuthority": {
+    "document": "docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md",
+    "sections": {
+      "motionObligation": "8.6 Motion is part of the product, not an afterthought (line 579)",
+      "eligibilityTests": "18.3 Motion eligibility test / 18.4 Motion rejection test (lines 1211, 1224)",
+      "approvedLibraryStrategy": "18.5 Approved-library strategy (line 1237)",
+      "designChecks": "DS-MOT-001..006 table (lines 1830-1835)",
+      "implementationChecklist": "33 Design implementation checklist: Taste Skill settings documented per page type; Impeccable review commands integrated (lines 2102-2103)",
+      "designToolReferences": "35 Source and Reference Register, stable_uid D04-S-77a07562db66"
+    },
+    "openDecision": "34.6 Which motion library or libraries are standardised remains open; the approved-internal GSAP ScrollTrigger precedent from HomepageMotion.tsx is used until the owner adjudicates."
+  },
+  "tasteSkillSettings": {
+    "skill": "design-taste-frontend (installed derivative of michaelchamboko/taste-skill)",
+    "designRead": "Editorial trend reports inside an established review-journal identity (paper/ink/clay tokens, Georgia display serif, light theme lock).",
+    "dialsByPageType": "See pageTypes[].tasteSettings; dial values are proposals pending owner review.",
+    "impeccable": {
+      "repository": "https://github.com/michaelchamboko/impeccable",
+      "installed": true,
+      "version": "engine 0.1.5, skill 4.3.1",
+      "scope": "project (.opencode/skills/impeccable), owner-approved 2026-09-10",
+      "reviewFlow": "Assessment A (isolated design critique) then one bounded 'impeccable detect --json' detector pass on rendered pages; fix findings in one batch; verify once.",
+      "committedWorldExceptions": ".impeccable/config.json records house overrides with reasons (hero-eyebrow-chip rule; Inter body stack pending Doc 04 §34.2 ratification).",
+      "knownHouseDebt": [
+        "undersized-ui-text at 10.88px on footer legal nav (site-wide smallprint ramp; owner typography decision)",
+        "dark-glow #22d3ee in studio/landing stylesheet (not rendered on trend pages)",
+        "journey-evidence-state chips on decision pages remain 10.56px until those pages are reviewed",
+        "PRODUCT.md via '/impeccable init' not yet created: the tool requires an owner interview for product truth; scoped-refinement runs proceeded under SCOPED_EXISTING_ALLOWED.",
+        "public-site--dark token block is undefined in globals.css: tone='dark' is a silent no-op except the inverted footer (3.1:1 contrast fail); the flagship journey pages still pass tone='dark' and need either the token block or a tone drop (owner decision)"
+      ]
+    }
+  },
+  "pageTypes": [
+    {
+      "id": "home",
+      "routes": ["/"],
+      "signatureInteraction": "required",
+      "motionComponents": ["src/components/public/HomepageMotion.tsx"],
+      "motionHookAttribute": "data-home-motion",
+      "patterns": ["home-entrance-timeline", "home-hero-mark-parallax", "home-review-card-batch-reveal", "home-section-reveal"],
+      "tasteSettings": { "variance": 6, "motion": 5, "density": 4 }
+    },
+    {
+      "id": "decision-journey",
+      "routes": ["/decision-hub", "/solution-hub", "/scenarios", "/decision-hub/*", "/solution-hub/*", "/scenarios/*"],
+      "signatureInteraction": "pending-owner-decision",
+      "patterns": ["trend-reading-progress", "trend-block-reveal", "trend-evidence-reveal"],
+      "instanceMotion": {
+        "routes": ["/decision-hub/video-localization", "/solution-hub/video-localization", "/scenarios/video-localization"],
+        "component": "src/components/public/LocalizationMotion.tsx",
+        "hook": "data-localization-root",
+        "ownerDirective": "2026-09-11: release three high-quality researched pages with good animation and scrolling",
+        "designRead": "Extend the established paper, ink, clay editorial decision guide; native scrolling with reading progress and purposeful visible-default reveals.",
+        "tasteSettings": { "variance": 6, "motion": 5, "density": 4 },
+        "reducedMotionFallback": "static",
+        "reviewLogged": true
+      },
+      "tasteSettings": { "variance": 5, "motion": 2, "density": 4 },
+      "note": "Pre-existing static pages. DS-MOT-002 shortfall recorded, not adjudicated; retrofit needs owner sign-off."
+    },
+    {
+      "id": "trend-report",
+      "routes": ["/trends/*"],
+      "signatureInteraction": "required",
+      "motionComponents": ["src/components/public/TrendReportMotion.tsx"],
+      "motionHookAttribute": "data-trend-motion",
+      "patterns": ["trend-reading-progress", "trend-block-reveal", "trend-evidence-reveal", "trend-completion-reveal"],
+      "tasteSettings": { "variance": 6, "motion": 4, "density": 3 }
+    },
+    {
+      "id": "legal-document",
+      "routes": ["/privacy", "/terms", "/contact", "/affiliate-disclosure", "/editorial-policy", "/paia", "/accessibility"],
+      "signatureInteraction": "not-required",
+      "patterns": [],
+      "tasteSettings": { "variance": 3, "motion": 2, "density": 4 },
+      "note": "Trust-first legal pages: calm, dense, minimal motion per §8.6 rejection tests (reading must not be delayed)."
+    },
+    {
+      "id": "utility",
+      "routes": ["/affiliate-link-unavailable", "/getresponse-studio", "/landing-page-previews/*"],
+      "signatureInteraction": "not-required",
+      "patterns": [],
+      "tasteSettings": { "variance": 3, "motion": 2, "density": 5 }
+    },
+    {
+      "id": "generated-review",
+      "routes": ["/landing-page-builders/*"],
+      "signatureInteraction": "delegated",
+      "patterns": [],
+      "note": "Design gates run through the landing pipeline: landing:quality, scan:landing:* (editorial-v2, a11y, hero, conversion), visual review t4, release receipts."
+    },
+    {
+      "id": "admin",
+      "routes": ["/admin/*"],
+      "signatureInteraction": "not-required",
+      "patterns": [],
+      "tasteSettings": { "variance": 3, "motion": 2, "density": 6 },
+      "note": "Operator product UI; taste-skill landing-page rules do not apply."
+    }
+  ],
+  "patterns": [
+    {
+      "name": "home-entrance-timeline",
+      "purpose": "Staged reveal of header, hero lines, and support copy to direct attention from identity to message to action.",
+      "library": "approved-internal",
+      "derivedFrom": "src/components/public/HomepageMotion.tsx",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "home-hero-mark-parallax",
+      "purpose": "Slow drift of the decorative VSB mark to add depth without carrying content.",
+      "library": "approved-internal",
+      "derivedFrom": "src/components/public/HomepageMotion.tsx",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "home-review-card-batch-reveal",
+      "purpose": "Batched entrance of review cards to show progress through the catalogue as the visitor scrolls.",
+      "library": "approved-internal",
+      "derivedFrom": "src/components/public/HomepageMotion.tsx",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "home-section-reveal",
+      "purpose": "Calm section entrances that preserve reading order for long-form evidence.",
+      "library": "approved-internal",
+      "derivedFrom": "src/components/public/HomepageMotion.tsx",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "trend-reading-progress",
+      "purpose": "Shows scroll progress through a long evidence-dense report so the reader knows how much decision material remains.",
+      "library": "approved-internal",
+      "derivedFrom": "GSAP ScrollTrigger scrub on a fixed 2px transform-scaled bar (transform-only per §6.A); element scaleX(0) with no JS, so it never appears for reduced-motion or no-JS visitors.",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "trend-block-reveal",
+      "purpose": "Reveals report sections as they enter the viewport to unpack a long argument in readable stages.",
+      "library": "approved-internal",
+      "derivedFrom": "home-section-reveal (gsap.from inside prefers-reduced-motion: no-preference guard)",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "trend-evidence-reveal",
+      "purpose": "Staggers evidence entries so claims and citations land together, distinguishing the findings section as it unfolds.",
+      "library": "approved-internal",
+      "derivedFrom": "home-review-card-batch-reveal batch pattern",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    },
+    {
+      "name": "trend-completion-reveal",
+      "purpose": "Deliberate completion moment for sources, boundaries, and next-step navigation at the end of the report.",
+      "library": "approved-internal",
+      "derivedFrom": "home-section-reveal",
+      "reducedMotionFallback": "static",
+      "delaysContent": false
+    }
+  ]
+}

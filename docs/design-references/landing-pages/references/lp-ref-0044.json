@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0044",
+  "source_url": "https://www.clearscope.io",
+  "captured_at": "2026-07-14T06:57:22.300Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0044/desktop.webp",
+      "sha256": "987573dd7b71193e39bca2883d1b8536c5ab2c1e43a2436f7084615788e81b76",
+      "byte_size": 76376
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0044/mobile.webp",
+      "sha256": "f8bf9222f77ce7b47cce5dd79646f8fdabcd97fc9173adb9b5f94c167adc2192",
+      "byte_size": 33258
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "analytics",
+  "category_tags": [
+    "analytics",
+    "data-tools",
+    "business-intelligence"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "start heading at 80px with 1280px width.",
+      "media_strategy": "img at 81,593 sized 520×349."
+    },
+    "typography": {
+      "pair": "space_grotesk_dm_sans",
+      "display_style": "Closest approved pair to computed GT-Pressura-Mono, monospace.",
+      "body_style": "Computed body family GT-Pressura-Mono, monospace at 16px.",
+      "scale": "77.3968px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 600 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Graphite Scales AEO + SEO Wins with Clearscope” at y=75 with 1 column(s) and 4 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1098,16.",
+      "label_pattern": "Observed concise action label “Sign in”.",
+      "interaction": "Measured solid interactive control sized 110×42."
+    },
+    "motion": {
+      "variant": "media_parallax",
+      "triggers": "2 active browser animation(s) were measured after font readiness.",
+      "intensity": "media parallax is the closest registered motion pattern.",
+      "reduced_motion_behavior": "2 animation(s) remained with reduced motion and 4700 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "70.890625px navigation across 2 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 14px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "space_grotesk_dm_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "media_parallax"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 80,139 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font GT-Pressura-Mono, monospace, 77.3968px, weight 600; body GT-Pressura-Mono, monospace."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Graphite Scales AEO + SEO Wins with Clearscope” at y=75 with 1 column(s) and 4 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Sign in” measured 110×42."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 2 normal-motion animation(s) and 2 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 2 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "7500e25e73713d1a82daba6b84a4288abaf61b1cd9672c1321a44dd1b521f76c"
+}

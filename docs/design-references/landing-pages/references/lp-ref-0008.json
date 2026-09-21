@@ -1,0 +1,162 @@
+{
+  "id": "lp-ref-0008",
+  "source_url": "https://www.cursor.com",
+  "captured_at": "2026-07-14T06:50:24.680Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0008/desktop.webp",
+      "sha256": "b430c2a3cf5e30765dbe1157a39f36b265f1fdf4623a4bd801c07b145fe7c460",
+      "byte_size": 57302
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0008/mobile.webp",
+      "sha256": "0d5fdab41a8392f1669347032c4fc31bbaba73fdbd65d0deeaa3f2946f796aae",
+      "byte_size": 24054
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "proof_led",
+      "composition": "Measured proof led composition around the primary heading and first-viewport media.",
+      "alignment": "left heading at 70px with 658px width.",
+      "media_strategy": "img at 70,351 sized 1300×720."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed CursorGothic, \"CursorGothic Fallback\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif.",
+      "body_style": "Computed body family CursorGothic, \"CursorGothic Fallback\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif at 16px.",
+      "scale": "26px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 400 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "proof_blocks",
+        "family": "process_timeline",
+        "composition_notes": "Observed heading “Trusted every day by teams that build world-class software” at y=1138 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "benefits",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Agents turn ideas into code” at y=1315 with 1 column(s) and 4 item(s)."
+      },
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “In every tool, at every step” at y=2991 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Cursor is an applied research team focused on building the future of software development.” at y=6315 with 1 column(s) and 1 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "split_evidence",
+      "placement": "Primary visible CTA at 541,9.",
+      "label_pattern": "Observed concise action label “Product”.",
+      "interaction": "Measured solid interactive control sized 83×34."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 8738 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "56px navigation across 5 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 119px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "proof_led"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "process_timeline",
+      "closing_manifesto"
+    ],
+    "cta": [
+      "split_evidence"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured proof led hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed split evidence decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 70,164 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font CursorGothic, \"CursorGothic Fallback\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif, 26px, weight 400; body CursorGothic, \"CursorGothic Fallback\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Trusted every day by teams that build world-class software” at y=1138 with 1 column(s) and 1 item(s).",
+          "Observed heading “Agents turn ideas into code” at y=1315 with 1 column(s) and 4 item(s).",
+          "Observed heading “In every tool, at every step” at y=2991 with 1 column(s) and 1 item(s).",
+          "Observed heading “Cursor is an applied research team focused on building the future of software development.” at y=6315 with 1 column(s) and 1 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "proof_blocks:process_timeline",
+          "benefits:closing_manifesto",
+          "objection_handling:closing_manifesto",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Product” measured 83×34."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 5 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "267330af7249fec5c23893bc622780315d6227bb75a216ef63a143fd829e1ffc"
+}

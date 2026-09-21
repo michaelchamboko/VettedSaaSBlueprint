@@ -1,0 +1,141 @@
+{
+  "id": "lp-ref-0038",
+  "source_url": "https://www.apollo.io",
+  "captured_at": "2026-07-14T06:55:47.959Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0038/desktop.webp",
+      "sha256": "d6b299ef39928a6e34d60a99d2c776e13e046c1598cf9ab8c80ee448d05539a3",
+      "byte_size": 34136
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0038/mobile.webp",
+      "sha256": "23e843ef33e091b7a03ececaad4d23c6ba140e9a98e4dfa937401a6091e10eb2",
+      "byte_size": 24122
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "sales-crm",
+  "category_tags": [
+    "sales-crm",
+    "sales-tools",
+    "business-software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "problem_statement_stack",
+      "composition": "Measured problem statement stack composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 296px with 848px width.",
+      "media_strategy": "video at 78,758 sized 1284×642."
+    },
+    "typography": {
+      "pair": "space_grotesk_dm_sans",
+      "display_style": "Closest approved pair to computed seasonMix, \"seasonMix Fallback\".",
+      "body_style": "Computed body family soehne, \"soehne Fallback\" at 18px.",
+      "scale": "72px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 550 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Why buy five tools when one does it better?” at y=6922 with 1 column(s) and 2 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "compact_utility",
+      "placement": "Primary visible CTA at 1168,16.",
+      "label_pattern": "Observed concise action label “Get a demo”.",
+      "interaction": "Measured solid interactive control sized 105×40."
+    },
+    "motion": {
+      "variant": "quiet_stagger",
+      "triggers": "0 active browser animation(s) were measured after font readiness.",
+      "intensity": "quiet stagger is the closest registered motion pattern.",
+      "reduced_motion_behavior": "0 animation(s) remained with reduced motion and 5974 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "56px navigation across 45 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 8px.",
+      "overflow_behavior": "Document width 390px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "problem_statement_stack"
+    ],
+    "typography": [
+      "space_grotesk_dm_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto"
+    ],
+    "cta": [
+      "compact_utility"
+    ],
+    "motion": [
+      "quiet_stagger"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured problem statement stack hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed compact utility decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 296,152 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font seasonMix, \"seasonMix Fallback\", 72px, weight 550; body soehne, \"soehne Fallback\"."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Why buy five tools when one does it better?” at y=6922 with 1 column(s) and 2 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Get a demo” measured 105×40."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 0 normal-motion animation(s) and 0 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 390px for a 390px viewport; navigation 45 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "e6c50c9762e1c53e0768a498aa31a4dc93a9ac15f944675cca75926483409078"
+}

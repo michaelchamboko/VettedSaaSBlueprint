@@ -1,0 +1,155 @@
+{
+  "id": "lp-ref-0060",
+  "source_url": "https://retool.com",
+  "captured_at": "2026-07-14T06:58:55.542Z",
+  "captures": {
+    "desktop": {
+      "path": "captures/lp-ref-0060/desktop.webp",
+      "sha256": "ba5b9806d69e1c65bb3c8cc1565d8558adf5b936bdaff9b8e649a4f8b6267982",
+      "byte_size": 36818
+    },
+    "mobile": {
+      "path": "captures/lp-ref-0060/mobile.webp",
+      "sha256": "4758b6c17247ab68be53473f0755554334c5c26abc4b709beff27dd06ba200fd",
+      "byte_size": 14806
+    }
+  },
+  "usage_status": "active",
+  "usage_scope": "internal_only",
+  "primary_product_category": "saas-tools",
+  "category_tags": [
+    "saas-tools",
+    "software"
+  ],
+  "observations": {
+    "hero": {
+      "variant": "media_first_offset",
+      "composition": "Measured media first offset composition around the primary heading and first-viewport media.",
+      "alignment": "center heading at 269px with 887px width.",
+      "media_strategy": "video at 40,0 sized 1345×824."
+    },
+    "typography": {
+      "pair": "dm_serif_instrument_sans",
+      "display_style": "Closest approved pair to computed saansFont, \"saansFont Fallback\", sans-serif.",
+      "body_style": "Computed body family ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\" at 16px.",
+      "scale": "72px H1 within a 900px first viewport.",
+      "weight_contrast": "Display weight 300 against measured body styling."
+    },
+    "sections": [
+      {
+        "key": "objection_handling",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Apps that mean business” at y=0 with 1 column(s) and 7 item(s)."
+      },
+      {
+        "key": "proof_blocks",
+        "family": "alternating_story",
+        "composition_notes": "Observed heading “Why enterprises choose Retool” at y=5580 with 1 column(s) and 1 item(s)."
+      },
+      {
+        "key": "closing_cta",
+        "family": "closing_manifesto",
+        "composition_notes": "Observed heading “Trusted by 10,000+ teams to generate production-ready AI applications” at y=6076 with 6 column(s) and 2 item(s)."
+      }
+    ],
+    "cta": {
+      "variant": "inline_decision",
+      "placement": "Primary visible CTA at 1063,20.",
+      "label_pattern": "Observed concise action label “Sign inSign in”.",
+      "interaction": "Measured solid interactive control sized 68×40."
+    },
+    "motion": {
+      "variant": "split_reveal",
+      "triggers": "6 active browser animation(s) were measured after font readiness.",
+      "intensity": "split reveal is the closest registered motion pattern.",
+      "reduced_motion_behavior": "4 animation(s) remained with reduced motion and 3470 visible text characters remained."
+    },
+    "mobile": {
+      "strategy": "copy_first",
+      "stacking": "copy first order derived from H1, media and CTA positions.",
+      "navigation": "64px navigation across 3 line(s).",
+      "cta_behavior": "Primary CTA remains in document flow at 12px.",
+      "overflow_behavior": "Document width 375px against 390px viewport."
+    }
+  },
+  "supported_variant_tags": {
+    "hero": [
+      "media_first_offset"
+    ],
+    "typography": [
+      "dm_serif_instrument_sans"
+    ],
+    "section_variants": [
+      "closing_manifesto",
+      "alternating_story"
+    ],
+    "cta": [
+      "inline_decision"
+    ],
+    "motion": [
+      "split_reveal"
+    ],
+    "mobile": [
+      "copy_first"
+    ]
+  },
+  "reusable_principles": [
+    "Use the measured media first offset hierarchy without copying brand assets or exact geometry.",
+    "Apply the observed inline decision decision pattern with original copy and evidence."
+  ],
+  "prohibited_copy_notes": [
+    "Do not copy branding, copy, logos, imagery, proprietary assets, exact colors, or exact layout measurements."
+  ],
+  "classification": {
+    "overall_confidence": 0.8514,
+    "axes": {
+      "hero": {
+        "confidence": 0.9,
+        "evidence": [
+          "H1 measured at 269,120 with visible media."
+        ]
+      },
+      "typography": {
+        "confidence": 0.86,
+        "evidence": [
+          "Computed H1 font saansFont, \"saansFont Fallback\", sans-serif, 72px, weight 300; body ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"."
+        ]
+      },
+      "section_order": {
+        "confidence": 0.82,
+        "evidence": [
+          "Observed heading “Apps that mean business” at y=0 with 1 column(s) and 7 item(s).",
+          "Observed heading “Why enterprises choose Retool” at y=5580 with 1 column(s) and 1 item(s).",
+          "Observed heading “Trusted by 10,000+ teams to generate production-ready AI applications” at y=6076 with 6 column(s) and 2 item(s)."
+        ]
+      },
+      "section_variants": {
+        "confidence": 0.8,
+        "evidence": [
+          "objection_handling:closing_manifesto",
+          "proof_blocks:alternating_story",
+          "closing_cta:closing_manifesto"
+        ]
+      },
+      "cta": {
+        "confidence": 0.88,
+        "evidence": [
+          "Primary CTA “Sign inSign in” measured 68×40."
+        ]
+      },
+      "motion": {
+        "confidence": 0.8,
+        "evidence": [
+          "Detected 6 normal-motion animation(s) and 4 reduced-motion animation(s)."
+        ]
+      },
+      "mobile": {
+        "confidence": 0.9,
+        "evidence": [
+          "Mobile document width 375px for a 390px viewport; navigation 3 line(s)."
+        ]
+      }
+    }
+  },
+  "entry_digest": "119981daac37e57f9d4172f88e9551134aa4b5dd64e2d4db6b71d180b041684c"
+}
