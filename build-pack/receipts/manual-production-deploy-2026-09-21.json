@@ -1,0 +1,55 @@
+{
+  "schema_version": "1",
+  "kind": "manual-production-deploy",
+  "status": "verified",
+  "authorized_by": "Product owner directive: \"deploy directly to vercel\" (2026-09-21)",
+  "deployed_commit": "19789722a07b504b0b972012b64b145c8a2c745a",
+  "lineage_commits": [
+    "44e2cf7",
+    "7254613",
+    "4f5f8a1",
+    "d9165f8",
+    "a755849",
+    "e61f605",
+    "1978972"
+  ],
+  "deployment": {
+    "id": "dpl_XHbp1FNYjDSu2EQdRmxh8ozafW3p",
+    "url": "vetted-saa-s-blueprint-ffah7wubn-michaelchamboko-gravityclaw.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "source": "cli",
+    "region": "cpt1",
+    "ready_at": "2026-09-21T20:58:13Z",
+    "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J"
+  },
+  "vercel_confirmed_sha_meta": {
+    "githubCommitSha": "19789722a07b504b0b972012b64b145c8a2c745a",
+    "githubCommitRef": "main"
+  },
+  "local_gates_before_commit": {
+    "typecheck": "passed",
+    "lint": "passed 0 errors / 128 warnings",
+    "tests": "271 pass / 0 fail / 3 skipped",
+    "build": "passed"
+  },
+  "production_checks_after_deploy": {
+    "/": "200",
+    "/decision-hub": "200",
+    "/solution-hub": "200",
+    "/scenarios": "200",
+    "/blog": "200",
+    "/trends/ai-agents": "200",
+    "/sitemap.xml": "200 (27 URLs)"
+  },
+  "known_404s_pre_existing": [
+    "/reviews",
+    "/site-map",
+    "/landing-page-previews/levo-motion-study",
+    "/studio",
+    "/guides/how-to-evaluate-ai-voice-quality",
+    "/email-marketing-software"
+  ],
+  "known_404_note": "Visibility-catalogue pages fail closed because src/generated/visibility-pages and .stage2/visibility-publications.json are absent from every checkout (verified 404 on the previous production deployment before this deploy as well).",
+  "history_note": "Canary lineage commit fc2b264 (worktree codex/buyer-journeys) is NOT an ancestor of main; its unique pages were already 404 on production. Nothing regressed."
+}
