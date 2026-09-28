@@ -1,0 +1,28 @@
+# vercel deploy --dry --yes re-measured at release commit 526a3b3aa11e14d43ca1b11cfe9a07212687d315
+# Command identical to the OPTIMISATION-20260928 baseline: `vercel deploy --dry --yes`, Vercel CLI 54.21.1, warm, same checkout.
+# Raw CLI JSON (about 266 KB each) is retained in the working tree beside this file and is not committed.
+
+durations_ms=5890,5436,5390 median=5436
+baseline_median_ms=75400 reduction_vs_baseline=92.8%
+
+sample 1 (vercel-dry-at-release-01.txt): duration_ms=5890 upload_files=1388 upload_mb=59.2
+sample 2 (vercel-dry-at-release-02.txt): duration_ms=5436 upload_files=1389 upload_mb=59.5
+sample 3 (vercel-dry-at-release-03.txt): duration_ms=5390 upload_files=1390 upload_mb=59.7
+
+uploaded directories (largest first, final sample):
+  build-pack               424 files    31.9 MB
+  docs                     229 files    10.4 MB
+  .stage2                   95 files     7.4 MB
+  public                    23 files     7.0 MB
+  src                      291 files     1.2 MB
+  .agents                  168 files     0.6 MB
+  scripts                   59 files     0.4 MB
+  (root files)              26 files     0.4 MB
+  tests                     67 files     0.3 MB
+  .hermes                    1 files     0.0 MB
+  automation                 5 files     0.0 MB
+  .githooks                  1 files     0.0 MB
+  largest single file: build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-03.stdout.txt (3.4 MB)
+
+note: build-pack grew to 424 files / 31.9 MB because this cycle wrote its own evidence there;
+it is a real build input for nothing in src/, but Vercel receives it, so it remains the top upload cost.
