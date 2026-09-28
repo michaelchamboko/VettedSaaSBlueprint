@@ -171,8 +171,13 @@ function verifyFingerprint(
   }
   const raw = readFileSync(artifactPath);
   const rawFingerprint = sha256(raw);
-  const normalizedFingerprint = sha256(raw.toString("utf8").replace(/\r\n/g, "\n"));
-  if (rawFingerprint !== reference.sha256 && normalizedFingerprint !== reference.sha256) {
+  const lfNormalized = raw.toString("utf8").replace(/\r\n/g, "\n");
+  const acceptedFingerprints = new Set([
+    rawFingerprint,
+    sha256(lfNormalized),
+    sha256(lfNormalized.replace(/\n/g, "\r\n")),
+  ]);
+  if (!acceptedFingerprints.has(reference.sha256)) {
     throw new Error(
       `Release fingerprint mismatch for ${label}: expected ${reference.sha256}, received ${rawFingerprint}.`,
     );

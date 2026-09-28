@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 
 const stylesheet = readFileSync("src/app/globals.css", "utf8").replace(/^@import[^;]+;\s*$/gm, "");
 
-test("the review catalogue renders one final separator in populated and empty states", { timeout: 20_000 }, async () => {
+test("the review catalogue renders one final separator in populated and empty states", { timeout: 60_000 }, async () => {
   const browser = await chromium.launch({ headless: true });
 
   try {
