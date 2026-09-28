@@ -360,6 +360,26 @@
                   "reviewedAt": "2026-09-28"
                 }
               ]
+            },
+            {
+              "statement": "The prevalence and control-gap figures on this page are United Kingdom population statistics. They are not South African evidence, and no local law, reporting duty, or regulator position is asserted here.",
+              "evidenceState": "insufficient",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
             }
           ]
         },
@@ -566,6 +586,26 @@
                   "reviewedAt": "2026-09-28"
                 }
               ]
+            },
+            {
+              "statement": "These six steps rest on United Kingdom authority and vendor documentation. They carry no South African legal, regulatory, or breach-notification conclusion, and no local equivalent was acquired in this pass.",
+              "evidenceState": "insufficient",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
             }
           ]
         }
@@ -607,7 +647,7 @@
           "summary": "Five people, one shared MacBook in the studio, no technical administrator, and an operations lead who is also a designer. Client work passes through hosting, two stock libraries, a proofing platform, an invoicing tool, and one business bank account.",
           "claims": [
             {
-              "statement": "The requested team size is a scenario constraint. The available statistics are reported by micro, small, medium, and large bands, so no figure here is attributed to five people.",
+              "statement": "The requested team size is a scenario constraint. The available statistics come from a United Kingdom survey reported by micro, small, medium, and large bands, so no figure here is attributed to five people or to a South African business.",
               "evidenceState": "partial",
               "sources": [
                 {

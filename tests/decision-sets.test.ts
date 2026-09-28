@@ -196,6 +196,22 @@ test("no shipped claim is marked validated on vendor documentation alone", () =>
   }
 });
 
+// The printable report renders only on the scenario page, so this set's own selection
+// record (docs/research/2026-09-28-team-access-control-topic-selection.md) promised that
+// its jurisdiction limit be disclosed on every page rather than only in the report.
+// Applied to this set only: the earlier governed-AI set is sector context, not headline
+// statistics, and changing published claims is owner-adjudicable work, not a silent fix.
+test("the shared-account set names its evidence jurisdiction on every page", () => {
+  const set = listDecisionSets().find((record) => record.slug === "team-shared-account-access-control");
+  assert.ok(set, "the shared-account set must be discoverable");
+
+  for (const page of Object.values(set.pages)) {
+    const body = [page.decisionContext, ...page.blocks.flatMap((block) => [block.summary, ...block.claims.map((claim) => claim.statement)])].join(" ");
+    assert.match(body, /United Kingdom/, `${page.pageType} must name the evidence jurisdiction`);
+  }
+  assert.match(set.report.limitations.join(" "), /South Africa/, "the report must disclose the operator jurisdiction gap");
+});
+
 test("external source hashes in each shipped set are reproducible from its evidence ledger", () => {
   const ledgerDirectory = path.join("docs", "research");
   const ledgers = readdirSync(ledgerDirectory)
