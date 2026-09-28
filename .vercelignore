@@ -1,6 +1,12 @@
 .env
 .env.*
+.automation/
+.codegraph
 .gitnexus/
+.impeccable/
+.opencode/
+*.log
+tsconfig.tsbuildinfo
 .next/
 node_modules/
 node_modules.incomplete-recovery/

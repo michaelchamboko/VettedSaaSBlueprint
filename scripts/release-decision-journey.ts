@@ -1,19 +1,36 @@
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
 import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { evidenceUpdateSchema, pageSetChangeSchema, type DeploymentReceiptV1 } from "../src/lib/automation/contracts";
 import { assessAutomaticRelease } from "../src/lib/automation/release-policy";
 
 const execFile = promisify(execFileCallback);
 
+// `npm` and `vercel` are `.cmd` shims on Windows. Node 24 resolves them only through a
+// shell: `execFile("npm", ...)` fails with `spawn npm ENOENT` and `execFile("npm.cmd", ...)`
+// fails with `spawn EINVAL`. The shell is therefore enabled on Windows only, and every
+// argument is quoted and validated because shell arguments are concatenated, not escaped.
+export const usesShell = process.platform === "win32";
+const unsafeArgument = /["`$&|<>()^%!\\\r\n]/;
+
+export function shellArguments(args: string[]): string[] {
+  if (!usesShell) return args;
+  return args.map((value) => {
+    if (unsafeArgument.test(value)) throw new Error(`Argument cannot be passed safely through a shell: ${value}`);
+    return `"${value}"`;
+  });
+}
+
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : undefined;
 }
 
-async function run(command: string, args: string[]) {
-  const { stdout, stderr } = await execFile(command, args, { cwd: process.cwd(), windowsHide: true });
+export async function run(command: string, args: string[]) {
+  const { stdout, stderr } = await execFile(command, shellArguments(args), { cwd: process.cwd(), windowsHide: true, shell: usesShell });
   if (stderr.trim()) process.stderr.write(stderr);
   if (stdout.trim()) process.stdout.write(stdout);
   return stdout;
@@ -79,7 +96,10 @@ async function main() {
   console.log(JSON.stringify(receipt, null, 2));
 }
 
-void main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+const invokedPath = process.argv[1] ? resolve(process.argv[1]) : "";
+if (invokedPath === fileURLToPath(import.meta.url)) {
+  void main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
