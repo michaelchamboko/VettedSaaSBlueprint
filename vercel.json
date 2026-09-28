@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "result=0; for check in typecheck lint test validate:public-site build; do npm run \"$check\"; status=$?; echo \"VALIDATION $check $status\"; [ \"$status\" -eq 0 ] || result=1; done; exit \"$result\"",
-  "installCommand": "npx --yes npm@12.0.2 ci",
+  "buildCommand": "run(){ if [ \"$1\" = test ]; then VERCEL_ENV=production npm run \"$1\"; else npm run \"$1\"; fi; }; result=0; for check in typecheck lint test validate:public-site build; do run \"$check\" || result=1; done; exit \"$result\"",
+  "installCommand": "npx --yes npm@12.0.2 ci && npx playwright install chromium",
   "regions": [
     "cpt1"
   ],
