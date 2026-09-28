@@ -1,10 +1,40 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import { getLandingPageManifest, getPublishedLandingPage, listPublishedLandingPageParams, listPublishedLandingPageSlugs, loadPublishedLandingPageSummariesFromDirectory } from "../src/lib/generated/landing-pages";
+
+const moosendSlug = "moosend-email-marketing-automation";
+
+async function withLandingPageFixture(
+  run: (directory: string) => Promise<void>,
+) {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "landing-catalogue-"));
+  try {
+    await cp(path.resolve("src/generated/landing-pages"), directory, { recursive: true });
+    await run(directory);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+async function writeMoosendPageWithReceiptNewlines(
+  directory: string,
+  artifactNewline: "\n" | "\r\n",
+  receiptNewline: "\n" | "\r\n",
+) {
+  const pagePath = path.join(directory, `${moosendSlug}.json`);
+  const receiptPath = path.join(directory, "releases", moosendSlug, "release-receipt.json");
+  const page = (await readFile(pagePath, "utf8")).replace(/\r\n/g, "\n");
+  const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+  const receiptBytes = page.replace(/\n/g, receiptNewline);
+  receipt.artifacts.page.sha256 = createHash("sha256").update(receiptBytes).digest("hex");
+  await writeFile(pagePath, page.replace(/\n/g, artifactNewline));
+  await writeFile(receiptPath, JSON.stringify(receipt, null, 2));
+}
 
 test("verified agent releases are exposed as published slugs", () => {
   const slugs = listPublishedLandingPageSlugs();
@@ -51,4 +81,45 @@ test("manifest entries without audited publication provenance are rejected", asy
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("release fingerprints accept LF artifacts with CRLF receipts", async () => {
+  await withLandingPageFixture(async (directory) => {
+    await writeMoosendPageWithReceiptNewlines(directory, "\n", "\r\n");
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 2);
+  });
+});
+
+test("Moosend release fingerprints accept an LF-only checkout", async () => {
+  await withLandingPageFixture(async (directory) => {
+    const receiptPath = path.join(directory, "releases", moosendSlug, "release-receipt.json");
+    const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+    for (const reference of Object.values(receipt.artifacts) as Array<{ path: string }>) {
+      const artifactPath = path.join(directory, reference.path);
+      const artifact = (await readFile(artifactPath, "utf8")).replace(/\r\n/g, "\n");
+      await writeFile(artifactPath, artifact);
+    }
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 2);
+  });
+});
+
+test("release fingerprints accept CRLF artifacts with LF receipts", async () => {
+  await withLandingPageFixture(async (directory) => {
+    await writeMoosendPageWithReceiptNewlines(directory, "\r\n", "\n");
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 2);
+  });
+});
+
+test("release fingerprints reject content mutations", async () => {
+  await withLandingPageFixture(async (directory) => {
+    await writeMoosendPageWithReceiptNewlines(directory, "\n", "\r\n");
+    const pagePath = path.join(directory, `${moosendSlug}.json`);
+    const page = JSON.parse(await readFile(pagePath, "utf8"));
+    page.metadata.title_tag = page.metadata.title_tag.replace("Moosend", "Moosent");
+    await writeFile(pagePath, JSON.stringify(page, null, 2));
+    assert.throws(
+      () => loadPublishedLandingPageSummariesFromDirectory(directory),
+      /Release fingerprint mismatch for page/,
+    );
+  });
 });
