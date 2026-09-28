@@ -1,16 +1,27 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npm run validate:public-site && next build",
+  "buildCommand": "node -e 'const {spawnSync}=require(\"node:child_process\"); let failed=false; for (const script of [\"typecheck\",\"lint\",\"test\",\"validate:public-site\",\"build\"]) { console.log(\"VALIDATION START \"+script); const result=spawnSync(\"npm\",[\"run\",script],{stdio:\"inherit\"}); console.log(\"VALIDATION RESULT \"+script+\" \"+result.status); if(result.status!==0) failed=true; } process.exit(failed?1:0)'",
   "installCommand": "npx --yes npm@12.0.2 ci",
-  "regions": ["cpt1"],
+  "regions": [
+    "cpt1"
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
       ]
     }
   ]
