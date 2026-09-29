@@ -7,6 +7,7 @@ import { chromium } from "@playwright/test";
 
 import { productionQualityReceiptV2Schema } from "../src/lib/automation/contracts";
 import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
+import { listDecisionSets } from "../src/lib/decision-journey/sets";
 
 const defaultOrigin = "https://vettedsaasblueprint.online";
 const stepWords: Record<string, number> = {
@@ -20,6 +21,38 @@ export function headlineStepCountMatches(headline: string, stepCount: number): b
   if (!match) return true;
   const declared = /^\d+$/.test(match[1]) ? Number(match[1]) : stepWords[match[1].toLowerCase()];
   return declared === stepCount;
+}
+
+export type DeploymentIdentity = { commitSha: string | null; environment: string | null };
+
+export function deploymentIdentityMatches(identity: DeploymentIdentity, revision: string): { passed: boolean; detail: string } {
+  if (!identity.commitSha || !identity.environment) {
+    return { passed: false, detail: "Deployment metadata endpoint returned no commit SHA or environment; refusing unverified identity." };
+  }
+  if (identity.commitSha.toLowerCase() !== revision.toLowerCase()) {
+    return { passed: false, detail: `Deployed commit ${identity.commitSha} does not match the verified revision ${revision}; refusing stale or mismatched deployment.` };
+  }
+  if (identity.environment !== "production") {
+    return { passed: false, detail: `Deployment environment is ${identity.environment}, not production; refusing non-production identity.` };
+  }
+  return { passed: true, detail: `Deployment identity verified: commit ${identity.commitSha} on ${identity.environment}.` };
+}
+
+export function expectedProductionRoutes(): string[] {
+  const pilotRoutes = Object.keys(decisionJourneyCatalog);
+  const setRoutes = listDecisionSets().flatMap((set) => [
+    `/decision-hub/${set.slug}`,
+    `/solution-hub/${set.slug}`,
+    `/scenarios/${set.slug}`,
+  ]);
+  return ["/", ...pilotRoutes, ...setRoutes];
+}
+
+async function fetchDeploymentIdentity(origin: string): Promise<DeploymentIdentity> {
+  const response = await fetch(`${origin}/api/deployment`, { cache: "no-store" });
+  if (!response.ok) return { commitSha: null, environment: null };
+  const body = (await response.json()) as { commitSha?: string | null; environment?: string | null };
+  return { commitSha: body.commitSha ?? null, environment: body.environment ?? null };
 }
 
 function argument(name: string): string | undefined {
@@ -49,6 +82,23 @@ async function checkHtml(origin: string, route: keyof typeof decisionJourneyCata
       { name: `${route}: evidence traceability`, passed: record.blocks.every((block) => block.claims.every((claim) => claim.sources.every((source) => html.includes(source.sectionUid)))), detail: "Every material claim exposes its stable source identifier.", category: "evidence" },
       { name: `${route}: catalogue composition`, passed: html.includes("data-catalogue-reference=") && html.includes(`data-journey-kind="${record.pageType}"`), detail: "The rendered page declares its approved catalogue-backed composition.", category: "visual" },
       { name: `${route}: motion contract`, passed: html.includes("data-journey-motion=\"hero\"") && html.includes("data-journey-motion=\"hero-card\"") && html.includes("data-journey-motion=\"progress\""), detail: "The static document contains the progressive-enhancement motion anchors.", category: "motion" },
+    ];
+  } catch (error) {
+    return [{ name: `${route}: availability`, passed: false, detail: error instanceof Error ? error.message : String(error), category: "production" }];
+  }
+}
+
+async function checkSetRoute(origin: string, route: string, record: { headline: string; canonicalPath: string; blocks: Array<{ id: string; claims: Array<{ sources: Array<{ sectionUid: string }> }> }> }): Promise<Check[]> {
+  const url = `${origin}${route}`;
+  try {
+    const response = await fetch(url, { redirect: "error" });
+    const html = await response.text();
+    return [
+      { name: `${route}: availability`, passed: response.ok, detail: `HTTP ${response.status}.`, category: "production" },
+      { name: `${route}: canonical and principal answer`, passed: html.includes(record.headline) && html.includes(`<link rel="canonical" href="${url}"`), detail: "The set page exposes its structured headline and canonical URL.", category: "content" },
+      { name: `${route}: required decision structure`, passed: record.blocks.every((block) => html.includes(`id="${block.id}"`)), detail: "Every required set section is present in the server-rendered document.", category: "content" },
+      { name: `${route}: evidence traceability`, passed: record.blocks.every((block) => block.claims.every((claim) => claim.sources.every((source) => html.includes(source.sectionUid)))), detail: "Every material set claim exposes its stable source identifier.", category: "evidence" },
+      { name: `${route}: headline step count`, passed: headlineStepCountMatches(record.headline, record.blocks.length), detail: `Any declared step count matches the ${record.blocks.length} structured sections.`, category: "content" },
     ];
   } catch (error) {
     return [{ name: `${route}: availability`, passed: false, detail: error instanceof Error ? error.message : String(error), category: "production" }];
@@ -105,8 +155,33 @@ async function main() {
   }
   const output = path.resolve(argument("--screenshot-dir") ?? path.join(".automation", "receipts", "production-quality"));
   await mkdir(output, { recursive: true });
+
+  // Verify deployment identity BEFORE browser checks: the metadata endpoint must
+  // report the exact release commit on the production environment.
+  const identityBefore = await fetchDeploymentIdentity(origin);
+  const identityCheckBefore: Check = {
+    name: "deployment identity (pre-browser)",
+    passed: deploymentIdentityMatches(identityBefore, revision).passed,
+    detail: deploymentIdentityMatches(identityBefore, revision).detail,
+    category: "production",
+  };
+
+  const routes = expectedProductionRoutes();
   const htmlChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => checkHtml(origin, route as keyof typeof decisionJourneyCatalog)));
+  const setChecks = await Promise.all(listDecisionSets().flatMap((set) => [
+    { route: `/decision-hub/${set.slug}`, record: set.pages.decisionHub },
+    { route: `/solution-hub/${set.slug}`, record: set.pages.solutionHub },
+    { route: `/scenarios/${set.slug}`, record: set.pages.scenario },
+  ]).map(({ route, record }) => checkSetRoute(origin, route, record)));
   const browserChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => captureRoute({ origin, route: route as keyof typeof decisionJourneyCatalog, output })));
+  const routeAvailabilityChecks: Check[] = await Promise.all(routes.map(async (route) => {
+    try {
+      const response = await fetch(`${origin}${route}`, { redirect: "error" });
+      return { name: `${route}: route availability`, passed: response.ok, detail: `HTTP ${response.status}.`, category: "production" };
+    } catch (error) {
+      return { name: `${route}: route availability`, passed: false, detail: error instanceof Error ? error.message : String(error), category: "production" };
+    }
+  }));
   const semanticChecks: Check[] = Object.entries(decisionJourneyCatalog).map(([route, record]) => {
     const matches = headlineStepCountMatches(record.headline, record.blocks.length);
     return {
@@ -116,7 +191,18 @@ async function main() {
       category: "content",
     };
   });
-  const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks), ...semanticChecks];
+
+  // Verify deployment identity AGAIN after browser checks: the alias must not have
+  // been repointed to a different deployment while pages were being verified.
+  const identityAfter = await fetchDeploymentIdentity(origin);
+  const identityCheckAfter: Check = {
+    name: "deployment identity (post-browser)",
+    passed: deploymentIdentityMatches(identityAfter, revision).passed,
+    detail: deploymentIdentityMatches(identityAfter, revision).detail,
+    category: "production",
+  };
+
+  const checks = [identityCheckBefore, ...htmlChecks.flat(), ...setChecks.flat(), ...browserChecks.flatMap((result) => result.checks), ...routeAvailabilityChecks, ...semanticChecks, identityCheckAfter];
   const receipt = productionQualityReceiptV2Schema.parse({
     version: 2,
     runId: argument("--run-id") ?? randomUUID(),
