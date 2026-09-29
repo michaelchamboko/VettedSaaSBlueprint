@@ -49,10 +49,14 @@ export function expectedProductionRoutes(): string[] {
 }
 
 async function fetchDeploymentIdentity(origin: string): Promise<DeploymentIdentity> {
-  const response = await fetch(`${origin}/api/deployment`, { cache: "no-store" });
-  if (!response.ok) return { commitSha: null, environment: null };
-  const body = (await response.json()) as { commitSha?: string | null; environment?: string | null };
-  return { commitSha: body.commitSha ?? null, environment: body.environment ?? null };
+  try {
+    const response = await fetch(`${origin}/api/deployment`, { cache: "no-store" });
+    if (!response.ok) return { commitSha: null, environment: null };
+    const body = (await response.json()) as { commitSha?: string | null; environment?: string | null };
+    return { commitSha: body.commitSha ?? null, environment: body.environment ?? null };
+  } catch {
+    return { commitSha: null, environment: null };
+  }
 }
 
 function argument(name: string): string | undefined {
@@ -105,7 +109,7 @@ async function checkSetRoute(origin: string, route: string, record: { headline: 
   }
 }
 
-async function captureRoute(input: { origin: string; route: keyof typeof decisionJourneyCatalog; output: string }): Promise<{ checks: Check[]; screenshots: Screenshot[] }> {
+async function captureRoute(input: { origin: string; route: string; expectedHeadline?: string; expectedSections?: number; output: string }): Promise<{ checks: Check[]; screenshots: Screenshot[] }> {
   const browser = await chromium.launch({ headless: true });
   const url = `${input.origin}${input.route}`;
   const checks: Check[] = [];
@@ -124,7 +128,7 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
       const primary = await page.locator("h1").textContent();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
       const sectionCount = await page.locator(".decision-journey__block").count();
-      const filePrefix = path.join(input.output, `${input.route.slice(1)}-${profile.name}`);
+      const filePrefix = path.join(input.output, `${input.route.replace(/\//g, "-").replace(/^-/, "")}-${profile.name}`);
       const firstScreen = `${filePrefix}-first-screen.png`;
       const fullPage = `${filePrefix}-full-page.png`;
       await page.screenshot({ path: firstScreen });
@@ -134,8 +138,8 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
         { route: input.route, viewport: `${profile.viewport.width}x${profile.viewport.height}`, mode: `${profile.name}: full-page`, path: fullPage },
       );
       checks.push(
-        { name: `${input.route}: ${profile.name} principal content`, passed: primary === decisionJourneyCatalog[input.route].headline, detail: "The route-specific headline remains available in the rendered page.", category: "accessibility" },
-        { name: `${input.route}: ${profile.name} complete structure`, passed: sectionCount === decisionJourneyCatalog[input.route].blocks.length, detail: "Rendered section count matches the structured catalogue.", category: "content" },
+        { name: `${input.route}: ${profile.name} principal content`, passed: input.expectedHeadline ? primary === input.expectedHeadline : primary !== null && primary.trim().length > 0, detail: input.expectedHeadline ? "The route-specific headline remains available in the rendered page." : "The page renders a principal heading.", category: "accessibility" },
+        { name: `${input.route}: ${profile.name} complete structure`, passed: input.expectedSections !== undefined ? sectionCount === input.expectedSections : true, detail: input.expectedSections !== undefined ? "Rendered section count matches the structured record." : "Structure count not asserted for this route.", category: "content" },
         { name: `${input.route}: ${profile.name} layout`, passed: !overflow, detail: overflow ? "Horizontal overflow detected." : "No horizontal overflow detected.", category: "visual" },
         { name: `${input.route}: ${profile.name} console`, passed: browserErrors.length === 0, detail: browserErrors.length ? browserErrors.join(" | ") : "No browser console errors.", category: "motion" },
       );
@@ -173,7 +177,19 @@ async function main() {
     { route: `/solution-hub/${set.slug}`, record: set.pages.solutionHub },
     { route: `/scenarios/${set.slug}`, record: set.pages.scenario },
   ]).map(({ route, record }) => checkSetRoute(origin, route, record)));
-  const browserChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => captureRoute({ origin, route: route as keyof typeof decisionJourneyCatalog, output })));
+  // Browser-level verification (layout, reduced-motion, no-JavaScript, console
+  // errors, screenshots) covers the homepage, every pilot route, and every set
+  // route — the full expected production route set.
+  const browserTargets: Array<{ route: string; expectedHeadline?: string; expectedSections?: number }> = [
+    { route: "/" },
+    ...Object.entries(decisionJourneyCatalog).map(([route, record]) => ({ route, expectedHeadline: record.headline, expectedSections: record.blocks.length })),
+    ...listDecisionSets().flatMap((set) => [
+      { route: `/decision-hub/${set.slug}`, expectedHeadline: set.pages.decisionHub.headline, expectedSections: set.pages.decisionHub.blocks.length },
+      { route: `/solution-hub/${set.slug}`, expectedHeadline: set.pages.solutionHub.headline, expectedSections: set.pages.solutionHub.blocks.length },
+      { route: `/scenarios/${set.slug}`, expectedHeadline: set.pages.scenario.headline, expectedSections: set.pages.scenario.blocks.length },
+    ]),
+  ];
+  const browserChecks = await Promise.all(browserTargets.map((target) => captureRoute({ origin, route: target.route, expectedHeadline: target.expectedHeadline, expectedSections: target.expectedSections, output })));
   const routeAvailabilityChecks: Check[] = await Promise.all(routes.map(async (route) => {
     try {
       const response = await fetch(`${origin}${route}`, { redirect: "error" });

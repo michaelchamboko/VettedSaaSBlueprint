@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { completeLocalAutomationRun, startLocalAutomationRun } from "../src/lib/automation/local-store";
-import { assertWorkflowPrerequisites } from "../src/lib/automation/workflows";
+import { assertWorkflowPrerequisites, parseWorkflowResult } from "../src/lib/automation/workflows";
 
 const fingerprint = "a".repeat(64);
 
@@ -78,4 +78,28 @@ test("a version 2 editorial brief requires a version 2 research evidence packet"
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("watchdog completion requires a revision-bound V2 receipt and rejects unbound V1 receipts", () => {
+  const v2Receipt = {
+    version: 2,
+    runId: "00000000-0000-4000-8000-000000000002",
+    revision: "a".repeat(40),
+    catalogueFingerprint: "b".repeat(64),
+    passed: true,
+    checks: [{ name: "content", passed: true, detail: "ok", category: "content" }],
+    screenshots: [],
+    createdAt: "2026-09-29T00:00:00.000Z",
+  };
+  const v1Receipt = {
+    version: 1,
+    runId: "00000000-0000-4000-8000-000000000003",
+    passed: true,
+    checks: [{ name: "content", passed: true, detail: "ok" }],
+    createdAt: "2026-09-29T00:00:00.000Z",
+  };
+  const parsed = parseWorkflowResult("watchdog", v2Receipt) as { version: number; revision: string };
+  assert.equal(parsed.version, 2);
+  assert.equal(parsed.revision, "a".repeat(40));
+  assert.throws(() => parseWorkflowResult("watchdog", v1Receipt), /ProductionQualityReceiptV2/i);
 });

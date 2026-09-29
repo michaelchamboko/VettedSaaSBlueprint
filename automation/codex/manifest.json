@@ -33,7 +33,7 @@
       "type": "watchdog",
       "timeSast": "23:00",
       "promptFile": "automation/codex/production-watchdog.md",
-      "promptSha256": "225941cc5ca7264352c69e9eefe09ce417bbddf7de23b9d376fb1ca2a781359f",
+      "promptSha256": "21d404dbcc8808f8d9d684a8f9b8efa51b7ca9d73063dd24a2c628e38ac56c78",
       "desktopBootstrap": "Load automation/codex/production-watchdog.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     }
   ]

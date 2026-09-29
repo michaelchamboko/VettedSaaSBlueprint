@@ -3,6 +3,7 @@ import {
   editorialBriefSchema,
   evidenceUpdateSchema,
   pageSetChangeSchema,
+  productionQualityReceiptV2Schema,
   watchdogReceiptSchema,
   type AutomationJobType,
 } from "@/lib/automation/contracts";
@@ -13,7 +14,13 @@ export function parseWorkflowResult(type: AutomationJobType, value: unknown): un
     case "research": return evidenceUpdateSchema.parse(value);
     case "editorial_brief": return editorialBriefSchema.parse(value);
     case "optimise": return pageSetChangeSchema.parse(value);
-    case "watchdog": return watchdogReceiptSchema.parse(value);
+    // Watchdog completions must be revision-bound V2 receipts; the V1 union
+    // member remains parseable for historical records but cannot complete a run.
+    case "watchdog": {
+      const parsed = watchdogReceiptSchema.parse(value);
+      if (parsed.version !== 2) throw new Error("Watchdog completion requires a revision-bound ProductionQualityReceiptV2; version-1 receipts are historical only.");
+      return productionQualityReceiptV2Schema.parse(value);
+    }
     case "release": return deploymentReceiptSchema.parse(value);
   }
 }
