@@ -1,0 +1,33 @@
+﻿cmd : 
+At line:2 char:1
++ cmd /c ".agents\skills\impeccable\scripts\impeccable.cmd detect src/c ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+C:\Users\micha\.buzz\REPOS\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth 
+Strategy\src\app\globals.css
+  line 194: [side-tab] border-left: 4px solid var(--journey-accent)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler 
+accent or remove it entirely.
+  line 296: [side-tab] border-left: 6px solid var(--sage)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler 
+accent or remove it entirely.
+  line 301: [side-tab] border-left: 6px solid var(--clay)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler 
+accent or remove it entirely.
+  line 530: [side-tab] border-left: 8px solid var(--reference-accent)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler 
+accent or remove it entirely.
+  line 545: [side-tab] border-left: 4px solid var(--reference-accent)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler 
+accent or remove it entirely.
+  line 562: [side-tab] border-left: 8px solid var(--reference-accent)
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler 
+accent or remove it entirely.
+  line 21: [overused-font] font-family: Arial
+    → Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer 
+feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives 
+your interface personality.
+
+7 anti-patterns found.

@@ -1,0 +1,48 @@
+﻿{
+    "schema_version":  2,
+    "deployment_metadata":  {
+                                "environment":  "production",
+                                "commitSha":  "1eeb3f83d094a49ed7be8dd64401ed5e04fdd691"
+                            },
+    "release_commit":  "1eeb3f83d094a49ed7be8dd64401ed5e04fdd691",
+    "verified_at":  "2026-09-29T18:01:11Z",
+    "catalogue_fingerprint":  "2e0cbaa19dfdf8ff13f21652a9f3b667f45102aed79c06ad67d10eedf1549b48",
+    "watchdog":  {
+                     "passed":  true,
+                     "checks":  99,
+                     "failed_checks":  0,
+                     "receipt_path":  "build-pack/evidence/FIXES-20260929/watchdog-post-release-output.txt",
+                     "revision":  "1eeb3f83d094a49ed7be8dd64401ed5e04fdd691",
+                     "screenshots":  18
+                 },
+    "phase":  "P2-CORRECTED",
+    "deployment":  {
+                       "target":  "production",
+                       "url":  "https://vetted-saa-s-blueprint-ef1uk29dt-michaelchamboko-gravityclaw.vercel.app",
+                       "id":  "dpl_Amfguhw6L8Mmei9zTGvsQjKE8L3z",
+                       "custom_domain":  "https://vettedsaasblueprint.online",
+                       "state":  "READY"
+                   },
+    "production_routes":  [
+                              "/",
+                              "/decision-hub",
+                              "/solution-hub",
+                              "/scenarios",
+                              "/decision-hub/team-shared-account-access-control",
+                              "/solution-hub/team-shared-account-access-control",
+                              "/scenarios/team-shared-account-access-control",
+                              "/decision-hub/governed-ai-client-work-preparation",
+                              "/solution-hub/governed-ai-client-work-preparation",
+                              "/scenarios/governed-ai-client-work-preparation"
+                          ],
+    "status":  "verified",
+    "repository_checks":  {
+                              "build":  "exit 0",
+                              "typecheck":  "exit 0",
+                              "validate_public_site":  "exit 0",
+                              "lint":  "exit 0 (0 errors, 222 warnings pre-existing)",
+                              "test":  "exit 0 (285 pass, 0 fail, 3 skipped)",
+                              "npm_audit":  "0 vulnerabilities"
+                          },
+    "dependency_lock_sha256":  "557b21620eaa57d76c50695f6626877fe80201b721f4c9769ba5960fe8b66057"
+}

@@ -1,0 +1,47 @@
+﻿node.exe : Vercel CLI 54.21.1 (Node.js 24.18.0)
+At C:\Users\micha\AppData\Roaming\npm\vercel.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/vercel/dist/vc.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Vercel CLI 54.21.1 (Node.js 24.18.0):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Fetching deployment "vettedsaasblueprint.online" in michaelchamboko-gravityclaw
+> Fetched deployment "vetted-saa-s-blueprint-ca8lak7eb-michaelchamboko-gravityclaw.vercel.app" in 
+michaelchamboko-gravityclaw [5s]
+
+  General
+
+    id		dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G
+    name	vetted-saa-s-blueprint
+    target	production
+    status	● Ready
+    url		https://vetted-saa-s-blueprint-ca8lak7eb-michaelchamboko-gravityclaw.vercel.app
+    created	Tue Sep 29 2026 00:01:40 GMT+0200 (South Africa Standard Time) [19h ago]
+
+
+  Aliases
+
+    ╶ https://vettedsaasblueprint.online
+    ╶ https://vetted-saa-s-blueprint.vercel.app
+    ╶ https://www.vettedsaasblueprint.online
+    ╶ https://vetted-saa-s-blueprint-michaelchamboko-gravityclaw.vercel.app
+    
+
+  Builds
+
+    ┌ .        [0ms]
+    ├── λ _middleware (72.73KB) [bom1, fra1, gru1, iad1, lhr1, sfo1, sin1, syd1]
+    ├── λ index (10.82MB) [cpt1]
+    ├── λ _global-error (10.82MB) [cpt1]
+    ├── λ _global-error.rsc (10.82MB) [cpt1]
+    ├── λ _global-error.segments/__PAGE__.segment.rsc (10.82MB) [cpt1]
+    └── 622 output items hidden
+    
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│                     Update available! v54.21.1 ≫ v61.0.0                     │
+│   Changelog: https://github.com/vercel/vercel/releases/tag/vercel%4061.0.0   │
+│                   Run `npm i -g vercel@latest` to update.                    │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
