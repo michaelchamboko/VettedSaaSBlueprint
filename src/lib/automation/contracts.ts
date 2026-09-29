@@ -127,6 +127,8 @@ export const validationReceiptSchema = z.object({
 
 export const productionQualityReceiptV2Schema = validationReceiptSchema.omit({ version: true, checks: true }).extend({
   version: z.literal(2),
+  revision: z.string().regex(/^[a-f0-9]{40}$/),
+  catalogueFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   checks: z.array(z.object({
     name: z.string().min(1),
     passed: z.boolean(),

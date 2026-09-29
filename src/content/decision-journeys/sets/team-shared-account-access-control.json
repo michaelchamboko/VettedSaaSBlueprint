@@ -430,7 +430,7 @@
       "version": 2,
       "pageType": "solution-hub",
       "canonicalPath": "/solution-hub/team-shared-account-access-control",
-      "headline": "A six-step path from shared passwords to revocable team access",
+      "headline": "A seven-step path from shared passwords to revocable team access",
       "decisionContext": "This is a control sequence for evaluating an approach. It is not a recommendation for a named product or a ranking of any vault.",
       "evidenceState": "partial",
       "reviewDate": "2026-09-28",
@@ -588,7 +588,7 @@
               ]
             },
             {
-              "statement": "These six steps rest on United Kingdom authority and vendor documentation. They carry no South African legal, regulatory, or breach-notification conclusion, and no local equivalent was acquired in this pass.",
+              "statement": "These seven steps rest on United Kingdom authority and vendor documentation. They carry no South African legal, regulatory, or breach-notification conclusion, and no local equivalent was acquired in this pass.",
               "evidenceState": "insufficient",
               "sources": [
                 {
@@ -624,7 +624,7 @@
           "Preline Hero with Client Logo Row",
           "UI Layouts Condition Grid"
         ],
-        "artDirection": "Present the six steps as an accountable sequence with the governing evidence beside each control, and no logo row implying endorsement."
+        "artDirection": "Present the seven steps as an accountable sequence with the governing evidence beside each control, and no logo row implying endorsement."
       },
       "connectedRoutes": [
         "/decision-hub/team-shared-account-access-control",

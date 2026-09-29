@@ -27,6 +27,14 @@ const phaseOneTaskIds = new Set([
   "P1-RELEASE-001",
 ]);
 
+const reopenedP2TaskIds = new Set([
+  "P2-RESEARCH-001",
+  "P2-EDITORIAL-001",
+  "P2-WATCH-001",
+  "P2-VERIFY-001",
+  "P2-ACT-001",
+]);
+
 const taskDefinitions = [
   ["P1-PLAN-001", "Phase One authority and traceability", [], "medium", [1, 1, 1, 0, 0]],
   ["RCV-002R", "Recovered baseline and active-test reconciliation", ["P1-PLAN-001"], "medium", [1, 1, 1, 0, 0]],
@@ -176,12 +184,14 @@ const main = async () => {
   const tasks = taskDefinitions.map(([id, title, dependencies, risk, scores]) => {
     const requirementIds = requirements.requirements.filter((requirement) => assignments.get(requirement.id) === id).map((requirement) => requirement.id);
     const completedPhaseOneTask = phaseOneVerified && phaseOneTaskIds.has(id);
-    const completedPhaseTwoTask = ["P2-PLAN-001", "P2-CLEAN-001", "P2-RUNNER-001", "P2-RESEARCH-001", "P2-EDITORIAL-001", "P2-OPT-001", "P2-WATCH-001", "P2-RELEASE-001", "P2-SCHEDULE-001", "P2-VERIFY-001", "P2-DEPLOY-001"].includes(id);
+    const completedPhaseTwoTask = ["P2-PLAN-001", "P2-CLEAN-001", "P2-RUNNER-001", "P2-RESEARCH-001", "P2-EDITORIAL-001", "P2-OPT-001", "P2-WATCH-001", "P2-RELEASE-001", "P2-SCHEDULE-001", "P2-VERIFY-001", "P2-DEPLOY-001"].includes(id) && !reopenedP2TaskIds.has(id);
     const completedPhaseThreePlanningTask = ["P3-PLAN-001", "P3-EXCLUDED-001"].includes(id);
     const task = {
       id,
       title,
-      status: completedPhaseOneTask || completedPhaseTwoTask || completedPhaseThreePlanningTask
+      status: reopenedP2TaskIds.has(id)
+        ? id === "P2-RESEARCH-001" || id === "P2-WATCH-001" || id === "P2-VERIFY-001" ? "ready" : "blocked"
+        : completedPhaseOneTask || completedPhaseTwoTask || completedPhaseThreePlanningTask
         ? "done"
         : "blocked",
       dependencies,
@@ -213,6 +223,12 @@ const main = async () => {
       context_packet: { window_tokens: 32000, initial_tokens: 12000, retrieval: "targeted" },
       operation_phase: completedPhaseOneTask || completedPhaseTwoTask || completedPhaseThreePlanningTask ? "committed" : "prepared",
     };
+    if (id === "P2-ACT-001") {
+      task.blocker = {
+        reason: "The v2.2 correction excludes earlier cycles; corrected activation requires a fresh release, one manual canary, then three consecutive corrected scheduled cycles.",
+        recorded_at: "2026-09-29T00:00:00Z",
+      };
+    }
     if (completedPhaseOneTask) {
       task.verified_commit = releaseReceipt.release_commit;
       task.verified_at = releaseReceipt.verified_at;

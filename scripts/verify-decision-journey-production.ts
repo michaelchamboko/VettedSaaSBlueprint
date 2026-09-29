@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { createHash, randomUUID } from "node:crypto";
 
 import { chromium } from "@playwright/test";
 
@@ -8,6 +9,18 @@ import { productionQualityReceiptV2Schema } from "../src/lib/automation/contract
 import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
 
 const defaultOrigin = "https://vettedsaasblueprint.online";
+const stepWords: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
+  nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
+  fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
+};
+
+export function headlineStepCountMatches(headline: string, stepCount: number): boolean {
+  const match = headline.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)-step\b/i);
+  if (!match) return true;
+  const declared = /^\d+$/.test(match[1]) ? Number(match[1]) : stepWords[match[1].toLowerCase()];
+  return declared === stepCount;
+}
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -86,14 +99,29 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
 
 async function main() {
   const origin = argument("--origin") ?? defaultOrigin;
+  const revision = argument("--revision") ?? process.env.VERCEL_GIT_COMMIT_SHA;
+  if (!revision || !/^[a-f0-9]{40}$/i.test(revision)) {
+    throw new Error("Pass --revision <40-character git commit SHA> (or set VERCEL_GIT_COMMIT_SHA) to bind this receipt to the verified code revision.");
+  }
   const output = path.resolve(argument("--screenshot-dir") ?? path.join(".automation", "receipts", "production-quality"));
   await mkdir(output, { recursive: true });
   const htmlChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => checkHtml(origin, route as keyof typeof decisionJourneyCatalog)));
   const browserChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => captureRoute({ origin, route: route as keyof typeof decisionJourneyCatalog, output })));
-  const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks)];
+  const semanticChecks: Check[] = Object.entries(decisionJourneyCatalog).map(([route, record]) => {
+    const matches = headlineStepCountMatches(record.headline, record.blocks.length);
+    return {
+      name: `${route}: headline step count`,
+      passed: matches,
+      detail: matches ? `Any declared step count matches the ${record.blocks.length} catalogue sections.` : `Headline declares a different number of steps than the ${record.blocks.length} catalogue sections.`,
+      category: "content",
+    };
+  });
+  const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks), ...semanticChecks];
   const receipt = productionQualityReceiptV2Schema.parse({
     version: 2,
     runId: argument("--run-id") ?? randomUUID(),
+    revision: revision.toLowerCase(),
+    catalogueFingerprint: createHash("sha256").update(JSON.stringify(decisionJourneyCatalog), "utf8").digest("hex"),
     passed: checks.every((check) => check.passed),
     checks,
     screenshots: browserChecks.flatMap((result) => result.screenshots),
@@ -103,4 +131,4 @@ async function main() {
   if (!receipt.passed) process.exitCode = 1;
 }
 
-void main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) void main();

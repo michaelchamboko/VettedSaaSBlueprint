@@ -166,6 +166,8 @@ button, input, textarea, select { font: inherit; }
 .decision-journey__hero dd { margin: .35rem 0 0; text-transform: capitalize; }
 .decision-journey__blocks { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(1rem, 3vw, 3rem); margin-top: clamp(3rem, 7vw, 7rem); }
 .decision-journey__progress { position: absolute; top: 0; bottom: 0; left: calc(8.333% + .25rem); width: 2px; background: var(--journey-accent); transform-origin: top; }
+.decision-journey--decision-hub .decision-journey__progress,
+.decision-journey--solution-hub .decision-journey__progress { display: none; }
 .decision-journey__block { position: relative; z-index: 1; display: grid; grid-template-columns: 3rem minmax(0, 1fr); grid-column: 3 / -1; gap: 1.25rem; padding: clamp(2.5rem, 5vw, 5rem) 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 2rem; }
 .decision-journey__block:nth-of-type(3n) { grid-column: 2 / span 8; }
 .decision-journey__block:nth-of-type(3n + 1) { grid-column: 5 / -1; }
