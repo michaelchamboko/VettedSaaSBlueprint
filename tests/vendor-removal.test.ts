@@ -7,8 +7,10 @@ import os from "node:os";
 
 const forbidden = ["ora", "cle"].join("");
 // Workspace-local artifact directories are not repository content; the
-// historical runner assumed a clean checkout.
-const excludedDirectories = new Set([".git", ".next", "node_modules", ".worktrees", ".automation", ".gitnexus", ".stage2", ".freebuff", ".scratch", "build-pack"]);
+// historical runner assumed a clean checkout. `.vercel` holds ignored local
+// CLI state (linked project metadata and pulled environment files), never
+// tracked repository content.
+const excludedDirectories = new Set([".git", ".next", "node_modules", ".worktrees", ".automation", ".gitnexus", ".stage2", ".freebuff", ".scratch", "build-pack", ".vercel"]);
 
 export function repositoryFiles(root: string, directory = root): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
