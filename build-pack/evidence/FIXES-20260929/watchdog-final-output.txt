@@ -1,0 +1,1479 @@
+﻿node.exe : npm notice run npx
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\micha\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run npx:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run tsx scripts/verify-decision-journey-production.ts --revision f8eeef8c3e8834365d44c99901859e7cd7610b28 
+--screenshot-dir build-pack/evidence/FIXES-20260929/watchdog-final
+{
+  "runId": "e6274897-5feb-4c20-8aa1-5a6f32d5e03a",
+  "passed": true,
+  "createdAt": "2026-09-29T19:14:50.783Z",
+  "version": 2,
+  "revision": "f8eeef8c3e8834365d44c99901859e7cd7610b28",
+  "catalogueFingerprint": "2e0cbaa19dfdf8ff13f21652a9f3b667f45102aed79c06ad67d10eedf1549b48",
+  "checks": [
+    {
+      "name": "deployment identity (pre-browser)",
+      "passed": true,
+      "detail": "Deployment identity verified: commit f8eeef8c3e8834365d44c99901859e7cd7610b28 on production.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub: canonical and principal answer",
+      "passed": true,
+      "detail": "The static HTML exposes the route-specific principal answer and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub: required decision structure",
+      "passed": true,
+      "detail": "Every required decision section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub: evidence traceability",
+      "passed": true,
+      "detail": "Every material claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/decision-hub: catalogue composition",
+      "passed": true,
+      "detail": "The rendered page declares its approved catalogue-backed composition.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub: motion contract",
+      "passed": true,
+      "detail": "The static document contains the progressive-enhancement motion anchors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/solution-hub: canonical and principal answer",
+      "passed": true,
+      "detail": "The static HTML exposes the route-specific principal answer and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub: required decision structure",
+      "passed": true,
+      "detail": "Every required decision section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub: evidence traceability",
+      "passed": true,
+      "detail": "Every material claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/solution-hub: catalogue composition",
+      "passed": true,
+      "detail": "The rendered page declares its approved catalogue-backed composition.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub: motion contract",
+      "passed": true,
+      "detail": "The static document contains the progressive-enhancement motion anchors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/scenarios: canonical and principal answer",
+      "passed": true,
+      "detail": "The static HTML exposes the route-specific principal answer and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios: required decision structure",
+      "passed": true,
+      "detail": "Every required decision section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios: evidence traceability",
+      "passed": true,
+      "detail": "Every material claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/scenarios: catalogue composition",
+      "passed": true,
+      "detail": "The rendered page declares its approved catalogue-backed composition.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios: motion contract",
+      "passed": true,
+      "detail": "The static document contains the progressive-enhancement motion anchors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: canonical and principal answer",
+      "passed": true,
+      "detail": "The set page exposes its structured headline and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: required decision structure",
+      "passed": true,
+      "detail": "Every required set section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: evidence traceability",
+      "passed": true,
+      "detail": "Every material set claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 12 structured sections.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: canonical and principal answer",
+      "passed": true,
+      "detail": "The set page exposes its structured headline and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: required decision structure",
+      "passed": true,
+      "detail": "Every required set section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: evidence traceability",
+      "passed": true,
+      "detail": "Every material set claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 7 structured sections.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: canonical and principal answer",
+      "passed": true,
+      "detail": "The set page exposes its structured headline and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: required decision structure",
+      "passed": true,
+      "detail": "Every required set section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: evidence traceability",
+      "passed": true,
+      "detail": "Every material set claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 12 structured sections.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: canonical and principal answer",
+      "passed": true,
+      "detail": "The set page exposes its structured headline and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: required decision structure",
+      "passed": true,
+      "detail": "Every required set section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: evidence traceability",
+      "passed": true,
+      "detail": "Every material set claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 12 structured sections.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: canonical and principal answer",
+      "passed": true,
+      "detail": "The set page exposes its structured headline and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: required decision structure",
+      "passed": true,
+      "detail": "Every required set section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: evidence traceability",
+      "passed": true,
+      "detail": "Every material set claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 7 structured sections.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: canonical and principal answer",
+      "passed": true,
+      "detail": "The set page exposes its structured headline and canonical URL.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: required decision structure",
+      "passed": true,
+      "detail": "Every required set section is present in the server-rendered document.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: evidence traceability",
+      "passed": true,
+      "detail": "Every material set claim exposes its stable source identifier.",
+      "category": "evidence"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 12 structured sections.",
+      "category": "content"
+    },
+    {
+      "name": "/: desktop principal content",
+      "passed": true,
+      "detail": "The page renders a principal heading.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/: desktop complete structure",
+      "passed": true,
+      "detail": "Structure count not asserted for this route.",
+      "category": "content"
+    },
+    {
+      "name": "/: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The page renders a principal heading.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Structure count not asserted for this route.",
+      "category": "content"
+    },
+    {
+      "name": "/: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The page renders a principal heading.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Structure count not asserted for this route.",
+      "category": "content"
+    },
+    {
+      "name": "/: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: desktop principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: desktop complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: desktop layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: desktop console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-reduced-motion principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-reduced-motion complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-reduced-motion layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-reduced-motion console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-no-javascript principal content",
+      "passed": true,
+      "detail": "The route-specific headline remains available in the rendered page.",
+      "category": "accessibility"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-no-javascript complete structure",
+      "passed": true,
+      "detail": "Rendered section count matches the structured record.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-no-javascript layout",
+      "passed": true,
+      "detail": "No horizontal overflow detected.",
+      "category": "visual"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: mobile-no-javascript console",
+      "passed": true,
+      "detail": "No browser console errors.",
+      "category": "motion"
+    },
+    {
+      "name": "/: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/solution-hub: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/scenarios: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub/governed-ai-client-work-preparation: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/solution-hub/governed-ai-client-work-preparation: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/scenarios/governed-ai-client-work-preparation: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub/team-shared-account-access-control: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/solution-hub/team-shared-account-access-control: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/scenarios/team-shared-account-access-control: route availability",
+      "passed": true,
+      "detail": "HTTP 200.",
+      "category": "production"
+    },
+    {
+      "name": "/decision-hub: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 12 catalogue sections.",
+      "category": "content"
+    },
+    {
+      "name": "/solution-hub: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 7 catalogue sections.",
+      "category": "content"
+    },
+    {
+      "name": "/scenarios: headline step count",
+      "passed": true,
+      "detail": "Any declared step count matches the 12 catalogue sections.",
+      "category": "content"
+    },
+    {
+      "name": "deployment identity (post-browser)",
+      "passed": true,
+      "detail": "Deployment identity verified: commit f8eeef8c3e8834365d44c99901859e7cd7610b28 on production.",
+      "category": "production"
+    }
+  ],
+  "screenshots": [
+    {
+      "route": "/",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\-desktop-first-screen.png"
+    },
+    {
+      "route": "/",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\-desktop-full-page.png"
+    },
+    {
+      "route": "/",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-desktop-first-screen.png"
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-desktop-full-page.png"
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/solution-hub",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-desktop-first-screen.png"
+    },
+    {
+      "route": "/solution-hub",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-desktop-full-page.png"
+    },
+    {
+      "route": "/solution-hub",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/solution-hub",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/solution-hub",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/solution-hub",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/scenarios",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-desktop-first-screen.png"
+    },
+    {
+      "route": "/scenarios",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-desktop-full-page.png"
+    },
+    {
+      "route": "/scenarios",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/scenarios",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/scenarios",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/scenarios",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/decision-hub/governed-ai-client-work-preparation",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-governed-ai-client-work-preparation-desktop-first-screen.png"
+    },
+    {
+      "route": "/decision-hub/governed-ai-client-work-preparation",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-governed-ai-client-work-preparation-desktop-full-page.png"
+    },
+    {
+      "route": "/decision-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-governed-ai-client-work-preparation-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/decision-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-governed-ai-client-work-preparation-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/decision-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-governed-ai-client-work-preparation-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/decision-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-governed-ai-client-work-preparation-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/solution-hub/governed-ai-client-work-preparation",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-governed-ai-client-work-preparation-desktop-first-screen.png"
+    },
+    {
+      "route": "/solution-hub/governed-ai-client-work-preparation",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-governed-ai-client-work-preparation-desktop-full-page.png"
+    },
+    {
+      "route": "/solution-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-governed-ai-client-work-preparation-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/solution-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-governed-ai-client-work-preparation-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/solution-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-governed-ai-client-work-preparation-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/solution-hub/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-governed-ai-client-work-preparation-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/scenarios/governed-ai-client-work-preparation",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-governed-ai-client-work-preparation-desktop-first-screen.png"
+    },
+    {
+      "route": "/scenarios/governed-ai-client-work-preparation",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-governed-ai-client-work-preparation-desktop-full-page.png"
+    },
+    {
+      "route": "/scenarios/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-governed-ai-client-work-preparation-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/scenarios/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-governed-ai-client-work-preparation-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/scenarios/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-governed-ai-client-work-preparation-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/scenarios/governed-ai-client-work-preparation",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-governed-ai-client-work-preparation-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/decision-hub/team-shared-account-access-control",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-team-shared-account-access-control-desktop-first-screen.png"
+    },
+    {
+      "route": "/decision-hub/team-shared-account-access-control",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-team-shared-account-access-control-desktop-full-page.png"
+    },
+    {
+      "route": "/decision-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-team-shared-account-access-control-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/decision-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-team-shared-account-access-control-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/decision-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-team-shared-account-access-control-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/decision-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\decision-hub-team-shared-account-access-control-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/solution-hub/team-shared-account-access-control",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-team-shared-account-access-control-desktop-first-screen.png"
+    },
+    {
+      "route": "/solution-hub/team-shared-account-access-control",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-team-shared-account-access-control-desktop-full-page.png"
+    },
+    {
+      "route": "/solution-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-team-shared-account-access-control-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/solution-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-team-shared-account-access-control-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/solution-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-team-shared-account-access-control-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/solution-hub/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\solution-hub-team-shared-account-access-control-mobile-no-javascript-full-page.png"
+    },
+    {
+      "route": "/scenarios/team-shared-account-access-control",
+      "viewport": "1440x900",
+      "mode": "desktop: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-team-shared-account-access-control-desktop-first-screen.png"
+    },
+    {
+      "route": "/scenarios/team-shared-account-access-control",
+      "viewport": "1440x900",
+      "mode": "desktop: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-team-shared-account-access-control-desktop-full-page.png"
+    },
+    {
+      "route": "/scenarios/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-team-shared-account-access-control-mobile-reduced-motion-first-screen.png"
+    },
+    {
+      "route": "/scenarios/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-reduced-motion: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-team-shared-account-access-control-mobile-reduced-motion-full-page.png"
+    },
+    {
+      "route": "/scenarios/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: first-screen",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-team-shared-account-access-control-mobile-no-javascript-first-screen.png"
+    },
+    {
+      "route": "/scenarios/team-shared-account-access-control",
+      "viewport": "390x844",
+      "mode": "mobile-no-javascript: full-page",
+      "path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\FIXES-20260929\\watchdog-final\\scenarios-team-shared-account-access-control-mobile-no-javascript-full-page.png"
+    }
+  ]
+}
