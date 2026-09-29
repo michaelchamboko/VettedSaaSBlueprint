@@ -57,8 +57,8 @@ Note: raw file hashes differ from manifest fingerprints because the manifest pin
 | --- | --- | --- | --- | --- | --- |
 | F1 checkout sync | pass | root `main@5dd2cfb` (reviewed commit `ce52264`); scheduled `codex/vetted-saas-phase-two@345a9e5` | phase-two: `npm run typecheck` 0, `npm run lint` 0 (0 errors/109 warnings), `npm test` 0 (275 pass/0 fail/3 skip), `npm run validate:public-site` 0, `npm run build` 0 | phase-two-typecheck-2.txt, phase-two-lint-2.txt, phase-two-test-3.txt, phase-two-validate.txt, phase-two-build.txt, phase-two-merge.txt | none — manifest workingDirectory and all four schedules unchanged; prompt fingerprints re-verified true ×4 |
 | F2 production watchdog | pass (code) | root `main@1eeb3f8`; scheduled `codex/vetted-saas-phase-two@0759a77` | root: `npm run typecheck` 0, `npm run lint` 0, `npm test` 0 (285/288 pass), `npm run validate:public-site` 0, `npm run build` 0; phase-two verifier tests 4/4; watchdog dry run against production exit 1 (expected fail-closed on stale six-step deployment) | watchdog-baseline-2-output.txt, root-test-f2b.txt, root-build-f2.txt | production still serves the pre-correction deployment; F3 release required before a passing watchdog receipt |
-| F3 reviewed release | pass | root `main@7514bd9` (release commit `1eeb3f8`) | root: full gates 0; `vercel deploy --prod --yes` 0; watchdog `--revision 1eeb3f8…` exit 0 (99/99 checks, 18 screenshots) | vercel-deploy-prod.txt, watchdog-post-release-output.txt, vercel-inspect-prod-post-release.txt, corrected-release-2026-09-29.json | none — production verified independently |
-| F4 canary/cycles | partial: canary pass; cycles pending | scheduled `codex/vetted-saas-phase-two@0759a77` | canary sequence exit 0 (research/editorial/watchdog all completed; watchdog 99/99) | canary receipts under `.worktrees/phase-two/.automation/receipts/2026-09-29-canary/`; canary-*.txt | three consecutive real scheduled cycles have not elapsed — activation pending; next run 2026-09-29 23:00 SAST (watchdog) |
+| F3 reviewed release | pass | root `main@fc6d951` (final release commit `f8eeef8`, superseding `1eeb3f8`) | root: full gates 0; `vercel deploy --prod --yes` 0; watchdog `--revision f8eeef8…` exit 0 (183/183 checks, 60 screenshots across all 10 routes) | vercel-deploy-prod-2.txt, watchdog-final-output.txt, vercel-inspect-prod-final.txt, corrected-release-2026-09-29.json | none — production verified independently with review fixes included |
+| F4 canary/cycles | partial: canary pass; cycles pending | scheduled `codex/vetted-saas-phase-two@649ab25` | canary sequence exit 0 (research/editorial/watchdog all completed; watchdog 99/99 at canary time) | canary receipts under `.worktrees/phase-two/.automation/receipts/2026-09-29-canary/`; canary-*.txt | three consecutive real scheduled cycles have not elapsed — activation pending; next run 2026-09-29 23:00 SAST (watchdog) |
 
 ### F1 pre-integration baseline (root checkout, dirty state, 2026-09-29T17:15–17:35Z)
 
@@ -94,18 +94,28 @@ Connected Mode is not bound to a SonarQube Cloud/Server project in this workspac
 
 ## 5. Independent review verdict
 
-Pending. Will record reviewer findings, rejected assumptions, and corrections for F1–F4.
+An independent code-review agent reviewed commits `ce52264`, `5dd2cfb`, `1eeb3f8`, `7514bd9` (full diffs, worktree reconciliation, receipt evidence, and re-ran the new tests). Verdict: **F1 reconciliation faithful, seven-step fix complete, execution-state reopening matches planning v2.2 exactly, no secrets in committed evidence** — with five findings, all addressed in root commit `f8eeef8` (synced to phase-two `322a428`):
+
+| # | Severity | Finding | Disposition |
+| --- | --- | --- | --- |
+| 1 | High | Browser-level verification and screenshots covered only the three pilot routes; homepage and set routes got fetch-only checks | Fixed: `captureRoute` now runs for all 10 routes (homepage + 3 pilot + 6 set routes) × 3 profiles = 60 screenshots, 183 checks |
+| 2 | Medium | Revision binding was tautological when the prompt's "deployed-commit-sha" came from the same metadata endpoint | Fixed: prompt now instructs passing the released checkout's `git rev-parse HEAD` so identity compares deployment against release intent |
+| 3 | Medium | `fetchDeploymentIdentity` crashed on network/parse errors instead of producing a failed check | Fixed: wrapped in try/catch returning null identity (fail-closed check) |
+| 4 | Medium | Watchdog completion gate still accepted unbound V1 receipts | Fixed: `parseWorkflowResult("watchdog")` now requires V2 with revision; V1 remains parseable as historical record only; new test added |
+| 5 | Low | Test coverage gaps for new I/O logic | Partially addressed: V2-only completion test added; fetch/HTML-check internals remain untested (noted as residual) |
+
+Rejected assumptions from review: none — all five findings were accepted and fixed. The `.vercel` vendor-scan exclusion was verified safe (gitignored, zero tracked files, directory-name-based exclusion cannot hide tracked content).
 
 ## 6. Deployment URLs and identity
 
 | Field | Baseline value | Post-release value |
 | --- | --- | --- |
 | Production URL | https://vettedsaasblueprint.online | https://vettedsaasblueprint.online (verified 200 on all 10 routes) |
-| Deployment ID | dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G | dpl_Amfguhw6L8Mmei9zTGvsQjKE8L3z |
-| Commit SHA | 526a3b3aa11e14d43ca1b11cfe9a07212687d315 | 1eeb3f83d094a49ed7be8dd64401ed5e04fdd691 |
+| Deployment ID | dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G | dpl_Gr3tpzhokvwJ29EDJEr3TZGigt1o (supersedes dpl_Amfguhw6L8Mmei9zTGvsQjKE8L3z) |
+| Commit SHA | 526a3b3aa11e14d43ca1b11cfe9a07212687d315 | f8eeef8c3e8834365d44c99901859e7cd7610b28 (release; supersedes 1eeb3f83d094a49ed7be8dd64401ed5e04fdd691) |
 | Environment | production | production (verified via /api/deployment pre- and post-browser) |
 | Release/source fingerprint | — | dependency-lock SHA-256 557b2162…; catalogue fingerprint 2e0cbaa1… |
-| Watchdog receipt | — | build-pack/evidence/FIXES-20260929/watchdog-post-release-output.txt (passed, 99/99 checks, 18 screenshots) |
+| Watchdog receipt | — | build-pack/evidence/FIXES-20260929/watchdog-final-output.txt (passed, 183/183 checks, 60 screenshots across homepage + 3 pilot routes + 6 set routes × 3 browser profiles) |
 | Release receipt | — | build-pack/receipts/corrected-release-2026-09-29.json |
 
 **F3 design workflow record:** Design Read — "Reading this as: an evidence-first public decision-guide page family (Decision Hub / Solution Hub / Scenario) for non-technical business buyers, with a restrained editorial system, leaning toward native CSS + the established site identity and reduced-motion-safe progressive enhancement." Impeccable `context` resolved the incumbent visual system (no PRODUCT.md; narrow refinement allowed). `detect` on the changed surface found 7 pre-existing anti-patterns (side-tab accent borders, Arial fallback) — all incumbent site identity, preserved per AGENTS.md; the F1 change (progress rail `display:none` on decision-hub/solution-hub) introduces no new anti-patterns. Local production-server inspection confirmed the rail is hidden on decision-hub/solution-hub and visible on scenarios; desktop and mobile screenshots captured (local-*.png). Watchdog browser profiles re-verified desktop, mobile reduced-motion, and mobile no-JavaScript on production.
@@ -114,13 +124,13 @@ Pending. Will record reviewer findings, rejected assumptions, and corrections fo
 
 | Window | Status | UTC date/time + run ID | Checkout/source/prompt fingerprint | Deployment/watchdog receipt | Evidence or next date |
 | --- | --- | --- | --- | --- | --- |
-| Manual canary | pass | 2026-09-29T18:03–18:07Z; research `ed1ce6e7-8841-4406-8927-4503459bfaf9`, editorial `37268ec4-da55-4c44-89f0-a0299bffd0f8`, watchdog `64fdafbb-166b-47ba-ba00-e26563ca64b4` | scheduled checkout `codex/vetted-saas-phase-two@0759a77`; catalogue fingerprint `2e0cbaa1…`; prompt fingerprints verified true ×4 | watchdog V2 receipt passed 99/99 bound to revision `1eeb3f83…`; deployment `dpl_Amfguhw6L8Mmei9zTGvsQjKE8L3z` | `.worktrees/phase-two/.automation/receipts/2026-09-29-canary/` (research.json, editorial_brief.json, watchdog.json, screenshots/); idempotency proven (duplicate start returned existing run); canary-research-start.txt, canary-research-complete.txt, canary-editorial-complete.txt, canary-watchdog-complete.txt, canary-watchdog-verify.txt |
+| Manual canary | pass | 2026-09-29T18:03–18:07Z; research `ed1ce6e7-8841-4406-8927-4503459bfaf9`, editorial `37268ec4-da55-4c44-89f0-a0299bffd0f8`, watchdog `64fdafbb-166b-47ba-ba00-e26563ca64b4` | scheduled checkout `codex/vetted-saas-phase-two@0759a77` (canary time); catalogue fingerprint `2e0cbaa1…`; prompt fingerprints verified true ×4 | watchdog V2 receipt passed 99/99 bound to revision `1eeb3f83…` (release at canary time); deployment `dpl_Amfguhw6L8Mmei9zTGvsQjKE8L3z` | `.worktrees/phase-two/.automation/receipts/2026-09-29-canary/` (research.json, editorial_brief.json, watchdog.json, screenshots/); idempotency proven (duplicate start returned existing run); canary-research-start.txt, canary-research-complete.txt, canary-editorial-complete.txt, canary-watchdog-complete.txt, canary-watchdog-verify.txt |
 | Scheduled day 1 | pending | — | — | — | next real window: watchdog 2026-09-29 23:00 SAST (21:00 UTC) |
 | Scheduled day 2 | pending | — | — | — | next: research 2026-09-30 02:00 SAST, editorial 06:00 SAST, optimisation 20:00 SAST, watchdog 23:00 SAST |
 | Scheduled day 3 | pending | — | — | — | next: full four-window cycle 2026-10-01 SAST |
 
 ## 8. Final status
 
-**`activation pending`** — F1, F2, and F3 are complete and verified. F4's manual canary passed in its own window (`2026-09-29-canary`) with the full research → editorial brief → watchdog sequence, idempotency proof, and a production-bound watchdog receipt. The three consecutive corrected scheduled cycles have not yet elapsed: the scheduler (Windows Codex desktop host) runs outside this session at 02:00, 06:00, 20:00, and 23:00 SAST. The next real scheduled window is the production watchdog at **2026-09-29 23:00 SAST (21:00 UTC)**, followed by research 02:00, editorial 06:00, optimisation 20:00, and watchdog 23:00 SAST on 2026-09-30, and a full four-window cycle on 2026-10-01. `P2_VERIFIED` and `publication.enabled` must remain disabled until those three consecutive corrected cycles complete with receipts; no evidence has been fabricated and no gate has been bypassed.
+**`activation pending`** — F1, F2, and F3 are complete and verified, including all five independent-review findings fixed and re-released (final release commit `f8eeef8`, deployment `dpl_Gr3tpzhokvwJ29EDJEr3TZGigt1o`, watchdog 183/183 with 60 screenshots). F4's manual canary passed in its own window (`2026-09-29-canary`) with the full research → editorial brief → watchdog sequence, idempotency proof, and a production-bound watchdog receipt. The three consecutive corrected scheduled cycles have not yet elapsed: the scheduler (Windows Codex desktop host) runs outside this session at 02:00, 06:00, 20:00, and 23:00 SAST. The next real scheduled window is the production watchdog at **2026-09-29 23:00 SAST (21:00 UTC)**, followed by research 02:00, editorial 06:00, optimisation 20:00, and watchdog 23:00 SAST on 2026-09-30, and a full four-window cycle on 2026-10-01. `P2_VERIFIED` and `publication.enabled` must remain disabled until those three consecutive corrected cycles complete with receipts; no evidence has been fabricated and no gate has been bypassed.
 
 **Next action:** observe the scheduled windows above through the configured scheduler in the reconciled `.worktrees/phase-two` checkout; record each cycle's run ID, fingerprints, receipts, and watchdog results in section 7; then update `build-pack/execution-state.json` only through the approved state mechanism.
