@@ -135,6 +135,35 @@ Rejected assumptions from review: none — all five findings were accepted and f
 
 **2026-09-30 morning check (04:57 UTC):** the scheduled windows of 2026-09-29 23:00 SAST (watchdog), 2026-09-30 02:00 SAST (research), and 06:00 SAST (editorial) elapsed with **no scheduler receipts** — the Windows Codex desktop host did not fire any run (last `.automation/state` write remains the 2026-09-29 canary at 20:07 local). The scheduled checkout remains reconciled (`codex/vetted-saas-phase-two@649ab25`), all four prompt fingerprints still match, production still serves release commit `f8eeef8` (verified 200 on all routes), and a fresh watchdog verification on the morning of 2026-09-30 passed 183/183 with 60 screenshots (watchdog-morning-0930-output.txt). This is a scheduler-side absence, not a repository defect: the Codex desktop automations are configured in the Codex app, not Windows Task Scheduler, and this session cannot start them without fabricating a scheduled window.
 
-**Next action for the product owner:** confirm the four Codex desktop automations (`vetted-saas-daily-research`, `vetted-saas-editorial-brief`, `vetted-saas-optimisation`, `vetted-saas-production-watchdog`) are enabled and pointed at the reconciled `.worktrees/phase-two` checkout. The next real windows are optimisation **2026-09-30 20:00 SAST** and watchdog **23:00 SAST**, then full cycles on 2026-10-01 and 2026-10-02. `P2_VERIFIED` and `publication.enabled` must remain disabled until three consecutive corrected scheduled cycles complete with receipts; no evidence has been fabricated and no gate has been bypassed.
+## 9. Actual automation verification (2026-09-30, owner-directed focus)
+
+The owner directed focus onto the actual automation (the scheduled runner), setting aside the schedule-elapsed question. The automation is `scripts/run-automation.ts` + `src/lib/automation/{local-store,workflows,authority,contracts}.ts` executing five workflow types with a prerequisite chain, executed from the scheduled checkout.
+
+### Full chain end-to-end (window `2026-09-30-automation-chain-canary`, phase-two checkout)
+
+| Step | Run ID | Result | Receipt |
+| --- | --- | --- | --- |
+| research | `6690e281-a600-4cb4-a72f-05ef66e6b251` | completed, no_change EvidenceUpdateV2 | `.automation/receipts/2026-09-30-automation-chain-canary/research.json` |
+| editorial_brief | `efd5e5aa-0b48-435f-afb8-7b87a1d1480d` | completed, no-work EditorialBriefV2 (prerequisite: research receipt satisfied) | `…/editorial_brief.json` |
+| optimise | `42fdf232-2c10-43ed-8fc6-2a52aedda6bf` | completed, content-only no-change PageSetChangeV1 (prerequisite: editorial receipt satisfied) | `…/optimise.json` |
+| watchdog | `72517c86-0741-4e35-a6ac-a58f48d0ac3e` | completed, ProductionQualityReceiptV2 passed 183/183 bound to release revision `f8eeef8…` | `…/watchdog.json` + screenshots/ |
+
+### Runner mechanics verified
+
+| Mechanism | Evidence |
+| --- | --- |
+| Idempotency (duplicate start returns existing run, same runId) | chain-research start returned `existing` with identical runId; also proven in 2026-09-29 canary |
+| Retry (failed run resumes, attempts increment) | window `2026-09-30-retry-check-canary`: fail 1 → state `failed` attempts 1; retry start → same runId; fail 2 → attempts 2; retry start → resumes; fail 3 → state `blocked` attempts 3 |
+| Escalation (3 failures → blocked + escalation receipt) | `.automation/receipts/2026-09-30-retry-check-canary/research-escalation.json` written with failure fingerprint |
+| Prerequisite gate: editorial requires same-window research receipt | window `2026-09-30-prereq-check-canary`: completion rejected, exit 1, "Editorial brief requires a research receipt for the same scheduled window." |
+| Prerequisite gate: release requires same-window optimise receipt | window `2026-09-30-release-gate-check-canary`: completion rejected, exit 1, "Release requires an optimisation receipt for the same scheduled window." |
+| Watchdog completion requires revision-bound V2 receipt | unit test in tests/automation-workflows.test.ts (V1 rejected) |
+| Lock TTL (3h) and stale-lock recovery | covered by tests/local-automation-store.test.ts |
+
+### Structural finding (recorded, not acted on without owner direction)
+
+`src/lib/automation/` contains a second, unwired layer (~90 KB across `daily-run.ts`, `workflow-engine.ts`, `state-machine.ts`, `module-contract.ts`, `model-router.ts`, `watchdog.ts`, `premium-rescue.ts`, `services/`, `validation/`, `providers/`, `audit/`, `deployment/`) implementing a D03-style DailyRun pipeline with model routing and premium rescue. It has zero importers outside itself and zero tests; nothing in `planning.md` or the packet requires wiring it, and the v2.2 operational contract binds the scheduled flow to the runner above. Per the non-inference gate this is recorded as an observation only — no deletion or wiring was performed.
 
 **Next action:** observe the scheduled windows above through the configured scheduler in the reconciled `.worktrees/phase-two` checkout; record each cycle's run ID, fingerprints, receipts, and watchdog results in section 7; then update `build-pack/execution-state.json` only through the approved state mechanism.
+
+**Next action for the product owner:** confirm the four Codex desktop automations (`vetted-saas-daily-research`, `vetted-saas-editorial-brief`, `vetted-saas-optimisation`, `vetted-saas-production-watchdog`) are enabled and pointed at the reconciled `.worktrees/phase-two` checkout. The next real windows are optimisation **2026-09-30 20:00 SAST** and watchdog **23:00 SAST**, then full cycles on 2026-10-01 and 2026-10-02. `P2_VERIFIED` and `publication.enabled` must remain disabled until three consecutive corrected scheduled cycles complete with receipts; no evidence has been fabricated and no gate has been bypassed.
