@@ -326,6 +326,7 @@ button, input, textarea, select { font: inherit; }
   .home-hero { min-height: 48rem; }
   .home-hero__support, .section-heading, .affiliate-ribbon, .vetting-section { grid-template-columns: 1fr; }
   .decision-guide-catalogue__grid { grid-template-columns: 1fr; }
+  .studio-category { grid-template-columns: 1fr; gap: 2rem; }
   .decision-journey__hero { grid-template-columns: 1fr; min-height: 0; }
   .decision-journey__hero-card { max-width: 32rem; }
   .decision-journey__blocks { display: grid; grid-template-columns: 1fr; margin-top: 3rem; }
