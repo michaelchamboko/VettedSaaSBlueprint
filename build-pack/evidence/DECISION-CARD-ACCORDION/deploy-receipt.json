@@ -98,6 +98,54 @@
     "previous_production_deployment_id": "dpl_3JiCFmSej76oS8oRepiUcbCsrit8",
     "needed": false
   },
+  "corrective_releases": [
+    {
+      "reason": "User-reported live alignment defect; corrective follow-up to the approved production release.",
+      "authorization": "User explicitly requested correction of the live defect and approved the corrective release.",
+      "recorded_at": "2026-10-09T11:54:34Z",
+      "app_commit": "5e8056c5cbb3258124601205fad7359defdf62ca",
+      "branch": "codex/decision-card-accordion",
+      "deployment": {
+        "id": "dpl_DR1PavdzNyteRTpJzseFqCPrSr9q",
+        "url": "https://vetted-saa-s-blueprint-eeaun2kqr-michaelchamboko-gravityclaw.vercel.app",
+        "custom_domain": "https://vettedsaasblueprint.online",
+        "state": "READY",
+        "target": "production",
+        "promoted": true,
+        "inspection": "Vercel inspect resolved the custom domain to this deployment; deployment and build states were READY.",
+        "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+        "team": "team_0Vjm5yuoHjiIcGq0hoJMm5vC"
+      },
+      "verification": {
+        "staged_route_statuses": {"/": 200, "/decision-hub": 200, "/solution-hub": 200, "/scenarios": 200},
+        "production_route_statuses": {"/": 200, "/decision-hub": 200, "/solution-hub": 200, "/scenarios": 200},
+        "desktop_808x668_card_03_open": {
+          "instrumented_animation_frames": 100,
+          "frames_with_group_translation": 38,
+          "maximum_group_translate_y_px": 54,
+          "maximum_card_edge_spread_px_during_motion": 0,
+          "final_card_top_px": 109.84375,
+          "final_card_bottom_px": 557.84375,
+          "review_card_marker": "accordion root only; zero per-card markers"
+        },
+        "mobile": {
+          "viewport_390": "350px card widths; no horizontal overflow",
+          "viewport_320": "280px card widths; no horizontal overflow"
+        },
+        "interaction_and_assets": "All three cards transferred open state correctly; each associated image loaded; summary keyboard focus remained visible.",
+        "browser_console_errors": 0,
+        "failed_requests": 0,
+        "vercel_error_logs_last_1h": "0 error records returned for the promoted deployment",
+        "verified_at": "2026-10-09T11:54:34Z"
+      },
+      "tooling_deviation": "RTK token-filtering proxy was absent; direct npm, git, and Vercel commands were used under the parent-approved fallback; no software was installed.",
+      "known_warnings": [
+        "Lint: 128 warnings, 0 errors; existing Next.js middleware-convention and Edge Runtime deprecation warnings remain.",
+        "Vercel remote install audit reported 9 dependency findings: 8 high and 1 critical.",
+        "The optional .impeccable/build/state.json recorder was unavailable; the independent Impeccable finish reviewer returned disposition ship and confirmed all six reviewed fixes resolved."
+      ]
+    }
+  ],
   "known_non_blocking_warnings": [
     "RTK token-filtering proxy was absent; direct commands were used per parent-approved fallback, and no software was installed.",
     "Lint reported 128 warnings and 0 errors.",
