@@ -33,17 +33,37 @@ export default async function StudioLandingPage({ params }: { params: Promise<{ 
         <section className={styles.hero}>
           <div className={styles.copy}>
             <p className={styles.kicker} data-catalogue-kicker>{page.name} / {page.variant.label}</p>
-            <h1 data-catalogue-title>{page.variant.framing}</h1>
+            <h1 data-catalogue-title>{page.headline}</h1>
             <p className={styles.lede} data-catalogue-copy>{page.lede}</p>
-            <a className={styles.cta} data-catalogue-cta href={page.affiliateUrl} rel="nofollow sponsored">Explore {page.name} <span aria-hidden="true">↗</span></a>
-            <p className={styles.disclosure}>We may earn a commission if you use this link, at no extra cost to you.</p>
           </div>
           <figure className={styles.artwork} data-catalogue-art>
             <img src="/generated/affiliate-catalogue-hero.png" alt={page.alt} style={{ objectPosition: page.visualPosition }} />
           </figure>
         </section>
-        <section className={styles.steps} aria-label={`${page.name} fit check`}>
-          {page.steps.map((step) => <article key={step} data-catalogue-step><span>{step.slice(0, 2)}</span><h2>{step.slice(5)}</h2><p>{page.variant.framing}</p></article>)}
+        <section className={styles.steps} aria-labelledby="guide-title">
+          <header className={styles.guideIntro}>
+            <h2 id="guide-title">{page.guideTitle}</h2>
+            <p>Work through these checks in order. Keep a short record of what you tried, what happened, and what remains unresolved.</p>
+          </header>
+          <ol className={styles.checks}>
+            {page.steps.map((step) => (
+              <li key={step.number} data-catalogue-step>
+                <span aria-hidden="true">{step.number}</span>
+                <div><h3>{step.title}</h3><p>{step.body}</p></div>
+              </li>
+            ))}
+          </ol>
+        </section>
+        <section className={styles.decision} aria-labelledby="next-step-title">
+          <div>
+            <h2 id="next-step-title">Decide what to do next</h2>
+            <p>{page.nextStep}</p>
+            <p className={styles.limitation}>{page.limitation}</p>
+          </div>
+          <div className={styles.action}>
+            <p className={styles.disclosure}>We may earn a commission if you use this link, at no extra cost to you.</p>
+            <a className={styles.cta} data-catalogue-cta href={page.affiliateUrl} rel="nofollow sponsored">Check {page.name} options</a>
+          </div>
         </section>
         <footer className={styles.footer}><p>Check current product options and terms on the official {page.name} destination.</p><nav aria-label="Trust links"><Link href="/affiliate-disclosure">Disclosure</Link><Link href="/editorial-policy">Editorial policy</Link><Link href="/privacy">Privacy</Link></nav></footer>
       </main>
