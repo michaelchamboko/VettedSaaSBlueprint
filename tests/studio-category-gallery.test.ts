@@ -35,8 +35,30 @@ test("studio gallery preserves native disclosures, ElevenLabs default, and all 2
     assert.ok(category.alt);
   }
   assert.doesNotMatch(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /[←-⇿]/u);
-  assert.match(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /open=\{index === 2\}/);
+  assert.match(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /open=\{index === activeIndex\}/);
   assert.match(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /suppressHydrationWarning/);
+});
+
+test("studio gallery stabilizes hover selection and disables spatial motion for reduced motion", () => {
+  const source = readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8");
+  const css = readFileSync("src/app/globals.css", "utf8");
+  assert.match(source, /useState\(2\)/);
+  assert.match(source, /<motion\.details/);
+  assert.match(source, /useReducedMotion\(\)/);
+  assert.match(source, /layout=\{!reduceMotion\}/);
+  assert.match(source, /duration: 0\.42, ease: \[0\.16, 1, 0\.3, 1\]/);
+  assert.match(source, /onPointerMove=/);
+  assert.match(source, /pointerType !== "mouse"/);
+  assert.ok(source.includes('(hover: hover) and (pointer: fine)'));
+  assert.match(source, /closest<HTMLElement>\("\.studio-category-card"\)/);
+  assert.match(source, /onFocus=\{\(\) => setActiveIndex\(index\)\}/);
+  assert.match(source, /event\.preventDefault\(\); setActiveIndex\(index\)/);
+  assert.doesNotMatch(source, /onPointerEnter|card\.open\s*=/);
+  const cardRule = css.match(/\.studio-category-card \{([^}]+)\}/)?.[1] ?? "";
+  assert.doesNotMatch(cardRule, /transition:[^;]*(?:flex-grow|transform|top)/);
+  assert.match(cardRule, /border-color 420ms cubic-bezier/);
+  assert.match(css, /@media \(max-width: 1024px\)[\s\S]*?\.studio-category-gallery \{ display: grid;/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.studio-category-card, \.studio-category-card__image \{ transition: none; \}\s*\.studio-category-card\[open\] \{ top: 0; \}/);
 });
 
 test("studio images retain accessible descriptions and show one category sprite panel", () => {

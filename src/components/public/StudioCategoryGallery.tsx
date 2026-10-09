@@ -1,38 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type CSSProperties } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useState, type CSSProperties } from "react";
 
 import type { getStudioCategories } from "@/lib/studio-catalogue";
 
 export function StudioCategoryGallery({ categories }: { categories: ReturnType<typeof getStudioCategories> }) {
-  const cardRefs = useRef<Array<HTMLDetailsElement | null>>([]);
-
-  function activate(index: number) {
-    cardRefs.current.forEach((card, cardIndex) => {
-      if (card) card.open = cardIndex === index;
-    });
-  }
+  const [activeIndex, setActiveIndex] = useState(2);
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div className="studio-category-gallery" aria-labelledby="studio-title">
+    <div
+      className="studio-category-gallery"
+      aria-labelledby="studio-title"
+      onPointerMove={(event) => {
+        if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+        // Moving card boundaries must not select a new card beneath a stationary pointer.
+        const card = (event.target as HTMLElement).closest<HTMLElement>(".studio-category-card");
+        if (card && event.currentTarget.contains(card)) setActiveIndex(Number(card.dataset.categoryIndex));
+      }}
+    >
       {categories.map((category, index) => (
-        <details
+        <motion.details
           className="studio-category-card"
           key={category.slug}
           name="homepage-studio-categories"
-          open={index === 2}
+          open={index === activeIndex}
           suppressHydrationWarning
-          ref={(card) => { cardRefs.current[index] = card; }}
+          data-category-index={index}
+          layout={!reduceMotion}
+          transition={{ layout: { duration: 0.42, ease: [0.16, 1, 0.3, 1] } }}
           style={{ "--studio-accent": category.accent } as CSSProperties}
-          onPointerEnter={(event) => {
-            if (event.pointerType === "mouse" && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-              activate(index);
-            }
-          }}
-          onFocus={() => activate(index)}
+          onFocus={() => setActiveIndex(index)}
         >
-          <summary onClick={(event) => { event.preventDefault(); activate(index); }}>
+          <summary onClick={(event) => { event.preventDefault(); setActiveIndex(index); }}>
             <div className="studio-category-card__heading">
               <p className="studio-category-card__label">{category.label}</p>
               <h3>{category.productName}</h3>
@@ -51,7 +53,7 @@ export function StudioCategoryGallery({ categories }: { categories: ReturnType<t
               {category.pages.map((page) => <Link key={page.slug} href={page.path}>{page.variant.label}</Link>)}
             </nav>
           </div>
-        </details>
+        </motion.details>
       ))}
     </div>
   );
