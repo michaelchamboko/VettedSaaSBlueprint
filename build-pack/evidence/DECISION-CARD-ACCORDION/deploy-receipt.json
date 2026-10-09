@@ -209,6 +209,71 @@
         "Direct interactive browser access to the staged deployment was blocked by Vercel Deployment Protection. Staged route/HTML checks plus same-commit local browser checks were used before promotion; full interactive checks were then run against production.",
         "An early authenticated CLI curl from the initially unlinked worktree unexpectedly created a separate Vercel project `card-open-alignment` (prj_j1HgHWWynNDkkdRc6aZMxz6VRWIk). No deployment was created there; it was not deleted. Subsequent checks and deployment used the verified target project/team IDs."
       ]
+    },
+    {
+      "reason": "Corrective release restoring ordinary page flow and desktop hover-driven decision-guide activation while preserving touch/mobile native disclosures.",
+      "authorization": "Parent task delegated the approved corrective production release after implementation and verification.",
+      "recorded_at": "2026-10-09T13:37:46Z",
+      "app_commit": "525c1c48d57ec341f977416d8d17411282aee659",
+      "branch": "codex/card-open-alignment",
+      "deployment": {
+        "id": "dpl_Hn22LUjqBjNWiYGkLtjTairw7b1L",
+        "url": "https://vetted-saa-s-blueprint-79vtx4s5b-michaelchamboko-gravityclaw.vercel.app",
+        "custom_domain": "https://vettedsaasblueprint.online",
+        "state": "READY",
+        "target": "production",
+        "created_at": "2026-10-09T13:33:13Z",
+        "promotion": {
+          "command": "vercel promote https://vetted-saa-s-blueprint-79vtx4s5b-michaelchamboko-gravityclaw.vercel.app",
+          "result": "success",
+          "domain_resolves_to_deployment_id": true
+        },
+        "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+        "team": "team_0Vjm5yuoHjiIcGq0hoJMm5vC"
+      },
+      "pre_promotion_verification": {
+        "gates": "Parent reported focused tests 11/11, typecheck/build/public validation passed, lint 0 errors/128 existing warnings, and Impeccable detector clean.",
+        "staged_inspect_state": "READY",
+        "staged_route_statuses": {"/": 200, "/decision-hub": 200, "/solution-hub": 200, "/scenarios": 200},
+        "staged_homepage": "Authenticated Vercel CLI retrieved the exact staged homepage; HTTP 200, expected title and decision-guide markup present.",
+        "browser_test_scope": "Direct interactive browser access to the protected staged deployment was unavailable. Parent-approved same-commit local browser evidence was used before promotion.",
+        "same_commit_local_browser": {
+          "desktop_808x668": "One viewport scroll moved the deck -668px in ordinary flow with no pin spacer or scroll-progress state changes; hover sequence 01→02→03 was visually confirmed.",
+          "mobile_390x844": "Column layout; card width 335.2px; initial state [true,false,false]; zero pin spacers; no horizontal overflow."
+        }
+      },
+      "production_verification": {
+        "verified_at": "2026-10-09T13:37:46Z",
+        "domain_deployment_id": "dpl_Hn22LUjqBjNWiYGkLtjTairw7b1L",
+        "route_statuses": {"/": 200, "/decision-hub": 200, "/solution-hub": 200, "/scenarios": 200},
+        "desktop_808x668": {
+          "initial_deck_states": [[true, false, false], [true, false, false]],
+          "ordinary_scroll": {"viewport_delta_px": 668, "guide_state_changed": false, "pin_spacers": 0},
+          "first_deck_hover_sequence": [1, 2, 3, 2, 1],
+          "second_deck_hover_sequence": [1, 2, 3, 2, 1],
+          "one_open_card_at_a_time": true,
+          "all_six_active_guide_images_loaded": true,
+          "horizontal_overflow": false
+        },
+        "mobile_touch_390x844": {
+          "pin_spacers": 0,
+          "layout": "column",
+          "card_widths_px": [350, 350, 350],
+          "initial_state": [true, false, false],
+          "touch_disclosure_sequence": [2, 3, 2, 1],
+          "horizontal_overflow": false
+        },
+        "console_errors": 0,
+        "page_errors": 0,
+        "failed_requests": 0,
+        "vercel_error_logs_last_1h": "No error log records returned for the promoted deployment."
+      },
+      "tooling_deviation": "RTK was unavailable; direct git and Vercel CLI commands were used as the approved fallback.",
+      "known_warnings": [
+        "Vercel remote install audit reported 9 dependency findings: 8 high and 1 critical; Next.js emitted existing middleware-convention and Edge Runtime deprecation warnings.",
+        "Direct interactive browser access to the staged deployment was blocked by Vercel Deployment Protection; the receipt distinguishes same-commit local pre-promotion evidence from live production verification.",
+        "The previously recorded accidental empty Vercel project was left untouched as instructed; this release used the existing authoritative project link and created no project or deployment outside the target project."
+      ]
     }
   ],
   "known_non_blocking_warnings": [
