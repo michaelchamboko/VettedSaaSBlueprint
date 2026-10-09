@@ -19,11 +19,10 @@ export function DecisionGuideAccordion({
   items: readonly DecisionGuideItem[];
 }) {
   return (
-    <div className="decision-guide-accordion" role="list" aria-labelledby={labelledBy}>
+    <div className="decision-guide-accordion" data-home-motion="review-card" role="list" aria-labelledby={labelledBy}>
       {items.map((item, index) => (
         <details
           className="decision-guide-card"
-          data-home-motion="review-card"
           key={item.href}
           name={groupName}
           open={index === 0}

@@ -33,6 +33,8 @@ test("homepage decision guides are grouped native disclosures without a JavaScri
 
     for (let index = 0; index < await groups.count(); index += 1) {
       const group = groups.nth(index);
+      assert.equal(await group.getAttribute("data-home-motion"), "review-card", "the deck should enter as one aligned group");
+      assert.equal(await group.locator("[data-home-motion]").count(), 0, "cards must not receive staggered reveal transforms");
       assert.equal(await group.locator("details").count(), 3);
       assert.equal(await group.locator("summary").count(), 3);
       assert.equal(await group.locator("h3").count(), 3);
@@ -115,6 +117,19 @@ test("decision guide accordion communicates state across desktop, mobile, focus,
     assert.ok(focusState.height >= 44, `expected a 44px control, received ${focusState.height}px`);
     assert.notEqual(focusState.outlineStyle, "none");
     assert.notEqual(focusState.outlineWidth, "0px");
+
+    await page.setViewportSize({ width: 808, height: 668 });
+    await summaries.nth(2).click();
+    await page.waitForTimeout(500);
+    assert.notEqual(await cards.nth(2).getAttribute("open"), null);
+    const cardEdges = await cards.evaluateAll((items) => items.map((item) => {
+      const { top, bottom } = item.getBoundingClientRect();
+      return { top, bottom };
+    }));
+    for (const edges of cardEdges) {
+      assert.ok(Math.abs(edges.top - cardEdges[0].top) < 1, "all cards should share their top edge at 808px");
+      assert.ok(Math.abs(edges.bottom - cardEdges[0].bottom) < 1, "all cards should share their bottom edge at 808px");
+    }
 
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 900 });
