@@ -1,0 +1,51 @@
+{
+  "schema_version": "1",
+  "kind": "manual-production-deploy",
+  "status": "verified",
+  "authorized_by": "Product owner directive: approved push and deploy to vercel (2026-10-09)",
+  "completed_at": "2026-10-09T09:41:57.768Z",
+  "deployed_commit": "5a87d0cc9ae4c06d669fd4476e7ed1e3e8c01b82",
+  "branch": "codex/decision-card-accordion",
+  "deployment": {
+    "id": "dpl_3JiCFmSej76oS8oRepiUcbCsrit8",
+    "url": "https://vetted-saa-s-blueprint-mursysw5p-michaelchamboko-gravityclaw.vercel.app",
+    "custom_domain": "https://vettedsaasblueprint.online",
+    "state": "READY",
+    "target": "production",
+    "source": "vercel-cli-staged-production-then-promote",
+    "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J"
+  },
+  "pre_deploy_gates": {
+    "repository_guard": "passed",
+    "repository_text_validation": "passed",
+    "lint": "passed with 0 errors and 128 warnings",
+    "typecheck": "passed",
+    "tests": "277 passed, 0 failed, 3 skipped because Windows symlink privilege is unavailable",
+    "production_build": "passed with 129 generated pages",
+    "public_site_validation": "passed",
+    "impeccable_detector": "0 findings",
+    "independent_review": "APPROVE with no Critical or Important findings"
+  },
+  "staged_artifact_verification": {
+    "authenticated_homepage_status": 200,
+    "homepage_grouped_details": 3,
+    "accordion_markup_present": true,
+    "decision_routes_present": true
+  },
+  "production_verification": {
+    "homepage_status": 200,
+    "decision_hub_status": 200,
+    "solution_hub_status": 200,
+    "scenarios_status": 200,
+    "accordion_markup_present": true,
+    "exclusive_state_transfer": "680px open / 310px closed before and after second-summary activation",
+    "mobile_390": "column layout with no horizontal overflow",
+    "browser_console_errors": 0,
+    "vercel_error_logs_last_10_minutes": 0
+  },
+  "known_non_blocking_build_output": [
+    "Next.js middleware convention deprecation warning",
+    "Next.js Edge Runtime deprecation warning",
+    "npm audit reports 9 dependency findings: 8 high and 1 critical"
+  ]
+}

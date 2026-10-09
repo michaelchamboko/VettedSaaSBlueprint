@@ -1,6 +1,6 @@
 # Decision Guide Accordion Card Amendment — Implementation Plan
 
-Status: implemented, independently reviewed, and authorized for production deployment
+Status: implemented, independently reviewed, deployed to production, and live-verified
 Branch: `codex/decision-card-accordion`
 Base: `origin/main` at `c6254d70e75dc48a01439a7428c196cad45e66e3`
 Approved direction: Concept 1, expanding editorial stack
