@@ -142,7 +142,9 @@ test("reference renderer uses the approved font, concise hero, and private visua
   assert.match(renderer, /throw new Error\("reference_composed_v1 pages require a hero answer snippet\."\)/);
   assert.match(renderer, /figcaption className="sr-only"/);
   assert.doesNotMatch(renderer, />Fit assessment</);
-  assert.doesNotMatch(css, /writing-mode:\s*vertical-rl/);
+  const referenceRules = css.match(/[^{}]*\.landing-reference-composed[^{}]*\{[^{}]*\}/g) ?? [];
+  assert.ok(referenceRules.length > 0);
+  assert.doesNotMatch(referenceRules.join("\n"), /writing-mode:\s*vertical-rl/);
   assert.match(css, /font-size:\s*clamp\(62px, 10vw, 112px\)/);
 });
 

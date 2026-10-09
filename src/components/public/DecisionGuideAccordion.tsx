@@ -1,4 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
+
+const guideImages = ["decision", "solution", "scenario"];
 
 type DecisionGuideItem = {
   title: string;
@@ -31,10 +34,13 @@ export function DecisionGuideAccordion({
               <span className="decision-guide-card__index" aria-hidden="true">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span>{item.title}</span>
+              <span className="decision-guide-card__title">{item.title}</span>
             </h3>
           </summary>
           <div className="decision-guide-card__panel">
+            <div className="decision-guide-card__image">
+              <Image src={`/images/decision-guides/${guideImages[index % guideImages.length]}.png`} alt="" width={1122} height={1402} sizes="(max-width: 800px) 90vw, 45vw" />
+            </div>
             <p>{item.description}</p>
             <Link href={item.href}>
               Open guide <span aria-hidden="true">→</span>

@@ -67,15 +67,41 @@ test("decision guide accordion communicates state across desktop, mobile, focus,
     const summaries = group.locator("summary");
     const panels = group.locator(".decision-guide-card__panel");
     const initialWidths = await cards.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().width));
+    const deckLayout = await group.evaluate((deck) => {
+      const intro = deck.parentElement!.querySelector(".section-heading")!.getBoundingClientRect();
+      const deckRect = deck.getBoundingClientRect();
+      const first = deck.querySelector("details")!.getBoundingClientRect();
+      const second = deck.querySelectorAll("details")[1].getBoundingClientRect();
+      return { sideBySide: intro.right <= deckRect.left, overlap: first.right - second.left };
+    });
+    assert.equal(deckLayout.sideBySide, true, "desktop introduction should sit beside the deck");
+    assert.ok(deckLayout.overlap > 0, "closed tabs should tuck behind the active card");
+    const darkTab = await cards.nth(1).evaluate((card) => ({ background: getComputedStyle(card).backgroundColor, color: getComputedStyle(card).color }));
+    assert.equal(darkTab.background, "rgb(29, 33, 29)");
+    assert.equal(darkTab.color, "rgb(251, 248, 241)");
+    const button = await panels.nth(0).locator("a").evaluate((link) => ({ background: getComputedStyle(link).backgroundColor, height: link.getBoundingClientRect().height }));
+    assert.notEqual(button.background, "rgba(0, 0, 0, 0)");
+    assert.ok(button.height >= 48);
+    const imageInset = await panels.nth(0).locator("img").evaluate((image) => {
+      const frame = image.closest("details")!.getBoundingClientRect();
+      const rect = image.getBoundingClientRect();
+      return rect.top > frame.top && rect.right < frame.right && rect.bottom < frame.bottom;
+    });
+    assert.equal(imageInset, true, "photograph should retain a paper margin");
 
-    assert.ok(initialWidths[0] >= initialWidths[1] * 1.5, `expected the open card to dominate: ${initialWidths.join(", ")}`);
+    assert.ok(initialWidths[0] >= initialWidths[1] * 5, `expected the open card to dominate: ${initialWidths.join(", ")}`);
+    assert.ok(initialWidths[1] <= 120, `expected a narrow closed tab: ${initialWidths[1]}`);
+    assert.equal(await cards.nth(1).locator("h3 > span:last-child").evaluate((title) => getComputedStyle(title).writingMode), "vertical-rl");
+    assert.equal(await panels.nth(0).locator("img").isVisible(), true);
     assert.equal(await panels.nth(0).isVisible(), true);
     assert.equal(await panels.nth(1).isVisible(), false);
 
     await summaries.nth(1).click();
     await page.waitForTimeout(500);
     const transferredWidths = await cards.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().width));
-    assert.ok(transferredWidths[1] >= transferredWidths[0] * 1.5, `expected dominance to transfer: ${transferredWidths.join(", ")}`);
+    assert.ok(transferredWidths[1] >= transferredWidths[0] * 5, `expected dominance to transfer: ${transferredWidths.join(", ")}`);
+    assert.equal(await cards.nth(0).locator("h3 > span:last-child").evaluate((title) => getComputedStyle(title).writingMode), "vertical-rl");
+    assert.equal(await panels.nth(1).locator("img").isVisible(), true);
     assert.equal(await panels.nth(0).isVisible(), false);
     assert.equal(await panels.nth(1).isVisible(), true);
 
@@ -98,6 +124,11 @@ test("decision guide accordion communicates state across desktop, mobile, focus,
       }));
       assert.equal(mobileState.flexDirection, "column");
       assert.equal(mobileState.overflows, false);
+      const groupWidth = await group.evaluate((element) => element.getBoundingClientRect().width);
+      for (const card of await cards.all()) {
+        assert.ok(Math.abs(await card.evaluate((element) => element.getBoundingClientRect().width) - groupWidth) < 2);
+        assert.equal(await card.locator("h3 > span:last-child").evaluate((title) => getComputedStyle(title).writingMode), "horizontal-tb");
+      }
     }
 
     await page.emulateMedia({ reducedMotion: "reduce" });

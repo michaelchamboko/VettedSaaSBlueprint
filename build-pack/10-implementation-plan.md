@@ -1,148 +1,148 @@
-# Decision Guide Accordion Card Amendment — Implementation Plan
+# Decision Guide Card Fix — Vercel Release Plan
 
-Status: implemented, independently reviewed, deployed to production, and live-verified
+Status: corrected implementation verified locally; commit, push, staged production deployment, promotion, and live verification pending
 Branch: `codex/decision-card-accordion`
-Base: `origin/main` at `c6254d70e75dc48a01439a7428c196cad45e66e3`
-Approved direction: Concept 1, expanding editorial stack
+Current branch commit: `18ba821cf1fa565a359ff7db99f1bd9501ebe8ac`
+Vercel project: `vetted-saa-s-blueprint` (`prj_6ymKeAz0lqMs8LYvplkn4AKMya7J`)
+Vercel team: `team_0Vjm5yuoHjiIcGq0hoJMm5vC`
+Production domain: `https://vettedsaasblueprint.online`
+Rollback deployment: `dpl_3JiCFmSej76oS8oRepiUcbCsrit8`
 
 ## 1. Objective
 
-Replace the homepage's static, equal-width decision-guide card rows with one reusable expanding editorial accordion. Preserve the existing VettedSaaSBlueprint paper, ink, clay, sage, serif, and sans-serif identity. Keep all current routes and source-bound copy unchanged.
+Release the owner-approved cascading decision-guide card fix to Vercel without rebuilding unrelated surfaces. The release must promote the same production artifact that passes staged verification, preserve all existing routes and copy, and leave a recoverable rollback to the currently live deployment.
 
-The amendment applies to every three-card decision-guide group rendered on the homepage so the initial guide group and generated decision-set groups do not diverge visually.
+## 2. Release scope
 
-## 2. Authority and constraints
+Expected application changes:
 
-- **User directive:** Concept 1 is approved for implementation. This is a card interaction and presentation amendment, not a site rebrand.
-- **Repository fact:** D04 §6.2, Taste Skill role (`D04-S-c52a0e3d7a64`), sets Decision Hub working ranges of design variance 5–7, motion intensity 4–6, and visual density 5–7.
-- **Repository fact:** D04 §7.4, purposeful microinteractions (`D04-S-50c9466739ae`), requires interaction to communicate state, progress, relationship, or confirmation.
-- **Repository fact:** D04 §18.2, control feedback and context-preserving transitions (`D04-S-c95a9cafb49e`, `D04-S-4ada08689845`), explicitly includes accordions and evidence expansion.
-- **Repository fact:** D04 §18.3, motion eligibility (`D04-S-7c9f562cef00`), permits motion only when it supports the decision or confirms an action.
-- **Repository fact:** D04 §24.3, required accessibility checks (`D04-S-f0fcea5c8b33`), requires keyboard navigation, visible focus, reduced motion, screen-reader meaning, mobile reflow, non-colour state, and adequate targets.
-- **Repository fact:** D04 §32 Stage 4 (`D04-S-1daaf8613a03`) requires Taste and Impeccable review, hierarchy correction, purposeful motion, anti-pattern removal, and documentation.
-- **Scope guard:** Do not add the mockup's invented “Evidence current” label, new claims, imagery, routes, analytics, dependencies, or global redesign.
+- `src/components/public/DecisionGuideAccordion.tsx`
+- scoped decision-guide rules in `src/app/globals.css`
+- `tests/decision-guide-accordion.test.ts`
+- the narrowed vertical-text assertion in `tests/reference-composed-renderer.test.ts`
+- `public/images/decision-guides/decision.png`
+- `public/images/decision-guides/solution.png`
+- `public/images/decision-guides/scenario.png`
 
-## 3. Design Read
+Expected review evidence:
 
-Reading this as: a narrow refinement of a trust-first editorial SaaS homepage for evidence-conscious buyers, preserving the established identity while replacing an equal-card grid with a clearer progressive-disclosure interaction.
+- `.impeccable/review/desktop.png`
+- `.impeccable/review/mobile.png`
+- `.impeccable/review/direction.md`
 
-Working dials: `DESIGN_VARIANCE: 6`, `MOTION_INTENSITY: 5`, `VISUAL_DENSITY: 5`.
+No database migration, environment-variable change, route change, dependency addition, DNS change, Vercel configuration change, or automation change is required.
 
-## 4. Technical decision
+## 3. Pre-commit gate
 
-Use native HTML `<details>` and `<summary>` elements grouped with a unique `name` per card set. The first card starts open. This gives keyboard operation, disclosure semantics, and no-JavaScript functionality without adding client state or another dependency.
+1. Inspect the managed worktree and enumerate every modified or untracked file.
+2. Reject unrelated files; the commit must contain only the release scope above and any required receipt update created after deployment.
+3. Confirm the generated images contain no text, logo, or claim and are referenced through local `/images/decision-guides/*` paths.
+4. Run the release gates from the linked project root:
+   - `npm run lint`
+   - `npm run typecheck`
+   - `npm test`
+   - `npm run build`
+   - `npm run validate:public-site`
+5. Require these results before committing:
+   - lint: 0 errors;
+   - typecheck: exit 0;
+   - tests: 277 passed, 0 failed, with only the three recorded Windows symlink skips;
+   - production build: exit 0 and 129 static pages;
+   - public-site validation: exit 0;
+   - Impeccable detector: 0 findings;
+   - finish review: `ship` for all six reviewed fixes.
 
-Desktop presentation uses a horizontal flex accordion: the open item grows, exposes its description and action, and receives one restrained offset shadow; closed items retain their number and title. Mobile presentation becomes a vertical accordion with the same semantics. Hover may preview emphasis, but only an explicit disclosure action changes state.
+## 4. Commit and push
 
-The existing GSAP homepage reveal may continue to target each item through `data-home-motion="review-card"`; the accordion itself remains native and CSS-driven. `HomepageMotion.tsx` should remain unchanged unless browser verification proves a real conflict.
+1. Create one focused commit on `codex/decision-card-accordion`, for example: `fix: match approved decision guide card deck`.
+2. Confirm the committed diff still matches the release scope and contains no credentials, `.env` files, browser state, or Vercel authentication data.
+3. Push the branch to `origin/codex/decision-card-accordion`.
+4. Record the resulting commit SHA. That SHA becomes the release identity used by the deployment receipt and verification evidence.
 
-## 5. Development tasks
+## 5. Stage the production artifact
 
-### Task 1 — Accordion semantics and homepage integration
+Use the repository's existing Vercel link in `.vercel/project.json`; do not relink or change project/team settings.
 
-Write `tests/decision-guide-accordion.test.ts` first. Render the real homepage with `react-dom/server`, load the rendered markup in Playwright, and assert the visitor-visible contract:
+1. Confirm the CLI target before release:
+   - team: `team_0Vjm5yuoHjiIcGq0hoJMm5vC`;
+   - project: `prj_6ymKeAz0lqMs8LYvplkn4AKMya7J`;
+   - environment: production;
+   - commit: the SHA created in section 4.
+2. Stage a production deployment without assigning the production domain:
+   - `vercel deploy --prod --skip-domain`
+3. Capture the returned deployment ID and `vercel.app` URL.
+4. Run `vercel inspect <staged-url>` and require `READY` before browser verification.
 
-- every decision-guide group contains three native `<details>` disclosures and three `<summary>` controls;
-- each group has its own disclosure `name`, with one item open by default;
-- titles, descriptions, and destination links remain available in server-rendered markup;
-- opening a second item closes the first without application JavaScript;
-- the existing initial routes and generated decision-set routes remain unchanged.
+This follows the prior successful release path and avoids testing one artifact before rebuilding a different artifact for production.
 
-Run the focused test before production code. Expected: FAIL because the current homepage renders equal `<article>` cards and no disclosures.
+## 6. Verify the staged deployment
 
-Then create `src/components/public/DecisionGuideAccordion.tsx` and modify `src/app/page.tsx`:
+Verify the staged production URL, not localhost and not the existing custom domain.
 
-- define only `title`, `description`, and `href` in the local item contract;
-- accept a unique `groupName` and the three-item array;
-- render a labelled list with grouped native `<details>` elements and the first item open;
-- use `<summary>` as the disclosure control and keep a semantic level-three card heading;
-- place the existing description and `Open guide` link in the revealed panel;
-- preserve `data-home-motion="review-card"`;
-- replace both duplicated homepage maps with the shared component;
-- preserve all copy, routes, section order, and labels;
-- add no client state, pointer tracking, dependency, image, or claim.
+Automated checks:
 
-Run:
+- homepage returns 200;
+- `/decision-hub`, `/solution-hub`, and `/scenarios` return 200;
+- homepage contains three named native disclosures per guide group;
+- one disclosure starts open and state transfers when another summary is activated;
+- all existing guide hrefs are unchanged;
+- no horizontal overflow at 390px and 320px;
+- reduced-motion mode removes authored card motion;
+- browser console reports zero errors.
 
-`node --test --import tsx tests/decision-guide-accordion.test.ts tests/public-home.test.ts`
+Visual checks:
 
-Expected: PASS.
+- at 1440px the introduction is left and the cascading deck is right;
+- the active card contains grouped copy, clay action, and inset image;
+- closed tabs overlap the active card, with dark `02` and paper `03` states;
+- opening `02` transfers the active-card presentation and returns it to paper;
+- mobile shows the active card followed by two full-width horizontal disclosures;
+- keyboard focus remains visible on summaries and the guide link.
 
-### Task 2 — Responsive visual interaction
+Do not promote if the staged render differs materially from `.impeccable/review/desktop.png` or `.impeccable/review/mobile.png`.
 
-Extend the same Playwright test before changing styles. Use the real rendered homepage and production stylesheet to assert:
+## 7. Promote and verify production
 
-- at 1440px the open card is materially wider than a closed card;
-- activating another summary transfers the dominant state;
-- the open panel is visible and closed panels are hidden;
-- summary focus has a visible outline and important controls are at least 44px high;
-- at 390px and 320px the disclosures stack without horizontal overflow;
-- under reduced motion, accordion transitions and transforms resolve to none.
+1. Promote the verified staged artifact without rebuilding it:
+   - `vercel promote <staged-url-or-deployment-id>`
+2. Confirm `https://vettedsaasblueprint.online` resolves to the promoted deployment.
+3. Repeat the route, interaction, responsive, focus, console, and visual smoke checks against the custom domain.
+4. Inspect recent production errors:
+   - `vercel logs <production-url> --level error --since 1h`
+5. Require zero card-related runtime or asset errors before closing the release.
 
-Run the focused test. Expected: FAIL because the existing stylesheet uses an equal three-column grid and has no accordion states.
+## 8. Receipt and evidence
 
-Then modify only the decision-guide selectors in `src/app/globals.css`:
+Update `build-pack/evidence/DECISION-CARD-ACCORDION/deploy-receipt.json` only after production verification. Record:
 
-- replace the equal grid with a desktop horizontal expanding layout;
-- give the open item increased width, a warm-paper surface, 12–16px radius, and one soft offset shadow;
-- keep clay for sequence/state, near-black for primary text, and existing muted ink for body copy;
-- keep closed titles readable and summary controls at least 44px high;
-- add explicit hover, open, and `:focus-visible` states that do not rely on colour alone;
-- animate only flex growth, content continuity, indicator rotation, and restrained shadow changes;
-- remove those transitions and transforms under `prefers-reduced-motion: reduce`;
-- use a vertical mobile accordion with full-width actions and no clipping;
-- remove superseded grid-card rules instead of layering contradictory styles.
+- authorization source and timestamp;
+- deployed commit SHA and branch;
+- deployment ID, staged URL, custom domain, target, state, project, and release method;
+- each pre-deploy gate result;
+- staged and production route/interaction/viewport results;
+- browser console result and Vercel error-log scan;
+- known non-blocking platform warnings, kept separate from failures.
 
-Run the focused test again. Expected: PASS.
+Commit and push the receipt as a documentation-only follow-up commit. The receipt commit is not the deployed application commit and must name the deployed SHA explicitly.
 
-### Task 3 — Full verification and mandatory design review
+## 9. Rollback
 
-Run, in order:
+Rollback trigger: any broken public route, missing card asset, unusable disclosure state, mobile overflow, inaccessible control, browser runtime error, or material mismatch with the approved captures.
 
-1. `npm run lint`
-2. `npm run typecheck`
-3. `npm test`
-4. `npm run build`
-5. `npm run validate:public-site`
+Rollback procedure:
 
-Expected: every command exits 0.
+1. Promote the last verified production deployment `dpl_3JiCFmSej76oS8oRepiUcbCsrit8`.
+2. Verify the custom domain and core public routes return 200.
+3. Record the rollback deployment, reason, time, and verification results in the deployment receipt/evidence directory.
+4. Do not patch production in place. Correct the branch, repeat all gates, create a new staged production artifact, and promote only after verification.
 
-Render and inspect desktop and mobile together, including 1440px, tablet, 390px, 320px, 200% text zoom, keyboard focus, JavaScript disabled, and reduced motion. Record the bounded evidence under `build-pack/evidence/DECISION-CARD-ACCORDION/`.
+## 10. Completion criteria
 
-Run the mandatory design review:
+The release is complete only when:
 
-Before editing, run:
-
-`./.agents/skills/impeccable/scripts/impeccable.cmd context --target src/app/page.tsx`
-
-After the first verified render, inspect desktop and mobile together, then run:
-
-1. `./.agents/skills/impeccable/scripts/impeccable.cmd critique src/app/page.tsx`
-2. `./.agents/skills/impeccable/scripts/impeccable.cmd audit src/app/page.tsx`
-3. `./.agents/skills/impeccable/scripts/impeccable.cmd detect src/app/page.tsx`
-
-Correct findings in one bounded pass and confirm once. Record screenshots for desktop, mobile, keyboard focus, JavaScript-disabled, and reduced-motion states under `build-pack/evidence/DECISION-CARD-ACCORDION/`.
-
-## 6. Acceptance criteria
-
-- All homepage decision-guide groups use the approved expanding editorial design.
-- One card is open by default; another can be opened with pointer, keyboard, and touch.
-- Disclosure state is announced semantically and remains understandable without colour or motion.
-- The component works without JavaScript; reduced motion produces an immediate, non-animated state change.
-- Existing copy, claims, URLs, source evidence, and global brand tokens remain unchanged.
-- No new runtime dependency is added.
-- Desktop, tablet, 390px mobile, 320px mobile, and 200% text zoom pass visual inspection.
-- Focused tests, lint, typecheck, full tests, production build, and public-site validation pass.
-- Impeccable critique, audit, and detect outputs are resolved or explicitly recorded.
-
-## 7. Explicit non-goals
-
-- No redesign of review cards, studio categories, legal pages, headers, footers, or decision-journey pages.
-- No new image asset from the approval mockup.
-- No generated evidence status, ranking, recommendation, or commercial copy.
-- No analytics event, database, API, deployment, or automation change.
-- No source-strategy amendment.
-
-## 8. Rollback boundary
-
-The change is isolated to the new component, the two homepage call sites, scoped CSS, and focused tests. Rollback removes the component, restores the two existing maps and the prior `.decision-guide-catalogue__grid` rules, and leaves every route and content record untouched.
+- the scoped fix is committed and pushed;
+- the exact staged production artifact passes automated and visual verification;
+- that artifact is promoted to the custom domain;
+- live routes, interactions, responsive layouts, console, and Vercel error logs pass;
+- the deployment receipt records the deployed application commit and production deployment ID;
+- rollback remains available and documented.
