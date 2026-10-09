@@ -1,0 +1,122 @@
+{
+  "desktop": {
+    "cardWidths": [
+      680,
+      310,
+      310
+    ],
+    "flexDirection": "row",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      164,
+      324,
+      324
+    ]
+  },
+  "tablet": {
+    "cardWidths": [
+      420,
+      192,
+      192
+    ],
+    "flexDirection": "row",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      126,
+      318,
+      318
+    ]
+  },
+  "mobile": {
+    "cardWidths": [
+      350,
+      350,
+      350
+    ],
+    "flexDirection": "column",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      101,
+      191,
+      191
+    ]
+  },
+  "mobile320": {
+    "cardWidths": [
+      280,
+      280,
+      280
+    ],
+    "flexDirection": "column",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      96,
+      186,
+      211
+    ]
+  },
+  "noJavaScript": {
+    "cardWidths": [
+      350,
+      350,
+      350
+    ],
+    "flexDirection": "column",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      101,
+      191,
+      191
+    ]
+  },
+  "reducedMotion": {
+    "cardWidths": [
+      350,
+      350,
+      350
+    ],
+    "flexDirection": "column",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      101,
+      191,
+      191
+    ]
+  },
+  "keyboardFocus": {
+    "cardWidths": [
+      310,
+      680,
+      310
+    ],
+    "flexDirection": "row",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      324,
+      164,
+      324
+    ]
+  },
+  "textZoom200": {
+    "cardWidths": [
+      668,
+      305,
+      305
+    ],
+    "flexDirection": "row",
+    "openCount": 1,
+    "overflows": false,
+    "summaryHeights": [
+      242,
+      638,
+      638
+    ]
+  }
+}

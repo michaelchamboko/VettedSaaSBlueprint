@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 
 import { HomepageMotion } from "@/components/public/HomepageMotion";
+import { DecisionGuideAccordion } from "@/components/public/DecisionGuideAccordion";
 import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { PublicReviewCard } from "@/components/public/PublicReviewCard";
 import { listPublishedLandingPageSummaries } from "@/lib/generated/landing-pages";
@@ -59,14 +60,11 @@ export default function Home() {
             <h2 id="decision-guides-title">Start with the situation, not a vendor list.</h2>
             <p>A connected, source-bound path for a five-person team choosing software without a technical administrator.</p>
           </div>
-          <div className="decision-guide-catalogue__grid">
-            {decisionGuides.map(([title, description, href], index) => (
-              <article key={href} data-home-motion="review-card">
-                <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                <h3>{title}</h3><p>{description}</p><Link href={href}>Open guide <span aria-hidden="true">→</span></Link>
-              </article>
-            ))}
-          </div>
+          <DecisionGuideAccordion
+            groupName="homepage-decision-guides"
+            labelledBy="decision-guides-title"
+            items={decisionGuides.map(([title, description, href]) => ({ title, description, href }))}
+          />
         </section>
 
         {decisionSets.map((set) => (
@@ -76,11 +74,15 @@ export default function Home() {
               <h2 id={`decision-set-${set.slug}`}>{set.title}</h2>
               <p>{set.userProblem}</p>
             </div>
-            <div className="decision-guide-catalogue__grid">
-              {[["Decision guide", set.pages.decisionHub.canonicalPath], ["Solution guide", set.pages.solutionHub.canonicalPath], ["Worked scenario", set.pages.scenario.canonicalPath]].map(([title, href], index) => (
-                <article key={href} data-home-motion="review-card"><span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><h3>{title}</h3><p>{set.pages[index === 0 ? "decisionHub" : index === 1 ? "solutionHub" : "scenario"].decisionContext}</p><Link href={href}>Open guide <span aria-hidden="true">→</span></Link></article>
-              ))}
-            </div>
+            <DecisionGuideAccordion
+              groupName={`decision-set-${set.slug}`}
+              labelledBy={`decision-set-${set.slug}`}
+              items={[
+                { title: "Decision guide", description: set.pages.decisionHub.decisionContext, href: set.pages.decisionHub.canonicalPath },
+                { title: "Solution guide", description: set.pages.solutionHub.decisionContext, href: set.pages.solutionHub.canonicalPath },
+                { title: "Worked scenario", description: set.pages.scenario.decisionContext, href: set.pages.scenario.canonicalPath },
+              ]}
+            />
           </section>
         ))}
 
