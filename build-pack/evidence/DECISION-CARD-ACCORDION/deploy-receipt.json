@@ -2,50 +2,107 @@
   "schema_version": "1",
   "kind": "manual-production-deploy",
   "status": "verified",
-  "authorized_by": "Product owner directive: approved push and deploy to vercel (2026-10-09)",
-  "completed_at": "2026-10-09T09:41:57.768Z",
-  "deployed_commit": "5a87d0cc9ae4c06d669fd4476e7ed1e3e8c01b82",
+  "authorization": {
+    "source": "Product owner directive: approved build and deployment",
+    "date": "2026-10-09"
+  },
+  "recorded_at": "2026-10-09T11:07:26Z",
+  "deployed_commit": "4e4eae1985cad94d4e587560e603aff8b87f33d9",
   "branch": "codex/decision-card-accordion",
   "deployment": {
-    "id": "dpl_3JiCFmSej76oS8oRepiUcbCsrit8",
-    "url": "https://vetted-saa-s-blueprint-mursysw5p-michaelchamboko-gravityclaw.vercel.app",
+    "id": "dpl_4LM6F6NaAaY5ou5TwLiT2SN9ewBp",
+    "url": "https://vetted-saa-s-blueprint-qsfhfl72y-michaelchamboko-gravityclaw.vercel.app",
     "custom_domain": "https://vettedsaasblueprint.online",
     "state": "READY",
     "target": "production",
     "source": "vercel-cli-staged-production-then-promote",
-    "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J"
+    "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "team": "team_0Vjm5yuoHjiIcGq0hoJMm5vC",
+    "created_at": "2026-10-09T10:50:38.172Z",
+    "promotion": {
+      "command": "vercel promote https://vetted-saa-s-blueprint-qsfhfl72y-michaelchamboko-gravityclaw.vercel.app",
+      "result": "success",
+      "observed_at": "2026-10-09T11:07:26Z",
+      "domain_resolves_to_deployment_id": true
+    }
   },
   "pre_deploy_gates": {
     "repository_guard": "passed",
     "repository_text_validation": "passed",
     "lint": "passed with 0 errors and 128 warnings",
-    "typecheck": "passed",
+    "typecheck": "passed on serial rerun after removing one malformed ignored .next/dev/types/validator.ts artifact; generated next-env.d.ts change was restored",
     "tests": "277 passed, 0 failed, 3 skipped because Windows symlink privilege is unavailable",
     "production_build": "passed with 129 generated pages",
     "public_site_validation": "passed",
     "impeccable_detector": "0 findings",
-    "independent_review": "APPROVE with no Critical or Important findings"
+    "impeccable_finish_review": {
+      "disposition": "ship",
+      "fixes_resolved": 6,
+      "reviewer_verdict": "independent Impeccable finish reviewer confirmed fixes 1-6 resolved and approved ship; result relayed by parent agent",
+      "build_phase_state_recorder": "not recorded: .impeccable/build/state.json was absent; this optional recorder is separate from the completed reviewer verdict"
+    },
+    "rtk_wrapper": "unavailable; direct npm, git, and Vercel commands used under parent-approved fallback",
+    "app_commit_push": "passed; commit 4e4eae1985cad94d4e587560e603aff8b87f33d9 pushed to origin/codex/decision-card-accordion"
   },
   "staged_artifact_verification": {
-    "authenticated_homepage_status": 200,
-    "homepage_grouped_details": 3,
-    "accordion_markup_present": true,
-    "decision_routes_present": true
+    "deployment_id": "dpl_4LM6F6NaAaY5ou5TwLiT2SN9ewBp",
+    "inspect_state": "READY",
+    "authenticated_cli_route_statuses": {
+      "/": 200,
+      "/decision-hub": 200,
+      "/solution-hub": 200,
+      "/scenarios": 200
+    },
+    "homepage_markup": {
+      "groups": 2,
+      "named_native_disclosures": 6,
+      "disclosures_per_group": 3,
+      "one_open_per_group": true,
+      "existing_guide_paths_preserved": true
+    },
+    "staged_browser_access": "Direct browser navigation was redirected to Vercel login by deployment protection. Authenticated Vercel CLI retrieved the exact staged HTML, stylesheet, and image assets; a local Playwright render of those resources verified card state transfer, desktop layout, 390px/320px overflow, reduced motion, and visible focus. Scripts were omitted in this isolated render; the full script-enabled browser check was completed against production after promotion.",
+    "visual_review": "settled 1440px and mobile captures matched the approved cascading card direction; active 02 state and its image loaded"
   },
   "production_verification": {
-    "homepage_status": 200,
-    "decision_hub_status": 200,
-    "solution_hub_status": 200,
-    "scenarios_status": 200,
-    "accordion_markup_present": true,
-    "exclusive_state_transfer": "680px open / 310px closed before and after second-summary activation",
-    "mobile_390": "column layout with no horizontal overflow",
-    "browser_console_errors": 0,
-    "vercel_error_logs_last_10_minutes": 0
+    "verified_at": "2026-10-09T11:07:26Z",
+    "domain_deployment_id": "dpl_4LM6F6NaAaY5ou5TwLiT2SN9ewBp",
+    "route_statuses": {
+      "/": 200,
+      "/decision-hub": 200,
+      "/solution-hub": 200,
+      "/scenarios": 200
+    },
+    "homepage": {
+      "title": "VettedSaaSBlueprint — Practical SaaS reviews",
+      "groups": 2,
+      "native_disclosures": 6,
+      "initially_open_per_group": 1,
+      "guide_paths_preserved": true
+    },
+    "browser": {
+      "desktop_1440": "introduction left of cascading deck; 793.625px active card, 80px closed tabs, 16px overlap",
+      "state_transfer": "second and third summaries each became the sole open card",
+      "decision_image_loaded": true,
+      "solution_image_loaded": true,
+      "scenario_image_loaded": true,
+      "keyboard_focus": "visible 3px summary outline and visible guide-link outline",
+      "viewport_390": "three full-width cards, 350px each; no horizontal overflow",
+      "viewport_320": "three full-width cards, 280px each; no horizontal overflow",
+      "reduced_motion": "card transition 0s; transform none",
+      "console_errors": 0,
+      "failed_requests": 0
+    },
+    "vercel_error_logs_last_1h": "0 error records returned for the promoted deployment"
   },
-  "known_non_blocking_build_output": [
-    "Next.js middleware convention deprecation warning",
-    "Next.js Edge Runtime deprecation warning",
-    "npm audit reports 9 dependency findings: 8 high and 1 critical"
+  "rollback": {
+    "previous_production_deployment_id": "dpl_3JiCFmSej76oS8oRepiUcbCsrit8",
+    "needed": false
+  },
+  "known_non_blocking_warnings": [
+    "RTK token-filtering proxy was absent; direct commands were used per parent-approved fallback, and no software was installed.",
+    "Lint reported 128 warnings and 0 errors.",
+    "Next.js reported middleware-convention and Edge Runtime deprecation warnings.",
+    "Vercel remote install audit reported 9 dependency findings: 8 high and 1 critical.",
+    "The separate Impeccable build-phase state recorder could not run because .impeccable/build/state.json was absent; the independent finish reviewer supplied the ship verdict for all six fixes."
   ]
 }
