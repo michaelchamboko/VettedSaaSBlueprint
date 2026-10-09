@@ -3,7 +3,6 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { activeDecisionGuideIndex } from "./decision-guide-progress";
 
 export function HomepageMotion() {
   const initialized = useRef(false);
@@ -23,12 +22,28 @@ export function HomepageMotion() {
         {
           motion: "(prefers-reduced-motion: no-preference)",
           desktop: "(min-width: 768px)",
-          guideDesktop: "(min-width: 801px)",
+          guideHover: "(min-width: 801px) and (hover: hover) and (pointer: fine)",
         },
         ({ conditions }) => {
+          const removeGuideListeners: (() => void)[] = [];
+          if (conditions?.guideHover) {
+            gsap.utils.toArray<HTMLElement>(".decision-guide-accordion").forEach((deck) => {
+              const cards = Array.from(deck.querySelectorAll<HTMLDetailsElement>("details"));
+              cards.forEach((card) => {
+                const reveal = (event: PointerEvent) => {
+                  if (event.pointerType === "touch") return;
+                  cards.forEach((item) => { item.open = item === card; });
+                };
+                card.addEventListener("pointerenter", reveal);
+                removeGuideListeners.push(() => card.removeEventListener("pointerenter", reveal));
+              });
+            });
+          }
+          const cleanupGuides = () => removeGuideListeners.forEach((remove) => remove());
+
           if (!conditions?.motion) {
             gsap.set("[data-home-motion]", { clearProps: "all" });
-            return;
+            return cleanupGuides;
           }
 
           gsap.timeline({ defaults: { ease: "power3.out" } })
@@ -48,35 +63,7 @@ export function HomepageMotion() {
             },
           });
 
-          const restoreGuides: (() => void)[] = [];
-          if (conditions.guideDesktop) {
-            gsap.utils.toArray<HTMLElement>(".decision-guide-accordion").forEach((deck) => {
-              const cards = Array.from(deck.querySelectorAll<HTMLDetailsElement>("details"));
-              const initialOpen = cards.map((card) => card.open);
-              const activate = (activeIndex: number) => {
-                cards.forEach((card, index) => { card.open = index === activeIndex; });
-              };
-
-              // Frame the decision, compare the solution lens, then read the worked scenario.
-              // Native disclosures provide the same reading path without scroll enhancement.
-              activate(0);
-              ScrollTrigger.create({
-                trigger: deck,
-                start: "top 112px",
-                end: () => `+=${Math.min(window.innerHeight, 720)}`,
-                pin: true,
-                invalidateOnRefresh: true,
-                onUpdate: ({ progress }) => activate(activeDecisionGuideIndex(progress, cards.length)),
-              });
-              restoreGuides.push(() => {
-                cards.forEach((card, index) => { card.open = initialOpen[index]; });
-              });
-            });
-          }
-
-          ScrollTrigger.batch(conditions.guideDesktop
-            ? "[data-home-motion='review-card']:not(.decision-guide-accordion)"
-            : "[data-home-motion='review-card']", {
+          ScrollTrigger.batch("[data-home-motion='review-card']", {
             start: "top 88%",
             once: true,
             onEnter: (cards) => gsap.from(cards, {
@@ -97,7 +84,7 @@ export function HomepageMotion() {
               scrollTrigger: { trigger: element, start: "top 86%", once: true },
             });
           });
-          return () => restoreGuides.forEach((restore) => restore());
+          return cleanupGuides;
         },
       );
     }, scope);
