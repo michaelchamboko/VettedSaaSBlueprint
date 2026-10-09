@@ -1,0 +1,45 @@
+{
+  "schema_version": "1",
+  "kind": "manual-production-deploy",
+  "status": "verified",
+  "authorized_by": "Product owner directive: \"deploy\" (2026-10-09)",
+  "deployed_commit": "3545cf476f791b900348e1ff99934cb493e729ca",
+  "source_branch": "codex/studio-gallery-redesign",
+  "deployment": {
+    "id": "dpl_4TQXRqkbjvrBiuhdWtfw4ACT1fAB",
+    "url": "https://vetted-saa-s-blueprint-im2fit5b7-michaelchamboko-gravityclaw.vercel.app",
+    "alias": "https://vettedsaasblueprint.online",
+    "state": "READY",
+    "target": "production",
+    "source": "vercel-cli",
+    "project": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "created_at": "2026-10-09T20:53:57Z"
+  },
+  "scope": {
+    "routes": "/studio/* (25 static briefs)",
+    "verification_route": "/studio/elevenlabs-studio-proof",
+    "change": "Replace repeated filler with product-specific decision guidance, ordered checks, explicit limitations, and disclosure before the affiliate CTA."
+  },
+  "local_gates_before_deploy": {
+    "tests": "290 passed / 0 failed / 3 skipped",
+    "focused_studio_tests": "3 passed / 0 failed",
+    "typecheck": "passed",
+    "lint": "passed with 128 pre-existing warnings",
+    "validate_public_site": "passed",
+    "production_build": "passed (129 routes)"
+  },
+  "production_checks_after_deploy": {
+    "deployment_state": "READY",
+    "custom_domain": "assigned",
+    "route_render": "passed",
+    "headline": "How can you test ElevenLabs in practice?",
+    "ordered_guidance": "01 / 02 / 03 visible",
+    "disclosure_before_cta": "passed",
+    "browser_console": "0 warnings / 0 errors",
+    "vercel_error_logs": "no logs found in the first hour"
+  },
+  "observed_platform_warnings": [
+    "Vercel install reported 9 dependency vulnerabilities: 8 high and 1 critical. This deployment did not change dependencies or assess exploitability.",
+    "Next.js reported the middleware convention and Edge Runtime as deprecated."
+  ]
+}
