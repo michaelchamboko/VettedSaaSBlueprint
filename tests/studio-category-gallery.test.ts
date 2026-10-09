@@ -35,6 +35,8 @@ test("studio gallery preserves native disclosures, ElevenLabs default, and all 2
     assert.ok(category.alt);
   }
   assert.doesNotMatch(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /[←-⇿]/u);
+  assert.match(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /open=\{index === 2\}/);
+  assert.match(readFileSync("src/components/public/StudioCategoryGallery.tsx", "utf8"), /suppressHydrationWarning/);
 });
 
 test("studio images retain accessible descriptions and show one category sprite panel", () => {

@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
 
 import type { getStudioCategories } from "@/lib/studio-catalogue";
 
 export function StudioCategoryGallery({ categories }: { categories: ReturnType<typeof getStudioCategories> }) {
-  const [activeIndex, setActiveIndex] = useState(2);
+  const cardRefs = useRef<Array<HTMLDetailsElement | null>>([]);
+
+  function activate(index: number) {
+    cardRefs.current.forEach((card, cardIndex) => {
+      if (card) card.open = cardIndex === index;
+    });
+  }
 
   return (
     <div className="studio-category-gallery" aria-labelledby="studio-title">
@@ -15,16 +21,18 @@ export function StudioCategoryGallery({ categories }: { categories: ReturnType<t
           className="studio-category-card"
           key={category.slug}
           name="homepage-studio-categories"
-          open={activeIndex === index}
+          open={index === 2}
+          suppressHydrationWarning
+          ref={(card) => { cardRefs.current[index] = card; }}
           style={{ "--studio-accent": category.accent } as CSSProperties}
           onPointerEnter={(event) => {
             if (event.pointerType === "mouse" && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-              setActiveIndex(index);
+              activate(index);
             }
           }}
-          onFocus={() => setActiveIndex(index)}
+          onFocus={() => activate(index)}
         >
-          <summary onClick={(event) => { event.preventDefault(); setActiveIndex(index); }}>
+          <summary onClick={(event) => { event.preventDefault(); activate(index); }}>
             <div className="studio-category-card__heading">
               <p className="studio-category-card__label">{category.label}</p>
               <h3>{category.productName}</h3>
