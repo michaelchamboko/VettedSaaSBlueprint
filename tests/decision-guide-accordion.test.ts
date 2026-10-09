@@ -119,9 +119,12 @@ test("decision guide accordion communicates state across desktop, mobile, focus,
     assert.notEqual(focusState.outlineWidth, "0px");
 
     await page.setViewportSize({ width: 808, height: 668 });
+    const labelTransforms = () => summaries.evaluateAll((items) => items.map((summary) => getComputedStyle(summary, "::after").transform));
+    assert.deepEqual(await labelTransforms(), ["matrix(1, 0, 0, 1, -14, 0)", "none", "none"], "only a closed tab before the active card needs overlap compensation");
     await summaries.nth(2).click();
     await page.waitForTimeout(500);
     assert.notEqual(await cards.nth(2).getAttribute("open"), null);
+    assert.deepEqual(await labelTransforms(), ["matrix(1, 0, 0, 1, -14, 0)", "matrix(1, 0, 0, 1, -14, 0)", "none"]);
     const cardEdges = await cards.evaluateAll((items) => items.map((item) => {
       const { top, bottom } = item.getBoundingClientRect();
       return { top, bottom };
@@ -139,6 +142,7 @@ test("decision guide accordion communicates state across desktop, mobile, focus,
       }));
       assert.equal(mobileState.flexDirection, "column");
       assert.equal(mobileState.overflows, false);
+      assert.deepEqual(await labelTransforms(), ["none", "none", "none"], "mobile labels must retain native unshifted placement");
       const groupWidth = await group.evaluate((element) => element.getBoundingClientRect().width);
       for (const card of await cards.all()) {
         assert.ok(Math.abs(await card.evaluate((element) => element.getBoundingClientRect().width) - groupWidth) < 2);

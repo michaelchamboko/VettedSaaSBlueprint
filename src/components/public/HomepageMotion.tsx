@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { activeDecisionGuideIndex } from "./decision-guide-progress";
 
 export function HomepageMotion() {
   const initialized = useRef(false);
@@ -22,6 +23,7 @@ export function HomepageMotion() {
         {
           motion: "(prefers-reduced-motion: no-preference)",
           desktop: "(min-width: 768px)",
+          guideDesktop: "(min-width: 801px)",
         },
         ({ conditions }) => {
           if (!conditions?.motion) {
@@ -46,7 +48,35 @@ export function HomepageMotion() {
             },
           });
 
-          ScrollTrigger.batch("[data-home-motion='review-card']", {
+          const restoreGuides: (() => void)[] = [];
+          if (conditions.guideDesktop) {
+            gsap.utils.toArray<HTMLElement>(".decision-guide-accordion").forEach((deck) => {
+              const cards = Array.from(deck.querySelectorAll<HTMLDetailsElement>("details"));
+              const initialOpen = cards.map((card) => card.open);
+              const activate = (activeIndex: number) => {
+                cards.forEach((card, index) => { card.open = index === activeIndex; });
+              };
+
+              // Frame the decision, compare the solution lens, then read the worked scenario.
+              // Native disclosures provide the same reading path without scroll enhancement.
+              activate(0);
+              ScrollTrigger.create({
+                trigger: deck,
+                start: "top 112px",
+                end: () => `+=${Math.min(window.innerHeight, 720)}`,
+                pin: true,
+                invalidateOnRefresh: true,
+                onUpdate: ({ progress }) => activate(activeDecisionGuideIndex(progress, cards.length)),
+              });
+              restoreGuides.push(() => {
+                cards.forEach((card, index) => { card.open = initialOpen[index]; });
+              });
+            });
+          }
+
+          ScrollTrigger.batch(conditions.guideDesktop
+            ? "[data-home-motion='review-card']:not(.decision-guide-accordion)"
+            : "[data-home-motion='review-card']", {
             start: "top 88%",
             once: true,
             onEnter: (cards) => gsap.from(cards, {
@@ -67,6 +97,7 @@ export function HomepageMotion() {
               scrollTrigger: { trigger: element, start: "top 86%", once: true },
             });
           });
+          return () => restoreGuides.forEach((restore) => restore());
         },
       );
     }, scope);

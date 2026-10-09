@@ -166,6 +166,9 @@ button, input, textarea, select { font: inherit; }
 .decision-guide-card:not([open]) h3 { justify-items: center; gap: 2rem; font-size: 1.7rem; }
 .decision-guide-card:not([open]) .decision-guide-card__title { writing-mode: vertical-rl; }
 .decision-guide-card:not([open]) summary::after { text-align: center; }
+@media (min-width: 801px) {
+  .decision-guide-card:not([open]):has(~ .decision-guide-card[open]) summary::after { transform: translateX(-.875rem); }
+}
 .decision-guide-card__image { position: absolute; top: 1.25rem; right: 1.25rem; bottom: 1.25rem; width: calc(48% - 1.25rem); overflow: hidden; border-radius: 8px; }
 .decision-guide-card__image img { width: 100%; height: 100%; object-fit: cover; }
 .decision-guide-card__index, .decision-journey__index { color: var(--clay); font-family: Inter, ui-sans-serif, sans-serif; font-size: .72rem; font-weight: 800; letter-spacing: .1em; }
