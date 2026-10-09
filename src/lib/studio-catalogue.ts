@@ -26,7 +26,7 @@ const categories = {
     slug: "commerce-intelligence",
     label: "Commerce intelligence",
     description: "Signals and decision tools for teams operating the digital shelf.",
-    accent: "#b85a1b",
+    accent: "#a84c14",
   },
   audio: {
     slug: "voice-and-audio",
@@ -137,6 +137,8 @@ export function getStudioCategories() {
   return products.map((product) => ({
     ...product.category,
     productName: product.name,
+    visualPosition: product.visualPosition,
+    alt: product.alt,
     pages: studioLandingPages.filter((page) => page.category.slug === product.category.slug),
   }));
 }
