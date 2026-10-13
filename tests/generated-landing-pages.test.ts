@@ -8,12 +8,22 @@ import { getLandingPageManifest, getPublishedLandingPage, listPublishedLandingPa
 
 test("verified agent releases are exposed as published slugs", () => {
   const slugs = listPublishedLandingPageSlugs();
-  assert.deepEqual(slugs, ["elevenlabs-ai-voice-generator", "moosend-email-marketing-automation"]);
+  assert.deepEqual(slugs, [
+    "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+    "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "elevenlabs-ai-voice-generator",
+    "moosend-email-marketing-automation",
+  ]);
 });
 
 test("generated slugs param helper returns route params", () => {
   const params = listPublishedLandingPageParams();
-  assert.deepEqual(params, [{ slug: "elevenlabs-ai-voice-generator" }, { slug: "moosend-email-marketing-automation" }]);
+  assert.deepEqual(params, [
+    { slug: "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces" },
+    { slug: "how-can-growing-brands-automate-on-brand-email-marketing-journeys" },
+    { slug: "elevenlabs-ai-voice-generator" },
+    { slug: "moosend-email-marketing-automation" },
+  ]);
 });
 
 test("published landing page can be retrieved and is schema-valid", () => {
@@ -30,8 +40,8 @@ test("invalid slug format is blocked", () => {
   const invalid = getPublishedLandingPage("../bad/slug");
   assert.equal(invalid, null);
   const manifest = getLandingPageManifest();
-  assert.equal(manifest.length, 2);
-  assert.equal(manifest[0]?.slug, "elevenlabs-ai-voice-generator");
+  assert.equal(manifest.length, 4);
+  assert.equal(manifest[0]?.slug, "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces");
 });
 
 test("missing generated manifest is a valid empty public catalogue", async () => {

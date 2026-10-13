@@ -1,0 +1,64 @@
+{
+  "schema_version": "LandingReleaseReceiptV1",
+  "slug": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+  "path": "/landing-page-builders/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+  "exact_affiliate_url": "https://try.webcatalog.io/vettedsaasblueprint",
+  "url_fingerprint": "9f20064f6b4ce84e3d41da9afe054d0341c50a7c8f3d5c7bae4cbecf7cd8bfeb",
+  "authorization": {
+    "source": "approved-urls.md",
+    "exact_url": "https://try.webcatalog.io/vettedsaasblueprint",
+    "url_fingerprint": "9f20064f6b4ce84e3d41da9afe054d0341c50a7c8f3d5c7bae4cbecf7cd8bfeb"
+  },
+  "artifacts": {
+    "page": {
+      "path": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces.json",
+      "sha256": "0a1f6df497d9046459a592d0f8b523a90a2f2690c60e4da7df4719228a583d21"
+    },
+    "product_evidence": {
+      "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/product-evidence.json",
+      "sha256": "fc2bcdaf11eb2eff61e2a17c17ee4e35986ac5822d7b8d932f0faf66cf7e863b"
+    },
+    "visual_review": {
+      "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/visual-review.json",
+      "sha256": "082e7dd96c07924bfdc244bf4789e5dbeadf779d5294f108dff7e1137b28c90f"
+    },
+    "uniqueness_review": {
+      "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/uniqueness-review.json",
+      "sha256": "66f22f4fefff4c801638ad98c25a5e5a5a37d2e2f09d1ee9288f1bbc89315af6"
+    },
+    "compliance_review": {
+      "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/compliance-review.json",
+      "sha256": "5f95cb04fca4cf3df2cb23dabeaa8e2e9f0e6a57ef64b1171a7584c74fc41dd2"
+    },
+    "conversion_review": {
+      "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/conversion-review.json",
+      "sha256": "0f52839b947792db4544ec47cff5ac47a9921148f618547f4d7b0963630a9a62"
+    },
+    "quality_receipt": {
+      "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/quality.json",
+      "sha256": "5a1345c2de286d9fd2f8f91224231cd2dedea0746dddcd181b6b43c8d86a43b8"
+    }
+  },
+  "checks": {
+    "product_evidence": true,
+    "visual": true,
+    "uniqueness": true,
+    "compliance": true,
+    "conversion": true,
+    "quality": true,
+    "exact_cta": true,
+    "disclosure": true,
+    "preview": true,
+    "clean_build": true
+  },
+  "release": {
+    "reviewed_commit": "525b21c4c8a48c8a9dfd7d72dc5bc971c2080ef1",
+    "preview_url": "https://vetted-saa-s-blueprint-iiig853bb-michaelchamboko-gravityclaw.vercel.app/landing-page-previews/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+    "verified_at": "2026-10-13T07:36:00.000Z"
+  },
+  "claims_removed_or_softened": [
+    "Removed unsupported RAM, CPU, speed and security claims.",
+    "Corrected Basic space count; omitted unsupported lifetime licensing and precise price claims.",
+    "Removed competitor comparisons without evidence."
+  ]
+}

@@ -28,7 +28,30 @@
   ],
   "affiliate": {
     "original_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
-    "authorization_source": "approved-urls.md"
+    "authorization_source": "approved-urls.md",
+    "destination_review": {
+      "exact_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+      "state": "reviewed",
+      "checked_at": "2026-10-13T07:36:00.000Z",
+      "http_status": 200,
+      "redirect_count": 2,
+      "redirect_chain": [
+        "https://partners.campaignmonitor.com/vettedsaasblueprint",
+        "https://www.campaignmonitor.com/pricing/?source=referral_partner&pscd=partners.campaignmonitor.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=za90CO0gy4WNMN&gsxid=za90CO0gy4WNMN&gspk=MDViMDMwMTkwYThj"
+      ],
+      "final_visible_url": "https://www.campaignmonitor.com/pricing/?source=referral_partner&pscd=partners.campaignmonitor.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=za90CO0gy4WNMN&gsxid=za90CO0gy4WNMN&gspk=MDViMDMwMTkwYThj"
+    }
+  },
+  "program_rules": {
+    "state": "documented",
+    "rules": [
+      {
+        "name": "exact_url",
+        "value": "allowed",
+        "source": "user_product_owner_directive_2026-10-13"
+      }
+    ],
+    "unknown_reason": null
   },
   "claims_removed_or_softened": [
     "Removed unverified regional dollar prices and universal annual-discount claims.",

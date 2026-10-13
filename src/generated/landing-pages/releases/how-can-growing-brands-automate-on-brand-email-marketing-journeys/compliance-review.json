@@ -1,11 +1,24 @@
 {
   "page_slug": "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
-  "reviewed_at": "2026-10-13T07:11:09.000Z",
+  "reviewed_at": "2026-10-13T07:36:00.000Z",
   "schema_version": "LandingComplianceReviewV1",
   "status": "pass",
+  "publish_readiness": "eligible_for_conversion_review",
+  "reason_codes": [],
+  "hard_gate_failures": [],
+  "required_changes": [],
+  "recommended_action": "pass",
   "exact_affiliate_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
   "disclosure": "Visible before first CTA; verified in desktop, mobile, reduced-motion and no-JavaScript browser checks.",
   "claim_scope": "Official documentation only; no hands-on results or competitor superiority claims.",
+  "link_review": {
+    "status": "pass",
+    "exact_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+    "destination_http_status": 200,
+    "redirect_count": 2,
+    "final_visible_url": "https://www.campaignmonitor.com/pricing/?source=referral_partner&pscd=partners.campaignmonitor.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=za90CO0gy4WNMN&gsxid=za90CO0gy4WNMN&gspk=MDViMDMwMTkwYThj",
+    "checked_at": "2026-10-13T07:36:00.000Z"
+  },
   "claims_removed_or_softened": [
     "Removed unverified regional dollar prices and universal annual-discount claims.",
     "Removed competitor superiority, deliverability and no-code outcome guarantees.",
