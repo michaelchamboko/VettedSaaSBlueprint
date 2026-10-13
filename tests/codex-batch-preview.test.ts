@@ -83,7 +83,12 @@ test("validates registry UUIDs and rejects duplicate preview slugs", () => {
 });
 
 test("agent release candidates are available for noindex preview without pretending to be committed batches", async () => {
-  assert.deepEqual(await listCodexBatchPreviewSlugs(), ["elevenlabs-ai-voice-generator", "getresponse-marketing-automation"]);
+  assert.deepEqual(await listCodexBatchPreviewSlugs(), [
+    "elevenlabs-ai-voice-generator",
+    "getresponse-marketing-automation",
+    "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+  ]);
   assert.deepEqual(listCodexBatchPreviewRegistryBatchIds(), []);
   assert.deepEqual(
     await loadCodexBatchPreviewCatalogue({ batchRoot: path.join(process.cwd(), ".stage2", "missing-codex-batches") }),

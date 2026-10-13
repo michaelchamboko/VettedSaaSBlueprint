@@ -1,0 +1,173 @@
+{
+  "checked_at": "2026-10-13T07:07:45.029Z",
+  "results": [
+    {
+      "name": "webcatalog",
+      "mode": "desktop",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://webcatalog.io/en/pricing"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 1440,
+      "scroll_width": 1440,
+      "headings": [
+        "Give each client a clearer workspace"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "webcatalog",
+      "mode": "mobile",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://webcatalog.io/en/pricing"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 390,
+      "scroll_width": 390,
+      "headings": [
+        "Give each client a clearer workspace"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "webcatalog",
+      "mode": "reduced",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://webcatalog.io/en/pricing"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 390,
+      "scroll_width": 390,
+      "headings": [
+        "Give each client a clearer workspace"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "webcatalog",
+      "mode": "no-js",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://webcatalog.io/en/pricing"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 390,
+      "scroll_width": 390,
+      "headings": [
+        "Give each client a clearer workspace"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "campaign-monitor",
+      "mode": "desktop",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://www.campaignmonitor.com/pricing/"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 1440,
+      "scroll_width": 1440,
+      "headings": [
+        "Keep email journeys on brand"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "campaign-monitor",
+      "mode": "mobile",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://www.campaignmonitor.com/pricing/"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 390,
+      "scroll_width": 390,
+      "headings": [
+        "Keep email journeys on brand"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "campaign-monitor",
+      "mode": "reduced",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://www.campaignmonitor.com/pricing/"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 390,
+      "scroll_width": 390,
+      "headings": [
+        "Keep email journeys on brand"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    },
+    {
+      "name": "campaign-monitor",
+      "mode": "no-js",
+      "status": 200,
+      "pass": true,
+      "primary_cta_visible": true,
+      "disclosure_visible": true,
+      "exact_ctas": 2,
+      "source_links": [
+        "https://www.campaignmonitor.com/pricing/"
+      ],
+      "review_date": "2026-10-13",
+      "robots": "noindex, nofollow",
+      "width": 390,
+      "scroll_width": 390,
+      "headings": [
+        "Keep email journeys on brand"
+      ],
+      "hidden_sections": 0,
+      "errors": []
+    }
+  ]
+}

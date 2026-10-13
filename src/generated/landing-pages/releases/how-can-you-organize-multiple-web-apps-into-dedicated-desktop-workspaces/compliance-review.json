@@ -1,0 +1,16 @@
+{
+  "page_slug": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+  "reviewed_at": "2026-10-13T07:11:09.000Z",
+  "schema_version": "LandingComplianceReviewV1",
+  "status": "pass",
+  "exact_affiliate_url": "https://try.webcatalog.io/vettedsaasblueprint",
+  "disclosure": "Visible before first CTA; verified in desktop, mobile, reduced-motion and no-JavaScript browser checks.",
+  "claim_scope": "Official documentation only; no hands-on results or competitor superiority claims.",
+  "claims_removed_or_softened": [
+    "Removed unsupported RAM, CPU, speed and security claims.",
+    "Corrected Basic space count; omitted unsupported lifetime licensing and precise price claims.",
+    "Removed competitor comparisons without evidence."
+  ],
+  "scanner": "build-pack/evidence/AFFILIATE-DRAFTS-20261013/webcatalog/landing-scanner-compliance.json",
+  "rating_basis": "Editorial review judgment; see editorial-review.json. High score does not establish program rights or override destination checks."
+}

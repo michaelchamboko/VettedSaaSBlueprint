@@ -1,0 +1,12 @@
+{
+  "page_slug": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+  "reviewed_at": "2026-10-13T07:11:09.000Z",
+  "schema_version": "LandingConversionReviewV1",
+  "status": "pass",
+  "scanner": "build-pack/evidence/AFFILIATE-DRAFTS-20261013/webcatalog/landing-scanner-conversion-copy.json",
+  "checks": [
+    "Same exact approved affiliate URL on both CTAs",
+    "Primary CTA and preceding disclosure in first mobile viewport",
+    "Buyer-run evaluation guidance without promised outcomes"
+  ]
+}

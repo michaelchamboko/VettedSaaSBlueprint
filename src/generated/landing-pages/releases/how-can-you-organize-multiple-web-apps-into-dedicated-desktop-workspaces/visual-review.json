@@ -1,0 +1,21 @@
+{
+  "page_slug": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+  "reviewed_at": "2026-10-13T07:11:09.000Z",
+  "schema_version": "VisualDesignReviewV1",
+  "status": "pass",
+  "method": "Independent parent Assessment A plus worker detector/browser Assessment B",
+  "initial_finding": "media_first pushed disclosure and CTA below mobile first viewport.",
+  "repair": "Changed candidate presentation.mobile to copy_first and recalculated fingerprint; preserved renderer/CSS design.",
+  "confirmation": "build-pack/evidence/AFFILIATE-DRAFTS-20261013/browser-verification.json",
+  "desktop_screenshot": "build-pack/evidence/AFFILIATE-DRAFTS-20261013/webcatalog-desktop-full.png",
+  "mobile_screenshot": "build-pack/evidence/AFFILIATE-DRAFTS-20261013/webcatalog-mobile-first.png",
+  "detector": {
+    "command": ".agents/skills/impeccable/scripts/impeccable.cmd detect --json src/components/landing/ReferenceComposedReviewPage.tsx",
+    "findings": []
+  },
+  "cli_limitations": [
+    "critique: Unknown command: \"critique\"",
+    "audit: Unknown command: \"audit\""
+  ],
+  "audit_basis": "Reference-guided review of incumbent semantics, exact links, source date, page overflow, content visibility, reduced-motion and no-JavaScript behavior. No automated WCAG or Lighthouse certification claimed."
+}

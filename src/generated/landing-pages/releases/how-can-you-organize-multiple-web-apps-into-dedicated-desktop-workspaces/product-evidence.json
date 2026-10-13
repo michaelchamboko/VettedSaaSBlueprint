@@ -1,0 +1,39 @@
+{
+  "schema_version": "ProductEvidencePackV1",
+  "status": "candidate",
+  "product": {
+    "id": "197e3a28-1a91-480a-8d9f-c6d131d9e7a1",
+    "name": "WebCatalog"
+  },
+  "review_basis": {
+    "basis": "vendor_docs",
+    "summary": "Official source retrieved on 2026-10-13; editorial workflow suggestions are not measured outcomes.",
+    "first_hand_boundary": "No hands-on evaluation, benchmark, deliverability or performance result claimed."
+  },
+  "sources": [
+    {
+      "id": "3d6682a0-ad6e-4898-a956-cb86c7c00eb1",
+      "source_type": "official_pricing_comparison",
+      "url": "https://webcatalog.io/en/pricing",
+      "retrieved_at": "2026-10-13T06:44:16.000Z",
+      "observation": "WebCatalog's official comparison lists desktop apps, profiles and spaces for macOS, Windows and Linux. Basic includes 2 apps, 2 profiles and 1 space; Pro removes these limits; Business adds shared spaces and team management."
+    }
+  ],
+  "evidence_claims": [
+    {
+      "id": "50c6f391-f6b4-453d-893a-1b173a538121",
+      "source_id": "3d6682a0-ad6e-4898-a956-cb86c7c00eb1",
+      "claim": "WebCatalog's official comparison lists desktop apps, profiles and spaces for macOS, Windows and Linux. Basic includes 2 apps, 2 profiles and 1 space; Pro removes these limits; Business adds shared spaces and team management."
+    }
+  ],
+  "affiliate": {
+    "original_url": "https://try.webcatalog.io/vettedsaasblueprint",
+    "authorization_source": "approved-urls.md"
+  },
+  "claims_removed_or_softened": [
+    "Removed unsupported RAM, CPU, speed and security claims.",
+    "Corrected Basic space count; omitted unsupported lifetime licensing and precise price claims.",
+    "Removed competitor comparisons without evidence."
+  ],
+  "quality_note": "See editorial-review.json for documented editorial scores. Scores are review judgments, not measurements."
+}

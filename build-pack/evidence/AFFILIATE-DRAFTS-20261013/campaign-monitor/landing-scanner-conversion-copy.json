@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-conversion-copy-risks",
+  "input_mode": "draft",
+  "status": "pass",
+  "report_only": false,
+  "target_dir": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\generated\\landing-pages",
+  "target": "how-can-growing-brands-automate-on-brand-email-marketing-journeys.json",
+  "scanned_count": 7,
+  "summary": {
+    "issue_count": 0,
+    "duplicate_group_count": 0,
+    "high_severity_issue_count": 0,
+    "finding_count": 0
+  },
+  "duplicate_groups": [],
+  "issues": []
+}
