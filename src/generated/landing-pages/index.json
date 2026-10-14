@@ -1,6 +1,17 @@
 {
-  "generated_at": "2026-07-26T00:00:00.000Z",
+  "generated_at": "2026-10-14T07:32:21.215Z",
   "pages": [
+    {
+      "slug": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+      "title": "Diginius: Consolidate PPC Reporting and B2B Lead Signals",
+      "artifact": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
+      "path": "/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+      "status": "published",
+      "publication_source": "agent_verified_release",
+      "published_at": "2026-10-14T07:32:21.215Z",
+      "current_version_id": "agent-release-8d3cd1b",
+      "release_receipt": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/release-receipt.json"
+    },
     {
       "slug": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
       "title": "WebCatalog: Organize Apps Without Losing Account Context",

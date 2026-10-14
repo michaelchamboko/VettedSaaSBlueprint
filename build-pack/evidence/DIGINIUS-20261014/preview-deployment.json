@@ -1,0 +1,8 @@
+{
+  "deployment_id": "dpl_B35345eE5uqKaMuZYNpV4RxKexR4",
+  "url": "https://vetted-saa-s-blueprint-4esqjq4o9-michaelchamboko-gravityclaw.vercel.app",
+  "status": "READY",
+  "commit": "8d3cd1bbaf4d5de8ac72c541844ac97d6d9f473a",
+  "verification": "Authenticated vercel curl returned the expected title, noindex, exact affiliate URL, disclosure and company-identification limitation. Four browser modes verified locally against identical content. Remote anonymous browser requires Vercel login.",
+  "verified_at": "2026-10-14T07:32:19.781Z"
+}

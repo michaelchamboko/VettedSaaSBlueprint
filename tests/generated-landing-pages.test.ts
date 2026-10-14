@@ -9,6 +9,7 @@ import { getLandingPageManifest, getPublishedLandingPage, listPublishedLandingPa
 test("verified agent releases are exposed as published slugs", () => {
   const slugs = listPublishedLandingPageSlugs();
   assert.deepEqual(slugs, [
+    "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
     "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
     "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
     "elevenlabs-ai-voice-generator",
@@ -19,6 +20,7 @@ test("verified agent releases are exposed as published slugs", () => {
 test("generated slugs param helper returns route params", () => {
   const params = listPublishedLandingPageParams();
   assert.deepEqual(params, [
+    { slug: "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring" },
     { slug: "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces" },
     { slug: "how-can-growing-brands-automate-on-brand-email-marketing-journeys" },
     { slug: "elevenlabs-ai-voice-generator" },
@@ -40,8 +42,8 @@ test("invalid slug format is blocked", () => {
   const invalid = getPublishedLandingPage("../bad/slug");
   assert.equal(invalid, null);
   const manifest = getLandingPageManifest();
-  assert.equal(manifest.length, 4);
-  assert.equal(manifest[0]?.slug, "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces");
+  assert.equal(manifest.length, 5);
+  assert.equal(manifest[0]?.slug, "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring");
 });
 
 test("missing generated manifest is a valid empty public catalogue", async () => {
