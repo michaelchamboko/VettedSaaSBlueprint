@@ -1,0 +1,28 @@
+{
+  "scope": "One owner-requested candidate, existing renderer and preview registry; no automation or source authority changes.",
+  "hashes": [
+    {
+      "path": "src/generated/landing-release-previews.ts",
+      "sha256": "d8bba7aa723cd9efb33ae5e252e68458d7ded8e1e5476ab6739adfdb497adffc"
+    },
+    {
+      "path": "src/generated/landing-pages/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
+      "sha256": "4fb2c7498b99e7861bb47ac11ddfcf818036a5742e6b1e09d29754961e9b6998"
+    },
+    {
+      "path": "src/components/landing/ReferenceComposedReviewPage.tsx",
+      "sha256": "ef00bb85eda23b8b9e7ea79aee4f1b9e6a723195f61554fc851cbe389b33bf22"
+    },
+    {
+      "path": "src/app/landing-page-previews/[slug]/page.tsx",
+      "sha256": "575008a08da8591c473b97e679db2bcf4d57d1da0caf98068edc8af054afd445"
+    },
+    {
+      "path": "src/app/landing-page-builders/[slug]/page.tsx",
+      "sha256": "8b6ee2c2584b13e8249492cda7cf7d6e29b0b4b34e171717b594281a6cdb97ce"
+    }
+  ],
+  "route_inventory": "One new noindex preview; public route not added until reviewed release receipt exists.",
+  "gitnexus": "No impact-sensitive shared renderer edit; deterministic file hashes and import/route inventory used.",
+  "rtk": "Command unavailable on PATH; direct PowerShell fallback."
+}

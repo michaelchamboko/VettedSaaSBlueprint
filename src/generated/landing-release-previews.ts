@@ -1,3 +1,4 @@
+import diginiusBlueprint from "./landing-pages/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json";
 import blueprint from "./landing-pages/elevenlabs-ai-voice-generator.json";
 import getResponseBlueprint from "./landing-pages/getresponse-marketing-automation.json";
 import webCatalogBlueprint from "./landing-pages/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces.json";
@@ -6,6 +7,14 @@ import campaignMonitorBlueprint from "./landing-pages/how-can-growing-brands-aut
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 export const landingReleasePreviews = [
+  {
+    kind: "release_candidate" as const,
+    batch_id: "47b83590-b35d-4f44-9422-e0b7cc929067",
+    page_blueprint_id: "7cf1b59f-0a35-4282-a068-a0838135c363",
+    slug: diginiusBlueprint.metadata.url_slug,
+    affiliate_url: "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+    blueprint: diginiusBlueprint as PageBlueprint,
+  },
   {
     kind: "release_candidate" as const,
     batch_id: "13e50499-96c6-43bb-a8e4-cc3f29537bbd",

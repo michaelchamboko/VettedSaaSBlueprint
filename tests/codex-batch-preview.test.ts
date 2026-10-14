@@ -86,6 +86,7 @@ test("agent release candidates are available for noindex preview without pretend
   assert.deepEqual(await listCodexBatchPreviewSlugs(), [
     "elevenlabs-ai-voice-generator",
     "getresponse-marketing-automation",
+    "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
     "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
     "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
   ]);

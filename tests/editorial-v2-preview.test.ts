@@ -7,7 +7,7 @@ import { pageBlueprintSchema } from "@/lib/schemas/contracts";
 test("release previews are reference-composed candidates", () => {
   assert.deepEqual(
     landingReleasePreviews.map((preview) => preview.slug),
-    ["how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces", "how-can-growing-brands-automate-on-brand-email-marketing-journeys", "elevenlabs-ai-voice-generator", "getresponse-marketing-automation"],
+    ["how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring", "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces", "how-can-growing-brands-automate-on-brand-email-marketing-journeys", "elevenlabs-ai-voice-generator", "getresponse-marketing-automation"],
   );
   assert.ok(landingReleasePreviews.every((preview) => preview.blueprint.metadata.design_profile === "reference_composed_v1"));
 });

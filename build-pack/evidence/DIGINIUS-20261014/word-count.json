@@ -1,0 +1,6 @@
+{
+  "draft_claimed": 1910,
+  "draft_body_whitespace_tokens_after_disclosure_marker_before_editorial_notes": 693,
+  "note": "Deterministic whitespace-token count, including Markdown tokens; original count_verified claim is not retained.",
+  "rendered_initial_visible_words": 1385
+}
