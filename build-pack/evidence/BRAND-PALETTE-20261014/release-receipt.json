@@ -1,0 +1,29 @@
+{
+  "verification_status": "pass",
+  "production_deployment_id": "dpl_5ect3g529NCVsj5mr7CT4gLfz3AZ",
+  "release_commit": "cfe522c537050b6e8eae43be46757b88d0295af6",
+  "preview_deployment_id": "dpl_2duAk79JYXouGzTtBfPNkhezuLpJ",
+  "aliases": [
+    "vettedsaasblueprint.online",
+    "vetted-saa-s-blueprint.vercel.app",
+    "www.vettedsaasblueprint.online",
+    "vetted-saa-s-blueprint-michaelchamboko-gravityclaw.vercel.app"
+  ],
+  "verified_at": "2026-10-14T08:46:42.673Z",
+  "ready_state": "READY",
+  "pages_verified": 5,
+  "public_origin": "https://vettedsaasblueprint.online",
+  "checks": {
+    "preview_authenticated_http": true,
+    "lint_errors": 0,
+    "full_tests_failed": 0,
+    "public_site_validation": true,
+    "full_tests_passed": 291,
+    "build": true,
+    "typecheck": true,
+    "lint_existing_warnings": 222,
+    "renderer_tests_passed": 14,
+    "live_computed_brand_colours": true,
+    "full_tests_skipped": 3
+  }
+}

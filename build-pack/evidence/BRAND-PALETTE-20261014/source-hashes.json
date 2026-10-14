@@ -1,0 +1,27 @@
+[
+  {
+    "Algorithm": "SHA256",
+    "Hash": "901A5A7E729AC4172480BDB61891153C5112279F955926DAB885D9B4578432B9",
+    "Path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\app\\globals.css"
+  },
+  {
+    "Algorithm": "SHA256",
+    "Hash": "2212BF083FF5AFA49716ED44AD38DC1D95D11C2750AFAD5A69AE2B7C6D4D9D98",
+    "Path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\tests\\reference-composed-renderer.test.ts"
+  },
+  {
+    "Algorithm": "SHA256",
+    "Hash": "EF00BB85EDA23B8B9E7EA79AEE4F1B9E6A723195F61554FC851CBE389B33BF22",
+    "Path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\components\\landing\\ReferenceComposedReviewPage.tsx"
+  },
+  {
+    "Algorithm": "SHA256",
+    "Hash": "2AD47FB81EF33682C1A8A97A7C6873F1DF77300B9B1653EFF958799C1C97BD99",
+    "Path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\generated\\landing-pages\\index.json"
+  },
+  {
+    "Algorithm": "SHA256",
+    "Hash": "557B21620EAA57D76C50695F6626877FE80201B721F4C9769BA5960FE8B66057",
+    "Path": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\package-lock.json"
+  }
+]
