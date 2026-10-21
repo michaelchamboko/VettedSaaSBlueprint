@@ -12,6 +12,7 @@ export type FullProductionChecks = {
   sitemapOk: boolean;
   browserErrorsOk: boolean;
 };
+const PRODUCTION_CHECK_KEYS = ["routeOk", "contentOk", "disclosureOk", "exactCtaOk", "desktopOk", "mobileOk", "robotsOk", "sitemapOk", "browserErrorsOk"] as const;
 
 export type ReleaseGitSnapshot = {
   clean: boolean;
@@ -32,9 +33,9 @@ export type ReleaseOperations = {
   inspectGit(): Promise<ReleaseGitSnapshot>;
   refreshMain(): Promise<ReleaseGitSnapshot>;
   runValidation(commands: readonly string[]): Promise<{ ok: boolean; summary: string }>;
-  capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string }>;
+  capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string; verified: boolean }>;
   commit(message: string): Promise<string>;
-  pushFastForward(commitSha: string): Promise<void>;
+  pushFastForward(commitSha: string): Promise<{ commitSha: string; originMainSha: string; force: false }>;
   deploy(commitSha: string): Promise<ReleaseDeployment>;
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
   rollback(deploymentId: string): Promise<{ ok: boolean; summary: string }>;
@@ -50,7 +51,7 @@ export type ReleaseAssessment = {
   canonicalUrl?: string;
 };
 
-const VALIDATION_COMMANDS = [
+const COMMON_VALIDATION_COMMANDS = [
   "npm run verify:agent-workflow",
   "npm run lint",
   "npm run typecheck",
@@ -58,6 +59,17 @@ const VALIDATION_COMMANDS = [
   "npm run build",
   "npm run validate:public-site",
 ] as const;
+const FORMAT_VALIDATION_GATES: Partial<Record<ImportFormat, readonly string[]>> = {
+  "direct-review": ["npm run landing:quality:candidate"],
+  blog: ["npm run validate:public-site"],
+  visibility: ["npm run validate:public-site"],
+  "decision-set": ["npm run validate:public-site"],
+};
+
+export function validationCommandsForFormat(format: ImportFormat): readonly string[] | undefined {
+  const gate = FORMAT_VALIDATION_GATES[format];
+  return gate ? [...gate, ...COMMON_VALIDATION_COMMANDS] : undefined;
+}
 
 function pathUsesAllowedRoot(file: string, roots: readonly string[]): boolean {
   const normalized = file.replaceAll("\\", "/");
@@ -65,7 +77,8 @@ function pathUsesAllowedRoot(file: string, roots: readonly string[]): boolean {
   return roots.some((root) => normalized === root || normalized.startsWith(`${root}/`));
 }
 
-export function isAllowedReleasePath(file: string, format: ImportFormat, ownerAuthorizedAffiliateUrl = false): boolean {
+export function isAllowedReleasePath(file: string, format: ImportFormat, _ownerAuthorizedAffiliateUrl = false): boolean {
+  void _ownerAuthorizedAffiliateUrl;
   const shared = ["build-pack/editorial", "build-pack/article-import"];
   const formatRoots: Record<ImportFormat, string[]> = {
     "direct-review": ["src/generated/landing-pages", "public/landing", "public/images"],
@@ -75,15 +88,19 @@ export function isAllowedReleasePath(file: string, format: ImportFormat, ownerAu
     agent_review_required: [],
   };
   if (pathUsesAllowedRoot(file, [...shared, ...formatRoots[format]])) return true;
-  return ownerAuthorizedAffiliateUrl && file === "approved-urls.md";
+  return false;
 }
 
 export function validateReleasePaths(files: readonly string[], format: ImportFormat, ownerAuthorizedAffiliateUrl = false): string[] {
   return files.filter((file) => !isAllowedReleasePath(file, format, ownerAuthorizedAffiliateUrl));
 }
 
-function allChecksPass(checks: FullProductionChecks): boolean {
-  return Object.values(checks).every((value) => value === true);
+function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const candidate = value as Record<string, unknown>;
+  if (Object.keys(candidate).sort().join(",") !== [...PRODUCTION_CHECK_KEYS].sort().join(",")) return undefined;
+  if (PRODUCTION_CHECK_KEYS.some((key) => candidate[key] !== true)) return undefined;
+  return candidate as FullProductionChecks;
 }
 
 function productiveStage(record: ExternalArticleImportV1): ImportStage {
@@ -112,7 +129,12 @@ export async function assessImportRelease(input: {
     return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
   }
 
-  const validation = await input.operations.runValidation(VALIDATION_COMMANDS);
+  const validationCommands = validationCommandsForFormat(input.record.format);
+  if (!validationCommands) {
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `No configured validation gate for ${input.record.format}.` });
+    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: ["MISSING_FORMAT_VALIDATION_GATE"] };
+  }
+  const validation = await input.operations.runValidation(validationCommands);
   if (!validation.ok) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: validation.summary });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [validation.summary] };
@@ -131,15 +153,29 @@ export async function assessImportRelease(input: {
   }
 
   const previous = await input.operations.capturePreviousDeployment();
+  if (!previous.verified) {
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: "No verified known-good production deployment is available for rollback." });
+    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: ["PREVIOUS_DEPLOYMENT_UNVERIFIED"] };
+  }
+  let deploymentStarted = false;
   try {
     const commitSha = await input.operations.commit(input.commitMessage ?? `publish imported article ${input.record.importId}`);
-    await input.operations.pushFastForward(commitSha);
+    const pushProof = await input.operations.pushFastForward(commitSha);
+    if (pushProof.commitSha !== commitSha || pushProof.originMainSha !== commitSha || pushProof.force !== false) throw new Error("UNSAFE_PUSH_PROOF");
     const deployment = await input.operations.deploy(commitSha);
-    const checks = await input.operations.verifyProduction(deployment);
+    deploymentStarted = true;
     if (deployment.commitSha !== commitSha) {
       throw new Error("DEPLOYMENT_COMMIT_MISMATCH");
     }
-    if (!allChecksPass(checks)) {
+    let checks: FullProductionChecks | undefined;
+    let verificationFailure: string | undefined;
+    try {
+      checks = parseProductionChecks(await input.operations.verifyProduction(deployment));
+      if (!checks) verificationFailure = "INCOMPLETE_PRODUCTION_CHECKS";
+    } catch (error) {
+      verificationFailure = error instanceof Error ? error.message : String(error);
+    }
+    if (verificationFailure || !checks) {
       let restored = false;
       try {
         const rollback = await input.operations.rollback(previous.deploymentId);
@@ -147,9 +183,10 @@ export async function assessImportRelease(input: {
       } catch {
         restored = false;
       }
-      const rolledBack = { ...input.record, stage: "ROLLED_BACK" as const, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; preserve the prior receipt and wait for external repair.", stageReceipts: [...input.record.stageReceipts, { stage: "ROLLED_BACK" as const, status: "failed" as const, at: new Date().toISOString(), message: restored ? "New deployment failed verification; previous deployment restored." : "New deployment failed verification and rollback did not verify." }] };
+      const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
+      const rolledBack = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `New deployment failed verification (${verificationFailure}); previous deployment restored.` : `New deployment failed verification (${verificationFailure}); rollback did not verify.` }] };
       await saveImport(input.repositoryRoot, rolledBack);
-      if (!restored) return { status: "ROLLED_BACK", reasons: ["ROLLBACK_VERIFICATION_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
+      if (!restored) return { status: "WAITING_EXTERNAL", reasons: ["ROLLBACK_VERIFICATION_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
       if (input.operations.fixForward && await input.operations.fixForward(1)) return { status: "ROLLED_BACK", reasons: ["FIX_FORWARD_REQUIRED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
       return { status: "ROLLED_BACK", reasons: ["PRODUCTION_CHECK_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
     }
@@ -158,9 +195,20 @@ export async function assessImportRelease(input: {
     return { status: "LIVE", reasons: [], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message });
-    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: [message] };
+    if (!deploymentStarted) {
+      const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message });
+      return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: [message] };
+    }
+    let restored = false;
+    try {
+      const rollback = await input.operations.rollback(previous.deploymentId);
+      restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId);
+    } catch { restored = false; }
+    const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
+    const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
+    await saveImport(input.repositoryRoot, updated);
+    return { status: recoveryStage, reasons: [message, ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])], previousDeploymentId: previous.deploymentId };
   }
 }
 
-export { VALIDATION_COMMANDS };
+export { COMMON_VALIDATION_COMMANDS };

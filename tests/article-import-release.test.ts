@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { advanceImport, createArticleImport, loadImport, resumeImport } from "../src/lib/article-import/engine";
-import { assessImportRelease, isAllowedReleasePath, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { assessImportRelease, isAllowedReleasePath, validationCommandsForFormat, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
@@ -25,9 +25,9 @@ function operations(overrides: Partial<ReleaseOperations> = {}): ReleaseOperatio
     inspectGit: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     refreshMain: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     runValidation: async () => ({ ok: true, summary: "all validation commands passed" }),
-    capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40) }),
+    capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => "c".repeat(40),
-    pushFastForward: async () => undefined,
+    pushFastForward: async (commitSha) => ({ commitSha, originMainSha: commitSha, force: false }),
     deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }),
     verifyProduction: async () => checks,
     rollback: async () => ({ ok: true, summary: "restored" }),
@@ -85,7 +85,7 @@ test("rollback verification failure remains fail-closed", async () => {
   try {
     const record = await releasingRecord(root);
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, operations: operations({ verifyProduction: async () => ({ ...checks, mobileOk: false }), verifyRollback: async () => false }) });
-    assert.equal(result.status, "ROLLED_BACK");
+    assert.equal(result.status, "WAITING_EXTERNAL");
     assert.match(result.reasons[0], /ROLLBACK_VERIFICATION_FAILED/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -125,16 +125,86 @@ test("failed rollback stays rolled back when the rollback adapter throws", async
       verifyProduction: async () => ({ ...checks, routeOk: false }),
       rollback: async () => { throw new Error("ROLLBACK_UNAVAILABLE"); },
     }) });
-    assert.equal(result.status, "ROLLED_BACK");
+    assert.equal(result.status, "WAITING_EXTERNAL");
     assert.deepEqual(result.reasons, ["ROLLBACK_VERIFICATION_FAILED"]);
-    assert.equal((await loadImport(root, record.importId)).stage, "ROLLED_BACK");
+    assert.equal((await loadImport(root, record.importId)).stage, "WAITING_EXTERNAL");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("Switcher exact allowlist entry is accepted for the authorized manifest edit", async () => {
+test("deployment commit mismatch rolls back before returning", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    let rollbackCount = 0;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, operations: operations({
+      deploy: async () => ({ deploymentId: "dpl-wrong", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha: "d".repeat(40) }),
+      rollback: async () => { rollbackCount += 1; return { ok: true, summary: "restored" }; },
+    }) });
+    assert.equal(result.status, "ROLLED_BACK");
+    assert.equal(rollbackCount, 1);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("incomplete production checks roll back and never reach LIVE", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, operations: operations({ verifyProduction: async () => ({ routeOk: true } as unknown as FullProductionChecks) }) });
+    assert.equal(result.status, "ROLLED_BACK");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("receipt failure after deployment rolls back exactly once", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    let rollbackCount = 0;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, operations: operations({
+      verifyProduction: async () => checks,
+      deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "not-a-url", commitSha }),
+      rollback: async () => { rollbackCount += 1; return { ok: true, summary: "restored" }; },
+    }) });
+    assert.equal(result.status, "ROLLED_BACK");
+    assert.equal(rollbackCount, 1);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("unsafe push proof waits without deployment", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    let deployed = false;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, operations: operations({
+      pushFastForward: async (commitSha) => ({ commitSha, originMainSha: "e".repeat(40), force: false }),
+      deploy: async (commitSha) => { deployed = true; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
+    }) });
+    assert.equal(result.status, "WAITING_EXTERNAL");
+    assert.equal(deployed, false);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("unverified prior deployment waits before commit", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, operations: operations({ capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: false }) }) });
+    assert.equal(result.status, "WAITING_EXTERNAL");
+    assert.deepEqual(result.reasons, ["PREVIOUS_DEPLOYMENT_UNVERIFIED"]);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("approved URL edits are never automatically allowed", async () => {
+  assert.equal(isAllowedReleasePath("approved-urls.md", "direct-review", true), false);
+});
+
+test("agent-review-required format fails closed without a format gate", async () => {
+  assert.equal(validationCommandsForFormat("agent_review_required"), undefined);
+});
+
+test("Switcher exact allowlist entry remains in the separately reviewed manifest", async () => {
   const manifest = await readFile(path.join(process.cwd(), "approved-urls.md"), "utf8");
   assert.match(manifest, /https:\/\/start\.switcherstudio\.com\/anme6fqvgdx9/);
-  assert.equal(isAllowedReleasePath("approved-urls.md", "direct-review", true), true);
+  assert.equal(isAllowedReleasePath("approved-urls.md", "direct-review", true), false);
 });
 
 test("rolled back imports resume at their recorded productive stage", async () => {

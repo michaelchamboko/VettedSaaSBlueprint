@@ -1,5 +1,6 @@
 import { loadImport } from "../src/lib/article-import/engine";
 import { assessImportRelease, type ReleaseOperations } from "../src/lib/article-import/release";
+import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -34,7 +35,7 @@ async function main(): Promise<void> {
     changedFiles: files,
     ownerAuthorizedAffiliateUrl: process.argv.includes("--owner-authorized-affiliate-url"),
     execute: process.argv.includes("--execute"),
-    operations: unconfiguredOperations(),
+    operations: process.argv.includes("--execute") ? createLocalReleaseOperations(process.cwd()) : unconfiguredOperations(),
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
