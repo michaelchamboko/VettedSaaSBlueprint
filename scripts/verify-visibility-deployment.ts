@@ -4,11 +4,12 @@ import { chromium } from "playwright";
 import { getPublishedVisibilityPage } from "../src/lib/visibility-pages/catalogue";
 import { visibilityPageSchema } from "../src/lib/visibility-pages/contracts";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 function argument(name: string) { const index = process.argv.indexOf(name); return index >= 0 ? process.argv[index + 1] : undefined; }
 async function main() {
-  const origin = new URL(argument("--origin") ?? "https://vettedsaasblueprint.online").origin;
+  const context = verificationContext({ mode: argument("--mode"), origin: argument("--origin") ?? "https://vettedsaasblueprint.online", canonicalOrigin: argument("--canonical-origin"), expectedCommit: argument("--expected-sha") });
+  const { origin, canonicalOrigin } = context;
   const artifactPath = argument("--artifact");
   const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "visibility", artifactPath, argument("--slug")) : undefined;
   const route = approved?.target.renderedRoutes[0] ?? `/${(argument("--slug") ?? "").replace(/^\//, "")}`;
@@ -20,7 +21,7 @@ async function main() {
     if (!response.ok) throw new Error(`${file}: HTTP ${response.status}`);
     return response.text();
   }));
-  if (/^Disallow:\s*\/\s*$/im.test(robots) || !sitemap.includes(`${origin}${route}`)) throw new Error("Visibility discovery checks failed.");
+  if (/^Disallow:\s*\/\s*$/im.test(robots) || !sitemap.includes(`${canonicalOrigin}${route}`)) throw new Error("Visibility discovery checks failed.");
   const output = path.resolve(".automation/receipts/visibility-production");
   await mkdir(output, { recursive: true });
   const browser = await chromium.launch({ headless: true });
@@ -38,12 +39,12 @@ async function main() {
         overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
         sections: document.querySelectorAll("main section").length,
       }));
-      if (!response?.ok() || checks.headline !== record.page.hero.headline || checks.canonical !== `${origin}${route}` || checks.noindex || checks.overflow || !checks.sections || errors.length) throw new Error(`Visibility ${profile.name} checks failed: ${JSON.stringify({ checks, errors })}`);
+      if (!response?.ok() || checks.headline !== record.page.hero.headline || checks.canonical !== `${canonicalOrigin}${route}` || checks.noindex || checks.overflow || !checks.sections || errors.length) throw new Error(`Visibility ${profile.name} checks failed: ${JSON.stringify({ checks, errors })}`);
       await page.screenshot({ path: path.join(output, `${route.slice(1).replaceAll("/", "-")}-${profile.name}.png`), fullPage: true });
       await page.close();
     }
   } finally { await browser.close(); }
-  const result = { ok: true, routes: 1, verifiedRoutes: [route], viewportChecks: 2 };
+  const result = { ok: true, ...context, routes: 1, verifiedRoutes: [route], viewportChecks: 2 };
   await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }));
 }

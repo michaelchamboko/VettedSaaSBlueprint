@@ -51,11 +51,11 @@ Production publication remains gated by the repository's required owner-approved
 ## Verification evidence
 
 - Focused importer and verifier suite: 70 passed, 0 failed.
-- Full repository suite: 355 passed, 0 failed, 3 environment skips.
+- Full repository suite: 358 passed, 0 failed, 3 environment skips.
 - TypeScript route generation and typecheck: passed.
 - Mandatory workflow contract: passed.
 - Lint: 0 errors and 34 pre-existing warnings outside the changed importer surface.
-- Public-site validation, production build and all 16 Switcher candidate checks: passed.
+- Public-site validation, production build and all 16 Switcher candidate checks: passed. The rendered Switcher candidate also passed the local owner verifier at desktop, mobile and reduced-motion settings without claiming a deployment SHA.
 - Independent current-head review is requested and recorded on the PR before owner approval.
 
 ## Rollback

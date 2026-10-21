@@ -8,6 +8,24 @@ const targetSchema = z.object({ format: z.enum(["direct-review", "blog", "visibi
 const evidenceSchema = z.object({ schemaVersion: z.literal("ImportVerifierEvidenceV1"), target: targetSchema, result: z.record(z.string(), z.unknown()) }).strict();
 export type VerificationTarget = z.infer<typeof targetSchema>;
 
+export function verificationContext(input: { mode?: string; origin: string; canonicalOrigin?: string; expectedCommit?: string }) {
+  const verificationMode = z.enum(["candidate", "production"]).parse(input.mode ?? "production");
+  const origin = new URL(input.origin);
+  if (verificationMode === "candidate") {
+    if (!["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname) || !["http:", "https:"].includes(origin.protocol)) throw new Error("CANDIDATE_REQUIRES_LOOPBACK_ORIGIN");
+    if (input.expectedCommit) throw new Error("CANDIDATE_CANNOT_CLAIM_DEPLOYED_COMMIT");
+  } else if (origin.protocol !== "https:") throw new Error("PRODUCTION_REQUIRES_HTTPS");
+  const canonicalOrigin = new URL(input.canonicalOrigin ?? origin.origin);
+  if (canonicalOrigin.protocol !== "https:") throw new Error("CANONICAL_ORIGIN_REQUIRES_HTTPS");
+  return { verificationMode, origin: origin.origin, canonicalOrigin: canonicalOrigin.origin };
+}
+
+export function requireVerificationMode(value: unknown, expected: "candidate" | "production") {
+  const result = z.object({ verificationMode: z.literal(expected), origin: z.string().url(), canonicalOrigin: z.string().url() }).passthrough().parse(value);
+  verificationContext({ mode: expected, origin: result.origin, canonicalOrigin: result.canonicalOrigin, expectedCommit: typeof result.expected_commit === "string" ? result.expected_commit : undefined });
+  if (expected === "candidate" && ("deployment" in result || "expected_commit" in result)) throw new Error("CANDIDATE_CANNOT_CLAIM_DEPLOYMENT");
+}
+
 export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown): void {
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
@@ -27,6 +45,8 @@ export function assertVerifierResult(target: ReturnType<typeof importArtifactTar
 export async function writeImportVerifierEvidence(file: string | undefined, target: ReturnType<typeof importArtifactTarget> | undefined, result: unknown) {
   if (!file) return;
   if (!target) throw new Error("VERIFIER_ARTIFACT_REQUIRED");
+  const mode = z.object({ verificationMode: z.enum(["candidate", "production"]) }).passthrough().parse(result).verificationMode;
+  requireVerificationMode(result, mode);
   assertVerifierResult(target, result);
   const absolute = path.resolve(file);
   if (path.relative(process.cwd(), absolute).startsWith("..")) throw new Error("VERIFIER_RECEIPT_OUTSIDE_REPOSITORY");
@@ -41,6 +61,7 @@ export async function readImportVerifierEvidence(root: string, file: string, exp
   if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("VERIFIER_RECEIPT_OUTSIDE_REPOSITORY");
   const bytes = await readFile(absolute);
   const evidence = evidenceSchema.parse(JSON.parse(bytes.toString("utf8")));
+  requireVerificationMode(evidence.result, "candidate");
   if (evidence.target.format !== expected.format || evidence.target.artifactFingerprint !== expected.artifactFingerprint || JSON.stringify(evidence.target.renderedRoutes) !== JSON.stringify(expected.renderedRoutes)) throw new Error("VERIFIER_TARGET_MISMATCH");
   assertVerifierResult(evidence.target, evidence.result);
   return { path: relative.replaceAll("\\", "/"), sha256: createHash("sha256").update(bytes).digest("hex") };

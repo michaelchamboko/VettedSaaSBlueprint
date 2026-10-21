@@ -113,7 +113,7 @@ export const externalArticleImportSchema = z.object({
   unusableReason: z.string().optional(),
   transformation: importTransformationSchema.optional(),
   contentApproval: contentApprovalSchema.optional().catch(undefined),
-  presentation: importPresentationReceiptSchema.optional(),
+  presentation: importPresentationReceiptSchema.optional().catch(undefined),
   pendingRelease: importPendingReleaseSchema.optional(),
   release: importReleaseSchema.optional(),
   stageReceipts: z.array(z.object({

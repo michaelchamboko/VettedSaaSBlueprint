@@ -8,7 +8,7 @@ import { productionQualityReceiptV2Schema } from "../src/lib/automation/contract
 import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
 import { decisionSetV2Schema, getDecisionSet, type DecisionJourneyRecordV2 } from "../src/lib/decision-journey/sets";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 const defaultOrigin = "https://vettedsaasblueprint.online";
 let targets: Record<string, (typeof decisionJourneyCatalog)[string] | DecisionJourneyRecordV2> = decisionJourneyCatalog;
@@ -27,7 +27,7 @@ type Check = {
 
 type Screenshot = { route: string; viewport: string; mode: string; path: string };
 
-async function checkHtml(origin: string, route: keyof typeof decisionJourneyCatalog): Promise<Check[]> {
+async function checkHtml(origin: string, route: keyof typeof decisionJourneyCatalog, canonicalOrigin: string): Promise<Check[]> {
   const record = targets[route];
   const url = `${origin}${route}`;
   try {
@@ -35,7 +35,7 @@ async function checkHtml(origin: string, route: keyof typeof decisionJourneyCata
     const html = await response.text();
     return [
       { name: `${route}: availability`, passed: response.ok, detail: `HTTP ${response.status}.`, category: "production" },
-      { name: `${route}: canonical and principal answer`, passed: html.includes(record.headline) && html.includes(`<link rel="canonical" href="${url}"`), detail: "The static HTML exposes the route-specific principal answer and canonical URL.", category: "content" },
+      { name: `${route}: canonical and principal answer`, passed: html.includes(record.headline) && html.includes(`<link rel="canonical" href="${canonicalOrigin}${route}"`), detail: "The static HTML exposes the route-specific principal answer and canonical URL.", category: "content" },
       { name: `${route}: required decision structure`, passed: record.blocks.every((block) => html.includes(`id="${block.id}"`)), detail: "Every required decision section is present in the server-rendered document.", category: "content" },
       { name: `${route}: evidence traceability`, passed: record.blocks.every((block) => block.claims.every((claim) => claim.sources.every((source) => html.includes(source.sectionUid)))), detail: "Every material claim exposes its stable source identifier.", category: "evidence" },
       { name: `${route}: catalogue composition`, passed: html.includes("data-catalogue-reference=") && html.includes(`data-journey-kind="${record.pageType}"`), detail: "The rendered page declares its approved catalogue-backed composition.", category: "visual" },
@@ -89,7 +89,8 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
 }
 
 async function main() {
-  const origin = argument("--origin") ?? defaultOrigin;
+  const context = verificationContext({ mode: argument("--mode"), origin: argument("--origin") ?? defaultOrigin, canonicalOrigin: argument("--canonical-origin"), expectedCommit: argument("--expected-sha") });
+  const { origin, canonicalOrigin } = context;
   const artifactPath = argument("--artifact");
   const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "decision-set", artifactPath, argument("--slug")) : undefined;
   const slug = approved?.target.slug ?? argument("--slug");
@@ -105,10 +106,10 @@ async function main() {
     return response.text();
   }));
   const robotsOk = !/^Disallow:\s*\/\s*$/im.test(robots);
-  const sitemapOk = Object.keys(targets).every((route) => sitemap.includes(`${origin}${route}`));
+  const sitemapOk = Object.keys(targets).every((route) => sitemap.includes(`${canonicalOrigin}${route}`));
   const output = path.resolve(argument("--screenshot-dir") ?? path.join(".automation", "receipts", "production-quality"));
   await mkdir(output, { recursive: true });
-  const htmlChecks = await Promise.all(Object.keys(targets).map((route) => checkHtml(origin, route)));
+  const htmlChecks = await Promise.all(Object.keys(targets).map((route) => checkHtml(origin, route, canonicalOrigin)));
   const browserChecks = await Promise.all(Object.keys(targets).map((route) => captureRoute({ origin, route, output })));
   const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks)];
   const receipt = productionQualityReceiptV2Schema.parse({
@@ -119,7 +120,7 @@ async function main() {
     screenshots: browserChecks.flatMap((result) => result.screenshots),
     createdAt: new Date().toISOString(),
   });
-  const result = { ...receipt, robots_ok: robotsOk, sitemap_ok: sitemapOk };
+  const result = { ...receipt, ...context, robots_ok: robotsOk, sitemap_ok: sitemapOk };
   await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
   if (!receipt.passed) process.exitCode = 1;

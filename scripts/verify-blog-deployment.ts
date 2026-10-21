@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { listPublishedBlogPosts } from "../src/lib/blog/catalogue";
 import { blogPostSchema } from "../src/lib/blog/contracts";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 function argument(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
@@ -30,8 +30,8 @@ async function loadLazyImages(page: import("playwright").Page) {
 }
 
 async function main() {
-  const origin = new URL(argument(process.argv.slice(2), "--origin") ?? "http://127.0.0.1:3417").origin;
-  const canonicalOrigin = new URL(argument(process.argv.slice(2), "--canonical-origin") ?? origin).origin;
+  const context = verificationContext({ mode: argument(process.argv.slice(2), "--mode"), origin: argument(process.argv.slice(2), "--origin") ?? "https://vettedsaasblueprint.online", canonicalOrigin: argument(process.argv.slice(2), "--canonical-origin"), expectedCommit: argument(process.argv.slice(2), "--expected-sha") });
+  const { origin, canonicalOrigin } = context;
   const output = path.resolve(argument(process.argv.slice(2), "--screenshot-dir") ?? path.join(".stage2", "blog-verification"));
   const slug = argument(process.argv.slice(2), "--slug");
   const artifactPath = argument(process.argv.slice(2), "--artifact");
@@ -117,7 +117,7 @@ async function main() {
     await browser.close();
   }
 
-  const result = { ok: true, origin, routes: posts.length + 6, verifiedRoutes: posts.map((post) => post.canonicalPath), viewportChecks: results.length, screenshots: output };
+  const result = { ok: true, ...context, routes: posts.length + 6, verifiedRoutes: posts.map((post) => post.canonicalPath), viewportChecks: results.length, screenshots: output };
   await writeImportVerifierEvidence(argument(process.argv.slice(2), "--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
 }

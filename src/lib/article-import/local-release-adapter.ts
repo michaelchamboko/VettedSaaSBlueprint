@@ -6,7 +6,7 @@ import type { ReleaseOperations, ReleaseDeployment, ReleaseGitSnapshot, FullProd
 import type { ImportFormat } from "./contracts";
 import { validateReleasePaths } from "./release";
 import { readImportArtifactTarget } from "./format-validation";
-import { assertVerifierResult } from "./verification-evidence";
+import { assertVerifierResult, requireVerificationMode } from "./verification-evidence";
 
 const execFile = promisify(execFileCallback);
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
@@ -149,6 +149,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
         if (!script) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
         const result = JSON.parse((await runner("npx", ["tsx", script, "--origin", origin, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; ok?: boolean; passed?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
         if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
+        requireVerificationMode(result, "production");
         assertVerifierResult(target, result);
         const passed = options.format === "decision-set"
           ? result.passed === true && (result.checks?.length ?? 0) > 0 && result.checks!.every((check) => check.passed === true) && result.screenshots?.some((shot) => shot.mode.startsWith("desktop")) === true && result.screenshots?.some((shot) => shot.mode.startsWith("mobile")) === true && result.robots_ok === true && result.sitemap_ok === true
@@ -159,6 +160,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       }
       const result = JSON.parse((await runner("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
       if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
+      requireVerificationMode(result, "production");
       assertVerifierResult(target, result);
       const pages = result.pages ?? [];
       const snapshots = pages.flatMap((page) => [page.desktop, page.mobile]).filter((page): page is NonNullable<typeof page> => Boolean(page));

@@ -30,6 +30,19 @@ export async function verifyImportPresentationEvidence(root: string, record: Ext
   if (JSON.stringify(current) !== JSON.stringify(presentation.evidenceFiles)) throw new Error("PRESENTATION_EVIDENCE_CHANGED");
 }
 
+export async function presentationInputFromVerifier(root: string, record: ExternalArticleImportV1, evidencePath: string) {
+  const approval = record.contentApproval;
+  if (!approval) throw new Error("CONTENT_APPROVAL_INVALID");
+  const artifact = JSON.parse(await readFile(path.resolve(root, approval.artifactPath), "utf8"));
+  const renderedRoutes = validateImportArtifact(record.format, artifact);
+  await readImportVerifierEvidence(root, evidencePath, { format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes });
+  return { validationGate: `${record.format}:candidate-owner-verifier`, validationReceipt: {
+    schemaVersion: "ImportPresentationValidationV1", format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes,
+    checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true },
+    evidencePaths: [evidencePath], notes: "The format owner verifier passed against the local rendered candidate; this is not production verification.",
+  } };
+}
+
 export function requireImportPresentationBinding(record: ExternalArticleImportV1): void {
   const presentation = importPresentationReceiptSchema.parse(record.presentation);
   const approval = record.contentApproval;
