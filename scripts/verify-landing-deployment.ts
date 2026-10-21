@@ -2,6 +2,9 @@ import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { chromium, type Browser, type Page, type ViewportSize } from "playwright";
+import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
+import { writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { pageBlueprintSchema } from "../src/lib/schemas/contracts";
 
 type LandingTarget = {
   slug: string;
@@ -383,15 +386,23 @@ async function main() {
       "Usage: npm run landing:verify:deployment -- --origin <https-origin> --expected-sha <40-char-sha> [--slug <slug>]",
     );
   }
+  const artifactPath = argumentValue(args, "--artifact");
+  const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "direct-review", artifactPath, argumentValue(args, "--slug")) : undefined;
+  if (approved) {
+    const published = JSON.parse(await readFile(path.join(process.cwd(), "src/generated/landing-pages", `${approved.target.slug}.json`), "utf8"));
+    if (JSON.stringify(pageBlueprintSchema.parse(published)) !== JSON.stringify(pageBlueprintSchema.parse(approved.artifact))) throw new Error("LANDING_PUBLISHED_ARTIFACT_MISMATCH");
+  }
   const result = await verifyLandingDeployment({
     origin,
     expectedCommit,
-    slug: argumentValue(args, "--slug"),
+    slug: approved?.target.slug ?? argumentValue(args, "--slug"),
     attempts: Number(argumentValue(args, "--attempts") ?? 20),
     retryMs: Number(argumentValue(args, "--retry-ms") ?? 15_000),
     screenshotDir: argumentValue(args, "--screenshot-dir"),
   });
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (approved && JSON.stringify(result.pages.map((page) => page.path)) !== JSON.stringify(approved.target.renderedRoutes)) throw new Error("LANDING_PUBLISHED_ROUTE_MISMATCH");
+  await writeImportVerifierEvidence(argumentValue(args, "--receipt"), approved?.target, result);
+  process.stdout.write(`${JSON.stringify({ ...result, target: approved?.target }, null, 2)}\n`);
 }
 
 if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/verify-landing-deployment.ts")) {

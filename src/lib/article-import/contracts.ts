@@ -30,6 +30,29 @@ export const importTransformationSchema = z.object({
 }).strict();
 export type ImportTransformationV1 = z.infer<typeof importTransformationSchema>;
 
+export const importPresentationValidationSchema = z.object({
+  schemaVersion: z.literal("ImportPresentationValidationV1"),
+  format: importFormatSchema.exclude(["agent_review_required"]),
+  artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  renderedRoutes: z.array(z.string().startsWith("/")).min(1),
+  checks: z.object({ desktop: z.literal(true), mobile: z.literal(true), accessibility: z.literal(true), technicalSeo: z.literal(true), overflow: z.literal(true), runtimeErrors: z.literal(true) }).strict(),
+  evidencePaths: z.array(z.string().min(1)).min(1),
+  notes: z.string().min(1),
+}).strict();
+
+export const importPresentationReceiptSchema = z.object({
+  schemaVersion: z.literal("ImportPresentationReceiptV1"),
+  format: importFormatSchema.exclude(["agent_review_required"]),
+  artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  artifactPath: z.string().min(1),
+  validationGate: z.string().min(1),
+  validationReceiptFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  validation: importPresentationValidationSchema,
+  evidenceFiles: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1),
+  renderedRoutes: z.array(z.string().startsWith("/")).min(1),
+  presentedAt: z.string().datetime({ offset: true }),
+}).strict();
+
 export const importReleaseSchema = z.object({
   schemaVersion: z.literal("ImportReleaseV1"),
   commitSha: z.string().regex(/^[a-f0-9]{40}$/),
@@ -48,8 +71,30 @@ export const importReleaseSchema = z.object({
     browserErrorsOk: z.literal(true),
   }).strict(),
   previousDeploymentId: z.string().min(1).optional(),
+  presentationFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 }).strict();
 export type ImportReleaseV1 = z.infer<typeof importReleaseSchema>;
+
+export const importCodeReviewSchema = z.object({
+  schemaVersion: z.literal("ImportCodeReviewV1"),
+  reviewer: z.literal("codex"),
+  independent: z.literal(true),
+  passed: z.literal(true),
+  reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
+  pullRequestUrl: z.string().url(),
+  evidenceUrl: z.string().url(),
+  reviewedAt: z.string().datetime({ offset: true }),
+}).strict();
+
+export const importPendingReleaseSchema = z.object({
+  schemaVersion: z.literal("ImportPendingReleaseV1"),
+  reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
+  branch: z.string().regex(/^codex\/article-import\/[a-z0-9-]{1,80}$/),
+  pullRequestUrl: z.string().url().optional(),
+  createdAt: z.string().datetime({ offset: true }),
+  mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
+  codeReview: importCodeReviewSchema.optional().catch(undefined),
+}).strict();
 
 export const externalArticleImportSchema = z.object({
   schemaVersion: z.literal("ExternalArticleImportV1"),
@@ -68,6 +113,8 @@ export const externalArticleImportSchema = z.object({
   unusableReason: z.string().optional(),
   transformation: importTransformationSchema.optional(),
   contentApproval: contentApprovalSchema.optional().catch(undefined),
+  presentation: importPresentationReceiptSchema.optional(),
+  pendingRelease: importPendingReleaseSchema.optional(),
   release: importReleaseSchema.optional(),
   stageReceipts: z.array(z.object({
     stage: importStageSchema,

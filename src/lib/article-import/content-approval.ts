@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 
 import { EDITORIAL_REVISION, canReuseEditorialEvidence, fingerprintEditorialArtifact, type createEditorialEvidence } from "../editorial/refinement";
+import { importFormatQualityGates, validateImportArtifact } from "./format-validation";
 
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 export const contentApprovalSchema = z.object({
@@ -24,7 +25,6 @@ export type ApprovalFiles = { artifactPath: string; editorialEvidencePath: strin
 
 const formats = { "direct-review": "landing", blog: "blog", visibility: "visibility", "decision-set": "decision" } as const;
 const revisions = { "direct-review": "PageBlueprintV1", blog: "BlogPostV1", visibility: "VisibilityPageV1", "decision-set": "DecisionSetV2" } as const;
-const qualityGates = { "direct-review": "landing:quality:candidate", blog: "validate:public-site", visibility: "validate:public-site", "decision-set": "validate:public-site" } as const;
 
 async function readCanonicalJson(root: string, file: string) {
   const canonicalRoot = await realpath(root);
@@ -45,7 +45,8 @@ export async function createContentApproval(root: string, input: ApprovalFiles &
     !evidence.semanticNotes?.trim() || !evidence.checker?.before?.trim() || !evidence.checker?.after?.trim() ||
     !canReuseEditorialEvidence(evidence, formats[format], artifact.value)) throw new Error("Editorial evidence does not approve the current artifact.");
   const artifactFingerprint = fingerprintEditorialArtifact(artifact.value);
-  z.object({ format: z.literal(format), artifactFingerprint: z.literal(artifactFingerprint), passed: z.literal(true), gate: z.literal(qualityGates[format]) }).passthrough().parse(quality.value);
+  validateImportArtifact(format, artifact.value);
+  z.object({ format: z.literal(format), artifactFingerprint: z.literal(artifactFingerprint), passed: z.literal(true), gate: z.literal(importFormatQualityGates[format]) }).passthrough().parse(quality.value);
   return contentApprovalSchema.parse({
     schemaVersion: "ImportContentApprovalV1", artifactPath: artifact.path, format, schemaRevision: revisions[format],
     artifactFingerprint, sourceFingerprint: input.sourceFingerprint, editorialRevision: EDITORIAL_REVISION,

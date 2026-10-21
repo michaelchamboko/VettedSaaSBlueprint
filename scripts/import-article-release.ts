@@ -1,5 +1,6 @@
-import { loadImport } from "../src/lib/article-import/engine";
-import { assessImportRelease, type ReleaseOperations } from "../src/lib/article-import/release";
+import { loadImport, resumeImport } from "../src/lib/article-import/engine";
+import { assessImportRelease, recordImportCodeReview, type ReleaseOperations } from "../src/lib/article-import/release";
+import { readFile } from "node:fs/promises";
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 
 function argument(name: string): string | undefined {
@@ -16,7 +17,9 @@ function unconfiguredOperations(): ReleaseOperations {
     runValidation: unavailable,
     capturePreviousDeployment: unavailable,
     commit: unavailable,
-    pushFastForward: unavailable,
+    preparePullRequest: unavailable,
+    inspectPullRequest: unavailable,
+    checkoutMergedCommit: unavailable,
     deploy: unavailable,
     verifyProduction: unavailable,
     rollback: unavailable,
@@ -27,10 +30,17 @@ function unconfiguredOperations(): ReleaseOperations {
 async function main(): Promise<void> {
   const importId = argument("--import-id");
   if (!importId) throw new Error("--import-id is required.");
-  const record = await loadImport(process.cwd(), importId);
+  let record = await loadImport(process.cwd(), importId);
   const files = process.argv.flatMap((value, index) => value === "--file" && process.argv[index + 1] ? [process.argv[index + 1]] : []);
   const artifactPath = argument("--artifact");
   const slug = argument("--slug");
+  const operations = process.argv.includes("--execute") ? createLocalReleaseOperations(process.cwd(), { format: record.format, slug, artifactPath, importId, origin: argument("--origin") }) : unconfiguredOperations();
+  const codeReviewFile = argument("--code-review-receipt");
+  if (codeReviewFile) {
+    if (!process.argv.includes("--execute")) throw new Error("--code-review-receipt requires --execute to verify the current PR head.");
+    record = await recordImportCodeReview(process.cwd(), record, JSON.parse(await readFile(codeReviewFile, "utf8")), operations.inspectPullRequest);
+    record = await resumeImport(process.cwd(), record);
+  }
   const result = await assessImportRelease({
     repositoryRoot: process.cwd(),
     record,
@@ -39,7 +49,7 @@ async function main(): Promise<void> {
     execute: process.argv.includes("--execute"),
     artifactPath,
     slug,
-    operations: process.argv.includes("--execute") ? createLocalReleaseOperations(process.cwd(), { format: record.format, slug, artifactPath, origin: argument("--origin") }) : unconfiguredOperations(),
+    operations,
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }

@@ -6,6 +6,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node scripts/run-active-tests.mjs",
+    "verify:agent-workflow": "node scripts/verify-agent-workflow.mjs",
     "validate:public-site": "tsx scripts/validate-public-site.ts",
     "gate:public-release": "npm run validate:public-site",
     "validate:landing:matrix": "node scripts/validate-landing-workflow-matrix.mjs",

@@ -6,8 +6,12 @@ import { chromium } from "@playwright/test";
 
 import { productionQualityReceiptV2Schema } from "../src/lib/automation/contracts";
 import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
+import { decisionSetV2Schema, getDecisionSet, type DecisionJourneyRecordV2 } from "../src/lib/decision-journey/sets";
+import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
+import { writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 const defaultOrigin = "https://vettedsaasblueprint.online";
+let targets: Record<string, (typeof decisionJourneyCatalog)[string] | DecisionJourneyRecordV2> = decisionJourneyCatalog;
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -24,7 +28,7 @@ type Check = {
 type Screenshot = { route: string; viewport: string; mode: string; path: string };
 
 async function checkHtml(origin: string, route: keyof typeof decisionJourneyCatalog): Promise<Check[]> {
-  const record = decisionJourneyCatalog[route];
+  const record = targets[route];
   const url = `${origin}${route}`;
   try {
     const response = await fetch(url, { redirect: "error" });
@@ -71,8 +75,8 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
         { route: input.route, viewport: `${profile.viewport.width}x${profile.viewport.height}`, mode: `${profile.name}: full-page`, path: fullPage },
       );
       checks.push(
-        { name: `${input.route}: ${profile.name} principal content`, passed: primary === decisionJourneyCatalog[input.route].headline, detail: "The route-specific headline remains available in the rendered page.", category: "accessibility" },
-        { name: `${input.route}: ${profile.name} complete structure`, passed: sectionCount === decisionJourneyCatalog[input.route].blocks.length, detail: "Rendered section count matches the structured catalogue.", category: "content" },
+        { name: `${input.route}: ${profile.name} principal content`, passed: primary === targets[input.route].headline, detail: "The route-specific headline remains available in the rendered page.", category: "accessibility" },
+        { name: `${input.route}: ${profile.name} complete structure`, passed: sectionCount === targets[input.route].blocks.length, detail: "Rendered section count matches the structured catalogue.", category: "content" },
         { name: `${input.route}: ${profile.name} layout`, passed: !overflow, detail: overflow ? "Horizontal overflow detected." : "No horizontal overflow detected.", category: "visual" },
         { name: `${input.route}: ${profile.name} console`, passed: browserErrors.length === 0, detail: browserErrors.length ? browserErrors.join(" | ") : "No browser console errors.", category: "motion" },
       );
@@ -86,20 +90,38 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
 
 async function main() {
   const origin = argument("--origin") ?? defaultOrigin;
+  const artifactPath = argument("--artifact");
+  const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "decision-set", artifactPath, argument("--slug")) : undefined;
+  const slug = approved?.target.slug ?? argument("--slug");
+  if (slug) {
+    const set = getDecisionSet(slug);
+    if (!set) throw new Error(`Unknown decision set: ${slug}`);
+    if (approved && JSON.stringify(set) !== JSON.stringify(decisionSetV2Schema.parse(approved.artifact))) throw new Error("DECISION_PUBLISHED_ARTIFACT_MISMATCH");
+    targets = Object.fromEntries(Object.values(set.pages).map((page) => [page.canonicalPath, page]));
+  }
+  const [robots, sitemap] = await Promise.all(["robots.txt", "sitemap.xml"].map(async (file) => {
+    const response = await fetch(`${origin}/${file}`);
+    if (!response.ok) throw new Error(`${file}: HTTP ${response.status}`);
+    return response.text();
+  }));
+  const robotsOk = !/^Disallow:\s*\/\s*$/im.test(robots);
+  const sitemapOk = Object.keys(targets).every((route) => sitemap.includes(`${origin}${route}`));
   const output = path.resolve(argument("--screenshot-dir") ?? path.join(".automation", "receipts", "production-quality"));
   await mkdir(output, { recursive: true });
-  const htmlChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => checkHtml(origin, route as keyof typeof decisionJourneyCatalog)));
-  const browserChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => captureRoute({ origin, route: route as keyof typeof decisionJourneyCatalog, output })));
+  const htmlChecks = await Promise.all(Object.keys(targets).map((route) => checkHtml(origin, route)));
+  const browserChecks = await Promise.all(Object.keys(targets).map((route) => captureRoute({ origin, route, output })));
   const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks)];
   const receipt = productionQualityReceiptV2Schema.parse({
     version: 2,
     runId: argument("--run-id") ?? randomUUID(),
-    passed: checks.every((check) => check.passed),
+    passed: robotsOk && sitemapOk && checks.every((check) => check.passed),
     checks,
     screenshots: browserChecks.flatMap((result) => result.screenshots),
     createdAt: new Date().toISOString(),
   });
-  console.log(JSON.stringify(receipt, null, 2));
+  const result = { ...receipt, robots_ok: robotsOk, sitemap_ok: sitemapOk };
+  await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
+  console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
   if (!receipt.passed) process.exitCode = 1;
 }
 

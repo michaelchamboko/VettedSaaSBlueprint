@@ -1,12 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { link, mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, type ApprovalFiles } from "./content-approval";
 import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
+import { createImportPresentation, verifyImportPresentationEvidence } from "./presentation";
 
 const ROOT = ".automation/article-imports";
+const activeLease = new AsyncLocalStorage<ImportLease>();
 const INSTRUCTION_LINE = /ignore\s+(all|any|the)\s+(previous|prior)|system\s+prompt|developer\s+message|reveal\s+your\s+instructions|jailbreak/i;
 const RISK_PATTERNS = [
   ["price", /\$\s?\d|\b\d+\s?(?:\/month|per month|monthly)\b/i],
@@ -178,14 +181,15 @@ export async function writeJsonAtomically(file: string, value: unknown, replace:
   }
 }
 
-async function atomicWrite(file: string, value: unknown): Promise<void> {
-  return writeJsonAtomically(file, value);
-}
-
 export async function saveImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<string> {
   const parsed = externalArticleImportSchema.parse(record);
   const file = recordPath(repositoryRoot, parsed.importId);
-  await atomicWrite(file, parsed);
+  const lease = activeLease.getStore();
+  await lease?.assertOwned();
+  await writeJsonAtomically(file, parsed, async (from, to) => {
+    await lease?.assertOwned();
+    await rename(from, to);
+  });
   return file;
 }
 
@@ -197,13 +201,87 @@ export async function listPendingImports(repositoryRoot: string): Promise<Extern
   return (await listAllImports(repositoryRoot)).filter((record) => !["LIVE", "QUARANTINED"].includes(record.stage));
 }
 
-export async function resumePendingImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
-  const pending = await listPendingImports(repositoryRoot);
-  return Promise.all(pending.map((record) =>
-    ["WAITING_EXTERNAL", "REPAIRING", "ROLLED_BACK"].includes(record.stage)
-      ? resumeImport(repositoryRoot, record)
-      : record,
-  ));
+type LeaseRecord = { generation: number; ownerToken: string; expiresAt: number };
+export type ImportLease = { ownerToken: string; expiresAt: number; assertOwned: () => Promise<void>; release: () => Promise<void> };
+
+// Immutable generations make exclusive hard-link creation a filesystem compare-and-swap.
+// An expired owner can never delete or overwrite a successor's lease.
+export async function claimImportLease(repositoryRoot: string, importId: string, ttlMs = 30 * 60_000): Promise<ImportLease | undefined> {
+  if (!/^article-[0-9a-f-]{36}$/.test(importId) || ttlMs <= 0) throw new Error("Invalid import lease request.");
+  const directory = path.join(storeRoot(repositoryRoot), "leases", importId);
+  await mkdir(directory, { recursive: true });
+  const latest = async (): Promise<LeaseRecord | undefined> => {
+    const generations = (await readdir(directory)).filter((name) => /^\d+\.json$/.test(name)).map((name) => Number(name.slice(0, -5)));
+    if (!generations.length) return undefined;
+    return JSON.parse(await readFile(path.join(directory, `${Math.max(...generations)}.json`), "utf8")) as LeaseRecord;
+  };
+  const append = async (record: LeaseRecord): Promise<boolean> => {
+    const temporary = path.join(directory, `${randomUUID()}.tmp`);
+    await writeJsonAtomically(temporary, record);
+    try {
+      await link(temporary, path.join(directory, `${record.generation}.json`));
+      return true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
+      throw error;
+    } finally { await unlink(temporary); }
+  };
+  const previous = await latest();
+  if (previous && previous.expiresAt > Date.now()) return undefined;
+  const record = { generation: (previous?.generation ?? 0) + 1, ownerToken: randomUUID(), expiresAt: Date.now() + ttlMs };
+  if (!await append(record)) return undefined;
+  const assertOwned = async () => {
+    const current = await latest();
+    if (current?.ownerToken !== record.ownerToken || current.expiresAt <= Date.now()) throw new Error("Import lease expired or changed owner.");
+  };
+  return { ownerToken: record.ownerToken, expiresAt: record.expiresAt, assertOwned, release: async () => {
+    const current = await latest();
+    if (current?.ownerToken === record.ownerToken) await append({ generation: current.generation + 1, ownerToken: record.ownerToken, expiresAt: 0 });
+  } };
+}
+
+export type ImportExecutionContext = {
+  record: ExternalArticleImportV1; stage: ImportStage; strategy: string; attempt: number;
+  idempotencyKey: string; leaseToken: string; assertLease: () => Promise<void>;
+};
+export type ImportStageExecutor = (context: ImportExecutionContext) => Promise<ExternalArticleImportV1>;
+
+function strategyGroup(stage: ImportStage): string {
+  return ({ RESEARCHING: "research", TRANSFORMING: "transform", REFINING: "validate", VALIDATING: "validate", RELEASING: "release", VERIFYING: "release" } as Partial<Record<ImportStage, string>>)[stage] ?? "research";
+}
+
+export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor): Promise<ExternalArticleImportV1> {
+  const lease = await claimImportLease(repositoryRoot, importId);
+  if (!lease) return loadImport(repositoryRoot, importId);
+  try {
+    return await activeLease.run(lease, async () => {
+      const current = await loadImport(repositoryRoot, importId);
+      if (["LIVE", "QUARANTINED"].includes(current.stage)) return current;
+      const record = await resumeImport(repositoryRoot, current);
+      const group = strategyGroup(record.stage);
+      const failures = record.strategyAttempts[group] ?? 0;
+      const strategy = STRATEGIES[group][Math.min(Math.floor(failures / 3), STRATEGIES[group].length - 1)];
+      const idempotencyKey = fingerprint(`${importId}:${record.sourceFingerprint}:${record.stage}:${strategy}`);
+      await lease.assertOwned();
+      let result: ExternalArticleImportV1;
+      try {
+        result = await execute({ record, stage: record.stage, strategy, attempt: failures % 3 + 1, idempotencyKey, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
+      } catch (error) {
+        await lease.assertOwned();
+        return recordImportFailure(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, classification: "transient", message: error instanceof Error ? error.message : String(error) });
+      }
+      if (result.importId !== importId || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("Stage executor changed import identity.");
+      await lease.assertOwned();
+      await saveImport(repositoryRoot, result);
+      return result;
+    });
+  } finally { await lease.release(); }
+}
+
+export async function resumePendingImports(repositoryRoot: string, execute: ImportStageExecutor): Promise<ExternalArticleImportV1[]> {
+  const results: ExternalArticleImportV1[] = [];
+  for (const record of await listPendingImports(repositoryRoot)) results.push(await executePendingImport(repositoryRoot, record.importId, execute));
+  return results;
 }
 
 async function listAllImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
@@ -254,7 +332,7 @@ const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEA
 export async function approveImportContent(repositoryRoot: string, record: ExternalArticleImportV1, files: ApprovalFiles): Promise<ExternalArticleImportV1> {
   if (record.stage !== "REFINING") throw new Error("Content approval requires REFINING.");
   const contentApproval = await createContentApproval(repositoryRoot, { ...files, format: record.format, sourceFingerprint: record.sourceFingerprint });
-  const updated = { ...record, contentApproval, updatedAt: now() };
+  const updated = externalArticleImportSchema.parse({ ...record, contentApproval, presentation: undefined, pendingRelease: undefined, release: undefined, updatedAt: now() });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
@@ -262,7 +340,7 @@ export async function approveImportContent(repositoryRoot: string, record: Exter
 export async function ensureImportContentApproval(repositoryRoot: string, record: ExternalArticleImportV1, artifactPath?: string): Promise<ExternalArticleImportV1> {
   if (await contentApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint, artifactPath)) return record;
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, contentApproval: undefined, release: undefined, resumeStage: undefined, stage: "REFINING", updatedAt: at,
+  const updated = externalArticleImportSchema.parse({ ...record, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined, resumeStage: undefined, stage: "REFINING", updatedAt: at,
     stageReceipts: [...record.stageReceipts, { stage: "REFINING", status: "failed", at, message: "Content approval is missing or no longer matches the artifact and evidence." }],
     nextAction: "Refine the current artifact and record fresh editorial and format quality approval.",
   });
@@ -270,15 +348,50 @@ export async function ensureImportContentApproval(repositoryRoot: string, record
   return updated;
 }
 
+export async function ensureImportPresentation(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  try {
+    await verifyImportPresentationEvidence(repositoryRoot, record);
+    return record;
+  } catch {
+    const at = now();
+    const updated = externalArticleImportSchema.parse({ ...record, presentation: undefined, pendingRelease: undefined, release: undefined, resumeStage: undefined, stage: "VALIDATING", updatedAt: at,
+      stageReceipts: [...record.stageReceipts, { stage: "VALIDATING", status: "failed", at, message: "Presentation evidence is missing or no longer matches the approved content." }],
+      nextAction: "Render the approved content without changing its words and record fresh presentation evidence.",
+    });
+    await saveImport(repositoryRoot, updated);
+    return updated;
+  }
+}
+
+export async function recordImportPresentation(repositoryRoot: string, record: ExternalArticleImportV1, input: { validationGate: string; validationReceipt: unknown }): Promise<ExternalArticleImportV1> {
+  if (record.stage !== "VALIDATING") throw new Error("Presentation evidence can only be recorded from VALIDATING.");
+  const checked = await ensureImportContentApproval(repositoryRoot, record);
+  if (!checked.contentApproval) return checked;
+  const presentation = await createImportPresentation(repositoryRoot, checked, input);
+  const at = now();
+  const updated = externalArticleImportSchema.parse({ ...checked, presentation, pendingRelease: undefined, release: undefined, updatedAt: at,
+    stageReceipts: [...checked.stageReceipts, { stage: "VALIDATING", status: "passed", at, message: "Presentation evidence recorded for the approved content fingerprint." }],
+    nextAction: "Advance to release without changing the approved words.",
+  });
+  await saveImport(repositoryRoot, updated);
+  return updated;
+}
+
 export async function advanceImport(repositoryRoot: string, record: ExternalArticleImportV1, message: string): Promise<ExternalArticleImportV1> {
   const stage = nextStage[record.stage];
-  if (!stage) throw new Error(`Stage ${record.stage} cannot advance automatically.`);
+  if (!stage) throw new Error("Stage " + record.stage + " cannot advance automatically.");
   if (["VALIDATING", "RELEASING"].includes(stage)) {
     const checked = await ensureImportContentApproval(repositoryRoot, record);
     if (!checked.contentApproval) return checked;
+    record = checked;
+  }
+  if (stage === "RELEASING") {
+    const checked = await ensureImportPresentation(repositoryRoot, record);
+    if (!checked.presentation) return checked;
+    record = checked;
   }
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: `Complete ${stage.toLowerCase()} and record its receipt.` });
+  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
@@ -288,8 +401,10 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
   const checked = await ensureImportContentApproval(repositoryRoot, record);
   if (!checked.contentApproval) return checked;
   const release = externalArticleImportSchema.shape.release.unwrap().parse(releaseInput);
+  const presented = await ensureImportPresentation(repositoryRoot, { ...checked, release });
+  if (!presented.presentation) return presented;
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
+  const updated = externalArticleImportSchema.parse({ ...presented, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
@@ -297,9 +412,11 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
 export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
   if (record.stage !== "VERIFYING" || !record.release) throw new Error("A validated release receipt is required before production verification.");
   const release = externalArticleImportSchema.shape.release.unwrap().parse(record.release);
+  const presented = await ensureImportPresentation(repositoryRoot, { ...record, release });
+  if (!presented.presentation) return presented;
   if (Object.values(release.checks).some((check) => check !== true)) throw new Error("Every required production check must pass before LIVE.");
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, stage: "LIVE", updatedAt: at, stageReceipts: [...record.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+  const updated = externalArticleImportSchema.parse({ ...presented, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
   return deleteRawSource(repositoryRoot, updated.importId, updated, at);
 }
 
@@ -307,6 +424,12 @@ export async function resumeImport(repositoryRoot: string, record: ExternalArtic
   if (["VALIDATING", "RELEASING", "VERIFYING"].includes(record.resumeStage ?? record.stage)) {
     const checked = await ensureImportContentApproval(repositoryRoot, record);
     if (!checked.contentApproval) return checked;
+    record = checked;
+  }
+  if (["RELEASING", "VERIFYING"].includes(record.resumeStage ?? record.stage)) {
+    const checked = await ensureImportPresentation(repositoryRoot, record);
+    if (!checked.presentation) return checked;
+    record = checked;
   }
   if (!["WAITING_EXTERNAL", "REPAIRING", "ROLLED_BACK"].includes(record.stage)) return record;
   const stage = record.resumeStage;
@@ -314,20 +437,19 @@ export async function resumeImport(repositoryRoot: string, record: ExternalArtic
     throw new Error("Recovery receipt does not identify a productive resume stage.");
   }
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "started", at, message: `Resumed from ${record.stage} using the recorded productive stage.` }], nextAction: `Retry ${stage.toLowerCase()} using the next recorded strategy.` });
+  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "started", at, message: "Resumed from " + record.stage + " using the recorded productive stage." }], nextAction: "Retry " + stage.toLowerCase() + " using the next recorded strategy." });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
-
 export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; message: string }): Promise<ExternalArticleImportV1> {
   const attemptKey = input.classification === "transient" ? `transient:${input.strategy}` : input.strategy;
   const attempt = (record.strategyAttempts[attemptKey] ?? 0) + 1;
   const attempts = { ...record.strategyAttempts, [attemptKey]: attempt };
   const strategies = STRATEGIES[input.strategy] ?? ["retry", "alternate", "quarantine"];
-  const next = strategies[attempt] ?? "quarantine";
+  const next = strategies[Math.floor(attempt / 3)] ?? "quarantine";
   const at = now();
   const exhausted = next === "quarantine";
-  const stage: ImportStage = input.classification === "transient" && !exhausted ? "WAITING_EXTERNAL" : next === "quarantine" ? "QUARANTINED" : "REPAIRING";
+  const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : exhausted ? "QUARANTINED" : "REPAIRING";
   const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
   const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
@@ -338,6 +460,6 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
 async function deleteRawSource(repositoryRoot: string, importId: string, record: ExternalArticleImportV1, at: string): Promise<ExternalArticleImportV1> {
   try { await unlink(sourcePath(repositoryRoot, importId)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
   const updated = externalArticleImportSchema.parse({ ...record, sourceDeletedAt: at });
-  await atomicWrite(recordPath(repositoryRoot, importId), updated);
+  await saveImport(repositoryRoot, updated);
   return updated;
 }

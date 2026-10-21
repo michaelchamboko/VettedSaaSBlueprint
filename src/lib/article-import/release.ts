@@ -1,5 +1,26 @@
 import { ensureImportContentApproval, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
+import { fingerprintEditorialArtifact } from "../editorial/refinement";
+import { requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
+import { readImportArtifactTarget } from "./format-validation";
+import { importCodeReviewSchema } from "./contracts";
+
+export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, inspectPullRequest: ReleaseOperations["inspectPullRequest"]): Promise<ExternalArticleImportV1> {
+  const codeReview = importCodeReviewSchema.parse(receipt);
+  const pending = record.pendingRelease;
+  if (!pending?.pullRequestUrl || codeReview.pullRequestUrl !== pending.pullRequestUrl || codeReview.reviewedCommitSha !== pending.reviewedCommitSha) throw new Error("CODE_REVIEW_BINDING_MISMATCH");
+  const current = await inspectPullRequest(pending.pullRequestUrl);
+  if (current.headRefOid !== codeReview.reviewedCommitSha) throw new Error("CODE_REVIEW_HEAD_CHANGED");
+  const updated = { ...record, pendingRelease: { ...pending, codeReview }, updatedAt: new Date().toISOString() };
+  await saveImport(repositoryRoot, updated);
+  return updated;
+}
+
+function hasCurrentCodeReview(record: ExternalArticleImportV1, head: string): boolean {
+  const pending = record.pendingRelease;
+  const review = importCodeReviewSchema.safeParse(pending?.codeReview);
+  return review.success && review.data.reviewedCommitSha === head && head === pending?.reviewedCommitSha && review.data.pullRequestUrl === pending.pullRequestUrl;
+}
 
 export type FullProductionChecks = {
   routeOk: boolean;
@@ -34,8 +55,10 @@ export type ReleaseOperations = {
   refreshMain(): Promise<ReleaseGitSnapshot>;
   runValidation(commands: readonly string[]): Promise<{ ok: boolean; summary: string }>;
   capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string; verified: boolean }>;
-  commit(message: string): Promise<string>;
-  pushFastForward(commitSha: string): Promise<{ commitSha: string; originMainSha: string; force: false }>;
+  commit(message: string, files: readonly string[]): Promise<string>;
+  preparePullRequest(reviewedCommitSha: string): Promise<{ url: string; branch: string; reviewedCommitSha: string }>;
+  inspectPullRequest(url: string): Promise<{ merged: boolean; headRefOid: string; mergeCommitSha?: string }>;
+  checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;
   deploy(commitSha: string): Promise<ReleaseDeployment>;
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
   rollback(deploymentId: string): Promise<{ ok: boolean; summary: string }>;
@@ -59,16 +82,10 @@ const COMMON_VALIDATION_COMMANDS = [
   "npm run build",
   "npm run validate:public-site",
 ] as const;
-const FORMAT_VALIDATION_GATES: Partial<Record<ImportFormat, readonly string[]>> = {
-  blog: ["npm run validate:public-site"],
-  visibility: ["npm run validate:public-site"],
-  "decision-set": ["npm run validate:public-site"],
-};
-
 export function validationCommandsForFormat(format: ImportFormat, artifactPath?: string): readonly string[] | undefined {
+  if (!artifactPath || !/^[a-zA-Z0-9_./-]+$/.test(artifactPath) || artifactPath.split("/").includes("..") || artifactPath.startsWith("/")) return undefined;
   const basename = artifactPath?.replaceAll("\\", "/").split("/").at(-1);
-  const gate = format === "direct-review" && basename ? [`npm run landing:quality:candidate -- --artifact ${basename}`] : FORMAT_VALIDATION_GATES[format];
-  if (format === "direct-review" && !artifactPath) return undefined;
+  const gate = format === "direct-review" && basename ? [`npm run landing:quality:candidate -- --artifact ${basename}`] : format !== "agent_review_required" ? [`npx tsx scripts/validate-article-artifact.ts ${format} ${artifactPath}`] : undefined;
   return gate ? [...gate, ...COMMON_VALIDATION_COMMANDS] : undefined;
 }
 
@@ -127,6 +144,13 @@ export async function assessImportRelease(input: {
   const reasons: string[] = [];
   const disallowed = validateReleasePaths(input.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true);
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
+  if (input.execute && input.record.contentApproval) {
+    try {
+      if (input.artifactPath?.replaceAll("\\", "/") !== input.record.contentApproval.artifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
+      const { target } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
+      input.slug = target.slug;
+    } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
+  }
   if (input.record.format === "direct-review") {
     if (!input.slug) reasons.push("DIRECT_REVIEW_SLUG_REQUIRED");
     const expected = input.slug ? `src/generated/landing-pages/${input.slug}.json` : undefined;
@@ -137,11 +161,17 @@ export async function assessImportRelease(input: {
   if (input.killSwitchEnabled) {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
   }
-  const preflight = await input.operations.preflight();
-  if (!preflight.ok) reasons.push(...preflight.reasons);
-  if (reasons.length || !input.execute) {
-    return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
+  if (input.execute && reasons.length) {
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: reasons.join("; ") });
+    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons };
   }
+  try {
+    const preflight = await input.operations.preflight();
+    if (!preflight.ok) reasons.push(...preflight.reasons);
+    if (reasons.length || !input.execute) {
+      if (input.execute) await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: reasons.join("; ") });
+      return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
+    }
 
   const validationCommands = validationCommandsForFormat(input.record.format, input.artifactPath);
   const approved = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
@@ -155,14 +185,22 @@ export async function assessImportRelease(input: {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: validation.summary });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [validation.summary] };
   }
+  input.record = approved;
+  try { await verifyImportPresentationEvidence(input.repositoryRoot, input.record); }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message });
+    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
+  }
+  const presentation = input.record.presentation!;
 
   const initialGit = await input.operations.inspectGit();
   const inspectedFiles = normalizedPathSet(initialGit.changedFiles);
   const declaredFiles = normalizedPathSet(input.changedFiles);
   const gitReasons: string[] = [];
   if (!initialGit.clean || validateReleasePaths(inspectedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true).length) gitReasons.push("WORKTREE_NOT_RELEASE_SAFE");
-  if (inspectedFiles.join("\n") !== declaredFiles.join("\n")) gitReasons.push("DECLARED_CHANGED_FILES_MISMATCH");
-  if (input.record.format === "direct-review" && input.slug) {
+  if (!input.record.pendingRelease && inspectedFiles.join("\n") !== declaredFiles.join("\n")) gitReasons.push("DECLARED_CHANGED_FILES_MISMATCH");
+  if (!input.record.pendingRelease && input.record.format === "direct-review" && input.slug) {
     const expected = `src/generated/landing-pages/${input.slug}.json`;
     if (!inspectedFiles.includes(expected)) gitReasons.push("DIRECT_REVIEW_ARTIFACT_NOT_IN_WORKTREE");
   }
@@ -172,7 +210,7 @@ export async function assessImportRelease(input: {
   }
 
   const refreshed = await input.operations.refreshMain();
-  if (!refreshed.fastForwardable || refreshed.originMainSha !== initialGit.originMainSha) {
+  if (!input.record.pendingRelease && (!refreshed.fastForwardable || refreshed.originMainSha !== initialGit.originMainSha)) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: "main moved during release preparation; refresh and regenerate the candidate." });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: ["MAIN_MOVED"] };
   }
@@ -186,9 +224,34 @@ export async function assessImportRelease(input: {
   const rechecked = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
   if (!rechecked.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
   try {
-    const commitSha = await input.operations.commit(input.commitMessage ?? `publish imported article ${input.record.importId}`);
-    const pushProof = await input.operations.pushFastForward(commitSha);
-    if (pushProof.commitSha !== commitSha || pushProof.originMainSha !== commitSha || pushProof.force !== false) throw new Error("UNSAFE_PUSH_PROOF");
+    let pendingRelease = input.record.pendingRelease;
+    if (!pendingRelease) {
+      const reviewedCommitSha = await input.operations.commit(input.commitMessage ?? ("publish imported article " + input.record.importId), declaredFiles);
+      pendingRelease = { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha, branch: "codex/article-import/" + input.record.importId, createdAt: new Date().toISOString() };
+      input.record = { ...input.record, pendingRelease };
+      await saveImport(input.repositoryRoot, input.record);
+    }
+    if (!pendingRelease.pullRequestUrl) {
+      const pullRequest = await input.operations.preparePullRequest(pendingRelease.reviewedCommitSha);
+      if (pullRequest.reviewedCommitSha !== pendingRelease.reviewedCommitSha || pullRequest.branch !== pendingRelease.branch) throw new Error("PULL_REQUEST_COMMIT_MISMATCH");
+      pendingRelease = { ...pendingRelease, pullRequestUrl: pullRequest.url };
+      input.record = { ...input.record, pendingRelease };
+      await saveImport(input.repositoryRoot, input.record);
+      return await waitForCodeReview(input.repositoryRoot, input.record);
+    }
+    const pullRequest = await input.operations.inspectPullRequest(pendingRelease.pullRequestUrl);
+    if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED");
+    if (!hasCurrentCodeReview(input.record, pullRequest.headRefOid)) return await waitForCodeReview(input.repositoryRoot, input.record);
+    if (!pullRequest.merged) return await waitForOwnerMerge(input.repositoryRoot, input.record);
+    if (!pullRequest.mergeCommitSha) throw new Error("MERGE_COMMIT_MISSING");
+    const commitSha = pullRequest.mergeCommitSha;
+    await input.operations.checkoutMergedCommit(pendingRelease.reviewedCommitSha, commitSha);
+    const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
+    if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
+    requireImportPresentationBinding(mergedApproval);
+    pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha };
+    input.record = { ...input.record, pendingRelease };
+    await saveImport(input.repositoryRoot, input.record);
     const deployment = await input.operations.deploy(commitSha);
     deploymentStarted = true;
     if (deployment.commitSha !== commitSha) {
@@ -217,7 +280,8 @@ export async function assessImportRelease(input: {
       if (input.operations.fixForward && await input.operations.fixForward(1)) return { status: "ROLLED_BACK", reasons: ["FIX_FORWARD_REQUIRED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
       return { status: "ROLLED_BACK", reasons: ["PRODUCTION_CHECK_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
     }
-    const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, previousDeploymentId: previous.deploymentId });
+    const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
+    requireImportPresentationBinding(withReceipt);
     await verifyImportRelease(input.repositoryRoot, withReceipt);
     return { status: "LIVE", reasons: [], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl };
   } catch (error) {
@@ -236,6 +300,30 @@ export async function assessImportRelease(input: {
     await saveImport(input.repositoryRoot, updated);
     return { status: recoveryStage, reasons: [message, ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])], previousDeploymentId: previous.deploymentId };
   }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message });
+    return { status: "WAITING_EXTERNAL", reasons: [message] };
+  }
 }
 
 export { COMMON_VALIDATION_COMMANDS };
+
+async function waitForCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, reason = "CURRENT_HEAD_CODEX_REVIEW_REQUIRED"): Promise<ReleaseAssessment> {
+  const pending = record.pendingRelease;
+  if (!pending?.pullRequestUrl) throw new Error("PULL_REQUEST_URL_MISSING");
+  const at = new Date().toISOString();
+  await saveImport(repositoryRoot, { ...record, pendingRelease: { ...pending, codeReview: undefined }, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at,
+    nextAction: "Record a passed independent Codex review of the current PR head before owner merge: " + pending.pullRequestUrl,
+    stageReceipts: [...record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: reason + ": " + pending.pullRequestUrl }],
+  });
+  return { status: "WAITING_EXTERNAL", reasons: [reason, pending.pullRequestUrl] };
+}
+
+async function waitForOwnerMerge(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ReleaseAssessment> {
+  const pullRequestUrl = record.pendingRelease?.pullRequestUrl;
+  if (!pullRequestUrl) throw new Error("PULL_REQUEST_URL_MISSING");
+  const at = new Date().toISOString();
+  await saveImport(repositoryRoot, { ...record, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at, nextAction: "Owner review and merge required: " + pullRequestUrl, stageReceipts: [...record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: "Owner approval required: " + pullRequestUrl }] });
+  return { status: "WAITING_EXTERNAL", reasons: ["OWNER_PR_MERGE_REQUIRED", pullRequestUrl] };
+}

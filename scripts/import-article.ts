@@ -1,4 +1,5 @@
-import { createArticleImport, loadImport, resumeImport, resumePendingImports } from "../src/lib/article-import/engine";
+import { createArticleImport, executePendingImport, resumePendingImports, type ImportStageExecutor } from "../src/lib/article-import/engine";
+import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 
 export type ImportCommand = { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "resume-pending" };
 
@@ -12,15 +13,13 @@ export function parseImportCommand(argv: string[]): ImportCommand {
   throw new Error("Use --source <file>, --resume <import-id>, or --resume-pending.");
 }
 
-export async function executeImportCommand(root: string, command: ImportCommand): Promise<unknown> {
+export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor): Promise<unknown> {
   if (command.kind === "source") {
     return createArticleImport(root, command.source);
   }
-  if (command.kind === "resume") {
-    const record = await loadImport(root, command.importId);
-    return resumeImport(root, record);
-  }
-  return resumePendingImports(root);
+  const execute = executor ?? createSupervisedImportExecutor(root);
+  if (command.kind === "resume") return executePendingImport(root, command.importId, execute);
+  return resumePendingImports(root, execute);
 }
 
 async function main(): Promise<void> {

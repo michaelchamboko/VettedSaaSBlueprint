@@ -25,8 +25,29 @@ Complete the next action in the receipt in order:
 3. Apply `.agents/skills/eleanor-editorial/SKILL.md` exactly once after evidence-backed drafting and before validation. Run `scripts/compare-editorial-artifacts.ts`, preserve protected fields and item order, and save the evidence receipt.
 4. For an affiliate URL, use the exact resolved allowlisted URL in the transformation receipt. If the receipt says `decommercialized`, remove affiliate links and commercial CTAs and publish a neutral article. Never edit `approved-urls.md`.
 5. Run the format validator, quality checks, `npm run verify:agent-workflow`, lint, typecheck, tests, build, public-site validation, and applicable production verification. Repair the failed layer, then record a stage receipt.
-6. Release from a clean worktree after refreshing `main`. Recreate the content artifact if its target changed, never force-push, capture the previous Vercel deployment, and verify the new canonical URL. If verification fails, roll back the captured deployment, verify restoration, and fix forward.
+6. Release from a clean worktree after refreshing `main`. Recreate the content artifact if its target changed, stage only declared files, and open or reuse an import PR. Wait for owner-approved merge, then deploy the exact merged commit and verify the canonical URL. If verification fails, roll back the captured deployment, verify restoration, and fix forward.
 
 Use `npm run import:article -- --resume <import-id>` to inspect one run and `npm run import:article -- --resume-pending` for the quiet recovery heartbeat. A transient dependency failure is `WAITING_EXTERNAL`; a submission with no safe publishable topic is `QUARANTINED`.
+
+### Supervised heartbeat execution
+
+The Codex heartbeat is the supervising agent. The CLI executes local gates; it does not call a separate model service. During each existing heartbeat window:
+
+1. Run `npm run import:article -- --resume-pending`. For a productive stage, read the `*.work.json` path in `nextAction`. Execute its instructions with the existing research, editorial or presentation tools; do not stop after listing the packet.
+2. Write the packet's `resultPath` atomically. Use its exact `idempotencyKey` and `sourceFingerprint`, a truthful `summary`, and a `work` object with the recorded `stage` and the stage's required fields below. Keep evidence files in the repository. Reuse existing matching evidence after interruption; never invent successful work.
+3. Run the packet's `resumeCommand`. The runner claims an exclusive lease and validates/executes that result. Repeat while productive work remains in the window. An external outage remains resumable; missing agent output is work for this heartbeat, not an external outage.
+4. For release, let the adapter create the PR and record its head. Obtain independent current-head Codex review, write its `ImportCodeReviewV1` receipt and add `codeReviewPath` to the release result. The adapter waits for the owner's merge; the heartbeat must not merge on the owner's behalf.
+
+Stage result fields (in `work`):
+
+| Stage | Required fields |
+| --- | --- |
+| `RESEARCHING` | `evidencePath`: JSON containing `sources`, each with attributable `url` and nonempty `claims` arrays; preserve removal and uncertainty notes alongside them. |
+| `TRANSFORMING` | `artifactPath`, `format`: an existing, schema-valid supported content artifact with its required media. |
+| `REFINING` | `artifactPath`, `editorialEvidencePath`, `formatQualityPath`: existing content-approval inputs, bound to the current artifact. |
+| `VALIDATING` | `validationGate`, `validationReceiptPath`: the completed `ImportPresentationValidationV1` receipt for the frozen artifact. |
+| `RELEASING` | `artifactPath`, `changedFiles`; `slug` for direct reviews. Optional `origin` and `codeReviewPath`. The runtime performs the existing release sequence. |
+
+`INGESTING` and `VERIFYING` execute locally. A stale result cannot advance a different source, stage or strategy. Results are retained under ignored `.automation/article-imports/work/` so the next heartbeat can continue after interruption.
 
 Before a release, run `npm run import:article:release -- --import-id <import-id> --file <changed-file>` for a structured dry-run assessment. Add `--execute` only when the supervising agent has injected authenticated Git/Vercel operations and has captured the prior verified deployment. The command never invents credentials or performs an unconfigured release.

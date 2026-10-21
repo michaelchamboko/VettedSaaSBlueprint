@@ -9,7 +9,8 @@ import {
 } from "../src/lib/article-import/engine";
 import { executeImportCommand, parseImportCommand } from "../scripts/import-article";
 import { writeJsonAtomically } from "../src/lib/article-import/engine";
-import { approveFixture } from "./fixtures/article-content-approval";
+import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 
 const allowlist = "- https://start.switcherstudio.com/anme6fqvgdx9\n- https://try.example.com/ref\n";
 const source = `---\ntitle: "How to stream with Switcher Studio"\nprimary_question: "How can a creator stream with multiple iOS cameras?"\naffiliate_name: "Switcher Studio"\naffiliate_url: "[https://start.switcherstudio.com/anme6fqvgd](https://start.switcherstudio.com/anme6fqvgd)"\n---\n\nA practical guide for creators using several iOS devices in one production workflow. It explains the operating choices and trade-offs clearly.\n`;
@@ -76,16 +77,16 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
     assert.equal(run.stage, "RESEARCHING");
     run = await recordImportFailure(root, run, { strategy: "research", classification: "deterministic", message: "Source claim needs support." });
     assert.equal(run.stage, "REPAIRING");
-    assert.match(run.nextAction, /narrow-claim/);
+    assert.match(run.nextAction, /alternate-source/);
     run = await resumeImport(root, run);
     assert.equal(run.stage, "RESEARCHING");
     run = await recordImportFailure(root, run, { strategy: "research", classification: "transient", message: "Provider timeout." });
     assert.equal(run.stage, "WAITING_EXTERNAL");
-    run = await executeImportCommand(root, { kind: "resume", importId: run.importId }) as typeof run;
+    run = await executeImportCommand(root, { kind: "resume", importId: run.importId }, async ({ record }) => record) as typeof run;
     assert.equal(run.stage, "RESEARCHING");
     const resumed = await loadImport(root, run.importId);
     assert.equal(resumed.stage, "RESEARCHING");
-    for (let i = 0; i < 3; i += 1) run = await recordImportFailure(root, run, { strategy: "validate", classification: "deterministic", message: `Invalid candidate ${i}` });
+    for (let i = 0; i < 9; i += 1) run = await recordImportFailure(root, run, { strategy: "validate", classification: "deterministic", message: `Invalid candidate ${i}` });
     assert.equal(run.stage, "QUARANTINED");
     assert.equal(run.sourceDeletedAt !== undefined, true);
   } finally {
@@ -93,7 +94,7 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
   }
 });
 
-test("resume-pending resumes recoverable receipts and leaves active work pending", async () => {
+test("resume-pending executes the next local stage", async () => {
   const root = await testRoot("article-import-resume-pending-");
   try {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
@@ -103,7 +104,7 @@ test("resume-pending resumes recoverable receipts and leaves active work pending
     const resumed = await executeImportCommand(root, { kind: "resume-pending" }) as Array<{ importId: string; stage: string }>;
     assert.equal(resumed.length, 1);
     assert.equal(resumed[0]?.importId, created.importId);
-    assert.equal(resumed[0]?.stage, "INGESTING");
+    assert.equal(resumed[0]?.stage, "RESEARCHING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -143,11 +144,12 @@ test("live completion deletes raw source and retains the receipt", async () => {
     let run = await createArticleImport(root, "article.md");
     for (const message of ["research", "transform", "refine", "validate", "release"]) {
       if (run.stage === "REFINING") run = await approveFixture(root, run);
+      if (run.stage === "VALIDATING") run = await presentFixture(root, run);
       run = await advanceImport(root, run, message);
     }
     assert.equal(run.stage, "RELEASING");
     await assert.rejects(() => advanceImport(root, run, "pretend release"), /cannot advance/);
-    const release = { schemaVersion: "ImportReleaseV1", commitSha: "a".repeat(40), deploymentId: "dpl_test", canonicalUrl: "https://example.com/article", verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } };
+    const release = { schemaVersion: "ImportReleaseV1", commitSha: "a".repeat(40), deploymentId: "dpl_test", canonicalUrl: "https://example.com/imported-guide", presentationFingerprint: fingerprintEditorialArtifact(run.presentation), verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } };
     run = await recordImportRelease(root, run, release);
     assert.equal(run.stage, "VERIFYING");
     run = await verifyImportRelease(root, run);
@@ -167,9 +169,10 @@ test("LIVE duplicate creates an explicit reuse receipt", async () => {
     let live = await createArticleImport(root, "article.md");
     for (const message of ["research", "transform", "refine", "validate", "release"]) {
       if (live.stage === "REFINING") live = await approveFixture(root, live);
+      if (live.stage === "VALIDATING") live = await presentFixture(root, live);
       live = await advanceImport(root, live, message);
     }
-    live = await recordImportRelease(root, live, { schemaVersion: "ImportReleaseV1", commitSha: "b".repeat(40), deploymentId: "dpl_live", canonicalUrl: "https://example.com/live", verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
+    live = await recordImportRelease(root, live, { schemaVersion: "ImportReleaseV1", commitSha: "b".repeat(40), deploymentId: "dpl_live", canonicalUrl: "https://example.com/imported-guide", presentationFingerprint: fingerprintEditorialArtifact(live.presentation), verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
     live = await verifyImportRelease(root, live);
     const reused = await createArticleImport(root, "article.md");
     assert.equal(reused.stage, "LIVE");

@@ -4,6 +4,9 @@ import path from "node:path";
 import { promisify } from "node:util";
 import type { ReleaseOperations, ReleaseDeployment, ReleaseGitSnapshot, FullProductionChecks } from "./release";
 import type { ImportFormat } from "./contracts";
+import { validateReleasePaths } from "./release";
+import { readImportArtifactTarget } from "./format-validation";
+import { assertVerifierResult } from "./verification-evidence";
 
 const execFile = promisify(execFileCallback);
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
@@ -23,7 +26,7 @@ async function linkedProjectId(repositoryRoot: string): Promise<string | undefin
 }
 async function git(runner: ReleaseCommandRunner, args: readonly string[]): Promise<string> { return (await runner("git", args)).stdout.trim(); }
 async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot> {
-  const status = await git(runner, ["status", "--porcelain"]);
+  const status = (await runner("git", ["status", "--porcelain", "--untracked-files=all"])).stdout;
   const lines = status.split(/\r?\n/).filter(Boolean);
   const changedFiles: string[] = [];
   let clean = true;
@@ -42,7 +45,7 @@ async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot
   return { clean, changedFiles, headSha, originMainSha, fastForwardable };
 }
 
-export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string }): ReleaseOperations {
+export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string; importId?: string }): ReleaseOperations {
   const runner = options.runner ?? defaultRunner(repositoryRoot);
   const defaultFetchJson: ReleaseJsonFetcher = async (url) => {
     const response = await fetch(url);
@@ -75,7 +78,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       try {
         await verifiedDeployment(previousId ?? origin);
       } catch { reasons.push("PREVIOUS_DEPLOYMENT_UNVERIFIED"); }
-      if (options.format === "direct-review" && !options.slug) reasons.push("DIRECT_REVIEW_SLUG_MISSING");
+      if (options.format === "direct-review" && !options.slug && !options.artifactPath) reasons.push("DIRECT_REVIEW_SLUG_MISSING");
       if (options.format === "direct-review" && !options.artifactPath) reasons.push("DIRECT_REVIEW_ARTIFACT_MISSING");
       try { await runner("git", ["--version"]); } catch { reasons.push("GIT_UNAVAILABLE"); }
       try { await runner("vercel", ["--version"]); } catch { reasons.push("VERCEL_CLI_UNAVAILABLE"); }
@@ -95,15 +98,37 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       const parsed = await verifiedDeployment(target);
       return { deploymentId: parsed.id, commitSha: parsed.commitSha, verified: true };
     },
-    async commit(message) {
-      await runner("git", ["add", "--all"]);
+    async commit(message, files) {
+      if (!files.length || validateReleasePaths(files, options.format).length) throw new Error("UNSAFE_STAGING_PATHS");
+      const staged = (await git(runner, ["diff", "--cached", "--name-only"])).split(/\r?\n/).filter(Boolean);
+      if (staged.some((file) => !files.includes(file))) throw new Error("UNDECLARED_STAGED_FILES");
+      await runner("git", ["add", "--", ...files]);
+      const actual = (await git(runner, ["diff", "--cached", "--name-only"])).split(/\r?\n/).filter(Boolean).sort();
+      if (actual.join("\n") !== [...new Set(files)].sort().join("\n")) throw new Error("STAGED_FILES_MISMATCH");
       await runner("git", ["commit", "-m", message]);
       return sha(await git(runner, ["rev-parse", "HEAD"]));
     },
-    async pushFastForward(commitSha) {
-      await runner("git", ["push", "origin", "HEAD:main"]);
-      const originMainSha = await git(runner, ["ls-remote", "origin", "refs/heads/main"]);
-      return { commitSha, originMainSha: sha(originMainSha), force: false as const };
+    async preparePullRequest(reviewedCommitSha) {
+      if (!options.importId || !/^[a-z0-9-]{1,80}$/.test(options.importId)) throw new Error("SAFE_IMPORT_ID_REQUIRED");
+      if (sha(await git(runner, ["rev-parse", "HEAD"])) !== reviewedCommitSha) throw new Error("REVIEWED_COMMIT_MISMATCH");
+      const branch = `codex/article-import/${options.importId}`;
+      await runner("git", ["push", "origin", `HEAD:refs/heads/${branch}`]);
+      const existing = JSON.parse((await runner("gh", ["pr", "list", "--head", branch, "--base", "main", "--state", "all", "--json", "url,headRefOid,state"])).stdout) as Array<{ url: string; headRefOid: string; state: string }>;
+      const matching = existing.find((pr) => pr.headRefOid === reviewedCommitSha && ["OPEN", "MERGED"].includes(pr.state));
+      const url = matching?.url ?? (await runner("gh", ["pr", "create", "--base", "main", "--head", branch, "--title", `Publish imported article ${options.importId}`, "--body", "Publish the approved article after format validation and repository checks. Owner review and merge are required before production deployment."])).stdout.trim();
+      if (!/^https:\/\/[^\s]+\/pull\/\d+$/.test(url)) throw new Error("PULL_REQUEST_URL_INVALID");
+      return { url, branch, reviewedCommitSha };
+    },
+    async inspectPullRequest(url) {
+      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string } };
+      return { merged: pr.state === "MERGED", headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
+    },
+    async checkoutMergedCommit(reviewedCommitSha, mergeCommitSha) {
+      if (!/^[a-f0-9]{40}$/.test(reviewedCommitSha) || !/^[a-f0-9]{40}$/.test(mergeCommitSha)) throw new Error("INVALID_MERGE_COMMIT");
+      await runner("git", ["fetch", "origin", "main"]);
+      await runner("git", ["merge-base", "--is-ancestor", mergeCommitSha, "origin/main"]);
+      if ((await inspect(runner)).changedFiles.length) throw new Error("MERGED_RELEASE_WORKTREE_DIRTY");
+      await runner("git", ["checkout", "--detach", mergeCommitSha]);
     },
     async deploy(commitSha): Promise<ReleaseDeployment> {
       const result = await runner("vercel", withToken(["deploy", "--prod", "--yes"], token));
@@ -111,11 +136,30 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
       const inspected = await verifiedDeployment(url);
       if (inspected.commitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
-      return { deploymentId: inspected.id, canonicalUrl: url, commitSha: inspected.commitSha };
+      if (!options.artifactPath) throw new Error("ARTIFACT_PATH_REQUIRED");
+      const { target } = await readImportArtifactTarget(repositoryRoot, options.format, options.artifactPath, options.slug);
+      return { deploymentId: inspected.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: inspected.commitSha };
     },
     async verifyProduction(deployment): Promise<FullProductionChecks> {
-      if (options.format !== "direct-review" || !options.slug) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
-      const result = JSON.parse((await runner("npm", ["run", "landing:verify:deployment", "--", "--origin", options.origin ?? "https://vettedsaasblueprint.online", "--expected-sha", deployment.commitSha, "--slug", options.slug])).stdout) as { status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
+      if (!options.artifactPath) throw new Error("ARTIFACT_PATH_REQUIRED");
+      const { target } = await readImportArtifactTarget(repositoryRoot, options.format, options.artifactPath, options.slug);
+      if (deployment.canonicalUrl !== new URL(target.renderedRoutes[0], origin).href) throw new Error("DEPLOYMENT_CANONICAL_MISMATCH");
+      if (options.format !== "direct-review") {
+        const script = { blog: "scripts/verify-blog-deployment.ts", visibility: "scripts/verify-visibility-deployment.ts", "decision-set": "scripts/verify-decision-journey-production.ts" }[options.format as "blog" | "visibility" | "decision-set"];
+        if (!script) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
+        const result = JSON.parse((await runner("npx", ["tsx", script, "--origin", origin, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; ok?: boolean; passed?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
+        if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
+        assertVerifierResult(target, result);
+        const passed = options.format === "decision-set"
+          ? result.passed === true && (result.checks?.length ?? 0) > 0 && result.checks!.every((check) => check.passed === true) && result.screenshots?.some((shot) => shot.mode.startsWith("desktop")) === true && result.screenshots?.some((shot) => shot.mode.startsWith("mobile")) === true && result.robots_ok === true && result.sitemap_ok === true
+          : result.ok === true && (result.routes ?? 0) > 0 && (result.viewportChecks ?? 0) >= 2;
+        if (!passed) throw new Error(`FORMAT_VERIFIER_FAILED:${options.format}`);
+        // These formats prohibit affiliate destinations; their owner checks apply.
+        return { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
+      }
+      const result = JSON.parse((await runner("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
+      if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
+      assertVerifierResult(target, result);
       const pages = result.pages ?? [];
       const snapshots = pages.flatMap((page) => [page.desktop, page.mobile]).filter((page): page is NonNullable<typeof page> => Boolean(page));
       if (result.status !== "pass" || pages.length === 0) throw new Error("LANDING_VERIFIER_FAILED");

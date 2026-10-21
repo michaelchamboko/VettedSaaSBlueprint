@@ -326,6 +326,17 @@ The pilot is **choosing software for a five-person team without a technical admi
 The `ExternalArticleImportV1` flow is an agent-triggered, repository-local import path for user-supplied Markdown articles. It may transform and release schema-valid direct-review, blog, visibility, and decision-set content plus its required media and receipts after the existing repository gates pass. It does not activate or modify the paused production schedules, add a database, add a public API, or mutate `approved-urls.md`.
 
 The import runner stores atomic state and receipts under ignored `.automation/article-imports/`. It retries transient source, Git, Vercel, rate-limit, and credential failures through a quiet resume loop. A submitted affiliate URL may use an exact allowlisted URL or a unique same-vendor allowlist match; otherwise the agent removes commercial destinations and publishes a neutral version. It may not invent or authorize a new affiliate destination. User-attached source material is treated as the owner's standing authorization to transform and publish it; the agent must still remove unsupported claims and quarantine an input with no safe publishable topic.
+The durable stages have separate authority:
+
+| Stage | Authority | Required handoff |
+|---|---|---|
+| `INGESTING` through `TRANSFORMING` | Normalize, research, resolve approved URLs and build the evidence-backed schema. | Draft artifact and evidence records. |
+| `REFINING` | Decide SEO intent and wording; apply Eleanor/SlopMonster; review factual meaning and qualifiers. | Content approval bound to the artifact, editorial evidence and owner-format quality receipt. |
+| `VALIDATING` | Place the approved artifact in existing templates and check desktop, mobile, accessibility, technical SEO, overflow and runtime behavior. It cannot change approved wording. | Presentation receipt bound to the approved content fingerprint. |
+| `RELEASING` and `VERIFYING` | Run repository gates, open or reuse a PR, wait for owner-approved merge, deploy the exact merged commit, verify production and roll back on failure. | Verified canonical URL and release receipt. |
+
+A wording change clears presentation and release state and returns the import to `REFINING`. A presentation-only repair preserves content approval. Temporary infrastructure failures remain resumable and cannot quarantine content. The import release path may open a PR automatically, but the repository owner must approve its merge.
+
 
 ### Denominators and task model
 

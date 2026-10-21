@@ -1,5 +1,13 @@
 # Agent Operating Contract
 
+<!-- build-faster-skills:workflow:start -->
+## Mandatory build-faster workflow
+
+Every repository-changing task—including pages, components, content, configuration, automation, and fixes—must use these four mandatory beats: **Isolate** in a fresh branch/worktree from `origin/main` after the scope check; **Build** with the `code-structure` service-layer guidance where shared mechanics apply; **Prove** with repository checks plus runtime before/after evidence; and **Ship** through a PR with before-and-after evidence and an independent current-head Codex code review, with no merge without owner approval. Run `unslop` on human-facing text. Read-only analysis is excluded. The workflow is subordinate to this repository's planning authority, non-inference gate, automation contract, source-intelligence requirements, and other repository-specific gates.
+
+For UI changes, use both `design-taste-frontend` and the project-local Impeccable skill, including their required context and critique/audit/detect checks. Every repository change must pass `npm run verify:agent-workflow`, `npm run lint`, `npm run typecheck`, and `npm test`. Add `npm run build`, `npm run validate:public-site`, and the applicable stage or release gates when the changed surface requires them. Record before/after evidence whenever runtime behavior changes.
+<!-- build-faster-skills:workflow:end -->
+
 This repository is the local Spec Kit, implementation, automation, and deployment workspace for Vetted SaaS B. The source strategy documents remain the product authority; implementation proceeds here through small, verifiable vertical slices.
 
 ## Active phase
@@ -46,6 +54,14 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 5. Deploy Phase One and later release slices to Vercel through the repository deployment configuration.
 6. Verify the deployed URLs independently of worker self-reporting and record the deployment receipt.
 7. Keep scheduled jobs authenticated, idempotent, observable, retryable, and outside latency-sensitive public request paths.
+
+## Mandatory frontend design workflow
+
+- Every agent and model that creates or changes a page, component, layout, typography, styling, or motion must use both `design-taste-frontend` and the project-local Impeccable skill. This applies to scheduled page-building runs and low-cost models as well as interactive work; do not treat either as optional inspiration.
+- Before implementation, read `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or the checkout copy if provisioned), state its one-line Design Read, and choose a page-type direction using the approved visual references and dials in D04 §6.2 (`D04-S-c5113e3d7e2d`) and D04 §32 Stage 4 (`D04-S-1daaf8613a03`). Preserve the established site identity unless the approved brief calls for a redesign.
+- Before a UI edit, run `.agents/skills/impeccable/scripts/impeccable.cmd context --target <source-file-or-route>` from the repository root, follow its project context, and read `.agents/skills/impeccable/reference/craft-floor.md`. If the launcher is unavailable, follow the Impeccable skill's documented fallback and report that the detector did not run.
+- After rendering, inspect desktop and mobile together; run `.agents/skills/impeccable/scripts/impeccable.cmd critique <target>`, `audit <target>`, and `detect <target>` for the changed surface, correct the findings in one bounded pass, then confirm once. Preserve content, evidence, responsive behavior, accessibility, and reduced-motion requirements. Do not claim a design pass from a clean mechanical detector alone.
+- Keep both skills available to page-building runs: `design-taste-frontend` is installed at `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or `.agents/skills/design-taste-frontend/SKILL.md` when provisioned in the checkout); Impeccable must be installed at `.agents/skills/impeccable/SKILL.md` with its local launcher. Check these paths before page work and restore a missing skill before proceeding. Use the Impeccable project hook after user approval in Codex `/hooks`.
 
 ## Source-intelligence workflow
 
