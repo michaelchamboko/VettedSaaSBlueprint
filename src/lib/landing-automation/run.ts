@@ -321,7 +321,7 @@ export function advanceLandingRun(
         next_action: {
           kind: "author_page",
           description:
-            "Create the structured page, design direction, preview artifacts, and independent review records.",
+            "Create the evidence-backed structured page, apply one existing-writer Eleanor refinement pass using .agents/skills/eleanor-editorial/SKILL.md before candidate validation, and record the prose comparison outside public content alongside design direction, preview artifacts, and independent review records.",
         },
       };
 

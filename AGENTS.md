@@ -28,6 +28,8 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 
 ## Repository boundaries
 
+- Owner directive for supervised authoring: after evidence-backed drafting and before candidate validation, apply .agents/skills/eleanor-editorial/SKILL.md once with the existing writer. This covers DecisionSetV2, direct-review landing blueprints, VisibilityPageV1 and individual BlogPostV1 records. Save comparison evidence under build-pack/editorial, preserve protected fields and semantic meaning, and reuse it only for an unchanged artifact fingerprint and revision. This does not change scheduled prompts, paused automation, publication authority or source strategy.
+
 - GitNexus is a navigation and impact-analysis aid, not semantic authority.
 - `docs/document-intelligence/` is the explicit semantic layer.
 - Application code, workflows, tests, and deployment configuration created in this repository are members of its GitNexus index.

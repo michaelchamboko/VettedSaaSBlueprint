@@ -1,0 +1,28 @@
+{
+  "repository": "https://github.com/michaelchamboko/SlopMonster",
+  "commit": "8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1",
+  "license": "MIT",
+  "files": {
+    "references/dr-eleanor-hayes.md": {
+      "gitBlobSha1": "7f413419f35e6fd1b4951e863d5f948e9657244d"
+    },
+    "references/principles.md": {
+      "gitBlobSha1": "d433c19cc7e16bfa694dffc10f2de9eb1e589999"
+    },
+    "references/signs-of-ai-writing.md": {
+      "gitBlobSha1": "ac18cd4da0e6f07154e920d89308b91a17b158e1"
+    },
+    "references/sources.md": {
+      "gitBlobSha1": "de6035a82db76e13c7e1bc7db4209f5a01849ea8"
+    },
+    "examples/ridgeline-roofing.md": {
+      "gitBlobSha1": "24306215c3314c90041ee461ee1e340bc811d23d"
+    },
+    "tools/deslop.py": {
+      "gitBlobSha1": "50bf25913730011631cd7a5be2240e410849a9da"
+    },
+    "LICENSE": {
+      "gitBlobSha1": "79819274e47822b4a112374862c4c05d07e211cc"
+    }
+  }
+}
