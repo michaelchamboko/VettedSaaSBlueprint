@@ -60,6 +60,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     preparePullRequest: async () => ({ url: pr, branch: `codex/article-import/${importId}`, reviewedCommitSha: commit }),
     inspectPullRequest: async () => ({ merged, headRefOid: commit, mergeCommitSha: merged ? commit : undefined }),
     checkoutMergedCommit: async () => {},
+    verifyCodeReview: async () => {},
     deploy: async (commitSha) => { deployments++; return { deploymentId: "dpl-current", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
     verifyProduction: async () => ({ routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true }),
     rollback: async () => ({ ok: true, summary: "Mocked rollback." }),
@@ -111,7 +112,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");
     assert.equal(deployments, 0);
-    const codeReviewPath = "build-pack/article-import/review.json";
+    const codeReviewPath = ".automation/article-imports/reviews/review.json";
     await writeJsonAtomically(path.join(root, codeReviewPath), { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: commit, pullRequestUrl: pr, evidenceUrl: `${pr}#issuecomment-review`, reviewedAt: new Date().toISOString() });
     await writeJsonAtomically(path.join(root, release.packet.resultPath), { ...release.result, work: { ...release.result.work, codeReviewPath } });
     await heartbeat();

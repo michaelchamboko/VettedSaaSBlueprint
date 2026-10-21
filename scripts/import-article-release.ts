@@ -19,6 +19,7 @@ function unconfiguredOperations(): ReleaseOperations {
     commit: unavailable,
     preparePullRequest: unavailable,
     inspectPullRequest: unavailable,
+    verifyCodeReview: unavailable,
     checkoutMergedCommit: unavailable,
     deploy: unavailable,
     verifyProduction: unavailable,
@@ -38,7 +39,7 @@ async function main(): Promise<void> {
   const codeReviewFile = argument("--code-review-receipt");
   if (codeReviewFile) {
     if (!process.argv.includes("--execute")) throw new Error("--code-review-receipt requires --execute to verify the current PR head.");
-    record = await recordImportCodeReview(process.cwd(), record, JSON.parse(await readFile(codeReviewFile, "utf8")), operations.inspectPullRequest);
+    record = await recordImportCodeReview(process.cwd(), record, JSON.parse(await readFile(codeReviewFile, "utf8")), operations);
     record = await resumeImport(process.cwd(), record);
   }
   const result = await assessImportRelease({

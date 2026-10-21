@@ -123,11 +123,25 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string } };
       return { merged: pr.state === "MERGED", headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
     },
+    async verifyCodeReview(pullRequestUrl, evidenceUrl, reviewedCommitSha) {
+      const pr = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(pullRequestUrl);
+      const commentId = evidenceUrl.startsWith(`${pullRequestUrl}#issuecomment-`) ? evidenceUrl.slice(`${pullRequestUrl}#issuecomment-`.length) : "";
+      if (!pr || !/^[1-9]\d*$/.test(commentId)) throw new Error("CODE_REVIEW_EVIDENCE_URL_INVALID");
+      const comment = JSON.parse((await runner("gh", ["api", `repos/${pr[1]}/${pr[2]}/issues/comments/${commentId}`])).stdout) as { html_url?: string; issue_url?: string; user?: { login?: string }; body?: string };
+      if (comment.html_url !== evidenceUrl || comment.issue_url !== `https://api.github.com/repos/${pr[1]}/${pr[2]}/issues/${pr[3]}`) throw new Error("CODE_REVIEW_COMMENT_MISMATCH");
+      if (comment.user?.login !== "chatgpt-codex-connector[bot]") throw new Error("CODE_REVIEW_AUTHOR_INVALID");
+      const markers = typeof comment.body === "string" ? [...comment.body.matchAll(/<!--\s*codex-review-state:v1\s+([\s\S]*?)\s*-->/g)] : [];
+      if (markers.length !== 1) throw new Error("CODE_REVIEW_STATE_MISSING");
+      const state = JSON.parse(markers[0][1]) as { code_review?: { commit_sha?: string; status?: string; has_any_findings?: boolean; has_unresolved_findings?: boolean } };
+      const review = state?.code_review;
+      if (review?.commit_sha !== reviewedCommitSha || review.status !== "completed" || review.has_any_findings !== false || review.has_unresolved_findings !== false) throw new Error("CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD");
+    },
     async checkoutMergedCommit(reviewedCommitSha, mergeCommitSha) {
       if (!/^[a-f0-9]{40}$/.test(reviewedCommitSha) || !/^[a-f0-9]{40}$/.test(mergeCommitSha)) throw new Error("INVALID_MERGE_COMMIT");
       await runner("git", ["fetch", "origin", "main"]);
       await runner("git", ["merge-base", "--is-ancestor", mergeCommitSha, "origin/main"]);
-      if ((await inspect(runner)).changedFiles.length) throw new Error("MERGED_RELEASE_WORKTREE_DIRTY");
+      const snapshot = await inspect(runner);
+      if (!snapshot.clean || snapshot.changedFiles.length) throw new Error("MERGED_RELEASE_WORKTREE_DIRTY");
       await runner("git", ["checkout", "--detach", mergeCommitSha]);
     },
     async deploy(commitSha): Promise<ReleaseDeployment> {

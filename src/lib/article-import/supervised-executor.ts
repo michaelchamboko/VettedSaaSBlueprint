@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { advanceImport, approveImportContent, loadImport, recordImportPresentation, verifyImportRelease, writeJsonAtomically, type ImportStageExecutor } from "./engine";
 import { importFormatSchema } from "./contracts";
+import { assertIgnoredImportStatePath } from "./automation-state";
 import { validateImportArtifact } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
 import { assessImportRelease, recordImportCodeReview, type ReleaseOperations } from "./release";
@@ -34,7 +35,7 @@ const instructions = {
   TRANSFORMING: "Use the research evidence to create the existing format schema. Remove unsupported claims and use only the resolved affiliate URL. Record artifactPath and supported format; this is not editorial approval.",
   REFINING: "Apply the existing Eleanor editorial skill and protected-field comparison. Record artifactPath, editorialEvidencePath and formatQualityPath. The existing content approval validator must freeze the current fingerprint before presentation.",
   VALIDATING: "Render the approved artifact without rewriting words. Inspect desktop/mobile, accessibility, technical SEO, overflow and runtime errors. Write ImportPresentationValidationV1 and record validationReceiptPath and validationGate. A wording issue must return to editorial review.",
-  RELEASING: "Record artifactPath, changedFiles, slug for a direct review, and optional origin. The local Git/Vercel adapter runs the release gates and creates a PR. After independent current-head Codex review, add codeReviewPath; wait for the owner's merge. Never fabricate review, merge or deployment evidence.",
+  RELEASING: "Record artifactPath, changedFiles, slug for a direct review, and optional origin. The local Git/Vercel adapter runs the release gates and creates a PR. After independent current-head Codex review, add codeReviewPath under ignored .automation/article-imports/reviews/; keep results at resultPath and wait for the owner's merge. Never fabricate review, merge or deployment evidence.",
 } as const;
 
 /** Codex owns authoring; the runtime validates its durable stage output and executes local operations. */
@@ -49,6 +50,8 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     const directory = `.automation/article-imports/work/${record.importId}`;
     const workPath = `${directory}/${context.idempotencyKey}.work.json`;
     const resultPath = `${directory}/${context.idempotencyKey}.result.json`;
+    await assertIgnoredImportStatePath(root, workPath);
+    await assertIgnoredImportStatePath(root, resultPath);
     await writeJsonAtomically(path.join(root, workPath), {
       schemaVersion: "ImportSupervisedWorkV1", importId: record.importId,
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
@@ -83,7 +86,10 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         return record.stage === "VALIDATING" && record.presentation ? advanceImport(root, record, result.summary) : record;
       case "RELEASING": {
         const operations = releaseOperations ?? createLocalReleaseOperations(root, { format: record.format, artifactPath: work.artifactPath, slug: work.slug, importId: record.importId, origin: work.origin });
-        if (work.codeReviewPath) record = await recordImportCodeReview(root, record, await readRepositoryJson(root, work.codeReviewPath), operations.inspectPullRequest);
+        if (work.codeReviewPath) {
+          await assertIgnoredImportStatePath(root, work.codeReviewPath);
+          record = await recordImportCodeReview(root, record, await readRepositoryJson(root, work.codeReviewPath), operations);
+        }
         await assessImportRelease({ repositoryRoot: root, record, artifactPath: work.artifactPath, slug: work.slug, changedFiles: work.changedFiles, execute: true, operations });
         return loadImport(root, record.importId);
       }

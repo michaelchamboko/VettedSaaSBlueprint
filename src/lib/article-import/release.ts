@@ -5,12 +5,13 @@ import { requireImportPresentationBinding, verifyImportPresentationEvidence } fr
 import { readImportArtifactTarget } from "./format-validation";
 import { importCodeReviewSchema } from "./contracts";
 
-export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, inspectPullRequest: ReleaseOperations["inspectPullRequest"]): Promise<ExternalArticleImportV1> {
+export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">): Promise<ExternalArticleImportV1> {
   const codeReview = importCodeReviewSchema.parse(receipt);
   const pending = record.pendingRelease;
   if (!pending?.pullRequestUrl || codeReview.pullRequestUrl !== pending.pullRequestUrl || codeReview.reviewedCommitSha !== pending.reviewedCommitSha) throw new Error("CODE_REVIEW_BINDING_MISMATCH");
-  const current = await inspectPullRequest(pending.pullRequestUrl);
+  const current = await operations.inspectPullRequest(pending.pullRequestUrl);
   if (current.headRefOid !== codeReview.reviewedCommitSha) throw new Error("CODE_REVIEW_HEAD_CHANGED");
+  await operations.verifyCodeReview(codeReview.pullRequestUrl, codeReview.evidenceUrl, current.headRefOid);
   const updated = { ...record, pendingRelease: { ...pending, codeReview }, updatedAt: new Date().toISOString() };
   await saveImport(repositoryRoot, updated);
   return updated;
@@ -58,6 +59,7 @@ export type ReleaseOperations = {
   commit(message: string, files: readonly string[]): Promise<string>;
   preparePullRequest(reviewedCommitSha: string): Promise<{ url: string; branch: string; reviewedCommitSha: string }>;
   inspectPullRequest(url: string): Promise<{ merged: boolean; headRefOid: string; mergeCommitSha?: string }>;
+  verifyCodeReview(pullRequestUrl: string, evidenceUrl: string, reviewedCommitSha: string): Promise<void>;
   checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;
   deploy(commitSha: string): Promise<ReleaseDeployment>;
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
@@ -242,6 +244,7 @@ export async function assessImportRelease(input: {
     const pullRequest = await input.operations.inspectPullRequest(pendingRelease.pullRequestUrl);
     if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED");
     if (!hasCurrentCodeReview(input.record, pullRequest.headRefOid)) return await waitForCodeReview(input.repositoryRoot, input.record);
+    await input.operations.verifyCodeReview(pendingRelease.pullRequestUrl, pendingRelease.codeReview!.evidenceUrl, pullRequest.headRefOid);
     if (!pullRequest.merged) return await waitForOwnerMerge(input.repositoryRoot, input.record);
     if (!pullRequest.mergeCommitSha) throw new Error("MERGE_COMMIT_MISSING");
     const commitSha = pullRequest.mergeCommitSha;

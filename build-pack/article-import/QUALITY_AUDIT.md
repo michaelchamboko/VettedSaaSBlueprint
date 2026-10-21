@@ -41,6 +41,9 @@ A bounded search of the current checkout, open PR file lists and attached worktr
 9. The supervised heartbeat exchanges source-bound work and result packets with the existing Codex agent; the CLI validates each result and runs the existing gates without adding a model service.
 10. Format verifiers reject caller-selected slugs or routes that differ from the approved artifact, and presentation receipts hash real verifier files.
 11. Closed pull requests are replaced, and a passed independent Codex review is bound to the exact current PR head before release can continue.
+12. Review evidence is fetched from the exact GitHub bot comment and must report a clean review for the current head; a stored assertion cannot authorize deployment.
+13. Mutable review and heartbeat receipts remain in ignored automation state, so they cannot dirty the reviewed checkout before deployment.
+14. Visibility imports commit their publication authority with the generated artifacts, making the released page discoverable by the runtime catalogue.
 
 ## Pilot
 
@@ -51,7 +54,7 @@ Production publication remains gated by the repository's required owner-approved
 ## Verification evidence
 
 - Focused importer and verifier suite: 70 passed, 0 failed.
-- Full repository suite: 358 passed, 0 failed, 3 environment skips.
+- Full repository suite: 364 passed, 0 failed, 3 documented Windows symlink skips (367 total).
 - TypeScript route generation and typecheck: passed.
 - Mandatory workflow contract: passed.
 - Lint: 0 errors and 34 pre-existing warnings outside the changed importer surface.

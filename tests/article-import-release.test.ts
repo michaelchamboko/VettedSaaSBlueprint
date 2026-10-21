@@ -38,6 +38,7 @@ function operations(overrides: Partial<ReleaseOperations> = {}): ReleaseOperatio
     preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/1", branch: "codex/article-import/example" }),
     inspectPullRequest: async () => ({ merged: true, headRefOid: "c".repeat(40), mergeCommitSha: "c".repeat(40) }),
     checkoutMergedCommit: async () => {},
+    verifyCodeReview: async () => {},
     deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }),
     verifyProduction: async () => checks,
     rollback: async () => ({ ok: true, summary: "restored" }),
@@ -603,14 +604,69 @@ test("merged PR waits for a passed independent current-head Codex receipt", asyn
     const waiting = await loadImport(root, record.importId);
     assert.deepEqual(waiting.strategyAttempts, record.strategyAttempts);
     const receipt = prepared.pendingRelease!.codeReview!;
-    await assert.rejects(() => recordImportCodeReview(root, waiting, { ...receipt, passed: false }, operations().inspectPullRequest));
-    await assert.rejects(() => recordImportCodeReview(root, waiting, { ...receipt, pullRequestUrl: "https://github.com/example/repository/pull/2" }, operations().inspectPullRequest), /BINDING_MISMATCH/);
-    await assert.rejects(() => recordImportCodeReview(root, waiting, receipt, async () => ({ merged: false, headRefOid: "e".repeat(40) })), /HEAD_CHANGED/);
-    const reviewed = await recordImportCodeReview(root, waiting, receipt, operations().inspectPullRequest);
+    await assert.rejects(() => recordImportCodeReview(root, waiting, { ...receipt, passed: false }, operations()));
+    await assert.rejects(() => recordImportCodeReview(root, waiting, { ...receipt, pullRequestUrl: "https://github.com/example/repository/pull/2" }, operations()), /BINDING_MISMATCH/);
+    await assert.rejects(() => recordImportCodeReview(root, waiting, receipt, operations({ inspectPullRequest: async () => ({ merged: false, headRefOid: "e".repeat(40) }) })), /HEAD_CHANGED/);
+    const reviewed = await recordImportCodeReview(root, waiting, receipt, operations());
     assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
     const resumed = await resumeImport(root, reviewed);
     const live = await assessImportRelease({ ...base, record: resumed, operations: operations() });
     assert.equal(live.status, "LIVE");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("code review receipts require the exact live Codex comment and clean current-head state", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-review-evidence-"));
+  try {
+    const record = await releasingRecord(root);
+    const receipt = { ...record.pendingRelease!.codeReview!, evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-123" };
+    const clean = { commit_sha: receipt.reviewedCommitSha, status: "completed", has_any_findings: false, has_unresolved_findings: false };
+    const body = (review: Record<string, unknown>) => "<!-- codex-review-state:v1 " + JSON.stringify({ code_review: review }) + " -->";
+    const comment = { html_url: receipt.evidenceUrl, issue_url: "https://api.github.com/repos/example/repository/issues/1", user: { login: "chatgpt-codex-connector[bot]" }, body: body(clean) };
+    let liveComment = comment;
+    const runner: ReleaseCommandRunner = async (command, args) => {
+      assert.equal(command, "gh");
+      assert.deepEqual(args, ["api", "repos/example/repository/issues/comments/123"]);
+      return { stdout: JSON.stringify(liveComment), stderr: "" };
+    };
+    const ops = operations({ verifyCodeReview: createLocalReleaseOperations(root, { format: "blog", runner }).verifyCodeReview });
+    for (const evidenceUrl of ["https://example.com/review", receipt.pullRequestUrl + "#issuecomment-fake", receipt.pullRequestUrl + "#pullrequestreview-123", "https://github.com/example/repository/pull/2#issuecomment-123"]) {
+      await assert.rejects(() => recordImportCodeReview(root, record, { ...receipt, evidenceUrl }, ops), /EVIDENCE_URL_INVALID/);
+    }
+    for (const invalid of [
+      { ...comment, html_url: receipt.pullRequestUrl + "#issuecomment-456" },
+      { ...comment, issue_url: "https://api.github.com/repos/example/repository/issues/2" },
+      { ...comment, user: { login: "owner" } },
+      { ...comment, body: "@codex review" },
+      { ...comment, body: "Review passed. No findings." },
+      { ...comment, body: body({ ...clean, commit_sha: "d".repeat(40) }) },
+      { ...comment, body: body({ ...clean, status: "in_progress" }) },
+      { ...comment, body: body({ ...clean, has_any_findings: true }) },
+      { ...comment, body: body({ ...clean, has_unresolved_findings: true }) },
+      { ...comment, body: body({ ...clean, has_unresolved_findings: null }) },
+    ]) {
+      liveComment = invalid;
+      await assert.rejects(() => recordImportCodeReview(root, record, receipt, ops), /CODE_REVIEW_/);
+    }
+    liveComment = comment;
+    const reviewed = await recordImportCodeReview(root, record, receipt, ops);
+    assert.deepEqual(reviewed.pendingRelease?.codeReview, receipt);
+    assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("release revalidates stored review evidence before deploying", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-review-recheck-"));
+  try {
+    const record = await releasingRecord(root);
+    let deployed = false;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+      verifyCodeReview: async () => { throw new Error("CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD"); },
+      deploy: async () => { deployed = true; throw new Error("must not deploy"); },
+    }) });
+    assert.equal(result.status, "WAITING_EXTERNAL");
+    assert.equal(result.reasons[0], "CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD");
+    assert.equal(deployed, false);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
