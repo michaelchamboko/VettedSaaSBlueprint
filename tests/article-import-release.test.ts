@@ -977,6 +977,24 @@ test("direct-review release binds the manifest artefact to the approved blueprin
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("direct-review release rejects duplicate manifest entries for the approved slug", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-manifest-duplicate-"));
+  try {
+    const base = await releasingRecord(root);
+    // The loader's pages.set serves the LAST same-slug entry, so a later duplicate must fail
+    // the binding even when the first entry is the approved one.
+    const artifactBytes = await readFile(path.join(root, "src/generated/landing-pages/example.json"));
+    await writeFile(path.join(root, "src/generated/landing-pages/other-valid.json"), artifactBytes);
+    await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [
+      { slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" },
+      { slug: "example", artifact: "other-valid.json", release_receipt: "releases/example/release-receipt.json" },
+    ] }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_MANIFEST_DUPLICATE_SLUG"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("direct-review release rejects a receipt page path that differs from the manifest artefact", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-receipt-page-path-"));
   try {

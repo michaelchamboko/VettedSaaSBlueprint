@@ -219,8 +219,13 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
   try {
     manifest = JSON.parse(await readFile(path.join(catalogueDirectory, "index.json"), "utf8"));
   } catch { throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`); }
-  const entry = (manifest.pages ?? []).find((page) => page.slug === slug);
-  if (!entry || typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
+  const matches = (manifest.pages ?? []).filter((page) => page.slug === slug);
+  if (matches.length === 0) throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
+  // The loader serves the LAST same-slug entry (pages.set overwrites), so allow exactly one
+  // match — otherwise a later duplicate could swap in unapproved content under the slug.
+  if (matches.length > 1) throw new Error("RELEASE_MANIFEST_DUPLICATE_SLUG");
+  const entry = matches[0];
+  if (typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
   let receipt: { exact_affiliate_url?: unknown; artifacts?: { page?: { path?: unknown; sha256?: unknown } } };
   try {
     receipt = JSON.parse(await readFile(safeCatalogueReceiptPath(catalogueDirectory, entry.release_receipt), "utf8"));
