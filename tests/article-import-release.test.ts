@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -278,6 +278,37 @@ test("local adapter requires direct-review slug and artifact before execution", 
   const result = await createLocalReleaseOperations(".", { runner, format: "direct-review" }).preflight();
   assert.ok(result.reasons.includes("DIRECT_REVIEW_SLUG_MISSING"));
   assert.ok(result.reasons.includes("DIRECT_REVIEW_ARTIFACT_MISSING"));
+});
+
+test("local adapter accepts linked project and authenticated CLI without env credentials", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-linked-"));
+  try {
+    await mkdir(path.join(root, ".vercel"), { recursive: true });
+    await writeFile(path.join(root, ".vercel", "project.json"), JSON.stringify({ projectId: "prj_linked" }));
+    const runner: ReleaseCommandRunner = async (command, args) => {
+      if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "a".repeat(40), target: "production" }), stderr: "" };
+      if (command === "vercel" && args[0] === "whoami") return { stdout: "owner", stderr: "" };
+      return { stdout: "", stderr: "" };
+    };
+    const result = await createLocalReleaseOperations(root, { runner, format: "direct-review", artifactPath: "src/generated/landing-pages/a.json", slug: "a" }).preflight();
+    assert.deepEqual(result, { ok: true, reasons: [] });
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("local adapter resolves the current production deployment from the canonical origin", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-origin-"));
+  try {
+    const calls: string[][] = [];
+    const runner: ReleaseCommandRunner = async (command, args) => {
+      calls.push([command, ...args]);
+      if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "b".repeat(40), target: "production" }), stderr: "" };
+      return { stdout: "owner", stderr: "" };
+    };
+    const operations = createLocalReleaseOperations(root, { runner, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+    const previous = await operations.capturePreviousDeployment();
+    assert.deepEqual(previous, { deploymentId: "dpl_current", commitSha: "b".repeat(40), verified: true });
+    assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://example.com", "--json"]);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("local adapter rejects missing or mismatched Vercel commit metadata", async () => {
