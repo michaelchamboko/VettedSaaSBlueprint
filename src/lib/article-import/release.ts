@@ -1,4 +1,4 @@
-import { recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
+import { ensureImportContentApproval, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
 
 export type FullProductionChecks = {
@@ -44,7 +44,7 @@ export type ReleaseOperations = {
 };
 
 export type ReleaseAssessment = {
-  status: "DRY_RUN" | "WAITING_EXTERNAL" | "REPAIRING" | "ROLLED_BACK" | "LIVE" | "QUARANTINED";
+  status: "DRY_RUN" | "WAITING_EXTERNAL" | "REPAIRING" | "REFINING" | "ROLLED_BACK" | "LIVE" | "QUARANTINED";
   reasons: string[];
   previousDeploymentId?: string;
   deploymentId?: string;
@@ -144,6 +144,8 @@ export async function assessImportRelease(input: {
   }
 
   const validationCommands = validationCommandsForFormat(input.record.format, input.artifactPath);
+  const approved = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
+  if (!approved.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
   if (!validationCommands) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `No configured validation gate for ${input.record.format}.` });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: ["MISSING_FORMAT_VALIDATION_GATE"] };
@@ -181,6 +183,8 @@ export async function assessImportRelease(input: {
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: ["PREVIOUS_DEPLOYMENT_UNVERIFIED"] };
   }
   let deploymentStarted = false;
+  const rechecked = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
+  if (!rechecked.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
   try {
     const commitSha = await input.operations.commit(input.commitMessage ?? `publish imported article ${input.record.importId}`);
     const pushProof = await input.operations.pushFastForward(commitSha);

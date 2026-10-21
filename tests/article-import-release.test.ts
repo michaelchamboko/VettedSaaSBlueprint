@@ -8,6 +8,7 @@ import { advanceImport, createArticleImport, loadImport, resumeImport } from "..
 import { assessImportRelease, isAllowedReleasePath, validationCommandsForFormat, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
+import { approveFixture } from "./fixtures/article-content-approval";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
 const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\n\nThis is a sufficiently long article body for the release coordinator test and its deterministic validation path.\n";
@@ -16,7 +17,10 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), source);
   let record = await createArticleImport(root, "article.md");
-  for (let i = 0; i < 5; i += 1) record = await advanceImport(root, record, "stage complete");
+  for (let i = 0; i < 5; i += 1) {
+    if (record.stage === "REFINING") record = await approveFixture(root, record);
+    record = await advanceImport(root, record, "stage complete");
+  }
   return record;
 }
 

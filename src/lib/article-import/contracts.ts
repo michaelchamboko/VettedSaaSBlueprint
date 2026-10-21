@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { contentApprovalSchema } from "./content-approval";
 
 export const importStageSchema = z.enum([
   "INGESTING", "RESEARCHING", "TRANSFORMING", "REFINING", "VALIDATING",
@@ -66,6 +67,7 @@ export const externalArticleImportSchema = z.object({
   promptInjectionDetected: z.boolean(),
   unusableReason: z.string().optional(),
   transformation: importTransformationSchema.optional(),
+  contentApproval: contentApprovalSchema.optional().catch(undefined),
   release: importReleaseSchema.optional(),
   stageReceipts: z.array(z.object({
     stage: importStageSchema,

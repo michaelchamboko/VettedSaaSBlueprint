@@ -9,6 +9,7 @@ import {
 } from "../src/lib/article-import/engine";
 import { executeImportCommand, parseImportCommand } from "../scripts/import-article";
 import { writeJsonAtomically } from "../src/lib/article-import/engine";
+import { approveFixture } from "./fixtures/article-content-approval";
 
 const allowlist = "- https://start.switcherstudio.com/anme6fqvgdx9\n- https://try.example.com/ref\n";
 const source = `---\ntitle: "How to stream with Switcher Studio"\nprimary_question: "How can a creator stream with multiple iOS cameras?"\naffiliate_name: "Switcher Studio"\naffiliate_url: "[https://start.switcherstudio.com/anme6fqvgd](https://start.switcherstudio.com/anme6fqvgd)"\n---\n\nA practical guide for creators using several iOS devices in one production workflow. It explains the operating choices and trade-offs clearly.\n`;
@@ -140,7 +141,10 @@ test("live completion deletes raw source and retains the receipt", async () => {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
     await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
     let run = await createArticleImport(root, "article.md");
-    for (const message of ["research", "transform", "refine", "validate", "release"]) run = await advanceImport(root, run, message);
+    for (const message of ["research", "transform", "refine", "validate", "release"]) {
+      if (run.stage === "REFINING") run = await approveFixture(root, run);
+      run = await advanceImport(root, run, message);
+    }
     assert.equal(run.stage, "RELEASING");
     await assert.rejects(() => advanceImport(root, run, "pretend release"), /cannot advance/);
     const release = { schemaVersion: "ImportReleaseV1", commitSha: "a".repeat(40), deploymentId: "dpl_test", canonicalUrl: "https://example.com/article", verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } };
@@ -161,7 +165,10 @@ test("LIVE duplicate creates an explicit reuse receipt", async () => {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
     await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
     let live = await createArticleImport(root, "article.md");
-    for (const message of ["research", "transform", "refine", "validate", "release"]) live = await advanceImport(root, live, message);
+    for (const message of ["research", "transform", "refine", "validate", "release"]) {
+      if (live.stage === "REFINING") live = await approveFixture(root, live);
+      live = await advanceImport(root, live, message);
+    }
     live = await recordImportRelease(root, live, { schemaVersion: "ImportReleaseV1", commitSha: "b".repeat(40), deploymentId: "dpl_live", canonicalUrl: "https://example.com/live", verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
     live = await verifyImportRelease(root, live);
     const reused = await createArticleImport(root, "article.md");

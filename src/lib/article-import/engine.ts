@@ -3,6 +3,7 @@ import { mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
+import { contentApprovalMatches, createContentApproval, type ApprovalFiles } from "./content-approval";
 import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 
 const ROOT = ".automation/article-imports";
@@ -250,9 +251,32 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
 }
 
 const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEARCHING", RESEARCHING: "TRANSFORMING", TRANSFORMING: "REFINING", REFINING: "VALIDATING", VALIDATING: "RELEASING" };
+export async function approveImportContent(repositoryRoot: string, record: ExternalArticleImportV1, files: ApprovalFiles): Promise<ExternalArticleImportV1> {
+  if (record.stage !== "REFINING") throw new Error("Content approval requires REFINING.");
+  const contentApproval = await createContentApproval(repositoryRoot, { ...files, format: record.format, sourceFingerprint: record.sourceFingerprint });
+  const updated = { ...record, contentApproval, updatedAt: now() };
+  await saveImport(repositoryRoot, updated);
+  return updated;
+}
+
+export async function ensureImportContentApproval(repositoryRoot: string, record: ExternalArticleImportV1, artifactPath?: string): Promise<ExternalArticleImportV1> {
+  if (await contentApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint, artifactPath)) return record;
+  const at = now();
+  const updated = externalArticleImportSchema.parse({ ...record, contentApproval: undefined, release: undefined, resumeStage: undefined, stage: "REFINING", updatedAt: at,
+    stageReceipts: [...record.stageReceipts, { stage: "REFINING", status: "failed", at, message: "Content approval is missing or no longer matches the artifact and evidence." }],
+    nextAction: "Refine the current artifact and record fresh editorial and format quality approval.",
+  });
+  await saveImport(repositoryRoot, updated);
+  return updated;
+}
+
 export async function advanceImport(repositoryRoot: string, record: ExternalArticleImportV1, message: string): Promise<ExternalArticleImportV1> {
   const stage = nextStage[record.stage];
   if (!stage) throw new Error(`Stage ${record.stage} cannot advance automatically.`);
+  if (["VALIDATING", "RELEASING"].includes(stage)) {
+    const checked = await ensureImportContentApproval(repositoryRoot, record);
+    if (!checked.contentApproval) return checked;
+  }
   const at = now();
   const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: `Complete ${stage.toLowerCase()} and record its receipt.` });
   await saveImport(repositoryRoot, updated);
@@ -261,6 +285,8 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
 
 export async function recordImportRelease(repositoryRoot: string, record: ExternalArticleImportV1, releaseInput: unknown): Promise<ExternalArticleImportV1> {
   if (record.stage !== "RELEASING") throw new Error("A release receipt can only be recorded from RELEASING.");
+  const checked = await ensureImportContentApproval(repositoryRoot, record);
+  if (!checked.contentApproval) return checked;
   const release = externalArticleImportSchema.shape.release.unwrap().parse(releaseInput);
   const at = now();
   const updated = externalArticleImportSchema.parse({ ...record, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
@@ -278,6 +304,10 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
 }
 
 export async function resumeImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  if (["VALIDATING", "RELEASING", "VERIFYING"].includes(record.resumeStage ?? record.stage)) {
+    const checked = await ensureImportContentApproval(repositoryRoot, record);
+    if (!checked.contentApproval) return checked;
+  }
   if (!["WAITING_EXTERNAL", "REPAIRING", "ROLLED_BACK"].includes(record.stage)) return record;
   const stage = record.resumeStage;
   if (!stage || ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK", "LIVE", "QUARANTINED"].includes(stage)) {
