@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "ImportVerifierEvidenceV1",
+  "target": {
+    "format": "direct-review",
+    "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+    "artifactFingerprint": "06ce5284ef6f0603e9fbc7ad09a2e60f13f3f9dce2c891ade66821778aef7589",
+    "renderedRoutes": [
+      "/landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video"
+    ]
+  },
+  "result": {
+    "schema_version": "LandingDeploymentVerificationV1",
+    "status": "pass",
+    "verificationMode": "candidate",
+    "origin": "http://127.0.0.1:3110",
+    "canonicalOrigin": "https://vettedsaasblueprint.online",
+    "robots_ok": true,
+    "sitemap_ok": true,
+    "pages": [
+      {
+        "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+        "path": "/landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video",
+        "exact_affiliate_url": "https://start.switcherstudio.com/anme6fqvgdx9",
+        "desktop": {
+          "httpOk": true,
+          "disclosureOk": true,
+          "exactCtaCount": 1,
+          "allCtasExact": true,
+          "ctasFitViewport": true,
+          "allRevealSectionsVisible": true,
+          "horizontalPageScrollPossible": false,
+          "robots": "index, follow",
+          "errorOverlay": false,
+          "browserErrors": []
+        },
+        "mobile": {
+          "httpOk": true,
+          "disclosureOk": true,
+          "exactCtaCount": 1,
+          "allCtasExact": true,
+          "ctasFitViewport": true,
+          "allRevealSectionsVisible": true,
+          "horizontalPageScrollPossible": false,
+          "robots": "index, follow",
+          "errorOverlay": false,
+          "browserErrors": []
+        },
+        "reduced_motion": {
+          "httpOk": true,
+          "disclosureOk": true,
+          "exactCtaCount": 1,
+          "allCtasExact": true,
+          "ctasFitViewport": true,
+          "allRevealSectionsVisible": true,
+          "horizontalPageScrollPossible": false,
+          "robots": "index, follow",
+          "errorOverlay": false,
+          "browserErrors": []
+        }
+      }
+    ],
+    "verified_at": "2026-10-21T16:01:09.930Z"
+  }
+}

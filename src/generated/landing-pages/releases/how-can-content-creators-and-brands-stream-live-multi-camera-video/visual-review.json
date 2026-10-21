@@ -1,0 +1,31 @@
+{
+  "schema_version": "VisualDesignReviewV1",
+  "status": "pass",
+  "page_slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "recipe_id": "recipe-switcher-mobile-review-v1",
+  "recipe_fingerprint": "standing-authorized-existing-direct-review-template",
+  "selected_references": [],
+  "checks": {
+    "desktop_composition": "pass",
+    "mobile_composition": "pass",
+    "cta_wrapping": "pass",
+    "overlap": "pass",
+    "horizontal_overflow": "pass",
+    "reduced_motion": "pass",
+    "reference_application_without_copying": "pass",
+    "presentation_fingerprint": "pass",
+    "browser_errors": "pass"
+  },
+  "verification": {
+    "checked_at": "2026-10-21T13:05:09.024Z",
+    "preview_url": "http://127.0.0.1:3100/landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video",
+    "desktop_viewport": "1440x900",
+    "mobile_viewport": "390x844",
+    "exact_affiliate_cta_count": 1,
+    "all_reveal_sections_visible": true,
+    "console_errors": [],
+    "page_errors": [],
+    "request_failures": []
+  },
+  "notes": ["Uses the existing direct-review presentation and no copied vendor asset.", "Verified from the successful local production build at desktop and mobile sizes with reduced motion enabled; production is verified separately after deployment."]
+}

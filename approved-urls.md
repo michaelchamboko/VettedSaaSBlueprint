@@ -18,4 +18,5 @@ content, or removes a large group of URLs without the explicit CI override.
 - https://try.getresponsetoday.com/smypvzu98eko-kfze15
 - https://referral.flippa.com/vettedsaasblueprint
 - https://join.glideapps.com/9r1tcciij70r
-- https://manychat.partnerlinks.io/vettedsaasblueprint 
+- https://manychat.partnerlinks.io/vettedsaasblueprint
+- https://start.switcherstudio.com/anme6fqvgdx9

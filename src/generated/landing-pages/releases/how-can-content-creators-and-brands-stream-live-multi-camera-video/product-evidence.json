@@ -1,0 +1,67 @@
+{
+  "schema_version": "ProductEvidencePackV1",
+  "product": {
+    "id": "9cfe6f3a-48b1-4d2c-8f73-2ad5e4a1c9b6",
+    "name": "Switcher Studio",
+    "slug": "switcher-studio",
+    "category": "mobile multi-camera live production",
+    "website_url": "https://www.switcherstudio.com/",
+    "description": "A mobile production workflow documented for switching compatible camera devices, recording, remote guests, and streaming destinations.",
+    "primary_audience": "Creators and brands evaluating a mobile multi-camera production workflow"
+  },
+  "references": {
+    "product_id": "9cfe6f3a-48b1-4d2c-8f73-2ad5e4a1c9b6",
+    "affiliate_link_id": "2f5d9e13-4b67-4f2e-8c9a-1d73b6e4a508",
+    "source_ids": [
+      "a8e8e5c2-7b9c-4d11-8f24-0a6e3d7b9c52",
+      "b1f2c3d4-5e6f-4789-a012-3456789abcde",
+      "c9f1a6b4-2e73-4d8f-9a15-6b0c4e7d2f83",
+      "d4b2e7f9-6a18-4c3d-8f05-1e9b7a6c2d40",
+      "e7c3a1d8-5f29-4b60-9e14-2a8d6c0f7b35",
+      "e2a7c4f1-8d36-4b90-9c17-9f0e6d3a2b84"
+    ],
+    "page_blueprint_ids": ["9cfe6f3a-48b1-4d2c-8f73-2ad5e4a1c9b6"]
+  },
+  "affiliate": {
+    "original_url": "https://start.switcherstudio.com/anme6fqvgdx9",
+    "link_type": "affiliate",
+    "destination_review": {
+      "state": "approved_exact_url",
+      "checked_at": "2026-10-21T12:00:00+02:00",
+      "usage_notes": "The public CTA uses the uniquely approved exact URL from approved-urls.md. No unapproved URL was added."
+    }
+  },
+  "program_rules": {
+    "state": "documented",
+    "rules": [
+      { "name": "exact_url", "value": "allowed", "usage_notes": "Use only the exact approved URL." },
+      { "name": "unsupported_commercial_claims", "value": "disallowed", "usage_notes": "Pricing, discounts, rankings, comparisons, and guarantees were removed." },
+      { "name": "vendor_assets", "value": "disallowed", "usage_notes": "No copied vendor imagery or logo is used." }
+    ]
+  },
+  "compliance_profile": {
+    "required_disclosure": "We may earn a commission if you use this link, at no extra cost to you.",
+    "import_notes": "Official documentation is mapped to material claims; uncertain or dynamic commercial details remain conditional or omitted."
+  },
+  "disclosures": {
+    "short": "We may earn a commission if you use this link, at no extra cost to you.",
+    "full": "This page contains an affiliate link. If you visit Switcher Studio through it and later make a purchase, we may earn a commission at no extra cost to you.",
+    "placement_notes": "Disclosure is placed before the first CTA."
+  },
+  "review_basis": {
+    "basis": "official_vendor_docs",
+    "summary": "The article uses current official compatibility, camera setup, integration, recording, remote guest, and live-selling guidance.",
+    "first_hand_boundary": "No hands-on testing, personal experience, ranking, price, discount, or guaranteed outcome is claimed."
+  },
+  "sources": [
+    { "id": "a8e8e5c2-7b9c-4d11-8f24-0a6e3d7b9c52", "source_type": "official_compatibility_guide", "url": "https://support.switcherstudio.com/article/508-compatible-devices", "title": "Compatible devices", "retrieved_at": "2026-10-21T12:00:00+02:00", "usage_notes": "Supports compatibility wording and Android remote-camera qualification." },
+    { "id": "b1f2c3d4-5e6f-4789-a012-3456789abcde", "source_type": "official_camera_setup_guide", "url": "https://support.switcherstudio.com/article/391-camera-setup", "title": "Camera setup", "retrieved_at": "2026-10-21T12:00:00+02:00", "usage_notes": "Supports the conditional up-to-nine-camera-angle wording." },
+    { "id": "c9f1a6b4-2e73-4d8f-9a15-6b0c4e7d2f83", "source_type": "official_integration_guide", "url": "https://support.switcherstudio.com/article/482-streaming-platform-integrations", "title": "Streaming platform integrations", "retrieved_at": "2026-10-21T12:00:00+02:00", "usage_notes": "Supports named destinations and Custom RTMP wording." },
+    { "id": "d4b2e7f9-6a18-4c3d-8f05-1e9b7a6c2d40", "source_type": "official_recording_guide", "url": "https://support.switcherstudio.com/article/500-basic-streaming-recording-setup", "title": "Basic streaming and recording setup", "retrieved_at": "2026-10-21T12:00:00+02:00", "usage_notes": "Supports recording-only rehearsal wording." },
+    { "id": "e7c3a1d8-5f29-4b60-9e14-2a8d6c0f7b35", "source_type": "official_remote_guest_guide", "url": "https://support.switcherstudio.com/article/596-how-to-add-a-remote-guest-to-a-livestream", "title": "How to add a remote guest", "retrieved_at": "2026-10-21T12:00:00+02:00", "usage_notes": "Supports browser-link guest wording." },
+    { "id": "e2a7c4f1-8d36-4b90-9c17-9f0e6d3a2b84", "source_type": "official_live_selling_guide", "url": "https://support.switcherstudio.com/article/258-live-selling-on-your-website-with-switcher-player-cartr", "title": "Live selling with Switcher Player and Cartr", "retrieved_at": "2026-10-21T12:00:00+02:00", "usage_notes": "Supports conditional Shopify, plan, and iOS caveats." }
+  ],
+  "prohibited_claims": ["Current pricing or discounts", "Best or ranking claims", "Named competitor comparisons", "Hands-on testing or first-person experience", "Guaranteed production quality"],
+  "sibling_context": [],
+  "proposed_buyer_decisions": [{ "page_blueprint_id": "9cfe6f3a-48b1-4d2c-8f73-2ad5e4a1c9b6", "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video", "buyer_decision": "Whether a creator or brand should test Switcher Studio against its devices, destinations, guest workflow, and recording needs." }]
+}

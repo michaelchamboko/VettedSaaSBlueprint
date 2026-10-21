@@ -135,7 +135,7 @@ export function loadPublishedVisibilityPagesFromDirectories(
 }
 
 const generatedDirectory = path.resolve(process.cwd(), "src/generated/visibility-pages");
-const projectionPath = path.resolve(process.cwd(), ".stage2/visibility-publications.json");
+const projectionPath = path.join(generatedDirectory, "publications.json");
 
 let catalogue: PublishedVisibilityPage[] = [];
 try {

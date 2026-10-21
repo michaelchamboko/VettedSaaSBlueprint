@@ -4,6 +4,9 @@ import path from "node:path";
 import { chromium } from "playwright";
 
 import { listPublishedBlogPosts } from "../src/lib/blog/catalogue";
+import { blogPostSchema } from "../src/lib/blog/contracts";
+import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
+import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 function argument(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
@@ -27,10 +30,15 @@ async function loadLazyImages(page: import("playwright").Page) {
 }
 
 async function main() {
-  const origin = new URL(argument(process.argv.slice(2), "--origin") ?? "http://127.0.0.1:3417").origin;
-  const canonicalOrigin = new URL(argument(process.argv.slice(2), "--canonical-origin") ?? origin).origin;
+  const context = verificationContext({ mode: argument(process.argv.slice(2), "--mode"), origin: argument(process.argv.slice(2), "--origin") ?? "https://vettedsaasblueprint.online", canonicalOrigin: argument(process.argv.slice(2), "--canonical-origin"), expectedCommit: argument(process.argv.slice(2), "--expected-sha") });
+  const { origin, canonicalOrigin } = context;
   const output = path.resolve(argument(process.argv.slice(2), "--screenshot-dir") ?? path.join(".stage2", "blog-verification"));
-  const posts = listPublishedBlogPosts();
+  const slug = argument(process.argv.slice(2), "--slug");
+  const artifactPath = argument(process.argv.slice(2), "--artifact");
+  const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "blog", artifactPath, slug) : undefined;
+  const posts = listPublishedBlogPosts().filter((post) => !(approved?.target.slug ?? slug) || post.slug === (approved?.target.slug ?? slug));
+  if (!posts.length) throw new Error("No published blog target matched.");
+  if (approved && (posts.length !== 1 || JSON.stringify(posts[0]) !== JSON.stringify(blogPostSchema.parse(approved.artifact)))) throw new Error("BLOG_PUBLISHED_ARTIFACT_MISMATCH");
   const [homeHtml, blogHtml, rss, llms, sitemap, robots] = await Promise.all([
     requireText(`${origin}/`),
     requireText(`${origin}/blog`),
@@ -109,7 +117,9 @@ async function main() {
     await browser.close();
   }
 
-  console.log(JSON.stringify({ ok: true, origin, routes: posts.length + 6, viewportChecks: results.length, screenshots: output }, null, 2));
+  const result = { ok: true, ...context, routes: posts.length + 6, verifiedRoutes: posts.map((post) => post.canonicalPath), viewportChecks: results.length, screenshots: output };
+  await writeImportVerifierEvidence(argument(process.argv.slice(2), "--receipt"), approved?.target, result);
+  console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
 }
 
 void main().catch((error) => {

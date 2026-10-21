@@ -2,6 +2,9 @@ import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { chromium, type Browser, type Page, type ViewportSize } from "playwright";
+import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
+import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { pageBlueprintSchema } from "../src/lib/schemas/contracts";
 
 type LandingTarget = {
   slug: string;
@@ -270,33 +273,34 @@ export async function verifyLandingDeployment({
   attempts = 20,
   retryMs = 15_000,
   screenshotDir,
+  mode = "production",
+  canonicalOrigin: requestedCanonicalOrigin,
 }: {
   origin: string;
-  expectedCommit: string;
+  expectedCommit?: string;
   slug?: string;
   attempts?: number;
   retryMs?: number;
   screenshotDir?: string;
+  mode?: "candidate" | "production";
+  canonicalOrigin?: string;
 }) {
-  const parsedOrigin = new URL(origin);
-  if (parsedOrigin.protocol !== "https:") {
-    throw new Error("Production verification origin must use HTTPS.");
-  }
-  const canonicalOrigin = parsedOrigin.origin;
-  if (!/^[a-f0-9]{40}$/.test(expectedCommit)) {
+  const context = verificationContext({ mode, origin, canonicalOrigin: requestedCanonicalOrigin, expectedCommit });
+  const canonicalOrigin = context.canonicalOrigin;
+  if (mode === "production" && (!expectedCommit || !/^[a-f0-9]{40}$/.test(expectedCommit))) {
     throw new Error("Production verification requires a full 40-character Git SHA.");
   }
 
   const targets = await loadAgentReleaseTargets(slug);
-  const deployment = await waitForCommit(
-    canonicalOrigin,
-    expectedCommit,
+  const deployment = mode === "production" ? await waitForCommit(
+    context.origin,
+    expectedCommit!,
     attempts,
     retryMs,
-  );
+  ) : undefined;
   const [robots, sitemap] = await Promise.all([
-    fetchText(`${canonicalOrigin}/robots.txt`),
-    fetchText(`${canonicalOrigin}/sitemap.xml`),
+    fetchText(`${context.origin}/robots.txt`),
+    fetchText(`${context.origin}/sitemap.xml`),
   ]);
   if (/^Disallow:\s*\/\s*$/im.test(robots)) {
     throw new Error("Production robots.txt blocks the whole site.");
@@ -311,7 +315,7 @@ export async function verifyLandingDeployment({
       }
       const desktop = await verifyViewport(
         browser,
-        canonicalOrigin,
+        context.origin,
         target,
         { width: 1440, height: 900 },
         "no-preference",
@@ -319,7 +323,7 @@ export async function verifyLandingDeployment({
       );
       const mobile = await verifyViewport(
         browser,
-        canonicalOrigin,
+        context.origin,
         target,
         { width: 390, height: 844 },
         "no-preference",
@@ -327,7 +331,7 @@ export async function verifyLandingDeployment({
       );
       const reducedMotion = await verifyViewport(
         browser,
-        canonicalOrigin,
+        context.origin,
         target,
         { width: 390, height: 844 },
         "reduce",
@@ -361,9 +365,8 @@ export async function verifyLandingDeployment({
     return {
       schema_version: "LandingDeploymentVerificationV1",
       status: "pass",
-      origin: canonicalOrigin,
-      expected_commit: expectedCommit,
-      deployment,
+      ...context,
+      ...(mode === "production" ? { expected_commit: expectedCommit!, deployment: deployment! } : {}),
       robots_ok: true,
       sitemap_ok: true,
       pages,
@@ -378,20 +381,32 @@ async function main() {
   const args = process.argv.slice(2);
   const origin = argumentValue(args, "--origin");
   const expectedCommit = argumentValue(args, "--expected-sha");
-  if (!origin || !expectedCommit) {
+  const mode = argumentValue(args, "--mode") ?? "production";
+  if (mode !== "candidate" && mode !== "production") throw new Error("Use --mode candidate or production.");
+  if (!origin || (mode === "production" && !expectedCommit)) {
     throw new Error(
       "Usage: npm run landing:verify:deployment -- --origin <https-origin> --expected-sha <40-char-sha> [--slug <slug>]",
     );
   }
+  const artifactPath = argumentValue(args, "--artifact");
+  const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "direct-review", artifactPath, argumentValue(args, "--slug")) : undefined;
+  if (approved) {
+    const published = JSON.parse(await readFile(path.join(process.cwd(), "src/generated/landing-pages", `${approved.target.slug}.json`), "utf8"));
+    if (JSON.stringify(pageBlueprintSchema.parse(published)) !== JSON.stringify(pageBlueprintSchema.parse(approved.artifact))) throw new Error("LANDING_PUBLISHED_ARTIFACT_MISMATCH");
+  }
   const result = await verifyLandingDeployment({
     origin,
     expectedCommit,
-    slug: argumentValue(args, "--slug"),
+    mode,
+    canonicalOrigin: argumentValue(args, "--canonical-origin"),
+    slug: approved?.target.slug ?? argumentValue(args, "--slug"),
     attempts: Number(argumentValue(args, "--attempts") ?? 20),
     retryMs: Number(argumentValue(args, "--retry-ms") ?? 15_000),
     screenshotDir: argumentValue(args, "--screenshot-dir"),
   });
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (approved && JSON.stringify(result.pages.map((page) => page.path)) !== JSON.stringify(approved.target.renderedRoutes)) throw new Error("LANDING_PUBLISHED_ROUTE_MISMATCH");
+  await writeImportVerifierEvidence(argumentValue(args, "--receipt"), approved?.target, result);
+  process.stdout.write(`${JSON.stringify({ ...result, target: approved?.target }, null, 2)}\n`);
 }
 
 if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/verify-landing-deployment.ts")) {

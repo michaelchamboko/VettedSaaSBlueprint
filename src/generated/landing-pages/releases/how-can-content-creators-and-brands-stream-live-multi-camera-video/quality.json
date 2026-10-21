@@ -1,0 +1,9 @@
+{
+  "schema_version": "LandingQualityReceiptV1",
+  "status": "pass",
+  "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "reviewed_at": "2026-10-21T12:30:00+02:00",
+  "checks": {"schema": true, "evidence": true, "editorial": true, "compliance": true, "accessibility": true, "links": true, "catalogue": true, "length": true, "candidate_quality": true},
+  "scores": {"evidence": 95, "originality": 90, "conversion": 86, "compliance": 97, "readability": 91, "seo_safety": 96, "overall": 92},
+  "notes": ["The advisory checker does not override source evidence or semantic review."]
+}

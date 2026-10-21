@@ -1,0 +1,65 @@
+{
+  "status": "unpublished calibration only",
+  "passages": [
+    {
+      "format": "decision",
+      "source": "src/content/decision-journeys/sets/governed-ai-client-work-preparation.json",
+      "path": "pages.decisionHub.decisionContext",
+      "before": "The evidence supports a controlled internal pilot question, not a universal recommendation or permission to use client information.",
+      "after": "The evidence supports asking whether to run a controlled internal pilot. It gives neither a universal recommendation nor permission to use client information.",
+      "category": "overly_cautious",
+      "changeExplanation": "The abstract 'pilot question' phrasing delays the actual decision. The revision states the question and then gives the same limits separately.",
+      "integrityCheck": "Controlled internal pilot remains conditional. Neither a universal recommendation nor client-information permission is added. Evidence records and disclosure-related content remain unchanged."
+    },
+    {
+      "format": "decision",
+      "source": "src/content/decision-journeys/sets/governed-ai-client-work-preparation.json",
+      "path": "pages.decisionHub.blocks.1.summary",
+      "before": "The choice is whether a bounded preparation workflow can be made safer and more useful than the current manual process.",
+      "after": "Can a bounded preparation workflow be safer and more useful than the team's current manual process? That is the decision.",
+      "category": "overly_cautious",
+      "changeExplanation": "The indirect 'choice is whether ... can be made' construction puts distance between the reader and the decision. A direct question retains the uncertainty without that extra framing.",
+      "integrityCheck": "The bounded workflow, manual baseline and safer-and-more-useful comparison remain. 'Can' still expresses uncertainty. No facts, permissions or disclosures change."
+    },
+    {
+      "format": "landing",
+      "source": "src/generated/landing-pages/moosend-email-marketing-automation.json",
+      "path": "hero.subheadline",
+      "before": "For small marketing teams that need to build emails, segment an audience, and set up repeatable follow-up without making their first campaign a one-off.",
+      "after": "For small marketing teams building emails, segmenting an audience and setting up repeatable follow-up. The first campaign should be something the team can run again.",
+      "category": "generic",
+      "changeExplanation": "The long audience-and-tasks sentence ends in a generic one-off contrast. Splitting it makes the repeatability requirement easier to read.",
+      "integrityCheck": "Small marketing teams remain the audience; email building, segmentation and repeatable follow-up remain the tasks. No product capability or performance claim is added. Affiliate disclosures and destinations are unchanged."
+    },
+    {
+      "format": "landing",
+      "source": "src/generated/landing-pages/moosend-email-marketing-automation.json",
+      "path": "problem_solution.problem",
+      "before": "A feature list can make email platforms look interchangeable even when the real decision is whether your team can turn one campaign into repeatable follow-up.",
+      "after": "Email platforms can look interchangeable on a feature list. The useful question is whether your team can turn one campaign into repeatable follow-up.",
+      "category": "generic",
+      "changeExplanation": "The feature-list framing delays the buyer's practical question. Two short sentences separate that setup from the campaign-repeatability decision.",
+      "integrityCheck": "Platforms only 'can' look interchangeable; the same conditional wording and workflow question remain. No vendor comparison or unsupported fact is added. Disclosures and destinations are unchanged."
+    },
+    {
+      "format": "blog",
+      "source": "src/generated/blog-posts/posts.json",
+      "path": "answerSummary",
+      "before": "Treat a voice clone as a controlled production asset, not a novelty. Confirm the speaker's informed consent, restrict who can create and export audio, test the voice against the actual scripts and languages you use, document approval and takedown paths, and keep a human reviewer responsible for every release. A convincing demo is only the start of the evaluation.",
+      "after": "Treat a voice clone as a controlled production asset. Confirm the speaker's informed consent and restrict who can create and export audio. Test the voice on the scripts and languages you actually use, document approval and takedown paths, and keep a human reviewer responsible for every release. A convincing demo starts the evaluation; it does not finish it.",
+      "category": "strong",
+      "changeExplanation": "The original already gives concrete controls and a useful answer. A light edit splits its long checklist sentence and removes the novelty aside; no new advice is needed.",
+      "integrityCheck": "Consent, access, real-script and language testing, approval, takedown and human release review all remain. The demo still starts rather than completes evaluation. No source, qualifier, disclosure or destination is altered."
+    },
+    {
+      "format": "blog",
+      "source": "src/generated/blog-posts/posts.json",
+      "path": "sections.0.paragraphs.0",
+      "before": "The first production question is not whether a clone sounds impressive. It is whether the organization can prove that the person whose voice is being modeled understood the intended uses and granted permission for them. Record the permitted channels, languages, territories, duration, and people allowed to operate the tool. A generic release is weak if the real workflow later expands into advertising, support calls, or localization that the speaker never considered.",
+      "after": "Before judging how convincing a clone sounds, check whether the organization can prove that the speaker understood and permitted its intended uses. Record the permitted channels, languages, territories, duration and people allowed to operate the tool. A generic release offers little reassurance if the workflow later expands into advertising, support calls or localization the speaker never considered.",
+      "category": "strong",
+      "changeExplanation": "The original is specific and preserves a meaningful consent caveat. A light edit combines its opening contrast into a direct instruction and shortens the description of the speaker.",
+      "integrityCheck": "Proof of understood and permitted use remains required. Channels, languages, territories, duration, operators and the conditional expansion caveat remain. No legal assurance or experience claim is introduced; disclosures and sources are unchanged."
+    }
+  ]
+}

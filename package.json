@@ -6,6 +6,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node scripts/run-active-tests.mjs",
+    "verify:agent-workflow": "node scripts/verify-agent-workflow.mjs",
     "validate:public-site": "tsx scripts/validate-public-site.ts",
     "gate:public-release": "npm run validate:public-site",
     "validate:landing:matrix": "node scripts/validate-landing-workflow-matrix.mjs",
@@ -61,6 +62,10 @@
     "neon:migration:apply": "tsx scripts/verify-neon-migration.ts --apply",
     "neon:migration:verify": "tsx scripts/verify-neon-migration-source.ts",
     "landing:workflow:describe": "tsx scripts/describe-landing-workflow.ts",
+    "import:article": "tsx scripts/import-article.ts",
+    "import:article:resume": "tsx scripts/import-article.ts --resume",
+    "import:article:resume-pending": "tsx scripts/import-article.ts --resume-pending",
+    "import:article:release": "tsx scripts/import-article-release.ts",
     "verify:runtime-contract": "node scripts/verify-runtime-contract.mjs"
   },
   "dependencies": {

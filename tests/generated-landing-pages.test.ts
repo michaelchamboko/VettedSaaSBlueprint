@@ -38,12 +38,12 @@ async function writeMoosendPageWithReceiptNewlines(
 
 test("verified agent releases are exposed as published slugs", () => {
   const slugs = listPublishedLandingPageSlugs();
-  assert.deepEqual(slugs, ["elevenlabs-ai-voice-generator", "moosend-email-marketing-automation"]);
+  assert.deepEqual(slugs, ["how-can-content-creators-and-brands-stream-live-multi-camera-video", "elevenlabs-ai-voice-generator", "moosend-email-marketing-automation"]);
 });
 
 test("generated slugs param helper returns route params", () => {
   const params = listPublishedLandingPageParams();
-  assert.deepEqual(params, [{ slug: "elevenlabs-ai-voice-generator" }, { slug: "moosend-email-marketing-automation" }]);
+  assert.deepEqual(params, [{ slug: "how-can-content-creators-and-brands-stream-live-multi-camera-video" }, { slug: "elevenlabs-ai-voice-generator" }, { slug: "moosend-email-marketing-automation" }]);
 });
 
 test("published landing page can be retrieved and is schema-valid", () => {
@@ -60,8 +60,8 @@ test("invalid slug format is blocked", () => {
   const invalid = getPublishedLandingPage("../bad/slug");
   assert.equal(invalid, null);
   const manifest = getLandingPageManifest();
-  assert.equal(manifest.length, 2);
-  assert.equal(manifest[0]?.slug, "elevenlabs-ai-voice-generator");
+  assert.equal(manifest.length, 3);
+  assert.equal(manifest[1]?.slug, "elevenlabs-ai-voice-generator");
 });
 
 test("missing generated manifest is a valid empty public catalogue", async () => {
@@ -86,7 +86,7 @@ test("manifest entries without audited publication provenance are rejected", asy
 test("release fingerprints accept LF artifacts with CRLF receipts", async () => {
   await withLandingPageFixture(async (directory) => {
     await writeMoosendPageWithReceiptNewlines(directory, "\n", "\r\n");
-    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 2);
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 3);
   });
 });
 
@@ -99,14 +99,14 @@ test("Moosend release fingerprints accept an LF-only checkout", async () => {
       const artifact = (await readFile(artifactPath, "utf8")).replace(/\r\n/g, "\n");
       await writeFile(artifactPath, artifact);
     }
-    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 2);
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 3);
   });
 });
 
 test("release fingerprints accept CRLF artifacts with LF receipts", async () => {
   await withLandingPageFixture(async (directory) => {
     await writeMoosendPageWithReceiptNewlines(directory, "\r\n", "\n");
-    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 2);
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 3);
   });
 });
 
