@@ -108,6 +108,10 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       return { routeOk: snapshots.every((page) => page.httpOk === true), contentOk: snapshots.every((page) => page.allRevealSectionsVisible === true), disclosureOk: snapshots.every((page) => page.disclosureOk === true), exactCtaOk: snapshots.every((page) => page.allCtasExact === true), desktopOk: pages.every((page) => page.desktop?.httpOk === true), mobileOk: pages.every((page) => page.mobile?.httpOk === true), robotsOk: result.robots_ok === true, sitemapOk: result.sitemap_ok === true, browserErrorsOk: snapshots.every((page) => (page.browserErrors?.length ?? 1) === 0) };
     },
     async rollback(deploymentId) { try { await runner("vercel", withToken(["rollback", deploymentId, "--yes"], token)); return { ok: true, summary: "rollback completed" }; } catch (error) { return { ok: false, summary: String(error) }; } },
-    async verifyRollback(deploymentId) { const result = await runner("vercel", inspectArgs(deploymentId)); return /production/i.test(result.stdout); },
+    async verifyRollback(deploymentId, expectedCommitSha) {
+      const result = await runner("vercel", inspectArgs(origin));
+      const parsed = JSON.parse(result.stdout) as { id?: string; gitCommitSha?: string; target?: string };
+      return parsed.target === "production" && parsed.id === deploymentId && (!expectedCommitSha || parsed.gitCommitSha === expectedCommitSha);
+    },
   };
 }

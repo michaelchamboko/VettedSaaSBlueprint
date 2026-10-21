@@ -331,3 +331,26 @@ test("local adapter maps verifier evidence and rejects verifier failures", async
   const failingRunner: ReleaseCommandRunner = async () => ({ stdout: JSON.stringify({ status: "failed" }), stderr: "" });
   await assert.rejects(() => createLocalReleaseOperations(".", { runner: failingRunner, format: "direct-review", artifactPath: "a.json", slug: "a" }).verifyProduction({ deploymentId: "dpl", canonicalUrl: "https://example.com", commitSha: "a".repeat(40) }), /LANDING_VERIFIER_FAILED/);
 });
+
+test("local adapter verifies rollback through the canonical production origin", async () => {
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    if (command === "vercel" && args[0] === "inspect" && args[1] === "https://example.com") {
+      return { stdout: JSON.stringify({ id: "dpl-known-good", gitCommitSha: "b".repeat(40), target: "production" }), stderr: "" };
+    }
+    return { stdout: "", stderr: "" };
+  };
+  const operations = createLocalReleaseOperations(".", { runner, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  assert.equal(await operations.verifyRollback("dpl-known-good", "b".repeat(40)), true);
+  assert.equal(await operations.verifyRollback("dpl-known-good", "c".repeat(40)), false);
+});
+
+test("local adapter rejects rollback when canonical origin still points to the failed deployment", async () => {
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    if (command === "vercel" && args[0] === "inspect" && args[1] === "https://example.com") {
+      return { stdout: JSON.stringify({ id: "dpl-failed", gitCommitSha: "c".repeat(40), target: "production" }), stderr: "" };
+    }
+    return { stdout: "", stderr: "" };
+  };
+  const operations = createLocalReleaseOperations(".", { runner, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  assert.equal(await operations.verifyRollback("dpl-known-good", "b".repeat(40)), false);
+});

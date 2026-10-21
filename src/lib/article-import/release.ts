@@ -39,7 +39,7 @@ export type ReleaseOperations = {
   deploy(commitSha: string): Promise<ReleaseDeployment>;
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
   rollback(deploymentId: string): Promise<{ ok: boolean; summary: string }>;
-  verifyRollback(deploymentId: string): Promise<boolean>;
+  verifyRollback(deploymentId: string, expectedCommitSha?: string): Promise<boolean>;
   fixForward?(attempt: number): Promise<boolean>;
 };
 
@@ -202,7 +202,7 @@ export async function assessImportRelease(input: {
       let restored = false;
       try {
         const rollback = await input.operations.rollback(previous.deploymentId);
-        restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId);
+        restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
       } catch {
         restored = false;
       }
@@ -225,7 +225,7 @@ export async function assessImportRelease(input: {
     let restored = false;
     try {
       const rollback = await input.operations.rollback(previous.deploymentId);
-      restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId);
+      restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
     } catch { restored = false; }
     const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
     const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
