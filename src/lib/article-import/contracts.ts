@@ -35,7 +35,17 @@ export const importReleaseSchema = z.object({
   deploymentId: z.string().min(1),
   canonicalUrl: z.string().url(),
   verifiedAt: z.string().datetime({ offset: true }),
-  checks: z.record(z.string(), z.boolean()),
+  checks: z.object({
+    routeOk: z.literal(true),
+    contentOk: z.literal(true),
+    disclosureOk: z.literal(true),
+    exactCtaOk: z.literal(true),
+    desktopOk: z.literal(true),
+    mobileOk: z.literal(true),
+    robotsOk: z.literal(true),
+    sitemapOk: z.literal(true),
+    browserErrorsOk: z.literal(true),
+  }).strict(),
   previousDeploymentId: z.string().min(1).optional(),
 }).strict();
 export type ImportReleaseV1 = z.infer<typeof importReleaseSchema>;

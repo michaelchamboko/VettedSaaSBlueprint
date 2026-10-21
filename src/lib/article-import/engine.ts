@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
@@ -39,13 +39,17 @@ export function parseExternalArticle(markdown: string): { title: string; primary
   const lines = markdown.replace(/^\uFEFF/, "").split(/\r?\n/);
   const metadata: Record<string, string> = {};
   let bodyStart = 0;
+  let malformedFrontmatter = false;
   if (lines[0]?.trim() === "---") {
     const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
-    if (end < 0) throw new Error("Frontmatter starts with --- but has no closing delimiter.");
-    bodyStart = end + 1;
-    for (const line of lines.slice(1, end)) {
-      const match = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
-      if (match) metadata[match[1]] = scalar(match[2]);
+    if (end < 0) {
+      malformedFrontmatter = true;
+    } else {
+      bodyStart = end + 1;
+      for (const line of lines.slice(1, end)) {
+        const match = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+        if (match) metadata[match[1]] = scalar(match[2]);
+      }
     }
   }
   const bodyLines = lines.slice(bodyStart);
@@ -56,6 +60,7 @@ export function parseExternalArticle(markdown: string): { title: string; primary
   const inferredFields = [
     ...(metadata.title ? [] : ["title"]),
     ...(metadata.primary_question || metadata.primaryQuestion ? [] : ["primaryQuestion"]),
+    ...(malformedFrontmatter ? ["frontmatter"] : []),
   ];
   const unusableReason = body.length < 80 ? "The submission has no usable article body." : undefined;
   const link = metadata.affiliate_url?.match(/https:\/\/[^)\s]+/)?.[0] ?? metadata.affiliate_url?.trim();
@@ -66,7 +71,7 @@ function classify(input: ReturnType<typeof parseExternalArticle>): ImportFormat 
   const text = `${input.title}\n${input.primaryQuestion}\n${input.body}`.toLowerCase();
   if (input.affiliateName || input.affiliateUrl) return "direct-review";
   if (/decision hub|solution hub|decision scenario|three connected pages/.test(text)) return "decision-set";
-  if (/^##?\s*(faq|frequently asked)|buyer question|topic cluster/.test(text)) return "blog";
+  if (/^#{1,2}\s*(faq|frequently asked)/im.test(text) || /buyer question|topic cluster/.test(text)) return "blog";
   if (/guide|how to|checklist|workflow/.test(text)) return "visibility";
   return "agent_review_required";
 }
@@ -75,12 +80,21 @@ function risks(body: string): ImportTransformationV1["claimRisks"] {
   return RISK_PATTERNS.filter(([, pattern]) => pattern.test(body)).map(([name]) => name);
 }
 
-function hostMatches(candidate: string, affiliateName?: string): boolean {
+function domainKey(host: string): string {
+  const labels = host.toLowerCase().replace(/^www\./, "").split(".");
+  return labels.slice(-2).join(".");
+}
+
+function hostMatches(candidate: string, submitted: string | undefined, affiliateName?: string): boolean {
   try {
     const host = new URL(candidate).hostname.toLowerCase().replace(/^www\./, "");
+    const submittedHost = submitted ? new URL(submitted).hostname.toLowerCase().replace(/^www\./, "") : "";
+    if (!submittedHost || domainKey(host) !== domainKey(submittedHost)) return false;
     if (!affiliateName) return false;
-    const tokens = affiliateName.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2);
-    return tokens.some((token) => host.includes(token));
+    const compactName = affiliateName.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const tokens = [compactName, ...affiliateName.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2).map((token) => token.replace(/[^a-z0-9]/g, ""))];
+    const labels = host.split(".").map((label) => label.replace(/[^a-z0-9]/g, ""));
+    return tokens.some((token) => labels.includes(token));
   } catch { return false; }
 }
 
@@ -89,7 +103,7 @@ export function resolveAffiliateUrl(submitted: string | undefined, affiliateName
   const manifest = parseApprovedUrls(allowlistMarkdown);
   const exact = manifest.entries.find((entry) => entry.exactUrl === submitted);
   if (exact) return { mode: "approved", submitted, resolved: exact.exactUrl };
-  const matches = manifest.entries.filter((entry) => hostMatches(entry.exactUrl, affiliateName));
+  const matches = manifest.entries.filter((entry) => hostMatches(entry.exactUrl, submitted, affiliateName));
   if (matches.length === 1) return { mode: "approved", submitted, resolved: matches[0].exactUrl };
   return { mode: "decommercialized", submitted };
 }
@@ -122,15 +136,45 @@ function initialRecord(input: { importId: string; sourceFile: string; sourceFing
 async function atomicWrite(file: string, value: unknown): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true });
   const temp = `${file}.${process.pid}.tmp`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  const serialized = `${JSON.stringify(value, null, 2)}\n`;
+  await writeFile(temp, serialized, "utf8");
   try {
     await rename(temp, file);
   } catch (error) {
     // Windows sandboxed temporary folders can reject an atomic rename. Keep
     // the durable write deterministic and remove the staging file.
     if ((error as NodeJS.ErrnoException).code !== "EPERM") throw error;
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-    await unlink(temp).catch(() => undefined);
+    let destinationExists = true;
+    try { await access(file); } catch (accessError) {
+      if ((accessError as NodeJS.ErrnoException).code !== "ENOENT") throw accessError;
+      destinationExists = false;
+    }
+    if (!destinationExists) {
+      await writeFile(file, serialized, { encoding: "utf8", flag: "wx" });
+      await unlink(temp).catch(() => undefined);
+      return;
+    }
+    const backup = `${file}.${process.pid}.bak`;
+    try {
+      await rename(file, backup);
+    } catch (backupError) {
+      if ((backupError as NodeJS.ErrnoException).code !== "EPERM") throw backupError;
+      await copyFile(file, backup);
+    }
+    try {
+      try {
+        await rename(temp, file);
+      } catch (replaceError) {
+        if ((replaceError as NodeJS.ErrnoException).code !== "EPERM") throw replaceError;
+        await writeFile(file, serialized, { encoding: "utf8", flag: "w" });
+        await unlink(temp).catch(() => undefined);
+      }
+      await unlink(backup).catch(() => undefined);
+    } catch (replaceError) {
+      await writeFile(file, await readFile(backup));
+      await unlink(backup).catch(() => undefined);
+      throw replaceError;
+    }
   }
 }
 
@@ -166,6 +210,22 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
   const parsed = parseExternalArticle(raw);
   const sourceFingerprint = fingerprint(raw);
   const existing = (await listAllImports(repositoryRoot)).find((record) => record.sourceFingerprint === sourceFingerprint);
+  if (existing?.stage === "LIVE") {
+    const at = now();
+    const reused = externalArticleImportSchema.parse({
+      ...existing,
+      importId: `article-${randomUUID()}`,
+      sourceFile: absoluteSource,
+      createdAt: at,
+      updatedAt: at,
+      duplicateOf: existing.importId,
+      sourceDeletedAt: at,
+      stageReceipts: [...existing.stageReceipts, { stage: "LIVE", status: "passed", at, message: `Reused live result ${existing.importId}.` }],
+      nextAction: `Reused live result ${existing.importId}.`,
+    });
+    await saveImport(repositoryRoot, reused);
+    return reused;
+  }
   if (existing) return existing;
   const allowlist = await readFile(path.resolve(repositoryRoot, allowlistFile), "utf8");
   const transformation = prepareTransformation(parsed, allowlist);
@@ -177,24 +237,53 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
   return record;
 }
 
-const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEARCHING", RESEARCHING: "TRANSFORMING", TRANSFORMING: "REFINING", REFINING: "VALIDATING", VALIDATING: "RELEASING", RELEASING: "VERIFYING", VERIFYING: "LIVE" };
+const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEARCHING", RESEARCHING: "TRANSFORMING", TRANSFORMING: "REFINING", REFINING: "VALIDATING", VALIDATING: "RELEASING" };
 export async function advanceImport(repositoryRoot: string, record: ExternalArticleImportV1, message: string): Promise<ExternalArticleImportV1> {
   const stage = nextStage[record.stage];
   if (!stage) throw new Error(`Stage ${record.stage} cannot advance automatically.`);
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: stage === "LIVE" ? "none" : `Complete ${stage.toLowerCase()} and record its receipt.` });
+  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: `Complete ${stage.toLowerCase()} and record its receipt.` });
   await saveImport(repositoryRoot, updated);
-  if (stage === "LIVE" || stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
+  return updated;
+}
+
+export async function recordImportRelease(repositoryRoot: string, record: ExternalArticleImportV1, releaseInput: unknown): Promise<ExternalArticleImportV1> {
+  if (record.stage !== "RELEASING") throw new Error("A release receipt can only be recorded from RELEASING.");
+  const release = externalArticleImportSchema.shape.release.unwrap().parse(releaseInput);
+  const at = now();
+  const updated = externalArticleImportSchema.parse({ ...record, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
+  await saveImport(repositoryRoot, updated);
+  return updated;
+}
+
+export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  if (record.stage !== "VERIFYING" || !record.release) throw new Error("A validated release receipt is required before production verification.");
+  const release = externalArticleImportSchema.shape.release.unwrap().parse(record.release);
+  if (Object.values(release.checks).some((check) => check !== true)) throw new Error("Every required production check must pass before LIVE.");
+  const at = now();
+  const updated = externalArticleImportSchema.parse({ ...record, stage: "LIVE", updatedAt: at, stageReceipts: [...record.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+  return deleteRawSource(repositoryRoot, updated.importId, updated, at);
+}
+
+export async function resumeImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  if (record.stage !== "WAITING_EXTERNAL") throw new Error("Only WAITING_EXTERNAL imports can be explicitly resumed.");
+  const prior = [...record.stageReceipts].reverse().find((receipt) => receipt.stage !== "WAITING_EXTERNAL" && receipt.status !== "waiting");
+  const stage = prior?.stage && nextStage[prior.stage] ? prior.stage : "RESEARCHING";
+  const at = now();
+  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "started", at, message: "External dependency recovered; resumed explicitly." }], nextAction: `Retry ${stage.toLowerCase()} using the next recorded strategy.` });
+  await saveImport(repositoryRoot, updated);
   return updated;
 }
 
 export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; message: string }): Promise<ExternalArticleImportV1> {
-  const attempt = (record.strategyAttempts[input.strategy] ?? 0) + 1;
-  const attempts = { ...record.strategyAttempts, [input.strategy]: attempt };
+  const attemptKey = input.classification === "transient" ? `transient:${input.strategy}` : input.strategy;
+  const attempt = (record.strategyAttempts[attemptKey] ?? 0) + 1;
+  const attempts = { ...record.strategyAttempts, [attemptKey]: attempt };
   const strategies = STRATEGIES[input.strategy] ?? ["retry", "alternate", "quarantine"];
   const next = strategies[attempt] ?? "quarantine";
   const at = now();
-  const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : next === "quarantine" ? "QUARANTINED" : "REPAIRING";
+  const exhausted = next === "quarantine";
+  const stage: ImportStage = input.classification === "transient" && !exhausted ? "WAITING_EXTERNAL" : next === "quarantine" ? "QUARANTINED" : "REPAIRING";
   const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
   if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);

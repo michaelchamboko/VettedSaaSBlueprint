@@ -1,33 +1,37 @@
 import { createArticleImport, listPendingImports, loadImport } from "../src/lib/article-import/engine";
 
-function value(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-}
+export type ImportCommand = { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "resume-pending" };
 
-async function main(): Promise<void> {
-  const command = process.argv[2];
-  const root = process.cwd();
-  if (command === "--source") {
-    const source = value("--source");
-    if (!source) throw new Error("--source requires a Markdown file.");
-    process.stdout.write(`${JSON.stringify(await createArticleImport(root, source), null, 2)}\n`);
-    return;
-  }
-  if (command === "--resume") {
-    const importId = value("--resume");
-    if (!importId) throw new Error("--resume requires an import ID.");
-    process.stdout.write(`${JSON.stringify(await loadImport(root, importId), null, 2)}\n`);
-    return;
-  }
-  if (command === "--resume-pending") {
-    process.stdout.write(`${JSON.stringify(await listPendingImports(root), null, 2)}\n`);
-    return;
+export function parseImportCommand(argv: string[]): ImportCommand {
+  if (argv[0] === "--source" && argv[1]) return { kind: "source", source: argv[1] };
+  if (argv[0] === "--resume-pending") return { kind: "resume-pending" };
+  if (argv[0] === "--resume") {
+    const importId = argv.slice(1).find((argument) => argument !== "--resume" && !argument.startsWith("--"));
+    if (importId) return { kind: "resume", importId };
   }
   throw new Error("Use --source <file>, --resume <import-id>, or --resume-pending.");
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+async function main(): Promise<void> {
+  const command = parseImportCommand(process.argv.slice(2));
+  const root = process.cwd();
+  if (command.kind === "source") {
+    process.stdout.write(`${JSON.stringify(await createArticleImport(root, command.source), null, 2)}\n`);
+    return;
+  }
+  if (command.kind === "resume") {
+    process.stdout.write(`${JSON.stringify(await loadImport(root, command.importId), null, 2)}\n`);
+    return;
+  }
+  if (command.kind === "resume-pending") {
+    process.stdout.write(`${JSON.stringify(await listPendingImports(root), null, 2)}\n`);
+    return;
+  }
+}
+
+if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/import-article.ts")) {
+  main().catch((error: unknown) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}
