@@ -50,10 +50,11 @@ test("heartbeat consumes durable work after interruption and releases only after
   const commit = "c".repeat(40);
   const pr = "https://github.com/example/repository/pull/1";
   const artifactPath = "src/generated/landing-pages/example.json";
+  const authorityPath = "src/generated/landing-pages/index.json";
   const operations: ReleaseOperations = {
     preflight: async () => ({ ok: true, reasons: [] }),
-    inspectGit: async () => ({ clean: true, changedFiles: [artifactPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
-    refreshMain: async () => ({ clean: true, changedFiles: [artifactPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    inspectGit: async () => ({ clean: true, changedFiles: [artifactPath, authorityPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    refreshMain: async () => ({ clean: true, changedFiles: [artifactPath, authorityPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     runValidation: async () => ({ ok: true, summary: "Mocked repository checks passed." }),
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => { commits++; return commit; },
@@ -108,7 +109,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout" });
     await heartbeat();
     assert.equal((await current()).stage, "RELEASING");
-    const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath], slug: "example" });
+    const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" });
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");
     assert.equal(deployments, 0);

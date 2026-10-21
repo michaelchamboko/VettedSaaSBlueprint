@@ -119,6 +119,63 @@ export function validateReleasePaths(files: readonly string[], format: ImportFor
   return files.filter((file) => !isAllowedReleasePath(file, format, ownerAuthorizedAffiliateUrl));
 }
 
+/** Publication authority files that must accompany the approved artifact in every release commit. */
+export function publicationAuthorityPaths(format: ImportFormat): readonly string[] {
+  switch (format) {
+    case "direct-review": return ["src/generated/landing-pages/index.json"];
+    case "blog": return ["src/generated/blog-posts/posts.json"];
+    case "visibility": return ["src/generated/visibility-pages/index.json", "src/generated/visibility-pages/publications.json"];
+    case "decision-set": return ["src/content/decision-journeys/catalogue.json"];
+    case "agent_review_required": return [];
+  }
+}
+
+const AFFILIATE_DESTINATION_KEYS = new Set(["destination_url", "affiliate_url", "final_visible_destination_url", "approved_destinations"]);
+
+export function collectAffiliateDestinationUrls(value: unknown, collected: string[] = []): string[] {
+  if (Array.isArray(value)) { for (const item of value) collectAffiliateDestinationUrls(item, collected); return collected; }
+  if (!value || typeof value !== "object") return collected;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (AFFILIATE_DESTINATION_KEYS.has(key)) {
+      if (typeof child === "string" && child.trim()) collected.push(child.trim());
+      else if (Array.isArray(child)) { for (const item of child) if (typeof item === "string" && item.trim()) collected.push(item.trim()); }
+      else collectAffiliateDestinationUrls(child, collected);
+    } else collectAffiliateDestinationUrls(child, collected);
+  }
+  return collected;
+}
+
+/** Enforces the import's resolved commercial mode on an artifact before it can publish. */
+export function assertArtifactCommercialSafety(record: ExternalArticleImportV1, format: ImportFormat, artifact: unknown): void {
+  const mode = record.transformation?.commercialMode ?? "none";
+  const resolved = record.transformation?.resolvedAffiliateUrl;
+  const submitted = record.transformation?.submittedAffiliateUrl;
+  const destinations = [...new Set(collectAffiliateDestinationUrls(artifact))];
+  const serialized = JSON.stringify(artifact ?? "");
+  if (mode === "decommercialized") {
+    if (format === "direct-review") throw new Error("DECOMMERCIALIZED_INPUT_CANNOT_PUBLISH_DIRECT_REVIEW");
+    if (destinations.length) throw new Error("DECOMMERCIALIZED_ARTIFACT_RETAINS_AFFILIATE_DESTINATION");
+    if (submitted && serialized.includes(submitted)) throw new Error("DECOMMERCIALIZED_ARTIFACT_RETAINS_SUBMITTED_AFFILIATE_URL");
+    return;
+  }
+  if (format !== "direct-review") {
+    if (destinations.length) throw new Error("NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_DESTINATION");
+    return;
+  }
+  for (const destination of destinations) {
+    if (!resolved || destination !== resolved) throw new Error("ARTIFACT_AFFILIATE_DESTINATION_NOT_RESOLVED_URL");
+  }
+  const blueprint = artifact as { affiliate_links?: Array<{ affiliate_link_id?: string; destination_url?: string | null }>; hero?: { primary_cta_link_id?: string }; cta_blocks?: Array<{ affiliate_link_id?: string }> };
+  const links = Array.isArray(blueprint.affiliate_links) ? blueprint.affiliate_links : [];
+  if (!links.length) return;
+  const byId = new Map(links.map((link) => [String(link.affiliate_link_id ?? ""), link.destination_url]));
+  const referenced = [blueprint.hero?.primary_cta_link_id, ...(Array.isArray(blueprint.cta_blocks) ? blueprint.cta_blocks : []).map((block) => block.affiliate_link_id)].filter((id): id is string => typeof id === "string" && id.length > 0);
+  for (const id of referenced) {
+    const destination = byId.get(id);
+    if (typeof destination !== "string" || !resolved || destination !== resolved) throw new Error("AFFILIATE_CTA_DESTINATION_UNBOUND");
+  }
+}
+
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const candidate = value as Record<string, unknown>;
@@ -149,8 +206,9 @@ export async function assessImportRelease(input: {
   if (input.execute && input.record.contentApproval) {
     try {
       if (input.artifactPath?.replaceAll("\\", "/") !== input.record.contentApproval.artifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
-      const { target } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
+      const { target, artifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
       input.slug = target.slug;
+      assertArtifactCommercialSafety(input.record, input.record.format, artifact);
     } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
   }
   if (input.record.format === "direct-review") {
@@ -159,6 +217,15 @@ export async function assessImportRelease(input: {
     const normalizedArtifact = input.artifactPath?.replaceAll("\\", "/");
     if (!expected || normalizedArtifact !== expected || normalizedArtifact.startsWith("/") || normalizedArtifact.split("/").includes("..")) reasons.push("DIRECT_REVIEW_ARTIFACT_MISMATCH");
     if (expected && !input.changedFiles.map((file) => file.replaceAll("\\", "/")).includes(expected)) reasons.push("DIRECT_REVIEW_ARTIFACT_NOT_CHANGED");
+  }
+  // Every publishable format ships its approved artifact plus its publication authority files.
+  if (input.record.format !== "agent_review_required") {
+    const declared = normalizedPathSet(input.changedFiles);
+    const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
+    if (input.record.format !== "direct-review" && approvedArtifact && !declared.includes(approvedArtifact)) reasons.push("ARTIFACT_NOT_IN_RELEASE");
+    for (const authority of publicationAuthorityPaths(input.record.format)) {
+      if (!declared.includes(authority)) reasons.push(`PUBLICATION_AUTHORITY_NOT_IN_RELEASE:${authority}`);
+    }
   }
   if (input.killSwitchEnabled) {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
@@ -205,6 +272,15 @@ export async function assessImportRelease(input: {
   if (!input.record.pendingRelease && input.record.format === "direct-review" && input.slug) {
     const expected = `src/generated/landing-pages/${input.slug}.json`;
     if (!inspectedFiles.includes(expected)) gitReasons.push("DIRECT_REVIEW_ARTIFACT_NOT_IN_WORKTREE");
+  }
+  if (!input.record.pendingRelease && input.record.format !== "agent_review_required") {
+    if (input.record.format !== "direct-review") {
+      const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
+      if (approvedArtifact && !inspectedFiles.includes(approvedArtifact)) gitReasons.push("ARTIFACT_NOT_IN_WORKTREE");
+    }
+    for (const authority of publicationAuthorityPaths(input.record.format)) {
+      if (!inspectedFiles.includes(authority)) gitReasons.push(`PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:${authority}`);
+    }
   }
   if (gitReasons.length) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `The inspected worktree does not match the declared import release: ${gitReasons.join(",")}.` });

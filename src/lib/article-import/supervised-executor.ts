@@ -6,7 +6,7 @@ import { importFormatSchema } from "./contracts";
 import { assertIgnoredImportStatePath } from "./automation-state";
 import { validateImportArtifact } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
-import { assessImportRelease, recordImportCodeReview, type ReleaseOperations } from "./release";
+import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
 
 const file = z.string().min(1);
 const resultSchema = z.object({
@@ -18,7 +18,7 @@ const resultSchema = z.object({
     z.object({ stage: z.literal("TRANSFORMING"), artifactPath: file, format: importFormatSchema.exclude(["agent_review_required"]) }).strict(),
     z.object({ stage: z.literal("REFINING"), artifactPath: file, editorialEvidencePath: file, formatQualityPath: file }).strict(),
     z.object({ stage: z.literal("VALIDATING"), validationGate: file, validationReceiptPath: file }).strict(),
-    z.object({ stage: z.literal("RELEASING"), artifactPath: file, changedFiles: z.array(file).min(1), slug: file.optional(), origin: z.string().url().optional(), codeReviewPath: file.optional() }).strict(),
+    z.object({ stage: z.literal("RELEASING"), artifactPath: file, changedFiles: z.array(file).min(1), slug: file.optional(), codeReviewPath: file.optional() }).strict(),
   ]),
 }).strict();
 
@@ -35,7 +35,7 @@ const instructions = {
   TRANSFORMING: "Use the research evidence to create the existing format schema. Remove unsupported claims and use only the resolved affiliate URL. Record artifactPath and supported format; this is not editorial approval.",
   REFINING: "Apply the existing Eleanor editorial skill and protected-field comparison. Record artifactPath, editorialEvidencePath and formatQualityPath. The existing content approval validator must freeze the current fingerprint before presentation.",
   VALIDATING: "Render the approved artifact without rewriting words. Inspect desktop/mobile, accessibility, technical SEO, overflow and runtime errors. Write ImportPresentationValidationV1 and record validationReceiptPath and validationGate. A wording issue must return to editorial review.",
-  RELEASING: "Record artifactPath, changedFiles, slug for a direct review, and optional origin. The local Git/Vercel adapter runs the release gates and creates a PR. After independent current-head Codex review, add codeReviewPath under ignored .automation/article-imports/reviews/; keep results at resultPath and wait for the owner's merge. Never fabricate review, merge or deployment evidence.",
+  RELEASING: "Record artifactPath, changedFiles, and slug for a direct review; publication authority files must be included in changedFiles. The release adapter always verifies against the canonical production origin; no origin is accepted from stage results. The local Git/Vercel adapter runs the release gates and creates a PR. After independent current-head Codex review, add codeReviewPath under ignored .automation/article-imports/reviews/; keep results at resultPath and wait for the owner's merge. Never fabricate review, merge or deployment evidence.",
 } as const;
 
 /** Codex owns authoring; the runtime validates its durable stage output and executes local operations. */
@@ -74,10 +74,13 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       case "RESEARCHING":
         z.object({ sources: z.array(z.object({ url: z.string().url(), claims: z.array(z.string().min(1)).min(1) }).passthrough()).min(1) }).passthrough().parse(await readRepositoryJson(root, work.evidencePath));
         return advanceImport(root, record, `${result.summary} Evidence: ${work.evidencePath}`);
-      case "TRANSFORMING":
-        validateImportArtifact(work.format, await readRepositoryJson(root, work.artifactPath));
+      case "TRANSFORMING": {
+        const artifact = await readRepositoryJson(root, work.artifactPath);
+        validateImportArtifact(work.format, artifact);
+        assertArtifactCommercialSafety(record, work.format, artifact);
         record = { ...record, format: work.format };
         return advanceImport(root, record, `${result.summary} Artifact: ${work.artifactPath}`);
+      }
       case "REFINING":
         record = await approveImportContent(root, record, work);
         return advanceImport(root, record, result.summary);
@@ -85,7 +88,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         record = await recordImportPresentation(root, record, { validationGate: work.validationGate, validationReceipt: await readRepositoryJson(root, work.validationReceiptPath) });
         return record.stage === "VALIDATING" && record.presentation ? advanceImport(root, record, result.summary) : record;
       case "RELEASING": {
-        const operations = releaseOperations ?? createLocalReleaseOperations(root, { format: record.format, artifactPath: work.artifactPath, slug: work.slug, importId: record.importId, origin: work.origin });
+        const operations = releaseOperations ?? createLocalReleaseOperations(root, { format: record.format, artifactPath: work.artifactPath, slug: work.slug, importId: record.importId });
         if (work.codeReviewPath) {
           await assertIgnoredImportStatePath(root, work.codeReviewPath);
           record = await recordImportCodeReview(root, record, await readRepositoryJson(root, work.codeReviewPath), operations);

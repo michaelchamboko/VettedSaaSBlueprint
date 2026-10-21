@@ -27,6 +27,19 @@ type Check = {
 
 type Screenshot = { route: string; viewport: string; mode: string; path: string };
 
+/** Console errors and uncaught page exceptions stay separate so a silent page exception can never pass as clean. */
+export function browserErrorChecksFor(input: { route: string; profile: string; consoleErrors: readonly string[]; pageErrors: readonly string[] }): Check[] {
+  return [
+    { name: `${input.route}: ${input.profile} console errors`, passed: input.consoleErrors.length === 0, detail: input.consoleErrors.length ? input.consoleErrors.join(" | ") : "No browser console errors.", category: "motion" },
+    { name: `${input.route}: ${input.profile} uncaught page errors`, passed: input.pageErrors.length === 0, detail: input.pageErrors.length ? input.pageErrors.join(" | ") : "No uncaught page exceptions.", category: "motion" },
+  ];
+}
+
+export function browserErrorsOkFrom(checks: readonly { name: string; passed: boolean }[]): boolean {
+  const relevant = checks.filter((check) => check.name.endsWith(" console errors") || check.name.endsWith(" uncaught page errors"));
+  return relevant.length > 0 && relevant.every((check) => check.passed === true);
+}
+
 async function checkHtml(origin: string, route: keyof typeof decisionJourneyCatalog, canonicalOrigin: string): Promise<Check[]> {
   const record = targets[route];
   const url = `${origin}${route}`;
@@ -59,9 +72,10 @@ export async function captureRoute(input: { origin: string; route: keyof typeof 
     ]) {
       const context = await browser.newContext({ viewport: profile.viewport, reducedMotion: profile.reducedMotion, javaScriptEnabled: profile.javaScriptEnabled });
       const page = await context.newPage();
-      const browserErrors: string[] = [];
-      page.on("console", (message) => { if (message.type() === "error") browserErrors.push(message.text()); });
-      page.on("pageerror", (error) => browserErrors.push(error.message));
+      const consoleErrors: string[] = [];
+      const pageErrors: string[] = [];
+      page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
+      page.on("pageerror", (error) => pageErrors.push(error.message));
       await page.goto(url, { waitUntil: "networkidle" });
       const primary = await page.locator("h1").textContent();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -79,7 +93,7 @@ export async function captureRoute(input: { origin: string; route: keyof typeof 
         { name: `${input.route}: ${profile.name} principal content`, passed: primary === targets[input.route].headline, detail: "The route-specific headline remains available in the rendered page.", category: "accessibility" },
         { name: `${input.route}: ${profile.name} complete structure`, passed: sectionCount === targets[input.route].blocks.length, detail: "Rendered section count matches the structured catalogue.", category: "content" },
         { name: `${input.route}: ${profile.name} layout`, passed: !overflow, detail: overflow ? "Horizontal overflow detected." : "No horizontal overflow detected.", category: "visual" },
-        { name: `${input.route}: ${profile.name} browser errors`, passed: browserErrors.length === 0, detail: browserErrors.length ? browserErrors.join(" | ") : "No browser console errors or uncaught exceptions.", category: "motion" },
+        ...browserErrorChecksFor({ route: input.route, profile: profile.name, consoleErrors, pageErrors }),
       );
       await context.close();
     }
@@ -121,8 +135,7 @@ async function main() {
     screenshots: browserChecks.flatMap((result) => result.screenshots),
     createdAt: new Date().toISOString(),
   });
-  const browserErrorChecks = checks.filter((check) => check.name.endsWith(" browser errors"));
-  const result = { ...receipt, ...context, robots_ok: robotsOk, sitemap_ok: sitemapOk, browser_errors_ok: browserErrorChecks.length > 0 && browserErrorChecks.every((check) => check.passed) };
+  const result = { ...receipt, ...context, robots_ok: robotsOk, sitemap_ok: sitemapOk, browser_errors_ok: browserErrorsOkFrom(checks) };
   await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
   if (!receipt.passed) process.exitCode = 1;

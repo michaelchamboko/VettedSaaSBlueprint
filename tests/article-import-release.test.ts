@@ -5,7 +5,8 @@ import path from "node:path";
 import test from "node:test";
 
 import { advanceImport, createArticleImport, loadImport, resumeImport } from "../src/lib/article-import/engine";
-import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-journey-production";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
@@ -13,6 +14,7 @@ import { importArtifactTarget, readImportArtifactTarget, validateImportArtifact 
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
+const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
 const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\n\nThis is a sufficiently long article body for the release coordinator test and its deterministic validation path.\n";
 
 async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
@@ -30,8 +32,8 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
 function operations(overrides: Partial<ReleaseOperations> = {}): ReleaseOperations {
   return {
     preflight: async () => ({ ok: true, reasons: [] }),
-    inspectGit: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
-    refreshMain: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    inspectGit: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    refreshMain: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     runValidation: async () => ({ ok: true, summary: "all validation commands passed" }),
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => "c".repeat(40),
@@ -63,7 +65,7 @@ test("missing release credentials waits for the heartbeat", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: { ...operations(), preflight: async () => ({ ok: false, reasons: ["VERCEL_TOKEN_MISSING"] }) } });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: { ...operations(), preflight: async () => ({ ok: false, reasons: ["VERCEL_TOKEN_MISSING"] }) } });
     assert.equal(result.status, "WAITING_EXTERNAL");
     assert.deepEqual(result.reasons, ["VERCEL_TOKEN_MISSING"]);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -73,7 +75,7 @@ test("successful release records and verifies the full production receipt", asyn
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
     assert.equal(result.status, "LIVE");
     assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -84,7 +86,7 @@ test("failed production verification rolls back and never reports LIVE", async (
   try {
     const record = await releasingRecord(root);
     let rolledBack = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ verifyProduction: async () => ({ ...checks, contentOk: false }), rollback: async () => { rolledBack = true; return { ok: true, summary: "restored" }; } }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ verifyProduction: async () => ({ ...checks, contentOk: false }), rollback: async () => { rolledBack = true; return { ok: true, summary: "restored" }; } }) });
     assert.equal(result.status, "ROLLED_BACK");
     assert.equal(rolledBack, true);
     assert.equal((await loadImport(root, record.importId)).stage, "ROLLED_BACK");
@@ -102,10 +104,10 @@ test("a retry keeps the original known-good deployment as its rollback target", 
       verifyProduction: async () => ({ ...checks, contentOk: false }),
       rollback: async (deploymentId) => { rollbackTargets.push(deploymentId); return { ok: true, summary: "restored" }; },
     });
-    const first = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: releaseOperations });
+    const first = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: releaseOperations });
     assert.equal(first.status, "ROLLED_BACK");
     const retryRecord = await loadImport(root, record.importId);
-    const second = await assessImportRelease({ repositoryRoot: root, record: retryRecord, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: releaseOperations });
+    const second = await assessImportRelease({ repositoryRoot: root, record: retryRecord, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: releaseOperations });
     assert.equal(second.status, "ROLLED_BACK");
     assert.deepEqual(rollbackTargets, ["dpl-known-good", "dpl-known-good"]);
     assert.equal(captureCount, 1);
@@ -116,7 +118,7 @@ test("rollback verification failure remains fail-closed", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ verifyProduction: async () => ({ ...checks, mobileOk: false }), verifyRollback: async () => false }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ verifyProduction: async () => ({ ...checks, mobileOk: false }), verifyRollback: async () => false }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
     assert.match(result.reasons[0], /ROLLBACK_VERIFICATION_FAILED/);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -127,8 +129,8 @@ test("moving main waits for refresh instead of pushing a stale candidate", async
   try {
     const record = { ...await releasingRecord(root), pendingRelease: undefined };
     let committed = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
-      refreshMain: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "b".repeat(40), originMainSha: "b".repeat(40), fastForwardable: true }),
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+      refreshMain: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "b".repeat(40), originMainSha: "b".repeat(40), fastForwardable: true }),
       commit: async () => { committed = true; return "c".repeat(40); },
     }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
@@ -142,7 +144,7 @@ test("kill switch is an intentional hard stop", async () => {
   try {
     const record = await releasingRecord(root);
     let preflighted = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, killSwitchEnabled: true, operations: operations({ preflight: async () => { preflighted = true; return { ok: true, reasons: [] }; } }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, killSwitchEnabled: true, operations: operations({ preflight: async () => { preflighted = true; return { ok: true, reasons: [] }; } }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
     assert.deepEqual(result.reasons, ["AUTOMATION_KILL_SWITCH_ENABLED"]);
     assert.equal(preflighted, false);
@@ -153,7 +155,7 @@ test("failed rollback stays rolled back when the rollback adapter throws", async
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
       verifyProduction: async () => ({ ...checks, routeOk: false }),
       rollback: async () => { throw new Error("ROLLBACK_UNAVAILABLE"); },
     }) });
@@ -168,7 +170,7 @@ test("deployment commit mismatch rolls back before returning", async () => {
   try {
     const record = await releasingRecord(root);
     let rollbackCount = 0;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
       deploy: async () => ({ deploymentId: "dpl-wrong", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha: "d".repeat(40) }),
       rollback: async () => { rollbackCount += 1; return { ok: true, summary: "restored" }; },
     }) });
@@ -181,7 +183,7 @@ test("incomplete production checks roll back and never reach LIVE", async () => 
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ verifyProduction: async () => ({ routeOk: true } as unknown as FullProductionChecks) }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ verifyProduction: async () => ({ routeOk: true } as unknown as FullProductionChecks) }) });
     assert.equal(result.status, "ROLLED_BACK");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -191,7 +193,7 @@ test("receipt failure after deployment rolls back exactly once", async () => {
   try {
     const record = await releasingRecord(root);
     let rollbackCount = 0;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
       verifyProduction: async () => checks,
       deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "not-a-url", commitSha }),
       rollback: async () => { rollbackCount += 1; return { ok: true, summary: "restored" }; },
@@ -206,7 +208,7 @@ test("an unverified merge commit waits without deployment", async () => {
   try {
     const record = await releasingRecord(root);
     let deployed = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
       checkoutMergedCommit: async () => { throw new Error("MERGE_NOT_ON_MAIN"); },
       deploy: async (commitSha) => { deployed = true; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
     }) });
@@ -219,7 +221,7 @@ test("unverified prior deployment waits before commit", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: false }) }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: false }) }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
     assert.deepEqual(result.reasons, ["PREVIOUS_DEPLOYMENT_UNVERIFIED"]);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -238,7 +240,7 @@ test("direct-review binds slug, artifact path, and changed file exactly", async 
   try {
     const record = await releasingRecord(root);
     const base = { repositoryRoot: root, record, execute: true, operations: operations() };
-    const mismatch = await assessImportRelease({ ...base, slug: "other", artifactPath: "src/generated/landing-pages/example.json", changedFiles: ["src/generated/landing-pages/example.json"] });
+    const mismatch = await assessImportRelease({ ...base, slug: "other", artifactPath: "src/generated/landing-pages/example.json", changedFiles: releaseFiles });
     assert.match(mismatch.reasons.join(" "), /DIRECT_REVIEW_ARTIFACT_MISMATCH/);
     const missing = await assessImportRelease({ ...base, slug: "example", artifactPath: "src/generated/landing-pages/example.json", changedFiles: ["src/generated/landing-pages/other.json"] });
     assert.match(missing.reasons.join(" "), /DIRECT_REVIEW_ARTIFACT_NOT_CHANGED/);
@@ -257,7 +259,7 @@ test("direct-review rejects a declared artifact absent from the inspected worktr
       execute: true,
       slug: "example",
       artifactPath: "src/generated/landing-pages/example.json",
-      changedFiles: ["src/generated/landing-pages/example.json"],
+      changedFiles: releaseFiles,
       operations: operations({
         inspectGit: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/other.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
       }),
@@ -335,10 +337,10 @@ test("local adapter resolves the current production deployment from the canonica
       if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "b".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
       return { stdout: "owner", stderr: "" };
     };
-    const operations = createLocalReleaseOperations(root, { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+    const operations = createLocalReleaseOperations(root, { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://vettedsaasblueprint.online" });
     const previous = await operations.capturePreviousDeployment();
     assert.deepEqual(previous, { deploymentId: "dpl_current", commitSha: "b".repeat(40), verified: true });
-    assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://example.com", "--json"]);
+    assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://vettedsaasblueprint.online", "--json"]);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -347,7 +349,7 @@ test("local adapter falls back to the deployment API commit when inspect omits g
     if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", target: "production", readyState: "READY" }), stderr: "" };
     return { stdout: "owner", stderr: "" };
   };
-  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "d".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "d".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a" });
   assert.deepEqual(await operations.capturePreviousDeployment(), { deploymentId: "dpl_current", commitSha: "d".repeat(40), verified: true });
 });
 
@@ -355,7 +357,7 @@ test("local adapter rejects disagreement between inspect and deployment API comm
   const runner: ReleaseCommandRunner = async (command, args) => command === "vercel" && args[0] === "inspect"
     ? { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "a".repeat(40), target: "production", readyState: "READY" }), stderr: "" }
     : { stdout: "owner", stderr: "" };
-  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a" });
   await assert.rejects(() => operations.capturePreviousDeployment(), /DEPLOYMENT_COMMIT_METADATA_MISMATCHED/);
 });
 
@@ -363,7 +365,7 @@ test("local adapter fails closed when deployment API is unavailable", async () =
   const runner: ReleaseCommandRunner = async (command, args) => command === "vercel" && args[0] === "inspect"
     ? { stdout: JSON.stringify({ id: "dpl_current", target: "production", readyState: "READY" }), stderr: "" }
     : { stdout: "owner", stderr: "" };
-  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => { throw new Error("endpoint unavailable"); }, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => { throw new Error("endpoint unavailable"); }, format: "direct-review", artifactPath: "a.json", slug: "a" });
   await assert.rejects(() => operations.capturePreviousDeployment(), /endpoint unavailable/);
 });
 
@@ -392,24 +394,24 @@ test("local adapter maps verifier evidence and rejects verifier failures", async
 
 test("local adapter verifies rollback through the canonical production origin", async () => {
   const runner: ReleaseCommandRunner = async (command, args) => {
-    if (command === "vercel" && args[0] === "inspect" && args[1] === "https://example.com") {
+    if (command === "vercel" && args[0] === "inspect" && args[1] === "https://vettedsaasblueprint.online") {
       return { stdout: JSON.stringify({ id: "dpl-known-good", gitCommitSha: "b".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
     }
     return { stdout: "", stderr: "" };
   };
-  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://vettedsaasblueprint.online" });
   assert.equal(await operations.verifyRollback("dpl-known-good", "b".repeat(40)), true);
   assert.equal(await operations.verifyRollback("dpl-known-good", "c".repeat(40)), false);
 });
 
 test("local adapter rejects rollback when canonical origin still points to the failed deployment", async () => {
   const runner: ReleaseCommandRunner = async (command, args) => {
-    if (command === "vercel" && args[0] === "inspect" && args[1] === "https://example.com") {
+    if (command === "vercel" && args[0] === "inspect" && args[1] === "https://vettedsaasblueprint.online") {
       return { stdout: JSON.stringify({ id: "dpl-failed", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
     }
     return { stdout: "", stderr: "" };
   };
-  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "c".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "c".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://vettedsaasblueprint.online" });
   assert.equal(await operations.verifyRollback("dpl-known-good", "b".repeat(40)), false);
 });
 
@@ -534,7 +536,7 @@ test("external preflight and Git exceptions persist WAITING_EXTERNAL", async () 
     const root = await mkdtemp(path.join(os.tmpdir(), "article-release-external-"));
     try {
       const record = await releasingRecord(root);
-      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ [operation]: async () => { throw new Error("NETWORK_UNAVAILABLE"); } }) });
+      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ [operation]: async () => { throw new Error("NETWORK_UNAVAILABLE"); } }) });
       assert.equal(result.status, "WAITING_EXTERNAL");
       assert.equal((await loadImport(root, record.importId)).stage, "WAITING_EXTERNAL");
     } finally { await rm(root, { recursive: true, force: true }); }
@@ -545,7 +547,7 @@ test("presentation binds approved content and the released canonical route", asy
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-binding-"));
   try {
     const record = await releasingRecord(root);
-    await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
     const live = await loadImport(root, record.importId);
     assert.equal(live.stage, "LIVE");
     assert.doesNotThrow(() => requireImportPresentationBinding(live));
@@ -560,7 +562,7 @@ test("first release creates a PR and waits without deploying or consuming retrie
   try {
     const record = { ...await releasingRecord(root), pendingRelease: undefined };
     let deployed = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/1", branch: "codex/article-import/" + record.importId }), deploy: async () => { deployed = true; throw new Error("must wait"); } }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/1", branch: "codex/article-import/" + record.importId }), deploy: async () => { deployed = true; throw new Error("must wait"); } }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
     assert.equal(result.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
     assert.equal(deployed, false);
@@ -576,7 +578,7 @@ test("PR creation failure resumes from the prepared commit without recommitting"
   try {
     const record = { ...await releasingRecord(root), pendingRelease: undefined };
     let commits = 0;
-    const base = { repositoryRoot: root, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
+    const base = { repositoryRoot: root, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
     const interrupted = await assessImportRelease({ ...base, record, operations: operations({
       commit: async () => { commits += 1; return "c".repeat(40); },
       preparePullRequest: async () => { throw new Error("network interrupted"); },
@@ -602,7 +604,7 @@ test("unmerged PR resumes without committing again; merged PR deploys the exact 
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-merge-"));
   try {
     const record = await releasingRecord(root);
-    const base = { repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
+    const base = { repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
     const waiting = await assessImportRelease({ ...base, operations: operations({ inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }), commit: async () => { throw new Error("must not recommit"); } }) });
     assert.equal(waiting.reasons[0], "OWNER_PR_MERGE_REQUIRED");
     let deployedSha = "";
@@ -617,7 +619,7 @@ test("merged release validates both before merge and after checkout of the merge
   try {
     const record = await releasingRecord(root);
     let validations = 0;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ runValidation: async () => { validations += 1; return { ok: true, summary: "passed" }; } }) });
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ runValidation: async () => { validations += 1; return { ok: true, summary: "passed" }; } }) });
     assert.equal(result.status, "LIVE");
     assert.equal(validations, 2);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -629,7 +631,7 @@ test("merged PR waits for a passed independent current-head Codex receipt", asyn
     const prepared = await releasingRecord(root);
     const record = { ...prepared, pendingRelease: { ...prepared.pendingRelease!, codeReview: undefined } };
     let deployed = false;
-    const base = { repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
+    const base = { repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
     const result = await assessImportRelease({ ...base, operations: operations({ deploy: async () => { deployed = true; throw new Error("must wait"); } }) });
     assert.equal(result.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
     assert.equal(deployed, false);
@@ -692,7 +694,7 @@ test("release revalidates stored review evidence before deploying", async () => 
   try {
     const record = await releasingRecord(root);
     let deployed = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
       verifyCodeReview: async () => { throw new Error("CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD"); },
       deploy: async () => { deployed = true; throw new Error("must not deploy"); },
     }) });
@@ -706,7 +708,7 @@ test("changed PR head invalidates the stored review without deploying", async ()
   const root = await mkdtemp(path.join(os.tmpdir(), "article-code-review-stale-"));
   try {
     const record = await releasingRecord(root);
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
       inspectPullRequest: async () => ({ merged: true, ownerApproved: true, headRefOid: "e".repeat(40), mergeCommitSha: "f".repeat(40) }),
       deploy: async () => { throw new Error("must not deploy"); },
     }) });
@@ -735,7 +737,7 @@ test("deploy rejection after a production side effect restores and verifies the 
     try {
       const record = await releasingRecord(root);
       const calls: string[] = [];
-      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
         deploy: async () => { calls.push("production-changed"); throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED"); },
         verifyProduction: async () => { throw new Error("must not verify a rejected deploy"); },
         rollback: async (id) => { calls.push(`rollback:${id}`); return { ok: true, summary: "rollback requested" }; },
@@ -757,7 +759,7 @@ test("merged imports wait when owner approval is missing or false", async () => 
     const record = await releasingRecord(root);
     for (const ownerApproved of [undefined, false]) {
       let deployed = false;
-      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
         inspectPullRequest: async () => ({ merged: true, ownerApproved, headRefOid: "c".repeat(40), mergeCommitSha: "d".repeat(40) }),
         deploy: async () => { deployed = true; throw new Error("must not deploy"); },
       }) });
@@ -799,4 +801,82 @@ test("owner inspection rejects malformed or non-GitHub PR URLs before execution"
   for (const url of ["https://example.com/owner/repo/pull/1", "https://github.com/owner/repo/pull/0", "https://github.com/owner/repo/pull/1?owner=other", "https://github.com/owner/repo/pull/1#fragment", "--repo=other/repo"]) {
     await assert.rejects(operations.inspectPullRequest(url), /PULL_REQUEST_URL_INVALID/);
   }
+});
+
+test("local adapter pins release verification to the canonical production origin", () => {
+  const runner: ReleaseCommandRunner = async () => ({ stdout: "", stderr: "" });
+  assert.throws(() => createLocalReleaseOperations(".", { format: "blog", runner, origin: "https://example.com" }), /ORIGIN_NOT_CANONICAL/);
+  assert.throws(() => createLocalReleaseOperations(".", { format: "blog", runner, origin: "https://vettedsaasblueprint.online/evil" }), /ORIGIN_NOT_CANONICAL/);
+  assert.throws(() => createLocalReleaseOperations(".", { format: "blog", runner, origin: "http://vettedsaasblueprint.online" }), /ORIGIN_NOT_CANONICAL/);
+  assert.doesNotThrow(() => createLocalReleaseOperations(".", { format: "blog", runner }));
+  assert.doesNotThrow(() => createLocalReleaseOperations(".", { format: "blog", runner, origin: "https://vettedsaasblueprint.online" }));
+  assert.doesNotThrow(() => createLocalReleaseOperations(".", { format: "blog", runner, origin: "https://vettedsaasblueprint.online/" }));
+});
+
+test("publication authority files accompany every publishable format", () => {
+  assert.deepEqual(publicationAuthorityPaths("direct-review"), ["src/generated/landing-pages/index.json"]);
+  assert.deepEqual(publicationAuthorityPaths("blog"), ["src/generated/blog-posts/posts.json"]);
+  assert.deepEqual(publicationAuthorityPaths("visibility"), ["src/generated/visibility-pages/index.json", "src/generated/visibility-pages/publications.json"]);
+  assert.deepEqual(publicationAuthorityPaths("decision-set"), ["src/content/decision-journeys/catalogue.json"]);
+  assert.deepEqual(publicationAuthorityPaths("agent_review_required"), []);
+});
+
+test("release execution fails when the publication authority file is missing from the declared changes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-authority-declared-"));
+  try {
+    const record = await releasingRecord(root);
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("PUBLICATION_AUTHORITY_NOT_IN_RELEASE:src/generated/landing-pages/index.json"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("release execution fails when the publication authority file is absent from the inspected worktree", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-authority-worktree-"));
+  try {
+    const record = { ...await releasingRecord(root), pendingRelease: undefined };
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+      inspectGit: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    }) });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:src/generated/landing-pages/index.json"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("commercial safety rejects decommercialized artifacts and unapproved affiliate destinations", () => {
+  const record = (transformation: Record<string, unknown>) => ({ transformation } as unknown as ExternalArticleImportV1);
+  const resolvedUrl = "https://start.switcherstudio.com/anme6fqvgdx9";
+  assert.throws(() => assertArtifactCommercialSafety(record({ commercialMode: "decommercialized", resolvedAffiliateUrl: resolvedUrl }), "direct-review", { title: "Example" }), /DECOMMERCIALIZED_INPUT_CANNOT_PUBLISH_DIRECT_REVIEW/);
+  assert.throws(() => assertArtifactCommercialSafety(record({ commercialMode: "decommercialized", submittedAffiliateUrl: resolvedUrl }), "blog", { blocks: [{ affiliate_url: resolvedUrl }] }), /DECOMMERCIALIZED_ARTIFACT_RETAINS_AFFILIATE_DESTINATION/);
+  assert.throws(() => assertArtifactCommercialSafety(record({ commercialMode: "decommercialized", submittedAffiliateUrl: "https://partner.example/deal" }), "visibility", { description: "Try https://partner.example/deal today." }), /DECOMMERCIALIZED_ARTIFACT_RETAINS_SUBMITTED_AFFILIATE_URL/);
+  assert.throws(() => assertArtifactCommercialSafety(record({ commercialMode: "approved", resolvedAffiliateUrl: resolvedUrl }), "blog", { destination_url: resolvedUrl }), /NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_DESTINATION/);
+  const approved = record({ commercialMode: "approved", resolvedAffiliateUrl: resolvedUrl });
+  assert.throws(() => assertArtifactCommercialSafety(approved, "direct-review", { affiliate_links: [{ affiliate_link_id: "switcher", destination_url: "https://alternate.example/deal" }] }), /ARTIFACT_AFFILIATE_DESTINATION_NOT_RESOLVED_URL/);
+  assert.throws(() => assertArtifactCommercialSafety(approved, "direct-review", { affiliate_links: [{ affiliate_link_id: "switcher", destination_url: resolvedUrl }], hero: { primary_cta_link_id: "missing-link" } }), /AFFILIATE_CTA_DESTINATION_UNBOUND/);
+  assert.throws(() => assertArtifactCommercialSafety(approved, "direct-review", { affiliate_links: [{ affiliate_link_id: "switcher", destination_url: resolvedUrl }], cta_blocks: [{ affiliate_link_id: "missing-link" }] }), /AFFILIATE_CTA_DESTINATION_UNBOUND/);
+  assert.doesNotThrow(() => assertArtifactCommercialSafety(approved, "direct-review", { affiliate_links: [{ affiliate_link_id: "switcher", destination_url: resolvedUrl }], hero: { primary_cta_link_id: "switcher" }, cta_blocks: [{ affiliate_link_id: "switcher" }] }));
+  assert.doesNotThrow(() => assertArtifactCommercialSafety(record({ commercialMode: "none" }), "blog", { title: "Neutral guide" }));
+});
+
+test("release execution fails when a decommercialized input would publish as a direct review", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-decommercialized-release-"));
+  try {
+    const base = await releasingRecord(root);
+    const record = { ...base, transformation: { ...base.transformation, commercialMode: "decommercialized" as const } };
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("DECOMMERCIALIZED_INPUT_CANNOT_PUBLISH_DIRECT_REVIEW"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("an uncaught decision-page exception fails production browser verification", () => {
+  const clean = browserErrorChecksFor({ route: "/decision/example", profile: "desktop", consoleErrors: [], pageErrors: [] });
+  const withPageError = browserErrorChecksFor({ route: "/decision/example", profile: "desktop", consoleErrors: [], pageErrors: ["Uncaught TypeError: x is not a function"] });
+  const withConsoleError = browserErrorChecksFor({ route: "/decision/example", profile: "mobile", consoleErrors: ["Failed to load resource"], pageErrors: [] });
+  assert.equal(browserErrorsOkFrom(clean), true);
+  assert.equal(browserErrorsOkFrom(withPageError), false);
+  assert.equal(browserErrorsOkFrom(withConsoleError), false);
+  assert.equal(browserErrorsOkFrom([]), false);
+  assert.equal(withPageError.some((check) => check.name.endsWith("uncaught page errors") && check.passed === false), true);
+  assert.equal(withPageError.some((check) => check.name.endsWith("console errors") && check.passed === true), true);
 });
