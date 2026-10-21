@@ -78,6 +78,10 @@ function pathUsesAllowedRoot(file: string, roots: readonly string[]): boolean {
   return roots.some((root) => normalized === root || normalized.startsWith(`${root}/`));
 }
 
+function normalizedPathSet(files: readonly string[]): string[] {
+  return [...new Set(files.map((file) => file.replaceAll("\\", "/")))].sort();
+}
+
 export function isAllowedReleasePath(file: string, format: ImportFormat, _ownerAuthorizedAffiliateUrl = false): boolean {
   void _ownerAuthorizedAffiliateUrl;
   const shared = ["build-pack/editorial", "build-pack/article-import"];
@@ -151,9 +155,18 @@ export async function assessImportRelease(input: {
   }
 
   const initialGit = await input.operations.inspectGit();
-  if (!initialGit.clean || validateReleasePaths(initialGit.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true).length) {
-    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: "The worktree contains changes outside the import release allowlist." });
-    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: ["WORKTREE_NOT_RELEASE_SAFE"] };
+  const inspectedFiles = normalizedPathSet(initialGit.changedFiles);
+  const declaredFiles = normalizedPathSet(input.changedFiles);
+  const gitReasons: string[] = [];
+  if (!initialGit.clean || validateReleasePaths(inspectedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true).length) gitReasons.push("WORKTREE_NOT_RELEASE_SAFE");
+  if (inspectedFiles.join("\n") !== declaredFiles.join("\n")) gitReasons.push("DECLARED_CHANGED_FILES_MISMATCH");
+  if (input.record.format === "direct-review" && input.slug) {
+    const expected = `src/generated/landing-pages/${input.slug}.json`;
+    if (!inspectedFiles.includes(expected)) gitReasons.push("DIRECT_REVIEW_ARTIFACT_NOT_IN_WORKTREE");
+  }
+  if (gitReasons.length) {
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `The inspected worktree does not match the declared import release: ${gitReasons.join(",")}.` });
+    return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: gitReasons };
   }
 
   const refreshed = await input.operations.refreshMain();

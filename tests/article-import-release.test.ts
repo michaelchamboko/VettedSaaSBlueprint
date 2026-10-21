@@ -216,6 +216,27 @@ test("direct-review binds slug, artifact path, and changed file exactly", async 
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("direct-review rejects a declared artifact absent from the inspected worktree", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    const result = await assessImportRelease({
+      repositoryRoot: root,
+      record,
+      execute: true,
+      slug: "example",
+      artifactPath: "src/generated/landing-pages/example.json",
+      changedFiles: ["src/generated/landing-pages/example.json"],
+      operations: operations({
+        inspectGit: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/other.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+      }),
+    });
+    assert.equal(result.status, "REPAIRING");
+    assert.match(result.reasons.join(" "), /DECLARED_CHANGED_FILES_MISMATCH/);
+    assert.match(result.reasons.join(" "), /DIRECT_REVIEW_ARTIFACT_NOT_IN_WORKTREE/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("direct-review validation uses the exact artifact basename after identity binding", () => {
   assert.deepEqual(validationCommandsForFormat("direct-review", "src/generated/landing-pages/example.json")?.[0], "npm run landing:quality:candidate -- --artifact example.json");
 });
