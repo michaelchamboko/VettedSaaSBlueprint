@@ -66,6 +66,9 @@ export function parseExternalArticle(markdown: string): { title: string; primary
   }
   const bodyLines = lines.slice(bodyStart);
   const promptInjectionDetected = bodyLines.some((line) => INSTRUCTION_LINE.test(line)) || Object.values(metadata).some((value) => INSTRUCTION_LINE.test(value));
+  for (const [key, value] of Object.entries(metadata)) {
+    if (INSTRUCTION_LINE.test(value)) delete metadata[key];
+  }
   const body = bodyLines.filter((line) => !INSTRUCTION_LINE.test(line)).join("\n").trim();
   const title = metadata.title?.trim() || body.match(/^#\s+(.+)$/m)?.[1]?.trim() || "Imported article";
   const primaryQuestion = metadata.primary_question?.trim() || metadata.primaryQuestion?.trim() || title;
@@ -323,7 +326,7 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
   const importId = `article-${randomUUID()}`;
   const record = initialRecord({ importId, sourceFile: absoluteSource, sourceFingerprint, parsed, transformation });
   await mkdir(storeRoot(repositoryRoot), { recursive: true });
-  await writeFile(sourcePath(repositoryRoot, importId), raw, "utf8");
+  await writeFile(sourcePath(repositoryRoot, importId), parsed.body, "utf8");
   await saveImport(repositoryRoot, record);
   return record;
 }
