@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "EditorialEvidenceV1",
+  "format": "landing",
+  "revision": "eleanor-v1:8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1",
+  "beforeFingerprint": "ff6b33b219396702885464e458cb3e3d30f1c404c53a98c74893ce277a05678d",
+  "afterFingerprint": "c290cd67cf77283314a93c1cef70e5b61d965823b2b8dd8309b9bf555ee91fc3",
+  "changedPaths": [
+    "hero.subheadline",
+    "problem_solution.problem"
+  ],
+  "checker": {
+    "before": "484 words of visible copy\r\n\r\n\r\n  score 5/5  CLEAN\r\n",
+    "after": "483 words of visible copy\r\n\r\n\r\n  score 5/5  CLEAN\r\n"
+  },
+  "semanticNotes": "The same small-team audience, campaign tasks and repeatability question remain. No new product capability, pricing or performance claim was introduced. Disclosures and CTAs are unchanged.",
+  "exceptions": [],
+  "meaningPreserved": true,
+  "arrayOrderPreserved": true
+}

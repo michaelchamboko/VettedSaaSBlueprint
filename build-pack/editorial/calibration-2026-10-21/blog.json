@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "EditorialEvidenceV1",
+  "format": "blog",
+  "revision": "eleanor-v1:8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1",
+  "beforeFingerprint": "1a1da38c4079e4c225aa83b904b2a58217f625b3fa879428776426121f882013",
+  "afterFingerprint": "e99724d67596f16234a9bc17399af8827c5162d0b05d956f67bb83aaebe453ea",
+  "changedPaths": [
+    "answerSummary",
+    "sections.0.paragraphs.0"
+  ],
+  "checker": {
+    "before": "950 words of visible copy\r\n\r\n  AI constructions:\r\n    · hedged benefit ('helps you to…')  (1)\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (quality, security, and workflow)\r\n    · rule-of-three list  (territories, duration, and people)\r\n    · rule-of-three list  (creation, export, and disclosure)\r\n    · rule-of-three list  (approver, destination, and publication)\r\n    · rule-of-three list  (consistent, searchable, and included)\r\n\r\n  score 3/5  needs a cleanse\r\n",
+    "after": "935 words of visible copy\r\n\r\n  AI constructions:\r\n    · hedged benefit ('helps you to…')  (1)\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (quality, security, and workflow)\r\n    · rule-of-three list  (creation, export, and disclosure)\r\n    · rule-of-three list  (approver, destination, and publication)\r\n    · rule-of-three list  (consistent, searchable, and included)\r\n\r\n  score 3/5  needs a cleanse\r\n"
+  },
+  "semanticNotes": "Consent, access restrictions, representative testing, release review and takedown requirements remain. The release caveat preserves the same examples and uncertainty. The revised prose adds no personal testing claim or legal conclusion.",
+  "exceptions": [
+    "The retained 'can help you examine' wording limits what a product review can establish and immediately excludes rights analysis and real-script testing. The four retained rhythm hits enumerate evaluation criteria and release controls or describe disclosure records in unchanged passages; they do not claim new proof."
+  ],
+  "meaningPreserved": true,
+  "arrayOrderPreserved": true
+}
