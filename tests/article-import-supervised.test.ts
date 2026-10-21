@@ -35,6 +35,17 @@ test("the default CLI consumes bound research output and rejects a result for an
     await writeJsonAtomically(path.join(root, packet.resultPath), { ...result, sourceFingerprint: created.sourceFingerprint });
     await executeImportCommand(root, { kind: "resume-pending" });
     assert.equal((await loadImport(root, created.importId)).stage, "TRANSFORMING");
+    // A neutral (mode-"none") import must not be able to select the commercial direct-review format.
+    await executeImportCommand(root, { kind: "resume-pending" });
+    const transformPath = (await loadImport(root, created.importId)).nextAction.match(/execute (.*?)\.work\.json/)![1];
+    const transformPacket = JSON.parse(await readFile(path.join(root, `${transformPath}.work.json`), "utf8"));
+    const neutralArtifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
+    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/example.json"), neutralArtifact);
+    await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", format: "direct-review" } });
+    await executeImportCommand(root, { kind: "resume-pending" });
+    const rejectedTransform = await loadImport(root, created.importId);
+    assert.equal(rejectedTransform.stage, "WAITING_EXTERNAL");
+    assert.match(rejectedTransform.stageReceipts.at(-1)!.message, /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -68,8 +79,8 @@ test("heartbeat consumes durable work after interruption and releases only after
     verifyRollback: async () => true,
   };
   try {
-    await writeFile(path.join(root, "approved-urls.md"), "");
-    await writeFile(path.join(root, "article.md"), "# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.");
+    await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
+    await writeFile(path.join(root, "article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
     const created = await createArticleImport(root, "article.md");
     importId = created.importId;
     // Each invocation constructs a fresh executor, as a later heartbeat process would.
@@ -96,6 +107,9 @@ test("heartbeat consumes durable work after interruption and releases only after
     assert.equal((await current()).stage, "TRANSFORMING");
     const artifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
     await writeJsonAtomically(path.join(root, artifactPath), artifact);
+    // Approved direct-review releases bind to the manifest-selected receipt URL.
+    await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", release_receipt: "releases/example/release-receipt.json" }] });
+    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9" });
     await submit({ stage: "TRANSFORMING", artifactPath, format: "direct-review" });
     await heartbeat();
     assert.equal((await current()).stage, "REFINING");

@@ -859,6 +859,9 @@ test("commercial safety rejects decommercialized artifacts and unapproved affili
   assert.throws(() => assertArtifactCommercialSafety(approved, "direct-review", { affiliate_links: [{ affiliate_link_id: "switcher", destination_url: resolvedUrl }], cta_blocks: [{ affiliate_link_id: "missing-link" }] }), /AFFILIATE_CTA_DESTINATION_UNBOUND/);
   assert.doesNotThrow(() => assertArtifactCommercialSafety(approved, "direct-review", { affiliate_links: [{ affiliate_link_id: "switcher", destination_url: resolvedUrl }], hero: { primary_cta_link_id: "switcher" }, cta_blocks: [{ affiliate_link_id: "switcher" }] }));
   assert.doesNotThrow(() => assertArtifactCommercialSafety(record({ commercialMode: "none" }), "blog", { title: "Neutral guide" }));
+  // A neutral (mode-"none") import must not be able to select the commercial direct-review format.
+  assert.throws(() => assertArtifactCommercialSafety(record({ commercialMode: "none" }), "direct-review", { title: "Example" }), /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
+  assert.throws(() => assertArtifactCommercialSafety(record({ commercialMode: "approved" }), "direct-review", { title: "Example" }), /DIRECT_REVIEW_REQUIRES_RESOLVED_AFFILIATE_URL/);
 });
 
 test("release execution fails when a decommercialized input would publish as a direct review", async () => {
@@ -869,6 +872,17 @@ test("release execution fails when a decommercialized input would publish as a d
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("DECOMMERCIALIZED_INPUT_CANNOT_PUBLISH_DIRECT_REVIEW"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("release execution fails when a mode-none import would publish as a direct review", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-mode-none-release-"));
+  try {
+    const base = await releasingRecord(root);
+    const record = { ...base, transformation: { ...base.transformation, commercialMode: "none" as const, resolvedAffiliateUrl: undefined, submittedAffiliateUrl: undefined } };
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE"));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

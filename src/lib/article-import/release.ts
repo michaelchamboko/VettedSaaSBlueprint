@@ -170,6 +170,11 @@ export function assertArtifactCommercialSafety(record: ExternalArticleImportV1, 
     }
     return;
   }
+  // Direct-review is the commercial format. A mode-"none" (neutral) import that
+  // selects it would publish a receipt CTA URL the source never supplied, so it
+  // must fail here exactly as the decommercialized case does above.
+  if (mode !== "approved") throw new Error("DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE");
+  if (!resolved) throw new Error("DIRECT_REVIEW_REQUIRES_RESOLVED_AFFILIATE_URL");
   for (const destination of destinations) {
     if (!resolved || destination !== resolved) throw new Error("ARTIFACT_AFFILIATE_DESTINATION_NOT_RESOLVED_URL");
   }
