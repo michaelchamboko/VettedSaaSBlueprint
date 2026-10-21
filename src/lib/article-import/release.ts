@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { ensureImportContentApproval, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
@@ -160,6 +163,11 @@ export function assertArtifactCommercialSafety(record: ExternalArticleImportV1, 
   }
   if (format !== "direct-review") {
     if (destinations.length) throw new Error("NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_DESTINATION");
+    // Generic URL fields (e.g. BlogPostV1 sources[].url) can smuggle the affiliate
+    // destination past the named-key collector above.
+    for (const url of [submitted, resolved]) {
+      if (url && serialized.includes(url)) throw new Error("NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_URL");
+    }
     return;
   }
   for (const destination of destinations) {
@@ -174,6 +182,44 @@ export function assertArtifactCommercialSafety(record: ExternalArticleImportV1, 
     const destination = byId.get(id);
     if (typeof destination !== "string" || !resolved || destination !== resolved) throw new Error("AFFILIATE_CTA_DESTINATION_UNBOUND");
   }
+}
+
+function safeCatalogueReceiptPath(directory: string, relativePath: string): string {
+  if (!relativePath.endsWith(".json") || relativePath.includes("\\") || relativePath.split("/").some((segment) => !segment || segment === "..")) {
+    throw new Error("RELEASE_RECEIPT_PATH_INVALID");
+  }
+  const candidate = path.resolve(directory, relativePath);
+  const relative = path.relative(directory, candidate);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("RELEASE_RECEIPT_PATH_INVALID");
+  return candidate;
+}
+
+/**
+ * Binds an approved direct-review release to the manifest-selected receipt. The public CTA URL
+ * served from production is the receipt's exact_affiliate_url, not anything in the blueprint
+ * (PageBlueprint carries no affiliate_links), so the receipt must name the record's resolved
+ * affiliate URL — otherwise an allowlisted URL B could ship for an import resolved to URL A.
+ */
+export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: string, slug: string, record: ExternalArticleImportV1): Promise<void> {
+  const transformation = record.transformation;
+  if (record.format !== "direct-review" || transformation?.commercialMode !== "approved") return;
+  const resolved = transformation.resolvedAffiliateUrl;
+  if (!resolved) throw new Error("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH");
+  const catalogueDirectory = path.resolve(repositoryRoot, "src/generated/landing-pages");
+  let manifest: { pages?: Array<{ slug?: unknown; release_receipt?: unknown }> };
+  try {
+    manifest = JSON.parse(await readFile(path.join(catalogueDirectory, "index.json"), "utf8"));
+  } catch { throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`); }
+  const entry = (manifest.pages ?? []).find((page) => page.slug === slug);
+  if (!entry || typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
+  let receipt: { exact_affiliate_url?: unknown };
+  try {
+    receipt = JSON.parse(await readFile(safeCatalogueReceiptPath(catalogueDirectory, entry.release_receipt), "utf8"));
+  } catch (error) {
+    if (error instanceof Error && error.message === "RELEASE_RECEIPT_PATH_INVALID") throw error;
+    throw new Error("RELEASE_RECEIPT_UNREADABLE");
+  }
+  if (receipt.exact_affiliate_url !== resolved) throw new Error("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH");
 }
 
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
@@ -209,6 +255,7 @@ export async function assessImportRelease(input: {
       const { target, artifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
       input.slug = target.slug;
       assertArtifactCommercialSafety(input.record, input.record.format, artifact);
+      await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
     } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
   }
   if (input.record.format === "direct-review") {

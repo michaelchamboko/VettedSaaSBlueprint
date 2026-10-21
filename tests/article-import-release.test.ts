@@ -20,6 +20,9 @@ const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naff
 async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), source);
+  await mkdir(path.join(root, "src/generated/landing-pages/releases/example"), { recursive: true });
+  await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", release_receipt: "releases/example/release-receipt.json" }] }));
+  await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9" }));
   let record = await createArticleImport(root, "article.md");
   for (let i = 0; i < 5; i += 1) {
     if (record.stage === "REFINING") record = await approveFixture(root, record);
@@ -879,4 +882,46 @@ test("an uncaught decision-page exception fails production browser verification"
   assert.equal(browserErrorsOkFrom([]), false);
   assert.equal(withPageError.some((check) => check.name.endsWith("uncaught page errors") && check.passed === false), true);
   assert.equal(withPageError.some((check) => check.name.endsWith("console errors") && check.passed === true), true);
+});
+
+test("commercial safety rejects affiliate URLs hidden in generic non-direct-review URL fields", () => {
+  const resolvedUrl = "https://start.switcherstudio.com/anme6fqvgdx9";
+  const blogRecord = { transformation: { commercialMode: "approved", resolvedAffiliateUrl: resolvedUrl, submittedAffiliateUrl: resolvedUrl } } as unknown as ExternalArticleImportV1;
+  assert.throws(() => assertArtifactCommercialSafety(blogRecord, "blog", { title: "Post", sources: [{ url: resolvedUrl, label: "Product documentation" }] }), /NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_URL/);
+  assert.throws(() => assertArtifactCommercialSafety(blogRecord, "visibility", { title: "Page", references: [{ href: `https://example.org/redirect?to=${resolvedUrl}` }] }), /NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_URL/);
+  assert.doesNotThrow(() => assertArtifactCommercialSafety(blogRecord, "blog", { title: "Post", sources: [{ url: "https://example.com/documentation", label: "Docs" }] }));
+});
+
+test("direct-review release binds the manifest-selected receipt URL to the resolved affiliate URL", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-receipt-binding-"));
+  try {
+    const base = await releasingRecord(root);
+    // A different globally allowlisted URL B in the receipt for an import resolved to URL A.
+    await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://trymoo.moosend.com/michaelmedium" }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review release fails when the manifest has no receipt entry for the slug", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-receipt-missing-"));
+  try {
+    const base = await releasingRecord(root);
+    await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "other-page", release_receipt: "releases/other-page/release-receipt.json" }] }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_MANIFEST_ENTRY_MISSING:example"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review release rejects an unsafe receipt path escaping the catalogue", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-receipt-unsafe-"));
+  try {
+    const base = await releasingRecord(root);
+    await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", release_receipt: "../../evil/receipt.json" }] }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_RECEIPT_PATH_INVALID"));
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
