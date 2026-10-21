@@ -91,6 +91,27 @@ test("failed production verification rolls back and never reports LIVE", async (
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("a retry keeps the original known-good deployment as its rollback target", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
+  try {
+    const record = await releasingRecord(root);
+    const rollbackTargets: string[] = [];
+    let captureCount = 0;
+    const releaseOperations = operations({
+      capturePreviousDeployment: async () => ({ deploymentId: captureCount++ === 0 ? "dpl-known-good" : "dpl-failed-retry", commitSha: "b".repeat(40), verified: true }),
+      verifyProduction: async () => ({ ...checks, contentOk: false }),
+      rollback: async (deploymentId) => { rollbackTargets.push(deploymentId); return { ok: true, summary: "restored" }; },
+    });
+    const first = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: releaseOperations });
+    assert.equal(first.status, "ROLLED_BACK");
+    const retryRecord = await loadImport(root, record.importId);
+    const second = await assessImportRelease({ repositoryRoot: root, record: retryRecord, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: releaseOperations });
+    assert.equal(second.status, "ROLLED_BACK");
+    assert.deepEqual(rollbackTargets, ["dpl-known-good", "dpl-known-good"]);
+    assert.equal(captureCount, 1);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("rollback verification failure remains fail-closed", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
@@ -588,6 +609,17 @@ test("unmerged PR resumes without committing again; merged PR deploys the exact 
     const live = await assessImportRelease({ ...base, operations: operations({ inspectPullRequest: async () => ({ merged: true, ownerApproved: true, headRefOid: "c".repeat(40), mergeCommitSha: "d".repeat(40) }), deploy: async (commitSha) => { deployedSha = commitSha; return { deploymentId: "dpl-merged", commitSha, canonicalUrl: "https://vettedsaasblueprint.online/imported-guide" }; } }) });
     assert.equal(live.status, "LIVE");
     assert.equal(deployedSha, "d".repeat(40));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("merged release validates both before merge and after checkout of the merge commit", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-merge-validation-"));
+  try {
+    const record = await releasingRecord(root);
+    let validations = 0;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ runValidation: async () => { validations += 1; return { ok: true, summary: "passed" }; } }) });
+    assert.equal(result.status, "LIVE");
+    assert.equal(validations, 2);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

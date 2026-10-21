@@ -93,6 +93,8 @@ export const importPendingReleaseSchema = z.object({
   pullRequestUrl: z.string().url().optional(),
   createdAt: z.string().datetime({ offset: true }),
   mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
+  rollbackDeploymentId: z.string().min(1).optional(),
+  rollbackCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
   codeReview: importCodeReviewSchema.optional().catch(undefined),
 }).strict();
 

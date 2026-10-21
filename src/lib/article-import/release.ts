@@ -217,7 +217,10 @@ export async function assessImportRelease(input: {
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: ["MAIN_MOVED"] };
   }
 
-  const previous = await input.operations.capturePreviousDeployment();
+  const storedRollback = input.record.pendingRelease?.rollbackDeploymentId && input.record.pendingRelease.rollbackCommitSha
+    ? { deploymentId: input.record.pendingRelease.rollbackDeploymentId, commitSha: input.record.pendingRelease.rollbackCommitSha, verified: true }
+    : undefined;
+  const previous = storedRollback ?? await input.operations.capturePreviousDeployment();
   if (!previous.verified) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: "No verified known-good production deployment is available for rollback." });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: ["PREVIOUS_DEPLOYMENT_UNVERIFIED"] };
@@ -229,7 +232,11 @@ export async function assessImportRelease(input: {
     let pendingRelease = input.record.pendingRelease;
     if (!pendingRelease) {
       const reviewedCommitSha = await input.operations.commit(input.commitMessage ?? ("publish imported article " + input.record.importId), declaredFiles);
-      pendingRelease = { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha, branch: "codex/article-import/" + input.record.importId, createdAt: new Date().toISOString() };
+      pendingRelease = { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha, branch: "codex/article-import/" + input.record.importId, createdAt: new Date().toISOString(), rollbackDeploymentId: previous.deploymentId, rollbackCommitSha: previous.commitSha };
+      input.record = { ...input.record, pendingRelease };
+      await saveImport(input.repositoryRoot, input.record);
+    } else if (!pendingRelease.rollbackDeploymentId || !pendingRelease.rollbackCommitSha) {
+      pendingRelease = { ...pendingRelease, rollbackDeploymentId: previous.deploymentId, rollbackCommitSha: previous.commitSha };
       input.record = { ...input.record, pendingRelease };
       await saveImport(input.repositoryRoot, input.record);
     }
@@ -249,6 +256,11 @@ export async function assessImportRelease(input: {
     if (!pullRequest.mergeCommitSha) throw new Error("MERGE_COMMIT_MISSING");
     const commitSha = pullRequest.mergeCommitSha;
     await input.operations.checkoutMergedCommit(pendingRelease.reviewedCommitSha, commitSha);
+    const mergedValidation = await input.operations.runValidation(validationCommands);
+    if (!mergedValidation.ok) {
+      const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged commit validation failed: ${mergedValidation.summary}` });
+      return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [mergedValidation.summary] };
+    }
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
     requireImportPresentationBinding(mergedApproval);
