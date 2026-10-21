@@ -19,3 +19,5 @@ Complete the next action in the receipt in order:
 6. Release from a clean worktree after refreshing `main`. Recreate the content artifact if its target changed, never force-push, capture the previous Vercel deployment, and verify the new canonical URL. If verification fails, roll back the captured deployment, verify restoration, and fix forward.
 
 Use `npm run import:article -- --resume <import-id>` to inspect one run and `npm run import:article -- --resume-pending` for the quiet recovery heartbeat. A transient dependency failure is `WAITING_EXTERNAL`; a submission with no safe publishable topic is `QUARANTINED`.
+
+Before a release, run `npm run import:article:release -- --import-id <import-id> --file <changed-file>` for a structured dry-run assessment. Add `--execute` only when the supervising agent has injected authenticated Git/Vercel operations and has captured the prior verified deployment. The command never invents credentials or performs an unconfigured release.

@@ -246,7 +246,7 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
 }
 
 export async function resumeImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
-  if (!["WAITING_EXTERNAL", "REPAIRING"].includes(record.stage)) return record;
+  if (!["WAITING_EXTERNAL", "REPAIRING", "ROLLED_BACK"].includes(record.stage)) return record;
   const stage = record.resumeStage;
   if (!stage || ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK", "LIVE", "QUARANTINED"].includes(stage)) {
     throw new Error("Recovery receipt does not identify a productive resume stage.");
