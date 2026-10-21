@@ -77,7 +77,7 @@ export function parseExternalArticle(markdown: string): { title: string; primary
     ...(metadata.primary_question || metadata.primaryQuestion ? [] : ["primaryQuestion"]),
     ...(malformedFrontmatter ? ["frontmatter"] : []),
   ];
-  const unusableReason = body.length < 80 ? "The submission has no usable article body." : undefined;
+  const unusableReason = body.length === 0 ? "The submission has no usable article body." : undefined;
   const link = extractUrl(metadata.affiliate_url);
   return { title, primaryQuestion, affiliateName: metadata.affiliate_name, affiliateUrl: link, body, promptInjectionDetected, unusableReason, inferredFields };
 }
@@ -260,6 +260,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
     return await activeLease.run(lease, async () => {
       const current = await loadImport(repositoryRoot, importId);
       if (["LIVE", "QUARANTINED"].includes(current.stage)) return current;
+      if (current.unusableReason) return quarantineUnusableImport(repositoryRoot, current);
       const record = await resumeImport(repositoryRoot, current);
       const group = strategyGroup(record.stage);
       const failures = record.strategyAttempts[group] ?? 0;
@@ -327,6 +328,7 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
   const record = initialRecord({ importId, sourceFile: absoluteSource, sourceFingerprint, parsed, transformation });
   await mkdir(storeRoot(repositoryRoot), { recursive: true });
   await writeFile(sourcePath(repositoryRoot, importId), parsed.body, "utf8");
+  if (record.unusableReason) return quarantineUnusableImport(repositoryRoot, record);
   await saveImport(repositoryRoot, record);
   return record;
 }
@@ -381,6 +383,7 @@ export async function recordImportPresentation(repositoryRoot: string, record: E
 }
 
 export async function advanceImport(repositoryRoot: string, record: ExternalArticleImportV1, message: string): Promise<ExternalArticleImportV1> {
+  if (record.unusableReason) return quarantineUnusableImport(repositoryRoot, record);
   const stage = nextStage[record.stage];
   if (!stage) throw new Error("Stage " + record.stage + " cannot advance automatically.");
   if (["VALIDATING", "RELEASING"].includes(stage)) {
@@ -397,6 +400,15 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
   const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
   await saveImport(repositoryRoot, updated);
   return updated;
+}
+
+async function quarantineUnusableImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  const at = now();
+  const updated = externalArticleImportSchema.parse({ ...record, stage: "QUARANTINED", updatedAt: at,
+    stageReceipts: [...record.stageReceipts, { stage: "QUARANTINED", status: "quarantined", at, message: record.unusableReason }], nextAction: "none",
+  });
+  await saveImport(repositoryRoot, updated);
+  return deleteRawSource(repositoryRoot, updated.importId, updated, at);
 }
 
 export async function recordImportRelease(repositoryRoot: string, record: ExternalArticleImportV1, releaseInput: unknown): Promise<ExternalArticleImportV1> {
