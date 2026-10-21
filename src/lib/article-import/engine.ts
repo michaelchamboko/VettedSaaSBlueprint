@@ -35,6 +35,14 @@ function scalar(value: string): string {
   return trimmed;
 }
 
+function extractUrl(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  const markdownLink = trimmed.match(/^\[[^\]]*\]\((https:\/\/[^)\s]+)\)$/i);
+  if (markdownLink?.[1]) return markdownLink[1];
+  return trimmed.match(/https:\/\/[^)\s]+/i)?.[0] ?? trimmed;
+}
+
 export function parseExternalArticle(markdown: string): { title: string; primaryQuestion: string; affiliateName?: string; affiliateUrl?: string; body: string; promptInjectionDetected: boolean; unusableReason?: string; inferredFields: string[] } {
   const lines = markdown.replace(/^\uFEFF/, "").split(/\r?\n/);
   const metadata: Record<string, string> = {};
@@ -63,7 +71,7 @@ export function parseExternalArticle(markdown: string): { title: string; primary
     ...(malformedFrontmatter ? ["frontmatter"] : []),
   ];
   const unusableReason = body.length < 80 ? "The submission has no usable article body." : undefined;
-  const link = metadata.affiliate_url?.match(/https:\/\/[^)\s]+/)?.[0] ?? metadata.affiliate_url?.trim();
+  const link = extractUrl(metadata.affiliate_url);
   return { title, primaryQuestion, affiliateName: metadata.affiliate_name, affiliateUrl: link, body, promptInjectionDetected, unusableReason, inferredFields };
 }
 
