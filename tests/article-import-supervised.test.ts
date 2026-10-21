@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -107,9 +108,8 @@ test("heartbeat consumes durable work after interruption and releases only after
     assert.equal((await current()).stage, "TRANSFORMING");
     const artifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
     await writeJsonAtomically(path.join(root, artifactPath), artifact);
-    // Approved direct-review releases bind to the manifest-selected receipt URL.
-    await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", release_receipt: "releases/example/release-receipt.json" }] });
-    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9" });
+    // Approved direct-review releases bind to the manifest-selected receipt URL and artefact fingerprint.
+    await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
     await submit({ stage: "TRANSFORMING", artifactPath, format: "direct-review" });
     await heartbeat();
     assert.equal((await current()).stage, "REFINING");
@@ -123,6 +123,9 @@ test("heartbeat consumes durable work after interruption and releases only after
     await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout" });
     await heartbeat();
     assert.equal((await current()).stage, "RELEASING");
+    // The approval loop rewrites the artefact; bind the receipt to the final approved bytes.
+    const artifactFingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath))).toString("utf8").replace(/\r\n/g, "\n")).digest("hex");
+    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: artifactFingerprint } } });
     const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" });
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");

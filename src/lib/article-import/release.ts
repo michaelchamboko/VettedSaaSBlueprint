@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -204,6 +205,9 @@ function safeCatalogueReceiptPath(directory: string, relativePath: string): stri
  * served from production is the receipt's exact_affiliate_url, not anything in the blueprint
  * (PageBlueprint carries no affiliate_links), so the receipt must name the record's resolved
  * affiliate URL — otherwise an allowlisted URL B could ship for an import resolved to URL A.
+ * The manifest artifact and the receipt page fingerprint must also match the approved
+ * `<slug>.json` blueprint on disk: otherwise an authority-file change could deploy unapproved
+ * content under the approved slug while the URL binding alone still passes.
  */
 export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: string, slug: string, record: ExternalArticleImportV1): Promise<void> {
   const transformation = record.transformation;
@@ -211,13 +215,13 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
   const resolved = transformation.resolvedAffiliateUrl;
   if (!resolved) throw new Error("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH");
   const catalogueDirectory = path.resolve(repositoryRoot, "src/generated/landing-pages");
-  let manifest: { pages?: Array<{ slug?: unknown; release_receipt?: unknown }> };
+  let manifest: { pages?: Array<{ slug?: unknown; release_receipt?: unknown; artifact?: unknown }> };
   try {
     manifest = JSON.parse(await readFile(path.join(catalogueDirectory, "index.json"), "utf8"));
   } catch { throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`); }
   const entry = (manifest.pages ?? []).find((page) => page.slug === slug);
   if (!entry || typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
-  let receipt: { exact_affiliate_url?: unknown };
+  let receipt: { exact_affiliate_url?: unknown; artifacts?: { page?: { path?: unknown; sha256?: unknown } } };
   try {
     receipt = JSON.parse(await readFile(safeCatalogueReceiptPath(catalogueDirectory, entry.release_receipt), "utf8"));
   } catch (error) {
@@ -225,6 +229,22 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
     throw new Error("RELEASE_RECEIPT_UNREADABLE");
   }
   if (receipt.exact_affiliate_url !== resolved) throw new Error("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH");
+  const expectedArtifact = `${slug}.json`;
+  if (typeof entry.artifact !== "string" || entry.artifact !== expectedArtifact) throw new Error("RELEASE_MANIFEST_ARTIFACT_MISMATCH");
+  const receiptPage = receipt.artifacts?.page;
+  if (!receiptPage || typeof receiptPage.path !== "string" || receiptPage.path !== entry.artifact) throw new Error("RELEASE_RECEIPT_ARTIFACT_PATH_MISMATCH");
+  if (typeof receiptPage.sha256 !== "string") throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH");
+  let artifactBytes: Buffer;
+  try {
+    artifactBytes = await readFile(safeCatalogueReceiptPath(catalogueDirectory, expectedArtifact));
+  } catch { throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH"); }
+  const artifactText = artifactBytes.toString("utf8");
+  const acceptedFingerprints = new Set([
+    createHash("sha256").update(artifactBytes).digest("hex"),
+    createHash("sha256").update(artifactText.replace(/\r\n/g, "\n")).digest("hex"),
+    createHash("sha256").update(artifactText.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n")).digest("hex"),
+  ]);
+  if (!acceptedFingerprints.has(receiptPage.sha256)) throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH");
 }
 
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {

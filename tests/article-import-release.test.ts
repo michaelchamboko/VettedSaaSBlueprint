@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -21,14 +22,16 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), source);
   await mkdir(path.join(root, "src/generated/landing-pages/releases/example"), { recursive: true });
-  await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", release_receipt: "releases/example/release-receipt.json" }] }));
-  await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9" }));
+  await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] }));
   let record = await createArticleImport(root, "article.md");
   for (let i = 0; i < 5; i += 1) {
     if (record.stage === "REFINING") record = await approveFixture(root, record);
     if (record.stage === "VALIDATING") record = await presentFixture(root, record);
     record = await advanceImport(root, record, "stage complete");
   }
+  // The receipt binds the approved artefact fingerprint (LF-normalised, matching the loader).
+  const artifactBytes = await readFile(path.join(root, "src/generated/landing-pages/example.json"));
+  await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: createHash("sha256").update(artifactBytes.toString("utf8").replace(/\r\n/g, "\n")).digest("hex") } } }));
   return { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } };
 }
 
@@ -957,5 +960,67 @@ test("direct-review release rejects an unsafe receipt path escaping the catalogu
     const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("RELEASE_RECEIPT_PATH_INVALID"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review release binds the manifest artefact to the approved blueprint", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-manifest-artefact-"));
+  try {
+    const base = await releasingRecord(root);
+    // Another valid same-slug blueprint exists; the manifest must not point at it.
+    const artifactBytes = await readFile(path.join(root, "src/generated/landing-pages/example.json"));
+    await writeFile(path.join(root, "src/generated/landing-pages/other-valid.json"), artifactBytes);
+    await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", artifact: "other-valid.json", release_receipt: "releases/example/release-receipt.json" }] }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_MANIFEST_ARTIFACT_MISMATCH"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review release rejects a receipt page path that differs from the manifest artefact", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-receipt-page-path-"));
+  try {
+    const base = await releasingRecord(root);
+    const receiptPath = path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json");
+    const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+    await writeFile(receiptPath, JSON.stringify({ ...receipt, artifacts: { ...receipt.artifacts, page: { ...receipt.artifacts.page, path: "other-valid.json" } } }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_RECEIPT_ARTIFACT_PATH_MISMATCH"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review release rejects a receipt page fingerprint that does not match the approved artefact", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-receipt-fingerprint-"));
+  try {
+    const base = await releasingRecord(root);
+    const receiptPath = path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json");
+    const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+    await writeFile(receiptPath, JSON.stringify({ ...receipt, artifacts: { ...receipt.artifacts, page: { ...receipt.artifacts.page, sha256: "0".repeat(64) } } }));
+    const result = await assessImportRelease({ repositoryRoot: root, record: base, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations() });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("release re-verifies the merged-checkout artefact fingerprint before deploying", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-merged-artefact-"));
+  let deployments = 0;
+  try {
+    const record = await releasingRecord(root);
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example",
+      operations: operations({
+        // After the reviewed head merged, another commit changed the approved artefact content.
+        checkoutMergedCommit: async () => {
+          const swapped = { ...JSON.parse(await readFile(path.join(root, "src/generated/landing-pages/example.json"), "utf8")), title: "Swapped after review" };
+          await writeFile(path.join(root, "src/generated/landing-pages/example.json"), JSON.stringify(swapped));
+        },
+        deploy: async (commitSha) => { deployments += 1; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
+      }),
+    });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH"));
+    assert.equal(deployments, 0);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
