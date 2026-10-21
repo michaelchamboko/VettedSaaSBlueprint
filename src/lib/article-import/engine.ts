@@ -143,6 +143,21 @@ function initialRecord(input: { importId: string; sourceFile: string; sourceFing
 
 export type AtomicReplace = (from: string, to: string) => Promise<void>;
 
+const TRANSIENT_REPLACE_ERRORS = new Set(["EPERM", "EBUSY", "EACCES"]);
+
+async function replaceWithRetry(replace: AtomicReplace, from: string, to: string): Promise<void> {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await replace(from, to);
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (!TRANSIENT_REPLACE_ERRORS.has(code ?? "") || attempt === 3) throw error;
+      await new Promise((resolve) => setTimeout(resolve, attempt * 25));
+    }
+  }
+}
+
 export async function writeJsonAtomically(file: string, value: unknown, replace: AtomicReplace = rename): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true });
   const temp = `${file}.${process.pid}.${randomUUID()}.tmp`;
@@ -155,7 +170,7 @@ export async function writeJsonAtomically(file: string, value: unknown, replace:
     await handle.close();
   }
   try {
-    await replace(temp, file);
+    await replaceWithRetry(replace, temp, file);
   } catch (error) {
     await unlink(temp).catch(() => undefined);
     throw error;
@@ -179,6 +194,15 @@ export async function loadImport(repositoryRoot: string, importId: string): Prom
 
 export async function listPendingImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
   return (await listAllImports(repositoryRoot)).filter((record) => !["LIVE", "QUARANTINED"].includes(record.stage));
+}
+
+export async function resumePendingImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
+  const pending = await listPendingImports(repositoryRoot);
+  return Promise.all(pending.map((record) =>
+    ["WAITING_EXTERNAL", "REPAIRING", "ROLLED_BACK"].includes(record.stage)
+      ? resumeImport(repositoryRoot, record)
+      : record,
+  ));
 }
 
 async function listAllImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {

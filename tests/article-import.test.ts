@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -84,6 +84,20 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
   }
 });
 
+test("resume-pending resumes recoverable receipts and leaves active work pending", async () => {
+  const root = await testRoot("article-import-resume-pending-");
+  try {
+    await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
+    await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
+    const created = await createArticleImport(root, "article.md");
+    await recordImportFailure(root, created, { strategy: "research", classification: "transient", message: "provider unavailable" });
+    const resumed = await executeImportCommand(root, { kind: "resume-pending" }) as Array<{ importId: string; stage: string }>;
+    assert.equal(resumed.length, 1);
+    assert.equal(resumed[0]?.importId, created.importId);
+    assert.equal(resumed[0]?.stage, "INGESTING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("atomic replacement failure preserves the previous receipt", async () => {
   const root = await testRoot("article-import-atomic-");
   try {
@@ -94,6 +108,22 @@ test("atomic replacement failure preserves the previous receipt", async () => {
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("atomic replacement retries transient filesystem locks", async () => {
+  const root = await testRoot("article-import-atomic-retry-");
+  try {
+    const file = path.join(root, "receipt.json");
+    let attempts = 0;
+    await writeJsonAtomically(file, { version: 1 });
+    await writeJsonAtomically(file, { version: 2 }, async (from, to) => {
+      attempts += 1;
+      if (attempts < 3) throw Object.assign(new Error("locked"), { code: "EPERM" });
+      await rename(from, to);
+    });
+    assert.equal(attempts, 3);
+    assert.deepEqual(JSON.parse(await readFile(file, "utf8")), { version: 2 });
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("live completion deletes raw source and retains the receipt", async () => {

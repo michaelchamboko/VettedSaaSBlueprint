@@ -1,4 +1,4 @@
-import { createArticleImport, listPendingImports, loadImport, resumeImport } from "../src/lib/article-import/engine";
+import { createArticleImport, loadImport, resumeImport, resumePendingImports } from "../src/lib/article-import/engine";
 
 export type ImportCommand = { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "resume-pending" };
 
@@ -20,7 +20,7 @@ export async function executeImportCommand(root: string, command: ImportCommand)
     const record = await loadImport(root, command.importId);
     return resumeImport(root, record);
   }
-  return listPendingImports(root);
+  return resumePendingImports(root);
 }
 
 async function main(): Promise<void> {
