@@ -44,6 +44,9 @@ A bounded search of the current checkout, open PR file lists and attached worktr
 12. Review evidence is fetched from the exact GitHub bot comment and must report a clean review for the current head; a stored assertion cannot authorize deployment.
 13. Mutable review and heartbeat receipts remain in ignored automation state, so they cannot dirty the reviewed checkout before deployment.
 14. Visibility imports commit their publication authority with the generated artifacts, making the released page discoverable by the runtime catalogue.
+15. A merged PR cannot deploy until the repository owner either approved its current head or performed the merge.
+16. A deployment attempt triggers rollback handling even when the adapter fails after changing production but before returning deployment metadata.
+17. Decision-set verification captures console errors and uncaught browser exceptions, and the release receipt requires that explicit evidence.
 
 ## Pilot
 
@@ -53,8 +56,8 @@ Production publication remains gated by the repository's required owner-approved
 
 ## Verification evidence
 
-- Focused importer and verifier suite: 70 passed, 0 failed.
-- Full repository suite: 364 passed, 0 failed, 3 documented Windows symlink skips (367 total).
+- Focused importer, release, and verifier suite: 73 passed, 0 failed.
+- Full repository suite: 370 passed, 0 failed, 3 documented Windows symlink skips (373 total).
 - TypeScript route generation and typecheck: passed.
 - Mandatory workflow contract: passed.
 - Lint: 0 errors and 34 pre-existing warnings outside the changed importer surface.

@@ -120,8 +120,13 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       return { url, branch, reviewedCommitSha };
     },
     async inspectPullRequest(url) {
-      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string } };
-      return { merged: pr.state === "MERGED", headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
+      const identity = /^https:\/\/github\.com\/([A-Za-z0-9-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(url);
+      if (!identity) throw new Error("PULL_REQUEST_URL_INVALID");
+      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit,mergedBy,reviews"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string }; mergedBy?: { login?: string }; reviews?: Array<{ author?: { login?: string }; state?: string; commit?: { oid?: string } }> };
+      const owner = identity[1].toLowerCase();
+      const ownerReview = pr.reviews?.filter((review) => review.author?.login?.toLowerCase() === owner && ["APPROVED", "CHANGES_REQUESTED", "DISMISSED"].includes(review.state ?? "")).at(-1);
+      const ownerApproved = pr.mergedBy?.login?.toLowerCase() === owner || (ownerReview?.state === "APPROVED" && ownerReview.commit?.oid === pr.headRefOid);
+      return { merged: pr.state === "MERGED", ownerApproved, headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
     },
     async verifyCodeReview(pullRequestUrl, evidenceUrl, reviewedCommitSha) {
       const pr = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(pullRequestUrl);
@@ -161,7 +166,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (options.format !== "direct-review") {
         const script = { blog: "scripts/verify-blog-deployment.ts", visibility: "scripts/verify-visibility-deployment.ts", "decision-set": "scripts/verify-decision-journey-production.ts" }[options.format as "blog" | "visibility" | "decision-set"];
         if (!script) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
-        const result = JSON.parse((await runner("npx", ["tsx", script, "--origin", origin, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; ok?: boolean; passed?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
+        const result = JSON.parse((await runner("npx", ["tsx", script, "--origin", origin, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; ok?: boolean; passed?: boolean; browser_errors_ok?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
         if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
         requireVerificationMode(result, "production");
         assertVerifierResult(target, result);
@@ -170,7 +175,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
           : result.ok === true && (result.routes ?? 0) > 0 && (result.viewportChecks ?? 0) >= 2;
         if (!passed) throw new Error(`FORMAT_VERIFIER_FAILED:${options.format}`);
         // These formats prohibit affiliate destinations; their owner checks apply.
-        return { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
+        return { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: options.format === "decision-set" ? result.browser_errors_ok === true : true };
       }
       const result = JSON.parse((await runner("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
       if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");

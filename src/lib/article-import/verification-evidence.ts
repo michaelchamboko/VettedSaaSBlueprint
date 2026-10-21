@@ -33,7 +33,7 @@ export function assertVerifierResult(target: ReturnType<typeof importArtifactTar
     const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
     if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
   } else if (target.format === "decision-set") {
-    z.object({ passed: z.literal(true), robots_ok: z.literal(true), sitemap_ok: z.literal(true), checks: z.array(z.object({ passed: z.literal(true) }).passthrough()).min(1), screenshots: z.array(z.object({ route: z.string(), mode: z.string() }).passthrough()).min(2) }).passthrough().parse(result);
+    z.object({ passed: z.literal(true), browser_errors_ok: z.literal(true), robots_ok: z.literal(true), sitemap_ok: z.literal(true), checks: z.array(z.object({ passed: z.literal(true) }).passthrough()).min(1), screenshots: z.array(z.object({ route: z.string(), mode: z.string() }).passthrough()).min(2) }).passthrough().parse(result);
     const shots = result.screenshots as Array<{ route: string; mode: string }>;
     if (target.renderedRoutes.some((route) => !shots.some((shot) => shot.route === route && shot.mode.startsWith("desktop")) || !shots.some((shot) => shot.route === route && shot.mode.startsWith("mobile")))) throw new Error("VERIFIER_ROUTES_MISMATCH");
   } else {

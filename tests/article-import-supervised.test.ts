@@ -58,7 +58,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => { commits++; return commit; },
     preparePullRequest: async () => ({ url: pr, branch: `codex/article-import/${importId}`, reviewedCommitSha: commit }),
-    inspectPullRequest: async () => ({ merged, headRefOid: commit, mergeCommitSha: merged ? commit : undefined }),
+    inspectPullRequest: async () => ({ merged, ownerApproved: merged, headRefOid: commit, mergeCommitSha: merged ? commit : undefined }),
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
     deploy: async (commitSha) => { deployments++; return { deploymentId: "dpl-current", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },

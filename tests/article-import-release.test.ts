@@ -36,7 +36,7 @@ function operations(overrides: Partial<ReleaseOperations> = {}): ReleaseOperatio
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => "c".repeat(40),
     preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/1", branch: "codex/article-import/example" }),
-    inspectPullRequest: async () => ({ merged: true, headRefOid: "c".repeat(40), mergeCommitSha: "c".repeat(40) }),
+    inspectPullRequest: async () => ({ merged: true, ownerApproved: true, headRefOid: "c".repeat(40), mergeCommitSha: "c".repeat(40) }),
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
     deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }),
@@ -405,7 +405,7 @@ test("neutral production formats use their owner verifier without affiliate CTA 
     const artifact = await formatFixture(format);
     await writeFile(path.join(root, "example.json"), JSON.stringify(artifact));
     const target = importArtifactTarget(format, artifact);
-    const evidence = format === "decision-set" ? { target, passed: true, checks: [{ passed: true }], screenshots: target.renderedRoutes.flatMap((route) => [{ route, mode: "desktop: first-screen" }, { route, mode: "mobile-reduced-motion: first-screen" }]), robots_ok: true, sitemap_ok: true } : { target, ok: true, routes: target.renderedRoutes.length, verifiedRoutes: target.renderedRoutes, viewportChecks: target.renderedRoutes.length * 2 };
+    const evidence = format === "decision-set" ? { target, passed: true, browser_errors_ok: true, checks: [{ passed: true }], screenshots: target.renderedRoutes.flatMap((route) => [{ route, mode: "desktop: first-screen" }, { route, mode: "mobile-reduced-motion: first-screen" }]), robots_ok: true, sitemap_ok: true } : { target, ok: true, routes: target.renderedRoutes.length, verifiedRoutes: target.renderedRoutes, viewportChecks: target.renderedRoutes.length * 2 };
     const calls: readonly string[][] = [];
     const runner: ReleaseCommandRunner = async (_command, args) => { (calls as string[][]).push([...args]); return { stdout: JSON.stringify({ ...evidence, verificationMode: "production", origin: "https://vettedsaasblueprint.online", canonicalOrigin: "https://vettedsaasblueprint.online" }), stderr: "" }; };
     const adapter = createLocalReleaseOperations(root, { format, slug: target.slug, artifactPath: "example.json", runner });
@@ -585,7 +585,7 @@ test("unmerged PR resumes without committing again; merged PR deploys the exact 
     const waiting = await assessImportRelease({ ...base, operations: operations({ inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }), commit: async () => { throw new Error("must not recommit"); } }) });
     assert.equal(waiting.reasons[0], "OWNER_PR_MERGE_REQUIRED");
     let deployedSha = "";
-    const live = await assessImportRelease({ ...base, operations: operations({ inspectPullRequest: async () => ({ merged: true, headRefOid: "c".repeat(40), mergeCommitSha: "d".repeat(40) }), deploy: async (commitSha) => { deployedSha = commitSha; return { deploymentId: "dpl-merged", commitSha, canonicalUrl: "https://vettedsaasblueprint.online/imported-guide" }; } }) });
+    const live = await assessImportRelease({ ...base, operations: operations({ inspectPullRequest: async () => ({ merged: true, ownerApproved: true, headRefOid: "c".repeat(40), mergeCommitSha: "d".repeat(40) }), deploy: async (commitSha) => { deployedSha = commitSha; return { deploymentId: "dpl-merged", commitSha, canonicalUrl: "https://vettedsaasblueprint.online/imported-guide" }; } }) });
     assert.equal(live.status, "LIVE");
     assert.equal(deployedSha, "d".repeat(40));
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -675,7 +675,7 @@ test("changed PR head invalidates the stored review without deploying", async ()
   try {
     const record = await releasingRecord(root);
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
-      inspectPullRequest: async () => ({ merged: true, headRefOid: "e".repeat(40), mergeCommitSha: "f".repeat(40) }),
+      inspectPullRequest: async () => ({ merged: true, ownerApproved: true, headRefOid: "e".repeat(40), mergeCommitSha: "f".repeat(40) }),
       deploy: async () => { throw new Error("must not deploy"); },
     }) });
     assert.equal(result.reasons[0], "PULL_REQUEST_HEAD_CHANGED");
@@ -695,4 +695,76 @@ test("local PR adapter pushes only the import branch and reuses the exact review
   assert.equal(result.branch, "codex/article-import/article-example");
   assert.deepEqual(calls.find((call) => call[1] === "push"), ["git", "push", "origin", "HEAD:refs/heads/codex/article-import/article-example"]);
   assert.equal(calls.some((call) => call.includes("create")), false);
+});
+
+test("deploy rejection after a production side effect restores and verifies the previous deployment", async () => {
+  for (const restored of [true, false]) {
+    const root = await mkdtemp(path.join(os.tmpdir(), "article-partial-deploy-"));
+    try {
+      const record = await releasingRecord(root);
+      const calls: string[] = [];
+      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+        deploy: async () => { calls.push("production-changed"); throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED"); },
+        verifyProduction: async () => { throw new Error("must not verify a rejected deploy"); },
+        rollback: async (id) => { calls.push(`rollback:${id}`); return { ok: true, summary: "rollback requested" }; },
+        verifyRollback: async (id, commit) => { calls.push(`verify:${id}:${commit}`); return restored; },
+      }) });
+      assert.deepEqual(calls, ["production-changed", "rollback:dpl-previous", `verify:dpl-previous:${"b".repeat(40)}`]);
+      assert.equal(result.status, restored ? "ROLLED_BACK" : "WAITING_EXTERNAL");
+      assert.deepEqual(result.reasons, ["DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED", ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])]);
+      const persisted = await loadImport(root, record.importId);
+      assert.equal(persisted.stage, result.status);
+      assert.equal(persisted.resumeStage, "RELEASING");
+      assert.equal(persisted.release, undefined);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  }
+});
+test("merged imports wait when owner approval is missing or false", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-owner-approval-"));
+  try {
+    const record = await releasingRecord(root);
+    for (const ownerApproved of [undefined, false]) {
+      let deployed = false;
+      const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: ["src/generated/landing-pages/example.json"], execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
+        inspectPullRequest: async () => ({ merged: true, ownerApproved, headRefOid: "c".repeat(40), mergeCommitSha: "d".repeat(40) }),
+        deploy: async () => { deployed = true; throw new Error("must not deploy"); },
+      }) });
+      assert.equal(result.status, "WAITING_EXTERNAL");
+      assert.equal(result.reasons[0], "OWNER_PR_MERGE_REQUIRED");
+      assert.equal(deployed, false);
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("GitHub owner merge or latest current-head owner approval authorizes release", async () => {
+  const head = "c".repeat(40);
+  const approval = { author: { login: "repository-owner" }, state: "APPROVED", commit: { oid: head } };
+  const cases = [
+    { mergedBy: { login: "repository-owner" }, reviews: [], expected: true },
+    { mergedBy: { login: "collaborator" }, reviews: [approval], expected: true },
+    { mergedBy: { login: "collaborator" }, reviews: [], expected: false },
+    { mergedBy: null, reviews: [], expected: false },
+    { mergedBy: { login: "automation[bot]" }, reviews: [{ ...approval, author: { login: "collaborator" } }], expected: false },
+    { mergedBy: { login: "collaborator" }, reviews: [{ ...approval, commit: { oid: "a".repeat(40) } }], expected: false },
+    { mergedBy: { login: "collaborator" }, reviews: [approval, { ...approval, state: "CHANGES_REQUESTED" }], expected: false },
+    { mergedBy: { login: "collaborator" }, reviews: [{ ...approval, state: "DISMISSED" }], expected: false },
+    { mergedBy: { login: "collaborator" }, reviews: [approval, { ...approval, state: "COMMENTED" }], expected: true },
+  ];
+  for (const { expected, ...data } of cases) {
+    const runner: ReleaseCommandRunner = async (command, args) => {
+      assert.equal(command, "gh");
+      assert.equal(args.at(-1), "state,headRefOid,mergeCommit,mergedBy,reviews");
+      return { stdout: JSON.stringify({ state: "MERGED", headRefOid: head, mergeCommit: { oid: "d".repeat(40) }, ...data }), stderr: "" };
+    };
+    const result = await createLocalReleaseOperations(".", { format: "blog", runner }).inspectPullRequest("https://github.com/repository-owner/VettedSaaSBlueprint/pull/28");
+    assert.equal(result.ownerApproved, expected);
+  }
+});
+
+test("owner inspection rejects malformed or non-GitHub PR URLs before execution", async () => {
+  const runner: ReleaseCommandRunner = async () => { throw new Error("must not invoke GitHub"); };
+  const operations = createLocalReleaseOperations(".", { format: "blog", runner });
+  for (const url of ["https://example.com/owner/repo/pull/1", "https://github.com/owner/repo/pull/0", "https://github.com/owner/repo/pull/1?owner=other", "https://github.com/owner/repo/pull/1#fragment", "--repo=other/repo"]) {
+    await assert.rejects(operations.inspectPullRequest(url), /PULL_REQUEST_URL_INVALID/);
+  }
 });

@@ -58,7 +58,7 @@ export type ReleaseOperations = {
   capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string; verified: boolean }>;
   commit(message: string, files: readonly string[]): Promise<string>;
   preparePullRequest(reviewedCommitSha: string): Promise<{ url: string; branch: string; reviewedCommitSha: string }>;
-  inspectPullRequest(url: string): Promise<{ merged: boolean; headRefOid: string; mergeCommitSha?: string }>;
+  inspectPullRequest(url: string): Promise<{ merged: boolean; ownerApproved?: boolean; headRefOid: string; mergeCommitSha?: string }>;
   verifyCodeReview(pullRequestUrl: string, evidenceUrl: string, reviewedCommitSha: string): Promise<void>;
   checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;
   deploy(commitSha: string): Promise<ReleaseDeployment>;
@@ -245,7 +245,7 @@ export async function assessImportRelease(input: {
     if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED");
     if (!hasCurrentCodeReview(input.record, pullRequest.headRefOid)) return await waitForCodeReview(input.repositoryRoot, input.record);
     await input.operations.verifyCodeReview(pendingRelease.pullRequestUrl, pendingRelease.codeReview!.evidenceUrl, pullRequest.headRefOid);
-    if (!pullRequest.merged) return await waitForOwnerMerge(input.repositoryRoot, input.record);
+    if (!pullRequest.merged || pullRequest.ownerApproved !== true) return await waitForOwnerMerge(input.repositoryRoot, input.record);
     if (!pullRequest.mergeCommitSha) throw new Error("MERGE_COMMIT_MISSING");
     const commitSha = pullRequest.mergeCommitSha;
     await input.operations.checkoutMergedCommit(pendingRelease.reviewedCommitSha, commitSha);
@@ -255,8 +255,9 @@ export async function assessImportRelease(input: {
     pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha };
     input.record = { ...input.record, pendingRelease };
     await saveImport(input.repositoryRoot, input.record);
-    const deployment = await input.operations.deploy(commitSha);
+    // The adapter can fail after its production side effect, so every attempt needs rollback.
     deploymentStarted = true;
+    const deployment = await input.operations.deploy(commitSha);
     if (deployment.commitSha !== commitSha) {
       throw new Error("DEPLOYMENT_COMMIT_MISMATCH");
     }

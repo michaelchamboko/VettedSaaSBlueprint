@@ -46,7 +46,7 @@ async function checkHtml(origin: string, route: keyof typeof decisionJourneyCata
   }
 }
 
-async function captureRoute(input: { origin: string; route: keyof typeof decisionJourneyCatalog; output: string }): Promise<{ checks: Check[]; screenshots: Screenshot[] }> {
+export async function captureRoute(input: { origin: string; route: keyof typeof decisionJourneyCatalog; output: string }): Promise<{ checks: Check[]; screenshots: Screenshot[] }> {
   const browser = await chromium.launch({ headless: true });
   const url = `${input.origin}${input.route}`;
   const checks: Check[] = [];
@@ -61,6 +61,7 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
       const page = await context.newPage();
       const browserErrors: string[] = [];
       page.on("console", (message) => { if (message.type() === "error") browserErrors.push(message.text()); });
+      page.on("pageerror", (error) => browserErrors.push(error.message));
       await page.goto(url, { waitUntil: "networkidle" });
       const primary = await page.locator("h1").textContent();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -78,7 +79,7 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
         { name: `${input.route}: ${profile.name} principal content`, passed: primary === targets[input.route].headline, detail: "The route-specific headline remains available in the rendered page.", category: "accessibility" },
         { name: `${input.route}: ${profile.name} complete structure`, passed: sectionCount === targets[input.route].blocks.length, detail: "Rendered section count matches the structured catalogue.", category: "content" },
         { name: `${input.route}: ${profile.name} layout`, passed: !overflow, detail: overflow ? "Horizontal overflow detected." : "No horizontal overflow detected.", category: "visual" },
-        { name: `${input.route}: ${profile.name} console`, passed: browserErrors.length === 0, detail: browserErrors.length ? browserErrors.join(" | ") : "No browser console errors.", category: "motion" },
+        { name: `${input.route}: ${profile.name} browser errors`, passed: browserErrors.length === 0, detail: browserErrors.length ? browserErrors.join(" | ") : "No browser console errors or uncaught exceptions.", category: "motion" },
       );
       await context.close();
     }
@@ -120,10 +121,11 @@ async function main() {
     screenshots: browserChecks.flatMap((result) => result.screenshots),
     createdAt: new Date().toISOString(),
   });
-  const result = { ...receipt, ...context, robots_ok: robotsOk, sitemap_ok: sitemapOk };
+  const browserErrorChecks = checks.filter((check) => check.name.endsWith(" browser errors"));
+  const result = { ...receipt, ...context, robots_ok: robotsOk, sitemap_ok: sitemapOk, browser_errors_ok: browserErrorChecks.length > 0 && browserErrorChecks.every((check) => check.passed) };
   await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
   if (!receipt.passed) process.exitCode = 1;
 }
 
-void main();
+if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/verify-decision-journey-production.ts")) void main();
