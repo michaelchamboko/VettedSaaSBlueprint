@@ -38,6 +38,7 @@ async function main(): Promise<void> {
     ownerAuthorizedAffiliateUrl: process.argv.includes("--owner-authorized-affiliate-url"),
     execute: process.argv.includes("--execute"),
     artifactPath,
+    slug,
     operations: process.argv.includes("--execute") ? createLocalReleaseOperations(process.cwd(), { format: record.format, slug, artifactPath, origin: argument("--origin") }) : unconfiguredOperations(),
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

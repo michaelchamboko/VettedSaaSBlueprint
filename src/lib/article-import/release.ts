@@ -66,7 +66,8 @@ const FORMAT_VALIDATION_GATES: Partial<Record<ImportFormat, readonly string[]>> 
 };
 
 export function validationCommandsForFormat(format: ImportFormat, artifactPath?: string): readonly string[] | undefined {
-  const gate = format === "direct-review" && artifactPath ? [`npm run landing:quality:candidate -- --artifact ${artifactPath}`] : FORMAT_VALIDATION_GATES[format];
+  const basename = artifactPath?.replaceAll("\\", "/").split("/").at(-1);
+  const gate = format === "direct-review" && basename ? [`npm run landing:quality:candidate -- --artifact ${basename}`] : FORMAT_VALIDATION_GATES[format];
   if (format === "direct-review" && !artifactPath) return undefined;
   return gate ? [...gate, ...COMMON_VALIDATION_COMMANDS] : undefined;
 }
@@ -115,12 +116,20 @@ export async function assessImportRelease(input: {
   killSwitchEnabled?: boolean;
   execute?: boolean;
   artifactPath?: string;
+  slug?: string;
   operations: ReleaseOperations;
   commitMessage?: string;
 }): Promise<ReleaseAssessment> {
   const reasons: string[] = [];
   const disallowed = validateReleasePaths(input.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true);
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
+  if (input.record.format === "direct-review") {
+    if (!input.slug) reasons.push("DIRECT_REVIEW_SLUG_REQUIRED");
+    const expected = input.slug ? `src/generated/landing-pages/${input.slug}.json` : undefined;
+    const normalizedArtifact = input.artifactPath?.replaceAll("\\", "/");
+    if (!expected || normalizedArtifact !== expected || normalizedArtifact.startsWith("/") || normalizedArtifact.split("/").includes("..")) reasons.push("DIRECT_REVIEW_ARTIFACT_MISMATCH");
+    if (expected && !input.changedFiles.map((file) => file.replaceAll("\\", "/")).includes(expected)) reasons.push("DIRECT_REVIEW_ARTIFACT_NOT_CHANGED");
+  }
   if (input.killSwitchEnabled) {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
   }
