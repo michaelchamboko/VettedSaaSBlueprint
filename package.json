@@ -61,6 +61,9 @@
     "neon:migration:apply": "tsx scripts/verify-neon-migration.ts --apply",
     "neon:migration:verify": "tsx scripts/verify-neon-migration-source.ts",
     "landing:workflow:describe": "tsx scripts/describe-landing-workflow.ts",
+    "import:article": "tsx scripts/import-article.ts",
+    "import:article:resume": "tsx scripts/import-article.ts --resume",
+    "import:article:resume-pending": "tsx scripts/import-article.ts --resume-pending",
     "verify:runtime-contract": "node scripts/verify-runtime-contract.mjs"
   },
   "dependencies": {

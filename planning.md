@@ -321,6 +321,12 @@ The pilot is **choosing software for a five-person team without a technical admi
 - Automatic release is production-only and limited to schema-validated JSON catalogue records. A bounded decision set may release from partial or conflicting evidence when it has attributable problem evidence, attributable capability evidence, a credible adoption, customer, market, or independent signal, and a clearly labelled inference that states its assumptions, uncertainty, limitations, and non-fit conditions. Evidence gaps become disclosed follow-up work; they do not cancel a connected decision-set release. Dependencies, routes, authentication, migrations, rankings, prices, affiliate claims, and commercial comparisons still require owner review.
 - GitNexus remains index-only and non-authoritative. When its adapter cannot read the current index, deterministic hashes, `rg`, imports, route inventories and affected-test checks are the required fallback.
 
+### External article import authority — owner-approved narrow extension
+
+The `ExternalArticleImportV1` flow is an agent-triggered, repository-local import path for user-supplied Markdown articles. It may transform and release schema-valid direct-review, blog, visibility, and decision-set content plus its required media and receipts after the existing repository gates pass. It does not activate or modify the paused production schedules, add a database, add a public API, or mutate `approved-urls.md`.
+
+The import runner stores atomic state and receipts under ignored `.automation/article-imports/`. It retries transient source, Git, Vercel, rate-limit, and credential failures through a quiet resume loop. A submitted affiliate URL may use an exact allowlisted URL or a unique same-vendor allowlist match; otherwise the agent removes commercial destinations and publishes a neutral version. It may not invent or authorize a new affiliate destination. User-attached source material is treated as the owner's standing authorization to transform and publish it; the agent must still remove unsupported claims and quarantine an input with no safe publishable topic.
+
 ### Denominators and task model
 
 The two mandatory denominators remain **799 requirement IDs** and **799 existing acceptance IDs**, each with one current task assignment, evidence type and verifier. The Phase Two denominator is superseded by the Phase Three authority below; the current denominator is **32 packets**. No task may use a generic catch-all mapping.
