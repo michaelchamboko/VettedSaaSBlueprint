@@ -127,9 +127,10 @@ export function prepareTransformation(parsed: ReturnType<typeof parseExternalArt
   const resolved = resolveAffiliateUrl(parsed.affiliateUrl, parsed.affiliateName, allowlistMarkdown);
   const removals: string[] = [...risks(parsed.body)];
   if (resolved.mode === "decommercialized") removals.push("affiliate destination and commercial CTA");
+  const format = resolved.mode === "approved" ? classify(parsed) : classify({ ...parsed, affiliateName: undefined, affiliateUrl: undefined });
   return {
-    schemaVersion: "ImportTransformationV1", format: classify(parsed), title: parsed.title,
-    primaryQuestion: parsed.primaryQuestion, affiliateName: parsed.affiliateName,
+    schemaVersion: "ImportTransformationV1", format, title: parsed.title,
+    primaryQuestion: parsed.primaryQuestion, affiliateName: resolved.mode === "approved" ? parsed.affiliateName : undefined,
     submittedAffiliateUrl: resolved.submitted, resolvedAffiliateUrl: resolved.resolved,
     commercialMode: resolved.mode, removals, claimRisks: risks(parsed.body),
     sourceFingerprint: "0".repeat(64), inferredFields: parsed.inferredFields,

@@ -73,6 +73,15 @@ test("unknown affiliate URL is de-commercialized without mutating the manifest",
   assert.deepEqual(result, { mode: "decommercialized", submitted: "https://unknown.example/ref" });
 });
 
+test("de-commercialized submissions use a neutral format and no affiliate identity", () => {
+  const parsed = parseExternalArticle(`---\ntitle: A practical workflow\naffiliate_name: Unknown Vendor\naffiliate_url: https://unknown.example/ref\n---\n\nA guide to building a reliable workflow for a small team.`);
+  const transform = prepareTransformation(parsed, allowlist);
+  assert.equal(transform.format, "visibility");
+  assert.equal(transform.affiliateName, undefined);
+  assert.equal(transform.resolvedAffiliateUrl, undefined);
+  assert.equal(transform.commercialMode, "decommercialized");
+});
+
 test("malformed frontmatter is ingested as body and blog headings classify with multiline matching", () => {
   const malformed = parseExternalArticle("---\ntitle: Missing closing delimiter\n\n# A usable article\n\nThis is enough article text to remain usable after malformed metadata is treated as body content.\n");
   assert.ok(malformed.inferredFields.includes("frontmatter"));
