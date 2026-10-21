@@ -60,14 +60,14 @@ const COMMON_VALIDATION_COMMANDS = [
   "npm run validate:public-site",
 ] as const;
 const FORMAT_VALIDATION_GATES: Partial<Record<ImportFormat, readonly string[]>> = {
-  "direct-review": ["npm run landing:quality:candidate"],
   blog: ["npm run validate:public-site"],
   visibility: ["npm run validate:public-site"],
   "decision-set": ["npm run validate:public-site"],
 };
 
-export function validationCommandsForFormat(format: ImportFormat): readonly string[] | undefined {
-  const gate = FORMAT_VALIDATION_GATES[format];
+export function validationCommandsForFormat(format: ImportFormat, artifactPath?: string): readonly string[] | undefined {
+  const gate = format === "direct-review" && artifactPath ? [`npm run landing:quality:candidate -- --artifact ${artifactPath}`] : FORMAT_VALIDATION_GATES[format];
+  if (format === "direct-review" && !artifactPath) return undefined;
   return gate ? [...gate, ...COMMON_VALIDATION_COMMANDS] : undefined;
 }
 
@@ -114,6 +114,7 @@ export async function assessImportRelease(input: {
   ownerAuthorizedAffiliateUrl?: boolean;
   killSwitchEnabled?: boolean;
   execute?: boolean;
+  artifactPath?: string;
   operations: ReleaseOperations;
   commitMessage?: string;
 }): Promise<ReleaseAssessment> {
@@ -129,7 +130,7 @@ export async function assessImportRelease(input: {
     return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
   }
 
-  const validationCommands = validationCommandsForFormat(input.record.format);
+  const validationCommands = validationCommandsForFormat(input.record.format, input.artifactPath);
   if (!validationCommands) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `No configured validation gate for ${input.record.format}.` });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: ["MISSING_FORMAT_VALIDATION_GATE"] };

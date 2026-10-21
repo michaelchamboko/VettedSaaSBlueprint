@@ -1,6 +1,7 @@
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
 import type { ReleaseOperations, ReleaseDeployment, ReleaseGitSnapshot, FullProductionChecks } from "./release";
+import type { ImportFormat } from "./contracts";
 
 const execFile = promisify(execFileCallback);
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
@@ -13,15 +14,26 @@ function sha(value: string): string { return value.trim().split(/\s+/)[0] ?? "";
 async function git(runner: ReleaseCommandRunner, args: readonly string[]): Promise<string> { return (await runner("git", args)).stdout.trim(); }
 async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot> {
   const status = await git(runner, ["status", "--porcelain"]);
-  const changedFiles = status.split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).trim());
+  const lines = status.split(/\r?\n/).filter(Boolean);
+  const changedFiles: string[] = [];
+  let clean = true;
+  for (const line of lines) {
+    if (line.length < 4) { clean = false; continue; }
+    const code = line.slice(0, 2);
+    if (["UU", "AA", "DD", "AU", "UA", "DU", "UD"].includes(code)) clean = false;
+    const file = line.slice(3).trim();
+    if (!file || file.includes("\0")) clean = false;
+    else changedFiles.push(file.includes(" -> ") ? file.split(" -> ").at(-1)! : file);
+  }
   const headSha = await git(runner, ["rev-parse", "HEAD"]);
   const originMainSha = await git(runner, ["rev-parse", "origin/main"]);
   let fastForwardable = false;
   try { await git(runner, ["merge-base", "--is-ancestor", "origin/main", "HEAD"]); fastForwardable = true; } catch { /* fail closed */ }
-  return { clean: true, changedFiles, headSha, originMainSha, fastForwardable };
+  return { clean, changedFiles, headSha, originMainSha, fastForwardable };
 }
 
-export function createLocalReleaseOperations(repositoryRoot: string, runner = defaultRunner(repositoryRoot)): ReleaseOperations {
+export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string }): ReleaseOperations {
+  const runner = options.runner ?? defaultRunner(repositoryRoot);
   const token = process.env.VERCEL_TOKEN;
   const projectId = process.env.VERCEL_PROJECT_ID;
   const previousId = process.env.VERCEL_PREVIOUS_DEPLOYMENT_ID;
@@ -31,6 +43,8 @@ export function createLocalReleaseOperations(repositoryRoot: string, runner = de
       if (!token) reasons.push("VERCEL_TOKEN_MISSING");
       if (!projectId) reasons.push("VERCEL_PROJECT_ID_MISSING");
       if (!previousId) reasons.push("VERCEL_PREVIOUS_DEPLOYMENT_ID_MISSING");
+      if (options.format === "direct-review" && !options.slug) reasons.push("DIRECT_REVIEW_SLUG_MISSING");
+      if (options.format === "direct-review" && !options.artifactPath) reasons.push("DIRECT_REVIEW_ARTIFACT_MISSING");
       try { await runner("git", ["--version"]); } catch { reasons.push("GIT_UNAVAILABLE"); }
       try { await runner("vercel", ["--version"]); } catch { reasons.push("VERCEL_CLI_UNAVAILABLE"); }
       return { ok: reasons.length === 0, reasons };
@@ -64,14 +78,18 @@ export function createLocalReleaseOperations(repositoryRoot: string, runner = de
     async deploy(commitSha): Promise<ReleaseDeployment> {
       const result = await runner("vercel", ["deploy", "--prod", "--yes", "--token", token ?? ""]);
       const url = result.stdout.match(/https:\/\/[^\s]+/)?.[0];
-      const deploymentId = result.stdout.match(/dpl_[A-Za-z0-9]+/)?.[0] ?? url;
-      if (!url || !deploymentId) throw new Error("VERCEL_DEPLOYMENT_ID_MISSING");
-      return { deploymentId, canonicalUrl: url, commitSha };
+      if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
+      const inspected = JSON.parse((await runner("vercel", ["inspect", url, "--json", "--token", token ?? ""])).stdout) as { id?: string; gitCommitSha?: string; url?: string };
+      if (!inspected.id || !inspected.gitCommitSha || inspected.gitCommitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
+      return { deploymentId: inspected.id, canonicalUrl: inspected.url ? `https://${inspected.url.replace(/^https?:\/\//, "")}` : url, commitSha: inspected.gitCommitSha };
     },
     async verifyProduction(deployment): Promise<FullProductionChecks> {
-      const response = await fetch(deployment.canonicalUrl);
-      const html = response.ok ? await response.text() : "";
-      return { routeOk: response.ok, contentOk: html.length > 0, disclosureOk: /affiliate|commission/i.test(html), exactCtaOk: /href=/i.test(html), desktopOk: true, mobileOk: /viewport/i.test(html), robotsOk: true, sitemapOk: (await fetch(new URL("/sitemap.xml", deployment.canonicalUrl))).ok, browserErrorsOk: true };
+      if (options.format !== "direct-review" || !options.slug) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
+      const result = JSON.parse((await runner("npm", ["run", "landing:verify:deployment", "--", "--origin", options.origin ?? "https://vettedsaasblueprint.online", "--expected-sha", deployment.commitSha, "--slug", options.slug])).stdout) as { status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
+      const pages = result.pages ?? [];
+      const snapshots = pages.flatMap((page) => [page.desktop, page.mobile]).filter((page): page is NonNullable<typeof page> => Boolean(page));
+      if (result.status !== "pass" || pages.length === 0) throw new Error("LANDING_VERIFIER_FAILED");
+      return { routeOk: snapshots.every((page) => page.httpOk === true), contentOk: snapshots.every((page) => page.allRevealSectionsVisible === true), disclosureOk: snapshots.every((page) => page.disclosureOk === true), exactCtaOk: snapshots.every((page) => page.allCtasExact === true), desktopOk: pages.every((page) => page.desktop?.httpOk === true), mobileOk: pages.every((page) => page.mobile?.httpOk === true), robotsOk: result.robots_ok === true, sitemapOk: result.sitemap_ok === true, browserErrorsOk: snapshots.every((page) => (page.browserErrors?.length ?? 1) === 0) };
     },
     async rollback(deploymentId) { try { await runner("vercel", ["rollback", deploymentId, "--yes", "--token", token ?? ""]); return { ok: true, summary: "rollback completed" }; } catch (error) { return { ok: false, summary: String(error) }; } },
     async verifyRollback(deploymentId) { const result = await runner("vercel", ["inspect", deploymentId, "--json", "--token", token ?? ""]); return /production/i.test(result.stdout); },

@@ -29,13 +29,16 @@ async function main(): Promise<void> {
   if (!importId) throw new Error("--import-id is required.");
   const record = await loadImport(process.cwd(), importId);
   const files = process.argv.flatMap((value, index) => value === "--file" && process.argv[index + 1] ? [process.argv[index + 1]] : []);
+  const artifactPath = argument("--artifact");
+  const slug = argument("--slug");
   const result = await assessImportRelease({
     repositoryRoot: process.cwd(),
     record,
     changedFiles: files,
     ownerAuthorizedAffiliateUrl: process.argv.includes("--owner-authorized-affiliate-url"),
     execute: process.argv.includes("--execute"),
-    operations: process.argv.includes("--execute") ? createLocalReleaseOperations(process.cwd()) : unconfiguredOperations(),
+    artifactPath,
+    operations: process.argv.includes("--execute") ? createLocalReleaseOperations(process.cwd(), { format: record.format, slug, artifactPath, origin: argument("--origin") }) : unconfiguredOperations(),
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
