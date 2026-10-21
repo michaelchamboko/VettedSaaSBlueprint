@@ -126,10 +126,15 @@ export function validateReleasePaths(files: readonly string[], format: ImportFor
 /** Publication authority files that must accompany the approved artifact in every release commit. */
 export function publicationAuthorityPaths(format: ImportFormat): readonly string[] {
   switch (format) {
+    // Decision-set routes are discovered from the sets directory itself (listDecisionSets
+    // scans src/content/decision-journeys/sets); the artifact IS its publication authority and
+    // is separately required by ARTIFACT_NOT_IN_RELEASE / ARTIFACT_NOT_IN_WORKTREE.
+    // catalogue.json only feeds the unsuffixed /decision-hub, /solution-hub and /scenarios
+    // pages, so requiring it here would be an unrelated release prerequisite.
+    case "decision-set": return [];
     case "direct-review": return ["src/generated/landing-pages/index.json"];
     case "blog": return ["src/generated/blog-posts/posts.json"];
     case "visibility": return ["src/generated/visibility-pages/index.json", "src/generated/visibility-pages/publications.json"];
-    case "decision-set": return ["src/content/decision-journeys/catalogue.json"];
     case "agent_review_required": return [];
   }
 }

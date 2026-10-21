@@ -823,7 +823,7 @@ test("publication authority files accompany every publishable format", () => {
   assert.deepEqual(publicationAuthorityPaths("direct-review"), ["src/generated/landing-pages/index.json"]);
   assert.deepEqual(publicationAuthorityPaths("blog"), ["src/generated/blog-posts/posts.json"]);
   assert.deepEqual(publicationAuthorityPaths("visibility"), ["src/generated/visibility-pages/index.json", "src/generated/visibility-pages/publications.json"]);
-  assert.deepEqual(publicationAuthorityPaths("decision-set"), ["src/content/decision-journeys/catalogue.json"]);
+  assert.deepEqual(publicationAuthorityPaths("decision-set"), []);
   assert.deepEqual(publicationAuthorityPaths("agent_review_required"), []);
 });
 
@@ -846,6 +846,25 @@ test("release execution fails when the publication authority file is absent from
     }) });
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:src/generated/landing-pages/index.json"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("decision-set release is not blocked by an unrelated catalogue prerequisite", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-decision-set-authority-"));
+  try {
+    const base = await releasingRecord(root);
+    // The sets artifact itself is the publication authority (listDecisionSets scans the
+    // directory); catalogue.json only feeds the unsuffixed hub pages.
+    const artifactPath = "src/content/decision-journeys/sets/example-set.json";
+    const record: ExternalArticleImportV1 = {
+      ...base,
+      format: "decision-set",
+      contentApproval: base.contentApproval ? { ...base.contentApproval, artifactPath } : base.contentApproval,
+    };
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: [artifactPath], artifactPath, operations: operations() });
+    assert.equal(result.status, "DRY_RUN");
+    assert.ok(!result.reasons.some((reason) => reason.startsWith("PUBLICATION_AUTHORITY_NOT_IN_RELEASE")), result.reasons.join("; "));
+    assert.ok(!result.reasons.includes("ARTIFACT_NOT_IN_RELEASE"), result.reasons.join("; "));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
