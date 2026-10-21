@@ -48,6 +48,14 @@ test("all documented command argument shapes parse", () => {
   assert.deepEqual(parseImportCommand(["--resume-pending"]), { kind: "resume-pending" });
 });
 
+test("external article workflow keeps content and publication gates separate", async () => {
+  const skill = await readFile(path.join(process.cwd(), ".agents/skills/external-article-import/SKILL.md"), "utf8");
+  assert.match(skill, /Separate content and publication gates/);
+  assert.match(skill, /freeze an approved content fingerprint/i);
+  assert.match(skill, /Browser and layout tools verify presentation; they never judge, rewrite, or silently normalize prose/i);
+  assert.match(skill, /return the import to `REFINING`/i);
+});
+
 test("classifies neutral article formats and flags risky claims", () => {
   const parsed = parseExternalArticle("---\ntitle: A guide to a safer workflow\n---\n\nUse this workflow as a checklist. It is never guaranteed and should be tested against your actual constraints.\n");
   const transform = prepareTransformation(parsed, allowlist);

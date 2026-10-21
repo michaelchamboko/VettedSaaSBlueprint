@@ -9,6 +9,15 @@ Use `npm run import:article -- --source <file>` to create an `ExternalArticleImp
 
 The submitter's attachment is the standing rights attestation that the material may be transformed and published. This does not authorize inventing facts, bypassing evidence, or adding affiliate URLs.
 
+## Separate content and publication gates
+
+Treat authoring and rendered publication as two separate gates with a one-way handoff:
+
+- **Content gate:** research and transformation establish the evidence-backed schema; the Eleanor/SlopMonster pass reviews SEO intent, directness, uncertainty, originality, and persona; protected-field comparison and semantic review then freeze an approved content fingerprint in the editorial evidence receipt. This gate owns all wording decisions.
+- **Publication/render gate:** only after the content fingerprint is frozen, run schema, catalogue, accessibility, desktop/mobile rendering, disclosure and CTA, sitemap, robots, overflow, runtime-error, build, deployment, and production-verification checks. Browser and layout tools verify presentation; they never judge, rewrite, or silently normalize prose.
+
+If any wording changes after the content gate, invalidate the prior content fingerprint, return the import to `REFINING`, repeat the content review and receipt, and only then restart publication/render checks. A layout or browser failure may repair the renderer or presentation metadata, but it must return a copy issue to the content gate rather than editing public words in place.
+
 Complete the next action in the receipt in order:
 
 1. Research each material claim with attributable sources. Remove unsupported prices, discounts, rankings, named comparisons, testing experience, and unsupported certainty. If the source has no defensible core, research a fresh article on the same viable topic; quarantine only when no safe topic remains.
