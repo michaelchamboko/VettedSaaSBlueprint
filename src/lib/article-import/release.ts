@@ -389,6 +389,15 @@ export async function assessImportRelease(input: {
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged commit validation failed: ${mergedValidation.summary}` });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [mergedValidation.summary] };
     }
+    // The pre-PR binding only covered the worktree; another commit could change the
+    // receipt after review, so rebind it on the merged checkout that actually deploys.
+    try {
+      await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, input.slug ?? "", input.record);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout receipt binding failed: ${message}` });
+      return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
+    }
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
     requireImportPresentationBinding(mergedApproval);

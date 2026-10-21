@@ -886,6 +886,26 @@ test("release execution fails when a mode-none import would publish as a direct 
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("release rebinds the affiliate receipt on the merged checkout before deploying", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-merged-rebinding-"));
+  let deployments = 0;
+  try {
+    const record = await releasingRecord(root);
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example",
+      operations: operations({
+        // After the reviewed head merged, another commit changed the receipt to a
+        // different globally allowlisted URL — the merged checkout must not deploy it.
+        checkoutMergedCommit: async () => { await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://trymoo.moosend.com/michaelmedium" })); },
+        deploy: async (commitSha) => { deployments += 1; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
+      }),
+    });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH"));
+    assert.equal(deployments, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("an uncaught decision-page exception fails production browser verification", () => {
   const clean = browserErrorChecksFor({ route: "/decision/example", profile: "desktop", consoleErrors: [], pageErrors: [] });
   const withPageError = browserErrorChecksFor({ route: "/decision/example", profile: "desktop", consoleErrors: [], pageErrors: ["Uncaught TypeError: x is not a function"] });
