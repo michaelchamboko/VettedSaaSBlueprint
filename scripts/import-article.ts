@@ -1,4 +1,4 @@
-import { createArticleImport, listPendingImports, loadImport } from "../src/lib/article-import/engine";
+import { createArticleImport, listPendingImports, loadImport, resumeImport } from "../src/lib/article-import/engine";
 
 export type ImportCommand = { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "resume-pending" };
 
@@ -12,21 +12,20 @@ export function parseImportCommand(argv: string[]): ImportCommand {
   throw new Error("Use --source <file>, --resume <import-id>, or --resume-pending.");
 }
 
-async function main(): Promise<void> {
-  const command = parseImportCommand(process.argv.slice(2));
-  const root = process.cwd();
+export async function executeImportCommand(root: string, command: ImportCommand): Promise<unknown> {
   if (command.kind === "source") {
-    process.stdout.write(`${JSON.stringify(await createArticleImport(root, command.source), null, 2)}\n`);
-    return;
+    return createArticleImport(root, command.source);
   }
   if (command.kind === "resume") {
-    process.stdout.write(`${JSON.stringify(await loadImport(root, command.importId), null, 2)}\n`);
-    return;
+    const record = await loadImport(root, command.importId);
+    return resumeImport(root, record);
   }
-  if (command.kind === "resume-pending") {
-    process.stdout.write(`${JSON.stringify(await listPendingImports(root), null, 2)}\n`);
-    return;
-  }
+  return listPendingImports(root);
+}
+
+async function main(): Promise<void> {
+  const command = parseImportCommand(process.argv.slice(2));
+  process.stdout.write(`${JSON.stringify(await executeImportCommand(process.cwd(), command), null, 2)}\n`);
 }
 
 if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/import-article.ts")) {

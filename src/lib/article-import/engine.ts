@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { access, copyFile, mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
@@ -133,49 +133,29 @@ function initialRecord(input: { importId: string; sourceFile: string; sourceFing
   };
 }
 
-async function atomicWrite(file: string, value: unknown): Promise<void> {
+export type AtomicReplace = (from: string, to: string) => Promise<void>;
+
+export async function writeJsonAtomically(file: string, value: unknown, replace: AtomicReplace = rename): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true });
-  const temp = `${file}.${process.pid}.tmp`;
+  const temp = `${file}.${process.pid}.${randomUUID()}.tmp`;
   const serialized = `${JSON.stringify(value, null, 2)}\n`;
-  await writeFile(temp, serialized, "utf8");
+  const handle = await open(temp, "w");
   try {
-    await rename(temp, file);
-  } catch (error) {
-    // Windows sandboxed temporary folders can reject an atomic rename. Keep
-    // the durable write deterministic and remove the staging file.
-    if ((error as NodeJS.ErrnoException).code !== "EPERM") throw error;
-    let destinationExists = true;
-    try { await access(file); } catch (accessError) {
-      if ((accessError as NodeJS.ErrnoException).code !== "ENOENT") throw accessError;
-      destinationExists = false;
-    }
-    if (!destinationExists) {
-      await writeFile(file, serialized, { encoding: "utf8", flag: "wx" });
-      await unlink(temp).catch(() => undefined);
-      return;
-    }
-    const backup = `${file}.${process.pid}.bak`;
-    try {
-      await rename(file, backup);
-    } catch (backupError) {
-      if ((backupError as NodeJS.ErrnoException).code !== "EPERM") throw backupError;
-      await copyFile(file, backup);
-    }
-    try {
-      try {
-        await rename(temp, file);
-      } catch (replaceError) {
-        if ((replaceError as NodeJS.ErrnoException).code !== "EPERM") throw replaceError;
-        await writeFile(file, serialized, { encoding: "utf8", flag: "w" });
-        await unlink(temp).catch(() => undefined);
-      }
-      await unlink(backup).catch(() => undefined);
-    } catch (replaceError) {
-      await writeFile(file, await readFile(backup));
-      await unlink(backup).catch(() => undefined);
-      throw replaceError;
-    }
+    await handle.writeFile(serialized, "utf8");
+    await handle.sync();
+  } finally {
+    await handle.close();
   }
+  try {
+    await replace(temp, file);
+  } catch (error) {
+    await unlink(temp).catch(() => undefined);
+    throw error;
+  }
+}
+
+async function atomicWrite(file: string, value: unknown): Promise<void> {
+  return writeJsonAtomically(file, value);
 }
 
 export async function saveImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<string> {
@@ -266,11 +246,13 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
 }
 
 export async function resumeImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
-  if (record.stage !== "WAITING_EXTERNAL") throw new Error("Only WAITING_EXTERNAL imports can be explicitly resumed.");
-  const prior = [...record.stageReceipts].reverse().find((receipt) => receipt.stage !== "WAITING_EXTERNAL" && receipt.status !== "waiting");
-  const stage = prior?.stage && nextStage[prior.stage] ? prior.stage : "RESEARCHING";
+  if (!["WAITING_EXTERNAL", "REPAIRING"].includes(record.stage)) return record;
+  const stage = record.resumeStage;
+  if (!stage || ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK", "LIVE", "QUARANTINED"].includes(stage)) {
+    throw new Error("Recovery receipt does not identify a productive resume stage.");
+  }
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "started", at, message: "External dependency recovered; resumed explicitly." }], nextAction: `Retry ${stage.toLowerCase()} using the next recorded strategy.` });
+  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "started", at, message: `Resumed from ${record.stage} using the recorded productive stage.` }], nextAction: `Retry ${stage.toLowerCase()} using the next recorded strategy.` });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
@@ -284,7 +266,8 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
   const at = now();
   const exhausted = next === "quarantine";
   const stage: ImportStage = input.classification === "transient" && !exhausted ? "WAITING_EXTERNAL" : next === "quarantine" ? "QUARANTINED" : "REPAIRING";
-  const updated = externalArticleImportSchema.parse({ ...record, stage, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
+  const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
+  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
   if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
   return updated;

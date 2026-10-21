@@ -56,6 +56,7 @@ export const externalArticleImportSchema = z.object({
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   sourceFile: z.string().min(1),
   stage: importStageSchema,
+  resumeStage: importStageSchema.optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
   sourceDeletedAt: z.string().datetime({ offset: true }).optional(),

@@ -7,7 +7,8 @@ import {
   advanceImport, createArticleImport, loadImport, parseExternalArticle, prepareTransformation,
   recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease,
 } from "../src/lib/article-import/engine";
-import { parseImportCommand } from "../scripts/import-article";
+import { executeImportCommand, parseImportCommand } from "../scripts/import-article";
+import { writeJsonAtomically } from "../src/lib/article-import/engine";
 
 const allowlist = "- https://start.switcherstudio.com/anme6fqvgdx9\n- https://try.example.com/ref\n";
 const source = `---\ntitle: "How to stream with Switcher Studio"\nprimary_question: "How can a creator stream with multiple iOS cameras?"\naffiliate_name: "Switcher Studio"\naffiliate_url: "[https://start.switcherstudio.com/anme6fqvgd](https://start.switcherstudio.com/anme6fqvgd)"\n---\n\nA practical guide for creators using several iOS devices in one production workflow. It explains the operating choices and trade-offs clearly.\n`;
@@ -66,15 +67,29 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
     run = await recordImportFailure(root, run, { strategy: "research", classification: "deterministic", message: "Source claim needs support." });
     assert.equal(run.stage, "REPAIRING");
     assert.match(run.nextAction, /narrow-claim/);
+    run = await resumeImport(root, run);
+    assert.equal(run.stage, "RESEARCHING");
     run = await recordImportFailure(root, run, { strategy: "research", classification: "transient", message: "Provider timeout." });
     assert.equal(run.stage, "WAITING_EXTERNAL");
-    run = await resumeImport(root, run);
+    run = await executeImportCommand(root, { kind: "resume", importId: run.importId }) as typeof run;
     assert.equal(run.stage, "RESEARCHING");
     const resumed = await loadImport(root, run.importId);
     assert.equal(resumed.stage, "RESEARCHING");
     for (let i = 0; i < 3; i += 1) run = await recordImportFailure(root, run, { strategy: "validate", classification: "deterministic", message: `Invalid candidate ${i}` });
     assert.equal(run.stage, "QUARANTINED");
     assert.equal(run.sourceDeletedAt !== undefined, true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("atomic replacement failure preserves the previous receipt", async () => {
+  const root = await testRoot("article-import-atomic-");
+  try {
+    const file = path.join(root, "receipt.json");
+    await writeJsonAtomically(file, { version: 1 });
+    await assert.rejects(() => writeJsonAtomically(file, { version: 2 }, async () => { throw new Error("replace failed"); }), /replace failed/);
+    assert.deepEqual(JSON.parse(await readFile(file, "utf8")), { version: 1 });
   } finally {
     await rm(root, { recursive: true, force: true });
   }
