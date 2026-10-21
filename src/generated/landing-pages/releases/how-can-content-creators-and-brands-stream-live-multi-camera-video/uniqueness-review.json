@@ -1,0 +1,9 @@
+{
+  "schema_version": "LandingUniquenessReviewV1",
+  "status": "pass",
+  "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "reviewed_at": "2026-10-21T12:30:00+02:00",
+  "method": "comparison against published landing catalogue and source article",
+  "findings": ["The article is a Switcher-specific device, destination, guest, and recording fit check.", "No copied vendor wording, ranking claim, or named competitor comparison remains."],
+  "score": 90
+}

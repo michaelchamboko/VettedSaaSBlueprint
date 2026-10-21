@@ -7,6 +7,7 @@ import type { ImportFormat } from "./contracts";
 
 const execFile = promisify(execFileCallback);
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
+export type ReleaseJsonFetcher = (url: string) => Promise<Record<string, unknown>>;
 
 function defaultRunner(repositoryRoot: string): ReleaseCommandRunner {
   return async (command, args) => execFile(command, [...args], { cwd: repositoryRoot, windowsHide: true, maxBuffer: 2_000_000 });
@@ -41,13 +42,30 @@ async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot
   return { clean, changedFiles, headSha, originMainSha, fastForwardable };
 }
 
-export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string }): ReleaseOperations {
+export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string }): ReleaseOperations {
   const runner = options.runner ?? defaultRunner(repositoryRoot);
+  const defaultFetchJson: ReleaseJsonFetcher = async (url) => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP_${response.status}`);
+    const value: unknown = await response.json();
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("INVALID_JSON_OBJECT");
+    return value as Record<string, unknown>;
+  };
+  const fetchJson = options.fetchJson ?? defaultFetchJson;
   const token = process.env.VERCEL_TOKEN;
   const configuredProjectId = process.env.VERCEL_PROJECT_ID;
   const previousId = process.env.VERCEL_PREVIOUS_DEPLOYMENT_ID;
   const origin = options.origin ?? "https://vettedsaasblueprint.online";
+  const deploymentApi = `${origin.replace(/\/$/, "")}/api/deployment`;
   const inspectArgs = (target: string) => withToken(["inspect", target, "--json"], token);
+  async function verifiedDeployment(target: string): Promise<{ id: string; target: string; readyState: string; commitSha: string }> {
+    const inspected = JSON.parse((await runner("vercel", inspectArgs(target))).stdout) as { id?: unknown; target?: unknown; readyState?: unknown; gitCommitSha?: unknown };
+    if (typeof inspected.id !== "string" || inspected.target !== "production" || inspected.readyState !== "READY") throw new Error("DEPLOYMENT_IDENTITY_UNVERIFIED");
+    const api = await fetchJson(deploymentApi);
+    if (typeof api.commitSha !== "string" || api.environment !== "production") throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED");
+    if (typeof inspected.gitCommitSha === "string" && inspected.gitCommitSha !== api.commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
+    return { id: inspected.id, target: "production", readyState: "READY", commitSha: typeof inspected.gitCommitSha === "string" ? inspected.gitCommitSha : api.commitSha };
+  }
   return {
     async preflight() {
       const reasons: string[] = [];
@@ -55,8 +73,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (!projectId) reasons.push("VERCEL_PROJECT_ID_MISSING");
       try { await runner("vercel", withToken(["whoami"], token)); } catch { reasons.push("VERCEL_AUTH_MISSING"); }
       try {
-        const parsed = JSON.parse((await runner("vercel", inspectArgs(previousId ?? origin))).stdout) as { gitCommitSha?: unknown; target?: unknown };
-        if (typeof parsed.gitCommitSha !== "string" || parsed.target !== "production") reasons.push("PREVIOUS_DEPLOYMENT_UNVERIFIED");
+        await verifiedDeployment(previousId ?? origin);
       } catch { reasons.push("PREVIOUS_DEPLOYMENT_UNVERIFIED"); }
       if (options.format === "direct-review" && !options.slug) reasons.push("DIRECT_REVIEW_SLUG_MISSING");
       if (options.format === "direct-review" && !options.artifactPath) reasons.push("DIRECT_REVIEW_ARTIFACT_MISSING");
@@ -75,11 +92,8 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
     },
     async capturePreviousDeployment() {
       const target = previousId ?? origin;
-      const result = await runner("vercel", inspectArgs(target));
-      const parsed = JSON.parse(result.stdout) as { id?: string; gitCommitSha?: string; target?: string };
-      if (!parsed.gitCommitSha || parsed.target !== "production") throw new Error("PREVIOUS_DEPLOYMENT_UNVERIFIED");
-      if (!parsed.id && !previousId) throw new Error("PREVIOUS_DEPLOYMENT_ID_MISSING");
-      return { deploymentId: parsed.id ?? previousId!, commitSha: parsed.gitCommitSha, verified: true };
+      const parsed = await verifiedDeployment(target);
+      return { deploymentId: parsed.id, commitSha: parsed.commitSha, verified: true };
     },
     async commit(message) {
       await runner("git", ["add", "--all"]);
@@ -95,9 +109,9 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       const result = await runner("vercel", withToken(["deploy", "--prod", "--yes"], token));
       const url = result.stdout.match(/https:\/\/[^\s]+/)?.[0];
       if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
-      const inspected = JSON.parse((await runner("vercel", inspectArgs(url))).stdout) as { id?: string; gitCommitSha?: string; url?: string };
-      if (!inspected.id || !inspected.gitCommitSha || inspected.gitCommitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
-      return { deploymentId: inspected.id, canonicalUrl: inspected.url ? `https://${inspected.url.replace(/^https?:\/\//, "")}` : url, commitSha: inspected.gitCommitSha };
+      const inspected = await verifiedDeployment(url);
+      if (inspected.commitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
+      return { deploymentId: inspected.id, canonicalUrl: url, commitSha: inspected.commitSha };
     },
     async verifyProduction(deployment): Promise<FullProductionChecks> {
       if (options.format !== "direct-review" || !options.slug) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
@@ -109,9 +123,10 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
     },
     async rollback(deploymentId) { try { await runner("vercel", withToken(["rollback", deploymentId, "--yes"], token)); return { ok: true, summary: "rollback completed" }; } catch (error) { return { ok: false, summary: String(error) }; } },
     async verifyRollback(deploymentId, expectedCommitSha) {
-      const result = await runner("vercel", inspectArgs(origin));
-      const parsed = JSON.parse(result.stdout) as { id?: string; gitCommitSha?: string; target?: string };
-      return parsed.target === "production" && parsed.id === deploymentId && (!expectedCommitSha || parsed.gitCommitSha === expectedCommitSha);
+      try {
+        const parsed = await verifiedDeployment(origin);
+        return parsed.id === deploymentId && (!expectedCommitSha || parsed.commitSha === expectedCommitSha);
+      } catch { return false; }
     },
   };
 }

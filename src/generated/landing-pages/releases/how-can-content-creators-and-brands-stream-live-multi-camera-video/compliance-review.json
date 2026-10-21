@@ -1,0 +1,8 @@
+{
+  "schema_version": "LandingComplianceReviewV1",
+  "status": "pass",
+  "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "reviewed_at": "2026-10-21T12:30:00+02:00",
+  "checks": {"affiliate_url_allowlisted": true, "disclosure_present": true, "unsupported_commercial_claims_removed": true, "experience_claims_removed": true, "source_mapping_present": true},
+  "notes": ["Exact approved URL ending fqvgdx9 is used.", "Pricing, discount, ranking, hardware-cost, and first-person claims are absent."]
+}

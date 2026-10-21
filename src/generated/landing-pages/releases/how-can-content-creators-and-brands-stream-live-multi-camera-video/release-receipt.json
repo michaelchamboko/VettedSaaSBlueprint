@@ -1,0 +1,44 @@
+{
+  "schema_version": "LandingReleaseReceiptV1",
+  "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "path": "/landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "exact_affiliate_url": "https://start.switcherstudio.com/anme6fqvgdx9",
+  "url_fingerprint": "65103868288d99e2342e1c33d32065b93329a7facb478b0b1c17d128893454c9",
+  "authorization": {
+    "source": "approved-urls.md",
+    "exact_url": "https://start.switcherstudio.com/anme6fqvgdx9",
+    "url_fingerprint": "65103868288d99e2342e1c33d32065b93329a7facb478b0b1c17d128893454c9"
+  },
+  "artifacts": {
+    "page": { "path": "how-can-content-creators-and-brands-stream-live-multi-camera-video.json", "sha256": "ec037469b7d93888a3ab01f680ac828eea970d968fffcd590ab79b3d29639259" },
+    "product_evidence": { "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/product-evidence.json", "sha256": "94f49617ea88a40681678ea144ddbee43fe983930d608c3e34265a696f92d3e1" },
+    "visual_review": { "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/visual-review.json", "sha256": "11ca3af97783d23f5e87824c19d8e6f3a09c8341a77c1553468d28430e90f46f" },
+    "uniqueness_review": { "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/uniqueness-review.json", "sha256": "630dff12f29bb08041912af1459a1a7288a69cdb1d6600a0a462da7daf2bfe9b" },
+    "compliance_review": { "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/compliance-review.json", "sha256": "b7cfb26e0ba8918df8ea9c34986bf22383fd887adf11f6c2189bac4c405a6f3f" },
+    "conversion_review": { "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/conversion-review.json", "sha256": "2ea1446604d371de040404d5ec9100172016aac213eee455a4a1fb17d224e818" },
+    "quality_receipt": { "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/quality.json", "sha256": "29fc5236ef3d8930803c6219ff70aa32ed8287891578294d01751db8ec592988" }
+  },
+  "checks": {
+    "product_evidence": true,
+    "visual": true,
+    "uniqueness": true,
+    "compliance": true,
+    "conversion": true,
+    "quality": true,
+    "exact_cta": true,
+    "disclosure": true,
+    "preview": true,
+    "clean_build": true
+  },
+  "release": {
+    "reviewed_commit": "9a1bf57cfd6cde68cdf57ab77e9b127c849a72f1",
+    "preview_url": "http://127.0.0.1:3100/landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video",
+    "verified_at": "2026-10-21T13:05:09.024Z"
+  },
+  "claims_removed_or_softened": [
+    "Removed submitted pricing and hardware-cost claims.",
+    "Removed named competitor comparisons and unsupported guest-count and ISO-recording claims.",
+    "Updated stale iOS-only framing and removed unsupported graphics/pre-recorded wording.",
+    "Kept device, destination, guest, recording, and Shopify details conditional on current official guidance."
+  ]
+}

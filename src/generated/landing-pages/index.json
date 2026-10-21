@@ -2,6 +2,17 @@
   "generated_at": "2026-07-26T00:00:00.000Z",
   "pages": [
     {
+      "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+      "title": "Switcher Studio for iPhone and iPad Multi-Camera Streaming",
+      "artifact": "how-can-content-creators-and-brands-stream-live-multi-camera-video.json",
+      "path": "/landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video",
+      "status": "published",
+      "publication_source": "agent_verified_release",
+      "published_at": "2026-10-21T12:30:00.000Z",
+      "current_version_id": "agent-release-switcher-fqvgdx9",
+      "release_receipt": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/release-receipt.json"
+    },
+    {
       "slug": "elevenlabs-ai-voice-generator",
       "title": "ElevenLabs AI Voice Generator: A Practical Fit Check",
       "artifact": "elevenlabs-ai-voice-generator.json",

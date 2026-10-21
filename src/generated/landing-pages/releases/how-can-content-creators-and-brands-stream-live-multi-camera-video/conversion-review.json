@@ -1,0 +1,8 @@
+{
+  "schema_version": "LandingConversionReviewV1",
+  "status": "pass",
+  "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+  "reviewed_at": "2026-10-21T12:30:00+02:00",
+  "checks": {"direct_answer": true, "buyer_conditions_visible": true, "cta_matches_allowlisted_url": true, "limitations_visible": true, "disclosure_near_cta": true},
+  "notes": ["The CTA asks the reader to check devices, destinations, guests, and recording needs before committing."]
+}

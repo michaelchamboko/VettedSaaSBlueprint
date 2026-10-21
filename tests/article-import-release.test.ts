@@ -286,11 +286,11 @@ test("local adapter accepts linked project and authenticated CLI without env cre
     await mkdir(path.join(root, ".vercel"), { recursive: true });
     await writeFile(path.join(root, ".vercel", "project.json"), JSON.stringify({ projectId: "prj_linked" }));
     const runner: ReleaseCommandRunner = async (command, args) => {
-      if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "a".repeat(40), target: "production" }), stderr: "" };
+      if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "a".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
       if (command === "vercel" && args[0] === "whoami") return { stdout: "owner", stderr: "" };
       return { stdout: "", stderr: "" };
     };
-    const result = await createLocalReleaseOperations(root, { runner, format: "direct-review", artifactPath: "src/generated/landing-pages/a.json", slug: "a" }).preflight();
+    const result = await createLocalReleaseOperations(root, { runner, fetchJson: async () => ({ commitSha: "a".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "src/generated/landing-pages/a.json", slug: "a" }).preflight();
     assert.deepEqual(result, { ok: true, reasons: [] });
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -301,14 +301,39 @@ test("local adapter resolves the current production deployment from the canonica
     const calls: string[][] = [];
     const runner: ReleaseCommandRunner = async (command, args) => {
       calls.push([command, ...args]);
-      if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "b".repeat(40), target: "production" }), stderr: "" };
+      if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "b".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
       return { stdout: "owner", stderr: "" };
     };
-    const operations = createLocalReleaseOperations(root, { runner, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+    const operations = createLocalReleaseOperations(root, { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
     const previous = await operations.capturePreviousDeployment();
     assert.deepEqual(previous, { deploymentId: "dpl_current", commitSha: "b".repeat(40), verified: true });
     assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://example.com", "--json"]);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("local adapter falls back to the deployment API commit when inspect omits gitCommitSha", async () => {
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_current", target: "production", readyState: "READY" }), stderr: "" };
+    return { stdout: "owner", stderr: "" };
+  };
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "d".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  assert.deepEqual(await operations.capturePreviousDeployment(), { deploymentId: "dpl_current", commitSha: "d".repeat(40), verified: true });
+});
+
+test("local adapter rejects disagreement between inspect and deployment API commit", async () => {
+  const runner: ReleaseCommandRunner = async (command, args) => command === "vercel" && args[0] === "inspect"
+    ? { stdout: JSON.stringify({ id: "dpl_current", gitCommitSha: "a".repeat(40), target: "production", readyState: "READY" }), stderr: "" }
+    : { stdout: "owner", stderr: "" };
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  await assert.rejects(() => operations.capturePreviousDeployment(), /DEPLOYMENT_COMMIT_METADATA_MISMATCHED/);
+});
+
+test("local adapter fails closed when deployment API is unavailable", async () => {
+  const runner: ReleaseCommandRunner = async (command, args) => command === "vercel" && args[0] === "inspect"
+    ? { stdout: JSON.stringify({ id: "dpl_current", target: "production", readyState: "READY" }), stderr: "" }
+    : { stdout: "owner", stderr: "" };
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => { throw new Error("endpoint unavailable"); }, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  await assert.rejects(() => operations.capturePreviousDeployment(), /endpoint unavailable/);
 });
 
 test("local adapter rejects missing or mismatched Vercel commit metadata", async () => {
@@ -339,7 +364,7 @@ test("local adapter verifies rollback through the canonical production origin", 
     }
     return { stdout: "", stderr: "" };
   };
-  const operations = createLocalReleaseOperations(".", { runner, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
   assert.equal(await operations.verifyRollback("dpl-known-good", "b".repeat(40)), true);
   assert.equal(await operations.verifyRollback("dpl-known-good", "c".repeat(40)), false);
 });
@@ -347,10 +372,10 @@ test("local adapter verifies rollback through the canonical production origin", 
 test("local adapter rejects rollback when canonical origin still points to the failed deployment", async () => {
   const runner: ReleaseCommandRunner = async (command, args) => {
     if (command === "vercel" && args[0] === "inspect" && args[1] === "https://example.com") {
-      return { stdout: JSON.stringify({ id: "dpl-failed", gitCommitSha: "c".repeat(40), target: "production" }), stderr: "" };
+      return { stdout: JSON.stringify({ id: "dpl-failed", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
     }
     return { stdout: "", stderr: "" };
   };
-  const operations = createLocalReleaseOperations(".", { runner, format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
+  const operations = createLocalReleaseOperations(".", { runner, fetchJson: async () => ({ commitSha: "c".repeat(40), environment: "production" }), format: "direct-review", artifactPath: "a.json", slug: "a", origin: "https://example.com" });
   assert.equal(await operations.verifyRollback("dpl-known-good", "b".repeat(40)), false);
 });
