@@ -20,8 +20,8 @@
     "placement": "above_first_cta"
   },
   "hero": {
-    "headline": "Decide if Switcher Studio fits your mobile live production",
-    "subheadline": "For creators and brands that want to switch multiple device feeds and publish from a mobile workflow.",
+    "headline": "Is Switcher Studio the right fit for your mobile live production?",
+    "subheadline": "A fit check for creators and brands that want to switch multiple iPhone and iPad camera feeds and publish from a mobile workflow.",
     "primary_cta_label": "Check Switcher Studio",
     "primary_cta_link_id": "2f5d9e13-4b67-4f2e-8c9a-1d73b6e4a508",
     "risk_reversal": "Start by checking your devices, destinations, guest workflow, and recording needs before committing to a plan.",
@@ -48,7 +48,7 @@
       "source_reference_ids": ["c9f1a6b4-2e73-4d8f-9a15-6b0c4e7d2f83"]
     },
     {
-      "benefit_title": "Test a recording-only workflow before going live",
+      "benefit_title": "Rehearse with recording only, then go live",
       "benefit_description": "Switcher documents recording without a livestream, so a team can rehearse a setup and review the result before publishing a live broadcast.",
       "feature_supporting_it": "Local recording and recording-only setup",
       "source_reference_ids": ["d4b2e7f9-6a18-4c3d-8f05-1e9b7a6c2d40"]
@@ -127,6 +127,12 @@
       "who_it_affects": "Teams moving from a controlled studio to a venue or event",
       "mitigation": "Record a complete rehearsal and review the result rather than treating the number of available camera angles as proof of production quality.",
       "evidence_claim_id": "c8e1a5f3-7b29-4d60-9f14-2a6c0e8d5b37"
+    },
+    {
+      "limitation": "A fixed production studio may still be the better fit",
+      "who_it_affects": "Teams that need permanently mounted cameras, complex audio routing, or a large control room",
+      "mitigation": "Compare the mobile workflow against a traditional multi-camera studio before switching; the mobile setup trades studio-grade rigidity for portability and faster setup.",
+      "evidence_claim_id": "f1a4c8e2-6b93-4d70-9a15-3c7e0b5d2f68"
     }
   ],
   "objection_handling": [
@@ -144,13 +150,23 @@
       "objection": "Can a guest join from somewhere else?",
       "response": "Switcher documents a remote guest workflow using a browser link. Test the guest's device, connection, and permissions before a public broadcast.",
       "source_reference_ids": ["e7c3a1d8-5f29-4b60-9e14-2a8d6c0f7b35"]
+    },
+    {
+      "objection": "Is this only for live streaming, or can I record without going live?",
+      "response": "Switcher documents a recording-only path, so a team can capture a production without sending it to a live destination. Use it as a rehearsal or as the final output when a live broadcast is not required.",
+      "source_reference_ids": ["d4b2e7f9-6a18-4c3d-8f05-1e9b7a6c2d40"]
+    },
+    {
+      "objection": "Can I use this for a Shopify live-selling show?",
+      "response": "The live-selling guidance describes Switcher Player and Cartr with Shopify and notes plan and iOS requirements. Check the current article for the exact requirements before promising product-card behavior.",
+      "source_reference_ids": ["e2a7c4f1-8d36-4b90-9c17-9f0e6d3a2b84"]
     }
   ],
   "cta_blocks": [
     {
       "placement": "closing",
       "label": "Check your production setup",
-      "supporting_text": "Compare your devices, destination, guest workflow, and recording needs with Switcher's current guidance before making a plan decision.",
+      "supporting_text": "Compare your devices, destination, guest workflow, and recording needs with Switcher's current guidance before you commit to a plan.",
       "affiliate_link_id": "2f5d9e13-4b67-4f2e-8c9a-1d73b6e4a508"
     }
   ],
@@ -174,6 +190,16 @@
       "question": "What should I check for Shopify live selling?",
       "answer": "The official live-selling guidance describes Switcher Player and Cartr with Shopify and notes plan and iOS requirements. Check the current article for the exact requirements before promising product-card behavior.",
       "source_reference_ids": ["e2a7c4f1-8d36-4b90-9c17-9f0e6d3a2b84"]
+    },
+    {
+      "question": "Do I need a fast internet connection for multi-camera streaming?",
+      "answer": "Switcher streams from a mobile device over the network it is connected to. Rehearse privately on the same network and conditions you will use at the event so you can confirm stability before going public.",
+      "source_reference_ids": ["a8e8e5c2-7b9c-4d11-8f24-0a6e3d7b9c52"]
+    },
+    {
+      "question": "What are the alternatives to Switcher Studio for multi-camera streaming?",
+      "answer": "Alternatives include a traditional multi-camera studio with hardware switchers, and other mobile or desktop production apps. Compare them on the same fit questions: device compatibility, destinations, guest workflow, and recording needs.",
+      "source_reference_ids": ["a8e8e5c2-7b9c-4d11-8f24-0a6e3d7b9c52"]
     }
   ],
   "schema_markup": {

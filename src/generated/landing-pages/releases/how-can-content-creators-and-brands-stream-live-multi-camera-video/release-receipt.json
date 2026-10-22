@@ -12,7 +12,7 @@
   "artifacts": {
     "page": {
       "path": "how-can-content-creators-and-brands-stream-live-multi-camera-video.json",
-      "sha256": "ec037469b7d93888a3ab01f680ac828eea970d968fffcd590ab79b3d29639259"
+      "sha256": "cb02aeb9fc8197de14c91aa557f024af825a8e6273d28de6fcbefe05ef993e59"
     },
     "product_evidence": {
       "path": "releases/how-can-content-creators-and-brands-stream-live-multi-camera-video/product-evidence.json",
@@ -60,6 +60,7 @@
     "Removed submitted pricing and hardware-cost claims.",
     "Removed named competitor comparisons and unsupported guest-count and ISO-recording claims.",
     "Updated stale iOS-only framing and removed unsupported graphics/pre-recorded wording.",
-    "Kept device, destination, guest, recording, and Shopify details conditional on current official guidance."
+    "Kept device, destination, guest, recording, and Shopify details conditional on current official guidance.",
+    "Reworked the hero and fit framing; removed exact plan prices per the price claim-risk removal and kept pricing qualitative."
   ]
 }

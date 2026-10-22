@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "EditorialEvidenceV1",
+  "format": "landing",
+  "revision": "eleanor-v1:8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1",
+  "beforeFingerprint": "5dd33c1dfcca967ce2233100083fea237197a9892a74de37b15c40196056537e",
+  "afterFingerprint": "ebbf395ada11a280d1cb71d14dc4fee131e8c05da8f5cace75ea070b7069cdbe",
+  "changedPaths": [
+    "cta_blocks.0.supporting_text",
+    "faq.4.answer"
+  ],
+  "checker": {
+    "before": "735 words of visible copy\r\n\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (Facebook, YouTube, and Twitch)\r\n    · rule-of-three list  (device, connection, and permissions)\r\n    · rule-of-three list  (Facebook, YouTube, and Twitch)\r\n\r\n  score 4/5  needs a cleanse\r\n",
+    "after": "730 words of visible copy\r\n\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (Facebook, YouTube, and Twitch)\r\n    · rule-of-three list  (device, connection, and permissions)\r\n    · rule-of-three list  (Facebook, YouTube, and Twitch)\r\n\r\n  score 4/5  needs a cleanse\r\n"
+  },
+  "semanticNotes": "One supervised Eleanor pass over the drafted fit-check rework before candidate validation. The reader is a creator or brand deciding whether a mobile multi-camera workflow fits their event. I made direct-answer and consequence-focused rewrites on two allowed landing prose paths only: cta_blocks[0].supporting_text now ends on the concrete consequence (commit to a plan) instead of a nominalised phrase, and the network-stability FAQ answer was tightened to name the rehearsal action and its result. Every fact, quotation, pricing statement, uncertainty bound, limitation, ID, destination, disclosure, metadata field and approval field is unchanged; exact plan prices remain absent per the price claim-risk removal. No testing or personal experience was invented. Object keys, array lengths and item order are identical before and after.",
+  "exceptions": [],
+  "meaningPreserved": true,
+  "arrayOrderPreserved": true
+}
