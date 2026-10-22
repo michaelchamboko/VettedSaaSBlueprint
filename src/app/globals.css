@@ -608,3 +608,257 @@ button, input, textarea, select { font: inherit; }
   .landing-reference-composed__cta-arrow { font-size: 16px; }
   .landing-reference-composed__compact-disclosure { font-size: 11px; }
 }
+
+/* Taste restyle: Switcher Studio decision page.
+   Re-skins the legacy review renderer for this slug only, using the canonical
+   paper/ink/clay public-site palette (D04 section 15: no new accent for a single page).
+   Scoped by data-motion-root so no other landing page is affected. */
+body:has([data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"]) {
+  background: #f2eee5;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] {
+  --paper: #f2eee5;
+  --paper-strong: #fbf8f1;
+  --ink: #1d211d;
+  --muted-ink: #62665e;
+  --rule: #cec6b8;
+  --clay: #a85436;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  accent-color: var(--clay);
+  caret-color: var(--clay);
+  scrollbar-color: #cec6b8 #f2eee5;
+  scrollbar-width: thin;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] ::selection {
+  background: #a85436;
+  color: #fffaf2;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] ::-webkit-scrollbar-track { background: #f2eee5; }
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] ::-webkit-scrollbar-thumb { background: #cec6b8; }
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] ::-webkit-scrollbar-thumb:hover { background: #a85436; }
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] a:focus-visible {
+  outline: 3px solid #a85436;
+  outline-offset: 4px;
+}
+
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] nav {
+  color: #62665e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] nav a[href="/"] {
+  color: #1d211d;
+  font-size: 0.82rem;
+  font-weight: 720;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] nav a[href="/affiliate-disclosure"] {
+  padding: 0.55rem 0.95rem;
+  border: 1px solid #cec6b8;
+  border-radius: 999px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] nav a[href="/affiliate-disclosure"]:hover {
+  color: #a85436;
+  border-color: #a85436;
+}
+
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] h1 {
+  max-width: 17ch;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.3rem, 4.6vw, 2.6rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] [data-motion="hero-copy"] > p.text-lg {
+  max-width: 34rem;
+  color: #62665e;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  line-height: 1.5;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] [data-motion="hero-copy"] > p.text-sm {
+  max-width: 34rem;
+  color: #62665e;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] aside {
+  max-width: 34rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #cec6b8;
+  border-radius: 12px;
+  background: #fbf8f1;
+  color: #62665e;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] aside strong {
+  color: #a85436;
+  font-weight: 750;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] a[data-track="primary-cta"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.9rem 1.6rem;
+  border-radius: 0;
+  background: #1d211d;
+  color: #fbf8f1;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  transition: background 0.2s ease;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] a[data-track="primary-cta"]:hover {
+  background: #a85436;
+}
+
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > div:last-child,
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > figure {
+  border: 1px solid #cec6b8;
+  border-radius: 14px;
+  background: #fbf8f1;
+  box-shadow: none;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > div:last-child > p:first-child {
+  color: #a85436;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > div:last-child h2 {
+  margin-top: 1rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > div:last-child > p:last-child {
+  color: #62665e;
+  line-height: 1.65;
+}
+
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(n + 2) {
+  padding-block: clamp(3.25rem, 6vw, 5.5rem);
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(n + 2) > h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(2) article {
+  padding: 1.5rem;
+  border: 1px solid #cec6b8;
+  border-radius: 14px;
+  background: #fbf8f1;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(2) article h3,
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(3) article h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(2) article p,
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(3) article p:not(:first-child),
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(4) article p {
+  color: #62665e;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(3) article {
+  padding: 1.25rem 0 0;
+  border: 0;
+  border-top: 1px solid #1d211d;
+  border-radius: 0;
+  background: transparent;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(3) article > p:first-child {
+  color: #a85436;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(4) article {
+  padding: 1.1rem 0 0;
+  border: 0;
+  border-top: 1px solid #cec6b8;
+  border-radius: 0;
+  background: transparent;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(4) article h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(5) details {
+  padding: 1.15rem 1.3rem;
+  border: 1px solid #cec6b8;
+  border-radius: 12px;
+  background: #fbf8f1;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(5) summary {
+  cursor: pointer;
+  font-weight: 650;
+  transition: color 0.2s ease;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(5) summary:hover {
+  color: #a85436;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(5) summary::marker,
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(5) summary::-webkit-details-marker {
+  color: #a85436;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] > section:nth-of-type(5) details p {
+  color: #62665e;
+  line-height: 1.65;
+}
+
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] footer {
+  border-top: 1px solid #cec6b8;
+  color: #62665e;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] footer a {
+  transition: color 0.2s ease;
+}
+[data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] footer a:hover {
+  color: #a85436;
+}
+
+@media (max-width: 767px) {
+  [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] h1 { max-width: none; }
+  [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] *,
+  [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] *::before,
+  [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
