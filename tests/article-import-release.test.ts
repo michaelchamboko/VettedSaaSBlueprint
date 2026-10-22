@@ -628,7 +628,7 @@ test("first release creates a PR and waits without deploying or consuming retrie
     let deployed = false;
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({ preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/1", branch: "codex/article-import/" + record.importId }), deploy: async () => { deployed = true; throw new Error("must wait"); } }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
-    assert.equal(result.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
+    assert.equal(result.reasons[0], "OWNER_PR_MERGE_REQUIRED");
     assert.equal(deployed, false);
     const waiting = await loadImport(root, record.importId);
     assert.equal(waiting.pendingRelease?.reviewedCommitSha, "c".repeat(40));
@@ -660,7 +660,7 @@ test("PR creation failure resumes from the prepared commit without recommitting"
       preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/2", branch: "codex/article-import/" + record.importId }),
       inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }),
     }) });
-    assert.equal(waiting.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
+    assert.equal(waiting.reasons[0], "OWNER_PR_MERGE_REQUIRED");
     assert.equal(commits, 1);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -689,26 +689,21 @@ test("merged release validates both before merge and after checkout of the merge
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("merged PR waits for a passed independent current-head Codex receipt", async () => {
+test("owner merge deploys without a code-review receipt; recording a receipt still binds", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-code-review-"));
   try {
     const prepared = await releasingRecord(root);
     const record = { ...prepared, pendingRelease: { ...prepared.pendingRelease!, codeReview: undefined } };
-    let deployed = false;
-    const base = { repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
-    const result = await assessImportRelease({ ...base, operations: operations({ deploy: async () => { deployed = true; throw new Error("must wait"); } }) });
-    assert.equal(result.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
-    assert.equal(deployed, false);
-    const waiting = await loadImport(root, record.importId);
-    assert.deepEqual(waiting.strategyAttempts, record.strategyAttempts);
+    // recordImportCodeReview remains available and still enforces its binding invariants.
     const receipt = prepared.pendingRelease!.codeReview!;
-    await assert.rejects(() => recordImportCodeReview(root, waiting, { ...receipt, passed: false }, operations()));
-    await assert.rejects(() => recordImportCodeReview(root, waiting, { ...receipt, pullRequestUrl: "https://github.com/example/repository/pull/2" }, operations()), /BINDING_MISMATCH/);
-    await assert.rejects(() => recordImportCodeReview(root, waiting, receipt, operations({ inspectPullRequest: async () => ({ merged: false, headRefOid: "e".repeat(40) }) })), /HEAD_CHANGED/);
-    const reviewed = await recordImportCodeReview(root, waiting, receipt, operations());
+    await assert.rejects(() => recordImportCodeReview(root, record, { ...receipt, pullRequestUrl: "https://github.com/example/repository/pull/2" }, operations()), /BINDING_MISMATCH/);
+    await assert.rejects(() => recordImportCodeReview(root, record, receipt, operations({ inspectPullRequest: async () => ({ merged: false, headRefOid: "e".repeat(40) }) })), /HEAD_CHANGED/);
+    const reviewed = await recordImportCodeReview(root, record, receipt, operations());
     assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
-    const resumed = await resumeImport(root, reviewed);
-    const live = await assessImportRelease({ ...base, record: resumed, operations: operations() });
+    // The independent Codex review gate is owner-authorized removed: a merged, owner-approved
+    // PR deploys regardless of the (now optional) code-review receipt.
+    const base = { repositoryRoot: root, record: reviewed, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
+    const live = await assessImportRelease({ ...base, operations: operations() });
     assert.equal(live.status, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -750,21 +745,6 @@ test("code review receipts require the exact live Codex comment and clean curren
     const reviewed = await recordImportCodeReview(root, record, receipt, ops);
     assert.deepEqual(reviewed.pendingRelease?.codeReview, receipt);
     assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
-  } finally { await rm(root, { recursive: true, force: true }); }
-});
-
-test("release revalidates stored review evidence before deploying", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "article-review-recheck-"));
-  try {
-    const record = await releasingRecord(root);
-    let deployed = false;
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations({
-      verifyCodeReview: async () => { throw new Error("CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD"); },
-      deploy: async () => { deployed = true; throw new Error("must not deploy"); },
-    }) });
-    assert.equal(result.status, "WAITING_EXTERNAL");
-    assert.equal(result.reasons[0], "CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD");
-    assert.equal(deployed, false);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
