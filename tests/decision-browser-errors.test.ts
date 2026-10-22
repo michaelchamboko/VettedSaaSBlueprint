@@ -23,11 +23,17 @@ test("decision verifier detects uncaught exceptions without console errors", asy
   try {
     const input = { origin: `http://127.0.0.1:${address.port}`, route, output };
     const failed = await captureRoute(input);
-    const errorChecks = failed.checks.filter((check) => check.name.endsWith(" browser errors"));
-    assert.equal(errorChecks.length, 3);
-    assert.equal(errorChecks.filter((check) => !check.passed).length, 2);
-    assert.equal(errorChecks.find((check) => check.name.includes("mobile-no-javascript"))?.passed, true);
-    assert.ok(errorChecks.filter((check) => !check.passed).every((check) => check.detail.includes("uncaught-verifier-fixture")));
+    const consoleChecks = failed.checks.filter((check) => check.name.endsWith(" console errors"));
+    const pageChecks = failed.checks.filter((check) => check.name.endsWith(" uncaught page errors"));
+    assert.equal(consoleChecks.length, 3);
+    assert.equal(pageChecks.length, 3);
+    // The uncaught exception must fail the dedicated page-error evidence on every JS-enabled profile.
+    assert.equal(pageChecks.filter((check) => !check.passed).length, 2);
+    assert.equal(pageChecks.find((check) => check.name.includes("mobile-no-javascript"))?.passed, true);
+    assert.ok(pageChecks.filter((check) => !check.passed).every((check) => check.detail.includes("uncaught-verifier-fixture")));
+    // Console evidence stays separate; whatever failed carries the fixture message.
+    assert.equal(consoleChecks.find((check) => check.name.includes("mobile-no-javascript"))?.passed, true);
+    assert.ok(failed.checks.filter((check) => !check.passed).every((check) => check.detail.includes("uncaught-verifier-fixture")));
     throws = false;
     const clean = await captureRoute(input);
     assert.ok(clean.checks.every((check) => check.passed));

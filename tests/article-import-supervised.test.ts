@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -35,6 +36,17 @@ test("the default CLI consumes bound research output and rejects a result for an
     await writeJsonAtomically(path.join(root, packet.resultPath), { ...result, sourceFingerprint: created.sourceFingerprint });
     await executeImportCommand(root, { kind: "resume-pending" });
     assert.equal((await loadImport(root, created.importId)).stage, "TRANSFORMING");
+    // A neutral (mode-"none") import must not be able to select the commercial direct-review format.
+    await executeImportCommand(root, { kind: "resume-pending" });
+    const transformPath = (await loadImport(root, created.importId)).nextAction.match(/execute (.*?)\.work\.json/)![1];
+    const transformPacket = JSON.parse(await readFile(path.join(root, `${transformPath}.work.json`), "utf8"));
+    const neutralArtifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
+    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/example.json"), neutralArtifact);
+    await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", format: "direct-review" } });
+    await executeImportCommand(root, { kind: "resume-pending" });
+    const rejectedTransform = await loadImport(root, created.importId);
+    assert.equal(rejectedTransform.stage, "WAITING_EXTERNAL");
+    assert.match(rejectedTransform.stageReceipts.at(-1)!.message, /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -50,10 +62,11 @@ test("heartbeat consumes durable work after interruption and releases only after
   const commit = "c".repeat(40);
   const pr = "https://github.com/example/repository/pull/1";
   const artifactPath = "src/generated/landing-pages/example.json";
+  const authorityPath = "src/generated/landing-pages/index.json";
   const operations: ReleaseOperations = {
     preflight: async () => ({ ok: true, reasons: [] }),
-    inspectGit: async () => ({ clean: true, changedFiles: [artifactPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
-    refreshMain: async () => ({ clean: true, changedFiles: [artifactPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    inspectGit: async () => ({ clean: true, changedFiles: [artifactPath, authorityPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    refreshMain: async () => ({ clean: true, changedFiles: [artifactPath, authorityPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     runValidation: async () => ({ ok: true, summary: "Mocked repository checks passed." }),
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => { commits++; return commit; },
@@ -67,8 +80,8 @@ test("heartbeat consumes durable work after interruption and releases only after
     verifyRollback: async () => true,
   };
   try {
-    await writeFile(path.join(root, "approved-urls.md"), "");
-    await writeFile(path.join(root, "article.md"), "# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.");
+    await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
+    await writeFile(path.join(root, "article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
     const created = await createArticleImport(root, "article.md");
     importId = created.importId;
     // Each invocation constructs a fresh executor, as a later heartbeat process would.
@@ -95,6 +108,8 @@ test("heartbeat consumes durable work after interruption and releases only after
     assert.equal((await current()).stage, "TRANSFORMING");
     const artifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
     await writeJsonAtomically(path.join(root, artifactPath), artifact);
+    // Approved direct-review releases bind to the manifest-selected receipt URL and artefact fingerprint.
+    await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
     await submit({ stage: "TRANSFORMING", artifactPath, format: "direct-review" });
     await heartbeat();
     assert.equal((await current()).stage, "REFINING");
@@ -108,7 +123,10 @@ test("heartbeat consumes durable work after interruption and releases only after
     await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout" });
     await heartbeat();
     assert.equal((await current()).stage, "RELEASING");
-    const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath], slug: "example" });
+    // The approval loop rewrites the artefact; bind the receipt to the final approved bytes.
+    const artifactFingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath))).toString("utf8").replace(/\r\n/g, "\n")).digest("hex");
+    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: artifactFingerprint } } });
+    const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" });
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");
     assert.equal(deployments, 0);

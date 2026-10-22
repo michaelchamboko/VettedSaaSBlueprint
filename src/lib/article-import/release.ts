@@ -1,6 +1,13 @@
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { ensureImportContentApproval, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
+import { blogPostSchema, type BlogPost } from "../blog/contracts";
+import { visibilityPageSchema, type VisibilityPageV1 } from "../visibility-pages/contracts";
+import { loadPublishedVisibilityPagesFromDirectories, type PublishedVisibilityPage } from "../visibility-pages/catalogue";
 import { requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { readImportArtifactTarget } from "./format-validation";
 import { importCodeReviewSchema } from "./contracts";
@@ -119,6 +126,202 @@ export function validateReleasePaths(files: readonly string[], format: ImportFor
   return files.filter((file) => !isAllowedReleasePath(file, format, ownerAuthorizedAffiliateUrl));
 }
 
+/** Publication authority files that must accompany the approved artifact in every release commit. */
+export function publicationAuthorityPaths(format: ImportFormat): readonly string[] {
+  switch (format) {
+    // Decision-set routes are discovered from the sets directory itself (listDecisionSets
+    // scans src/content/decision-journeys/sets); the artifact IS its publication authority and
+    // is separately required by ARTIFACT_NOT_IN_RELEASE / ARTIFACT_NOT_IN_WORKTREE.
+    // catalogue.json only feeds the unsuffixed /decision-hub, /solution-hub and /scenarios
+    // pages, so requiring it here would be an unrelated release prerequisite.
+    case "decision-set": return [];
+    case "direct-review": return ["src/generated/landing-pages/index.json"];
+    case "blog": return ["src/generated/blog-posts/posts.json"];
+    case "visibility": return ["src/generated/visibility-pages/index.json", "src/generated/visibility-pages/publications.json"];
+    case "agent_review_required": return [];
+  }
+}
+
+const AFFILIATE_DESTINATION_KEYS = new Set(["destination_url", "affiliate_url", "final_visible_destination_url", "approved_destinations"]);
+
+export function collectAffiliateDestinationUrls(value: unknown, collected: string[] = []): string[] {
+  if (Array.isArray(value)) { for (const item of value) collectAffiliateDestinationUrls(item, collected); return collected; }
+  if (!value || typeof value !== "object") return collected;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (AFFILIATE_DESTINATION_KEYS.has(key)) {
+      if (typeof child === "string" && child.trim()) collected.push(child.trim());
+      else if (Array.isArray(child)) { for (const item of child) if (typeof item === "string" && item.trim()) collected.push(item.trim()); }
+      else collectAffiliateDestinationUrls(child, collected);
+    } else collectAffiliateDestinationUrls(child, collected);
+  }
+  return collected;
+}
+
+/** Enforces the import's resolved commercial mode on an artifact before it can publish. */
+export function assertArtifactCommercialSafety(record: ExternalArticleImportV1, format: ImportFormat, artifact: unknown): void {
+  const mode = record.transformation?.commercialMode ?? "none";
+  const resolved = record.transformation?.resolvedAffiliateUrl;
+  const submitted = record.transformation?.submittedAffiliateUrl;
+  const destinations = [...new Set(collectAffiliateDestinationUrls(artifact))];
+  const serialized = JSON.stringify(artifact ?? "");
+  if (mode === "decommercialized") {
+    if (format === "direct-review") throw new Error("DECOMMERCIALIZED_INPUT_CANNOT_PUBLISH_DIRECT_REVIEW");
+    if (destinations.length) throw new Error("DECOMMERCIALIZED_ARTIFACT_RETAINS_AFFILIATE_DESTINATION");
+    if (submitted && serialized.includes(submitted)) throw new Error("DECOMMERCIALIZED_ARTIFACT_RETAINS_SUBMITTED_AFFILIATE_URL");
+    return;
+  }
+  if (format !== "direct-review") {
+    if (destinations.length) throw new Error("NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_DESTINATION");
+    // Generic URL fields (e.g. BlogPostV1 sources[].url) can smuggle the affiliate
+    // destination past the named-key collector above.
+    for (const url of [submitted, resolved]) {
+      if (url && serialized.includes(url)) throw new Error("NON_DIRECT_REVIEW_ARTIFACT_RETAINS_AFFILIATE_URL");
+    }
+    return;
+  }
+  // Direct-review is the commercial format. A mode-"none" (neutral) import that
+  // selects it would publish a receipt CTA URL the source never supplied, so it
+  // must fail here exactly as the decommercialized case does above.
+  if (mode !== "approved") throw new Error("DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE");
+  if (!resolved) throw new Error("DIRECT_REVIEW_REQUIRES_RESOLVED_AFFILIATE_URL");
+  for (const destination of destinations) {
+    if (!resolved || destination !== resolved) throw new Error("ARTIFACT_AFFILIATE_DESTINATION_NOT_RESOLVED_URL");
+  }
+  const blueprint = artifact as { affiliate_links?: Array<{ affiliate_link_id?: string; destination_url?: string | null }>; hero?: { primary_cta_link_id?: string }; cta_blocks?: Array<{ affiliate_link_id?: string }> };
+  const links = Array.isArray(blueprint.affiliate_links) ? blueprint.affiliate_links : [];
+  if (!links.length) return;
+  const byId = new Map(links.map((link) => [String(link.affiliate_link_id ?? ""), link.destination_url]));
+  const referenced = [blueprint.hero?.primary_cta_link_id, ...(Array.isArray(blueprint.cta_blocks) ? blueprint.cta_blocks : []).map((block) => block.affiliate_link_id)].filter((id): id is string => typeof id === "string" && id.length > 0);
+  for (const id of referenced) {
+    const destination = byId.get(id);
+    if (typeof destination !== "string" || !resolved || destination !== resolved) throw new Error("AFFILIATE_CTA_DESTINATION_UNBOUND");
+  }
+}
+
+function safeCatalogueReceiptPath(directory: string, relativePath: string): string {
+  if (!relativePath.endsWith(".json") || relativePath.includes("\\") || relativePath.split("/").some((segment) => !segment || segment === "..")) {
+    throw new Error("RELEASE_RECEIPT_PATH_INVALID");
+  }
+  const candidate = path.resolve(directory, relativePath);
+  const relative = path.relative(directory, candidate);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("RELEASE_RECEIPT_PATH_INVALID");
+  return candidate;
+}
+
+/**
+ * Binds an approved direct-review release to the manifest-selected receipt. The public CTA URL
+ * served from production is the receipt's exact_affiliate_url, not anything in the blueprint
+ * (PageBlueprint carries no affiliate_links), so the receipt must name the record's resolved
+ * affiliate URL — otherwise an allowlisted URL B could ship for an import resolved to URL A.
+ * The manifest artifact and the receipt page fingerprint must also match the approved
+ * `<slug>.json` blueprint on disk: otherwise an authority-file change could deploy unapproved
+ * content under the approved slug while the URL binding alone still passes.
+ */
+export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: string, slug: string, record: ExternalArticleImportV1): Promise<void> {
+  const transformation = record.transformation;
+  if (record.format !== "direct-review" || transformation?.commercialMode !== "approved") return;
+  const resolved = transformation.resolvedAffiliateUrl;
+  if (!resolved) throw new Error("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH");
+  const catalogueDirectory = path.resolve(repositoryRoot, "src/generated/landing-pages");
+  let manifest: { pages?: Array<{ slug?: unknown; release_receipt?: unknown; artifact?: unknown }> };
+  try {
+    manifest = JSON.parse(await readFile(path.join(catalogueDirectory, "index.json"), "utf8"));
+  } catch { throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`); }
+  const matches = (manifest.pages ?? []).filter((page) => page.slug === slug);
+  if (matches.length === 0) throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
+  // The loader serves the LAST same-slug entry (pages.set overwrites), so allow exactly one
+  // match — otherwise a later duplicate could swap in unapproved content under the slug.
+  if (matches.length > 1) throw new Error("RELEASE_MANIFEST_DUPLICATE_SLUG");
+  const entry = matches[0];
+  if (typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
+  let receipt: { exact_affiliate_url?: unknown; artifacts?: { page?: { path?: unknown; sha256?: unknown } } };
+  try {
+    receipt = JSON.parse(await readFile(safeCatalogueReceiptPath(catalogueDirectory, entry.release_receipt), "utf8"));
+  } catch (error) {
+    if (error instanceof Error && error.message === "RELEASE_RECEIPT_PATH_INVALID") throw error;
+    throw new Error("RELEASE_RECEIPT_UNREADABLE");
+  }
+  if (receipt.exact_affiliate_url !== resolved) throw new Error("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH");
+  const expectedArtifact = `${slug}.json`;
+  if (typeof entry.artifact !== "string" || entry.artifact !== expectedArtifact) throw new Error("RELEASE_MANIFEST_ARTIFACT_MISMATCH");
+  const receiptPage = receipt.artifacts?.page;
+  if (!receiptPage || typeof receiptPage.path !== "string" || receiptPage.path !== entry.artifact) throw new Error("RELEASE_RECEIPT_ARTIFACT_PATH_MISMATCH");
+  if (typeof receiptPage.sha256 !== "string") throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH");
+  let artifactBytes: Buffer;
+  try {
+    artifactBytes = await readFile(safeCatalogueReceiptPath(catalogueDirectory, expectedArtifact));
+  } catch { throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH"); }
+  const artifactText = artifactBytes.toString("utf8");
+  const acceptedFingerprints = new Set([
+    createHash("sha256").update(artifactBytes).digest("hex"),
+    createHash("sha256").update(artifactText.replace(/\r\n/g, "\n")).digest("hex"),
+    createHash("sha256").update(artifactText.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n")).digest("hex"),
+  ]);
+  if (!acceptedFingerprints.has(receiptPage.sha256)) throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH");
+}
+
+/**
+ * Binds a blog or visibility publication authority to the approved artifact on the
+ * merged checkout that actually deploys. Authority files (`posts.json`, the visibility
+ * manifest and projection) can move between review and merge, so a concurrent main
+ * change could select different content under the approved artifact; the post-deploy
+ * verifiers would only detect that mismatch after the wrong content shipped. Fail
+ * closed before deploy instead. Direct-review authority is bound by
+ * `assertReleaseReceiptAffiliateBinding`; decision-set routes are discovered from the
+ * artifact itself; agent_review_required never releases.
+ */
+export async function assertPublicationAuthorityBinding(repositoryRoot: string, format: ImportFormat, artifactPath: string | undefined): Promise<void> {
+  if (format !== "blog" && format !== "visibility") return;
+  if (!artifactPath) throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_MISSING");
+  const repository = path.resolve(repositoryRoot);
+  const artifactFile = path.resolve(repository, artifactPath);
+  const relative = path.relative(repository, artifactFile);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_MISSING");
+  let artifactValue: unknown;
+  try {
+    artifactValue = JSON.parse(await readFile(artifactFile, "utf8"));
+  } catch {
+    throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+  }
+  if (format === "blog") {
+    let approved: BlogPost;
+    try {
+      approved = blogPostSchema.parse(artifactValue);
+    } catch {
+      throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+    }
+    let posts: BlogPost[];
+    try {
+      posts = blogPostSchema.array().parse(JSON.parse(await readFile(path.join(repository, "src/generated/blog-posts/posts.json"), "utf8")));
+    } catch {
+      throw new Error("BLOG_AUTHORITY_UNREADABLE");
+    }
+    const matches = posts.filter((post) => post.slug === approved.slug);
+    if (matches.length === 0) throw new Error(`BLOG_AUTHORITY_ENTRY_MISSING:${approved.slug}`);
+    // The deployment verifier requires exactly one published post per slug.
+    if (matches.length > 1) throw new Error("BLOG_AUTHORITY_DUPLICATE_SLUG");
+    // Both sides are schema-parsed, so stringify comparison is key-order normalised.
+    if (JSON.stringify(matches[0]) !== JSON.stringify(approved)) throw new Error("BLOG_AUTHORITY_ARTIFACT_MISMATCH");
+    return;
+  }
+  let approvedPage: VisibilityPageV1;
+  try {
+    approvedPage = visibilityPageSchema.parse(artifactValue);
+  } catch {
+    throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+  }
+  const generatedDirectory = path.join(repository, "src/generated/visibility-pages");
+  let published: PublishedVisibilityPage[];
+  try {
+    published = loadPublishedVisibilityPagesFromDirectories(generatedDirectory, path.join(generatedDirectory, "publications.json"));
+  } catch (error) {
+    throw new Error(`VISIBILITY_AUTHORITY_INVALID:${error instanceof Error ? error.message : String(error)}`);
+  }
+  const match = published.find((entry) => entry.page.path === approvedPage.path);
+  if (!match) throw new Error(`VISIBILITY_AUTHORITY_ENTRY_MISSING:${approvedPage.path}`);
+  if (JSON.stringify(match.page) !== JSON.stringify(approvedPage)) throw new Error("VISIBILITY_AUTHORITY_ARTIFACT_MISMATCH");
+}
+
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const candidate = value as Record<string, unknown>;
@@ -149,8 +352,10 @@ export async function assessImportRelease(input: {
   if (input.execute && input.record.contentApproval) {
     try {
       if (input.artifactPath?.replaceAll("\\", "/") !== input.record.contentApproval.artifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
-      const { target } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
+      const { target, artifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
       input.slug = target.slug;
+      assertArtifactCommercialSafety(input.record, input.record.format, artifact);
+      await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
     } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
   }
   if (input.record.format === "direct-review") {
@@ -159,6 +364,15 @@ export async function assessImportRelease(input: {
     const normalizedArtifact = input.artifactPath?.replaceAll("\\", "/");
     if (!expected || normalizedArtifact !== expected || normalizedArtifact.startsWith("/") || normalizedArtifact.split("/").includes("..")) reasons.push("DIRECT_REVIEW_ARTIFACT_MISMATCH");
     if (expected && !input.changedFiles.map((file) => file.replaceAll("\\", "/")).includes(expected)) reasons.push("DIRECT_REVIEW_ARTIFACT_NOT_CHANGED");
+  }
+  // Every publishable format ships its approved artifact plus its publication authority files.
+  if (input.record.format !== "agent_review_required") {
+    const declared = normalizedPathSet(input.changedFiles);
+    const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
+    if (input.record.format !== "direct-review" && approvedArtifact && !declared.includes(approvedArtifact)) reasons.push("ARTIFACT_NOT_IN_RELEASE");
+    for (const authority of publicationAuthorityPaths(input.record.format)) {
+      if (!declared.includes(authority)) reasons.push(`PUBLICATION_AUTHORITY_NOT_IN_RELEASE:${authority}`);
+    }
   }
   if (input.killSwitchEnabled) {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
@@ -205,6 +419,15 @@ export async function assessImportRelease(input: {
   if (!input.record.pendingRelease && input.record.format === "direct-review" && input.slug) {
     const expected = `src/generated/landing-pages/${input.slug}.json`;
     if (!inspectedFiles.includes(expected)) gitReasons.push("DIRECT_REVIEW_ARTIFACT_NOT_IN_WORKTREE");
+  }
+  if (!input.record.pendingRelease && input.record.format !== "agent_review_required") {
+    if (input.record.format !== "direct-review") {
+      const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
+      if (approvedArtifact && !inspectedFiles.includes(approvedArtifact)) gitReasons.push("ARTIFACT_NOT_IN_WORKTREE");
+    }
+    for (const authority of publicationAuthorityPaths(input.record.format)) {
+      if (!inspectedFiles.includes(authority)) gitReasons.push(`PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:${authority}`);
+    }
   }
   if (gitReasons.length) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `The inspected worktree does not match the declared import release: ${gitReasons.join(",")}.` });
@@ -260,6 +483,24 @@ export async function assessImportRelease(input: {
     if (!mergedValidation.ok) {
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged commit validation failed: ${mergedValidation.summary}` });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [mergedValidation.summary] };
+    }
+    // The pre-PR binding only covered the worktree; another commit could change the
+    // receipt after review, so rebind it on the merged checkout that actually deploys.
+    try {
+      await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, input.slug ?? "", input.record);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout receipt binding failed: ${message}` });
+      return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
+    }
+    // Publication authorities can also move between review and merge; rebind them to
+    // the approved artifact on the merged checkout before anything deploys.
+    try {
+      await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, input.record.contentApproval?.artifactPath ?? input.artifactPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout authority binding failed: ${message}` });
+      return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
     }
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { z } from "zod";
 
-const DEFAULT_ORIGIN = "https://vettedsaasblueprint.online";
+/** The single trusted production origin. Release verification must never accept any other origin. */
+export const REPOSITORY_CANONICAL_ORIGIN = "https://vettedsaasblueprint.online";
+const DEFAULT_ORIGIN = REPOSITORY_CANONICAL_ORIGIN;
 
 const environmentSchema = z.object({
   PUBLIC_SITE_ORIGIN: z.string().optional(),

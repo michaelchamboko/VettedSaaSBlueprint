@@ -7,6 +7,7 @@ import type { ImportFormat } from "./contracts";
 import { validateReleasePaths } from "./release";
 import { readImportArtifactTarget } from "./format-validation";
 import { assertVerifierResult, requireVerificationMode } from "./verification-evidence";
+import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
 const execFile = promisify(execFileCallback);
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
@@ -58,7 +59,11 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
   const token = process.env.VERCEL_TOKEN;
   const configuredProjectId = process.env.VERCEL_PROJECT_ID;
   const previousId = process.env.VERCEL_PREVIOUS_DEPLOYMENT_ID;
-  const origin = options.origin ?? "https://vettedsaasblueprint.online";
+  // Production verification is pinned to the trusted repository origin; a caller-supplied
+  // origin (for example a different reachable Vercel project) must never redirect release checks.
+  const requestedOrigin = options.origin === undefined ? undefined : options.origin.replace(/\/+$/, "");
+  if (requestedOrigin !== undefined && requestedOrigin !== REPOSITORY_CANONICAL_ORIGIN) throw new Error("ORIGIN_NOT_CANONICAL");
+  const origin = REPOSITORY_CANONICAL_ORIGIN;
   const deploymentApi = `${origin.replace(/\/$/, "")}/api/deployment`;
   const inspectArgs = (target: string) => withToken(["inspect", target, "--json"], token);
   async function verifiedDeployment(target: string): Promise<{ id: string; target: string; readyState: string; commitSha: string }> {

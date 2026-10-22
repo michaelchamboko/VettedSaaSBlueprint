@@ -9,8 +9,8 @@ import { recordArticlePresentation } from "../scripts/record-article-presentatio
 
 async function setup() {
   const root = await mkdtemp(path.join(os.tmpdir(), "content-approval-"));
-  await writeFile(path.join(root, "approved-urls.md"), "");
-  await writeFile(path.join(root, "article.md"), "---\ntitle: Example\naffiliate_name: Example\n---\nAn article with enough text to qualify as useful source content for the import pipeline and its approval tests.");
+  await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
+  await writeFile(path.join(root, "article.md"), "---\ntitle: Example\naffiliate_name: Example\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\nAn article with enough text to qualify as useful source content for the import pipeline and its approval tests.");
   let record = await createArticleImport(root, "article.md");
   for (let i = 0; i < 3; i++) record = await advanceImport(root, record, "Stage completed.");
   return { root, record };
