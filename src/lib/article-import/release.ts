@@ -5,6 +5,9 @@ import path from "node:path";
 import { ensureImportContentApproval, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
+import { blogPostSchema, type BlogPost } from "../blog/contracts";
+import { visibilityPageSchema, type VisibilityPageV1 } from "../visibility-pages/contracts";
+import { loadPublishedVisibilityPagesFromDirectories, type PublishedVisibilityPage } from "../visibility-pages/catalogue";
 import { requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { readImportArtifactTarget } from "./format-validation";
 import { importCodeReviewSchema } from "./contracts";
@@ -257,6 +260,68 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
   if (!acceptedFingerprints.has(receiptPage.sha256)) throw new Error("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH");
 }
 
+/**
+ * Binds a blog or visibility publication authority to the approved artifact on the
+ * merged checkout that actually deploys. Authority files (`posts.json`, the visibility
+ * manifest and projection) can move between review and merge, so a concurrent main
+ * change could select different content under the approved artifact; the post-deploy
+ * verifiers would only detect that mismatch after the wrong content shipped. Fail
+ * closed before deploy instead. Direct-review authority is bound by
+ * `assertReleaseReceiptAffiliateBinding`; decision-set routes are discovered from the
+ * artifact itself; agent_review_required never releases.
+ */
+export async function assertPublicationAuthorityBinding(repositoryRoot: string, format: ImportFormat, artifactPath: string | undefined): Promise<void> {
+  if (format !== "blog" && format !== "visibility") return;
+  if (!artifactPath) throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_MISSING");
+  const repository = path.resolve(repositoryRoot);
+  const artifactFile = path.resolve(repository, artifactPath);
+  const relative = path.relative(repository, artifactFile);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_MISSING");
+  let artifactValue: unknown;
+  try {
+    artifactValue = JSON.parse(await readFile(artifactFile, "utf8"));
+  } catch {
+    throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+  }
+  if (format === "blog") {
+    let approved: BlogPost;
+    try {
+      approved = blogPostSchema.parse(artifactValue);
+    } catch {
+      throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+    }
+    let posts: BlogPost[];
+    try {
+      posts = blogPostSchema.array().parse(JSON.parse(await readFile(path.join(repository, "src/generated/blog-posts/posts.json"), "utf8")));
+    } catch {
+      throw new Error("BLOG_AUTHORITY_UNREADABLE");
+    }
+    const matches = posts.filter((post) => post.slug === approved.slug);
+    if (matches.length === 0) throw new Error(`BLOG_AUTHORITY_ENTRY_MISSING:${approved.slug}`);
+    // The deployment verifier requires exactly one published post per slug.
+    if (matches.length > 1) throw new Error("BLOG_AUTHORITY_DUPLICATE_SLUG");
+    // Both sides are schema-parsed, so stringify comparison is key-order normalised.
+    if (JSON.stringify(matches[0]) !== JSON.stringify(approved)) throw new Error("BLOG_AUTHORITY_ARTIFACT_MISMATCH");
+    return;
+  }
+  let approvedPage: VisibilityPageV1;
+  try {
+    approvedPage = visibilityPageSchema.parse(artifactValue);
+  } catch {
+    throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+  }
+  const generatedDirectory = path.join(repository, "src/generated/visibility-pages");
+  let published: PublishedVisibilityPage[];
+  try {
+    published = loadPublishedVisibilityPagesFromDirectories(generatedDirectory, path.join(generatedDirectory, "publications.json"));
+  } catch (error) {
+    throw new Error(`VISIBILITY_AUTHORITY_INVALID:${error instanceof Error ? error.message : String(error)}`);
+  }
+  const match = published.find((entry) => entry.page.path === approvedPage.path);
+  if (!match) throw new Error(`VISIBILITY_AUTHORITY_ENTRY_MISSING:${approvedPage.path}`);
+  if (JSON.stringify(match.page) !== JSON.stringify(approvedPage)) throw new Error("VISIBILITY_AUTHORITY_ARTIFACT_MISMATCH");
+}
+
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const candidate = value as Record<string, unknown>;
@@ -426,6 +491,15 @@ export async function assessImportRelease(input: {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout receipt binding failed: ${message}` });
+      return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
+    }
+    // Publication authorities can also move between review and merge; rebind them to
+    // the approved artifact on the merged checkout before anything deploys.
+    try {
+      await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, input.record.contentApproval?.artifactPath ?? input.artifactPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout authority binding failed: ${message}` });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
     }
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);

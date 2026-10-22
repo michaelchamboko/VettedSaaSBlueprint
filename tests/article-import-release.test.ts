@@ -5,14 +5,16 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { advanceImport, createArticleImport, loadImport, resumeImport } from "../src/lib/article-import/engine";
-import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
+import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
 import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-journey-production";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
 import { importArtifactTarget, readImportArtifactTarget, validateImportArtifact } from "../src/lib/article-import/format-validation";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
+import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
+import { visibilityPageSchema } from "../src/lib/visibility-pages/contracts";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
 const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
@@ -53,6 +55,62 @@ function operations(overrides: Partial<ReleaseOperations> = {}): ReleaseOperatio
     verifyRollback: async () => true,
     ...overrides,
   };
+}
+
+async function repoBlogPost(): Promise<Record<string, unknown>> {
+  return JSON.parse(await readFile(path.join(process.cwd(), "src/generated/blog-posts/posts.json"), "utf8"))[0];
+}
+
+async function approveBlogFixture(root: string, record: ExternalArticleImportV1, post: Record<string, unknown>, artifactPath: string) {
+  const editorialEvidencePath = "build-pack/editorial/example-blog.json";
+  const formatQualityPath = "build-pack/article-import/quality-blog.json";
+  const evidence = createEditorialEvidence("blog", post, post,
+    { semanticNotes: "Reviewed the prose and preserved meaning and protected fields.", exceptions: [], meaningPreserved: true, arrayOrderPreserved: true },
+    { before: "No findings.", after: "No findings." });
+  for (const [file, value] of [[artifactPath, post], [editorialEvidencePath, evidence], [formatQualityPath, { format: "blog", artifactFingerprint: fingerprintEditorialArtifact(post), passed: true, gate: "blog:audit-post" }]] as const) {
+    await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+    await writeFile(path.join(root, file), JSON.stringify(value));
+  }
+  return approveImportContent(root, record, { artifactPath, editorialEvidencePath, formatQualityPath });
+}
+
+async function presentBlogFixture(root: string, record: ExternalArticleImportV1, post: Record<string, unknown>) {
+  if (!record.contentApproval) throw new Error("Fixture content approval is required.");
+  const evidencePath = "build-pack/article-import/verifier-blog.json";
+  const target = importArtifactTarget("blog", post);
+  await mkdir(path.dirname(path.join(root, evidencePath)), { recursive: true });
+  await writeFile(path.join(root, evidencePath), JSON.stringify({ schemaVersion: "ImportVerifierEvidenceV1", target, result: { verificationMode: "candidate", origin: "http://127.0.0.1:3000", canonicalOrigin: "https://vettedsaasblueprint.online", ok: true, verifiedRoutes: target.renderedRoutes, viewportChecks: target.renderedRoutes.length * 2 } }));
+  return recordImportPresentation(root, record, {
+    validationGate: "fixture:rendered-layout",
+    validationReceipt: {
+      schemaVersion: "ImportPresentationValidationV1",
+      format: record.format,
+      artifactFingerprint: record.contentApproval.artifactFingerprint,
+      renderedRoutes: target.renderedRoutes,
+      checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true },
+      evidencePaths: [evidencePath],
+      notes: "Mocked browser evidence for importer state tests.",
+    },
+  });
+}
+
+async function blogReleasingRecord(root: string): Promise<{ record: ExternalArticleImportV1; post: Record<string, unknown>; artifactPath: string; changedFiles: string[] }> {
+  const post = await repoBlogPost();
+  const slug = String(post.slug);
+  const artifactPath = `src/generated/blog-posts/${slug}.json`;
+  const changedFiles = [artifactPath, "src/generated/blog-posts/posts.json"];
+  await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
+  await writeFile(path.join(root, "article.md"), "# Imported workflow guide\n\nThis is a sufficiently long neutral article body for the blog release coordinator test and its deterministic validation path.\n");
+  await mkdir(path.join(root, "src/generated/blog-posts"), { recursive: true });
+  await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([post]));
+  let record: ExternalArticleImportV1 = { ...(await createArticleImport(root, "article.md")), format: "blog" as const };
+  for (let i = 0; i < 5; i += 1) {
+    if (record.stage === "REFINING") record = await approveBlogFixture(root, record, post, artifactPath);
+    if (record.stage === "VALIDATING") record = await presentBlogFixture(root, record, post);
+    record = await advanceImport(root, record, "stage complete");
+  }
+  record = { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } };
+  return { record, post, artifactPath, changedFiles };
 }
 
 test("dry-run rejects disallowed files without executing release operations", async () => {
@@ -925,6 +983,110 @@ test("release rebinds the affiliate receipt on the merged checkout before deploy
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("RELEASE_RECEIPT_AFFILIATE_URL_MISMATCH"));
     assert.equal(deployments, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("publication authority binding fails closed on blog mismatches and no-ops for other formats", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-authority-binding-"));
+  const post = await repoBlogPost();
+  const slug = String(post.slug);
+  const artifactPath = `src/generated/blog-posts/${slug}.json`;
+  try {
+    await mkdir(path.join(root, "src/generated/blog-posts"), { recursive: true });
+    await writeFile(path.join(root, artifactPath), JSON.stringify(post));
+    // Formats outside blog/visibility are bound elsewhere and stay no-ops.
+    await assertPublicationAuthorityBinding(root, "direct-review", undefined);
+    await assertPublicationAuthorityBinding(root, "decision-set", undefined);
+    await assertPublicationAuthorityBinding(root, "agent_review_required", undefined);
+    // Matching authority entry passes.
+    await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([post]));
+    await assertPublicationAuthorityBinding(root, "blog", artifactPath);
+    // Missing, duplicate, and diverging entries all fail closed.
+    await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([]));
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", artifactPath), new RegExp(`BLOG_AUTHORITY_ENTRY_MISSING:${slug}`));
+    await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([post, post]));
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", artifactPath), /BLOG_AUTHORITY_DUPLICATE_SLUG/);
+    const diverged = { ...post, cyclePosition: post.cyclePosition === 1 ? 2 : 1 };
+    await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([diverged]));
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", artifactPath), /BLOG_AUTHORITY_ARTIFACT_MISMATCH/);
+    // Unreadable or unsafe artifact inputs fail closed too.
+    await rm(path.join(root, "src/generated/blog-posts/posts.json"));
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", artifactPath), /BLOG_AUTHORITY_UNREADABLE/);
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", undefined), /PUBLICATION_AUTHORITY_ARTIFACT_MISSING/);
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", "../outside.json"), /PUBLICATION_AUTHORITY_ARTIFACT_MISSING/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("publication authority binding fails closed on visibility mismatches", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-visibility-binding-"));
+  const generatedDirectory = path.join(root, "src/generated/visibility-pages");
+  const route = "/guides/how-to-evaluate-ai-voice-quality";
+  const expiresAt = new Date(Date.now() + 86400000).toISOString();
+  const page = { schema_version: "VisibilityPageV1", id: "voice-guide", path: route, kind: "guide", cluster_id: "ai_voice", title: "Voice quality guide", description: "Evaluate voice quality.", modified_at: new Date().toISOString(), hero: { eyebrow: "Guide", headline: "Evaluate voice quality", summary: "Compare samples." }, claim_ids: ["sample"], relevant_review_path: "/landing-page-builders/elevenlabs-ai-voice-generator", related_paths: ["/ai-voice-generators"], blocks: [{ type: "prose", paragraphs: ["Compare samples."] }] };
+  const evidence = { schema_version: "VisibilityEvidencePackV1", page_id: page.id, sources: [{ id: "source", url: "https://example.com/voice", source_hash: "a".repeat(64), retrieved_at: new Date().toISOString(), review_by: expiresAt, usage_allowed: true }], claims: [{ id: "sample", source_id: "source", allowed_wording: "Compare samples.", risk_level: "low", expires_at: expiresAt }] };
+  const entry = { id: page.id, path: route, artifact: "guide.json", evidence: "evidence.json", artifact_sha256: createHash("sha256").update(JSON.stringify(page)).digest("hex"), evidence_sha256: createHash("sha256").update(JSON.stringify(evidence)).digest("hex") };
+  const projection = { schema_version: "VisibilityBuildProjectionV1", source_commit_sha: "b".repeat(40), pages: [{ id: entry.id, path: entry.path, artifact_sha256: entry.artifact_sha256, evidence_sha256: entry.evidence_sha256, earliest_expires_at: expiresAt, state: "LIVE" }] };
+  const artifactPath = "src/generated/visibility-pages/guide.json";
+  try {
+    await mkdir(generatedDirectory, { recursive: true });
+    await writeFile(path.join(generatedDirectory, "guide.json"), JSON.stringify(page));
+    await writeFile(path.join(generatedDirectory, "evidence.json"), JSON.stringify(evidence));
+    await writeFile(path.join(generatedDirectory, "index.json"), JSON.stringify({ schema_version: "VisibilityManifestV1", pages: [entry] }));
+    await writeFile(path.join(generatedDirectory, "publications.json"), JSON.stringify(projection));
+    // A manifest whose authority matches the approved artifact passes.
+    await assertPublicationAuthorityBinding(root, "visibility", artifactPath);
+    // A diverging approved artifact (same path, different content) fails closed.
+    const approved = visibilityPageSchema.parse(page);
+    await writeFile(path.join(generatedDirectory, "other-page.json"), JSON.stringify({ ...approved, description: `${approved.description} Updated.` }));
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "visibility", "src/generated/visibility-pages/other-page.json"), /VISIBILITY_AUTHORITY_ARTIFACT_MISMATCH/);
+    // A missing authority entry and an unreadable manifest fail closed.
+    await writeFile(path.join(generatedDirectory, "index.json"), JSON.stringify({ schema_version: "VisibilityManifestV1", pages: [] }));
+    await writeFile(path.join(generatedDirectory, "publications.json"), JSON.stringify({ ...projection, pages: [] }));
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "visibility", artifactPath), new RegExp(`VISIBILITY_AUTHORITY_ENTRY_MISSING:${route}`));
+    await writeFile(path.join(generatedDirectory, "index.json"), "not-json");
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "visibility", artifactPath), /VISIBILITY_AUTHORITY_INVALID/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("merged checkout rebinds blog publication authority before deploying", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-blog-authority-"));
+  let deployments = 0;
+  try {
+    const { record, post, artifactPath, changedFiles } = await blogReleasingRecord(root);
+    const postsPath = path.join(root, "src/generated/blog-posts/posts.json");
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles, execute: true, artifactPath, slug: String(post.slug),
+      operations: operations({
+        inspectGit: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+        refreshMain: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+        // After review, a concurrent main change replaced the authority entry with
+        // different content under the approved slug — the merged checkout must not deploy it.
+        checkoutMergedCommit: async () => {
+          const posts = JSON.parse(await readFile(postsPath, "utf8")) as Array<Record<string, unknown>>;
+          await writeFile(postsPath, JSON.stringify(posts.map((entry) => entry.slug === post.slug ? { ...entry, cyclePosition: post.cyclePosition === 1 ? 2 : 1 } : entry)));
+        },
+        deploy: async (commitSha) => { deployments += 1; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
+      }),
+    });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.includes("BLOG_AUTHORITY_ARTIFACT_MISMATCH"));
+    assert.equal(deployments, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a matching blog authority release still deploys to LIVE", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-blog-release-"));
+  try {
+    const { record, post, artifactPath, changedFiles } = await blogReleasingRecord(root);
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles, execute: true, artifactPath, slug: String(post.slug),
+      operations: operations({
+        inspectGit: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+        refreshMain: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+        deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: `https://vettedsaasblueprint.online${post.canonicalPath}`, commitSha }),
+      }),
+    });
+    assert.equal(result.status, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
