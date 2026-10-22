@@ -4,6 +4,7 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = [
   {
     ignores: [
+      ".agents/skills/**",
       ".automation/**",
       ".freebuff/**",
       ".gitnexus/**",
