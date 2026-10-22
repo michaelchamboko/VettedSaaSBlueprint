@@ -24,12 +24,6 @@ export async function recordImportCodeReview(repositoryRoot: string, record: Ext
   return updated;
 }
 
-function hasCurrentCodeReview(record: ExternalArticleImportV1, head: string): boolean {
-  const pending = record.pendingRelease;
-  const review = importCodeReviewSchema.safeParse(pending?.codeReview);
-  return review.success && review.data.reviewedCommitSha === head && head === pending?.reviewedCommitSha && review.data.pullRequestUrl === pending.pullRequestUrl;
-}
-
 export type FullProductionChecks = {
   routeOk: boolean;
   contentOk: boolean;
@@ -469,12 +463,13 @@ export async function assessImportRelease(input: {
       pendingRelease = { ...pendingRelease, pullRequestUrl: pullRequest.url };
       input.record = { ...input.record, pendingRelease };
       await saveImport(input.repositoryRoot, input.record);
-      return await waitForCodeReview(input.repositoryRoot, input.record);
+      return await waitForOwnerMerge(input.repositoryRoot, input.record);
     }
     const pullRequest = await input.operations.inspectPullRequest(pendingRelease.pullRequestUrl);
     if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED");
-    if (!hasCurrentCodeReview(input.record, pullRequest.headRefOid)) return await waitForCodeReview(input.repositoryRoot, input.record);
-    await input.operations.verifyCodeReview(pendingRelease.pullRequestUrl, pendingRelease.codeReview!.evidenceUrl, pullRequest.headRefOid);
+    // Owner-authorized removal of the independent Codex review gate (2026-10-22): the pipeline
+    // no longer requires a chatgpt-codex-connector receipt before deploying. Head integrity
+    // (above) and owner merge (below) still gate the release.
     if (!pullRequest.merged || pullRequest.ownerApproved !== true) return await waitForOwnerMerge(input.repositoryRoot, input.record);
     if (!pullRequest.mergeCommitSha) throw new Error("MERGE_COMMIT_MISSING");
     const commitSha = pullRequest.mergeCommitSha;
