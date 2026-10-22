@@ -736,10 +736,10 @@ body:has([data-motion-root="how-can-content-creators-and-brands-stream-live-mult
 }
 [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > div:last-child > p:first-child {
   color: #a85436;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] section:first-of-type > div > div:last-child h2 {
   margin-top: 1rem;
@@ -838,7 +838,7 @@ body:has([data-motion-root="how-can-content-creators-and-brands-stream-live-mult
 [data-motion-root="how-can-content-creators-and-brands-stream-live-multi-camera-video"] footer {
   border-top: 1px solid #cec6b8;
   color: #62665e;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;
