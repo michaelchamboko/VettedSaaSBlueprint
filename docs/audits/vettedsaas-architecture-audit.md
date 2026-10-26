@@ -85,7 +85,7 @@ The following 17 stages have direct implementation or operational evidence. A st
 | 2 | Acquire idempotent run lock | Decision Journey | Deterministic | **IMPLEMENTED** | `src/lib/automation/local-store.ts:12,23-31,70-108` |
 | 3 | Discover topics and assemble evidence | Decision Journey | Agent/manual tool use | **IMPLEMENTED, PAUSED** | `automation/codex/daily-research.md:3-9` |
 | 4 | Validate `EvidenceUpdateV2` and persist receipt | Decision Journey | Deterministic | **IMPLEMENTED** | `src/lib/automation/workflows.ts:11-18`; `scripts/run-automation.ts:19-49` |
-| 5 | Produce exactly 12/7/12 editorial blueprints | Decision Journey | Agent | **IMPLEMENTED, PAUSED** | `automation/codex/editorial-brief.md:3-9` |
+| 5 | Produce three blueprints with 12/7/12 sections | Decision Journey | Agent | **IMPLEMENTED, PAUSED** | `automation/codex/editorial-brief.md:3-9`; `src/lib/automation/contracts.ts:104-108` |
 | 6 | Enforce same-window prerequisite | Decision Journey | Deterministic | **IMPLEMENTED** | `src/lib/automation/workflows.ts:27-39` |
 | 7 | Optimise eligible Decision Journey content | Decision Journey | Agent | **IMPLEMENTED, PAUSED** | `automation/codex/optimisation.md:3-7` |
 | 8 | Commit, run gates, and deploy eligible changes | Decision Journey | CLI + manual invocation | **IMPLEMENTED** | `scripts/release-decision-journey.ts:29-79`; `src/lib/automation/release-policy.ts` |
@@ -120,7 +120,7 @@ Independent verification is partial. Schema, provenance fields, allowlists, hash
 
 ### Stage C — editorial planning
 
-Editorial planning is prompt-driven and receipt-gated. The scheduled brief requires a current research receipt and creates 12 decision-hub, 7 solution-hub, and 12 scenario blueprints with references, composition, and motion decisions (`automation/codex/editorial-brief.md:3-9`). Article-import formats are `direct-review`, `blog`, `visibility`, and `decision-set` (`src/lib/article-import/contracts.ts:11-12`). SEO/AEO, links, disclosures, uniqueness, evidence status, and visual direction are represented in format schemas and quality artefacts.
+Editorial planning is prompt-driven and receipt-gated. The scheduled brief requires a current research receipt and creates three page blueprints: one 12-section Decision Hub, one 7-section Solution Hub, and one 12-section Scenario, each with references, composition, and motion decisions (`automation/codex/editorial-brief.md:3-9`; `src/lib/automation/contracts.ts:104-108`). Article-import formats are `direct-review`, `blog`, `visibility`, and `decision-set` (`src/lib/article-import/contracts.ts:11-12`). SEO/AEO, links, disclosures, uniqueness, evidence status, and visual direction are represented in format schemas and quality artefacts.
 
 This planning is automatic only when a human or schedule launches an agent that follows the prompt. The repository CLI does not itself call an LLM for the four-window workflow.
 
@@ -259,7 +259,7 @@ flowchart TD
 | Item | Responsibility | Status | Evidence |
 |---|---|---:|---|
 | Daily research prompt | Discover/update evidence with provenance and bounded inference | **IMPLEMENTED, PAUSED** | `automation/codex/daily-research.md:3-9` |
-| Editorial brief prompt | Convert same-window evidence into 31 typed page blueprints | **IMPLEMENTED, PAUSED** | `automation/codex/editorial-brief.md:3-9` |
+| Editorial brief prompt | Convert same-window evidence into three typed blueprints with 12/7/12 sections | **IMPLEMENTED, PAUSED** | `automation/codex/editorial-brief.md:3-9`; `src/lib/automation/contracts.ts:104-108` |
 | Optimisation prompt | Apply eligible changes to Decision Journey content only | **IMPLEMENTED, PAUSED** | `automation/codex/optimisation.md:3-7` |
 | Production watchdog prompt | Verify public production surfaces and record evidence | **IMPLEMENTED, PAUSED** | `automation/codex/production-watchdog.md:3-7` |
 | Import supervising agent | Write schema-valid stage results from work packets | **IMPLEMENTED** | `src/lib/article-import/supervised-executor.ts:33-97` |
