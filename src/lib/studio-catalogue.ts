@@ -26,7 +26,7 @@ const categories = {
     slug: "commerce-intelligence",
     label: "Commerce intelligence",
     description: "Signals and decision tools for teams operating the digital shelf.",
-    accent: "#a84c14",
+    accent: "#b85a1b",
   },
   audio: {
     slug: "voice-and-audio",
@@ -114,7 +114,7 @@ export type StudioLandingPage = ProductDefinition & {
 };
 
 export const studioLandingPages: StudioLandingPage[] = products.flatMap((product) =>
-  variants.map((variant, index) => ({
+  variants.map((variant) => ({
     ...product,
     slug: `${product.slug}-${variant.suffix}`,
     path: `/studio/${product.slug}-${variant.suffix}`,
@@ -122,7 +122,7 @@ export const studioLandingPages: StudioLandingPage[] = products.flatMap((product
     title: `${product.name}: ${variant.label}`,
     lede: `${product.positioning} This brief is for teams evaluating ${variant.focus}.`,
     steps: [
-      `${String(index + 1).padStart(2, "0")} / Name the moment`,
+      "01 / Name the moment",
       "02 / Check the working detail",
       "03 / Decide the next experiment",
     ],
