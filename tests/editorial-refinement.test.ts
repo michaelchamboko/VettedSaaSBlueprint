@@ -4,14 +4,31 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
-  canReuseEditorialEvidence, compareEditorialArtifacts, createEditorialEvidence, editorialProse,
+  canReuseEditorialEvidence, compareEditorialArtifacts, createEditorialEvidence, editorialProse, editorialProsePaths,
 } from "../src/lib/editorial/refinement";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, "utf8"));
 const decision = readJson("src/content/decision-journeys/sets/governed-ai-client-work-preparation.json");
 const blog = readJson("src/generated/blog-posts/posts.json")[0];
-const notes = { semanticNotes: "Reviewed the changed prose; meaning, qualification and item order are preserved.", exceptions: [], meaningPreserved: true, arrayOrderPreserved: true };
+const notes = {
+  semanticNotes: "Reviewed the complete rewritten prose; meaning, qualification and item order are preserved.",
+  exceptions: [], meaningPreserved: true, arrayOrderPreserved: true, rewriteMode: "full_article",
+  writerModelFamily: "writer-family", cleanseModelFamily: "reviewer-family",
+  passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, rivalFamilyCleanse: true, finalFidelityReview: true },
+} as const;
+
+function rewriteAllProse(format: "decision" | "landing" | "blog" | "visibility", value: unknown) {
+  const revised = structuredClone(value);
+  for (const prosePath of editorialProsePaths(format, revised)) {
+    const parts = prosePath.split(".");
+    const key = parts.pop()!;
+    let parent = revised as Record<string, unknown>;
+    for (const part of parts) parent = parent[part] as Record<string, unknown>;
+    parent[key] = `${parent[key] as string} Revised.`;
+  }
+  return revised;
+}
 
 test("allows only explicit prose fields across decision, landing and blog formats", () => {
   const landing = structuredClone(samplePageBlueprint);
@@ -102,15 +119,31 @@ test("visibility allows prose but freezes claim identity and links", () => {
 });
 
 test("receipt reuse requires identical artifact, format and pinned revision", () => {
-  const revised = structuredClone(samplePageBlueprint);
-  revised.hero.subheadline = "Evaluate the workflow your team needs.";
-  const evidence = createEditorialEvidence("landing", samplePageBlueprint, revised, notes, { before: "score 4/5", after: "score 5/5" });
+  const revised = rewriteAllProse("landing", samplePageBlueprint);
+  const evidence = createEditorialEvidence("landing", samplePageBlueprint, revised, notes, { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
   assert.equal(canReuseEditorialEvidence(evidence, "landing", revised), true);
   assert.equal(canReuseEditorialEvidence(evidence, "landing", samplePageBlueprint), false);
   assert.equal(canReuseEditorialEvidence({ ...evidence, revision: "old" }, "landing", revised), false);
-  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, { ...notes, meaningPreserved: false }, { before: "checked", after: "checked" }));
-  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, notes, { before: "", after: "checked" }));
+  assert.equal(canReuseEditorialEvidence({
+    ...evidence,
+    eligibleProsePaths: [evidence.eligibleProsePaths[0]],
+    changedPaths: [evidence.eligibleProsePaths[0]],
+  }, "landing", revised), false);
+  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, { ...notes, meaningPreserved: false }, { before: "checked", after: "score 5/5 CLEAN" }));
+  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, notes, { before: "", after: "score 5/5 CLEAN" }));
   assert.ok(!editorialProse("landing", samplePageBlueprint).includes(samplePageBlueprint.affiliate_disclosure.short_disclosure));
+});
+
+test("full rewrite evidence rejects partial cleanup, same-family review and a non-clean final score", () => {
+  const partial = structuredClone(samplePageBlueprint);
+  partial.hero.subheadline = "Evaluate the complete workflow before deciding.";
+  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, partial, notes,
+    { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" }), /left editable prose unchanged/);
+  const revised = rewriteAllProse("landing", samplePageBlueprint);
+  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised,
+    { ...notes, cleanseModelFamily: notes.writerModelFamily }, { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" }), /different model family/);
+  assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, notes,
+    { before: "score 4/5 needs a cleanse", after: "score 4/5 needs a cleanse" }), /5\/5 CLEAN/);
 });
 
 test("vendored upstream bytes match pinned Git blob hashes", () => {

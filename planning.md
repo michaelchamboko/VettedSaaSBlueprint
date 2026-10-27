@@ -331,11 +331,11 @@ The durable stages have separate authority:
 | Stage | Authority | Required handoff |
 |---|---|---|
 | `INGESTING` through `TRANSFORMING` | Normalize, research, resolve approved URLs and build the evidence-backed schema. | Draft artifact and evidence records. |
-| `REFINING` | Decide SEO intent and wording; apply Eleanor/SlopMonster; review factual meaning and qualifiers. | Content approval bound to the artifact, editorial evidence and owner-format quality receipt. |
+| `REFINING` | Perform the mandatory full-article SlopMonster rewrite. Rewrite every editable prose field through the purpose-and-structure, meaning-and-evidence, and wording-and-rhythm passes; require a different-model-family cleanse, final fidelity review, and a 5/5 final check. Preserve the validated claim baseline, quotations, URLs, disclosures, IDs, uncertainty and schema structure. | `EditorialEvidenceV2` proving full prose coverage, every required pass, rival-family separation, protected-field comparison and the final clean score; content approval bound to the rewritten artifact and owner-format quality receipt. |
 | `VALIDATING` | Place the approved artifact in existing templates and check desktop, mobile, accessibility, technical SEO, overflow and runtime behavior. It cannot change approved wording. | Presentation receipt bound to the approved content fingerprint. |
 | `RELEASING` and `VERIFYING` | Run repository gates, open or reuse a PR, wait for owner-approved merge, deploy the exact merged commit, verify production and roll back on failure. | Verified canonical URL and release receipt. |
 
-A wording change clears presentation and release state and returns the import to `REFINING`. A presentation-only repair preserves content approval. Temporary infrastructure failures remain resumable and cannot quarantine content. The import release path may open a PR automatically, but the repository owner must approve its merge.
+A wording change clears presentation and release state and returns the import to `REFINING`. A partial cleanup, unchanged editable prose field, same-family cleanse, incomplete pass, non-clean final score or legacy editorial receipt cannot leave `REFINING`. A presentation-only repair preserves content approval. Temporary infrastructure failures remain resumable and cannot quarantine content. The import release path may open a PR automatically, but the repository owner must approve its merge.
 
 
 ### Denominators and task model

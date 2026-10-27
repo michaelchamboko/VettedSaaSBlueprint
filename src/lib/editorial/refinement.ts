@@ -6,7 +6,7 @@ import { decisionSetV2Schema } from "../decision-journey/sets";
 import { pageBlueprintSchema } from "../schemas/contracts";
 import { visibilityPageSchema } from "../visibility-pages/contracts";
 
-export const EDITORIAL_REVISION = "eleanor-v1:8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1";
+export const EDITORIAL_REVISION = "slopmonster-full-rewrite-v2:8bf609edfaeed844f1d03bb6b69f80dc21728c8b";
 const formats = {
   decision: {
     schema: decisionSetV2Schema,
@@ -102,12 +102,72 @@ export function editorialProse(format: string, value: unknown): string {
   return prose.join("\n\n");
 }
 
+export function editorialProsePaths(format: string, value: unknown): string[] {
+  getFormat(format).schema.parse(value);
+  const paths: string[] = [];
+  const visit = (entry: unknown, path: string[]) => {
+    if (typeof entry === "string" && allowed(format, path)) paths.push(path.join("."));
+    else if (Array.isArray(entry)) entry.forEach((item, index) => visit(item, [...path, String(index)]));
+    else if (entry && typeof entry === "object") Object.entries(entry).forEach(([key, item]) => visit(item, [...path, key]));
+  };
+  visit(value, []);
+  return paths;
+}
+
+const rewritePassesSchema = z.object({
+  purposeAndStructure: z.literal(true),
+  meaningAndEvidence: z.literal(true),
+  wordingAndRhythm: z.literal(true),
+  rivalFamilyCleanse: z.literal(true),
+  finalFidelityReview: z.literal(true),
+}).strict();
+
 const notesSchema = z.object({
   semanticNotes: z.string().trim().min(20),
   exceptions: z.array(z.string().trim().min(10)),
   meaningPreserved: z.literal(true),
   arrayOrderPreserved: z.literal(true),
+  rewriteMode: z.literal("full_article"),
+  writerModelFamily: z.string().trim().min(1),
+  cleanseModelFamily: z.string().trim().min(1),
+  passes: rewritePassesSchema,
+}).strict().superRefine((notes, context) => {
+  if (notes.writerModelFamily.toLocaleLowerCase() === notes.cleanseModelFamily.toLocaleLowerCase()) {
+    context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "The cleanse must use a different model family from the writer." });
+  }
+});
+
+const checkerSchema = z.object({
+  before: z.string().trim().min(1),
+  after: z.string().trim().regex(/score\s+5\/5\s+CLEAN/i, "The final SlopMonster check must report score 5/5 CLEAN."),
 }).strict();
+
+export const editorialEvidenceSchema = z.object({
+  schemaVersion: z.literal("EditorialEvidenceV2"),
+  format: z.enum(["decision", "landing", "blog", "visibility"]),
+  revision: z.literal(EDITORIAL_REVISION),
+  beforeFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  afterFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  eligibleProsePaths: z.array(z.string().min(1)).min(1),
+  changedPaths: z.array(z.string().min(1)).min(1),
+  checker: checkerSchema,
+  semanticNotes: z.string().trim().min(20),
+  exceptions: z.array(z.string().trim().min(10)),
+  meaningPreserved: z.literal(true),
+  arrayOrderPreserved: z.literal(true),
+  rewriteMode: z.literal("full_article"),
+  writerModelFamily: z.string().trim().min(1),
+  cleanseModelFamily: z.string().trim().min(1),
+  passes: rewritePassesSchema,
+}).strict().superRefine((evidence, context) => {
+  if (evidence.writerModelFamily.toLocaleLowerCase() === evidence.cleanseModelFamily.toLocaleLowerCase()) {
+    context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "The cleanse must use a different model family from the writer." });
+  }
+  if (evidence.eligibleProsePaths.length !== evidence.changedPaths.length ||
+    evidence.eligibleProsePaths.some((path, index) => path !== evidence.changedPaths[index])) {
+    context.addIssue({ code: "custom", path: ["changedPaths"], message: "Every eligible prose path must be rewritten." });
+  }
+});
 
 export function createEditorialEvidence(
   format: string, before: unknown, after: unknown,
@@ -115,21 +175,30 @@ export function createEditorialEvidence(
 ) {
   const changedPaths = compareEditorialArtifacts(format, before, after);
   const review = notesSchema.parse(notes);
-  if (!checker.before.trim() || !checker.after.trim()) throw new Error("Checker findings are required for both drafts.");
-  return {
-    schemaVersion: "EditorialEvidenceV1",
+  const eligibleProsePaths = editorialProsePaths(format, before);
+  const unchangedPaths = eligibleProsePaths.filter((path) => !changedPaths.includes(path));
+  if (unchangedPaths.length > 0) {
+    throw new Error(`Full-article rewrite left editable prose unchanged: ${unchangedPaths.join(", ")}`);
+  }
+  return editorialEvidenceSchema.parse({
+    schemaVersion: "EditorialEvidenceV2",
     format,
     revision: EDITORIAL_REVISION,
     beforeFingerprint: fingerprintEditorialArtifact(before),
     afterFingerprint: fingerprintEditorialArtifact(after),
+    eligibleProsePaths,
     changedPaths,
-    checker,
+    checker: checkerSchema.parse(checker),
     ...review,
-  };
+  });
 }
 
-export function canReuseEditorialEvidence(evidence: ReturnType<typeof createEditorialEvidence>, format: string, artifact: unknown): boolean {
+export function canReuseEditorialEvidence(evidence: unknown, format: string, artifact: unknown): boolean {
+  const parsed = editorialEvidenceSchema.safeParse(evidence);
+  if (!parsed.success || parsed.data.format !== format) return false;
   getFormat(format).schema.parse(artifact);
-  return evidence.revision === EDITORIAL_REVISION && evidence.format === format &&
-    evidence.afterFingerprint === fingerprintEditorialArtifact(artifact);
+  const artifactProsePaths = editorialProsePaths(format, artifact);
+  const coversArtifact = artifactProsePaths.length === parsed.data.eligibleProsePaths.length &&
+    artifactProsePaths.every((path, index) => path === parsed.data.eligibleProsePaths[index]);
+  return coversArtifact && parsed.data.afterFingerprint === fingerprintEditorialArtifact(artifact);
 }

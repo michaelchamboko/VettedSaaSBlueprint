@@ -114,7 +114,10 @@ test("heartbeat consumes durable work after interruption and releases only after
     await heartbeat();
     assert.equal((await current()).stage, "REFINING");
     const approved = await approveFixture(root, await current());
-    await submit({ stage: "REFINING", artifactPath, editorialEvidencePath: approved.contentApproval!.editorialEvidencePath, formatQualityPath: approved.contentApproval!.formatQualityPath });
+    const refinement = await submit({ stage: "REFINING", artifactPath, editorialEvidencePath: approved.contentApproval!.editorialEvidencePath, formatQualityPath: approved.contentApproval!.formatQualityPath });
+    assert.match(refinement.packet.instructions, /mandatory full-article SlopMonster rewrite/i);
+    assert.match(refinement.packet.instructions, /different model family/i);
+    assert.match(refinement.packet.instructions, /5\/5 CLEAN/i);
     await heartbeat();
     assert.equal((await current()).stage, "VALIDATING");
     const validationReceiptPath = "build-pack/article-import/presentation.json";

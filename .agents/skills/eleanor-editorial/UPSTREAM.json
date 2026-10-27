@@ -1,19 +1,25 @@
 {
   "repository": "https://github.com/michaelchamboko/SlopMonster",
-  "commit": "8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1",
+  "commit": "8bf609edfaeed844f1d03bb6b69f80dc21728c8b",
   "license": "MIT",
   "files": {
     "references/dr-eleanor-hayes.md": {
-      "gitBlobSha1": "7f413419f35e6fd1b4951e863d5f948e9657244d"
+      "gitBlobSha1": "c93df2fc369002b750449cc9a7012f74d421722f"
     },
     "references/principles.md": {
       "gitBlobSha1": "d433c19cc7e16bfa694dffc10f2de9eb1e589999"
     },
     "references/signs-of-ai-writing.md": {
-      "gitBlobSha1": "ac18cd4da0e6f07154e920d89308b91a17b158e1"
+      "gitBlobSha1": "fa16be097480878f8deb0f32973191655a537571"
     },
     "references/sources.md": {
-      "gitBlobSha1": "de6035a82db76e13c7e1bc7db4209f5a01849ea8"
+      "gitBlobSha1": "c0861c375e042dba349f66e35ff02b3d677585d2"
+    },
+    "references/storyscope-findings.md": {
+      "gitBlobSha1": "76d784d15523f3456ee9934bc913712997fe251d"
+    },
+    "prompts/cleanse.txt": {
+      "gitBlobSha1": "b28677c62e0bc5ad095f14c201c9aca952e6c267"
     },
     "examples/ridgeline-roofing.md": {
       "gitBlobSha1": "24306215c3314c90041ee461ee1e340bc811d23d"

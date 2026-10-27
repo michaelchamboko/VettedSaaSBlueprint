@@ -10,7 +10,7 @@ import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, vali
 import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-journey-production";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
-import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { approveFixture, fullRewriteNotes, presentFixture, rewriteAllProse } from "./fixtures/article-content-approval";
 import { importArtifactTarget, readImportArtifactTarget, validateImportArtifact } from "../src/lib/article-import/format-validation";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
@@ -64,10 +64,10 @@ async function repoBlogPost(): Promise<Record<string, unknown>> {
 async function approveBlogFixture(root: string, record: ExternalArticleImportV1, post: Record<string, unknown>, artifactPath: string) {
   const editorialEvidencePath = "build-pack/editorial/example-blog.json";
   const formatQualityPath = "build-pack/article-import/quality-blog.json";
-  const evidence = createEditorialEvidence("blog", post, post,
-    { semanticNotes: "Reviewed the prose and preserved meaning and protected fields.", exceptions: [], meaningPreserved: true, arrayOrderPreserved: true },
-    { before: "No findings.", after: "No findings." });
-  for (const [file, value] of [[artifactPath, post], [editorialEvidencePath, evidence], [formatQualityPath, { format: "blog", artifactFingerprint: fingerprintEditorialArtifact(post), passed: true, gate: "blog:audit-post" }]] as const) {
+  const rewritten = rewriteAllProse("blog", post);
+  const evidence = createEditorialEvidence("blog", post, rewritten, fullRewriteNotes,
+    { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
+  for (const [file, value] of [[artifactPath, rewritten], [editorialEvidencePath, evidence], [formatQualityPath, { format: "blog", artifactFingerprint: fingerprintEditorialArtifact(rewritten), passed: true, gate: "blog:audit-post" }]] as const) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
@@ -95,7 +95,7 @@ async function presentBlogFixture(root: string, record: ExternalArticleImportV1,
 }
 
 async function blogReleasingRecord(root: string): Promise<{ record: ExternalArticleImportV1; post: Record<string, unknown>; artifactPath: string; changedFiles: string[] }> {
-  const post = await repoBlogPost();
+  let post = await repoBlogPost();
   const slug = String(post.slug);
   const artifactPath = `src/generated/blog-posts/${slug}.json`;
   const changedFiles = [artifactPath, "src/generated/blog-posts/posts.json"];
@@ -105,7 +105,11 @@ async function blogReleasingRecord(root: string): Promise<{ record: ExternalArti
   await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([post]));
   let record: ExternalArticleImportV1 = { ...(await createArticleImport(root, "article.md")), format: "blog" as const };
   for (let i = 0; i < 5; i += 1) {
-    if (record.stage === "REFINING") record = await approveBlogFixture(root, record, post, artifactPath);
+    if (record.stage === "REFINING") {
+      record = await approveBlogFixture(root, record, post, artifactPath);
+      post = JSON.parse(await readFile(path.join(root, artifactPath), "utf8"));
+      await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([post]));
+    }
     if (record.stage === "VALIDATING") record = await presentBlogFixture(root, record, post);
     record = await advanceImport(root, record, "stage complete");
   }
