@@ -136,6 +136,42 @@ export const productionQualityReceiptV2Schema = validationReceiptSchema.omit({ v
   screenshots: z.array(z.object({ route: z.string().min(1), viewport: z.string().min(1), mode: z.string().min(1), path: z.string().min(1) }).strict()),
 }).strict();
 
+export const deploymentConcernSchema = z.object({
+  id: z.string().min(1),
+  fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  severity: z.enum(["P0", "P1", "P2", "P3"]),
+  category: z.enum(["production", "content", "evidence", "visual", "motion", "accessibility", "release"]),
+  summary: z.string().min(1),
+  affectedRoutes: z.array(z.string().startsWith("/")).min(1),
+  firstSeenAt: z.string().datetime(),
+  lastSeenAt: z.string().datetime(),
+  occurrences: z.number().int().positive(),
+  status: z.enum(["open", "fixed_forward", "rolled_back", "resolved"]),
+  evidenceReferences: z.array(z.string().min(1)).min(1),
+}).strict();
+
+export const braintrustEvalSuggestionSchema = z.object({
+  concernFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  name: z.string().min(1),
+  datasetCase: z.string().min(1),
+  expectedOutcome: z.string().min(1),
+  scorer: z.string().min(1),
+  baselineEvidence: z.string().min(1),
+  passingThreshold: z.string().min(1),
+  nextRunComparison: z.string().min(1),
+}).strict();
+
+export const deploymentConcernReportSchema = z.object({
+  schemaVersion: z.literal("DeploymentConcernReportV1"),
+  windowStart: z.string().datetime(),
+  windowEnd: z.string().datetime(),
+  productionOutcome: z.enum(["deployed_and_verified", "fixed_forward_and_verified", "rolled_back_to_verified"]),
+  concerns: z.array(deploymentConcernSchema),
+  braintrustStatus: z.enum(["integration_available", "suggestions_only"]),
+  braintrustEvalSuggestions: z.array(braintrustEvalSuggestionSchema),
+  createdAt: z.string().datetime(),
+}).strict();
+
 export const watchdogReceiptSchema = z.discriminatedUnion("version", [validationReceiptSchema, productionQualityReceiptV2Schema]);
 
 export const deploymentReceiptSchema = z.object({
@@ -155,6 +191,7 @@ export type EditorialBriefV1 = z.infer<typeof editorialBriefSchema>;
 export type PageSetChangeV1 = z.infer<typeof pageSetChangeSchema>;
 export type ValidationReceiptV1 = z.infer<typeof validationReceiptSchema>;
 export type ProductionQualityReceiptV2 = z.infer<typeof productionQualityReceiptV2Schema>;
+export type DeploymentConcernReportV1 = z.infer<typeof deploymentConcernReportSchema>;
 export type DeploymentReceiptV1 = z.infer<typeof deploymentReceiptSchema>;
 
 export function fingerprintAutomation(value: unknown): string {

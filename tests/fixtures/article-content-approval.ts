@@ -14,6 +14,20 @@ export const fullRewriteNotes = {
   passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, rivalFamilyCleanse: true, finalFidelityReview: true },
 } as const;
 
+export const validPageDesignReceipt = {
+  scope: "new_or_materially_changed_public_page",
+  authority: { mode: "reused" },
+  impeccable: { context: true, shape: true, critique: true, audit: true, detect: true, polish: true },
+  specialists: {
+    emilDesignEngineering: "not_applicable",
+    mobileNative: "not_applicable",
+    appleDesign: "not_applicable",
+    pickUiLibrary: "not_applicable",
+    askSonner: "not_applicable",
+  },
+  notes: "The fixture models a changed page using the established design authority.",
+} as const;
+
 export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   const revised = structuredClone(value);
   for (const prosePath of editorialProsePaths(format, revised)) {
@@ -55,6 +69,7 @@ export async function presentFixture(root: string, record: ExternalArticleImport
       artifactFingerprint: record.contentApproval.artifactFingerprint,
       renderedRoutes: ["/imported-guide"],
       checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true },
+      pageDesign: validPageDesignReceipt,
       evidencePaths: [evidencePath],
       notes: "Mocked browser evidence for importer state tests.",
     },

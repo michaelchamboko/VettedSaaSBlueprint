@@ -17,7 +17,7 @@
       "type": "editorial_brief",
       "timeSast": "06:00",
       "promptFile": "automation/codex/editorial-brief.md",
-      "promptSha256": "714417a1acb45485f8e5ed5d24f0af6cb5575849622f1fe4a115411adad89b45",
+      "promptSha256": "05d299731d3efa7d05badebcd445d75f10c0ca5879775512c5210daa6c9d03e3",
       "desktopBootstrap": "Load automation/codex/editorial-brief.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     },
     {
@@ -33,7 +33,7 @@
       "type": "watchdog",
       "timeSast": "23:00",
       "promptFile": "automation/codex/production-watchdog.md",
-      "promptSha256": "eac426da51eb03b6efd3ae7302b9c39c053b28df37a674263edd3e6f28bddefc",
+      "promptSha256": "6c553cc1fec2a7984e20ef52e7fce6deb42b98b76358fbd4bfc48626809e6497",
       "desktopBootstrap": "Load automation/codex/production-watchdog.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     }
   ]

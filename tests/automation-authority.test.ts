@@ -8,6 +8,23 @@ import {
   verifyAutomationManifest,
   verifyTrackedAutomationManifest,
 } from "../src/lib/automation/authority";
+import { deploymentConcernReportSchema } from "../src/lib/automation/contracts";
+
+test("the morning concern report turns recurring deployment findings into measurable Braintrust suggestions", () => {
+  const fingerprint = "a".repeat(64);
+  const report = deploymentConcernReportSchema.parse({
+    schemaVersion: "DeploymentConcernReportV1",
+    windowStart: "2026-10-26T04:00:00.000Z",
+    windowEnd: "2026-10-27T04:00:00.000Z",
+    productionOutcome: "deployed_and_verified",
+    concerns: [{ id: "overflow-mobile", fingerprint, severity: "P2", category: "visual", summary: "A narrow viewport overflowed.", affectedRoutes: ["/decision-hub"], firstSeenAt: "2026-10-26T18:00:00.000Z", lastSeenAt: "2026-10-26T18:00:00.000Z", occurrences: 1, status: "open", evidenceReferences: ["build-pack/evidence/mobile.png"] }],
+    braintrustStatus: "suggestions_only",
+    braintrustEvalSuggestions: [{ concernFingerprint: fingerprint, name: "Mobile overflow regression", datasetCase: "Render the affected route at 375px.", expectedOutcome: "No horizontal overflow.", scorer: "document.scrollWidth <= document.clientWidth", baselineEvidence: "build-pack/evidence/mobile.png", passingThreshold: "100% of affected routes pass", nextRunComparison: "Compare the next production receipt with this fingerprint." }],
+    createdAt: "2026-10-27T04:00:00.000Z",
+  });
+  assert.equal(report.braintrustStatus, "suggestions_only");
+  assert.equal(report.braintrustEvalSuggestions[0].concernFingerprint, report.concerns[0].fingerprint);
+});
 
 test("the repository permits exactly the four approved Codex automations at their approved times", () => {
   assert.deepEqual(automationManifest.tasks.map((task) => [task.id, task.timeSast]), [

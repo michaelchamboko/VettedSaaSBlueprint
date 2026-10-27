@@ -30,12 +30,30 @@ export const importTransformationSchema = z.object({
 }).strict();
 export type ImportTransformationV1 = z.infer<typeof importTransformationSchema>;
 
+export const pageDesignValidationSchema = z.object({
+  scope: z.literal("new_or_materially_changed_public_page"),
+  authority: z.discriminatedUnion("mode", [
+    z.object({ mode: z.literal("identity_pilot"), init: z.literal(true), document: z.literal(true), extract: z.literal(true) }).strict(),
+    z.object({ mode: z.literal("reused") }).strict(),
+  ]),
+  impeccable: z.object({ context: z.literal(true), shape: z.literal(true), critique: z.literal(true), audit: z.literal(true), detect: z.literal(true), polish: z.literal(true) }).strict(),
+  specialists: z.object({
+    emilDesignEngineering: z.enum(["passed", "not_applicable"]),
+    mobileNative: z.enum(["passed", "not_applicable"]),
+    appleDesign: z.enum(["passed", "not_applicable"]),
+    pickUiLibrary: z.enum(["passed", "not_applicable"]),
+    askSonner: z.enum(["passed", "not_applicable"]),
+  }).strict(),
+  notes: z.string().min(1),
+}).strict();
+
 export const importPresentationValidationSchema = z.object({
   schemaVersion: z.literal("ImportPresentationValidationV1"),
   format: importFormatSchema.exclude(["agent_review_required"]),
   artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   renderedRoutes: z.array(z.string().startsWith("/")).min(1),
   checks: z.object({ desktop: z.literal(true), mobile: z.literal(true), accessibility: z.literal(true), technicalSeo: z.literal(true), overflow: z.literal(true), runtimeErrors: z.literal(true) }).strict(),
+  pageDesign: pageDesignValidationSchema,
   evidencePaths: z.array(z.string().min(1)).min(1),
   notes: z.string().min(1),
 }).strict();

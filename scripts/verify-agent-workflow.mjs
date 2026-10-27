@@ -44,7 +44,7 @@ for (const [file, expectedHash] of Object.entries(expectedFiles)) {
 if (Object.keys(manifest.files ?? {}).length !== 14) fail("vendored file inventory is incomplete");
 
 const agents = await read("AGENTS.md");
-for (const marker of ["<!-- build-faster-skills:workflow:start -->", "<!-- build-faster-skills:workflow:end -->", "Every repository-changing task", "**Isolate**", "**Build**", "**Prove**", "**Ship**", "no merge without owner approval", "design-taste-frontend", "Impeccable", "npm run verify:agent-workflow", "npm run lint", "npm run typecheck", "npm test"]) {
+for (const marker of ["<!-- build-faster-skills:workflow:start -->", "<!-- build-faster-skills:workflow:end -->", "Every repository-changing task", "**Isolate**", "**Build**", "**Prove**", "**Ship**", "merge and deploy automatically", "design-taste-frontend", "Impeccable", "npm run verify:agent-workflow", "npm run lint", "npm run typecheck", "npm test"]) {
   if (!agents.includes(marker)) fail(`AGENTS.md marker or requirement missing: ${marker}`);
 }
 const packageJson = JSON.parse(await read("package.json"));

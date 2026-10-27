@@ -20,6 +20,9 @@ const activeInstructionPaths = [
   ".agents/skills/direct-review-page-drafter/references/output-contract.md",
   ".agents/skills/conversion-copy-review/references/review-contract.md",
   "scripts/stage2-pre-review-gate.mjs",
+  "src/lib/article-import/release.ts",
+  "src/lib/article-import/local-release-adapter.ts",
+  "src/lib/article-import/supervised-executor.ts",
   "src/app/page.tsx",
   "src/app/editorial-policy/page.tsx",
 ] as const;
@@ -42,6 +45,9 @@ const forbiddenNormalPathLanguage = [
   "until owner approval",
   "repeat preview approval before",
   "the workstation does not grant publication authority",
+  "no merge without owner approval",
+  "wait for owner-approved merge",
+  "owner must approve its merge",
 ] as const;
 
 test("active landing instructions do not stop a normal URL run for human approval", () => {

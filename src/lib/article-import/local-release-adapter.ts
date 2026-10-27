@@ -120,18 +120,15 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       await runner("git", ["push", "origin", `HEAD:refs/heads/${branch}`]);
       const existing = JSON.parse((await runner("gh", ["pr", "list", "--head", branch, "--base", "main", "--state", "all", "--json", "url,headRefOid,state"])).stdout) as Array<{ url: string; headRefOid: string; state: string }>;
       const matching = existing.find((pr) => pr.headRefOid === reviewedCommitSha && ["OPEN", "MERGED"].includes(pr.state));
-      const url = matching?.url ?? (await runner("gh", ["pr", "create", "--base", "main", "--head", branch, "--title", `Publish imported article ${options.importId}`, "--body", "Publish the approved article after format validation and repository checks. Owner review and merge are required before production deployment."])).stdout.trim();
+      const url = matching?.url ?? (await runner("gh", ["pr", "create", "--base", "main", "--head", branch, "--title", `Publish imported article ${options.importId}`, "--body", "Publish the approved article after format validation, repository checks, and an independent current-head Codex review. A clean reviewed head is merged and deployed automatically."])).stdout.trim();
       if (!/^https:\/\/[^\s]+\/pull\/\d+$/.test(url)) throw new Error("PULL_REQUEST_URL_INVALID");
       return { url, branch, reviewedCommitSha };
     },
     async inspectPullRequest(url) {
       const identity = /^https:\/\/github\.com\/([A-Za-z0-9-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(url);
       if (!identity) throw new Error("PULL_REQUEST_URL_INVALID");
-      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit,mergedBy,reviews"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string }; mergedBy?: { login?: string }; reviews?: Array<{ author?: { login?: string }; state?: string; commit?: { oid?: string } }> };
-      const owner = identity[1].toLowerCase();
-      const ownerReview = pr.reviews?.filter((review) => review.author?.login?.toLowerCase() === owner && ["APPROVED", "CHANGES_REQUESTED", "DISMISSED"].includes(review.state ?? "")).at(-1);
-      const ownerApproved = pr.mergedBy?.login?.toLowerCase() === owner || (ownerReview?.state === "APPROVED" && ownerReview.commit?.oid === pr.headRefOid);
-      return { merged: pr.state === "MERGED", ownerApproved, headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
+      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string } };
+      return { merged: pr.state === "MERGED", headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
     },
     async verifyCodeReview(pullRequestUrl, evidenceUrl, reviewedCommitSha) {
       const pr = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(pullRequestUrl);
@@ -145,6 +142,15 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       const state = JSON.parse(markers[0][1]) as { code_review?: { commit_sha?: string; status?: string; has_any_findings?: boolean; has_unresolved_findings?: boolean } };
       const review = state?.code_review;
       if (review?.commit_sha !== reviewedCommitSha || review.status !== "completed" || review.has_any_findings !== false || review.has_unresolved_findings !== false) throw new Error("CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD");
+    },
+    async mergePullRequest(pullRequestUrl, reviewedCommitSha) {
+      if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/pull\/[1-9]\d*$/.test(pullRequestUrl)) throw new Error("PULL_REQUEST_URL_INVALID");
+      if (!/^[a-f0-9]{40}$/.test(reviewedCommitSha)) throw new Error("REVIEWED_COMMIT_INVALID");
+      await runner("gh", ["pr", "merge", pullRequestUrl, "--merge", "--match-head-commit", reviewedCommitSha]);
+      const merged = JSON.parse((await runner("gh", ["pr", "view", pullRequestUrl, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid?: string } };
+      if (merged.headRefOid !== reviewedCommitSha) throw new Error("PULL_REQUEST_HEAD_CHANGED");
+      if (merged.state !== "MERGED" || !merged.mergeCommit?.oid) throw new Error("PULL_REQUEST_MERGE_UNVERIFIED");
+      return { mergeCommitSha: merged.mergeCommit.oid };
     },
     async checkoutMergedCommit(reviewedCommitSha, mergeCommitSha) {
       if (!/^[a-f0-9]{40}$/.test(reviewedCommitSha) || !/^[a-f0-9]{40}$/.test(mergeCommitSha)) throw new Error("INVALID_MERGE_COMMIT");
