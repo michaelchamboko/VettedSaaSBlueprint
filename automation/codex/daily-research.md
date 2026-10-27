@@ -1,6 +1,6 @@
 # Daily Research V2
 
-Run only from the working directory recorded in `automation/codex/manifest.json`. Verify `AGENTS.md`, the active authority in `planning.md`, this prompt's manifest fingerprint, and repository identity before doing research. Use the supplied scheduled window unchanged and start exactly one idempotent `research` run. Runtime state and receipts belong only under ignored `.automation/`.
+Run only after an explicit manual or API trigger from the primary checkout. Verify `AGENTS.md`, the active authority in `planning.md`, this prompt's manifest fingerprint, and repository identity before doing research. Use the supplied run window unchanged and start exactly one idempotent `research` run. Runtime state and receipts belong only under ignored `.automation/`. Reject scheduled execution and linked-worktree execution.
 
 Follow D08 `Research Acquisition Pipeline` (`D08-S-7aa714d7198c`): retrieve existing knowledge first; determine whether new research is needed; use Last 30 Days where recent public demand and customer language matter; acquire targeted authoritative material through Scrapling or another approved adapter where suitable; preserve URL, provider, dates, source type, topic, acquisition method, and raw or derived status; extract only useful intelligence; normalise, compare, and persist durable results.
 

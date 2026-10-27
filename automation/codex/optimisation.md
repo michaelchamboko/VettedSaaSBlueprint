@@ -1,6 +1,6 @@
 # Optimisation
 
-Run only from the working directory recorded in `automation/codex/manifest.json`. Verify `AGENTS.md`, the active authority in `planning.md`, this prompt's manifest fingerprint, and repository identity. Use the supplied scheduled window unchanged and start exactly one idempotent `optimise` run. Runtime state and receipts belong only under ignored `.automation/`.
+Run only after an explicit manual or API trigger from the primary checkout. Verify `AGENTS.md`, the active authority in `planning.md`, this prompt's manifest fingerprint, and repository identity. Use the supplied run window unchanged and start exactly one idempotent `optimise` run. Runtime state and receipts belong only under ignored `.automation/`. Reject scheduled execution and linked-worktree execution.
 
 Require the final completed `EditorialBriefV2` receipt from the same scheduled window before creating a proposal. Preserve its Research evidence state and source fingerprint. `no_change` produces no new content change. Partial or conflicting evidence can authorise publication when the structured pages preserve attributable observations, label the bounded inference, and disclose uncertainty, limitations, contradictions, and non-fit conditions. Reject only unsupported core conclusions, unbounded claims, and commercial or safety-sensitive claims requiring review.
 

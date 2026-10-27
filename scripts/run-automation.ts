@@ -20,7 +20,11 @@ async function main() {
   const command = process.argv[2];
   const type = automationJobTypeSchema.parse(argument("--type"));
   const scheduledWindow = argument("--window") ?? new Date().toISOString().slice(0, 10);
-  const mode = argument("--mode") === "manual_canary" ? "manual_canary" : "scheduled";
+  const modeArgument = argument("--mode");
+  if (modeArgument !== "manual" && modeArgument !== "api") {
+    throw new Error("Use --mode manual or --mode api. Scheduled execution is prohibited.");
+  }
+  const mode = modeArgument;
   assertAutomationInvocation({ type, scheduledWindow, mode, repositoryRoot: process.cwd() });
   const store = { root: process.cwd() };
   if (command === "start") {

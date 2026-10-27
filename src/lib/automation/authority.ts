@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { z } from "zod";
@@ -7,30 +7,29 @@ import type { AutomationJobType } from "./contracts";
 
 export const automationManifest = {
   tasks: [
-    { id: "vetted-saas-daily-research", type: "research", timeSast: "02:00" },
-    { id: "vetted-saas-editorial-brief", type: "editorial_brief", timeSast: "06:00" },
-    { id: "vetted-saas-optimisation", type: "optimise", timeSast: "20:00" },
-    { id: "vetted-saas-production-watchdog", type: "watchdog", timeSast: "23:00" },
+    { id: "vetted-saas-research", type: "research", trigger: "manual_or_api" },
+    { id: "vetted-saas-editorial-brief", type: "editorial_brief", trigger: "manual_or_api" },
+    { id: "vetted-saas-optimisation", type: "optimise", trigger: "manual_or_api" },
+    { id: "vetted-saas-production-watchdog", type: "watchdog", trigger: "manual_or_api" },
   ],
-  approvedCapabilities: ["repository_local_receipts", "direct_vercel_production_deploy", "manual_canary"] as const,
+  approvedCapabilities: ["repository_local_receipts", "direct_vercel_production_deploy", "manual_trigger", "api_trigger"] as const,
 } as const;
 
 const requiredTasks = [
-  ["vetted-saas-daily-research", "research", "02:00"],
-  ["vetted-saas-editorial-brief", "editorial_brief", "06:00"],
-  ["vetted-saas-optimisation", "optimise", "20:00"],
-  ["vetted-saas-production-watchdog", "watchdog", "23:00"],
+  ["vetted-saas-research", "research", "manual_or_api"],
+  ["vetted-saas-editorial-brief", "editorial_brief", "manual_or_api"],
+  ["vetted-saas-optimisation", "optimise", "manual_or_api"],
+  ["vetted-saas-production-watchdog", "watchdog", "manual_or_api"],
 ] as const;
 
 const trackedManifestSchema = z.object({
-  version: z.literal(1),
-  timezone: z.literal("Africa/Johannesburg"),
-  workingDirectory: z.string().min(1),
+  version: z.literal(2),
+  checkoutPolicy: z.literal("primary"),
   runtimeDirectory: z.literal(".automation"),
   tasks: z.array(z.object({
     id: z.string().min(1),
     type: z.enum(["research", "editorial_brief", "optimise", "watchdog"]),
-    timeSast: z.string().regex(/^\d{2}:\d{2}$/),
+    trigger: z.literal("manual_or_api"),
     promptFile: z.string().regex(/^automation\/codex\/[a-z-]+\.md$/),
     promptSha256: z.string().regex(/^[a-f0-9]{64}$/),
     desktopBootstrap: z.string().min(1),
@@ -63,30 +62,32 @@ export function verifyTrackedAutomationManifest(repositoryRoot: string): string[
   return failures;
 }
 
-export function verifyAutomationManifest(manifest: { tasks: ReadonlyArray<{ id: string; type: string; timeSast: string }> } = automationManifest): string[] {
-  const actual = manifest.tasks.map((task) => [task.id, task.type, task.timeSast] as const);
-  return JSON.stringify(actual) === JSON.stringify(requiredTasks) ? [] : ["SCHEDULE_DRIFT"];
+export function verifyAutomationManifest(manifest: { tasks: ReadonlyArray<{ id: string; type: string; trigger: string }> } = automationManifest): string[] {
+  const actual = manifest.tasks.map((task) => [task.id, task.type, task.trigger] as const);
+  return JSON.stringify(actual) === JSON.stringify(requiredTasks) ? [] : ["FLOW_AUTHORITY_DRIFT"];
 }
 
 export function assertAutomationInvocation(input: {
   type: AutomationJobType;
   scheduledWindow: string;
-  mode: "scheduled" | "manual_canary";
+  mode: "manual" | "api";
   requestedCapability?: string;
   repositoryRoot?: string;
 }) {
+  if (!(["manual", "api"] as const).includes(input.mode)) {
+    throw new Error("Automation authority violation: trigger must be manual or API; scheduled execution is prohibited.");
+  }
   const failures = verifyAutomationManifest();
   if (input.repositoryRoot) {
     failures.push(...verifyTrackedAutomationManifest(input.repositoryRoot));
-    const manifest = loadTrackedAutomationManifest(input.repositoryRoot);
-    if (input.mode === "scheduled" && path.resolve(input.repositoryRoot).toLowerCase() !== path.resolve(manifest.workingDirectory).toLowerCase()) {
-      failures.push("CHECKOUT_DRIFT");
+    const gitEntry = path.join(input.repositoryRoot, ".git");
+    try {
+      if (!statSync(gitEntry).isDirectory()) failures.push("PRIMARY_CHECKOUT_REQUIRED");
+    } catch {
+      failures.push("PRIMARY_CHECKOUT_REQUIRED");
     }
   }
   if (failures.length) throw new Error(`Automation authority violation: ${failures.join(", ")}`);
-  if (input.mode === "manual_canary" && !input.scheduledWindow.includes("canary")) {
-    throw new Error("Manual canary runs require a distinct canary window.");
-  }
   if (input.requestedCapability && !automationManifest.approvedCapabilities.includes(input.requestedCapability as never)) {
     throw new Error(`Automation capability is not approved: ${input.requestedCapability}`);
   }
