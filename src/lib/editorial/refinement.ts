@@ -197,5 +197,8 @@ export function canReuseEditorialEvidence(evidence: unknown, format: string, art
   const parsed = editorialEvidenceSchema.safeParse(evidence);
   if (!parsed.success || parsed.data.format !== format) return false;
   getFormat(format).schema.parse(artifact);
-  return parsed.data.afterFingerprint === fingerprintEditorialArtifact(artifact);
+  const artifactProsePaths = editorialProsePaths(format, artifact);
+  const coversArtifact = artifactProsePaths.length === parsed.data.eligibleProsePaths.length &&
+    artifactProsePaths.every((path, index) => path === parsed.data.eligibleProsePaths[index]);
+  return coversArtifact && parsed.data.afterFingerprint === fingerprintEditorialArtifact(artifact);
 }

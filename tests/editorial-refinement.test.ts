@@ -124,6 +124,11 @@ test("receipt reuse requires identical artifact, format and pinned revision", ()
   assert.equal(canReuseEditorialEvidence(evidence, "landing", revised), true);
   assert.equal(canReuseEditorialEvidence(evidence, "landing", samplePageBlueprint), false);
   assert.equal(canReuseEditorialEvidence({ ...evidence, revision: "old" }, "landing", revised), false);
+  assert.equal(canReuseEditorialEvidence({
+    ...evidence,
+    eligibleProsePaths: [evidence.eligibleProsePaths[0]],
+    changedPaths: [evidence.eligibleProsePaths[0]],
+  }, "landing", revised), false);
   assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, { ...notes, meaningPreserved: false }, { before: "checked", after: "score 5/5 CLEAN" }));
   assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, notes, { before: "", after: "score 5/5 CLEAN" }));
   assert.ok(!editorialProse("landing", samplePageBlueprint).includes(samplePageBlueprint.affiliate_disclosure.short_disclosure));
