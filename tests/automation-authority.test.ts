@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -63,7 +65,7 @@ test("the runner rejects scheduled execution and unapproved expansion", () => {
   assert.deepEqual(verifyAutomationManifest({ ...automationManifest, tasks: [...automationManifest.tasks.slice(0, 1), { ...automationManifest.tasks[1], trigger: "scheduled" }, ...automationManifest.tasks.slice(2)] }), ["FLOW_AUTHORITY_DRIFT"]);
 });
 
-test("the tracked manifest binds every stage to the primary checkout and a fingerprinted prompt", () => {
+test("the tracked manifest binds every stage to the primary checkout and a fingerprinted prompt", (context) => {
   const manifest = loadTrackedAutomationManifest(process.cwd());
   assert.equal(manifest.checkoutPolicy, "primary");
   assert.equal(manifest.runtimeDirectory, ".automation");
@@ -74,8 +76,28 @@ test("the tracked manifest binds every stage to the primary checkout and a finge
     "automation/codex/production-watchdog.md",
   ]);
   assert.deepEqual(verifyTrackedAutomationManifest(process.cwd()), []);
+
+  const scratchRoot = path.join(process.cwd(), ".scratch");
+  mkdirSync(scratchRoot, { recursive: true });
+  const fixtureRoot = mkdtempSync(path.join(scratchRoot, "automation-authority-"));
+  context.after(() => rmSync(fixtureRoot, { recursive: true, force: true }));
+
+  const createCheckoutFixture = (name: string, primary: boolean) => {
+    const root = path.join(fixtureRoot, name);
+    mkdirSync(root, { recursive: true });
+    cpSync(path.join(process.cwd(), "automation", "codex"), path.join(root, "automation", "codex"), { recursive: true });
+    if (primary) mkdirSync(path.join(root, ".git"));
+    else writeFileSync(path.join(root, ".git"), "gitdir: C:/linked-worktree\n", "utf8");
+    return root;
+  };
+
+  const primaryCheckout = createCheckoutFixture("primary", true);
+  const linkedCheckout = createCheckoutFixture("linked", false);
+  assert.doesNotThrow(
+    () => assertAutomationInvocation({ type: "research", scheduledWindow: "2026-10-27-manual", mode: "manual", repositoryRoot: primaryCheckout }),
+  );
   assert.throws(
-    () => assertAutomationInvocation({ type: "research", scheduledWindow: "2026-10-27-manual", mode: "manual", repositoryRoot: process.cwd() }),
+    () => assertAutomationInvocation({ type: "research", scheduledWindow: "2026-10-27-manual", mode: "manual", repositoryRoot: linkedCheckout }),
     /primary_checkout_required/i,
   );
 });
