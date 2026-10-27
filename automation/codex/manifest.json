@@ -1,39 +1,38 @@
 {
-  "version": 1,
-  "timezone": "Africa/Johannesburg",
-  "workingDirectory": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\phase-two",
+  "version": 2,
+  "checkoutPolicy": "primary",
   "runtimeDirectory": ".automation",
   "tasks": [
     {
-      "id": "vetted-saas-daily-research",
+      "id": "vetted-saas-research",
       "type": "research",
-      "timeSast": "02:00",
+      "trigger": "manual_or_api",
       "promptFile": "automation/codex/daily-research.md",
-      "promptSha256": "f33be96dd7ca979e17906b89cc40e5fa33bdabeaf72c27ae5c99569f7790e84b",
+      "promptSha256": "c0d2413894b041d9f890c8877878e23d1f176862b531c021850af6e79f4ae8ca",
       "desktopBootstrap": "Load automation/codex/daily-research.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     },
     {
       "id": "vetted-saas-editorial-brief",
       "type": "editorial_brief",
-      "timeSast": "06:00",
+      "trigger": "manual_or_api",
       "promptFile": "automation/codex/editorial-brief.md",
-      "promptSha256": "05d299731d3efa7d05badebcd445d75f10c0ca5879775512c5210daa6c9d03e3",
+      "promptSha256": "79c32c27c3a1b403d521d50cc472c68fc2856a85fb3e2ca38a30eae3917ca1cc",
       "desktopBootstrap": "Load automation/codex/editorial-brief.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     },
     {
       "id": "vetted-saas-optimisation",
       "type": "optimise",
-      "timeSast": "20:00",
+      "trigger": "manual_or_api",
       "promptFile": "automation/codex/optimisation.md",
-      "promptSha256": "b7b967e4aca23ee735e313e47517126fae548c93defb7a34062227ad190feb3f",
+      "promptSha256": "f52911ecf5b448ef67d0d174ae6028e4cb0ea6fa2bd2322c6f42530edd3179b1",
       "desktopBootstrap": "Load automation/codex/optimisation.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     },
     {
       "id": "vetted-saas-production-watchdog",
       "type": "watchdog",
-      "timeSast": "23:00",
+      "trigger": "manual_or_api",
       "promptFile": "automation/codex/production-watchdog.md",
-      "promptSha256": "6c553cc1fec2a7984e20ef52e7fce6deb42b98b76358fbd4bfc48626809e6497",
+      "promptSha256": "0be340cdaccefff5fccf88bc4905b46c789e84140ce32377565cf9da5eeb7323",
       "desktopBootstrap": "Load automation/codex/production-watchdog.md from the configured working directory, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
     }
   ]

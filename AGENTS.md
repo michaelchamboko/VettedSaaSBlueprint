@@ -32,7 +32,7 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 - Automation is bound to the approved repository contract, schedule manifest, tracked prompts, and selected BuildRunner packet. Do not add a prerequisite, service, release channel, workflow stage, or capability by inference.
 - Before proposing a change, inspect `AGENTS.md`, `planning.md`, the selected packet, source-intelligence records, and the affected automation code. If the defined flow can continue, continue without asking.
 - Ask the product owner only when a specific, documented stage cannot proceed because a required authority, input, or external state is genuinely absent. State that exact blocker and no invented remedy.
-- A manual canary exercises the existing sequence in its own window. It must not modify scheduled times or weaken evidence, receipt, quality, or deployment gates.
+- The article-to-page workflow runs only from an explicit manual or API trigger in the primary checkout. Scheduled execution and secondary-worktree execution are prohibited. A trigger must not weaken evidence, receipt, quality, review, or deployment gates.
 
 ## Repository boundaries
 
@@ -53,11 +53,11 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 4. Implement the slice with its automated checks and production-facing acceptance criteria.
 5. Deploy Phase One and later release slices to Vercel through the repository deployment configuration.
 6. Verify the deployed URLs independently of worker self-reporting and record the deployment receipt.
-7. Keep scheduled jobs authenticated, idempotent, observable, retryable, and outside latency-sensitive public request paths.
+7. Keep manual and API-triggered runs authenticated, idempotent, observable, retryable, and outside latency-sensitive public request paths.
 
 ## Mandatory frontend design workflow
 
-- Every agent and model that creates or changes a page, component, layout, typography, styling, or motion must use both `design-taste-frontend` and the project-local Impeccable skill. This applies to scheduled page-building runs and low-cost models as well as interactive work; do not treat either as optional inspiration.
+- Every agent and model that creates or changes a page, component, layout, typography, styling, or motion must use both `design-taste-frontend` and the project-local Impeccable skill. This applies to manual and API-triggered page-building runs as well as interactive work; do not treat either as optional inspiration.
 - Before implementation, read `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or the checkout copy if provisioned), state its one-line Design Read, and choose a page-type direction using the approved visual references and dials in D04 §6.2 (`D04-S-c5113e3d7e2d`) and D04 §32 Stage 4 (`D04-S-1daaf8613a03`). Preserve the established site identity unless the approved brief calls for a redesign.
 - Before a UI edit, run `.agents/skills/impeccable/scripts/impeccable.cmd context --target <source-file-or-route>` from the repository root, follow its project context, and read `.agents/skills/impeccable/reference/craft-floor.md`. If the launcher is unavailable, follow the Impeccable skill's documented fallback and report that the detector did not run.
 - After rendering, inspect desktop and mobile together; run `.agents/skills/impeccable/scripts/impeccable.cmd critique <target>`, `audit <target>`, and `detect <target>` for the changed surface, correct the findings in one bounded pass, then confirm once. Preserve content, evidence, responsive behavior, accessibility, and reduced-motion requirements. Do not claim a design pass from a clean mechanical detector alone.

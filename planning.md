@@ -7,6 +7,23 @@ created: 2026-08-29
 
 # Vetted SaaS B Spec Kit Execution Authority
 
+## Product-owner article-to-page flow correction — 2026-10-27
+
+Status: `CURRENT ARTICLE-TO-PAGE AUTHORITY`
+
+Classification: `user-directive`. The product owner designated the 27 October 2026 Mandatory Article-to-Page Workflow diagram as the source of truth for this workflow. This section supersedes every earlier article-import, automation-trigger, release, activation, and worktree instruction that conflicts with it. Historical receipts remain evidence; they do not retain superseded authority.
+
+The binding sequence is:
+
+1. Accept an explicit manual or API trigger only; no scheduled task may start this workflow. Intake from the article folder, compare two stability observations five seconds apart, reuse an existing result for a duplicate, and hash plus preserve an immutable original for a new or changed file.
+2. Classify the article, extract material claims and source URLs, reuse exact-URL, claim-hash, and full-text evidence first, research only evidence gaps, validate every material claim, seek a distinct second source for unresolved claims, record the claim baseline, and store clean provenance and freshness records. Never invent certainty.
+3. Create structured article data; correct, qualify, or remove unsupported claims; perform the mandatory full SlopMonster rewrite on every editable prose field; complete the three structural, anti-slop, and voice/rhythm passes; use a different model family for the final cleanse; preserve claims, citations, URLs, disclosures, identifiers, order, and schema during fidelity review; require a valid fingerprint-matched `EditorialEvidenceV2` with all AI passes present and a 5/5 clean result.
+4. Reuse the established site identity and renderer unless a new or materially changed public page requires Impeccable context and page shaping. Use the first identity as the pilot, require an Emil design-engineering review only when interaction or motion is present, render desktop and mobile together, run Impeccable critique, audit, and detect, perform one bounded correction pass, then confirm the polish.
+5. Package the original, candidate, evidence, reviews, and receipts; obtain an independent Codex review bound to the exact current PR head; require clean workflow, lint, typecheck, tests, build, and public-site gates; repair substantiated findings and obtain a fresh current-head review; automatically merge only the exact reviewed head; deploy every eligible run to Vercel production; verify the canonical URL, content, accessibility, and runtime; then use bounded fix-forward or verified rollback when production checks fail.
+6. Close every task worktree. Remove shipped checkouts; snapshot or archive unfinished work before removal. The final state has no half-finished worktrees and no scheduled tasks. Braintrust remains connected for on-demand evaluation, and completed production work remains verified and recoverable.
+
+Operational enforcement: `automation/codex/manifest.json` authorizes the four existing workflow stages as `manual_or_api` only and requires the primary checkout. `scripts/run-automation.ts` must receive `--mode manual` or `--mode api`; it has no scheduled default. The term `scheduledWindow` in persisted version-one data is a legacy idempotency-field name, not permission to schedule execution. GitNexus remains optional navigation evidence and has no runtime or semantic-authority role.
+
 ## Product-owner phase transition — 2026-08-31
 
 Status: `SUPERSEDED BY RECOVERY AUTHORITY v1.1 BELOW`
