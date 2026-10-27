@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { advanceImport, createArticleImport, ensureImportContentApproval, ensureImportPresentation, loadImport, recordImportFailure, resumeImport } from "../src/lib/article-import/engine";
-import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { approveFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
 import { recordArticlePresentation } from "../scripts/record-article-presentation";
 
 async function setup() {
@@ -79,7 +79,9 @@ test("legacy presentation loads as absent and migrates without losing content ap
     assert.equal(validating.release, undefined);
     assert.equal(validating.resumeStage, undefined);
     await writeFile(statePath, JSON.stringify(legacy));
-    const migrated = await recordArticlePresentation(root, record.importId, "build-pack/article-import/verifier.json");
+    const designReceiptPath = path.join(root, "build-pack/article-import/page-design.json");
+    await writeFile(designReceiptPath, JSON.stringify(validPageDesignReceipt));
+    const migrated = await recordArticlePresentation(root, record.importId, "build-pack/article-import/verifier.json", designReceiptPath);
     assert.equal(migrated.stage, "RELEASING");
     assert.equal((await loadImport(root, record.importId)).stage, "RELEASING");
     assert.equal(migrated.presentation?.evidenceFiles.length, 1);

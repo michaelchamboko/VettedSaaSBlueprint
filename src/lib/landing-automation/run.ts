@@ -321,7 +321,7 @@ export function advanceLandingRun(
         next_action: {
           kind: "author_page",
           description:
-            "Create the evidence-backed structured page, then complete the mandatory full-article SlopMonster workflow in .agents/skills/eleanor-editorial/SKILL.md before candidate validation: rewrite every editable prose field through all three passes, complete a different-model-family cleanse, run the final fidelity review, require 5/5 CLEAN, and record EditorialEvidenceV2 outside public content alongside design direction, preview artifacts, and independent review records.",
+            "Create the evidence-backed structured page, then complete the mandatory full-article SlopMonster workflow in .agents/skills/eleanor-editorial/SKILL.md. Before UI implementation, run Impeccable context and shape; after rendering desktop and mobile, run critique, audit, detect, one bounded correction, and polish. The first qualifying page also runs init, document, and extract; later pages reuse that identity. Apply Emil guidance only when its interaction or motion trigger is present. Record EditorialEvidenceV2 and the page-design receipt before candidate validation.",
         },
       };
 
@@ -342,7 +342,7 @@ export function advanceLandingRun(
         next_action: {
           kind: "run_quality_checks",
           description:
-            "Run visual, uniqueness, compliance, conversion, static, link, and build checks.",
+            "Require the page-design receipt, then run visual, uniqueness, compliance, conversion, static, link, and build checks.",
         },
       };
 

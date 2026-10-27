@@ -59,8 +59,9 @@ export type ReleaseOperations = {
   capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string; verified: boolean }>;
   commit(message: string, files: readonly string[]): Promise<string>;
   preparePullRequest(reviewedCommitSha: string): Promise<{ url: string; branch: string; reviewedCommitSha: string }>;
-  inspectPullRequest(url: string): Promise<{ merged: boolean; ownerApproved?: boolean; headRefOid: string; mergeCommitSha?: string }>;
+  inspectPullRequest(url: string): Promise<{ merged: boolean; headRefOid: string; mergeCommitSha?: string }>;
   verifyCodeReview(pullRequestUrl: string, evidenceUrl: string, reviewedCommitSha: string): Promise<void>;
+  mergePullRequest(pullRequestUrl: string, reviewedCommitSha: string): Promise<{ mergeCommitSha: string }>;
   checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;
   deploy(commitSha: string): Promise<ReleaseDeployment>;
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
@@ -463,16 +464,19 @@ export async function assessImportRelease(input: {
       pendingRelease = { ...pendingRelease, pullRequestUrl: pullRequest.url };
       input.record = { ...input.record, pendingRelease };
       await saveImport(input.repositoryRoot, input.record);
-      return await waitForOwnerMerge(input.repositoryRoot, input.record);
+      return await waitForCodeReview(input.repositoryRoot, input.record);
     }
     const pullRequest = await input.operations.inspectPullRequest(pendingRelease.pullRequestUrl);
     if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED");
-    // Owner-authorized removal of the independent Codex review gate (2026-10-22): the pipeline
-    // no longer requires a chatgpt-codex-connector receipt before deploying. Head integrity
-    // (above) and owner merge (below) still gate the release.
-    if (!pullRequest.merged || pullRequest.ownerApproved !== true) return await waitForOwnerMerge(input.repositoryRoot, input.record);
-    if (!pullRequest.mergeCommitSha) throw new Error("MERGE_COMMIT_MISSING");
-    const commitSha = pullRequest.mergeCommitSha;
+    const codeReview = pendingRelease.codeReview;
+    if (!codeReview || codeReview.reviewedCommitSha !== pullRequest.headRefOid || codeReview.pullRequestUrl !== pendingRelease.pullRequestUrl) {
+      return await waitForCodeReview(input.repositoryRoot, input.record);
+    }
+    await input.operations.verifyCodeReview(codeReview.pullRequestUrl, codeReview.evidenceUrl, pullRequest.headRefOid);
+    const commitSha = pullRequest.merged
+      ? pullRequest.mergeCommitSha
+      : (await input.operations.mergePullRequest(pendingRelease.pullRequestUrl, pullRequest.headRefOid)).mergeCommitSha;
+    if (!commitSha) throw new Error("MERGE_COMMIT_MISSING");
     await input.operations.checkoutMergedCommit(pendingRelease.reviewedCommitSha, commitSha);
     const mergedValidation = await input.operations.runValidation(validationCommands);
     if (!mergedValidation.ok) {
@@ -566,16 +570,8 @@ async function waitForCodeReview(repositoryRoot: string, record: ExternalArticle
   if (!pending?.pullRequestUrl) throw new Error("PULL_REQUEST_URL_MISSING");
   const at = new Date().toISOString();
   await saveImport(repositoryRoot, { ...record, pendingRelease: { ...pending, codeReview: undefined }, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at,
-    nextAction: "Record a passed independent Codex review of the current PR head before owner merge: " + pending.pullRequestUrl,
+    nextAction: "Record a passed independent Codex review of the current PR head; the next release pass merges and deploys it automatically: " + pending.pullRequestUrl,
     stageReceipts: [...record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: reason + ": " + pending.pullRequestUrl }],
   });
   return { status: "WAITING_EXTERNAL", reasons: [reason, pending.pullRequestUrl] };
-}
-
-async function waitForOwnerMerge(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ReleaseAssessment> {
-  const pullRequestUrl = record.pendingRelease?.pullRequestUrl;
-  if (!pullRequestUrl) throw new Error("PULL_REQUEST_URL_MISSING");
-  const at = new Date().toISOString();
-  await saveImport(repositoryRoot, { ...record, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at, nextAction: "Owner review and merge required: " + pullRequestUrl, stageReceipts: [...record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: "Owner approval required: " + pullRequestUrl }] });
-  return { status: "WAITING_EXTERNAL", reasons: ["OWNER_PR_MERGE_REQUIRED", pullRequestUrl] };
 }
