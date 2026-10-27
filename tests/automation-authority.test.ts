@@ -26,6 +26,22 @@ test("the morning concern report turns recurring deployment findings into measur
   assert.equal(report.braintrustEvalSuggestions[0].concernFingerprint, report.concerns[0].fingerprint);
 });
 
+test("the morning concern report truthfully represents windows without a verified deployment", () => {
+  for (const productionOutcome of ["no_deployment", "release_failed_before_deployment", "production_unverified"] as const) {
+    const report = deploymentConcernReportSchema.parse({
+      schemaVersion: "DeploymentConcernReportV1",
+      windowStart: "2026-10-26T04:00:00.000Z",
+      windowEnd: "2026-10-27T04:00:00.000Z",
+      productionOutcome,
+      concerns: [],
+      braintrustStatus: "suggestions_only",
+      braintrustEvalSuggestions: [],
+      createdAt: "2026-10-27T04:00:00.000Z",
+    });
+    assert.equal(report.productionOutcome, productionOutcome);
+  }
+});
+
 test("the repository permits exactly the four approved Codex automations at their approved times", () => {
   assert.deepEqual(automationManifest.tasks.map((task) => [task.id, task.timeSast]), [
     ["vetted-saas-daily-research", "02:00"],
