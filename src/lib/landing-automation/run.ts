@@ -321,7 +321,7 @@ export function advanceLandingRun(
         next_action: {
           kind: "author_page",
           description:
-            "Create the evidence-backed structured page, apply one existing-writer Eleanor refinement pass using .agents/skills/eleanor-editorial/SKILL.md before candidate validation, and record the prose comparison outside public content alongside design direction, preview artifacts, and independent review records.",
+            "Create the evidence-backed structured page, then complete the mandatory full-article SlopMonster workflow in .agents/skills/eleanor-editorial/SKILL.md before candidate validation: rewrite every editable prose field through all three passes, complete a different-model-family cleanse, run the final fidelity review, require 5/5 CLEAN, and record EditorialEvidenceV2 outside public content alongside design direction, preview artifacts, and independent review records.",
         },
       };
 

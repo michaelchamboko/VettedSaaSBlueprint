@@ -12,7 +12,7 @@
 | Responsibility | Implementation | Failure route |
 |---|---|---|
 | Import and research | `src/lib/article-import/engine.ts` parses untrusted Markdown, resolves approved URLs, fingerprints sources and drives bounded strategies. | Temporary dependencies enter `WAITING_EXTERNAL`; unusable content can reach `QUARANTINED`. |
-| Editorial approval | `content-approval.ts` binds the schema artifact, source, pinned Eleanor revision, editorial evidence and format quality receipt. | Any artifact or evidence mismatch returns to `REFINING`. |
+| Editorial approval | `content-approval.ts` binds the schema artifact and source to pinned `EditorialEvidenceV2`: every editable prose field rewritten, all three Eleanor passes complete, a different-model-family cleanse complete, protected fields unchanged, final fidelity review complete and the SlopMonster result at 5/5 CLEAN. | A legacy receipt, partial cleanup, same-family cleanse, missing pass, unchanged prose field, protected-field mutation, non-clean final score, or artifact/evidence mismatch returns to `REFINING`. |
 | Presentation | `presentation.ts` requires owner-format schema validation plus hashed verifier evidence for desktop, mobile, accessibility, technical SEO, overflow and runtime proof. | Missing, stale or tampered proof returns to `VALIDATING` while preserving content approval. |
 | Release | `release.ts` and `local-release-adapter.ts` derive the target from the approved artifact, stage declared files, open or reuse a PR, require independent current-head Codex review, wait for owner merge, deploy the exact merged commit and verify or roll back. | Git, GitHub, credentials, network and deployment failures remain resumable. |
 

@@ -4,7 +4,9 @@ Six passages were revised in memory: two decision passages, two landing passages
 
 The decision checker stayed at 4/5, landing at 5/5 and blog at 3/5. The edits make the decision question and practical conditions easier to read. They do not establish better factual accuracy or human authorship. Specific retained findings are explained in each receipt.
 
-The checker ran with Python 3.13 and the unchanged SlopMonster source pinned in .agents/skills/eleanor-editorial/UPSTREAM.json. The comparison validated both drafts against existing schemas and rejected protected-field changes. Focused tests cover that rejection separately.
+These receipts record the superseded 21 October 2026 one-pass calibration. They remain historical evidence only and cannot satisfy the current `EditorialEvidenceV2` gate. The current mandatory full-article workflow is defined in `.agents/skills/eleanor-editorial/SKILL.md`.
+
+The historical checker ran with Python 3.13 and the SlopMonster source then pinned in `.agents/skills/eleanor-editorial/UPSTREAM.json`. The comparison validated both drafts against existing schemas and rejected protected-field changes. Focused tests cover that rejection separately.
 
 Source authority: D07 §32 Editorial Quality Standard (D07-S-761a1d533ac1) and D10 §9.4 Content and editorial quality (D10-S-574481d73201). The owner authorized this supervised integration. Calibration text is a proposal, not approved production copy.
 
@@ -12,7 +14,7 @@ scripts/calibrate-editorial-refinement.ts reproduces these transformations from 
 
 ## Delivery and workflow map
 
-For decision, landing, blog and visibility content, the supervised authoring sequence is: evidence-backed structured draft → before snapshot and checker → one Eleanor refinement by the existing writer → schema and protected-field comparison, checker and semantic review → editorial receipt → existing candidate validation and independent review. Publication still follows the existing approval and release process. This pass adds no model, service, scheduled stage or release authority.
+The current sequence for decision, landing, blog and visibility content is: evidence-backed structured draft → before snapshot and checker → full rewrite of every editable prose field through the three Eleanor passes → different-model-family cleanse → protected-field comparison and final fidelity review → 5/5 CLEAN → `EditorialEvidenceV2` → existing candidate validation and independent review. Publication still follows the existing approval and release process.
 
 | Format | Exact integration location and insertion point |
 | --- | --- |

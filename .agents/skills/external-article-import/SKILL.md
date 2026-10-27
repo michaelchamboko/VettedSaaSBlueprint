@@ -13,7 +13,7 @@ The submitter's attachment is the standing rights attestation that the material 
 
 Treat authoring and rendered publication as two separate gates with a one-way handoff:
 
-- **Content gate:** research and transformation establish the evidence-backed schema; the Eleanor/SlopMonster pass reviews SEO intent, directness, uncertainty, originality, and persona; protected-field comparison and semantic review then freeze an approved content fingerprint in the editorial evidence receipt. This gate owns all wording decisions.
+- **Content gate:** research and transformation establish the evidence-backed schema; the mandatory full-article Eleanor/SlopMonster workflow rewrites every editable prose field through three passes and a different-model-family cleanse; protected-field comparison, final fidelity review and a 5/5 CLEAN result then freeze an approved content fingerprint in `EditorialEvidenceV2`. This gate owns all wording decisions.
 - **Publication/render gate:** only after the content fingerprint is frozen, run schema, catalogue, accessibility, desktop/mobile rendering, disclosure and CTA, sitemap, robots, overflow, runtime-error, build, deployment, and production-verification checks. Browser and layout tools verify presentation; they never judge, rewrite, or silently normalize prose.
 
 If any wording changes after the content gate, invalidate the prior content fingerprint, return the import to `REFINING`, repeat the content review and receipt, and only then restart publication/render checks. A layout or browser failure may repair the renderer or presentation metadata, but it must return a copy issue to the content gate rather than editing public words in place.
@@ -22,7 +22,7 @@ Complete the next action in the receipt in order:
 
 1. Research each material claim with attributable sources. Remove unsupported prices, discounts, rankings, named comparisons, testing experience, and unsupported certainty. If the source has no defensible core, research a fresh article on the same viable topic; quarantine only when no safe topic remains.
 2. Use the recorded format and existing schema. For an unresolved format, choose the existing contract that fits the evidence and record why.
-3. Apply `.agents/skills/eleanor-editorial/SKILL.md` exactly once after evidence-backed drafting and before validation. Run `scripts/compare-editorial-artifacts.ts`, preserve protected fields and item order, and save the evidence receipt.
+3. Complete `.agents/skills/eleanor-editorial/SKILL.md` after evidence-backed drafting and before validation. Run `scripts/compare-editorial-artifacts.ts`; a partial rewrite, same-family cleanse, missing pass, protected-field or item-order change, or final score below 5/5 cannot leave `REFINING`.
 4. For an affiliate URL, use the exact resolved allowlisted URL in the transformation receipt. If the receipt says `decommercialized`, remove affiliate links and commercial CTAs and publish a neutral article. Never edit `approved-urls.md`.
 5. Run the format validator, quality checks, `npm run verify:agent-workflow`, lint, typecheck, tests, build, public-site validation, and applicable production verification. Repair the failed layer, then record a stage receipt.
 6. Release from a clean worktree after refreshing `main`. Recreate the content artifact if its target changed, stage only declared files, and open or reuse an import PR. Wait for owner-approved merge, then deploy the exact merged commit and verify the canonical URL. If verification fails, roll back the captured deployment, verify restoration, and fix forward.
