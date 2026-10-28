@@ -13,6 +13,31 @@ function Get-Sha256Text {
     }
 }
 
+function Get-NormalizedFileSha256 {
+    param([Parameter(Mandatory)][string]$Path)
+    $text = [System.IO.File]::ReadAllText($Path)
+    $normalized = ($text -replace "`r`n", "`n") -replace "`r", "`n"
+    return Get-Sha256Text -Text $normalized
+}
+
+function Get-RepositoryLifecycleState {
+    param([Parameter(Mandatory)][string]$RepositoryRoot)
+    $gitSafeDirectory = "safe.directory=$RepositoryRoot"
+    $inside = (& git -c $gitSafeDirectory -C $RepositoryRoot rev-parse --is-inside-work-tree).Trim()
+    if ($LASTEXITCODE -ne 0 -or $inside -ne 'true') {
+        throw "Unable to verify Git worktree: $RepositoryRoot"
+    }
+    $headCommit = (& git -c $gitSafeDirectory -C $RepositoryRoot rev-parse HEAD).Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect Git HEAD.' }
+    $remotes = @(& git -c $gitSafeDirectory -C $RepositoryRoot remote)
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect Git remotes.' }
+    return [pscustomobject]@{
+        IsInsideWorkTree = $true
+        HeadCommit = $headCommit
+        Remotes = $remotes
+    }
+}
+
 function ConvertTo-StableToken {
     param([string]$Value)
     $normal = $Value.Normalize([System.Text.NormalizationForm]::FormKD).ToLowerInvariant()
@@ -545,4 +570,4 @@ function Get-GraphImpact {
     }
 }
 
-Export-ModuleMember -Function Get-DocumentSections, Get-RelationshipCandidates, New-CanonicalGraph, Test-CanonicalGraph, New-GitNexusBridge, Get-GraphImpact
+Export-ModuleMember -Function Get-NormalizedFileSha256, Get-RepositoryLifecycleState, Get-DocumentSections, Get-RelationshipCandidates, New-CanonicalGraph, Test-CanonicalGraph, New-GitNexusBridge, Get-GraphImpact

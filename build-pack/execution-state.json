@@ -88,6 +88,7 @@
         "R-C-D06-S-a3bab00bb222",
         "R-C-D06-S-a69aeb2d6aa5",
         "R-C-D06-S-a7002eaf1d7e",
+        "R-C-D06-S-ac41adad0ebd",
         "R-C-D06-S-acc2f7475b24",
         "R-C-D06-S-afcaa5ba6eb7",
         "R-C-D06-S-b11060acced6",
@@ -1182,10 +1183,10 @@
     "phase_one": "P1_VERIFIED",
     "phase_one_receipt": "build-pack/receipts/phase-one-release.json",
     "planning_authority": "planning.md",
-    "requirement_denominator": 799,
-    "executable_requirement_count": 400,
-    "acceptance_denominator": 799,
+    "requirement_denominator": 803,
+    "executable_requirement_count": 401,
+    "acceptance_denominator": 803,
     "baseline_commit": "956e3a830ea7c11ae4867635ff2edf8c5865c856",
-    "digest": "3c1ef0d4ae92ef20e910ce6ace73c1085519b18a5f6b0a6586da5641bae82341"
+    "digest": "6d1715e8d4ed9ce6487b2f0585645ca39174b16a1e8b284cb92e4242d3668eaf"
   }
 }

@@ -57,6 +57,8 @@ The strategy exists to attract real people who need help making software decisio
 
 This document is authoritative for growth, distribution, audience development, and channel measurement.
 
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
+
 It does not redefine:
 
 - the product promise or functional requirements in the Master PRD;

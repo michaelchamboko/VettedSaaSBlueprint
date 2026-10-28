@@ -1,0 +1,24 @@
+﻿SOURCE_MANIFEST inventory taken 2026-10-28T18:23:41.4275327+02:00
+manifest path: docs/document-intelligence/SOURCE_MANIFEST.json
+schema_version=2.0
+generated_on=2026-08-29
+source_count=12
+heading_count=1424
+manifest_sha256(recorded)=0ff15ab1723ae38f53e9f97a09519f765ebf0a930bd0089ef140a212ec03f0ac
+
+source_id | authority_status | line_count | heading_count | path | sha256(recorded) | sha256(recomputed) | match
+UI | visual-reference-catalogue | 673 | 69 | docs/APPROVED_UI_COMPONENT_CATALOGUE.md | c44e1c9e8b0df66ad0162f4bc1ced7a400e500faa07ddb43a120b5d55cb60894 | 1b010f559b000bb944368edf90e29fbbee33cc7d8d6e34e3ca69a35f31b3e60f | MISMATCH
+D01 | working-validation-authority | 1132 | 101 | docs/Vetted-SaaS-Blueprint-01-Market-Research-and-Opportunity-Plan-v1.md | 85798b8b8e985b0e312824b8082ab5d83971f78702fb9ba7d783dcb04a533a2e | 358ee0675eb9921492622119e8ec4468a1d838d721f4be50d911ebfb88315c7d | MISMATCH
+D02 | working-roadmap-authority | 1350 | 127 | docs/Vetted-SaaS-Blueprint-02-Product-Roadmap-v1.md | 14a477c7f3d979006a931def3d3339bd036f25226fde4d63e45001eb275bc4e2 | c564501ceec5f923bf1f2f6510b8bac12c01cbc30f5663245cee83f46b150717 | MISMATCH
+D03 | working-architecture-authority | 1768 | 165 | docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md | 3091a2f7583538f84805f67e6e08da0170c2da6c7f291231418b0959fad7f16e | f492abe35850be64abc1fa4f6971037cc7901430895115e8f2358e2179219fe7 | MISMATCH
+D04 | working-design-authority | 2166 | 210 | docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md | 8327cd7d5bcd638a34a6a41413cdcd77d14fa602a26bb73a6cb8966e49d011de | 6ac64360592ffb5eb7d4c5aa962c0161f1e8969d1105742138e0a84e1afb7b16 | MISMATCH
+D05 | product-requirements-authority | 2237 | 182 | docs/Vetted-SaaS-Blueprint-05-Master-PRD-v1.md | 73517a8a680df0611b7b9023411a207aa5580059f2ee7b1481437b5e2831be7d | bb2c8dd824df0b84c29079d4def80e45842f572acb3dd586ace51d5c3e4085ab | MISMATCH
+D06 | working-implementation-authority | 1747 | 150 | docs/Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md | b4d9f56edb733560e2491a2ce853de32654fcb8f72c5aa859647ba92e093db04 | b06a2d2c52375c0bf5735cee00d650a860822b45497b768318203048cbf6b294 | MISMATCH
+D07 | working-editorial-authority | 1556 | 145 | docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md | 3470b10d2593a4df21f3207caa7f99175fd2231b92d3442dc95c3eb1d298b5bb | b9f32487c964685e967e544d85706756ce25db1dd782fc74e1db7732f158efa3 | MISMATCH
+D08 | working-research-authority | 1522 | 115 | docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md | 8d5ad931a35166aab7fc11f5582e4cda34502a3e10e26fd65657c8d9bf2acdb5 | 908c30b58444cd71a89fa49503cab7c6d9d1801d9f55424cf5f7fa5d62a2ce5b | MISMATCH
+D09 | working-growth-authority | 830 | 65 | docs/Vetted-SaaS-Blueprint-09-Growth-and-Distribution-Strategy.md | 6c0d612da685b2db9c34cc9670c71481478daa11b35283b793a09bd7006d74be | 8c0e4a3e2dbf0028964039efd52d0e0823186cada727e43692b97d8dd1deb335 | MISMATCH
+D10 | qa-operating-authority | 526 | 48 | docs/Vetted-SaaS-Blueprint-10-QA-and-Testing-Plan.md | 02c34aa737db9a233153397ccdadfc62c84a91ef09cc636354fb963719ec31d5 | 034f398460d49b24e543288105485b7add5eeaac713d91ad2d089aec841c1c94 | MISMATCH
+D11 | draft-proposal-no-implementation-authority | 473 | 47 | docs/Vetted-SaaS-Blueprint-11-ScrollCraft-Narrative-Motion-Strategy-and-Fork-Tailoring-Plan.md | 44b6724d1723ecc8e64aa4ed4c1999bfeb1e19fb8e33debb6564664d6695c96b | 6bab5fce941e1e51d1bd14906f2923eab7013e4b6753cabe63a8ce5de05a7058 | MISMATCH
+
+sum line_count = 15980
+sum heading_count = 1424

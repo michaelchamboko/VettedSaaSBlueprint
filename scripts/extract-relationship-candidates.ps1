@@ -31,15 +31,15 @@ function Get-Sha256Text {
     }
 }
 
-$manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
-$aliasDocument = Get-Content -Raw -LiteralPath $aliasPath | ConvertFrom-Json
+$manifest = Get-Content -Raw -Encoding UTF8 -LiteralPath $manifestPath | ConvertFrom-Json
+$aliasDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $aliasPath | ConvertFrom-Json
 $aliases = @{}
 foreach ($property in $aliasDocument.aliases.PSObject.Properties) { $aliases[$property.Name] = [string]$property.Value }
 
 $candidates = [System.Collections.Generic.List[object]]::new()
 foreach ($source in $manifest.sources) {
     $sourcePath = Join-Path $repositoryRoot ($source.path -replace '/', '\')
-    $currentHash = Get-Sha256File -Path $sourcePath
+    $currentHash = Get-NormalizedFileSha256 -Path $sourcePath
     if ($currentHash -ne $source.sha256) { throw "Source drift detected before candidate extraction: $($source.path)" }
     $lines = [System.IO.File]::ReadAllLines($sourcePath)
     $sections = @(Get-DocumentSections -SourceId $source.source_id -Lines $lines)

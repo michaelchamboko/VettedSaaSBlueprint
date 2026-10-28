@@ -1,2 +1,8 @@
 # Preserve pinned SlopMonster bytes on Windows checkouts.
 /.agents/skills/eleanor-editorial/** text eol=lf
+/docs/APPROVED_UI_COMPONENT_CATALOGUE.md text eol=lf
+/docs/Vetted-SaaS-Blueprint-*.md text eol=lf
+/docs/document-intelligence/*.json text eol=lf
+/docs/document-intelligence/*.md text eol=lf
+/docs/document-intelligence/gitnexus-bridge/** text eol=lf
+/build-pack/*.json text eol=lf

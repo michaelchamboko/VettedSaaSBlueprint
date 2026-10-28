@@ -170,6 +170,7 @@ export function claim_C_D08_S_c58729d2cea1() { return "C-D08-S-c58729d2cea1"; }
 export function claim_C_D08_S_dd41c94b259d() { return "C-D08-S-dd41c94b259d"; }
 export function claim_C_D08_S_97753d9e9959() { return "C-D08-S-97753d9e9959"; }
 export function claim_C_D08_S_1d5b36c1ac53() { return "C-D08-S-1d5b36c1ac53"; }
+export function claim_C_D08_S_b3ea66f554f2() { return "C-D08-S-b3ea66f554f2"; }
 export function claim_C_D08_S_9545135cc8c9() { return "C-D08-S-9545135cc8c9"; }
 export function claim_C_D08_S_de8aa1c5d8cf() { return "C-D08-S-de8aa1c5d8cf"; }
 export function claim_C_D08_S_74c7eea8bdc1() { return "C-D08-S-74c7eea8bdc1"; }

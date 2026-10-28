@@ -1,0 +1,300 @@
+﻿# A0001 — source checkout baseline observations
+Captured (ISO 8601): 2026-10-28T17:20:35.8525951+02:00
+Working directory: C:\Users\micha\.buzz\REPOS\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy
+
+## tool versions
+rtk : [rtk] /!\ No hook installed ΓÇö run `rtk init -g` for automatic token savings
+At line:10 char:12
++ $lines += (rtk proxy rtk --version 2>&1 | Out-String)
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([rtk] /!\ No ho...c token savings:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+rtk 0.42.4
+
+git version 2.55.0.windows.2
+
+v24.18.0
+
+12.0.0
+
+powershell: 5.1.26100.9711
+
+## git rev-parse --show-toplevel
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy
+
+## git branch --show-current
+main
+
+## git rev-parse HEAD
+703863e24c190a62ca8e316bcf1e29c83f76d601
+
+## git rev-parse origin/main
+e48691c0bcd19043b14de55ad1f124c8e4542e9e
+
+## git log --oneline -3 origin/main
+e48691c Merge PR #38: Remove retired multi-stage automation workflow
+3f1fc2b Scope retired workflow mappings explicitly
+a22e73d Narrow retired workflow requirement matching
+
+## git remote -v
+origin	https://github.com/michaelchamboko/VettedSaaSBlueprint.git (fetch)
+origin	https://github.com/michaelchamboko/VettedSaaSBlueprint.git (push)
+
+## git worktree list
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy                                      703863e [main]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/apple-design-fix          6d9782a [agent/apple-design-fix]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/architecture-audit-report ff85ee6 [codex/architecture-audit]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/article-import-1021       5de8e78 [codex/article-import-1021]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/article-import-proof      8b94be2 [codex/article-import-proof]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/AUT-001                   1dae069 [globalsetup/task-aut-001]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/card-open-alignment       de6ca29 [codex/card-open-alignment]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/decision-journey-design   0665739 [codex/vetted-saas-decision-journey-design]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/e2e-canary                7c679b9 [codex/vetted-saas-e2e-canary]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/eleanor-editorial-1021b   53d0e75 [codex/eleanor-editorial-1021b]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/footer-privacy-20260916   083f45b [codex/footer-privacy-20260916]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/impl-test-budget          960c8f1 (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/integration               1dae069 [codex/vetted-saas-integration]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/new-links-journeys        fc2b264 (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/P2-PLAN-001               efe1f68 [globalsetup/task-p2-plan-001]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-one                 fc5cabc [codex/vetted-saas-phase-one]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-three-plan          20982d2 [codex/vetted-saas-phase-three-plan]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-two-content-quality 29ce786 [codex/vetted-saas-content-quality]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-two-deploy          6697f4b (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-two-final-verify    d4ead2c (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-two-v3              e562ce4 [codex/decision-v3-repair]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/phase-two-verify          9992b78 (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/RCV-001                   d330ba4 [globalsetup/task-rcv-001]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/RCV-002                   0f63484 [globalsetup/task-rcv-002]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/RCV-003                   6526001 [globalsetup/task-rcv-003]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/RCV-004                   1dae069 [globalsetup/task-rcv-004]
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/recovery-release          8dee6aa (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/socialbee-01c             9ffb936 (detached HEAD)
+C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/studio-gallery-redesign   53fefb5 [codex/studio-gallery-redesign]
+C:/Users/micha/.codex/worktrees/architecture-audit/Vetted SaaS B - Content Strategy and Growth Strategy                                               e8ee1c7 (detached HEAD)
+C:/Users/micha/.codex/worktrees/article-import/Vetted SaaS B - Content Strategy and Growth Strategy                                                   c6254d7 (detached HEAD)
+C:/Users/micha/.codex/worktrees/article-import-stages/Vetted SaaS B - Content Strategy and Growth Strategy                                            a01b1f3 (detached HEAD)
+C:/Users/micha/.codex/worktrees/decision-card-accordion/Vetted SaaS B - Content Strategy and Growth Strategy                                          632431d [codex/decision-card-accordion]
+C:/Users/micha/.codex/worktrees/eleanor-editorial-1021/Vetted SaaS B - Content Strategy and Growth Strategy                                           c6254d7 (detached HEAD)
+C:/Users/micha/.codex/worktrees/feature-workflow-adoption/Vetted SaaS B - Content Strategy and Growth Strategy                                        c6254d7 [codex/feature-workflow-adoption]
+C:/Users/micha/.codex/worktrees/page-design-workflow/Vetted SaaS B - Content Strategy and Growth Strategy                                             8b4ce80 (detached HEAD)
+C:/Users/micha/.codex/worktrees/purge-retired-four-task-workflow/Vetted SaaS B - Content Strategy and Growth Strategy                                 3f1fc2b [codex/purge-retired-four-task-workflow]
+C:/Users/micha/.codex/worktrees/restore-studio-gallery/Vetted SaaS B - Content Strategy and Growth Strategy                                           7d0ebb0 (detached HEAD)
+C:/Users/micha/.codex/worktrees/slopmonster-full-rewrite/Vetted SaaS B - Content Strategy and Growth Strategy                                         e8ee1c7 (detached HEAD)
+C:/Users/micha/.local/share/opencode/worktree/ee6ed0/swift-knight                                                                                     f05fa29 [taste/switcher-paper-restyle]
+
+## git status --porcelain=v1
+A  .agents/skills/apple-design/SKILL.md
+ M AGENTS.md
+ M package.json
+?? .agents/build-faster-skills.lock.json
+?? .agents/skills/before-and-after/
+?? .agents/skills/code-review/
+?? .agents/skills/code-structure/
+?? .agents/skills/evidence-driven-testing/
+?? .agents/skills/impeccable/
+?? .agents/skills/new-feature/
+?? .agents/skills/unslop/
+?? .codex/
+?? WORKTREE_AUDIT_REPORT.md
+?? build-pack/authority-alignment/
+?? build-pack/evidence/BRAND-AUDIT-20261014/
+?? build-pack/evidence/BRAND-PALETTE-20261014-tests.txt
+?? build-pack/evidence/BRAND-PALETTE-20261014/capture.mjs
+?? build-pack/evidence/BRAND-PALETTE-20261014/contact-sheet.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/desktop-1.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/desktop-2.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/desktop-3.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/desktop-4.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/desktop-5.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours.txt
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/desktop-1.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/desktop-2.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/desktop-3.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/desktop-4.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/desktop-5.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/mobile-1.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/mobile-2.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/mobile-3.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/mobile-4.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live-colours/mobile-5.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/live/
+?? build-pack/evidence/BRAND-PALETTE-20261014/mobile-1.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/mobile-2.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/mobile-3.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/mobile-4.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/mobile-5.png
+?? build-pack/evidence/BRAND-PALETTE-20261014/preview-browser.txt
+?? build-pack/evidence/BRAND-PALETTE-20261014/preview-deploy.txt
+?? build-pack/evidence/BRAND-PALETTE-20261014/preview/
+?? build-pack/evidence/BRAND-PALETTE-20261014/production-deploy.txt
+?? build-pack/evidence/BRAND-PALETTE-20261014/production-inspect.json
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-decision-hub-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-decision-hub-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-decision-hub-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-home-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-home-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-scenarios-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-scenarios-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-scenarios-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-solution-hub-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-solution-hub-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/desktop-solution-hub-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-decision-hub-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-decision-hub-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-decision-hub-team-shared-account-access-control-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-decision-hub-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-home-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-home-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-scenarios-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-scenarios-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-scenarios-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-solution-hub-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-solution-hub-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-solution-hub-team-shared-account-access-control-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-no-js-solution-hub-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-decision-hub-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-decision-hub-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-decision-hub-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-home-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-home-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-scenarios-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-scenarios-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-scenarios-team-shared-account-access-control-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-scenarios-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-solution-hub-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-solution-hub-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-solution-hub-team-shared-account-access-control-first-screen.png
+?? build-pack/evidence/DELIVERY-20260928/browser/mobile-reduced-solution-hub-team-shared-account-access-control-full-page.png
+?? build-pack/evidence/DELIVERY-20260928/vercel-dry-at-release-01.txt
+?? build-pack/evidence/DELIVERY-20260928/vercel-dry-at-release-02.txt
+?? build-pack/evidence/DELIVERY-20260928/vercel-dry-at-release-03.txt
+?? build-pack/evidence/FIXES-20260929/chain-watchdog-verify.txt
+?? build-pack/evidence/FIXES-20260929/watchdog-morning-0930/
+?? build-pack/evidence/OPTIMISATION-20260928/base-build-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-build-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-landingquality-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-landingquality-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-lint-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-lint-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-lint-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-lint-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-npmci-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-npmci-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-stage2gate-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-stage2gate-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-stage2gate-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-stage2gate-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-stage2gate-03.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-stage2gate-03.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-test-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-test-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-typecheck-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-typecheck-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-typecheck-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-typecheck-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-03.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-uploadsizes-03.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-validate-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-validate-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-validate-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/base-validate-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/baseline-preview.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/baseline-preview.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/cold-npmci-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/cold-npmci-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/cold-npmci-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/cold-npmci-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/cold-npmci-03.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/cold-npmci-03.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/domain-verify.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-01.json.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-02.json.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-03.json.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-03.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp1-verceldry-03.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp2-verceldry-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp2-verceldry-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp2-verceldry-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp2-verceldry-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp2-verceldry-03.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp2-verceldry-03.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-build.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-build.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-lint.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-lint.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-test.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-test.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-typecheck.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp3-typecheck.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp4-lint.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp4-lint.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp4-test.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp4-test.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp4-validate-public.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/exp4-validate-public.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-focused-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-focused-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-lint-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-lint-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-typecheck-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-typecheck-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-verceldry-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-verceldry-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-verceldry-02.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-verceldry-02.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-verceldry-03.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final-verceldry-03.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-focused-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-focused-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-lint-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-lint-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-test-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-test-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-typecheck-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/final2-typecheck-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/install-samples.jsonl
+?? build-pack/evidence/OPTIMISATION-20260928/npm-audit.txt
+?? build-pack/evidence/OPTIMISATION-20260928/parallel-harness.jsonl
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-build-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-build-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-lint-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-lint-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-test-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-test-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-typecheck-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-typecheck-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-validate-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/phaseD-validate-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/preview-buildlog.txt
+?? build-pack/evidence/OPTIMISATION-20260928/preview-deploy.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/preview-deploy.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/preview-inspect.txt
+?? build-pack/evidence/OPTIMISATION-20260928/prod-inspect.json
+?? build-pack/evidence/OPTIMISATION-20260928/release-assess.txt
+?? build-pack/evidence/OPTIMISATION-20260928/stage-timings.jsonl
+?? build-pack/evidence/OPTIMISATION-20260928/upload-context-model-before.txt
+?? build-pack/evidence/OPTIMISATION-20260928/vercel-dry-before.txt
+?? build-pack/evidence/OPTIMISATION-20260928/vercel-inspect-prod.txt
+?? build-pack/evidence/OPTIMISATION-20260928/vercel-ls.txt
+?? build-pack/evidence/OPTIMISATION-20260928/vercelignore-final.txt
+?? build-pack/evidence/OPTIMISATION-20260928/verify-lint-clean-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/verify-lint-clean-01.stdout.txt
+?? build-pack/evidence/OPTIMISATION-20260928/verify-releasetest-01.stderr.txt
+?? build-pack/evidence/OPTIMISATION-20260928/verify-releasetest-01.stdout.txt
+?? build-pack/evidence/PHASE1-ROUTE-INVENTORY-20261026/
+?? fixes.md
+?? optimiseplan.md
+?? scripts/verify-agent-workflow.mjs
+?? tests/build-faster-skills-workflow.test.ts
+
+## git status --porcelain=v1 | count
+211

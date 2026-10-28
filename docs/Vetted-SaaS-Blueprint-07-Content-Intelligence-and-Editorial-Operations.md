@@ -53,7 +53,7 @@ It governs:
 - agent context packages;
 - content opportunity scoring;
 - editorial work queues;
-- the 06:00 SAST daily editorial brief;
+- the 06:00 SAST daily editorial brief (RETIRED 2026-10-28; an equivalent brief may be created only inside an explicitly triggered run);
 - content assembly across the three primary page types;
 - evidence-state handling;
 - refresh and maintenance;
@@ -77,6 +77,8 @@ The words **MUST**, **SHOULD** and **MAY** are deliberate:
 - **MAY** means optional, experimental or implementation-dependent.
 
 This document is authoritative for the editorial-intelligence and knowledge workflow.
+
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
 
 It MUST NOT redefine rules that already have an authoritative home.
 
@@ -851,9 +853,11 @@ The weighting must be versioned and must not change silently.
 
 ## 19. Daily Editorial Brief — 06:00 SAST
 
+RETIRED 2026-10-28: the fixed-time editorial brief and its scheduler are not part of the current execution path. The following subsections are retained as a historical brief schema only; an equivalent brief may be assembled inside an explicit manual or API-triggered run.
+
 ### 19.1 Purpose
 
-At **06:00 SAST**, the editorial system should produce the daily operational brief.
+RETIRED 2026-10-28: the editorial system does not produce a scheduled **06:00 SAST** brief.
 
 The brief is the point where prepared intelligence becomes an executable work queue.
 
@@ -1189,7 +1193,7 @@ A maintenance worker should:
 - update the refresh queue;
 - avoid consuming all daily production capacity.
 
-The 06:00 SAST brief decides which maintenance items deserve execution that day.
+RETIRED 2026-10-28: the former 06:00 SAST brief does not schedule maintenance. An explicitly triggered run may prioritise maintenance using the retained schema.
 
 Critical factual or commercial-link failures may interrupt normal priority.
 
@@ -1436,7 +1440,7 @@ Use the prepared intelligence to assemble and publish:
 
 ### Stage 8 — Run the first 06:00 editorial brief
 
-Generate a real daily queue from demand, evidence and page state.
+RETIRED 2026-10-28: do not schedule a 06:00 editorial brief. An explicitly triggered run may generate a bounded queue from demand, evidence and page state.
 
 ### Stage 9 — Prove refresh
 
@@ -1466,7 +1470,7 @@ Document 7 is implemented successfully when:
 12. one connected Decision Hub, Solution Hub and Decision Scenario can be assembled from the system;
 13. each material claim can be traced to evidence or a declared evidence state;
 14. multiple product dossiers can support one real decision scenario;
-15. the 06:00 SAST editorial brief can prioritise new content and maintenance;
+15. (RETIRED 2026-10-28) the 06:00 SAST editorial brief is not an implementation acceptance criterion;
 16. a product or evidence change can create a targeted refresh task;
 17. pages can be refreshed, consolidated, redirected or archived without deleting underlying knowledge;
 18. reusable knowledge can be promoted upward without duplication;
@@ -1524,7 +1528,7 @@ Define claim-specific default freshness windows for high-change and low-change c
 
 ### 38.9 06:00 scheduler
 
-Implement the daily SAST editorial brief through the approved orchestration environment.
+RETIRED 2026-10-28: do not implement a 06:00 scheduler. Brief generation is permitted only inside an explicit manual or API-triggered run.
 
 ### 38.10 Dossier backup and privacy
 

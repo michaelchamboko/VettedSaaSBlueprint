@@ -28,7 +28,7 @@ It establishes:
 - the local-to-cloud automation strategy;
 - the role of premium and lower-cost models;
 - the daily publishing guarantee;
-- the 23:00 SAST rescue and escalation rule;
+- the 23:00 SAST rescue and escalation rule (RETIRED 2026-10-28);
 - Vercel deployment requirements;
 - GitHub’s optional, non-blocking role;
 - data ownership and security boundaries;
@@ -53,6 +53,8 @@ The words **MUST**, **SHOULD**, and **MAY** are deliberate:
 
 Where a future implementation task conflicts with this document, this document takes priority unless the product owner explicitly changes the decision.
 
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
+
 No agent, model, framework, implementation plan, or infrastructure preference may silently weaken:
 
 1. the three-page daily publishing guarantee;
@@ -61,7 +63,7 @@ No agent, model, framework, implementation plan, or infrastructure preference ma
 4. the deterministic workflow boundary;
 5. production continuity for the existing indexed website;
 6. affiliate impartiality;
-7. the 23:00 SAST publishing rescue rule.
+7. the 23:00 SAST publishing rescue rule (RETIRED 2026-10-28).
 
 ---
 
@@ -474,18 +476,7 @@ It must:
 
 ### 7.10 Daily publishing watchdog
 
-A scheduler or watchdog monitors whether the required three-page set has reached production.
-
-It owns:
-
-- the daily deadline;
-- current page-set status;
-- warning and escalation signals;
-- the 23:00 SAST takeover trigger;
-- freezing optional work;
-- invoking the premium rescue path;
-- post-deployment verification;
-- failure logging and retry.
+RETIRED by owner directive 2026-10-28 (see planning.md "Product-owner retirement directive" and AGENTS.md): the daily publishing watchdog, the 23:00 SAST takeover trigger and the premium publishing rescue path are not part of the current execution path. Retained as a heading for traceability only. Active release is on-demand via an explicit manual or API trigger (AGENTS.md; planning.md "Current state"). See contradiction register C001 and amendment M001.
 
 The watchdog must be independent of any one AI worker’s self-reported status. It must verify the actual production URLs.
 
@@ -904,62 +895,21 @@ When an automation task encounters a dependency, the system must:
 - use a free or already approved substitute where practical;
 - invoke premium AI assistance to repair a free dependency where possible;
 - record paid, legal, credential, or irreversible blockers separately;
-- preserve the daily publishing path.
+- preserve the on-demand publishing path (AGENTS.md; planning.md).
 
 ### 11.4 Pre-deadline status
 
-The scheduler should support one or more configurable warning checkpoints before 23:00 SAST.
+RETIRED by owner directive 2026-10-28 (see planning.md "Product-owner retirement directive"): the pre-deadline scheduler warning checkpoints before 23:00 SAST are not part of the current execution path. Retained as a heading for traceability only. Active release is on-demand via an explicit manual or API trigger. See contradiction register C001 and amendment M001.
 
-At each checkpoint it verifies:
-
-- which of the three pages are production-ready;
-- which validations remain;
-- whether deployment is still feasible;
-- whether optional work must be frozen;
-- whether model escalation should occur early.
-
-The exact warning times are an implementation decision. They must leave sufficient time for the premium model to complete the release.
 
 ### 11.5 The 23:00 SAST hard takeover
 
-At **23:00 Africa/Johannesburg time**, the watchdog MUST verify production directly.
-
-If all three required pages are not live and passing the minimum production checks, the system triggers the **Premium Publishing Rescue**.
-
-The rescue process MUST:
-
-1. stop optional automation, refactoring, and feature work;
-2. take ownership of the current run state and all completed artefacts;
-3. identify the shortest truthful path to publication;
-4. reduce scope and optional page blocks where necessary;
-5. replace failed automation with direct premium-model execution;
-6. preserve real evidence and explicit uncertainty;
-7. use the fixed page templates where dynamic generation is failing;
-8. repair critical validation failures;
-9. deploy directly through the approved Vercel path;
-10. verify the three production URLs;
-11. record what failed and what was bypassed;
-12. create repair tasks for the next build day.
-
-The rescue model has authority to replan, resequence, simplify, and generate new implementation tasks as long as it does not:
-
-- change the agreed customer scope without necessity;
-- invent evidence;
-- alter the Vetted scoring methodology;
-- make irreversible external commitments;
-- hide a material failure.
+RETIRED by owner directive 2026-10-28 (see planning.md "Product-owner retirement directive" and AGENTS.md): the 23:00 SAST hard takeover, the Premium Publishing Rescue, and the "daily run complete" condition are not part of the current execution path. This section remains for traceability only. Active release is on-demand via an explicit manual or API trigger. See contradiction register C001 and amendment M001.
 
 ### 11.6 Completion condition
 
-The daily run is complete only when:
+RETIRED by owner directive 2026-10-28: the "daily run complete" condition is not part of the current execution path. Completion of an on-demand release is recorded via the isolate/build/prove/ship workflow and the production receipt. See planning.md and AGENTS.md.
 
-- all three production URLs are verified;
-- required evidence states are visible;
-- critical tests pass;
-- deployment and audit records exist;
-- the next improvement queue is recorded.
-
-An AI worker saying “done” is not sufficient.
 
 ---
 
@@ -1418,7 +1368,7 @@ Reason: protects the daily publishing guarantee.
 
 ### Priority 12 — Daily watchdog and premium rescue trigger
 
-Reason: enforces the non-negotiable deadline independently of agent self-reporting.
+Reason: (RETIRED 2026-10-28 by owner directive) the daily watchdog and 23:00 SAST premium rescue trigger are not part of the current execution path; see planning.md and AGENTS.md.
 
 ---
 
@@ -1487,7 +1437,7 @@ Publication authority requires stronger evidence of reliability.
 - percentage of build days meeting the production deadline;
 - production URLs verified;
 - time from scope selection to production;
-- number of page sets requiring 23:00 rescue;
+- (RETIRED 2026-10-28) number of page sets requiring 23:00 rescue;
 - number of externally blocked deployment days.
 
 ### 20.2 Automation metrics
@@ -1626,9 +1576,7 @@ The project repeats this cycle until the workflow is increasingly model-independ
 
 ### Stage E — Scheduled cloud execution
 
-**Goal:** Run proven background work without the owner’s computer remaining active.
-
-**Result:** Reliable scheduled research, refresh, generation, and rescue monitoring.
+RETIRED by owner directive 2026-10-28 (see planning.md "Product-owner retirement directive"): scheduled cloud execution, the 23:00 watchdog scheduler and the premium publishing rescue are not part of the current execution path. This section remains for traceability only. Active release is on-demand via an explicit manual or API trigger. See contradiction register C002 and amendment M002.
 
 ### Stage F — Continuous quality and cost optimisation
 
@@ -1646,7 +1594,7 @@ The following decisions are mandatory unless the product owner explicitly revise
 
 1. Vetted SaaS Blueprint is an existing live production website, not a greenfield build.
 2. The architecture must enhance the Vercel site incrementally.
-3. Every active build day ends with one Decision Hub, one Solution Hub, and one Decision Scenario live on Vercel.
+3. Every active build day ends with one Decision Hub, one Solution Hub, and one Decision Scenario live on Vercel (build-phase obligation; satisfied by the completed Phase One; ongoing releases are on-demand via an explicit manual or API trigger per AGENTS.md and planning.md).
 4. Internal infrastructure progress does not replace public output.
 5. Missing, partial, conflicting, and unavailable evidence are valid workflow outputs.
 6. Public evidence and recommendations may not be fabricated to meet the deadline.
@@ -1658,8 +1606,8 @@ The following decisions are mandatory unless the product owner explicitly revise
 12. AI models are replaceable workers inside the workflow.
 13. Automation is added one bounded, proven module at a time.
 14. The shipping track may not be blocked by the automation track.
-15. At 23:00 SAST, any incomplete daily production set triggers the Premium Publishing Rescue.
-16. The rescue process may simplify and replan but may not invent evidence or change methodology.
+15. (RETIRED 2026-10-28) At 23:00 SAST, any incomplete daily production set triggers the Premium Publishing Rescue. — Retired by owner directive; see planning.md and AGENTS.md. Active release is on-demand via an explicit manual or API trigger.
+16. (RETIRED 2026-10-28) The rescue process may simplify and replan but may not invent evidence or change methodology. — Retired by owner directive; see planning.md and AGENTS.md.
 17. Production completion is verified from live URLs, not agent self-reporting.
 18. Vercel remains the public deployment target.
 19. Preview deployments are acceptance tools; they do not satisfy the production requirement.
@@ -1690,7 +1638,7 @@ The following choices remain open for detailed technical planning:
 - task-specific qualification thresholds;
 - the supported Vercel CLI/API deployment route;
 - preview and production smoke-test tooling;
-- the scheduler used for the 23:00 watchdog;
+- the scheduler used for the 23:00 watchdog (RETIRED 2026-10-28 by owner directive; see planning.md and AGENTS.md);
 - the cloud runtime for long-running jobs;
 - monitoring and alert delivery;
 - the exact pre-deadline warning checkpoints;
@@ -1721,7 +1669,7 @@ This architecture is considered implemented at its first useful level when:
 - [ ] affiliate links and disclosures work without influencing editorial scores;
 - [ ] one writer at a time is enforced for shared outputs;
 - [ ] workflow checkpoints support recovery;
-- [ ] the 23:00 SAST watchdog and Premium Publishing Rescue have an implementable specification;
+- [x] (RETIRED 2026-10-28) the 23:00 SAST watchdog and Premium Publishing Rescue are not implementation requirements;
 - [ ] public production status is verified independently of agent self-reporting;
 - [ ] failures and premium interventions create improvement tasks;
 - [ ] the architecture has not reduced the three-page daily output.
@@ -1739,7 +1687,7 @@ This document is complete enough to guide implementation planning when all parti
 - the workflow, not the AI model, controls the process;
 - the existing Vercel site must remain live and progressively improve;
 - GitHub is optional infrastructure and not a publishing dependency;
-- the 23:00 SAST rescue rule protects the daily release;
+- (RETIRED 2026-10-28) the former 23:00 SAST rescue rule is retained only for traceability;
 - quality, truthfulness, and affiliate impartiality remain mandatory at every speed.
 
 ---
@@ -1757,7 +1705,7 @@ It provides constraints for:
 - **Onboarding and Activation:** initial customer journeys must use the same decision records and recommendation logic.
 - **UI Kit and Component Library:** reusable components must map directly to page-schema blocks.
 - **Growth and Distribution Strategy:** measurement, affiliate actions, lead assets, AEO, and distribution must use the same structured source of truth.
-- **QA and Testing Plan:** tests must cover model swaps, evidence states, workflow recovery, Vercel deployment, the daily watchdog, and premium rescue.
+- **QA and Testing Plan:** tests must cover model swaps, evidence states, workflow recovery, and Vercel deployment; the daily watchdog and premium rescue are RETIRED 2026-10-28.
 
 The final documentation index should reference this file explicitly even if the original ten-document numbering is retained.
 

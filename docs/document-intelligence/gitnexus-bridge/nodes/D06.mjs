@@ -207,6 +207,7 @@ export function claim_C_D06_S_f803ca9a47b5() { return "C-D06-S-f803ca9a47b5"; }
 export function claim_C_D06_S_ec6ed989a73f() { return "C-D06-S-ec6ed989a73f"; }
 export function claim_C_D06_S_b9d6d7bc8ab7() { return "C-D06-S-b9d6d7bc8ab7"; }
 export function claim_C_D06_S_82862778a135() { return "C-D06-S-82862778a135"; }
+export function claim_C_D06_S_ac41adad0ebd() { return "C-D06-S-ac41adad0ebd"; }
 export function claim_C_D06_S_dd6c34eacf03() { return "C-D06-S-dd6c34eacf03"; }
 export function claim_C_D06_S_1b9422a191a3() { return "C-D06-S-1b9422a191a3"; }
 export function claim_C_D06_S_acc2f7475b24() { return "C-D06-S-acc2f7475b24"; }

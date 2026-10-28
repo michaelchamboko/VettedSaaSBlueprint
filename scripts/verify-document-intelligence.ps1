@@ -24,14 +24,25 @@ function Get-Sha256File {
     }
 }
 
-$manifest = Get-Content -Raw -LiteralPath (Join-Path $intelligenceRoot 'SOURCE_MANIFEST.json') | ConvertFrom-Json
+function Get-SemanticJsonSha256 {
+    param([string]$Path)
+    $normalized = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return (($algorithm.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalized)) | ForEach-Object { $_.ToString('x2') }) -join '')
+    } finally {
+        $algorithm.Dispose()
+    }
+}
+
+$manifest = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $intelligenceRoot 'SOURCE_MANIFEST.json') | ConvertFrom-Json
 $candidatePath = Join-Path $intelligenceRoot 'RELATIONSHIP_CANDIDATES.json'
-$candidates = Get-Content -Raw -LiteralPath $candidatePath | ConvertFrom-Json
+$candidates = Get-Content -Raw -Encoding UTF8 -LiteralPath $candidatePath | ConvertFrom-Json
 $graphPath = Join-Path $intelligenceRoot 'DOCUMENT_GRAPH.json'
-$graph = Get-Content -Raw -LiteralPath $graphPath | ConvertFrom-Json
-$bridgeManifest = Get-Content -Raw -LiteralPath (Join-Path $intelligenceRoot 'gitnexus-bridge\BRIDGE_MANIFEST.json') | ConvertFrom-Json
-$agents = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'AGENTS.md')
-$config = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot '.gitnexusrc') | ConvertFrom-Json
+$graph = Get-Content -Raw -Encoding UTF8 -LiteralPath $graphPath | ConvertFrom-Json
+$bridgeManifest = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $intelligenceRoot 'gitnexus-bridge\BRIDGE_MANIFEST.json') | ConvertFrom-Json
+$agents = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $repositoryRoot 'AGENTS.md')
+$config = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $repositoryRoot '.gitnexusrc') | ConvertFrom-Json
 
 Assert-True ($manifest.source_count -eq 12) 'Expected exactly 12 registered source documents.'
 Assert-True ($manifest.heading_count -eq 1424) 'Expected exactly 1,424 registered headings.'
@@ -48,7 +59,7 @@ Assert-True (@($stableUids | Sort-Object -Unique).Count -eq $stableUids.Count) '
 foreach ($source in $manifest.sources) {
     $sourcePath = Join-Path $repositoryRoot ($source.path -replace '/', '\')
     Assert-True (Test-Path -LiteralPath $sourcePath -PathType Leaf) "Missing registered source: $($source.path)"
-    Assert-True ((Get-Sha256File -Path $sourcePath) -eq $source.sha256) "Source hash drift: $($source.path)"
+    Assert-True ((Get-NormalizedFileSha256 -Path $sourcePath) -eq $source.sha256) "Source hash drift: $($source.path)"
 }
 
 $verificationToken = [guid]::NewGuid().ToString('N')
@@ -56,10 +67,10 @@ $freshCandidatePath = Join-Path ([System.IO.Path]::GetTempPath()) "vsb-candidate
 $freshGraphPath = Join-Path ([System.IO.Path]::GetTempPath()) "vsb-graph-$verificationToken.json"
 try {
     $null = & (Join-Path $PSScriptRoot 'extract-relationship-candidates.ps1') -OutputPath $freshCandidatePath
-    Assert-True ((Get-Sha256File -Path $freshCandidatePath) -eq (Get-Sha256File -Path $candidatePath)) 'Candidate inbox is not reproducible from the current manifest and extractor.'
+    Assert-True ((Get-SemanticJsonSha256 -Path $freshCandidatePath) -eq (Get-SemanticJsonSha256 -Path $candidatePath)) 'Candidate inbox is not reproducible from the current manifest and extractor.'
 
     $null = & (Join-Path $PSScriptRoot 'build-document-graph.ps1') -OutputPath $freshGraphPath
-    Assert-True ((Get-Sha256File -Path $freshGraphPath) -eq (Get-Sha256File -Path $graphPath)) 'Canonical graph is not reproducible from the current manifest, candidates, and graph builder.'
+    Assert-True ((Get-SemanticJsonSha256 -Path $freshGraphPath) -eq (Get-SemanticJsonSha256 -Path $graphPath)) 'Canonical graph is not reproducible from the current manifest, candidates, and graph builder.'
 } finally {
     Remove-Item -LiteralPath $freshCandidatePath -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $freshGraphPath -Force -ErrorAction SilentlyContinue
@@ -94,20 +105,17 @@ Assert-True (-not (Test-Path -LiteralPath (Join-Path $repositoryRoot 'CLAUDE.md'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $repositoryRoot '.claude'))) '.claude must not exist in this agent-neutral workspace.'
 Assert-True ($agents -notmatch 'gitnexus:start') 'AGENTS.md contains a generated GitNexus block.'
 
-$gitSafeDirectory = "safe.directory=$repositoryRoot"
-$remotes = @(git -c $gitSafeDirectory -C $repositoryRoot remote)
-Assert-True ($LASTEXITCODE -eq 0) 'Unable to inspect Git remotes.'
-Assert-True ($remotes.Count -eq 0) 'This local-only repository must not have a remote.'
-$headCommit = git -c $gitSafeDirectory -C $repositoryRoot rev-list --max-count=1 --all
-Assert-True ([string]::IsNullOrWhiteSpace($headCommit)) 'A commit exists even though the baseline commit is deferred.'
+$repositoryState = Get-RepositoryLifecycleState -RepositoryRoot $repositoryRoot
+Assert-True $repositoryState.IsInsideWorkTree 'Document intelligence must be verified inside a Git worktree.'
+Assert-True ($repositoryState.HeadCommit -match '^[0-9a-f]{40}$') 'Unable to identify the committed verification baseline.'
 
 if (-not $SkipGitNexus) {
     $reconciliationPath = Join-Path $intelligenceRoot 'GITNEXUS_RECONCILIATION.json'
     Assert-True (Test-Path -LiteralPath $reconciliationPath -PathType Leaf) 'GitNexus reconciliation evidence is missing.'
-    $reconciliation = Get-Content -Raw -LiteralPath $reconciliationPath | ConvertFrom-Json
+    $reconciliation = Get-Content -Raw -Encoding UTF8 -LiteralPath $reconciliationPath | ConvertFrom-Json
     Assert-True ($reconciliation.source_manifest_sha256 -eq $manifest.manifest_sha256) 'GitNexus reconciliation is stale relative to source manifest.'
     Assert-True ($reconciliation.document_graph_sha256 -eq (Get-Sha256File -Path $graphPath)) 'GitNexus reconciliation is stale relative to canonical graph.'
-    Assert-True ($reconciliation.gitnexus_version -eq '1.6.9') 'GitNexus reconciliation used an unapproved version.'
+    Assert-True ($reconciliation.gitnexus_version -eq '1.6.10') 'GitNexus reconciliation used an unapproved version.'
     Assert-True ($reconciliation.status -eq 'pass') 'GitNexus reconciliation did not pass.'
     Assert-True $reconciliation.exact_node_set_match 'GitNexus node-symbol set differs from bridge manifest.'
     Assert-True $reconciliation.exact_relation_set_match 'GitNexus relation-symbol set differs from bridge manifest.'
@@ -124,7 +132,7 @@ Write-Output "Relationships: $(@($graph.relationships).Count)"
 Write-Output "Candidates: $(@($graph.candidates).Count)"
 Write-Output "Bridge node exports: $($runtimeResult.nodeExports)"
 Write-Output "Bridge relation exports: $($runtimeResult.relationExports)"
-Write-Output 'Remote: none'
-Write-Output 'Commit baseline: deferred'
+Write-Output "Remotes: $(@($repositoryState.Remotes).Count) [$(@($repositoryState.Remotes) -join ', ')]"
+Write-Output "Commit baseline: $($repositoryState.HeadCommit)"
 Write-Output 'Agent injection: absent'
 Write-Output "GitNexus reconciliation: $(if ($SkipGitNexus) { 'skipped' } else { 'pass' })"

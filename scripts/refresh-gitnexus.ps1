@@ -2,7 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
-$expectedVersion = '1.6.9'
+$expectedVersion = '1.6.10'
 $walCheckpointThreshold = 67108864
 $workerCount = 1
 $gitNexusCommand = Get-Command gitnexus.cmd -CommandType Application -ErrorAction SilentlyContinue

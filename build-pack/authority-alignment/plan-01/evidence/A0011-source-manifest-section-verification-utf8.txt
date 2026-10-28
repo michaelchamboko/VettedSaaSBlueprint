@@ -1,0 +1,20 @@
+﻿Section-level content hash verification (UTF-8 read) 2026-10-28T18:33:44.3915363+02:00
+Algorithm: DocumentGraph.psm1 Get-DocumentSections (ReadAllLines, sections joined with LF).
+Manifest read with -Encoding UTF8 (no BOM). Source files read with [System.IO.File]::ReadAllLines (UTF-8).
+
+UI | computed=69 manifest=69 headings=69 lines=673 mismatches=0
+D01 | computed=101 manifest=101 headings=101 lines=1132 mismatches=0
+D02 | computed=127 manifest=127 headings=127 lines=1350 mismatches=0
+D03 | computed=165 manifest=165 headings=165 lines=1768 mismatches=0
+D04 | computed=210 manifest=210 headings=210 lines=2166 mismatches=0
+D05 | computed=182 manifest=182 headings=182 lines=2237 mismatches=0
+D06 | computed=150 manifest=150 headings=150 lines=1747 mismatches=0
+D07 | computed=145 manifest=145 headings=145 lines=1556 mismatches=0
+D08 | computed=115 manifest=115 headings=115 lines=1522 mismatches=0
+D09 | computed=65 manifest=65 headings=65 lines=830 mismatches=0
+D10 | computed=48 manifest=48 headings=48 lines=526 mismatches=0
+D11 | computed=47 manifest=47 headings=47 lines=473 mismatches=0
+
+TOTAL computed sections=1424 mismatches=0 (expected 1424 / 0)
+
+Note: a prior verification pass using PowerShell's default Get-Content codepage (Windows-1252) reported 174 'heading' mismatches because em dashes (U+2014) in headings were mojibaked on read. Stable UIDs, content hashes and line numbers matched in that pass. The corrected UTF-8 read shows zero mismatches. Evidence of the false positive is retained in evidence/A0010-source-manifest-section-verification.txt.

@@ -7,8 +7,8 @@ $intelligenceRoot = Join-Path $repositoryRoot 'docs\document-intelligence'
 if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $intelligenceRoot 'DOCUMENT_GRAPH.json' }
 Import-Module -Force -Name (Join-Path $PSScriptRoot 'DocumentGraph.psm1')
 
-$manifest = Get-Content -Raw -LiteralPath (Join-Path $intelligenceRoot 'SOURCE_MANIFEST.json') | ConvertFrom-Json
-$candidateDocument = Get-Content -Raw -LiteralPath (Join-Path $intelligenceRoot 'RELATIONSHIP_CANDIDATES.json') | ConvertFrom-Json
+$manifest = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $intelligenceRoot 'SOURCE_MANIFEST.json') | ConvertFrom-Json
+$candidateDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $intelligenceRoot 'RELATIONSHIP_CANDIDATES.json') | ConvertFrom-Json
 if ($candidateDocument.source_manifest_sha256 -ne $manifest.manifest_sha256) { throw 'Candidate inbox was generated from a different source manifest.' }
 
 function Get-SectionUidByDisplayId {

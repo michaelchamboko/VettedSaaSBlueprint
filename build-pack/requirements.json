@@ -848,7 +848,7 @@
       "authority_domain": "market-and-buyer-decision",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "### 1.1 Delivery continuity and revision invariant\n\nMarket validation changes the evidence state, confidence, prioritisation, and later revision of public work. It does not authorise withholding the connected daily three-page decision set.\n\nEvery active publishing day must deploy one Decision Hub, one Solution Hub, and one Decision Scenario. Found, partial, conflicting, missing, and stale evidence are all publishable states when represented truthfully. Missing evidence changes the answer; it does not cancel delivery.\n\nEvery published page and asset remains versioned and revisitable. Newly discovered, corrected, or materially changed evidence must create an update task for the affected live work, followed by redistribution where the change matters to users.\n\n---\n",
+      "statement": "### 1.1 Delivery continuity and revision invariant\n\nMarket validation changes the evidence state, confidence, prioritisation, and later revision of public work. It does not authorise withholding the connected daily three-page decision set.\n\nThe three-page release unit (one Decision Hub, one Solution Hub, one Decision Scenario) is the delivery unit; it was delivered as the completed Phase One (see planning.md and build-pack/receipts/phase-one-release.json). Ongoing releases are on-demand via an explicit manual or API trigger (AGENTS.md). Found, partial, conflicting, missing, and stale evidence are all publishable states when represented truthfully. Missing evidence changes the answer; it does not cancel delivery.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nEvery published page and asset remains versioned and revisitable. Newly discovered, corrected, or materially changed evidence must create an update task for the affected live work, followed by redistribution where the change matters to users.\n\n---\n",
       "planned_outcome": "Deliver or review 1.1 Delivery continuity and revision invariant within the market-and-buyer-decision boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-01-Market-Research-and-Opportunity-Plan-v1.md at D01-H003 (D01-S-7d19567a803b).",
@@ -865,7 +865,7 @@
           "section_id": "D01-S-7d19567a803b",
           "display_id": "D01-H003",
           "heading": "1.1 Delivery continuity and revision invariant",
-          "hash": "23931c88108173facb685eb3a14e279d09dd3fa016724bf511c2489ef66c6910"
+          "hash": "6dce3cfdb7687b69a0d83ad3342c2fdc58ba257960e7b53ae010fe74c26bbbe0"
         }
       ],
       "tasks": [],
@@ -1561,7 +1561,7 @@
       "authority_domain": "roadmap-and-delivery",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "### 3.2 Daily shipping rule\n\nDuring active implementation and content-production work:\n\n> **Every build day MUST end with one complete three-page decision set live and working on Vercel.**\n\nA day spent only on invisible infrastructure, internal refactoring, orchestration, scraping, database work, agent prompts, or planning does not satisfy this rule.\n\nInfrastructure work may proceed only when it supports the same day’s visible three-page release or improves an already deployed three-page set in a directly demonstrable way.\n",
+      "statement": "### 3.2 Daily shipping rule\n\nDuring active implementation and content-production work:\n\n> **Every build day MUST end with one complete three-page decision set live and working on Vercel.** (Build-phase obligation; satisfied by the completed Phase One. Ongoing releases are on-demand via an explicit manual or API trigger per AGENTS.md and planning.md.)\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nA day spent only on invisible infrastructure, internal refactoring, orchestration, scraping, database work, agent prompts, or planning does not satisfy this rule.\n\nInfrastructure work may proceed only when it supports the same day’s visible three-page release or improves an already deployed three-page set in a directly demonstrable way.\n",
       "planned_outcome": "Deliver or review 3.2 Daily shipping rule within the roadmap-and-delivery boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-02-Product-Roadmap-v1.md at D02-H006 (D02-S-0951e69fb4b0).",
@@ -1578,7 +1578,7 @@
           "section_id": "D02-S-0951e69fb4b0",
           "display_id": "D02-H006",
           "heading": "3.2 Daily shipping rule",
-          "hash": "f590e50cb6d1a01c613fdf30e44491c12f9708e3be3c2cbe9bce3aba526b2dab"
+          "hash": "7ce13f473883ab911c5fc4e353ba137a10c525022e0556bf927bda4aeda9005e"
         }
       ],
       "tasks": [],
@@ -4413,7 +4413,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 23. Decisions Locked by This Document\n\nThe following decisions are mandatory unless the product owner explicitly revises them:\n\n1. Vetted SaaS Blueprint is an existing live production website, not a greenfield build.\n2. The architecture must enhance the Vercel site incrementally.\n3. Every active build day ends with one Decision Hub, one Solution Hub, and one Decision Scenario live on Vercel.\n4. Internal infrastructure progress does not replace public output.\n5. Missing, partial, conflicting, and unavailable evidence are valid workflow outputs.\n6. Public evidence and recommendations may not be fabricated to meet the deadline.\n7. The initial fallback is direct AI-first execution by the premium reference model, not manual human production.\n8. GPT-5.6 Sol, or the current approved premium equivalent, establishes and protects the reference quality bar.\n9. The long-term automation must not depend economically on premium models for routine tasks.\n10. Every AI task must have a defined contract and be qualified per model and model version.\n11. Deterministic code owns workflow state, scoring formulas, policy, validation, and publication rules.\n12. AI models are replaceable workers inside the workflow.\n13. Automation is added one bounded, proven module at a time.\n14. The shipping track may not be blocked by the automation track.\n15. At 23:00 SAST, any incomplete daily production set triggers the Premium Publishing Rescue.\n16. The rescue process may simplify and replan but may not invent evidence or change methodology.\n17. Production completion is verified from live URLs, not agent self-reporting.\n18. Vercel remains the public deployment target.\n19. Preview deployments are acceptance tools; they do not satisfy the production requirement.\n20. Direct Vercel deployment must be possible without GitHub Actions.\n21. GitHub may remain a private optional backup and collaboration remote.\n22. GitHub runner limits or billing may not block publication.\n23. Raw evidence remains private and separate from the public repository.\n24. Public content is generated from structured records and evidence references.\n25. Affiliate commercial data remains separate from editorial scoring inputs.\n26. Long-running automation may move to a separate cloud runtime after local proof.\n27. Every premium intervention must create a learning task aimed at reducing future premium dependence.\n\n---\n",
+      "statement": "## 23. Decisions Locked by This Document\n\nThe following decisions are mandatory unless the product owner explicitly revises them:\n\n1. Vetted SaaS Blueprint is an existing live production website, not a greenfield build.\n2. The architecture must enhance the Vercel site incrementally.\n3. Every active build day ends with one Decision Hub, one Solution Hub, and one Decision Scenario live on Vercel (build-phase obligation; satisfied by the completed Phase One; ongoing releases are on-demand via an explicit manual or API trigger per AGENTS.md and planning.md).\n4. Internal infrastructure progress does not replace public output.\n5. Missing, partial, conflicting, and unavailable evidence are valid workflow outputs.\n6. Public evidence and recommendations may not be fabricated to meet the deadline.\n7. The initial fallback is direct AI-first execution by the premium reference model, not manual human production.\n8. GPT-5.6 Sol, or the current approved premium equivalent, establishes and protects the reference quality bar.\n9. The long-term automation must not depend economically on premium models for routine tasks.\n10. Every AI task must have a defined contract and be qualified per model and model version.\n11. Deterministic code owns workflow state, scoring formulas, policy, validation, and publication rules.\n12. AI models are replaceable workers inside the workflow.\n13. Automation is added one bounded, proven module at a time.\n14. The shipping track may not be blocked by the automation track.\n15. (RETIRED 2026-10-28) At 23:00 SAST, any incomplete daily production set triggers the Premium Publishing Rescue. — Retired by owner directive; see planning.md and AGENTS.md. Active release is on-demand via an explicit manual or API trigger.\n16. (RETIRED 2026-10-28) The rescue process may simplify and replan but may not invent evidence or change methodology. — Retired by owner directive; see planning.md and AGENTS.md.\n17. Production completion is verified from live URLs, not agent self-reporting.\n18. Vercel remains the public deployment target.\n19. Preview deployments are acceptance tools; they do not satisfy the production requirement.\n20. Direct Vercel deployment must be possible without GitHub Actions.\n21. GitHub may remain a private optional backup and collaboration remote.\n22. GitHub runner limits or billing may not block publication.\n23. Raw evidence remains private and separate from the public repository.\n24. Public content is generated from structured records and evidence references.\n25. Affiliate commercial data remains separate from editorial scoring inputs.\n26. Long-running automation may move to a separate cloud runtime after local proof.\n27. Every premium intervention must create a learning task aimed at reducing future premium dependence.\n\n---\n",
       "planned_outcome": "Deliver or review 23. Decisions Locked by This Document within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H160 (D03-S-1591bfbb4a5d).",
@@ -4430,7 +4430,7 @@
           "section_id": "D03-S-1591bfbb4a5d",
           "display_id": "D03-H160",
           "heading": "23. Decisions Locked by This Document",
-          "hash": "3064d65ea5f36162c8a7b9fc86a8b4d5fbbb4614fcb7eacf005f8272d78a2f33"
+          "hash": "8b30b8a3ef3adf2be1e29194973176955f62a5ed1c320e2af6fd0b23e03b53d5"
         }
       ],
       "tasks": [],
@@ -5187,8 +5187,8 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "separate-authority-required",
-      "statement": "### 11.4 Pre-deadline status\n\nThe scheduler should support one or more configurable warning checkpoints before 23:00 SAST.\n\nAt each checkpoint it verifies:\n\n- which of the three pages are production-ready;\n- which validations remain;\n- whether deployment is still feasible;\n- whether optional work must be frozen;\n- whether model escalation should occur early.\n\nThe exact warning times are an implementation decision. They must leave sufficient time for the premium model to complete the release.\n",
+      "status": "owner-retired",
+      "statement": "### 11.4 Pre-deadline status\n\nRETIRED by owner directive 2026-10-28 (see planning.md \"Product-owner retirement directive\"): the pre-deadline scheduler warning checkpoints before 23:00 SAST are not part of the current execution path. Retained as a heading for traceability only. Active release is on-demand via an explicit manual or API trigger. See contradiction register C001 and amendment M001.\n",
       "planned_outcome": "Deliver or review 11.4 Pre-deadline status within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H072 (D03-S-4cb790f028a7).",
@@ -5205,7 +5205,7 @@
           "section_id": "D03-S-4cb790f028a7",
           "display_id": "D03-H072",
           "heading": "11.4 Pre-deadline status",
-          "hash": "2e4bb0072dee613e00f871d60fa381337e817d9817e1e9004bda5f818014db46"
+          "hash": "1e30b01ead376bb24afbd2614f3f807b5f9447c213af2ced77688c6c70f2e588"
         }
       ],
       "tasks": [],
@@ -5219,7 +5219,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 2. Document Authority\n\nThe words **MUST**, **SHOULD**, and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented technical result proves a simpler approach is better.\n- **MAY** means optional or deferred.\n\nWhere a future implementation task conflicts with this document, this document takes priority unless the product owner explicitly changes the decision.\n\nNo agent, model, framework, implementation plan, or infrastructure preference may silently weaken:\n\n1. the three-page daily publishing guarantee;\n2. truthful evidence handling;\n3. model independence;\n4. the deterministic workflow boundary;\n5. production continuity for the existing indexed website;\n6. affiliate impartiality;\n7. the 23:00 SAST publishing rescue rule.\n\n---\n",
+      "statement": "## 2. Document Authority\n\nThe words **MUST**, **SHOULD**, and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented technical result proves a simpler approach is better.\n- **MAY** means optional or deferred.\n\nWhere a future implementation task conflicts with this document, this document takes priority unless the product owner explicitly changes the decision.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nNo agent, model, framework, implementation plan, or infrastructure preference may silently weaken:\n\n1. the three-page daily publishing guarantee;\n2. truthful evidence handling;\n3. model independence;\n4. the deterministic workflow boundary;\n5. production continuity for the existing indexed website;\n6. affiliate impartiality;\n7. the 23:00 SAST publishing rescue rule (RETIRED 2026-10-28).\n\n---\n",
       "planned_outcome": "Deliver or review 2. Document Authority within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H003 (D03-S-51149f65d8b9).",
@@ -5236,7 +5236,7 @@
           "section_id": "D03-S-51149f65d8b9",
           "display_id": "D03-H003",
           "heading": "2. Document Authority",
-          "hash": "856b11416f7ff9e435e46736d5b541e611c364b58611037ff8a0a9e30d5640d7"
+          "hash": "8b9d6f49b9c06f2d7d2c590d56bfb3ac75bb9f18c37103a8a9724ce4ba9aae3d"
         }
       ],
       "tasks": [],
@@ -5436,7 +5436,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "owner-retired",
-      "statement": "### 7.10 Daily publishing watchdog\n\nA scheduler or watchdog monitors whether the required three-page set has reached production.\n\nIt owns:\n\n- the daily deadline;\n- current page-set status;\n- warning and escalation signals;\n- the 23:00 SAST takeover trigger;\n- freezing optional work;\n- invoking the premium rescue path;\n- post-deployment verification;\n- failure logging and retry.\n\nThe watchdog must be independent of any one AI worker’s self-reported status. It must verify the actual production URLs.\n",
+      "statement": "### 7.10 Daily publishing watchdog\n\nRETIRED by owner directive 2026-10-28 (see planning.md \"Product-owner retirement directive\" and AGENTS.md): the daily publishing watchdog, the 23:00 SAST takeover trigger and the premium publishing rescue path are not part of the current execution path. Retained as a heading for traceability only. Active release is on-demand via an explicit manual or API trigger (AGENTS.md; planning.md \"Current state\"). See contradiction register C001 and amendment M001.\n\nThe watchdog must be independent of any one AI worker’s self-reported status. It must verify the actual production URLs.\n",
       "planned_outcome": "Deliver or review 7.10 Daily publishing watchdog within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H034 (D03-S-5aed3f9cadd5).",
@@ -5453,7 +5453,7 @@
           "section_id": "D03-S-5aed3f9cadd5",
           "display_id": "D03-H034",
           "heading": "7.10 Daily publishing watchdog",
-          "hash": "4965d55cddf9788fff8c2e421bf1d929d0ebacaf4e604f75c391ccdfe947cfc9"
+          "hash": "c52d33c2eaeb87bcfde3435cb6cc7e9479f8b3401151c7eb9192309710b154e3"
         }
       ],
       "tasks": [],
@@ -5560,7 +5560,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 26. Definition of Done for This Document\n\nThis document is complete enough to guide implementation planning when all participants understand that:\n\n- the primary goal is daily public customer value;\n- direct premium AI execution is the initial reference process;\n- automation is extracted from successful work rather than designed in isolation;\n- every module must become explicit enough for cheaper models to be tested;\n- the workflow, not the AI model, controls the process;\n- the existing Vercel site must remain live and progressively improve;\n- GitHub is optional infrastructure and not a publishing dependency;\n- the 23:00 SAST rescue rule protects the daily release;\n- quality, truthfulness, and affiliate impartiality remain mandatory at every speed.\n\n---\n",
+      "statement": "## 26. Definition of Done for This Document\n\nThis document is complete enough to guide implementation planning when all participants understand that:\n\n- the primary goal is daily public customer value;\n- direct premium AI execution is the initial reference process;\n- automation is extracted from successful work rather than designed in isolation;\n- every module must become explicit enough for cheaper models to be tested;\n- the workflow, not the AI model, controls the process;\n- the existing Vercel site must remain live and progressively improve;\n- GitHub is optional infrastructure and not a publishing dependency;\n- (RETIRED 2026-10-28) the former 23:00 SAST rescue rule is retained only for traceability;\n- quality, truthfulness, and affiliate impartiality remain mandatory at every speed.\n\n---\n",
       "planned_outcome": "Deliver or review 26. Definition of Done for This Document within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H163 (D03-S-61259be0ec50).",
@@ -5577,7 +5577,7 @@
           "section_id": "D03-S-61259be0ec50",
           "display_id": "D03-H163",
           "heading": "26. Definition of Done for This Document",
-          "hash": "ecc7a0ecbe533f5fd223c1d45bfb652e4be8675e6a72ff3f444df6afa1d27939"
+          "hash": "89b79936484c006482935f33a39473f86f142df5a36e5ed70f1735be7472ffe1"
         }
       ],
       "tasks": [],
@@ -5870,7 +5870,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 27. Relationship to the Wider Documentation Set\n\nThis architecture document informs the remaining product documents.\n\nIt provides constraints for:\n\n- **Design System:** components and interactions must support structured, reusable decision blocks.\n- **Art Direction:** visual treatments must remain compatible with rapid deterministic page assembly.\n- **PRD:** functional requirements must map to the architecture contracts and daily release guarantee.\n- **Content Specification:** language, labels, terminology, schemas, and evidence presentation must be model-independent.\n- **Onboarding and Activation:** initial customer journeys must use the same decision records and recommendation logic.\n- **UI Kit and Component Library:** reusable components must map directly to page-schema blocks.\n- **Growth and Distribution Strategy:** measurement, affiliate actions, lead assets, AEO, and distribution must use the same structured source of truth.\n- **QA and Testing Plan:** tests must cover model swaps, evidence states, workflow recovery, Vercel deployment, the daily watchdog, and premium rescue.\n\nThe final documentation index should reference this file explicitly even if the original ten-document numbering is retained.\n\n---\n",
+      "statement": "## 27. Relationship to the Wider Documentation Set\n\nThis architecture document informs the remaining product documents.\n\nIt provides constraints for:\n\n- **Design System:** components and interactions must support structured, reusable decision blocks.\n- **Art Direction:** visual treatments must remain compatible with rapid deterministic page assembly.\n- **PRD:** functional requirements must map to the architecture contracts and daily release guarantee.\n- **Content Specification:** language, labels, terminology, schemas, and evidence presentation must be model-independent.\n- **Onboarding and Activation:** initial customer journeys must use the same decision records and recommendation logic.\n- **UI Kit and Component Library:** reusable components must map directly to page-schema blocks.\n- **Growth and Distribution Strategy:** measurement, affiliate actions, lead assets, AEO, and distribution must use the same structured source of truth.\n- **QA and Testing Plan:** tests must cover model swaps, evidence states, workflow recovery, and Vercel deployment; the daily watchdog and premium rescue are RETIRED 2026-10-28.\n\nThe final documentation index should reference this file explicitly even if the original ten-document numbering is retained.\n\n---\n",
       "planned_outcome": "Deliver or review 27. Relationship to the Wider Documentation Set within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H164 (D03-S-75d88f0be02c).",
@@ -5887,7 +5887,7 @@
           "section_id": "D03-S-75d88f0be02c",
           "display_id": "D03-H164",
           "heading": "27. Relationship to the Wider Documentation Set",
-          "hash": "9a7b7d6239a99305ca834f42732f1efe1498a29fd04dd123775220fdee17af71"
+          "hash": "ea1d500de7e523a844c0dc69c7da90bc1e4b4b4a2c65c34b28f83dd6ede77c56"
         }
       ],
       "tasks": [],
@@ -5963,7 +5963,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "owner-retired",
-      "statement": "### 11.5 The 23:00 SAST hard takeover\n\nAt **23:00 Africa/Johannesburg time**, the watchdog MUST verify production directly.\n\nIf all three required pages are not live and passing the minimum production checks, the system triggers the **Premium Publishing Rescue**.\n\nThe rescue process MUST:\n\n1. stop optional automation, refactoring, and feature work;\n2. take ownership of the current run state and all completed artefacts;\n3. identify the shortest truthful path to publication;\n4. reduce scope and optional page blocks where necessary;\n5. replace failed automation with direct premium-model execution;\n6. preserve real evidence and explicit uncertainty;\n7. use the fixed page templates where dynamic generation is failing;\n8. repair critical validation failures;\n9. deploy directly through the approved Vercel path;\n10. verify the three production URLs;\n11. record what failed and what was bypassed;\n12. create repair tasks for the next build day.\n\nThe rescue model has authority to replan, resequence, simplify, and generate new implementation tasks as long as it does not:\n\n- change the agreed customer scope without necessity;\n- invent evidence;\n- alter the Vetted scoring methodology;\n- make irreversible external commitments;\n- hide a material failure.\n",
+      "statement": "### 11.5 The 23:00 SAST hard takeover\n\nRETIRED by owner directive 2026-10-28 (see planning.md \"Product-owner retirement directive\" and AGENTS.md): the 23:00 SAST hard takeover, the Premium Publishing Rescue, and the \"daily run complete\" condition are not part of the current execution path. This section remains for traceability only. Active release is on-demand via an explicit manual or API trigger. See contradiction register C001 and amendment M001.\n",
       "planned_outcome": "Deliver or review 11.5 The 23:00 SAST hard takeover within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H073 (D03-S-87056c5d3838).",
@@ -5980,7 +5980,7 @@
           "section_id": "D03-S-87056c5d3838",
           "display_id": "D03-H073",
           "heading": "11.5 The 23:00 SAST hard takeover",
-          "hash": "ce5b621e15cd795d4f9bbd7fec64d258473d98487c41527004a050291dce73f9"
+          "hash": "b1da4a86e427c502aa6c8c7905a2702a0fb379922deee24ff4215c0e50517ba8"
         }
       ],
       "tasks": [],
@@ -6459,7 +6459,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "### 11.3 Continuous progress rule\n\nWhen an automation task encounters a dependency, the system must:\n\n- continue all unrelated implementable work;\n- use a free or already approved substitute where practical;\n- invoke premium AI assistance to repair a free dependency where possible;\n- record paid, legal, credential, or irreversible blockers separately;\n- preserve the daily publishing path.\n",
+      "statement": "### 11.3 Continuous progress rule\n\nWhen an automation task encounters a dependency, the system must:\n\n- continue all unrelated implementable work;\n- use a free or already approved substitute where practical;\n- invoke premium AI assistance to repair a free dependency where possible;\n- record paid, legal, credential, or irreversible blockers separately;\n- preserve the on-demand publishing path (AGENTS.md; planning.md).\n",
       "planned_outcome": "Deliver or review 11.3 Continuous progress rule within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H071 (D03-S-ca4d710308b0).",
@@ -6476,7 +6476,7 @@
           "section_id": "D03-S-ca4d710308b0",
           "display_id": "D03-H071",
           "heading": "11.3 Continuous progress rule",
-          "hash": "50d9450a70144a998928f76f49f4a7d90942ab001fb19abe2aed303e60a37e41"
+          "hash": "42f13610408109d0c0b419e89b414792e4fb03c7c95a8ce538284704b7c59015"
         }
       ],
       "tasks": [],
@@ -6893,7 +6893,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 24. Open Implementation Decisions\n\nThe following choices remain open for detailed technical planning:\n\n- the current repository structure and framework conventions;\n- the precise page-record schemas;\n- the first customer problem and affiliate products;\n- the initial local evidence directory structure;\n- local encryption and backup tooling;\n- whether operational product data starts in local files, Convex, or another store;\n- the workflow state-machine implementation;\n- the model gateway interface;\n- the first lower-cost candidate models;\n- task-specific qualification thresholds;\n- the supported Vercel CLI/API deployment route;\n- preview and production smoke-test tooling;\n- the scheduler used for the 23:00 watchdog;\n- the cloud runtime for long-running jobs;\n- monitoring and alert delivery;\n- the exact pre-deadline warning checkpoints;\n- retention periods for evidence and audit records;\n- which source captures may legally and practically be retained;\n- how production content changes are reflected in the optional GitHub remote.\n\nThese decisions must be resolved through the smallest working implementation. They may not postpone the first three-page production release.\n\n---\n",
+      "statement": "## 24. Open Implementation Decisions\n\nThe following choices remain open for detailed technical planning:\n\n- the current repository structure and framework conventions;\n- the precise page-record schemas;\n- the first customer problem and affiliate products;\n- the initial local evidence directory structure;\n- local encryption and backup tooling;\n- whether operational product data starts in local files, Convex, or another store;\n- the workflow state-machine implementation;\n- the model gateway interface;\n- the first lower-cost candidate models;\n- task-specific qualification thresholds;\n- the supported Vercel CLI/API deployment route;\n- preview and production smoke-test tooling;\n- the scheduler used for the 23:00 watchdog (RETIRED 2026-10-28 by owner directive; see planning.md and AGENTS.md);\n- the cloud runtime for long-running jobs;\n- monitoring and alert delivery;\n- the exact pre-deadline warning checkpoints;\n- retention periods for evidence and audit records;\n- which source captures may legally and practically be retained;\n- how production content changes are reflected in the optional GitHub remote.\n\nThese decisions must be resolved through the smallest working implementation. They may not postpone the first three-page production release.\n\n---\n",
       "planned_outcome": "Deliver or review 24. Open Implementation Decisions within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H161 (D03-S-fa592ef88ff8).",
@@ -6910,7 +6910,7 @@
           "section_id": "D03-S-fa592ef88ff8",
           "display_id": "D03-H161",
           "heading": "24. Open Implementation Decisions",
-          "hash": "cba2ba25b5832dd5914378509d3cb325ace19ebaffc6064913c356bbe0a317b7"
+          "hash": "957785ea16e541a5518c3729690dbb4e0201a7def6eb99f1dfeef42e4caf3a7f"
         }
       ],
       "tasks": [],
@@ -6924,7 +6924,7 @@
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 1. Purpose of This Document\n\nThis document defines **how Vetted SaaS Blueprint must operate as an AI-first, deterministic, model-independent production system while continuously improving an existing live website**.\n\nIt establishes:\n\n- the high-level system components;\n- the movement of evidence and content through the system;\n- the boundary between deterministic software and AI workers;\n- the local-to-cloud automation strategy;\n- the role of premium and lower-cost models;\n- the daily publishing guarantee;\n- the 23:00 SAST rescue and escalation rule;\n- Vercel deployment requirements;\n- GitHub’s optional, non-blocking role;\n- data ownership and security boundaries;\n- failure handling, observability, and recovery requirements;\n- the acceptance conditions for model-independent automation.\n\nThis is not a low-level implementation plan. It does not lock the project into a particular queue, database, framework, scraper, model provider, or cloud worker before those choices are tested. It defines the contracts those tools must satisfy.\n\nThe architecture has one central purpose:\n\n> **Help Vetted SaaS Blueprint publish truthful, useful, evidence-backed customer decision pages quickly every day, while progressively reducing the cost and intelligence required from the AI models doing the work.**\n\n---\n",
+      "statement": "## 1. Purpose of This Document\n\nThis document defines **how Vetted SaaS Blueprint must operate as an AI-first, deterministic, model-independent production system while continuously improving an existing live website**.\n\nIt establishes:\n\n- the high-level system components;\n- the movement of evidence and content through the system;\n- the boundary between deterministic software and AI workers;\n- the local-to-cloud automation strategy;\n- the role of premium and lower-cost models;\n- the daily publishing guarantee;\n- the 23:00 SAST rescue and escalation rule (RETIRED 2026-10-28);\n- Vercel deployment requirements;\n- GitHub’s optional, non-blocking role;\n- data ownership and security boundaries;\n- failure handling, observability, and recovery requirements;\n- the acceptance conditions for model-independent automation.\n\nThis is not a low-level implementation plan. It does not lock the project into a particular queue, database, framework, scraper, model provider, or cloud worker before those choices are tested. It defines the contracts those tools must satisfy.\n\nThe architecture has one central purpose:\n\n> **Help Vetted SaaS Blueprint publish truthful, useful, evidence-backed customer decision pages quickly every day, while progressively reducing the cost and intelligence required from the AI models doing the work.**\n\n---\n",
       "planned_outcome": "Deliver or review 1. Purpose of This Document within the architecture-and-automation boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md at D03-H002 (D03-S-fddd6f144f2c).",
@@ -6941,7 +6941,7 @@
           "section_id": "D03-S-fddd6f144f2c",
           "display_id": "D03-H002",
           "heading": "1. Purpose of This Document",
-          "hash": "a5e3f334c21977ca734227632b67361471990ce0178488064db66a073beafec1"
+          "hash": "e699cddffbc2331dfad83d314f6ef9d52f005acdac26cad2099a81896835650c"
         }
       ],
       "tasks": [],
@@ -8634,7 +8634,7 @@
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "candidate",
-      "statement": "## 2. Relationship to the Other Planning Documents\n\nThis document must be read with:\n\n1. `Vetted-SaaS-Blueprint-01-Market-Research-and-Opportunity-Plan-v1.md`\n2. `Vetted-SaaS-Blueprint-02-Product-Roadmap-v1.md`\n3. `Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md`\n4. `Vetted-SaaS-Blueprint-Master-PRD-v1.md`\n\nThe documents have different authority:\n\n| Document | Primary responsibility |\n|---|---|\n| Market Research and Opportunity | Why the business should exist and where it can win |\n| Product Roadmap | What must be delivered, in what sequence, and with what public proof |\n| AI-First Architecture | How the workflows, models, evidence, and deployment system operate |\n| Master PRD | What the product must do |\n| This Design System | How the product must communicate, look, feel, and behave |\n| Future Art Direction | How photography, illustration, diagrams, and visual storytelling are directed |\n| Future UI Kit and Component Library | The actual production components and their technical implementation |\n\nWhere a visual preference conflicts with decision clarity, accessibility, evidence integrity, or the daily publishing commitment, those product requirements take priority.\n\n---\n",
+      "statement": "## 2. Relationship to the Other Planning Documents\n\nThis document must be read with:\n\n1. `Vetted-SaaS-Blueprint-01-Market-Research-and-Opportunity-Plan-v1.md`\n2. `Vetted-SaaS-Blueprint-02-Product-Roadmap-v1.md`\n3. `Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md`\n4. `Vetted-SaaS-Blueprint-Master-PRD-v1.md`\n\nThe documents have different authority:\n\n| Document | Primary responsibility |\n|---|---|\n| Market Research and Opportunity | Why the business should exist and where it can win |\n| Product Roadmap | What must be delivered, in what sequence, and with what public proof |\n| AI-First Architecture | How the workflows, models, evidence, and deployment system operate |\n| Master PRD | What the product must do |\n| This Design System | How the product must communicate, look, feel, and behave |\n| Future Art Direction | How photography, illustration, diagrams, and visual storytelling are directed |\n| Future UI Kit and Component Library | The actual production components and their technical implementation |\n\nWhere a visual preference conflicts with decision clarity, accessibility, evidence integrity, or the daily publishing commitment, those product requirements take priority.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\n---\n",
       "planned_outcome": "Deliver or review 2. Relationship to the Other Planning Documents within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md at D04-H003 (D04-S-7692d01dc6e6).",
@@ -8651,7 +8651,7 @@
           "section_id": "D04-S-7692d01dc6e6",
           "display_id": "D04-H003",
           "heading": "2. Relationship to the Other Planning Documents",
-          "hash": "2e6bb0b3a95606e2ccc3733b33b083637546adde5cf3c532d94e1cd56c45e397"
+          "hash": "3ccf7a42b0a5911cc4b95337e4a09aef046b82fd317fe2211584d70983c8ef51"
         }
       ],
       "tasks": [
@@ -8865,7 +8865,7 @@
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "candidate",
-      "statement": "## 34. Open Decisions\n\nThe following must be resolved during design implementation rather than guessed now:\n\n1. Exact extracted colour values and semantic mapping.\n2. Exact current font families and final type scale.\n3. Whether the current homepage needs targeted refurbishment after token extraction.\n4. Final Taste Skill variance, motion, and density values per page type.\n5. Which open-source UI libraries enter the approved vault.\n6. Which motion library or libraries are standardised.\n7. Exact scheduled times for evening design-improvement runs.\n8. Exact signature interaction used for each of the first three reference pages.\n9. Final image sourcing and licensing workflow.\n10. Whether a separate design-review page or internal visual dashboard is required.\n11. Which design checks can be automated without an LLM.\n12. Which checks require visual-model review.\n13. How post-publication user signals influence design changes without creating uncontrolled drift.\n\n---\n",
+      "statement": "## 34. Open Decisions\n\nThe following must be resolved during design implementation rather than guessed now:\n\n1. Exact extracted colour values and semantic mapping.\n2. Exact current font families and final type scale.\n3. Whether the current homepage needs targeted refurbishment after token extraction.\n4. Final Taste Skill variance, motion, and density values per page type.\n5. Which open-source UI libraries enter the approved vault.\n6. Which motion library or libraries are standardised.\n7. (RETIRED 2026-10-28) Exact scheduled times for evening design-improvement runs — retired by owner directive; see planning.md and AGENTS.md.\n8. Exact signature interaction used for each of the first three reference pages.\n9. Final image sourcing and licensing workflow.\n10. Whether a separate design-review page or internal visual dashboard is required.\n11. Which design checks can be automated without an LLM.\n12. Which checks require visual-model review.\n13. How post-publication user signals influence design changes without creating uncontrolled drift.\n\n---\n",
       "planned_outcome": "Deliver or review 34. Open Decisions within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md at D04-H204 (D04-S-878e2b8062db).",
@@ -8882,7 +8882,7 @@
           "section_id": "D04-S-878e2b8062db",
           "display_id": "D04-H204",
           "heading": "34. Open Decisions",
-          "hash": "069370f0bb2364a2f1421f574eff1b6c30e200d638800a67b15f62cd9684f046"
+          "hash": "74070a94de06b8426c4a467f6ff54376be999d542e634e16200a2387e6160fa2"
         }
       ],
       "tasks": [
@@ -9492,7 +9492,7 @@
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "owner-retired",
-      "statement": "### 26.10 Step 10 - Scheduled optimisation\n\nDesign improvements may run in scheduled evening optimisation windows. The exact schedule will be selected during implementation and coordinated with the existing 23:00 SAST publishing-rescue policy.\n",
+      "statement": "### 26.10 Step 10 - Scheduled optimisation\n\nRETIRED by owner directive 2026-10-28 (see planning.md \"Product-owner retirement directive\"): scheduled evening optimisation windows and the 23:00 SAST publishing-rescue policy are not part of the current execution path. Design improvements are applied in normal change windows via the isolate/build/prove/ship workflow. This section remains for traceability only. See contradiction register C003 and amendment M003.\n",
       "planned_outcome": "Deliver or review 26.10 Step 10 - Scheduled optimisation within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md at D04-H171 (D04-S-c4b95ead9969).",
@@ -9509,7 +9509,7 @@
           "section_id": "D04-S-c4b95ead9969",
           "display_id": "D04-H171",
           "heading": "26.10 Step 10 - Scheduled optimisation",
-          "hash": "f656899e6b40ace61dc24861660ee1955459cade53f8653a343cac187f94a9a1"
+          "hash": "a67a3ff130997d1f4a0931e91e8cef90390ee4c53671246e91203d6cc38c3da2"
         }
       ],
       "tasks": [],
@@ -10249,7 +10249,7 @@
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "candidate",
-      "statement": "### 5.9 Publish first, improve continuously\n\nDesign optimisation must not recreate the previous failure where gates and reviews prevent public output.\n\nThe sequence is:\n\n1. assemble a truthful and usable page;\n2. perform safety and correctness checks;\n3. publish to Vercel;\n4. run the deeper design evaluation;\n5. queue and apply improvements;\n6. record what changed and why.\n\nSafety or correctness defects must be handled by removing, replacing, simplifying, or rolling back the affected claim, component, or interaction while the smallest safe and truthful connected set still publishes. They must not turn design review into a reason to miss the daily release.\n\nMissing, partial, conflicting, or stale evidence must have usable visual states. Those states publish on schedule, remain visibly qualified, and can be updated when stronger evidence becomes available. Every page and asset must support versioned post-publication improvement rather than waiting for visual or evidential completeness.\n",
+      "statement": "### 5.9 Publish first, improve continuously\n\nDesign optimisation must not recreate the previous failure where gates and reviews prevent public output.\n\nThe sequence is:\n\n1. assemble a truthful and usable page;\n2. perform safety and correctness checks;\n3. publish to Vercel;\n4. run the deeper design evaluation;\n5. queue and apply improvements;\n6. record what changed and why.\n\nSafety or correctness defects must be handled by removing, replacing, simplifying, or rolling back the affected claim, component, or interaction while the smallest safe and truthful connected set still publishes. Design review may not block an approved on-demand release (AGENTS.md; planning.md).\n\nMissing, partial, conflicting, or stale evidence must have usable visual states. Those states publish when approved and released, remain visibly qualified, and can be updated when stronger evidence becomes available. Every page and asset must support versioned post-publication improvement rather than waiting for visual or evidential completeness.\n",
       "planned_outcome": "Deliver or review 5.9 Publish first, improve continuously within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md at D04-H019 (D04-S-f9d094ee76e2).",
@@ -10266,7 +10266,7 @@
           "section_id": "D04-S-f9d094ee76e2",
           "display_id": "D04-H019",
           "heading": "5.9 Publish first, improve continuously",
-          "hash": "361fd6e8e19051b7b5190dfa0370ea85b4465ee25fd8100edd51074f040997a2"
+          "hash": "b4a1efd06aa4c10b74aa6dfcdf3d2e1d2a614f35dd09edb256e4a14ff2d61c91"
         }
       ],
       "tasks": [
@@ -13351,7 +13351,7 @@
       "authority_domain": "product-requirements",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "candidate",
-      "statement": "## 1. Document Authority and Boundaries\n\nThis document records the product decisions agreed during the discovery discussion. It is the authoritative product definition for the current planning phase.\n\nThe words **MUST**, **SHOULD**, and **MAY** are used deliberately:\n\n- **MUST** means the requirement is mandatory.\n- **SHOULD** means the requirement is expected unless planning identifies a documented reason not to implement it.\n- **MAY** means the capability is optional or planned for a later phase.\n\nThis PRD defines **what the product must achieve** and the high-level rules that keep it consistent. Detailed implementation tasks, exact service configuration, source-domain allowlists, scoring formulas, user-interface design, and test cases will be completed in the relevant companion documents and implementation plan.\n\n---\n",
+      "statement": "## 1. Document Authority and Boundaries\n\nThis document records the product decisions agreed during the discovery discussion. It is the authoritative product definition for the current planning phase.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nThe words **MUST**, **SHOULD**, and **MAY** are used deliberately:\n\n- **MUST** means the requirement is mandatory.\n- **SHOULD** means the requirement is expected unless planning identifies a documented reason not to implement it.\n- **MAY** means the capability is optional or planned for a later phase.\n\nThis PRD defines **what the product must achieve** and the high-level rules that keep it consistent. Detailed implementation tasks, exact service configuration, source-domain allowlists, scoring formulas, user-interface design, and test cases will be completed in the relevant companion documents and implementation plan.\n\n---\n",
       "planned_outcome": "Deliver or review 1. Document Authority and Boundaries within the product-requirements boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-05-Master-PRD-v1.md at D05-H002 (D05-S-bcda65d53c55).",
@@ -13368,7 +13368,7 @@
           "section_id": "D05-S-bcda65d53c55",
           "display_id": "D05-H002",
           "heading": "1. Document Authority and Boundaries",
-          "hash": "4c18660d7e891e761ef1e974725193a4fe3fd833c3933dc065e0a1af3995621d"
+          "hash": "cf2bb7ccad9d5eee6aeb2127b0e6e33aad09f4a545ff2bd4fb5e9af006b6c09c"
         }
       ],
       "tasks": [
@@ -16052,6 +16052,39 @@
       ]
     },
     {
+      "id": "R-C-D06-S-ac41adad0ebd",
+      "classification": "repository-fact",
+      "authority_domain": "implementation-and-agent-behaviour",
+      "implementation_relevance": "strategy-and-future-implementation",
+      "status": "candidate",
+      "statement": "### 17.5 Rescue and escalation\n\nWhen a lower-cost model fails:\n\n1. retry only if the failure is likely transient or correctable;\n2. provide validator feedback to the next attempt;\n3. narrow the task;\n4. use a stronger model for the failed module;\n5. use the premium reference model to finish the required daily output;\n6. log the failure as automation-improvement work.\n\nRETIRED 2026-10-28: the configured evening rescue point and 23:00 SAST publishing guarantee are not part of the current execution path. Model escalation may occur only inside an explicitly triggered run under `AGENTS.md` and `planning.md`.\n",
+      "planned_outcome": "Deliver or review 17.5 Rescue and escalation within the implementation-and-agent-behaviour boundary.",
+      "acceptance_criteria": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md at D06-H081 (D06-S-ac41adad0ebd).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "verification_obligations": [
+        "source-hash",
+        "requirement-traceability",
+        "risk-tier-validation"
+      ],
+      "sources": [
+        {
+          "source_id": "D06",
+          "section_id": "D06-S-ac41adad0ebd",
+          "display_id": "D06-H081",
+          "heading": "17.5 Rescue and escalation",
+          "hash": "ebb04d23b208a5567cbd1b921507aeeb85d26e4350545cba5085f383a4565b84"
+        }
+      ],
+      "tasks": [
+        "P1-PLAN-001"
+      ],
+      "acceptance_ids": [
+        "AC-C-D06-S-ac41adad0ebd"
+      ]
+    },
+    {
       "id": "R-C-D06-S-acc2f7475b24",
       "classification": "repository-fact",
       "authority_domain": "implementation-and-agent-behaviour",
@@ -16684,7 +16717,7 @@
       "authority_domain": "implementation-and-agent-behaviour",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "candidate",
-      "statement": "## 2. Document Authority\n\nThe words **MUST**, **SHOULD** and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented repository fact supports a safer or simpler alternative.\n- **MAY** means optional, experimental or deferred.\n\nWhen requirements conflict, agents must apply this priority order:\n\n1. user safety, legal compliance and secret protection;\n2. factual correctness and evidence honesty;\n3. the Master PRD and page-type contracts;\n4. the daily publishing guarantee;\n5. the AI-first architecture and recovery rules;\n6. the canonical design system;\n7. this implementation standard;\n8. existing repository conventions;\n9. task-specific plans;\n10. individual model preferences.\n\nNo agent may silently change the stack, architecture, page purpose, evidence rules, publishing commitment or monetisation principles.\n\nAny approved exception must be recorded with:\n\n- the rule being changed;\n- the repository fact or measured result that requires the change;\n- the replacement decision;\n- the expected benefit;\n- the rollback path;\n- the owner who approved it.\n\n---\n",
+      "statement": "## 2. Document Authority\n\nThe words **MUST**, **SHOULD** and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented repository fact supports a safer or simpler alternative.\n- **MAY** means optional, experimental or deferred.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nWhen requirements conflict, agents must apply this priority order:\n\n1. user safety, legal compliance and secret protection;\n2. factual correctness and evidence honesty;\n3. the Master PRD and page-type contracts;\n4. the daily publishing guarantee;\n5. the AI-first architecture and recovery rules;\n6. the canonical design system;\n7. this implementation standard;\n8. existing repository conventions;\n9. task-specific plans;\n10. individual model preferences.\n\nNo agent may silently change the stack, architecture, page purpose, evidence rules, publishing commitment or monetisation principles.\n\nAny approved exception must be recorded with:\n\n- the rule being changed;\n- the repository fact or measured result that requires the change;\n- the replacement decision;\n- the expected benefit;\n- the rollback path;\n- the owner who approved it.\n\n---\n",
       "planned_outcome": "Deliver or review 2. Document Authority within the implementation-and-agent-behaviour boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md at D06-H003 (D06-S-d0f5b165a83f).",
@@ -16701,7 +16734,7 @@
           "section_id": "D06-S-d0f5b165a83f",
           "display_id": "D06-H003",
           "heading": "2. Document Authority",
-          "hash": "7fe33aa1fb5f8cf27bca79ecfe6446d26eb16f72bd676ba8cae78b9244a8eb0c"
+          "hash": "af296360e622445f1c4b0352e425e3b74acdd716ff6fc9194c4394428e1b0682"
         }
       ],
       "tasks": [
@@ -17264,7 +17297,7 @@
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 2. Document Authority and Boundaries\n\nThe words **MUST**, **SHOULD** and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented reason supports a safer or more useful alternative.\n- **MAY** means optional, experimental or implementation-dependent.\n\nThis document is authoritative for the editorial-intelligence and knowledge workflow.\n\nIt MUST NOT redefine rules that already have an authoritative home.\n\nIn particular:\n\n- page purposes and mandatory content logic remain governed by the Master PRD;\n- visual presentation remains governed by the Design System;\n- implementation technology remains governed by Document 6;\n- workflow architecture and model independence remain governed by Document 3;\n- the daily release commitment remains governed by the Product Roadmap and architecture documents.\n\nWhere this document needs those rules, it references and operationalises them rather than creating competing versions.\n\n---\n",
+      "statement": "## 2. Document Authority and Boundaries\n\nThe words **MUST**, **SHOULD** and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented reason supports a safer or more useful alternative.\n- **MAY** means optional, experimental or implementation-dependent.\n\nThis document is authoritative for the editorial-intelligence and knowledge workflow.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nIt MUST NOT redefine rules that already have an authoritative home.\n\nIn particular:\n\n- page purposes and mandatory content logic remain governed by the Master PRD;\n- visual presentation remains governed by the Design System;\n- implementation technology remains governed by Document 6;\n- workflow architecture and model independence remain governed by Document 3;\n- the daily release commitment remains governed by the Product Roadmap and architecture documents.\n\nWhere this document needs those rules, it references and operationalises them rather than creating competing versions.\n\n---\n",
       "planned_outcome": "Deliver or review 2. Document Authority and Boundaries within the editorial-operations boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H003 (D07-S-1f772e34b52e).",
@@ -17281,7 +17314,7 @@
           "section_id": "D07-S-1f772e34b52e",
           "display_id": "D07-H003",
           "heading": "2. Document Authority and Boundaries",
-          "hash": "e55710b18725736eec9344c698fb8cf105ff2497f0fd573ee87f87f9fc2c2937"
+          "hash": "eda2728f5a0f5e721ac7214a87f2816cb8bf3704c808af84e06e3bb2140ac9fc"
         }
       ],
       "tasks": [],
@@ -17318,6 +17351,37 @@
       "tasks": [],
       "acceptance_ids": [
         "AC-C-D07-S-2353b84a3aed"
+      ]
+    },
+    {
+      "id": "R-C-D07-S-24ce753f0331",
+      "classification": "repository-fact",
+      "authority_domain": "editorial-operations",
+      "implementation_relevance": "strategy-and-future-implementation",
+      "status": "separate-authority-required",
+      "statement": "## 19. Daily Editorial Brief — 06:00 SAST\n\nRETIRED 2026-10-28: the fixed-time editorial brief and its scheduler are not part of the current execution path. The following subsections are retained as a historical brief schema only; an equivalent brief may be assembled inside an explicit manual or API-triggered run.\n",
+      "planned_outcome": "Deliver or review 19. Daily Editorial Brief — 06:00 SAST within the editorial-operations boundary.",
+      "acceptance_criteria": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H080 (D07-S-24ce753f0331).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "verification_obligations": [
+        "source-hash",
+        "requirement-traceability",
+        "risk-tier-validation"
+      ],
+      "sources": [
+        {
+          "source_id": "D07",
+          "section_id": "D07-S-24ce753f0331",
+          "display_id": "D07-H080",
+          "heading": "19. Daily Editorial Brief — 06:00 SAST",
+          "hash": "edc194f4750eb832285bb30c8b994bde5106aa33019adef517d32699f8a6b787"
+        }
+      ],
+      "tasks": [],
+      "acceptance_ids": [
+        "AC-C-D07-S-24ce753f0331"
       ]
     },
     {
@@ -17698,7 +17762,7 @@
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 27. Maintenance Operating Model\n\nMaintenance is continuous but bounded.\n\nA maintenance worker should:\n\n- process change events;\n- scan for stale evidence;\n- check affiliate destinations;\n- inspect refresh-due pages;\n- surface content conflicts;\n- identify consolidation candidates;\n- update the refresh queue;\n- avoid consuming all daily production capacity.\n\nThe 06:00 SAST brief decides which maintenance items deserve execution that day.\n\nCritical factual or commercial-link failures may interrupt normal priority.\n\n---\n",
+      "statement": "## 27. Maintenance Operating Model\n\nMaintenance is continuous but bounded.\n\nA maintenance worker should:\n\n- process change events;\n- scan for stale evidence;\n- check affiliate destinations;\n- inspect refresh-due pages;\n- surface content conflicts;\n- identify consolidation candidates;\n- update the refresh queue;\n- avoid consuming all daily production capacity.\n\nRETIRED 2026-10-28: the former 06:00 SAST brief does not schedule maintenance. An explicitly triggered run may prioritise maintenance using the retained schema.\n\nCritical factual or commercial-link failures may interrupt normal priority.\n\n---\n",
       "planned_outcome": "Deliver or review 27. Maintenance Operating Model within the editorial-operations boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H109 (D07-S-4c6012467710).",
@@ -17715,7 +17779,7 @@
           "section_id": "D07-S-4c6012467710",
           "display_id": "D07-H109",
           "heading": "27. Maintenance Operating Model",
-          "hash": "2f8f827d49f20f1649e552070a84e67cef1246e8e8e28e11fd7ae513ca90e3fa"
+          "hash": "ba29dfecde03255df2cc81e064b24e1dfa4a2d0523c271a74d92b07bc2bd62ae"
         }
       ],
       "tasks": [],
@@ -17783,6 +17847,37 @@
       "tasks": [],
       "acceptance_ids": [
         "AC-C-D07-S-4f56d4884b01"
+      ]
+    },
+    {
+      "id": "R-C-D07-S-51c73f72ca7f",
+      "classification": "repository-fact",
+      "authority_domain": "editorial-operations",
+      "implementation_relevance": "strategy-and-future-implementation",
+      "status": "separate-authority-required",
+      "statement": "### Stage 8 — Run the first 06:00 editorial brief\n\nRETIRED 2026-10-28: do not schedule a 06:00 editorial brief. An explicitly triggered run may generate a bounded queue from demand, evidence and page state.\n",
+      "planned_outcome": "Deliver or review Stage 8 — Run the first 06:00 editorial brief within the editorial-operations boundary.",
+      "acceptance_criteria": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H130 (D07-S-51c73f72ca7f).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "verification_obligations": [
+        "source-hash",
+        "requirement-traceability",
+        "risk-tier-validation"
+      ],
+      "sources": [
+        {
+          "source_id": "D07",
+          "section_id": "D07-S-51c73f72ca7f",
+          "display_id": "D07-H130",
+          "heading": "Stage 8 — Run the first 06:00 editorial brief",
+          "hash": "3b3d1af6d2df9dfd0bc5451fe9dd56d7a78f43947ae75ad4f507a1516f0fd03b"
+        }
+      ],
+      "tasks": [],
+      "acceptance_ids": [
+        "AC-C-D07-S-51c73f72ca7f"
       ]
     },
     {
@@ -17946,7 +18041,7 @@
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 1. Purpose of This Document\n\nThis document defines **how Vetted SaaS Blueprint discovers what people want to know, builds reusable product and market intelligence, supplies focused context to AI workers, selects what to publish, creates content, refreshes existing content, and learns from every editorial run**.\n\nIt does not replace the Master PRD.\n\nThe Master PRD defines the product, page types, evidence principles, evaluation framework and decision logic. This document defines the **editorial operating system** that turns those requirements into a repeatable daily content operation.\n\nIt governs:\n\n- affiliate-product intake;\n- product dossiers;\n- local source material and evidence;\n- customer-question and intent discovery;\n- shared knowledge;\n- product-specific knowledge;\n- the business knowledge graph;\n- cross-product knowledge reuse;\n- context brokerage;\n- agent context packages;\n- content opportunity scoring;\n- editorial work queues;\n- the 06:00 SAST daily editorial brief;\n- content assembly across the three primary page types;\n- evidence-state handling;\n- refresh and maintenance;\n- archiving and redirects;\n- traceability;\n- knowledge promotion;\n- editorial learning and continuous improvement.\n\nThe central objective is:\n\n> **Publish what people genuinely need answered, using the strongest available evidence and the smallest relevant slice of reusable knowledge, without forcing every agent to rediscover the project from scratch.**\n\n---\n",
+      "statement": "## 1. Purpose of This Document\n\nThis document defines **how Vetted SaaS Blueprint discovers what people want to know, builds reusable product and market intelligence, supplies focused context to AI workers, selects what to publish, creates content, refreshes existing content, and learns from every editorial run**.\n\nIt does not replace the Master PRD.\n\nThe Master PRD defines the product, page types, evidence principles, evaluation framework and decision logic. This document defines the **editorial operating system** that turns those requirements into a repeatable daily content operation.\n\nIt governs:\n\n- affiliate-product intake;\n- product dossiers;\n- local source material and evidence;\n- customer-question and intent discovery;\n- shared knowledge;\n- product-specific knowledge;\n- the business knowledge graph;\n- cross-product knowledge reuse;\n- context brokerage;\n- agent context packages;\n- content opportunity scoring;\n- editorial work queues;\n- the 06:00 SAST daily editorial brief (RETIRED 2026-10-28; an equivalent brief may be created only inside an explicitly triggered run);\n- content assembly across the three primary page types;\n- evidence-state handling;\n- refresh and maintenance;\n- archiving and redirects;\n- traceability;\n- knowledge promotion;\n- editorial learning and continuous improvement.\n\nThe central objective is:\n\n> **Publish what people genuinely need answered, using the strongest available evidence and the smallest relevant slice of reusable knowledge, without forcing every agent to rediscover the project from scratch.**\n\n---\n",
       "planned_outcome": "Deliver or review 1. Purpose of This Document within the editorial-operations boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H002 (D07-S-6aafd0d67023).",
@@ -17963,7 +18058,7 @@
           "section_id": "D07-S-6aafd0d67023",
           "display_id": "D07-H002",
           "heading": "1. Purpose of This Document",
-          "hash": "85e4fc36ff9acc23550a21d32f2b3fddfbcc01b88be4a8a748c3ab8ac04c3dd4"
+          "hash": "8be4def9903e92d1cab5328cd3d327f702bf9c7f71d410424a82e53c7c97e273"
         }
       ],
       "tasks": [],
@@ -18782,8 +18877,8 @@
       "classification": "repository-fact",
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "separate-authority-required",
-      "statement": "### 19.1 Purpose\n\nAt **06:00 SAST**, the editorial system should produce the daily operational brief.\n\nThe brief is the point where prepared intelligence becomes an executable work queue.\n",
+      "status": "owner-retired",
+      "statement": "### 19.1 Purpose\n\nRETIRED 2026-10-28: the editorial system does not produce a scheduled **06:00 SAST** brief.\n\nThe brief is the point where prepared intelligence becomes an executable work queue.\n",
       "planned_outcome": "Deliver or review 19.1 Purpose within the editorial-operations boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H081 (D07-S-cda2f93a025a).",
@@ -18800,7 +18895,7 @@
           "section_id": "D07-S-cda2f93a025a",
           "display_id": "D07-H081",
           "heading": "19.1 Purpose",
-          "hash": "e164b8f859400a03d99787731666d22463277103890c9b33fa20de784a5aeb09"
+          "hash": "bd4ea4520628f7224d4d747c9b1b5dc1ee2b1347c129fabebdeeb8efc6fe4e07"
         }
       ],
       "tasks": [],
@@ -20333,7 +20428,7 @@
       "authority_domain": "research-and-knowledge-acquisition",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 1. Purpose of This Document\n\nThis document defines **how Vetted SaaS Blueprint continuously acquires, validates, refreshes, structures, and compounds research intelligence so that page production becomes progressively faster, more accurate, more useful, and less dependent on expensive real-time reasoning**.\n\nDocument 7 defines how editorial intelligence is organised and used.\n\nDocument 8 defines how the knowledge required by that editorial system is obtained and kept useful.\n\nThe primary objective is:\n\n> **Research once where possible, structure once, reuse everywhere, and keep improving the knowledge base without requiring new information to exist every day.**\n\nThe research system exists to make production easier.\n\nIt must not become a research project that prevents Vetted SaaS Blueprint from shipping public value.\n\n---\n",
+      "statement": "## 1. Purpose of This Document\n\nThis document defines **how Vetted SaaS Blueprint continuously acquires, validates, refreshes, structures, and compounds research intelligence so that page production becomes progressively faster, more accurate, more useful, and less dependent on expensive real-time reasoning**.\n\nDocument 7 defines how editorial intelligence is organised and used.\n\nDocument 8 defines how the knowledge required by that editorial system is obtained and kept useful.\n\nThe primary objective is:\n\n> **Research once where possible, structure once, reuse everywhere, and keep improving the knowledge base without requiring new information to exist every day.**\n\nThe research system exists to make production easier.\n\nIt must not become a research project that prevents Vetted SaaS Blueprint from shipping public value.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\n---\n",
       "planned_outcome": "Deliver or review 1. Purpose of This Document within the research-and-knowledge-acquisition boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md at D08-H002 (D08-S-ac0299e768be).",
@@ -20350,7 +20445,7 @@
           "section_id": "D08-S-ac0299e768be",
           "display_id": "D08-H002",
           "heading": "1. Purpose of This Document",
-          "hash": "355e30f09960e89366436b198527559b3c9ec0a8d9178ab2018690c60d699afa"
+          "hash": "bc66d2578da4f75f0e3dcb2c6c2084215ef66376c997ad6bd67cc8b0b2d87f76"
         }
       ],
       "tasks": [],
@@ -20364,7 +20459,7 @@
       "authority_domain": "research-and-knowledge-acquisition",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "owner-retired",
-      "statement": "## 14. Daily Research Cycle\n\nA routine research cycle should run every day as part of the intelligence-compounding system.\n\nThe research cycle may precede or feed the 06:00 SAST editorial brief.\n\nIt should consider:\n\n- active affiliate-product dossiers;\n- recently changed dossiers;\n- high-priority product categories;\n- current content opportunities;\n- stale high-value claims;\n- currently performing pages;\n- unanswered customer intents;\n- known product-change feeds;\n- recent community conversation;\n- new products or competitors relevant to active decisions.\n",
+      "statement": "## 14. Daily Research Cycle\n\nA routine research cycle should run every day as part of the intelligence-compounding system.\n\nRETIRED 2026-10-28: research does not feed a scheduled 06:00 SAST editorial brief. An explicitly triggered run may use accumulated research to prepare its bounded work queue.\n\nIt should consider:\n\n- active affiliate-product dossiers;\n- recently changed dossiers;\n- high-priority product categories;\n- current content opportunities;\n- stale high-value claims;\n- currently performing pages;\n- unanswered customer intents;\n- known product-change feeds;\n- recent community conversation;\n- new products or competitors relevant to active decisions.\n",
       "planned_outcome": "Deliver or review 14. Daily Research Cycle within the research-and-knowledge-acquisition boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md at D08-H054 (D08-S-aeebd36c92f4).",
@@ -20381,12 +20476,43 @@
           "section_id": "D08-S-aeebd36c92f4",
           "display_id": "D08-H054",
           "heading": "14. Daily Research Cycle",
-          "hash": "52cd04f01603d67715f6049402664c21378bd179a7d7d8461251048dd789c8b6"
+          "hash": "da03fe369fff057d6b76f8b5312409372e72bae08fc2bc58ba3cf0392c943186"
         }
       ],
       "tasks": [],
       "acceptance_ids": [
         "AC-C-D08-S-aeebd36c92f4"
+      ]
+    },
+    {
+      "id": "R-C-D08-S-b3ea66f554f2",
+      "classification": "repository-fact",
+      "authority_domain": "research-and-knowledge-acquisition",
+      "implementation_relevance": "strategy-and-future-implementation",
+      "status": "separate-authority-required",
+      "statement": "## 34. Daily Research Success Criteria\n\nThe daily research cycle succeeds when it:\n\n1. checks the highest-priority active research areas;\n2. identifies meaningful changes where they exist;\n3. identifies customer-intent changes where they exist;\n4. records no-change states honestly;\n5. improves or confirms the durable knowledge base;\n6. (RETIRED 2026-10-28) does not target a scheduled 06:00 editorial brief; an explicitly triggered run may consume the same inputs;\n7. stays inside its resource budget;\n8. does not delay the daily public-output mandate.\n\n---\n",
+      "planned_outcome": "Deliver or review 34. Daily Research Success Criteria within the research-and-knowledge-acquisition boundary.",
+      "acceptance_criteria": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md at D08-H087 (D08-S-b3ea66f554f2).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "verification_obligations": [
+        "source-hash",
+        "requirement-traceability",
+        "risk-tier-validation"
+      ],
+      "sources": [
+        {
+          "source_id": "D08",
+          "section_id": "D08-S-b3ea66f554f2",
+          "display_id": "D08-H087",
+          "heading": "34. Daily Research Success Criteria",
+          "hash": "2a434c6d907a0b4fde2a877d89383bc2aa5b4ef77d0480e22b35b0aad392cab8"
+        }
+      ],
+      "tasks": [],
+      "acceptance_ids": [
+        "AC-C-D08-S-b3ea66f554f2"
       ]
     },
     {
@@ -20891,7 +21017,7 @@
       "authority_domain": "research-and-knowledge-acquisition",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "### ARR-001 — Global Daily Value Delivery Mandate\n\n**Decision**\n\nEvery active day must produce useful public Vetted SaaS Blueprint output.\n\nAutomation or development failure does not cancel delivery.\n\n**Required follow-up**\n\nCreate a platform-wide operating-principles amendment and propagate this rule across all applicable Documents 1–8 and implementation plans.\n\n**Current required fallback**\n\nAt the 20:00 SAST rescue checkpoint, use the premium production fallback, currently GPT-5.6 Sol where available, to complete and publish the required pages if the automated path has failed.\n\n**Status**\n\nOPEN — captured here; requires cross-document propagation in Codex.\n",
+      "statement": "### ARR-001 — Global Daily Value Delivery Mandate\n\n**Decision**\n\nEvery active day must produce useful public Vetted SaaS Blueprint output.\n\nAutomation or development failure does not cancel delivery.\n\n**Required follow-up**\n\nCreate a platform-wide operating-principles amendment and propagate this rule across all applicable Documents 1–8 and implementation plans.\n\n**Current required fallback**\n\nRETIRED 2026-10-28: do not create or invoke a 20:00 SAST rescue checkpoint. Any fallback inside an explicitly triggered run remains provider-neutral and follows the active repository release contract.\n\n**Status**\n\nCLOSED 2026-10-28 — superseded by the owner directive and the cross-document cadence amendment recorded in Plan 1.\n",
       "planned_outcome": "Deliver or review ARR-001 — Global Daily Value Delivery Mandate within the research-and-knowledge-acquisition boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md at D08-H090 (D08-S-de8aa1c5d8cf).",
@@ -20908,7 +21034,7 @@
           "section_id": "D08-S-de8aa1c5d8cf",
           "display_id": "D08-H090",
           "heading": "ARR-001 — Global Daily Value Delivery Mandate",
-          "hash": "4b3d4e042956fe3c859409fbfcc96fe30b90ba69345bb3d149fddaa6c12ac43c"
+          "hash": "8f88a85b2fff7370c167457fa1b1c790da70f273666831cbb5c68262ca994712"
         }
       ],
       "tasks": [],
@@ -22286,7 +22412,7 @@
       "authority_domain": "growth-and-distribution",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "separate-authority-required",
-      "statement": "## 2. Authority and boundaries\n\nThis document is authoritative for growth, distribution, audience development, and channel measurement.\n\nIt does not redefine:\n\n- the product promise or functional requirements in the Master PRD;\n- the three public page types in the Product Roadmap and Master PRD;\n- evidence acquisition rules in the Research Operations document;\n- editorial assembly and refresh rules in the Editorial Operations document;\n- design and interaction rules in the Design System;\n- deployment mechanics in the Architecture and Implementation Standards documents.\n\nWhere a distribution tactic conflicts with truthfulness, editorial independence, user usefulness, privacy, accessibility, or the daily delivery obligation, those requirements take priority.\n\nThe words **MUST**, **SHOULD**, and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented reason supports a safer or more useful alternative.\n- **MAY** means optional, experimental, or dependent on evidence of value.\n",
+      "statement": "## 2. Authority and boundaries\n\nThis document is authoritative for growth, distribution, audience development, and channel measurement.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n\nIt does not redefine:\n\n- the product promise or functional requirements in the Master PRD;\n- the three public page types in the Product Roadmap and Master PRD;\n- evidence acquisition rules in the Research Operations document;\n- editorial assembly and refresh rules in the Editorial Operations document;\n- design and interaction rules in the Design System;\n- deployment mechanics in the Architecture and Implementation Standards documents.\n\nWhere a distribution tactic conflicts with truthfulness, editorial independence, user usefulness, privacy, accessibility, or the daily delivery obligation, those requirements take priority.\n\nThe words **MUST**, **SHOULD**, and **MAY** are deliberate:\n\n- **MUST** means mandatory.\n- **SHOULD** means expected unless a documented reason supports a safer or more useful alternative.\n- **MAY** means optional, experimental, or dependent on evidence of value.\n",
       "planned_outcome": "Deliver or review 2. Authority and boundaries within the growth-and-distribution boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-09-Growth-and-Distribution-Strategy.md at D09-H003 (D09-S-ebab0001bcf9).",
@@ -22303,7 +22429,7 @@
           "section_id": "D09-S-ebab0001bcf9",
           "display_id": "D09-H003",
           "heading": "2. Authority and boundaries",
-          "hash": "bafcab75993efda65ccde63b619a3ef941d901b98c5b1cce6a804fac7bb73619"
+          "hash": "be20a1d7f962720d4a075524ffeab6ed87c51370285feee44905c2ff43f97e82"
         }
       ],
       "tasks": [],
@@ -22969,7 +23095,7 @@
       "authority_domain": "quality-assurance",
       "implementation_relevance": "strategy-and-future-implementation",
       "status": "candidate",
-      "statement": "## 1. Purpose\n\nThis document defines how Vetted SaaS Blueprint verifies and improves each daily three-page release after it is live in production.\n\nThe daily output is one connected set:\n\n1. a Decision Hub;\n2. a Solution Hub; and\n3. a Decision Scenario.\n\nQuality assurance exists to make deployed work better. It is not permission to publish, a release veto, or an excuse to miss the daily delivery commitment.\n",
+      "statement": "## 1. Purpose\n\nThis document defines how Vetted SaaS Blueprint verifies and improves each daily three-page release after it is live in production.\n\nThe daily output is one connected set:\n\n1. a Decision Hub;\n2. a Solution Hub; and\n3. a Decision Scenario.\n\nQuality assurance exists to make deployed work better. It is not permission to publish, a release veto, or an excuse to miss the daily delivery commitment.\n\n**Cadence supersession (owner directive 2026-10-28):** Any \"daily\", \"every active day\", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.\n",
       "planned_outcome": "Deliver or review 1. Purpose within the quality-assurance boundary.",
       "acceptance_criteria": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-10-QA-and-Testing-Plan.md at D10-H002 (D10-S-ebe639899fcc).",
@@ -22986,7 +23112,7 @@
           "section_id": "D10-S-ebe639899fcc",
           "display_id": "D10-H002",
           "heading": "1. Purpose",
-          "hash": "8a8a51723cd70d770054b6732e065b9280ff3b4fc4ab01b3a94ebdb6f0dc19fa"
+          "hash": "2165ce78e4aef371d4aad1e25043b09807a84477cf66c256499bd361d25e5598"
         }
       ],
       "tasks": [

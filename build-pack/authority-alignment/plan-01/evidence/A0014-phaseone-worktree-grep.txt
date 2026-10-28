@@ -1,0 +1,14 @@
+﻿APPROVED_UI_COMPONENT_CATALOGUE.md:490: - **Layout:** High-contrast campaign banner with glow, scanlines, corner chrome, and primary/secondary actions.
+Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md:549: - Secondary actions must be visually subordinate.
+Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md:634: 6. **Optional secondary action** - only where it supports a distinct lower-commitment path.
+Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md:1008: - secondary text;
+Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md:1014: - secondary action;
+Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md:1801: | DS-HIER-002 | Primary and secondary actions are visually distinct | Required |
+Vetted-SaaS-Blueprint-05-Master-PRD-v1.md:401: Which secondary costs, risks, or constraints may not be obvious yet?
+Vetted-SaaS-Blueprint-05-Master-PRD-v1.md:588: - primary or secondary;
+Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md:431: - keep the product name secondary when the page’s primary intent is customer-outcome based.
+Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md:473: It is not a reason to delay Phase One publication. If integration is incomplete, the first pages may use validated local structured data and be migrated afterward.
+Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md:784: - use a maximum of one primary and one quieter secondary action in a decision moment;
+Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md:145: A page is complete when it resolves the required decision to the level justified by the evidence. Length is secondary.
+Vetted-SaaS-Blueprint-10-QA-and-Testing-Plan.md:42: - Missing polish, optional graphics, advanced motion, secondary distribution assets, or non-critical enhancements does not block deployment.
+VetterSaaSBlueprint_PRD.md:16: An approved content change is validated in a clean worktree, merged to `main`, built and deployed by Vercel, then smoke-tested in production.

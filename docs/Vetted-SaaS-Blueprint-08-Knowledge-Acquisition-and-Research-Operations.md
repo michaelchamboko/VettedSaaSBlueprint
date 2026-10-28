@@ -41,6 +41,8 @@ The research system exists to make production easier.
 
 It must not become a research project that prevents Vetted SaaS Blueprint from shipping public value.
 
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
+
 ---
 
 ## 2. Research Thesis
@@ -195,20 +197,7 @@ Model choice must remain replaceable and versioned.
 
 ### 4.4 20:00 SAST delivery escalation
 
-**20:00 SAST is the production-rescue checkpoint unless the implementation later establishes an earlier safer checkpoint.**
-
-If the normal automation has not produced an acceptable daily public deliverable by that checkpoint:
-
-1. stop relying on the unfinished experimental path for that day;
-2. preserve its diagnostics for later repair;
-3. invoke the premium fallback production path;
-4. use **GPT-5.6 Sol** as the current designated high-capability fallback when available;
-5. provide Sol with the prepared product dossiers, evidence, intent context, page contracts, and relevant prior production state;
-6. complete the required pages;
-7. run the minimum required validation;
-8. publish the acceptable output to Vercel;
-9. record that fallback intervention occurred;
-10. return the failed automation path to the improvement queue.
+RETIRED 2026-10-28: the **20:00 SAST** production-rescue checkpoint and its premium fallback path are not part of the current execution path. This heading is retained for traceability only. Recovery inside an explicitly triggered run follows `AGENTS.md` and `planning.md` without creating a scheduled checkpoint.
 
 ### 4.5 Delivery beats architectural purity
 
@@ -641,7 +630,7 @@ This rule is essential for speed and cost control.
 
 A routine research cycle should run every day as part of the intelligence-compounding system.
 
-The research cycle may precede or feed the 06:00 SAST editorial brief.
+RETIRED 2026-10-28: research does not feed a scheduled 06:00 SAST editorial brief. An explicitly triggered run may use accumulated research to prepare its bounded work queue.
 
 It should consider:
 
@@ -1184,7 +1173,7 @@ The daily research cycle succeeds when it:
 3. identifies customer-intent changes where they exist;
 4. records no-change states honestly;
 5. improves or confirms the durable knowledge base;
-6. provides actionable inputs to the 06:00 editorial brief;
+6. (RETIRED 2026-10-28) does not target a scheduled 06:00 editorial brief; an explicitly triggered run may consume the same inputs;
 7. stays inside its resource budget;
 8. does not delay the daily public-output mandate.
 
@@ -1211,7 +1200,7 @@ Document 8 is implemented successfully when:
 15. a page can be produced from previously accumulated intelligence without mandatory fresh scraping;
 16. the research system can degrade when one provider is unavailable;
 17. an automation failure cannot prevent the daily publishing fallback;
-18. the 20:00 SAST rescue rule can trigger the premium fallback path;
+18. (RETIRED 2026-10-28) the 20:00 SAST rescue rule is not an implementation acceptance criterion;
 19. fallback intervention is logged;
 20. failed experimental work returns to the improvement queue after the day's production obligation is satisfied.
 
@@ -1239,11 +1228,11 @@ Create a platform-wide operating-principles amendment and propagate this rule ac
 
 **Current required fallback**
 
-At the 20:00 SAST rescue checkpoint, use the premium production fallback, currently GPT-5.6 Sol where available, to complete and publish the required pages if the automated path has failed.
+RETIRED 2026-10-28: do not create or invoke a 20:00 SAST rescue checkpoint. Any fallback inside an explicitly triggered run remains provider-neutral and follows the active repository release contract.
 
 **Status**
 
-OPEN — captured here; requires cross-document propagation in Codex.
+CLOSED 2026-10-28 — superseded by the owner directive and the cross-document cadence amendment recorded in Plan 1.
 
 ### ARR-002 — Single-Agent Default
 
@@ -1486,7 +1475,7 @@ Test whether prepared context allows simpler approved models to produce acceptab
 
 ### Stage 10 — Delivery fallback
 
-Prove the 20:00 SAST rescue path can complete production if the normal workflow is unsuccessful.
+RETIRED 2026-10-28: the 20:00 SAST rescue path is not an implementation stage. Recovery is evaluated only within an explicitly triggered run.
 
 ### Stage 11 — Optimise after reliability
 

@@ -254,3 +254,6 @@ export function relation_R_D02_S_43ada931e3df_DEPENDS_ON_D01() {
 export function relation_R_D02_S_43ada931e3df_DEPENDS_ON_D05() {
   return { id: "R-D02-S-43ada931e3df-DEPENDS_ON-D05", type: "depends-on", classification: "inference", resolutionState: "unresolved", from: claim_C_D02_S_43ada931e3df(), to: claim_C_D05_S_bcda65d53c55() };
 }
+export function relation_R_D02_S_0951e69fb4b0_DEPENDS_ON_D10() {
+  return { id: "R-D02-S-0951e69fb4b0-DEPENDS_ON-D10", type: "depends-on", classification: "inference", resolutionState: "unresolved", from: claim_C_D02_S_0951e69fb4b0(), to: claim_C_D10_S_ebe639899fcc() };
+}

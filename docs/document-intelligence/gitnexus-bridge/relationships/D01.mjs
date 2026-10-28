@@ -157,3 +157,6 @@ export function relation_R_D01_S_b6f7f1c0bc93_DEPENDS_ON_D10() {
 export function relation_R_D01_S_b6f7f1c0bc93_DEPENDS_ON_D05() {
   return { id: "R-D01-S-b6f7f1c0bc93-DEPENDS_ON-D05", type: "depends-on", classification: "repository-fact", resolutionState: "confirmed", from: claim_C_D01_S_b6f7f1c0bc93(), to: claim_C_D05_S_bcda65d53c55() };
 }
+export function relation_R_D01_S_7d19567a803b_DEPENDS_ON_D10() {
+  return { id: "R-D01-S-7d19567a803b-DEPENDS_ON-D10", type: "depends-on", classification: "inference", resolutionState: "unresolved", from: claim_C_D01_S_7d19567a803b(), to: claim_C_D10_S_ebe639899fcc() };
+}
