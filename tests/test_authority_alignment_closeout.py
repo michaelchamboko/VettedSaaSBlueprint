@@ -18,6 +18,27 @@ def read_json(path: Path) -> dict:
 
 
 class AuthorityAlignmentCloseoutTests(unittest.TestCase):
+    def test_document_intelligence_reproducibility_is_encoding_and_format_independent(self) -> None:
+        extractor = (ROOT / "scripts/extract-relationship-candidates.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        graph_builder = (ROOT / "scripts/build-document-graph.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+        verifier = (ROOT / "scripts/verify-document-intelligence.ps1").read_text(
+            encoding="utf-8-sig"
+        )
+
+        self.assertGreaterEqual(extractor.count("Get-Content -Raw -Encoding UTF8"), 2)
+        self.assertGreaterEqual(graph_builder.count("Get-Content -Raw -Encoding UTF8"), 2)
+        self.assertIn("function Get-SemanticJsonSha256", verifier)
+        self.assertIn("Get-SemanticJsonSha256 -Path $freshCandidatePath", verifier)
+        self.assertIn("Get-SemanticJsonSha256 -Path $freshGraphPath", verifier)
+        self.assertNotIn(
+            "Get-Sha256File -Path $freshCandidatePath", verifier
+        )
+        self.assertNotIn("Get-Sha256File -Path $freshGraphPath", verifier)
+
     def test_every_operational_source_declares_the_cadence_supersession(self) -> None:
         manifest = read_json(ROOT / "docs/document-intelligence/SOURCE_MANIFEST.json")
         operational_sources = {
