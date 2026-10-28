@@ -7,7 +7,7 @@
 - Baseline commit: `b67a50425df71a3c98ee36f9543ddeadd815457d`
 - First reviewed commit: `a940ba0ae2c1f6f4abf075c67a3e9a2861ab6d28` (changes required)
 - Release record: `https://github.com/michaelchamboko/VettedSaaSBlueprint/pull/40`
-- Exact next action: commit the review remediation, rerun the required gates, and obtain independent review of the new exact head.
+- Exact next action: rerun the required gates and obtain independent review of the next exact PR head; PR #40 is authoritative for live release status.
 
 ## Task checklist
 
@@ -127,8 +127,8 @@
 - Evidence: `scripts/prepare-vetted-execution-state.mjs`; `scripts/generate-globalsetup-intake.py`; `src/lib/repository-intelligence/graph.ts`; `tests/repository-intelligence.test.ts`; `tests/retired-workflow-mapping.test.ts`; PR #40 review.
 - Changed files: the bounded paths listed above, regenerated requirements/phase map/execution state/capabilities, this ledger, and removal of the accidentally generated `build-pack/10-implementation-plan.md`.
 - Decision: the first candidate is not releasable; only a newly committed and independently reviewed head may proceed.
-- Limits: the remediated head is not yet committed, reviewed, synchronized to Neon, merged, or deployed.
-- Next action: run full gates, commit, push, and request independent current-head review.
+- Limits: this entry records the first review remediation; PR #40 is authoritative for later commit, review, synchronization, merge, and deployment status.
+- Next action: run full gates and request independent current-head review of the next exact PR head.
 
 ## Open blockers and unresolved decisions
 

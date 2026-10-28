@@ -177,6 +177,7 @@ const main = async () => {
     capabilities_file: "build-pack/capabilities.json",
     source_manifest_file: "build-pack/source-manifest.json",
     requirements_file: "build-pack/requirements.json",
+    grommet_file: "build-pack/grommet-approval.json",
     automation_authority: { publication: { enabled: false, destinations: [], command_prefixes: [] } },
     tasks,
     extensions: {
@@ -196,13 +197,13 @@ const main = async () => {
     schema_version: 2,
     python: { required: true, minimum_version: "3.10", observed_version: "3.11.15" },
     workspace: { integration_branch: "codex/vetted-saas-integration", serial: true },
-    repository_intelligence: {
+    graph: {
       required: true,
       provider: "neon-postgres",
       schema: "repository_intelligence_v1",
-      sync_command: "npm run intelligence:sync:apply",
-      query_command: "npm run intelligence:impact --",
-      reason: "Neon stores commit-bound semantic and repository relationship snapshots; direct source inspection remains mandatory for semantic conclusions.",
+      status_argv: ["npm", "run", "intelligence:sync"],
+      sync_argv: ["npm", "run", "intelligence:sync:apply"],
+      timeout_seconds: 900,
     },
   };
 

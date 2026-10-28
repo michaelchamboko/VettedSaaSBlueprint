@@ -81,7 +81,16 @@ class GlobalSetupIntakeTests(unittest.TestCase):
             self.assertEqual("high", tasks["SLC-008"]["risk"])
             self.assertEqual("high", tasks["SLC-009"]["risk"])
             mapped_ids = {requirement_id for task in state["tasks"] for requirement_id in task["requirement_ids"]}
-            self.assertEqual(actual_ids, mapped_ids)
+            unmapped = {item["id"] for item in requirements["requirements"] if not item.get("tasks")}
+            self.assertEqual(actual_ids - unmapped, mapped_ids)
+            self.assertTrue(unmapped)
+            self.assertTrue(all(
+                item["status"] in {"owner-retired", "separate-authority-required"}
+                for item in requirements["requirements"]
+                if item["id"] in unmapped
+            ))
+            open_decisions = next(item for item in requirements["requirements"] if item["id"] == "R-C-D04-S-878e2b8062db")
+            self.assertTrue(open_decisions["tasks"], "unrelated D04 open decisions must not be retired by nested text")
             affected_checks = [
                 check
                 for task in state["tasks"]

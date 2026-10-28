@@ -99,6 +99,14 @@ class LocalGlobalSetupRuntimeTests(unittest.TestCase):
         }
         self.assertEqual({"disabled", "neon-postgres"}, providers)
 
+    def test_repository_capabilities_configure_the_neon_graph_contract(self) -> None:
+        runner = load_runner()
+        capabilities = json.loads((ROOT / "build-pack" / "capabilities.json").read_text(encoding="utf-8"))
+        graph = runner.validate_v2_graph(capabilities)
+        self.assertEqual("neon-postgres", graph["provider"])
+        self.assertEqual(["npm", "run", "intelligence:sync"], graph["status_argv"])
+        self.assertEqual(["npm", "run", "intelligence:sync:apply"], graph["sync_argv"])
+
     def test_v2_build_pack_validator_reaches_the_grommet_gate(self) -> None:
         result = subprocess.run(
             [

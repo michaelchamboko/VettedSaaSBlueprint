@@ -4,6 +4,7 @@
   "capabilities_file": "build-pack/capabilities.json",
   "source_manifest_file": "build-pack/source-manifest.json",
   "requirements_file": "build-pack/requirements.json",
+  "grommet_file": "build-pack/grommet-approval.json",
   "automation_authority": {
     "publication": {
       "enabled": false,

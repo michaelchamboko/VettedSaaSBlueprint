@@ -31,16 +31,23 @@ OWNER_RETIRED_REQUIREMENTS = {
     "R-C-D08-S-aeebd36c92f4",
 }
 
+NON_EXECUTABLE_RETIREMENT_CONTEXT_REQUIREMENTS = {
+    "R-C-D03-S-1591bfbb4a5d",
+    "R-C-D03-S-51149f65d8b9",
+    "R-C-D03-S-61259be0ec50",
+    "R-C-D03-S-75d88f0be02c",
+    "R-C-D03-S-fa592ef88ff8",
+    "R-C-D03-S-fddd6f144f2c",
+    "R-C-D07-S-4c6012467710",
+    "R-C-D07-S-6aafd0d67023",
+    "R-C-D08-S-b3ea66f554f2",
+    "R-C-D08-S-de8aa1c5d8cf",
+}
+
 
 def is_non_executable_retirement(requirement: dict[str, Any]) -> bool:
-    """Keep retirement notices and their historical context out of task mappings."""
-    if requirement["id"] in OWNER_RETIRED_REQUIREMENTS:
-        return True
-    statement = requirement.get("statement", "")
-    if "RETIRED 2026-10-28" not in statement:
-        return False
-    source_ids = {source.get("source_id") for source in requirement.get("sources", [])}
-    return bool(source_ids & {"D03", "D04", "D07", "D08"})
+    """Keep only the owner-adjudicated retirement sections out of task mappings."""
+    return requirement["id"] in OWNER_RETIRED_REQUIREMENTS | NON_EXECUTABLE_RETIREMENT_CONTEXT_REQUIREMENTS
 
 
 def read_json(path: Path) -> dict[str, Any]:
