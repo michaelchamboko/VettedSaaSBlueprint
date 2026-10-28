@@ -66,7 +66,8 @@ const main = async () => {
   const assignments = new Map();
 
   for (const requirement of requirements.requirements) {
-    const task = taskForPhaseOneRequirement(requirement);
+    const retiredWorkflowRequirement = isRetiredWorkflowRequirement(requirement);
+    const task = retiredWorkflowRequirement ? null : taskForPhaseOneRequirement(requirement);
     assignments.set(requirement.id, task);
     requirement.tasks = task ? [task] : [];
     requirement.acceptance_ids = [`AC-${requirement.id.replace(/^R-/, "")}`];
@@ -77,7 +78,7 @@ const main = async () => {
       }
     } else {
       delete requirement.owner_authorized_phase_one;
-      requirement.status = isRetiredWorkflowRequirement(requirement) ? "owner-retired" : "separate-authority-required";
+      requirement.status = retiredWorkflowRequirement ? "owner-retired" : "separate-authority-required";
     }
   }
 

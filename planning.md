@@ -11,7 +11,7 @@ The source strategy documents remain unchanged as historical product inputs. The
 ## Current state
 
 - Phase One is complete and verified in production.
-- There is no active automation programme, scheduled cycle, manual cycle, API runner, or automated publication path.
+- There is no active retired multi-stage automation programme, scheduled research/editorial/optimisation/watchdog cycle, or publication path owned by that programme. The separate article-to-page workflow remains available only through an explicit manual or API trigger under `AGENTS.md`.
 - No later-phase packet is dependency-ready or authorised.
 - The next implementation packet must be created by an explicit product-owner planning amendment.
 

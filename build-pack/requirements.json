@@ -8402,7 +8402,7 @@
       "classification": "repository-fact",
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "owner-retired",
       "statement": "## 28. Release Classification\n\nThe system must not use broad “design blocker” language.\n\nEvery issue receives one of these classifications:\n",
       "planned_outcome": "Deliver or review 28. Release Classification within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
@@ -8423,9 +8423,7 @@
           "hash": "bdfe01ae971ae31ce81f0faf35d6e8c68a495bd4c4ea9a51f1d53685a5a40dcb"
         }
       ],
-      "tasks": [
-        "P1-UI-001"
-      ],
+      "tasks": [],
       "acceptance_ids": [
         "AC-C-D04-S-64bac92ce5d5"
       ]
@@ -9491,7 +9489,7 @@
       "classification": "repository-fact",
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "owner-retired",
       "statement": "### 26.10 Step 10 - Scheduled optimisation\n\nDesign improvements may run in scheduled evening optimisation windows. The exact schedule will be selected during implementation and coordinated with the existing 23:00 SAST publishing-rescue policy.\n",
       "planned_outcome": "Deliver or review 26.10 Step 10 - Scheduled optimisation within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
@@ -9512,9 +9510,7 @@
           "hash": "f656899e6b40ace61dc24861660ee1955459cade53f8653a343cac187f94a9a1"
         }
       ],
-      "tasks": [
-        "P1-UI-001"
-      ],
+      "tasks": [],
       "acceptance_ids": [
         "AC-C-D04-S-c4b95ead9969"
       ]
@@ -12593,7 +12589,7 @@
       "classification": "repository-fact",
       "authority_domain": "product-requirements",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "owner-retired",
       "statement": "## 31. Initial Release Scope\n\nThe first release SHOULD prove the complete system in one bounded SaaS category before broad expansion.\n\nThe exact first category and product cohort remain an owner decision.\n\nThe initial release should include:\n\n- one approved-source registry for the selected category;\n- a bounded product cohort;\n- private raw evidence storage;\n- normalised product and evidence records;\n- Vetted Evaluation Framework version 1;\n- all three public page models;\n- at least one complete Decision Hub;\n- multiple outcome-focused Solution Hubs;\n- at least one real Decision Scenario;\n- affiliate disclosure and link management;\n- Personalised Decision Report lead asset;\n- deterministic Python orchestration;\n- model-adapter boundary;\n- validation gates;\n- audit logging;\n- evidence refresh scheduling;\n- public read-only experience with no user authentication.\n\nThe first release does not require:\n\n- a large product catalogue;\n- automated weight self-modification;\n- public user accounts;\n- an advanced AI chatbot;\n- unrestricted web crawling;\n- a public raw evidence browser;\n- a full interactive Vetted Decision Engine.\n\n---\n",
       "planned_outcome": "Deliver or review 31. Initial Release Scope within the product-requirements boundary.",
       "acceptance_criteria": [
@@ -12614,9 +12610,7 @@
           "hash": "031deeb95fbc25c6ff971dc6ad09f25bacd820a5efedffd8dcc660dc6c53312a"
         }
       ],
-      "tasks": [
-        "P1-CONTENT-001"
-      ],
+      "tasks": [],
       "acceptance_ids": [
         "AC-C-D05-S-974b2b8309fc"
       ]
@@ -14870,7 +14864,7 @@
       "classification": "repository-fact",
       "authority_domain": "implementation-and-agent-behaviour",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "owner-retired",
       "statement": "### 4.1 Daily release unit\n\nEvery active build day must produce one connected set of three live pages:\n\n1. **Decision Hub**\n2. **Solution Hub**\n3. **Decision Scenario**\n\nThey must address the same customer problem, outcome, category or decision journey.\n",
       "planned_outcome": "Deliver or review 4.1 Daily release unit within the implementation-and-agent-behaviour boundary.",
       "acceptance_criteria": [
@@ -14891,9 +14885,7 @@
           "hash": "d7d8f1d72aaad454d58eb9ffa95a73bb731968ce5e98bd4710f9c80a389e3d2a"
         }
       ],
-      "tasks": [
-        "P1-PLAN-001"
-      ],
+      "tasks": [],
       "acceptance_ids": [
         "AC-C-D06-S-5ec10576af1d"
       ]
@@ -22508,7 +22500,7 @@
       "classification": "repository-fact",
       "authority_domain": "quality-assurance",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "owner-retired",
       "statement": "### 8.8 Learn across releases\n\nRepeated findings should improve templates, components, prompts, research operations, or deployment automation. Do not respond to every recurrence with another manual checklist item when a systemic fix is simpler.\n",
       "planned_outcome": "Deliver or review 8.8 Learn across releases within the quality-assurance boundary.",
       "acceptance_criteria": [
@@ -22529,9 +22521,7 @@
           "hash": "77c01e091ca64ee5493abbaab97d0f238fc4e7212f1f56353011f02094b445f3"
         }
       ],
-      "tasks": [
-        "P1-VERIFY-001"
-      ],
+      "tasks": [],
       "acceptance_ids": [
         "AC-C-D10-S-36011ac14ff8"
       ]
@@ -22739,7 +22729,7 @@
       "classification": "repository-fact",
       "authority_domain": "quality-assurance",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "owner-retired",
       "statement": "## 12. Automation boundaries\n\nAutomate checks when the result is repeatable and externally observable. Good candidates include URL availability, link integrity, metadata, schema syntax, accessibility signals, performance measurements, overflow detection, console errors, sitemap inclusion, and crawler responses.\n\nRetain human review for meaning, truthfulness, evidence context, art direction, visual hierarchy, motion purpose, recommendation integrity, and whether the page genuinely helps a decision.\n\nAutomated scores are evidence, not truth. A single aggregate score must never become a hidden release gate or replace the underlying observations.\n",
       "planned_outcome": "Deliver or review 12. Automation boundaries within the quality-assurance boundary.",
       "acceptance_criteria": [
@@ -22760,9 +22750,7 @@
           "hash": "89f141a188fdf2722366f32b9f2afe2d750804ace548c14b3aa1e813f1f607cb"
         }
       ],
-      "tasks": [
-        "P1-VERIFY-001"
-      ],
+      "tasks": [],
       "acceptance_ids": [
         "AC-C-D10-S-745a692f3a77"
       ]
