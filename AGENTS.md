@@ -8,14 +8,14 @@ Every repository-changing task—including pages, components, content, configura
 For UI changes, use both `design-taste-frontend` and the project-local Impeccable skill, including their required context and critique/audit/detect checks. Every repository change must pass `npm run verify:agent-workflow`, `npm run lint`, `npm run typecheck`, and `npm test`. Add `npm run build`, `npm run validate:public-site`, and the applicable stage or release gates when the changed surface requires them. Record before/after evidence whenever runtime behavior changes.
 <!-- build-faster-skills:workflow:end -->
 
-This repository is the local Spec Kit, implementation, automation, and deployment workspace for Vetted SaaS B. The source strategy documents remain the product authority; implementation proceeds here through small, verifiable vertical slices.
+This repository is the local Spec Kit, implementation, and deployment workspace for Vetted SaaS B. The source strategy documents remain the product authority; implementation proceeds here through small, verifiable vertical slices.
 
 ## Active phase
 
 - Document-intelligence foundation work is complete.
 - Global Setup was a one-time initializer and is no longer part of the execution path.
 - Phase One must produce one connected Decision Hub, Solution Hub, and Decision Scenario, then deploy and verify them on Vercel.
-- Later phases add the research, editorial, publishing, optimisation, watchdog, recovery, and notification workflows.
+- No later-phase automation programme is active. Future automation requires a new explicit product-owner directive and planning amendment.
 - Prefer the smallest deployable slice. A successful phase ends with working URLs and recorded verification evidence.
 
 ## Non-inference gate
@@ -27,16 +27,16 @@ This repository is the local Spec Kit, implementation, automation, and deploymen
 - Do not reinterpret reduced-motion requirements as minimal motion.
 - Do not weaken commercial intent or let it silently override evidence, disclosure, ranking independence, or anti-deception requirements.
 
-## Automation non-deviation rule
+## Automation retirement and non-deviation rule
 
-- Automation is bound to the approved repository contract, schedule manifest, tracked prompts, and selected BuildRunner packet. Do not add a prerequisite, service, release channel, workflow stage, or capability by inference.
-- Before proposing a change, inspect `AGENTS.md`, `planning.md`, the selected packet, source-intelligence records, and the affected automation code. If the defined flow can continue, continue without asking.
+- The retired multi-stage automation programme has no active runner, schedule manifest, tracked prompts, BuildRunner packet, or release authority. Do not recreate a prerequisite, service, schedule, release channel, workflow stage, or capability by inference.
+- Before proposing new automation, inspect `AGENTS.md`, `planning.md`, and the source-intelligence records. Source strategy language and historical receipts do not reactivate retired work.
 - Ask the product owner only when a specific, documented stage cannot proceed because a required authority, input, or external state is genuinely absent. State that exact blocker and no invented remedy.
 - The article-to-page workflow runs only from an explicit manual or API trigger in the primary checkout. Scheduled execution and secondary-worktree execution are prohibited. A trigger must not weaken evidence, receipt, quality, review, or deployment gates.
 
 ## Repository boundaries
 
-- Owner directive for supervised authoring: after evidence-backed drafting and before candidate validation, complete the mandatory full-article workflow in `.agents/skills/eleanor-editorial/SKILL.md`. This covers DecisionSetV2, direct-review landing blueprints, VisibilityPageV1 and individual BlogPostV1 records. Rewrite every editable prose field through all three SlopMonster passes, require a different-model-family cleanse, run the final fidelity review, and require a 5/5 CLEAN result. Save `EditorialEvidenceV2` under `build-pack/editorial`; preserve protected fields and semantic meaning; reuse it only for an unchanged artifact fingerprint and revision. A partial cleanup or missing pass cannot proceed. This does not change paused schedules, publication authority or source strategy.
+- Owner directive for supervised authoring: after evidence-backed drafting and before candidate validation, complete the mandatory full-article workflow in `.agents/skills/eleanor-editorial/SKILL.md`. This covers DecisionSetV2, direct-review landing blueprints, VisibilityPageV1 and individual BlogPostV1 records. Rewrite every editable prose field through all three SlopMonster passes, require a different-model-family cleanse, run the final fidelity review, and require a 5/5 CLEAN result. Save `EditorialEvidenceV2` under `build-pack/editorial`; preserve protected fields and semantic meaning; reuse it only for an unchanged artifact fingerprint and revision. A partial cleanup or missing pass cannot proceed. This does not authorise schedules, automated publication, or a change to source strategy.
 
 - GitNexus is a navigation and impact-analysis aid, not semantic authority.
 - `docs/document-intelligence/` is the explicit semantic layer.

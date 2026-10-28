@@ -1,20 +1,20 @@
 # Vetted SaaS Blueprint
 
-This repository is the Spec Kit, application, local automation, and production-deployment workspace for Vetted SaaS Blueprint.
+This repository is the Spec Kit, application, and production-deployment workspace for Vetted SaaS Blueprint.
 
 The application is a single-operator content and decision-support system:
 
 - Vercel builds and serves the Next.js application.
-- The configured PostgreSQL-compatible `DATABASE_URL` stores persistent application and automation records.
-- Codex desktop runs the four project-scoped research, editorial, optimisation, and watchdog schedules on the operator's computer.
-- Local verified commits deploy directly to Vercel production.
+- The configured PostgreSQL-compatible `DATABASE_URL` stores persistent application records.
+- Verified commits deploy to Vercel production through the repository release process.
+- No repository-local scheduled content workflow is active.
 
 ## Repository contents
 
 - `src/app` — Next.js App Router routes and authenticated administration pages.
 - `src/components` — shared public and administrative components.
-- `src/lib` — content, evidence, automation, authentication, database, and tracking contracts.
-- `scripts` — deterministic validation, automation, and deployment commands.
+- `src/lib` — content, evidence, authentication, database, and tracking contracts.
+- `scripts` — deterministic validation and deployment commands.
 - `planning.md` — the single planning and execution authority.
 - `docs/document-intelligence` — source inventory and stable source identifiers.
 
@@ -36,6 +36,6 @@ Secrets remain outside Git. Persistent features use `DATABASE_URL`; authenticati
 ## Production boundary
 
 - Production deployment is direct to the existing Vercel project.
-- Automatic release is limited to validated structured-content JSON.
+- Publication authority is disabled unless a product-owner-approved plan explicitly enables it.
 - Dependencies, routes, authentication, migrations, rankings, prices, affiliate claims, and conflicting evidence require owner review.
 - Tracking is minimal, first-party, and resilient when its configured endpoint is unavailable.

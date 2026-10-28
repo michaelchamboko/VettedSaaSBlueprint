@@ -175,7 +175,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       const { target } = await readImportArtifactTarget(repositoryRoot, options.format, options.artifactPath, options.slug);
       if (deployment.canonicalUrl !== new URL(target.renderedRoutes[0], origin).href) throw new Error("DEPLOYMENT_CANONICAL_MISMATCH");
       if (options.format !== "direct-review") {
-        const script = { blog: "scripts/verify-blog-deployment.ts", visibility: "scripts/verify-visibility-deployment.ts", "decision-set": "scripts/verify-decision-journey-production.ts" }[options.format as "blog" | "visibility" | "decision-set"];
+        const script = { blog: "scripts/verify-blog-deployment.ts", visibility: "scripts/verify-visibility-deployment.ts", "decision-set": "scripts/verify-decision-set-deployment.ts" }[options.format as "blog" | "visibility" | "decision-set"];
         if (!script) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
         const result = JSON.parse((await runner("npx", ["tsx", script, "--origin", origin, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; ok?: boolean; passed?: boolean; browser_errors_ok?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
         if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");

@@ -1,11 +1,12 @@
 {
-  "generatedAt": "2026-09-01T19:40:38.797Z",
+  "generatedAt": "2026-10-28T12:06:56.945Z",
   "denominatorCount": 799,
-  "mappedAtLeast": 799,
+  "mappedAtLeast": 400,
   "requirements": [
     {
       "requirementId": "R-C-D01-S-0403b64da931",
-      "task": "P3-ASSET-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-0403b64da931"
       ],
@@ -25,7 +26,8 @@
     },
     {
       "requirementId": "R-C-D01-S-065351a4fc18",
-      "task": "P3-DISCOVERY-001",
+      "task": "P1-DISCOVERY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D01-S-065351a4fc18"
       ],
@@ -45,7 +47,8 @@
     },
     {
       "requirementId": "R-C-D01-S-07051ecaa129",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-07051ecaa129"
       ],
@@ -65,7 +68,8 @@
     },
     {
       "requirementId": "R-C-D01-S-0a7372c951e0",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-0a7372c951e0"
       ],
@@ -85,7 +89,8 @@
     },
     {
       "requirementId": "R-C-D01-S-110cd299ff09",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-110cd299ff09"
       ],
@@ -105,7 +110,8 @@
     },
     {
       "requirementId": "R-C-D01-S-132cc4b30610",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-132cc4b30610"
       ],
@@ -125,7 +131,8 @@
     },
     {
       "requirementId": "R-C-D01-S-16ec20be230d",
-      "task": "P3-DISCOVERY-001",
+      "task": "P1-DISCOVERY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D01-S-16ec20be230d"
       ],
@@ -145,7 +152,8 @@
     },
     {
       "requirementId": "R-C-D01-S-1b03f16605b0",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-1b03f16605b0"
       ],
@@ -165,7 +173,8 @@
     },
     {
       "requirementId": "R-C-D01-S-220619e18b58",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-220619e18b58"
       ],
@@ -185,7 +194,8 @@
     },
     {
       "requirementId": "R-C-D01-S-23bed128531b",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-23bed128531b"
       ],
@@ -205,7 +215,8 @@
     },
     {
       "requirementId": "R-C-D01-S-2a7ba1dff5bc",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-2a7ba1dff5bc"
       ],
@@ -225,7 +236,8 @@
     },
     {
       "requirementId": "R-C-D01-S-2d96691de7bb",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-2d96691de7bb"
       ],
@@ -245,7 +257,8 @@
     },
     {
       "requirementId": "R-C-D01-S-2d96e24cd933",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-2d96e24cd933"
       ],
@@ -265,7 +278,8 @@
     },
     {
       "requirementId": "R-C-D01-S-300e3c563017",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-300e3c563017"
       ],
@@ -285,7 +299,8 @@
     },
     {
       "requirementId": "R-C-D01-S-33833a7e297f",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-33833a7e297f"
       ],
@@ -305,7 +320,8 @@
     },
     {
       "requirementId": "R-C-D01-S-4155ab9ba6e3",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-4155ab9ba6e3"
       ],
@@ -325,7 +341,8 @@
     },
     {
       "requirementId": "R-C-D01-S-41adb5812148",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-41adb5812148"
       ],
@@ -345,7 +362,8 @@
     },
     {
       "requirementId": "R-C-D01-S-463b9cadb9fe",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-463b9cadb9fe"
       ],
@@ -365,7 +383,8 @@
     },
     {
       "requirementId": "R-C-D01-S-4905a7b7127d",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-4905a7b7127d"
       ],
@@ -385,7 +404,8 @@
     },
     {
       "requirementId": "R-C-D01-S-4af9172d65c5",
-      "task": "P4-COMMERCIAL-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-4af9172d65c5"
       ],
@@ -405,7 +425,8 @@
     },
     {
       "requirementId": "R-C-D01-S-4e70e673e3a3",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-4e70e673e3a3"
       ],
@@ -425,7 +446,8 @@
     },
     {
       "requirementId": "R-C-D01-S-53465bf49238",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-53465bf49238"
       ],
@@ -445,7 +467,8 @@
     },
     {
       "requirementId": "R-C-D01-S-5fd369fea767",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-5fd369fea767"
       ],
@@ -465,7 +488,8 @@
     },
     {
       "requirementId": "R-C-D01-S-6359d0adda59",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-6359d0adda59"
       ],
@@ -485,7 +509,8 @@
     },
     {
       "requirementId": "R-C-D01-S-65b340d1876b",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-65b340d1876b"
       ],
@@ -505,7 +530,8 @@
     },
     {
       "requirementId": "R-C-D01-S-71b55266e034",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-71b55266e034"
       ],
@@ -525,7 +551,8 @@
     },
     {
       "requirementId": "R-C-D01-S-72ad479ce03c",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-72ad479ce03c"
       ],
@@ -545,7 +572,8 @@
     },
     {
       "requirementId": "R-C-D01-S-7d19567a803b",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-7d19567a803b"
       ],
@@ -565,7 +593,8 @@
     },
     {
       "requirementId": "R-C-D01-S-7e7756c6257a",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-7e7756c6257a"
       ],
@@ -585,7 +614,8 @@
     },
     {
       "requirementId": "R-C-D01-S-84d7c5b42335",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-84d7c5b42335"
       ],
@@ -605,7 +635,8 @@
     },
     {
       "requirementId": "R-C-D01-S-8c1b642fc5c6",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-8c1b642fc5c6"
       ],
@@ -625,7 +656,8 @@
     },
     {
       "requirementId": "R-C-D01-S-8d077f7680e1",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-8d077f7680e1"
       ],
@@ -645,7 +677,8 @@
     },
     {
       "requirementId": "R-C-D01-S-8f9ac6c18133",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-8f9ac6c18133"
       ],
@@ -665,7 +698,8 @@
     },
     {
       "requirementId": "R-C-D01-S-928ff10dfa22",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-928ff10dfa22"
       ],
@@ -685,7 +719,8 @@
     },
     {
       "requirementId": "R-C-D01-S-9305c491bd4d",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-9305c491bd4d"
       ],
@@ -705,7 +740,8 @@
     },
     {
       "requirementId": "R-C-D01-S-96710293da27",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-96710293da27"
       ],
@@ -725,7 +761,8 @@
     },
     {
       "requirementId": "R-C-D01-S-9e8b9d874f25",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-9e8b9d874f25"
       ],
@@ -745,7 +782,8 @@
     },
     {
       "requirementId": "R-C-D01-S-a3c787e65ca1",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-a3c787e65ca1"
       ],
@@ -765,7 +803,8 @@
     },
     {
       "requirementId": "R-C-D01-S-ab261d65fd41",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-ab261d65fd41"
       ],
@@ -785,7 +824,8 @@
     },
     {
       "requirementId": "R-C-D01-S-b6f7f1c0bc93",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-b6f7f1c0bc93"
       ],
@@ -805,7 +845,8 @@
     },
     {
       "requirementId": "R-C-D01-S-b77597f4cc93",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-b77597f4cc93"
       ],
@@ -825,7 +866,8 @@
     },
     {
       "requirementId": "R-C-D01-S-ba45fe589675",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-ba45fe589675"
       ],
@@ -845,7 +887,8 @@
     },
     {
       "requirementId": "R-C-D01-S-bf2619b36fe8",
-      "task": "P4-COMMERCIAL-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-bf2619b36fe8"
       ],
@@ -865,7 +908,8 @@
     },
     {
       "requirementId": "R-C-D01-S-c7b2a5fe3f65",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-c7b2a5fe3f65"
       ],
@@ -885,7 +929,8 @@
     },
     {
       "requirementId": "R-C-D01-S-cc46d0766a4b",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-cc46d0766a4b"
       ],
@@ -905,7 +950,8 @@
     },
     {
       "requirementId": "R-C-D01-S-e42e747aa0b8",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-e42e747aa0b8"
       ],
@@ -925,7 +971,8 @@
     },
     {
       "requirementId": "R-C-D01-S-e95f71de2095",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-e95f71de2095"
       ],
@@ -945,7 +992,8 @@
     },
     {
       "requirementId": "R-C-D01-S-eed8f3b858fe",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-eed8f3b858fe"
       ],
@@ -965,7 +1013,8 @@
     },
     {
       "requirementId": "R-C-D01-S-f3ad3fd4087f",
-      "task": "P3-CATALOGUE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D01-S-f3ad3fd4087f"
       ],
@@ -985,7 +1034,8 @@
     },
     {
       "requirementId": "R-C-D02-S-05f896c95b2e",
-      "task": "P1-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-05f896c95b2e"
       ],
@@ -1005,7 +1055,8 @@
     },
     {
       "requirementId": "R-C-D02-S-0951e69fb4b0",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-0951e69fb4b0"
       ],
@@ -1025,7 +1076,8 @@
     },
     {
       "requirementId": "R-C-D02-S-0a0d79eb77ee",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-0a0d79eb77ee"
       ],
@@ -1045,7 +1097,8 @@
     },
     {
       "requirementId": "R-C-D02-S-0a3d7fcaf5cd",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-0a3d7fcaf5cd"
       ],
@@ -1065,7 +1118,8 @@
     },
     {
       "requirementId": "R-C-D02-S-113ce637b814",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-113ce637b814"
       ],
@@ -1085,7 +1139,8 @@
     },
     {
       "requirementId": "R-C-D02-S-14ca15e67aec",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-14ca15e67aec"
       ],
@@ -1105,7 +1160,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1529597091aa",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1529597091aa"
       ],
@@ -1125,7 +1181,8 @@
     },
     {
       "requirementId": "R-C-D02-S-157c3623abc6",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-157c3623abc6"
       ],
@@ -1145,7 +1202,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1865e1ece388",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1865e1ece388"
       ],
@@ -1165,7 +1223,8 @@
     },
     {
       "requirementId": "R-C-D02-S-18fdcd2b5bc7",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-18fdcd2b5bc7"
       ],
@@ -1185,7 +1244,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1922efce18dd",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1922efce18dd"
       ],
@@ -1205,7 +1265,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1b86534e5dbb",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1b86534e5dbb"
       ],
@@ -1225,7 +1286,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1d99201cc922",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1d99201cc922"
       ],
@@ -1245,7 +1307,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1fb058e6212b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1fb058e6212b"
       ],
@@ -1265,7 +1328,8 @@
     },
     {
       "requirementId": "R-C-D02-S-1fc1e7dde5c6",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-1fc1e7dde5c6"
       ],
@@ -1285,7 +1349,8 @@
     },
     {
       "requirementId": "R-C-D02-S-2346cc7f6f68",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-2346cc7f6f68"
       ],
@@ -1305,7 +1370,8 @@
     },
     {
       "requirementId": "R-C-D02-S-279d965231b3",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-279d965231b3"
       ],
@@ -1325,7 +1391,8 @@
     },
     {
       "requirementId": "R-C-D02-S-29f6b389e083",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-29f6b389e083"
       ],
@@ -1345,7 +1412,8 @@
     },
     {
       "requirementId": "R-C-D02-S-3461b5e1b0de",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-3461b5e1b0de"
       ],
@@ -1365,7 +1433,8 @@
     },
     {
       "requirementId": "R-C-D02-S-43ada931e3df",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-43ada931e3df"
       ],
@@ -1385,7 +1454,8 @@
     },
     {
       "requirementId": "R-C-D02-S-455b8e41c2c4",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-455b8e41c2c4"
       ],
@@ -1405,7 +1475,8 @@
     },
     {
       "requirementId": "R-C-D02-S-512fd0fd66ee",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-512fd0fd66ee"
       ],
@@ -1425,7 +1496,8 @@
     },
     {
       "requirementId": "R-C-D02-S-53867c4d20e5",
-      "task": "P3-ASSET-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-53867c4d20e5"
       ],
@@ -1445,7 +1517,8 @@
     },
     {
       "requirementId": "R-C-D02-S-60d7c461616b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-60d7c461616b"
       ],
@@ -1465,7 +1538,8 @@
     },
     {
       "requirementId": "R-C-D02-S-612bc3feca04",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-612bc3feca04"
       ],
@@ -1485,7 +1559,8 @@
     },
     {
       "requirementId": "R-C-D02-S-663b0649da4b",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-663b0649da4b"
       ],
@@ -1505,7 +1580,8 @@
     },
     {
       "requirementId": "R-C-D02-S-67781f6d0382",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-67781f6d0382"
       ],
@@ -1525,7 +1601,8 @@
     },
     {
       "requirementId": "R-C-D02-S-69129bd07f11",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-69129bd07f11"
       ],
@@ -1545,7 +1622,8 @@
     },
     {
       "requirementId": "R-C-D02-S-6b298d2a38ea",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-6b298d2a38ea"
       ],
@@ -1565,7 +1643,8 @@
     },
     {
       "requirementId": "R-C-D02-S-6d2597911f8e",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-6d2597911f8e"
       ],
@@ -1585,7 +1664,8 @@
     },
     {
       "requirementId": "R-C-D02-S-758fea2986d4",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-758fea2986d4"
       ],
@@ -1605,7 +1685,8 @@
     },
     {
       "requirementId": "R-C-D02-S-761824930dee",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-761824930dee"
       ],
@@ -1625,7 +1706,8 @@
     },
     {
       "requirementId": "R-C-D02-S-782492896e19",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-782492896e19"
       ],
@@ -1645,7 +1727,8 @@
     },
     {
       "requirementId": "R-C-D02-S-7842c686213b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-7842c686213b"
       ],
@@ -1665,7 +1748,8 @@
     },
     {
       "requirementId": "R-C-D02-S-78dcb3877e85",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-78dcb3877e85"
       ],
@@ -1685,7 +1769,8 @@
     },
     {
       "requirementId": "R-C-D02-S-7d314a4d9107",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-7d314a4d9107"
       ],
@@ -1705,7 +1790,8 @@
     },
     {
       "requirementId": "R-C-D02-S-7fb597f70e93",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-7fb597f70e93"
       ],
@@ -1725,7 +1811,8 @@
     },
     {
       "requirementId": "R-C-D02-S-81fd3b11b2be",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-81fd3b11b2be"
       ],
@@ -1745,7 +1832,8 @@
     },
     {
       "requirementId": "R-C-D02-S-851b97ade45a",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-851b97ade45a"
       ],
@@ -1765,7 +1853,8 @@
     },
     {
       "requirementId": "R-C-D02-S-872b8c93d302",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-872b8c93d302"
       ],
@@ -1785,7 +1874,8 @@
     },
     {
       "requirementId": "R-C-D02-S-881720dd0501",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-881720dd0501"
       ],
@@ -1805,7 +1895,8 @@
     },
     {
       "requirementId": "R-C-D02-S-8864961062df",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-8864961062df"
       ],
@@ -1825,7 +1916,8 @@
     },
     {
       "requirementId": "R-C-D02-S-8a2e481e74c3",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-8a2e481e74c3"
       ],
@@ -1845,7 +1937,8 @@
     },
     {
       "requirementId": "R-C-D02-S-8c939974289d",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-8c939974289d"
       ],
@@ -1865,7 +1958,8 @@
     },
     {
       "requirementId": "R-C-D02-S-913deec87f54",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-913deec87f54"
       ],
@@ -1885,7 +1979,8 @@
     },
     {
       "requirementId": "R-C-D02-S-94e1603ee78e",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-94e1603ee78e"
       ],
@@ -1905,7 +2000,8 @@
     },
     {
       "requirementId": "R-C-D02-S-96cd09713553",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-96cd09713553"
       ],
@@ -1925,7 +2021,8 @@
     },
     {
       "requirementId": "R-C-D02-S-9b7ffccbe304",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-9b7ffccbe304"
       ],
@@ -1945,7 +2042,8 @@
     },
     {
       "requirementId": "R-C-D02-S-9df7a87f1da5",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-9df7a87f1da5"
       ],
@@ -1965,7 +2063,8 @@
     },
     {
       "requirementId": "R-C-D02-S-9f89b0d4c650",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-9f89b0d4c650"
       ],
@@ -1985,7 +2084,8 @@
     },
     {
       "requirementId": "R-C-D02-S-a5de85d631f5",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-a5de85d631f5"
       ],
@@ -2005,7 +2105,8 @@
     },
     {
       "requirementId": "R-C-D02-S-a68a51713e5e",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-a68a51713e5e"
       ],
@@ -2025,7 +2126,8 @@
     },
     {
       "requirementId": "R-C-D02-S-a92a015c2c5c",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-a92a015c2c5c"
       ],
@@ -2045,7 +2147,8 @@
     },
     {
       "requirementId": "R-C-D02-S-afc2b6e79b02",
-      "task": "P3-ASSET-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-afc2b6e79b02"
       ],
@@ -2065,7 +2168,8 @@
     },
     {
       "requirementId": "R-C-D02-S-afc7a479ad42",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-afc7a479ad42"
       ],
@@ -2085,7 +2189,8 @@
     },
     {
       "requirementId": "R-C-D02-S-b54cb87301e7",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-b54cb87301e7"
       ],
@@ -2105,7 +2210,8 @@
     },
     {
       "requirementId": "R-C-D02-S-b56c824b86a5",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-b56c824b86a5"
       ],
@@ -2125,7 +2231,8 @@
     },
     {
       "requirementId": "R-C-D02-S-b56d3821b66b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-b56d3821b66b"
       ],
@@ -2145,7 +2252,8 @@
     },
     {
       "requirementId": "R-C-D02-S-b8958e81a170",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-b8958e81a170"
       ],
@@ -2165,7 +2273,8 @@
     },
     {
       "requirementId": "R-C-D02-S-bce84b9d8115",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-bce84b9d8115"
       ],
@@ -2185,7 +2294,8 @@
     },
     {
       "requirementId": "R-C-D02-S-bdb8e7d88a1b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-bdb8e7d88a1b"
       ],
@@ -2205,7 +2315,8 @@
     },
     {
       "requirementId": "R-C-D02-S-bfb0c8c7cacc",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-bfb0c8c7cacc"
       ],
@@ -2225,7 +2336,8 @@
     },
     {
       "requirementId": "R-C-D02-S-c0fbaabd922f",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-c0fbaabd922f"
       ],
@@ -2245,7 +2357,8 @@
     },
     {
       "requirementId": "R-C-D02-S-c1c5f122c7e9",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-c1c5f122c7e9"
       ],
@@ -2265,7 +2378,8 @@
     },
     {
       "requirementId": "R-C-D02-S-c258fe19f0bc",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-c258fe19f0bc"
       ],
@@ -2285,7 +2399,8 @@
     },
     {
       "requirementId": "R-C-D02-S-c915c83f2ff0",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-c915c83f2ff0"
       ],
@@ -2305,7 +2420,8 @@
     },
     {
       "requirementId": "R-C-D02-S-cd2f9138e67d",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-cd2f9138e67d"
       ],
@@ -2325,7 +2441,8 @@
     },
     {
       "requirementId": "R-C-D02-S-cf1fdb42a93e",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-cf1fdb42a93e"
       ],
@@ -2345,7 +2462,8 @@
     },
     {
       "requirementId": "R-C-D02-S-cf2466bb9df6",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-cf2466bb9df6"
       ],
@@ -2365,7 +2483,8 @@
     },
     {
       "requirementId": "R-C-D02-S-d675e8ab1702",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-d675e8ab1702"
       ],
@@ -2385,7 +2504,8 @@
     },
     {
       "requirementId": "R-C-D02-S-d6afb3c2c118",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-d6afb3c2c118"
       ],
@@ -2405,7 +2525,8 @@
     },
     {
       "requirementId": "R-C-D02-S-d85498a8f4de",
-      "task": "P4-COMMERCIAL-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-d85498a8f4de"
       ],
@@ -2425,7 +2546,8 @@
     },
     {
       "requirementId": "R-C-D02-S-e07ec8830ebb",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-e07ec8830ebb"
       ],
@@ -2445,7 +2567,8 @@
     },
     {
       "requirementId": "R-C-D02-S-e1f6c021b576",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-e1f6c021b576"
       ],
@@ -2465,7 +2588,8 @@
     },
     {
       "requirementId": "R-C-D02-S-e2de7a1f509d",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-e2de7a1f509d"
       ],
@@ -2485,7 +2609,8 @@
     },
     {
       "requirementId": "R-C-D02-S-e9de29282c4b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-e9de29282c4b"
       ],
@@ -2505,7 +2630,8 @@
     },
     {
       "requirementId": "R-C-D02-S-f4d07d3b5b2b",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-f4d07d3b5b2b"
       ],
@@ -2525,7 +2651,8 @@
     },
     {
       "requirementId": "R-C-D02-S-f5f9f1043d64",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-f5f9f1043d64"
       ],
@@ -2545,7 +2672,8 @@
     },
     {
       "requirementId": "R-C-D02-S-f9046ecf5031",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-f9046ecf5031"
       ],
@@ -2565,7 +2693,8 @@
     },
     {
       "requirementId": "R-C-D02-S-ff59f3285fad",
-      "task": "P1-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-ff59f3285fad"
       ],
@@ -2585,7 +2714,8 @@
     },
     {
       "requirementId": "R-C-D03-S-00e3d2058753",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-00e3d2058753"
       ],
@@ -2605,7 +2735,8 @@
     },
     {
       "requirementId": "R-C-D03-S-02e75383e031",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-02e75383e031"
       ],
@@ -2625,7 +2756,8 @@
     },
     {
       "requirementId": "R-C-D03-S-062d46d3b5ea",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-062d46d3b5ea"
       ],
@@ -2645,7 +2777,8 @@
     },
     {
       "requirementId": "R-C-D03-S-07039d9d509e",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-07039d9d509e"
       ],
@@ -2665,7 +2798,8 @@
     },
     {
       "requirementId": "R-C-D03-S-09bc868d9534",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-09bc868d9534"
       ],
@@ -2685,7 +2819,8 @@
     },
     {
       "requirementId": "R-C-D03-S-0bee80f1297b",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-0bee80f1297b"
       ],
@@ -2705,7 +2840,8 @@
     },
     {
       "requirementId": "R-C-D03-S-0d00b1a97035",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-0d00b1a97035"
       ],
@@ -2725,7 +2861,8 @@
     },
     {
       "requirementId": "R-C-D03-S-0dfba4e2eba9",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-0dfba4e2eba9"
       ],
@@ -2745,7 +2882,8 @@
     },
     {
       "requirementId": "R-C-D03-S-10d7b1a21529",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-10d7b1a21529"
       ],
@@ -2765,7 +2903,8 @@
     },
     {
       "requirementId": "R-C-D03-S-121df8f4c04b",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-121df8f4c04b"
       ],
@@ -2785,7 +2924,8 @@
     },
     {
       "requirementId": "R-C-D03-S-146bf02a9b34",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-146bf02a9b34"
       ],
@@ -2805,7 +2945,8 @@
     },
     {
       "requirementId": "R-C-D03-S-1482b8b9556f",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-1482b8b9556f"
       ],
@@ -2825,7 +2966,8 @@
     },
     {
       "requirementId": "R-C-D03-S-14cb5e08c0f8",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-14cb5e08c0f8"
       ],
@@ -2845,7 +2987,8 @@
     },
     {
       "requirementId": "R-C-D03-S-1591bfbb4a5d",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-1591bfbb4a5d"
       ],
@@ -2865,7 +3008,8 @@
     },
     {
       "requirementId": "R-C-D03-S-19556098c7fa",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-19556098c7fa"
       ],
@@ -2885,7 +3029,8 @@
     },
     {
       "requirementId": "R-C-D03-S-1a9c746e5791",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-1a9c746e5791"
       ],
@@ -2905,7 +3050,8 @@
     },
     {
       "requirementId": "R-C-D03-S-1aa2954f80c6",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-1aa2954f80c6"
       ],
@@ -2925,7 +3071,8 @@
     },
     {
       "requirementId": "R-C-D03-S-1d00f2519242",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-1d00f2519242"
       ],
@@ -2945,7 +3092,8 @@
     },
     {
       "requirementId": "R-C-D03-S-2181e80969ad",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-2181e80969ad"
       ],
@@ -2965,7 +3113,8 @@
     },
     {
       "requirementId": "R-C-D03-S-233a1f3697dd",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-233a1f3697dd"
       ],
@@ -2985,7 +3134,8 @@
     },
     {
       "requirementId": "R-C-D03-S-25e0ee293d19",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-25e0ee293d19"
       ],
@@ -3005,7 +3155,8 @@
     },
     {
       "requirementId": "R-C-D03-S-25e45ad6a2b9",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-25e45ad6a2b9"
       ],
@@ -3025,7 +3176,8 @@
     },
     {
       "requirementId": "R-C-D03-S-2606549a8476",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-2606549a8476"
       ],
@@ -3045,7 +3197,8 @@
     },
     {
       "requirementId": "R-C-D03-S-2893f1a4bd69",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-2893f1a4bd69"
       ],
@@ -3065,7 +3218,8 @@
     },
     {
       "requirementId": "R-C-D03-S-289c34ddbcf4",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-289c34ddbcf4"
       ],
@@ -3085,7 +3239,8 @@
     },
     {
       "requirementId": "R-C-D03-S-29a6f4ef102e",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-29a6f4ef102e"
       ],
@@ -3105,7 +3260,8 @@
     },
     {
       "requirementId": "R-C-D03-S-2b1521d7cd59",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-2b1521d7cd59"
       ],
@@ -3125,7 +3281,8 @@
     },
     {
       "requirementId": "R-C-D03-S-2e89d9a102da",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-2e89d9a102da"
       ],
@@ -3145,7 +3302,8 @@
     },
     {
       "requirementId": "R-C-D03-S-3517fe76d8b6",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-3517fe76d8b6"
       ],
@@ -3165,7 +3323,8 @@
     },
     {
       "requirementId": "R-C-D03-S-39e729aad99b",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-39e729aad99b"
       ],
@@ -3185,7 +3344,8 @@
     },
     {
       "requirementId": "R-C-D03-S-3c4bea822637",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-3c4bea822637"
       ],
@@ -3205,7 +3365,8 @@
     },
     {
       "requirementId": "R-C-D03-S-3c922b544d30",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-3c922b544d30"
       ],
@@ -3225,7 +3386,8 @@
     },
     {
       "requirementId": "R-C-D03-S-3e6a0e1355fd",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-3e6a0e1355fd"
       ],
@@ -3245,7 +3407,8 @@
     },
     {
       "requirementId": "R-C-D03-S-3f0b3fa68504",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-3f0b3fa68504"
       ],
@@ -3265,7 +3428,8 @@
     },
     {
       "requirementId": "R-C-D03-S-425d869460f7",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-425d869460f7"
       ],
@@ -3285,7 +3449,8 @@
     },
     {
       "requirementId": "R-C-D03-S-45bb89df98ed",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-45bb89df98ed"
       ],
@@ -3305,7 +3470,8 @@
     },
     {
       "requirementId": "R-C-D03-S-47684fd634b4",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-47684fd634b4"
       ],
@@ -3325,7 +3491,8 @@
     },
     {
       "requirementId": "R-C-D03-S-4819f47b3b3b",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-4819f47b3b3b"
       ],
@@ -3345,7 +3512,8 @@
     },
     {
       "requirementId": "R-C-D03-S-4cb790f028a7",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-4cb790f028a7"
       ],
@@ -3365,7 +3533,8 @@
     },
     {
       "requirementId": "R-C-D03-S-51149f65d8b9",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-51149f65d8b9"
       ],
@@ -3385,7 +3554,8 @@
     },
     {
       "requirementId": "R-C-D03-S-5181c46c7f8d",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-5181c46c7f8d"
       ],
@@ -3405,7 +3575,8 @@
     },
     {
       "requirementId": "R-C-D03-S-524087f29f1a",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-524087f29f1a"
       ],
@@ -3425,7 +3596,8 @@
     },
     {
       "requirementId": "R-C-D03-S-567b4e8834ff",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-567b4e8834ff"
       ],
@@ -3445,7 +3617,8 @@
     },
     {
       "requirementId": "R-C-D03-S-5688799e263d",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-5688799e263d"
       ],
@@ -3465,7 +3638,8 @@
     },
     {
       "requirementId": "R-C-D03-S-58d68810bb78",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-58d68810bb78"
       ],
@@ -3485,7 +3659,8 @@
     },
     {
       "requirementId": "R-C-D03-S-59f132ec85b4",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-59f132ec85b4"
       ],
@@ -3505,7 +3680,8 @@
     },
     {
       "requirementId": "R-C-D03-S-5aed3f9cadd5",
-      "task": "P2-WATCH-001",
+      "task": null,
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D03-S-5aed3f9cadd5"
       ],
@@ -3525,7 +3701,8 @@
     },
     {
       "requirementId": "R-C-D03-S-5c6c39cf00f1",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-5c6c39cf00f1"
       ],
@@ -3545,7 +3722,8 @@
     },
     {
       "requirementId": "R-C-D03-S-5dbb2dbbf90e",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-5dbb2dbbf90e"
       ],
@@ -3565,7 +3743,8 @@
     },
     {
       "requirementId": "R-C-D03-S-611b9faf8ff1",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-611b9faf8ff1"
       ],
@@ -3585,7 +3764,8 @@
     },
     {
       "requirementId": "R-C-D03-S-61259be0ec50",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-61259be0ec50"
       ],
@@ -3605,7 +3785,8 @@
     },
     {
       "requirementId": "R-C-D03-S-63210fd7dae3",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-63210fd7dae3"
       ],
@@ -3625,7 +3806,8 @@
     },
     {
       "requirementId": "R-C-D03-S-64eb4ca4fdbc",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-64eb4ca4fdbc"
       ],
@@ -3645,7 +3827,8 @@
     },
     {
       "requirementId": "R-C-D03-S-65340a851e44",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-65340a851e44"
       ],
@@ -3665,7 +3848,8 @@
     },
     {
       "requirementId": "R-C-D03-S-69aa3b854332",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-69aa3b854332"
       ],
@@ -3685,7 +3869,8 @@
     },
     {
       "requirementId": "R-C-D03-S-6a087ec34299",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-6a087ec34299"
       ],
@@ -3705,7 +3890,8 @@
     },
     {
       "requirementId": "R-C-D03-S-6cfe32822f41",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-6cfe32822f41"
       ],
@@ -3725,7 +3911,8 @@
     },
     {
       "requirementId": "R-C-D03-S-6db37f26b44b",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-6db37f26b44b"
       ],
@@ -3745,7 +3932,8 @@
     },
     {
       "requirementId": "R-C-D03-S-727445acfe9d",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-727445acfe9d"
       ],
@@ -3765,7 +3953,8 @@
     },
     {
       "requirementId": "R-C-D03-S-73c41a77414c",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-73c41a77414c"
       ],
@@ -3785,7 +3974,8 @@
     },
     {
       "requirementId": "R-C-D03-S-75d88f0be02c",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-75d88f0be02c"
       ],
@@ -3805,7 +3995,8 @@
     },
     {
       "requirementId": "R-C-D03-S-780ba9c55295",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-780ba9c55295"
       ],
@@ -3825,7 +4016,8 @@
     },
     {
       "requirementId": "R-C-D03-S-84674ce11f36",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-84674ce11f36"
       ],
@@ -3845,7 +4037,8 @@
     },
     {
       "requirementId": "R-C-D03-S-87056c5d3838",
-      "task": "P2-WATCH-001",
+      "task": null,
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D03-S-87056c5d3838"
       ],
@@ -3865,7 +4058,8 @@
     },
     {
       "requirementId": "R-C-D03-S-8b9784eaf13c",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-8b9784eaf13c"
       ],
@@ -3885,7 +4079,8 @@
     },
     {
       "requirementId": "R-C-D03-S-90413d3a39c8",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-90413d3a39c8"
       ],
@@ -3905,7 +4100,8 @@
     },
     {
       "requirementId": "R-C-D03-S-92b5963026d8",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-92b5963026d8"
       ],
@@ -3925,7 +4121,8 @@
     },
     {
       "requirementId": "R-C-D03-S-951d7c13d93f",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-951d7c13d93f"
       ],
@@ -3945,7 +4142,8 @@
     },
     {
       "requirementId": "R-C-D03-S-96566392e0d8",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-96566392e0d8"
       ],
@@ -3965,7 +4163,8 @@
     },
     {
       "requirementId": "R-C-D03-S-98134a001b45",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-98134a001b45"
       ],
@@ -3985,7 +4184,8 @@
     },
     {
       "requirementId": "R-C-D03-S-9f16e1465f6b",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-9f16e1465f6b"
       ],
@@ -4005,7 +4205,8 @@
     },
     {
       "requirementId": "R-C-D03-S-9f1d0077c6e5",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-9f1d0077c6e5"
       ],
@@ -4025,7 +4226,8 @@
     },
     {
       "requirementId": "R-C-D03-S-a6c6f23bbf94",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-a6c6f23bbf94"
       ],
@@ -4045,7 +4247,8 @@
     },
     {
       "requirementId": "R-C-D03-S-aaee7f8eb3dc",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-aaee7f8eb3dc"
       ],
@@ -4065,7 +4268,8 @@
     },
     {
       "requirementId": "R-C-D03-S-aaef31cad93d",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-aaef31cad93d"
       ],
@@ -4085,7 +4289,8 @@
     },
     {
       "requirementId": "R-C-D03-S-ab88dbf70945",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-ab88dbf70945"
       ],
@@ -4105,7 +4310,8 @@
     },
     {
       "requirementId": "R-C-D03-S-b267fc5baab3",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-b267fc5baab3"
       ],
@@ -4125,7 +4331,8 @@
     },
     {
       "requirementId": "R-C-D03-S-b7aaeaae10ce",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-b7aaeaae10ce"
       ],
@@ -4145,7 +4352,8 @@
     },
     {
       "requirementId": "R-C-D03-S-c4178485ba76",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-c4178485ba76"
       ],
@@ -4165,7 +4373,8 @@
     },
     {
       "requirementId": "R-C-D03-S-ca4d710308b0",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-ca4d710308b0"
       ],
@@ -4185,7 +4394,8 @@
     },
     {
       "requirementId": "R-C-D03-S-ca688e6ef4aa",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-ca688e6ef4aa"
       ],
@@ -4205,7 +4415,8 @@
     },
     {
       "requirementId": "R-C-D03-S-d0f7870843ab",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-d0f7870843ab"
       ],
@@ -4225,7 +4436,8 @@
     },
     {
       "requirementId": "R-C-D03-S-d3ecef07ba02",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-d3ecef07ba02"
       ],
@@ -4245,7 +4457,8 @@
     },
     {
       "requirementId": "R-C-D03-S-dd445b101213",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-dd445b101213"
       ],
@@ -4265,7 +4478,8 @@
     },
     {
       "requirementId": "R-C-D03-S-deff7dd0b32f",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-deff7dd0b32f"
       ],
@@ -4285,7 +4499,8 @@
     },
     {
       "requirementId": "R-C-D03-S-e23a9b6ba819",
-      "task": "P2-WATCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-e23a9b6ba819"
       ],
@@ -4305,7 +4520,8 @@
     },
     {
       "requirementId": "R-C-D03-S-e644533b4e3b",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-e644533b4e3b"
       ],
@@ -4325,7 +4541,8 @@
     },
     {
       "requirementId": "R-C-D03-S-eea38873c075",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-eea38873c075"
       ],
@@ -4345,7 +4562,8 @@
     },
     {
       "requirementId": "R-C-D03-S-f0eece1e7748",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-f0eece1e7748"
       ],
@@ -4365,7 +4583,8 @@
     },
     {
       "requirementId": "R-C-D03-S-f5c65a995b53",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-f5c65a995b53"
       ],
@@ -4385,7 +4604,8 @@
     },
     {
       "requirementId": "R-C-D03-S-f5e72d9d3822",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-f5e72d9d3822"
       ],
@@ -4405,7 +4625,8 @@
     },
     {
       "requirementId": "R-C-D03-S-f7f24e35c72f",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-f7f24e35c72f"
       ],
@@ -4425,7 +4646,8 @@
     },
     {
       "requirementId": "R-C-D03-S-f827bb379d9e",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-f827bb379d9e"
       ],
@@ -4445,7 +4667,8 @@
     },
     {
       "requirementId": "R-C-D03-S-fa592ef88ff8",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-fa592ef88ff8"
       ],
@@ -4465,7 +4688,8 @@
     },
     {
       "requirementId": "R-C-D03-S-fddd6f144f2c",
-      "task": "P2-RUNNER-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-fddd6f144f2c"
       ],
@@ -4485,7 +4709,8 @@
     },
     {
       "requirementId": "R-C-D03-S-ff00e8abfb7c",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-ff00e8abfb7c"
       ],
@@ -4505,7 +4730,8 @@
     },
     {
       "requirementId": "R-C-D03-S-ff80acec14ea",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-ff80acec14ea"
       ],
@@ -4526,6 +4752,7 @@
     {
       "requirementId": "R-C-D04-S-00e59116abe7",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-00e59116abe7"
       ],
@@ -4546,6 +4773,7 @@
     {
       "requirementId": "R-C-D04-S-026ace36fbb5",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-026ace36fbb5"
       ],
@@ -4566,6 +4794,7 @@
     {
       "requirementId": "R-C-D04-S-039819730d12",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-039819730d12"
       ],
@@ -4586,6 +4815,7 @@
     {
       "requirementId": "R-C-D04-S-08fad9495add",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-08fad9495add"
       ],
@@ -4606,6 +4836,7 @@
     {
       "requirementId": "R-C-D04-S-0fe2380b7194",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-0fe2380b7194"
       ],
@@ -4626,6 +4857,7 @@
     {
       "requirementId": "R-C-D04-S-1497bdd3519d",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-1497bdd3519d"
       ],
@@ -4646,6 +4878,7 @@
     {
       "requirementId": "R-C-D04-S-14d2041e9ffb",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-14d2041e9ffb"
       ],
@@ -4666,6 +4899,7 @@
     {
       "requirementId": "R-C-D04-S-1bc5174a1466",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-1bc5174a1466"
       ],
@@ -4686,6 +4920,7 @@
     {
       "requirementId": "R-C-D04-S-1bee15809e88",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-1bee15809e88"
       ],
@@ -4706,6 +4941,7 @@
     {
       "requirementId": "R-C-D04-S-1ebfc692b28b",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-1ebfc692b28b"
       ],
@@ -4726,6 +4962,7 @@
     {
       "requirementId": "R-C-D04-S-2016736d7d93",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-2016736d7d93"
       ],
@@ -4746,6 +4983,7 @@
     {
       "requirementId": "R-C-D04-S-2368af5f3463",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-2368af5f3463"
       ],
@@ -4766,6 +5004,7 @@
     {
       "requirementId": "R-C-D04-S-29399c39d3c9",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-29399c39d3c9"
       ],
@@ -4786,6 +5025,7 @@
     {
       "requirementId": "R-C-D04-S-29ac66f6e8c1",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-29ac66f6e8c1"
       ],
@@ -4806,6 +5046,7 @@
     {
       "requirementId": "R-C-D04-S-2b0d2c9186a7",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-2b0d2c9186a7"
       ],
@@ -4826,6 +5067,7 @@
     {
       "requirementId": "R-C-D04-S-2e9a6917f88d",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-2e9a6917f88d"
       ],
@@ -4846,6 +5088,7 @@
     {
       "requirementId": "R-C-D04-S-324f9293f621",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-324f9293f621"
       ],
@@ -4866,6 +5109,7 @@
     {
       "requirementId": "R-C-D04-S-3284273f1b6b",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-3284273f1b6b"
       ],
@@ -4886,6 +5130,7 @@
     {
       "requirementId": "R-C-D04-S-32cd20f0458f",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-32cd20f0458f"
       ],
@@ -4906,6 +5151,7 @@
     {
       "requirementId": "R-C-D04-S-3394fc3d1cb4",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-3394fc3d1cb4"
       ],
@@ -4926,6 +5172,7 @@
     {
       "requirementId": "R-C-D04-S-348e92b37082",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-348e92b37082"
       ],
@@ -4946,6 +5193,7 @@
     {
       "requirementId": "R-C-D04-S-34bda8b49aa1",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-34bda8b49aa1"
       ],
@@ -4966,6 +5214,7 @@
     {
       "requirementId": "R-C-D04-S-34e7bb32ba4a",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-34e7bb32ba4a"
       ],
@@ -4986,6 +5235,7 @@
     {
       "requirementId": "R-C-D04-S-35818d32e06e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-35818d32e06e"
       ],
@@ -5006,6 +5256,7 @@
     {
       "requirementId": "R-C-D04-S-3853c4a63ce5",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-3853c4a63ce5"
       ],
@@ -5026,6 +5277,7 @@
     {
       "requirementId": "R-C-D04-S-3b9b42bfa435",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-3b9b42bfa435"
       ],
@@ -5046,6 +5298,7 @@
     {
       "requirementId": "R-C-D04-S-3f0f90c64b2f",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-3f0f90c64b2f"
       ],
@@ -5066,6 +5319,7 @@
     {
       "requirementId": "R-C-D04-S-4260e54f91b9",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-4260e54f91b9"
       ],
@@ -5086,6 +5340,7 @@
     {
       "requirementId": "R-C-D04-S-437722d07fbb",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-437722d07fbb"
       ],
@@ -5106,6 +5361,7 @@
     {
       "requirementId": "R-C-D04-S-45fa0c12abd4",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-45fa0c12abd4"
       ],
@@ -5126,6 +5382,7 @@
     {
       "requirementId": "R-C-D04-S-4bf02786461c",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-4bf02786461c"
       ],
@@ -5146,6 +5403,7 @@
     {
       "requirementId": "R-C-D04-S-4cf71b63f51e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-4cf71b63f51e"
       ],
@@ -5166,6 +5424,7 @@
     {
       "requirementId": "R-C-D04-S-4d2ac77dc8d5",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-4d2ac77dc8d5"
       ],
@@ -5186,6 +5445,7 @@
     {
       "requirementId": "R-C-D04-S-4f028df40196",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-4f028df40196"
       ],
@@ -5206,6 +5466,7 @@
     {
       "requirementId": "R-C-D04-S-50c9466739ae",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-50c9466739ae"
       ],
@@ -5226,6 +5487,7 @@
     {
       "requirementId": "R-C-D04-S-513ba9ab5fd0",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-513ba9ab5fd0"
       ],
@@ -5246,6 +5508,7 @@
     {
       "requirementId": "R-C-D04-S-51839a663bb9",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-51839a663bb9"
       ],
@@ -5266,6 +5529,7 @@
     {
       "requirementId": "R-C-D04-S-55d134d67a95",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-55d134d67a95"
       ],
@@ -5286,6 +5550,7 @@
     {
       "requirementId": "R-C-D04-S-5b7f482e2485",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-5b7f482e2485"
       ],
@@ -5306,6 +5571,7 @@
     {
       "requirementId": "R-C-D04-S-5ba53213ffdf",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-5ba53213ffdf"
       ],
@@ -5326,6 +5592,7 @@
     {
       "requirementId": "R-C-D04-S-5f86e810b854",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-5f86e810b854"
       ],
@@ -5346,6 +5613,7 @@
     {
       "requirementId": "R-C-D04-S-6350ea793dd0",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-6350ea793dd0"
       ],
@@ -5366,6 +5634,7 @@
     {
       "requirementId": "R-C-D04-S-64bac92ce5d5",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-64bac92ce5d5"
       ],
@@ -5386,6 +5655,7 @@
     {
       "requirementId": "R-C-D04-S-69cf94366062",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-69cf94366062"
       ],
@@ -5406,6 +5676,7 @@
     {
       "requirementId": "R-C-D04-S-6b2e7707ce77",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-6b2e7707ce77"
       ],
@@ -5426,6 +5697,7 @@
     {
       "requirementId": "R-C-D04-S-728fc453b792",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-728fc453b792"
       ],
@@ -5446,6 +5718,7 @@
     {
       "requirementId": "R-C-D04-S-72ce2ad2c538",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-72ce2ad2c538"
       ],
@@ -5466,6 +5739,7 @@
     {
       "requirementId": "R-C-D04-S-758b467cedef",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-758b467cedef"
       ],
@@ -5486,6 +5760,7 @@
     {
       "requirementId": "R-C-D04-S-7632dd8fbf15",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-7632dd8fbf15"
       ],
@@ -5506,6 +5781,7 @@
     {
       "requirementId": "R-C-D04-S-7692d01dc6e6",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-7692d01dc6e6"
       ],
@@ -5526,6 +5802,7 @@
     {
       "requirementId": "R-C-D04-S-76c9675d41ba",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-76c9675d41ba"
       ],
@@ -5546,6 +5823,7 @@
     {
       "requirementId": "R-C-D04-S-7884ca8cf8a1",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-7884ca8cf8a1"
       ],
@@ -5566,6 +5844,7 @@
     {
       "requirementId": "R-C-D04-S-7a9db4041a8e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-7a9db4041a8e"
       ],
@@ -5586,6 +5865,7 @@
     {
       "requirementId": "R-C-D04-S-7cff20925f68",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-7cff20925f68"
       ],
@@ -5606,6 +5886,7 @@
     {
       "requirementId": "R-C-D04-S-81903bf06e0d",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-81903bf06e0d"
       ],
@@ -5626,6 +5907,7 @@
     {
       "requirementId": "R-C-D04-S-870dc784fb4e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-870dc784fb4e"
       ],
@@ -5646,6 +5928,7 @@
     {
       "requirementId": "R-C-D04-S-878e2b8062db",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-878e2b8062db"
       ],
@@ -5666,6 +5949,7 @@
     {
       "requirementId": "R-C-D04-S-87dee3f13344",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-87dee3f13344"
       ],
@@ -5686,6 +5970,7 @@
     {
       "requirementId": "R-C-D04-S-8b8a34f64bab",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-8b8a34f64bab"
       ],
@@ -5706,6 +5991,7 @@
     {
       "requirementId": "R-C-D04-S-9311ec919c8e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-9311ec919c8e"
       ],
@@ -5726,6 +6012,7 @@
     {
       "requirementId": "R-C-D04-S-9a5bc970f71a",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-9a5bc970f71a"
       ],
@@ -5746,6 +6033,7 @@
     {
       "requirementId": "R-C-D04-S-9b1dade976e8",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-9b1dade976e8"
       ],
@@ -5766,6 +6054,7 @@
     {
       "requirementId": "R-C-D04-S-9c7926538997",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-9c7926538997"
       ],
@@ -5786,6 +6075,7 @@
     {
       "requirementId": "R-C-D04-S-a2bbcd69b901",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-a2bbcd69b901"
       ],
@@ -5806,6 +6096,7 @@
     {
       "requirementId": "R-C-D04-S-a366dfbac42e",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-a366dfbac42e"
       ],
@@ -5826,6 +6117,7 @@
     {
       "requirementId": "R-C-D04-S-a8f0c1c0bc44",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-a8f0c1c0bc44"
       ],
@@ -5846,6 +6138,7 @@
     {
       "requirementId": "R-C-D04-S-ac7a9111559e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-ac7a9111559e"
       ],
@@ -5866,6 +6159,7 @@
     {
       "requirementId": "R-C-D04-S-aca37ea5ca62",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-aca37ea5ca62"
       ],
@@ -5886,6 +6180,7 @@
     {
       "requirementId": "R-C-D04-S-b15208e706b2",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-b15208e706b2"
       ],
@@ -5906,6 +6201,7 @@
     {
       "requirementId": "R-C-D04-S-b889df6e15e6",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-b889df6e15e6"
       ],
@@ -5926,6 +6222,7 @@
     {
       "requirementId": "R-C-D04-S-b993de145122",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-b993de145122"
       ],
@@ -5946,6 +6243,7 @@
     {
       "requirementId": "R-C-D04-S-bce5e361ab6f",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-bce5e361ab6f"
       ],
@@ -5966,6 +6264,7 @@
     {
       "requirementId": "R-C-D04-S-c056fee79a75",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c056fee79a75"
       ],
@@ -5986,6 +6285,7 @@
     {
       "requirementId": "R-C-D04-S-c1f2eb62ecbc",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c1f2eb62ecbc"
       ],
@@ -6006,6 +6306,7 @@
     {
       "requirementId": "R-C-D04-S-c4203b6e7fba",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c4203b6e7fba"
       ],
@@ -6025,7 +6326,8 @@
     },
     {
       "requirementId": "R-C-D04-S-c4b95ead9969",
-      "task": "P1-UI-001",
+      "task": null,
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D04-S-c4b95ead9969"
       ],
@@ -6046,6 +6348,7 @@
     {
       "requirementId": "R-C-D04-S-c52a0e3d7a64",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c52a0e3d7a64"
       ],
@@ -6066,6 +6369,7 @@
     {
       "requirementId": "R-C-D04-S-c5ac209ef138",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c5ac209ef138"
       ],
@@ -6086,6 +6390,7 @@
     {
       "requirementId": "R-C-D04-S-c5ef8403710d",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c5ef8403710d"
       ],
@@ -6106,6 +6411,7 @@
     {
       "requirementId": "R-C-D04-S-c71c1f1a6cbc",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c71c1f1a6cbc"
       ],
@@ -6126,6 +6432,7 @@
     {
       "requirementId": "R-C-D04-S-c87370eae332",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c87370eae332"
       ],
@@ -6146,6 +6453,7 @@
     {
       "requirementId": "R-C-D04-S-c8942d1bb691",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-c8942d1bb691"
       ],
@@ -6166,6 +6474,7 @@
     {
       "requirementId": "R-C-D04-S-ca7f55532314",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-ca7f55532314"
       ],
@@ -6186,6 +6495,7 @@
     {
       "requirementId": "R-C-D04-S-ca9ba676b945",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-ca9ba676b945"
       ],
@@ -6206,6 +6516,7 @@
     {
       "requirementId": "R-C-D04-S-cb6175ff8275",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-cb6175ff8275"
       ],
@@ -6226,6 +6537,7 @@
     {
       "requirementId": "R-C-D04-S-d1fc2ad5973c",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-d1fc2ad5973c"
       ],
@@ -6246,6 +6558,7 @@
     {
       "requirementId": "R-C-D04-S-d7b18c1c3a0e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-d7b18c1c3a0e"
       ],
@@ -6266,6 +6579,7 @@
     {
       "requirementId": "R-C-D04-S-d9110ce256e1",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-d9110ce256e1"
       ],
@@ -6286,6 +6600,7 @@
     {
       "requirementId": "R-C-D04-S-db892bef81b0",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-db892bef81b0"
       ],
@@ -6306,6 +6621,7 @@
     {
       "requirementId": "R-C-D04-S-df8ca81ce488",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-df8ca81ce488"
       ],
@@ -6326,6 +6642,7 @@
     {
       "requirementId": "R-C-D04-S-e10372ed9905",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-e10372ed9905"
       ],
@@ -6346,6 +6663,7 @@
     {
       "requirementId": "R-C-D04-S-e108a9c242d6",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-e108a9c242d6"
       ],
@@ -6366,6 +6684,7 @@
     {
       "requirementId": "R-C-D04-S-e20d1ed34dcb",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-e20d1ed34dcb"
       ],
@@ -6386,6 +6705,7 @@
     {
       "requirementId": "R-C-D04-S-e2330fa8990e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-e2330fa8990e"
       ],
@@ -6406,6 +6726,7 @@
     {
       "requirementId": "R-C-D04-S-e86d5816fbff",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-e86d5816fbff"
       ],
@@ -6426,6 +6747,7 @@
     {
       "requirementId": "R-C-D04-S-e969fc8db3c8",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-e969fc8db3c8"
       ],
@@ -6446,6 +6768,7 @@
     {
       "requirementId": "R-C-D04-S-eb4f4801fc3f",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-eb4f4801fc3f"
       ],
@@ -6466,6 +6789,7 @@
     {
       "requirementId": "R-C-D04-S-ed9e1ef9e8a3",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-ed9e1ef9e8a3"
       ],
@@ -6486,6 +6810,7 @@
     {
       "requirementId": "R-C-D04-S-f9d094ee76e2",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-f9d094ee76e2"
       ],
@@ -6506,6 +6831,7 @@
     {
       "requirementId": "R-C-D04-S-facb2271ce62",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-facb2271ce62"
       ],
@@ -6526,6 +6852,7 @@
     {
       "requirementId": "R-C-D04-S-fb26f98d40fa",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-fb26f98d40fa"
       ],
@@ -6546,6 +6873,7 @@
     {
       "requirementId": "R-C-D04-S-fdd72f212265",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-fdd72f212265"
       ],
@@ -6566,6 +6894,7 @@
     {
       "requirementId": "R-C-D05-S-013ebbd8315e",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-013ebbd8315e"
       ],
@@ -6586,6 +6915,7 @@
     {
       "requirementId": "R-C-D05-S-051d1533454d",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-051d1533454d"
       ],
@@ -6606,6 +6936,7 @@
     {
       "requirementId": "R-C-D05-S-080be2a1384a",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-080be2a1384a"
       ],
@@ -6626,6 +6957,7 @@
     {
       "requirementId": "R-C-D05-S-0c10130ea23f",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-0c10130ea23f"
       ],
@@ -6646,6 +6978,7 @@
     {
       "requirementId": "R-C-D05-S-0d4f731fe6b3",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-0d4f731fe6b3"
       ],
@@ -6666,6 +6999,7 @@
     {
       "requirementId": "R-C-D05-S-146c8001e283",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-146c8001e283"
       ],
@@ -6686,6 +7020,7 @@
     {
       "requirementId": "R-C-D05-S-1df996ad3dfb",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-1df996ad3dfb"
       ],
@@ -6706,6 +7041,7 @@
     {
       "requirementId": "R-C-D05-S-1fbdeb0f05de",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-1fbdeb0f05de"
       ],
@@ -6726,6 +7062,7 @@
     {
       "requirementId": "R-C-D05-S-237c457f682c",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-237c457f682c"
       ],
@@ -6746,6 +7083,7 @@
     {
       "requirementId": "R-C-D05-S-26ba0e6cd954",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-26ba0e6cd954"
       ],
@@ -6766,6 +7104,7 @@
     {
       "requirementId": "R-C-D05-S-26c5a5fce102",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-26c5a5fce102"
       ],
@@ -6786,6 +7125,7 @@
     {
       "requirementId": "R-C-D05-S-277a548f191d",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-277a548f191d"
       ],
@@ -6806,6 +7146,7 @@
     {
       "requirementId": "R-C-D05-S-29f9818f145e",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-29f9818f145e"
       ],
@@ -6826,6 +7167,7 @@
     {
       "requirementId": "R-C-D05-S-2e6eecfd0fb6",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-2e6eecfd0fb6"
       ],
@@ -6846,6 +7188,7 @@
     {
       "requirementId": "R-C-D05-S-2eed282ac3e7",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-2eed282ac3e7"
       ],
@@ -6866,6 +7209,7 @@
     {
       "requirementId": "R-C-D05-S-2f7c36551c69",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-2f7c36551c69"
       ],
@@ -6886,6 +7230,7 @@
     {
       "requirementId": "R-C-D05-S-310806f32b3e",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-310806f32b3e"
       ],
@@ -6906,6 +7251,7 @@
     {
       "requirementId": "R-C-D05-S-317a00f40f3f",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-317a00f40f3f"
       ],
@@ -6926,6 +7272,7 @@
     {
       "requirementId": "R-C-D05-S-33f12114dc55",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-33f12114dc55"
       ],
@@ -6946,6 +7293,7 @@
     {
       "requirementId": "R-C-D05-S-34ff0c4151fb",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-34ff0c4151fb"
       ],
@@ -6966,6 +7314,7 @@
     {
       "requirementId": "R-C-D05-S-35fb81721acc",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-35fb81721acc"
       ],
@@ -6986,6 +7335,7 @@
     {
       "requirementId": "R-C-D05-S-38095e92845b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-38095e92845b"
       ],
@@ -7006,6 +7356,7 @@
     {
       "requirementId": "R-C-D05-S-39652eaa2782",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-39652eaa2782"
       ],
@@ -7026,6 +7377,7 @@
     {
       "requirementId": "R-C-D05-S-3abb6d2c179b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-3abb6d2c179b"
       ],
@@ -7046,6 +7398,7 @@
     {
       "requirementId": "R-C-D05-S-3d7681400fa8",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-3d7681400fa8"
       ],
@@ -7066,6 +7419,7 @@
     {
       "requirementId": "R-C-D05-S-3f01e93eaa95",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-3f01e93eaa95"
       ],
@@ -7086,6 +7440,7 @@
     {
       "requirementId": "R-C-D05-S-3f2df41fbd48",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-3f2df41fbd48"
       ],
@@ -7106,6 +7461,7 @@
     {
       "requirementId": "R-C-D05-S-4199a86dcab1",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-4199a86dcab1"
       ],
@@ -7126,6 +7482,7 @@
     {
       "requirementId": "R-C-D05-S-42f9c4897fcc",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-42f9c4897fcc"
       ],
@@ -7146,6 +7503,7 @@
     {
       "requirementId": "R-C-D05-S-446fb2acce9b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-446fb2acce9b"
       ],
@@ -7166,6 +7524,7 @@
     {
       "requirementId": "R-C-D05-S-46f39d3516fe",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-46f39d3516fe"
       ],
@@ -7186,6 +7545,7 @@
     {
       "requirementId": "R-C-D05-S-48538b3faa68",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-48538b3faa68"
       ],
@@ -7206,6 +7566,7 @@
     {
       "requirementId": "R-C-D05-S-4c7874f942d9",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-4c7874f942d9"
       ],
@@ -7226,6 +7587,7 @@
     {
       "requirementId": "R-C-D05-S-512aa0624ec2",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-512aa0624ec2"
       ],
@@ -7246,6 +7608,7 @@
     {
       "requirementId": "R-C-D05-S-5151b43d272f",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-5151b43d272f"
       ],
@@ -7266,6 +7629,7 @@
     {
       "requirementId": "R-C-D05-S-53564a2cf5a7",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-53564a2cf5a7"
       ],
@@ -7286,6 +7650,7 @@
     {
       "requirementId": "R-C-D05-S-54b1d2854864",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-54b1d2854864"
       ],
@@ -7306,6 +7671,7 @@
     {
       "requirementId": "R-C-D05-S-551cfeaca45b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-551cfeaca45b"
       ],
@@ -7326,6 +7692,7 @@
     {
       "requirementId": "R-C-D05-S-55320b0cdeb2",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-55320b0cdeb2"
       ],
@@ -7346,6 +7713,7 @@
     {
       "requirementId": "R-C-D05-S-55abba19db2e",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-55abba19db2e"
       ],
@@ -7366,6 +7734,7 @@
     {
       "requirementId": "R-C-D05-S-562cf270d754",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-562cf270d754"
       ],
@@ -7386,6 +7755,7 @@
     {
       "requirementId": "R-C-D05-S-564e39059c1d",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-564e39059c1d"
       ],
@@ -7406,6 +7776,7 @@
     {
       "requirementId": "R-C-D05-S-5e07446e7aba",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-5e07446e7aba"
       ],
@@ -7426,6 +7797,7 @@
     {
       "requirementId": "R-C-D05-S-5e7aa2660990",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-5e7aa2660990"
       ],
@@ -7446,6 +7818,7 @@
     {
       "requirementId": "R-C-D05-S-5f4ed2cdc87a",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-5f4ed2cdc87a"
       ],
@@ -7466,6 +7839,7 @@
     {
       "requirementId": "R-C-D05-S-5fa5c14227d3",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-5fa5c14227d3"
       ],
@@ -7486,6 +7860,7 @@
     {
       "requirementId": "R-C-D05-S-62133a50c376",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-62133a50c376"
       ],
@@ -7506,6 +7881,7 @@
     {
       "requirementId": "R-C-D05-S-63916034148b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-63916034148b"
       ],
@@ -7526,6 +7902,7 @@
     {
       "requirementId": "R-C-D05-S-68423a494e41",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-68423a494e41"
       ],
@@ -7546,6 +7923,7 @@
     {
       "requirementId": "R-C-D05-S-6a9c717574bc",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-6a9c717574bc"
       ],
@@ -7566,6 +7944,7 @@
     {
       "requirementId": "R-C-D05-S-6b53e9d51a92",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-6b53e9d51a92"
       ],
@@ -7586,6 +7965,7 @@
     {
       "requirementId": "R-C-D05-S-746c045dba0a",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-746c045dba0a"
       ],
@@ -7606,6 +7986,7 @@
     {
       "requirementId": "R-C-D05-S-7d549d57d936",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-7d549d57d936"
       ],
@@ -7626,6 +8007,7 @@
     {
       "requirementId": "R-C-D05-S-7f3204e910e9",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-7f3204e910e9"
       ],
@@ -7646,6 +8028,7 @@
     {
       "requirementId": "R-C-D05-S-80160e74cafa",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-80160e74cafa"
       ],
@@ -7666,6 +8049,7 @@
     {
       "requirementId": "R-C-D05-S-8308de74c675",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8308de74c675"
       ],
@@ -7686,6 +8070,7 @@
     {
       "requirementId": "R-C-D05-S-831ea9cd721a",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-831ea9cd721a"
       ],
@@ -7706,6 +8091,7 @@
     {
       "requirementId": "R-C-D05-S-84699b1b99b0",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-84699b1b99b0"
       ],
@@ -7726,6 +8112,7 @@
     {
       "requirementId": "R-C-D05-S-85e6b4fc6454",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-85e6b4fc6454"
       ],
@@ -7746,6 +8133,7 @@
     {
       "requirementId": "R-C-D05-S-8675bb412e82",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8675bb412e82"
       ],
@@ -7766,6 +8154,7 @@
     {
       "requirementId": "R-C-D05-S-8aaab9b19b98",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8aaab9b19b98"
       ],
@@ -7786,6 +8175,7 @@
     {
       "requirementId": "R-C-D05-S-8b31a6de2a36",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8b31a6de2a36"
       ],
@@ -7806,6 +8196,7 @@
     {
       "requirementId": "R-C-D05-S-8b87eafd148a",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8b87eafd148a"
       ],
@@ -7826,6 +8217,7 @@
     {
       "requirementId": "R-C-D05-S-8bf112cae422",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8bf112cae422"
       ],
@@ -7846,6 +8238,7 @@
     {
       "requirementId": "R-C-D05-S-8ec8f86fba3d",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-8ec8f86fba3d"
       ],
@@ -7866,6 +8259,7 @@
     {
       "requirementId": "R-C-D05-S-92035809db89",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-92035809db89"
       ],
@@ -7886,6 +8280,7 @@
     {
       "requirementId": "R-C-D05-S-937663a3f069",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-937663a3f069"
       ],
@@ -7906,6 +8301,7 @@
     {
       "requirementId": "R-C-D05-S-974b2b8309fc",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-974b2b8309fc"
       ],
@@ -7926,6 +8322,7 @@
     {
       "requirementId": "R-C-D05-S-979c1537cee4",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-979c1537cee4"
       ],
@@ -7946,6 +8343,7 @@
     {
       "requirementId": "R-C-D05-S-97ab403d5dd6",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-97ab403d5dd6"
       ],
@@ -7966,6 +8364,7 @@
     {
       "requirementId": "R-C-D05-S-97bd8125da96",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-97bd8125da96"
       ],
@@ -7986,6 +8385,7 @@
     {
       "requirementId": "R-C-D05-S-98ce15bb2564",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-98ce15bb2564"
       ],
@@ -8006,6 +8406,7 @@
     {
       "requirementId": "R-C-D05-S-996eb00e736f",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-996eb00e736f"
       ],
@@ -8026,6 +8427,7 @@
     {
       "requirementId": "R-C-D05-S-9a0795dd20af",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-9a0795dd20af"
       ],
@@ -8046,6 +8448,7 @@
     {
       "requirementId": "R-C-D05-S-9f3bca57a924",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-9f3bca57a924"
       ],
@@ -8066,6 +8469,7 @@
     {
       "requirementId": "R-C-D05-S-a00e5b2410c0",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-a00e5b2410c0"
       ],
@@ -8086,6 +8490,7 @@
     {
       "requirementId": "R-C-D05-S-a0fbd6ecab63",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-a0fbd6ecab63"
       ],
@@ -8106,6 +8511,7 @@
     {
       "requirementId": "R-C-D05-S-a44fe3431654",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-a44fe3431654"
       ],
@@ -8126,6 +8532,7 @@
     {
       "requirementId": "R-C-D05-S-a6b246ddffeb",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-a6b246ddffeb"
       ],
@@ -8146,6 +8553,7 @@
     {
       "requirementId": "R-C-D05-S-a871e61259ec",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-a871e61259ec"
       ],
@@ -8166,6 +8574,7 @@
     {
       "requirementId": "R-C-D05-S-af09f20b0a3f",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-af09f20b0a3f"
       ],
@@ -8186,6 +8595,7 @@
     {
       "requirementId": "R-C-D05-S-afe65e3a2291",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-afe65e3a2291"
       ],
@@ -8206,6 +8616,7 @@
     {
       "requirementId": "R-C-D05-S-b1c551a9ae9f",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-b1c551a9ae9f"
       ],
@@ -8226,6 +8637,7 @@
     {
       "requirementId": "R-C-D05-S-b27229611646",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-b27229611646"
       ],
@@ -8246,6 +8658,7 @@
     {
       "requirementId": "R-C-D05-S-b27aadc7a36e",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-b27aadc7a36e"
       ],
@@ -8266,6 +8679,7 @@
     {
       "requirementId": "R-C-D05-S-b6050a324bee",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-b6050a324bee"
       ],
@@ -8286,6 +8700,7 @@
     {
       "requirementId": "R-C-D05-S-b6521973c5ff",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-b6521973c5ff"
       ],
@@ -8306,6 +8721,7 @@
     {
       "requirementId": "R-C-D05-S-b8b6a0921cda",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-b8b6a0921cda"
       ],
@@ -8326,6 +8742,7 @@
     {
       "requirementId": "R-C-D05-S-ba96e2574fce",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-ba96e2574fce"
       ],
@@ -8346,6 +8763,7 @@
     {
       "requirementId": "R-C-D05-S-baaf319f4f6d",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-baaf319f4f6d"
       ],
@@ -8366,6 +8784,7 @@
     {
       "requirementId": "R-C-D05-S-bcda65d53c55",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-bcda65d53c55"
       ],
@@ -8386,6 +8805,7 @@
     {
       "requirementId": "R-C-D05-S-c2c3a832c214",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-c2c3a832c214"
       ],
@@ -8406,6 +8826,7 @@
     {
       "requirementId": "R-C-D05-S-c480477b724b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-c480477b724b"
       ],
@@ -8426,6 +8847,7 @@
     {
       "requirementId": "R-C-D05-S-c4a3f1fedf0b",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-c4a3f1fedf0b"
       ],
@@ -8446,6 +8868,7 @@
     {
       "requirementId": "R-C-D05-S-cdb8601ec7cf",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-cdb8601ec7cf"
       ],
@@ -8466,6 +8889,7 @@
     {
       "requirementId": "R-C-D05-S-cefc2e2b0435",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-cefc2e2b0435"
       ],
@@ -8486,6 +8910,7 @@
     {
       "requirementId": "R-C-D05-S-cf3ed5258e80",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-cf3ed5258e80"
       ],
@@ -8506,6 +8931,7 @@
     {
       "requirementId": "R-C-D05-S-d96bb1119e16",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-d96bb1119e16"
       ],
@@ -8526,6 +8952,7 @@
     {
       "requirementId": "R-C-D05-S-dcc49960fe33",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-dcc49960fe33"
       ],
@@ -8546,6 +8973,7 @@
     {
       "requirementId": "R-C-D05-S-dd486037fc5c",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-dd486037fc5c"
       ],
@@ -8566,6 +8994,7 @@
     {
       "requirementId": "R-C-D05-S-ddbbd4677bf6",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-ddbbd4677bf6"
       ],
@@ -8586,6 +9015,7 @@
     {
       "requirementId": "R-C-D05-S-e33591c573a1",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-e33591c573a1"
       ],
@@ -8606,6 +9036,7 @@
     {
       "requirementId": "R-C-D05-S-e590ed0d2e91",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-e590ed0d2e91"
       ],
@@ -8626,6 +9057,7 @@
     {
       "requirementId": "R-C-D05-S-e5f6bc594a9a",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-e5f6bc594a9a"
       ],
@@ -8646,6 +9078,7 @@
     {
       "requirementId": "R-C-D05-S-e6bb115816e0",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-e6bb115816e0"
       ],
@@ -8666,6 +9099,7 @@
     {
       "requirementId": "R-C-D05-S-e830cd46825d",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-e830cd46825d"
       ],
@@ -8686,6 +9120,7 @@
     {
       "requirementId": "R-C-D05-S-f879b62f42ac",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-f879b62f42ac"
       ],
@@ -8706,6 +9141,7 @@
     {
       "requirementId": "R-C-D05-S-fb59a9423ba3",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-fb59a9423ba3"
       ],
@@ -8726,6 +9162,7 @@
     {
       "requirementId": "R-C-D05-S-ff5858ee59d6",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-ff5858ee59d6"
       ],
@@ -8746,6 +9183,7 @@
     {
       "requirementId": "R-C-D06-S-068fac7d8a4a",
       "task": "RCV-002R",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-068fac7d8a4a"
       ],
@@ -8766,6 +9204,7 @@
     {
       "requirementId": "R-C-D06-S-09046b280098",
       "task": "RCV-004",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-09046b280098"
       ],
@@ -8786,6 +9225,7 @@
     {
       "requirementId": "R-C-D06-S-0b7f522f60c6",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-0b7f522f60c6"
       ],
@@ -8806,6 +9246,7 @@
     {
       "requirementId": "R-C-D06-S-0cb26574ee9e",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-0cb26574ee9e"
       ],
@@ -8826,6 +9267,7 @@
     {
       "requirementId": "R-C-D06-S-10bee053bbb7",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-10bee053bbb7"
       ],
@@ -8846,6 +9288,7 @@
     {
       "requirementId": "R-C-D06-S-16d0589bdc14",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-16d0589bdc14"
       ],
@@ -8866,6 +9309,7 @@
     {
       "requirementId": "R-C-D06-S-1ad3188b4376",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1ad3188b4376"
       ],
@@ -8886,6 +9330,7 @@
     {
       "requirementId": "R-C-D06-S-1b9422a191a3",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1b9422a191a3"
       ],
@@ -8906,6 +9351,7 @@
     {
       "requirementId": "R-C-D06-S-1bf2cdfb1ddb",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1bf2cdfb1ddb"
       ],
@@ -8926,6 +9372,7 @@
     {
       "requirementId": "R-C-D06-S-1c96d65d823b",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1c96d65d823b"
       ],
@@ -8946,6 +9393,7 @@
     {
       "requirementId": "R-C-D06-S-1cab9bec9be6",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1cab9bec9be6"
       ],
@@ -8966,6 +9414,7 @@
     {
       "requirementId": "R-C-D06-S-1ea7b678ff6d",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1ea7b678ff6d"
       ],
@@ -8986,6 +9435,7 @@
     {
       "requirementId": "R-C-D06-S-1f23b392d039",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1f23b392d039"
       ],
@@ -9006,6 +9456,7 @@
     {
       "requirementId": "R-C-D06-S-1f571d0f748d",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-1f571d0f748d"
       ],
@@ -9026,6 +9477,7 @@
     {
       "requirementId": "R-C-D06-S-32ddaa4c1d87",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-32ddaa4c1d87"
       ],
@@ -9046,6 +9498,7 @@
     {
       "requirementId": "R-C-D06-S-34cd837a5cf3",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-34cd837a5cf3"
       ],
@@ -9066,6 +9519,7 @@
     {
       "requirementId": "R-C-D06-S-38f83ad5ee8c",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-38f83ad5ee8c"
       ],
@@ -9086,6 +9540,7 @@
     {
       "requirementId": "R-C-D06-S-4bff6b2445f0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-4bff6b2445f0"
       ],
@@ -9106,6 +9561,7 @@
     {
       "requirementId": "R-C-D06-S-4eb32c5c6a58",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-4eb32c5c6a58"
       ],
@@ -9126,6 +9582,7 @@
     {
       "requirementId": "R-C-D06-S-50b51b8bbb54",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-50b51b8bbb54"
       ],
@@ -9146,6 +9603,7 @@
     {
       "requirementId": "R-C-D06-S-52debb621e60",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-52debb621e60"
       ],
@@ -9166,6 +9624,7 @@
     {
       "requirementId": "R-C-D06-S-55efa2940ff1",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-55efa2940ff1"
       ],
@@ -9186,6 +9645,7 @@
     {
       "requirementId": "R-C-D06-S-5723b28959d1",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5723b28959d1"
       ],
@@ -9206,6 +9666,7 @@
     {
       "requirementId": "R-C-D06-S-593fa8d9f4a0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-593fa8d9f4a0"
       ],
@@ -9226,6 +9687,7 @@
     {
       "requirementId": "R-C-D06-S-5953faaf8ad4",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5953faaf8ad4"
       ],
@@ -9246,6 +9708,7 @@
     {
       "requirementId": "R-C-D06-S-5d2f9675564f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5d2f9675564f"
       ],
@@ -9266,6 +9729,7 @@
     {
       "requirementId": "R-C-D06-S-5e69b826e65c",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5e69b826e65c"
       ],
@@ -9285,7 +9749,8 @@
     },
     {
       "requirementId": "R-C-D06-S-5ec10576af1d",
-      "task": "P2-RELEASE-001",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5ec10576af1d"
       ],
@@ -9306,6 +9771,7 @@
     {
       "requirementId": "R-C-D06-S-5f80a36ebdd0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5f80a36ebdd0"
       ],
@@ -9326,6 +9792,7 @@
     {
       "requirementId": "R-C-D06-S-6121faead65f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-6121faead65f"
       ],
@@ -9346,6 +9813,7 @@
     {
       "requirementId": "R-C-D06-S-620b921d1c2c",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-620b921d1c2c"
       ],
@@ -9366,6 +9834,7 @@
     {
       "requirementId": "R-C-D06-S-651f2474bbde",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-651f2474bbde"
       ],
@@ -9386,6 +9855,7 @@
     {
       "requirementId": "R-C-D06-S-653d846bfb7c",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-653d846bfb7c"
       ],
@@ -9406,6 +9876,7 @@
     {
       "requirementId": "R-C-D06-S-68688ad25ed0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-68688ad25ed0"
       ],
@@ -9426,6 +9897,7 @@
     {
       "requirementId": "R-C-D06-S-6967930c42f4",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-6967930c42f4"
       ],
@@ -9445,7 +9917,8 @@
     },
     {
       "requirementId": "R-C-D06-S-6e063fc99b7c",
-      "task": "P3-DISCOVERY-001",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-6e063fc99b7c"
       ],
@@ -9465,7 +9938,8 @@
     },
     {
       "requirementId": "R-C-D06-S-711ee7ae0269",
-      "task": "P2-RUNNER-001",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-711ee7ae0269"
       ],
@@ -9486,6 +9960,7 @@
     {
       "requirementId": "R-C-D06-S-751a6f6dfe21",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-751a6f6dfe21"
       ],
@@ -9506,6 +9981,7 @@
     {
       "requirementId": "R-C-D06-S-76429f3d62fe",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-76429f3d62fe"
       ],
@@ -9526,6 +10002,7 @@
     {
       "requirementId": "R-C-D06-S-7cd790810d99",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-7cd790810d99"
       ],
@@ -9546,6 +10023,7 @@
     {
       "requirementId": "R-C-D06-S-7d17ee89f4c9",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-7d17ee89f4c9"
       ],
@@ -9566,6 +10044,7 @@
     {
       "requirementId": "R-C-D06-S-7dfa1ebb5792",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-7dfa1ebb5792"
       ],
@@ -9586,6 +10065,7 @@
     {
       "requirementId": "R-C-D06-S-8067176404a2",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-8067176404a2"
       ],
@@ -9606,6 +10086,7 @@
     {
       "requirementId": "R-C-D06-S-8078de09d06f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-8078de09d06f"
       ],
@@ -9626,6 +10107,7 @@
     {
       "requirementId": "R-C-D06-S-80f52a2c38f0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-80f52a2c38f0"
       ],
@@ -9646,6 +10128,7 @@
     {
       "requirementId": "R-C-D06-S-82862778a135",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-82862778a135"
       ],
@@ -9666,6 +10149,7 @@
     {
       "requirementId": "R-C-D06-S-88fb46a1486b",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-88fb46a1486b"
       ],
@@ -9686,6 +10170,7 @@
     {
       "requirementId": "R-C-D06-S-8ae8a28fbb8b",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-8ae8a28fbb8b"
       ],
@@ -9706,6 +10191,7 @@
     {
       "requirementId": "R-C-D06-S-8e15725a54e0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-8e15725a54e0"
       ],
@@ -9726,6 +10212,7 @@
     {
       "requirementId": "R-C-D06-S-8f00e32082fe",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-8f00e32082fe"
       ],
@@ -9746,6 +10233,7 @@
     {
       "requirementId": "R-C-D06-S-9244dc8540de",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9244dc8540de"
       ],
@@ -9766,6 +10254,7 @@
     {
       "requirementId": "R-C-D06-S-9308f3aad9d8",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9308f3aad9d8"
       ],
@@ -9786,6 +10275,7 @@
     {
       "requirementId": "R-C-D06-S-9462ddfa9fe5",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9462ddfa9fe5"
       ],
@@ -9805,7 +10295,8 @@
     },
     {
       "requirementId": "R-C-D06-S-978d46b626a0",
-      "task": "P2-RELEASE-001",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-978d46b626a0"
       ],
@@ -9826,6 +10317,7 @@
     {
       "requirementId": "R-C-D06-S-987d192b79bd",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-987d192b79bd"
       ],
@@ -9846,6 +10338,7 @@
     {
       "requirementId": "R-C-D06-S-9b06d86afd7f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9b06d86afd7f"
       ],
@@ -9866,6 +10359,7 @@
     {
       "requirementId": "R-C-D06-S-9d06d88f82a5",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9d06d88f82a5"
       ],
@@ -9886,6 +10380,7 @@
     {
       "requirementId": "R-C-D06-S-9ed11e5a92d5",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9ed11e5a92d5"
       ],
@@ -9906,6 +10401,7 @@
     {
       "requirementId": "R-C-D06-S-9ff51289e8b3",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-9ff51289e8b3"
       ],
@@ -9926,6 +10422,7 @@
     {
       "requirementId": "R-C-D06-S-a09d1a8157e0",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-a09d1a8157e0"
       ],
@@ -9945,7 +10442,8 @@
     },
     {
       "requirementId": "R-C-D06-S-a3bab00bb222",
-      "task": "P2-RELEASE-001",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-a3bab00bb222"
       ],
@@ -9966,6 +10464,7 @@
     {
       "requirementId": "R-C-D06-S-a69aeb2d6aa5",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-a69aeb2d6aa5"
       ],
@@ -9986,6 +10485,7 @@
     {
       "requirementId": "R-C-D06-S-a7002eaf1d7e",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-a7002eaf1d7e"
       ],
@@ -10006,6 +10506,7 @@
     {
       "requirementId": "R-C-D06-S-acc2f7475b24",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-acc2f7475b24"
       ],
@@ -10026,6 +10527,7 @@
     {
       "requirementId": "R-C-D06-S-afcaa5ba6eb7",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-afcaa5ba6eb7"
       ],
@@ -10046,6 +10548,7 @@
     {
       "requirementId": "R-C-D06-S-b11060acced6",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b11060acced6"
       ],
@@ -10066,6 +10569,7 @@
     {
       "requirementId": "R-C-D06-S-b25d94ca0720",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b25d94ca0720"
       ],
@@ -10086,6 +10590,7 @@
     {
       "requirementId": "R-C-D06-S-b270d031ea20",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b270d031ea20"
       ],
@@ -10105,7 +10610,8 @@
     },
     {
       "requirementId": "R-C-D06-S-b4d06fb2dd76",
-      "task": "P3-DISCOVERY-001",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b4d06fb2dd76"
       ],
@@ -10126,6 +10632,7 @@
     {
       "requirementId": "R-C-D06-S-b56d610ea670",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b56d610ea670"
       ],
@@ -10146,6 +10653,7 @@
     {
       "requirementId": "R-C-D06-S-b59d35b69bb4",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b59d35b69bb4"
       ],
@@ -10166,6 +10674,7 @@
     {
       "requirementId": "R-C-D06-S-b70b17b11300",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b70b17b11300"
       ],
@@ -10186,6 +10695,7 @@
     {
       "requirementId": "R-C-D06-S-b8101ef37343",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b8101ef37343"
       ],
@@ -10206,6 +10716,7 @@
     {
       "requirementId": "R-C-D06-S-b9b0eae3ea96",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b9b0eae3ea96"
       ],
@@ -10226,6 +10737,7 @@
     {
       "requirementId": "R-C-D06-S-b9d6d7bc8ab7",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-b9d6d7bc8ab7"
       ],
@@ -10246,6 +10758,7 @@
     {
       "requirementId": "R-C-D06-S-ba3c904dd693",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-ba3c904dd693"
       ],
@@ -10266,6 +10779,7 @@
     {
       "requirementId": "R-C-D06-S-bd6ef7fb0a5b",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-bd6ef7fb0a5b"
       ],
@@ -10286,6 +10800,7 @@
     {
       "requirementId": "R-C-D06-S-c1bcc34f48ad",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-c1bcc34f48ad"
       ],
@@ -10306,6 +10821,7 @@
     {
       "requirementId": "R-C-D06-S-c498062b653d",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-c498062b653d"
       ],
@@ -10326,6 +10842,7 @@
     {
       "requirementId": "R-C-D06-S-cab36a11f0f9",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-cab36a11f0f9"
       ],
@@ -10346,6 +10863,7 @@
     {
       "requirementId": "R-C-D06-S-d032b1d14449",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-d032b1d14449"
       ],
@@ -10366,6 +10884,7 @@
     {
       "requirementId": "R-C-D06-S-d0f422b2867d",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-d0f422b2867d"
       ],
@@ -10386,6 +10905,7 @@
     {
       "requirementId": "R-C-D06-S-d0f5b165a83f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-d0f5b165a83f"
       ],
@@ -10406,6 +10926,7 @@
     {
       "requirementId": "R-C-D06-S-dd6c34eacf03",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-dd6c34eacf03"
       ],
@@ -10426,6 +10947,7 @@
     {
       "requirementId": "R-C-D06-S-e2d1075c56f9",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-e2d1075c56f9"
       ],
@@ -10446,6 +10968,7 @@
     {
       "requirementId": "R-C-D06-S-e89fe445de4f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-e89fe445de4f"
       ],
@@ -10466,6 +10989,7 @@
     {
       "requirementId": "R-C-D06-S-ec6ed989a73f",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-ec6ed989a73f"
       ],
@@ -10486,6 +11010,7 @@
     {
       "requirementId": "R-C-D06-S-f16747e85172",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-f16747e85172"
       ],
@@ -10506,6 +11031,7 @@
     {
       "requirementId": "R-C-D06-S-f36450d20abd",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-f36450d20abd"
       ],
@@ -10526,6 +11052,7 @@
     {
       "requirementId": "R-C-D06-S-f803ca9a47b5",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-f803ca9a47b5"
       ],
@@ -10546,6 +11073,7 @@
     {
       "requirementId": "R-C-D06-S-f9df5f840e60",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-f9df5f840e60"
       ],
@@ -10566,6 +11094,7 @@
     {
       "requirementId": "R-C-D06-S-fa5ae1baf450",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-fa5ae1baf450"
       ],
@@ -10586,6 +11115,7 @@
     {
       "requirementId": "R-C-D06-S-fcd9e9a95550",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-fcd9e9a95550"
       ],
@@ -10605,7 +11135,8 @@
     },
     {
       "requirementId": "R-C-D07-S-06ced30adea7",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-06ced30adea7"
       ],
@@ -10625,7 +11156,8 @@
     },
     {
       "requirementId": "R-C-D07-S-0a4aeaeed1d8",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-0a4aeaeed1d8"
       ],
@@ -10645,7 +11177,8 @@
     },
     {
       "requirementId": "R-C-D07-S-0d1d67a56415",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-0d1d67a56415"
       ],
@@ -10665,7 +11198,8 @@
     },
     {
       "requirementId": "R-C-D07-S-1210507b1eba",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-1210507b1eba"
       ],
@@ -10685,7 +11219,8 @@
     },
     {
       "requirementId": "R-C-D07-S-1b002336e8d7",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-1b002336e8d7"
       ],
@@ -10705,7 +11240,8 @@
     },
     {
       "requirementId": "R-C-D07-S-1d0d6c2d52b9",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-1d0d6c2d52b9"
       ],
@@ -10725,7 +11261,8 @@
     },
     {
       "requirementId": "R-C-D07-S-1e2f5a6c05e2",
-      "task": "P3-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-1e2f5a6c05e2"
       ],
@@ -10745,7 +11282,8 @@
     },
     {
       "requirementId": "R-C-D07-S-1f772e34b52e",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-1f772e34b52e"
       ],
@@ -10765,7 +11303,8 @@
     },
     {
       "requirementId": "R-C-D07-S-2353b84a3aed",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-2353b84a3aed"
       ],
@@ -10785,7 +11324,8 @@
     },
     {
       "requirementId": "R-C-D07-S-28f134bbdd45",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-28f134bbdd45"
       ],
@@ -10805,7 +11345,8 @@
     },
     {
       "requirementId": "R-C-D07-S-2946efc639cf",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-2946efc639cf"
       ],
@@ -10825,7 +11366,8 @@
     },
     {
       "requirementId": "R-C-D07-S-29f460d87f63",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-29f460d87f63"
       ],
@@ -10845,7 +11387,8 @@
     },
     {
       "requirementId": "R-C-D07-S-2e9f993d4a1b",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-2e9f993d4a1b"
       ],
@@ -10865,7 +11408,8 @@
     },
     {
       "requirementId": "R-C-D07-S-3341ffc7e1b2",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-3341ffc7e1b2"
       ],
@@ -10885,7 +11429,8 @@
     },
     {
       "requirementId": "R-C-D07-S-352ca93efb45",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-352ca93efb45"
       ],
@@ -10905,7 +11450,8 @@
     },
     {
       "requirementId": "R-C-D07-S-36313e7d1411",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-36313e7d1411"
       ],
@@ -10925,7 +11471,8 @@
     },
     {
       "requirementId": "R-C-D07-S-4369a2b78cd1",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-4369a2b78cd1"
       ],
@@ -10945,7 +11492,8 @@
     },
     {
       "requirementId": "R-C-D07-S-44e8c076839a",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-44e8c076839a"
       ],
@@ -10965,7 +11513,8 @@
     },
     {
       "requirementId": "R-C-D07-S-45d01a033541",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-45d01a033541"
       ],
@@ -10985,7 +11534,8 @@
     },
     {
       "requirementId": "R-C-D07-S-46a40778c60e",
-      "task": "P3-EXCLUDED-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-46a40778c60e"
       ],
@@ -11005,7 +11555,8 @@
     },
     {
       "requirementId": "R-C-D07-S-48a3464fc77c",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-48a3464fc77c"
       ],
@@ -11025,7 +11576,8 @@
     },
     {
       "requirementId": "R-C-D07-S-4c6012467710",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-4c6012467710"
       ],
@@ -11045,7 +11597,8 @@
     },
     {
       "requirementId": "R-C-D07-S-4ec51be55a61",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-4ec51be55a61"
       ],
@@ -11065,7 +11618,8 @@
     },
     {
       "requirementId": "R-C-D07-S-4f56d4884b01",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-4f56d4884b01"
       ],
@@ -11085,7 +11639,8 @@
     },
     {
       "requirementId": "R-C-D07-S-52fb8c8093bd",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-52fb8c8093bd"
       ],
@@ -11105,7 +11660,8 @@
     },
     {
       "requirementId": "R-C-D07-S-5b69759cdb5d",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-5b69759cdb5d"
       ],
@@ -11125,7 +11681,8 @@
     },
     {
       "requirementId": "R-C-D07-S-63619598cdf8",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-63619598cdf8"
       ],
@@ -11145,7 +11702,8 @@
     },
     {
       "requirementId": "R-C-D07-S-637390190b9f",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-637390190b9f"
       ],
@@ -11165,7 +11723,8 @@
     },
     {
       "requirementId": "R-C-D07-S-64cb6b73237d",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-64cb6b73237d"
       ],
@@ -11185,7 +11744,8 @@
     },
     {
       "requirementId": "R-C-D07-S-6aafd0d67023",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-6aafd0d67023"
       ],
@@ -11205,7 +11765,8 @@
     },
     {
       "requirementId": "R-C-D07-S-6cd122ae6051",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-6cd122ae6051"
       ],
@@ -11225,7 +11786,8 @@
     },
     {
       "requirementId": "R-C-D07-S-7133c782782d",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-7133c782782d"
       ],
@@ -11245,7 +11807,8 @@
     },
     {
       "requirementId": "R-C-D07-S-761a1d533ac1",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-761a1d533ac1"
       ],
@@ -11265,7 +11828,8 @@
     },
     {
       "requirementId": "R-C-D07-S-7bf3f5c01031",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-7bf3f5c01031"
       ],
@@ -11285,7 +11849,8 @@
     },
     {
       "requirementId": "R-C-D07-S-850ce45eea52",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-850ce45eea52"
       ],
@@ -11305,7 +11870,8 @@
     },
     {
       "requirementId": "R-C-D07-S-873cb1cf22f6",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-873cb1cf22f6"
       ],
@@ -11325,7 +11891,8 @@
     },
     {
       "requirementId": "R-C-D07-S-8e9018c6936d",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-8e9018c6936d"
       ],
@@ -11345,7 +11912,8 @@
     },
     {
       "requirementId": "R-C-D07-S-945e2e544de5",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-945e2e544de5"
       ],
@@ -11365,7 +11933,8 @@
     },
     {
       "requirementId": "R-C-D07-S-9ceedb708249",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-9ceedb708249"
       ],
@@ -11385,7 +11954,8 @@
     },
     {
       "requirementId": "R-C-D07-S-9ead36c026b3",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-9ead36c026b3"
       ],
@@ -11405,7 +11975,8 @@
     },
     {
       "requirementId": "R-C-D07-S-a05990604c19",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-a05990604c19"
       ],
@@ -11425,7 +11996,8 @@
     },
     {
       "requirementId": "R-C-D07-S-a1d9497b2412",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-a1d9497b2412"
       ],
@@ -11445,7 +12017,8 @@
     },
     {
       "requirementId": "R-C-D07-S-a30655462013",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-a30655462013"
       ],
@@ -11465,7 +12038,8 @@
     },
     {
       "requirementId": "R-C-D07-S-a726acdb143b",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-a726acdb143b"
       ],
@@ -11485,7 +12059,8 @@
     },
     {
       "requirementId": "R-C-D07-S-aa9cf3230b15",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-aa9cf3230b15"
       ],
@@ -11505,7 +12080,8 @@
     },
     {
       "requirementId": "R-C-D07-S-b079578cb449",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-b079578cb449"
       ],
@@ -11525,7 +12101,8 @@
     },
     {
       "requirementId": "R-C-D07-S-b31fa4435e5a",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-b31fa4435e5a"
       ],
@@ -11545,7 +12122,8 @@
     },
     {
       "requirementId": "R-C-D07-S-b5ed4fb49fee",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-b5ed4fb49fee"
       ],
@@ -11565,7 +12143,8 @@
     },
     {
       "requirementId": "R-C-D07-S-b735f485208b",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-b735f485208b"
       ],
@@ -11585,7 +12164,8 @@
     },
     {
       "requirementId": "R-C-D07-S-b830f780618b",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-b830f780618b"
       ],
@@ -11605,7 +12185,8 @@
     },
     {
       "requirementId": "R-C-D07-S-bb5e55f0f4bd",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-bb5e55f0f4bd"
       ],
@@ -11625,7 +12206,8 @@
     },
     {
       "requirementId": "R-C-D07-S-bb805a6f78ef",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-bb805a6f78ef"
       ],
@@ -11645,7 +12227,8 @@
     },
     {
       "requirementId": "R-C-D07-S-c1a46ced2f72",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-c1a46ced2f72"
       ],
@@ -11665,7 +12248,8 @@
     },
     {
       "requirementId": "R-C-D07-S-c1c28109beda",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-c1c28109beda"
       ],
@@ -11685,7 +12269,8 @@
     },
     {
       "requirementId": "R-C-D07-S-caf8fb67c548",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-caf8fb67c548"
       ],
@@ -11705,7 +12290,8 @@
     },
     {
       "requirementId": "R-C-D07-S-ccedf2277b04",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-ccedf2277b04"
       ],
@@ -11725,7 +12311,8 @@
     },
     {
       "requirementId": "R-C-D07-S-cda2f93a025a",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-cda2f93a025a"
       ],
@@ -11745,7 +12332,8 @@
     },
     {
       "requirementId": "R-C-D07-S-d4b2ca5eaa84",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-d4b2ca5eaa84"
       ],
@@ -11765,7 +12353,8 @@
     },
     {
       "requirementId": "R-C-D07-S-d4ff81fcfb54",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-d4ff81fcfb54"
       ],
@@ -11785,7 +12374,8 @@
     },
     {
       "requirementId": "R-C-D07-S-e0b55db5b9ff",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-e0b55db5b9ff"
       ],
@@ -11805,7 +12395,8 @@
     },
     {
       "requirementId": "R-C-D07-S-ecd712a40cce",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-ecd712a40cce"
       ],
@@ -11825,7 +12416,8 @@
     },
     {
       "requirementId": "R-C-D07-S-ee6ada8c6ac2",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-ee6ada8c6ac2"
       ],
@@ -11845,7 +12437,8 @@
     },
     {
       "requirementId": "R-C-D07-S-ef0124b3dff3",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-ef0124b3dff3"
       ],
@@ -11865,7 +12458,8 @@
     },
     {
       "requirementId": "R-C-D07-S-ef4f0f73c9f6",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-ef4f0f73c9f6"
       ],
@@ -11885,7 +12479,8 @@
     },
     {
       "requirementId": "R-C-D07-S-f37ffa1ac382",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-f37ffa1ac382"
       ],
@@ -11905,7 +12500,8 @@
     },
     {
       "requirementId": "R-C-D07-S-f8a890823a23",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-f8a890823a23"
       ],
@@ -11925,7 +12521,8 @@
     },
     {
       "requirementId": "R-C-D07-S-f93bda382dbf",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D07-S-f93bda382dbf"
       ],
@@ -11945,7 +12542,8 @@
     },
     {
       "requirementId": "R-C-D08-S-01d4ffda4a5e",
-      "task": "P2-EDITORIAL-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-01d4ffda4a5e"
       ],
@@ -11965,7 +12563,8 @@
     },
     {
       "requirementId": "R-C-D08-S-1316d0bd8449",
-      "task": "P2-OPT-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-1316d0bd8449"
       ],
@@ -11985,7 +12584,8 @@
     },
     {
       "requirementId": "R-C-D08-S-1419bc672bd8",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D08-S-1419bc672bd8"
       ],
@@ -12005,7 +12605,8 @@
     },
     {
       "requirementId": "R-C-D08-S-1d5b36c1ac53",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-1d5b36c1ac53"
       ],
@@ -12025,7 +12626,8 @@
     },
     {
       "requirementId": "R-C-D08-S-1ee053b47f28",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-1ee053b47f28"
       ],
@@ -12045,7 +12647,8 @@
     },
     {
       "requirementId": "R-C-D08-S-1f7042c67a99",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-1f7042c67a99"
       ],
@@ -12065,7 +12668,8 @@
     },
     {
       "requirementId": "R-C-D08-S-221172cd2424",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-221172cd2424"
       ],
@@ -12085,7 +12689,8 @@
     },
     {
       "requirementId": "R-C-D08-S-22f4dff8ae16",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-22f4dff8ae16"
       ],
@@ -12105,7 +12710,8 @@
     },
     {
       "requirementId": "R-C-D08-S-262edcaad6b9",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-262edcaad6b9"
       ],
@@ -12125,7 +12731,8 @@
     },
     {
       "requirementId": "R-C-D08-S-28908b62071d",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-28908b62071d"
       ],
@@ -12145,7 +12752,8 @@
     },
     {
       "requirementId": "R-C-D08-S-2985dcc26daf",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-2985dcc26daf"
       ],
@@ -12165,7 +12773,8 @@
     },
     {
       "requirementId": "R-C-D08-S-339927efa67b",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-339927efa67b"
       ],
@@ -12185,7 +12794,8 @@
     },
     {
       "requirementId": "R-C-D08-S-356452f3f2cb",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-356452f3f2cb"
       ],
@@ -12205,7 +12815,8 @@
     },
     {
       "requirementId": "R-C-D08-S-3734376506a3",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-3734376506a3"
       ],
@@ -12225,7 +12836,8 @@
     },
     {
       "requirementId": "R-C-D08-S-3f902f41fc0e",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-3f902f41fc0e"
       ],
@@ -12245,7 +12857,8 @@
     },
     {
       "requirementId": "R-C-D08-S-4610cc5c5531",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-4610cc5c5531"
       ],
@@ -12265,7 +12878,8 @@
     },
     {
       "requirementId": "R-C-D08-S-466fb6584a2a",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-466fb6584a2a"
       ],
@@ -12285,7 +12899,8 @@
     },
     {
       "requirementId": "R-C-D08-S-47be6ab5165f",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-47be6ab5165f"
       ],
@@ -12305,7 +12920,8 @@
     },
     {
       "requirementId": "R-C-D08-S-5a155ed672cc",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-5a155ed672cc"
       ],
@@ -12325,7 +12941,8 @@
     },
     {
       "requirementId": "R-C-D08-S-5a228bf34fa0",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-5a228bf34fa0"
       ],
@@ -12345,7 +12962,8 @@
     },
     {
       "requirementId": "R-C-D08-S-5a90a5bf1be3",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-5a90a5bf1be3"
       ],
@@ -12365,7 +12983,8 @@
     },
     {
       "requirementId": "R-C-D08-S-5d0b58afa3f9",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-5d0b58afa3f9"
       ],
@@ -12385,7 +13004,8 @@
     },
     {
       "requirementId": "R-C-D08-S-605c941bed2f",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-605c941bed2f"
       ],
@@ -12405,7 +13025,8 @@
     },
     {
       "requirementId": "R-C-D08-S-6265fce0ec48",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-6265fce0ec48"
       ],
@@ -12425,7 +13046,8 @@
     },
     {
       "requirementId": "R-C-D08-S-63578f8e9da1",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-63578f8e9da1"
       ],
@@ -12445,7 +13067,8 @@
     },
     {
       "requirementId": "R-C-D08-S-63d403698d77",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-63d403698d77"
       ],
@@ -12465,7 +13088,8 @@
     },
     {
       "requirementId": "R-C-D08-S-74c7eea8bdc1",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-74c7eea8bdc1"
       ],
@@ -12485,7 +13109,8 @@
     },
     {
       "requirementId": "R-C-D08-S-7e5339163f03",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-7e5339163f03"
       ],
@@ -12505,7 +13130,8 @@
     },
     {
       "requirementId": "R-C-D08-S-884c29b5522d",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-884c29b5522d"
       ],
@@ -12525,7 +13151,8 @@
     },
     {
       "requirementId": "R-C-D08-S-88dc49bcf374",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-88dc49bcf374"
       ],
@@ -12545,7 +13172,8 @@
     },
     {
       "requirementId": "R-C-D08-S-8a9b77a9a639",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D08-S-8a9b77a9a639"
       ],
@@ -12565,7 +13193,8 @@
     },
     {
       "requirementId": "R-C-D08-S-93ab449c3013",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-93ab449c3013"
       ],
@@ -12585,7 +13214,8 @@
     },
     {
       "requirementId": "R-C-D08-S-943cce428862",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-943cce428862"
       ],
@@ -12605,7 +13235,8 @@
     },
     {
       "requirementId": "R-C-D08-S-9545135cc8c9",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-9545135cc8c9"
       ],
@@ -12625,7 +13256,8 @@
     },
     {
       "requirementId": "R-C-D08-S-96dec27effa1",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-96dec27effa1"
       ],
@@ -12645,7 +13277,8 @@
     },
     {
       "requirementId": "R-C-D08-S-97753d9e9959",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-97753d9e9959"
       ],
@@ -12665,7 +13298,8 @@
     },
     {
       "requirementId": "R-C-D08-S-9ff98a6b3c6b",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-9ff98a6b3c6b"
       ],
@@ -12685,7 +13319,8 @@
     },
     {
       "requirementId": "R-C-D08-S-a9b6e1dccad7",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-a9b6e1dccad7"
       ],
@@ -12705,7 +13340,8 @@
     },
     {
       "requirementId": "R-C-D08-S-aab6ea0f7c1b",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-aab6ea0f7c1b"
       ],
@@ -12725,7 +13361,8 @@
     },
     {
       "requirementId": "R-C-D08-S-ac0299e768be",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-ac0299e768be"
       ],
@@ -12745,7 +13382,8 @@
     },
     {
       "requirementId": "R-C-D08-S-aeebd36c92f4",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D08-S-aeebd36c92f4"
       ],
@@ -12765,7 +13403,8 @@
     },
     {
       "requirementId": "R-C-D08-S-b58c071bbf9b",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-b58c071bbf9b"
       ],
@@ -12785,7 +13424,8 @@
     },
     {
       "requirementId": "R-C-D08-S-b7ed7d1e96b9",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-b7ed7d1e96b9"
       ],
@@ -12805,7 +13445,8 @@
     },
     {
       "requirementId": "R-C-D08-S-b9c4916c0dea",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-b9c4916c0dea"
       ],
@@ -12825,7 +13466,8 @@
     },
     {
       "requirementId": "R-C-D08-S-bf34e3ca7c06",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-bf34e3ca7c06"
       ],
@@ -12845,7 +13487,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c0206b8ba027",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c0206b8ba027"
       ],
@@ -12865,7 +13508,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c0af3bad5871",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c0af3bad5871"
       ],
@@ -12885,7 +13529,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c1f9d05c28fd",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c1f9d05c28fd"
       ],
@@ -12905,7 +13550,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c24f634c5e14",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c24f634c5e14"
       ],
@@ -12925,7 +13571,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c55f56741970",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c55f56741970"
       ],
@@ -12945,7 +13592,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c58729d2cea1",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c58729d2cea1"
       ],
@@ -12965,7 +13613,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c59729aa8ec4",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c59729aa8ec4"
       ],
@@ -12985,7 +13634,8 @@
     },
     {
       "requirementId": "R-C-D08-S-c9e114639f48",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-c9e114639f48"
       ],
@@ -13005,7 +13655,8 @@
     },
     {
       "requirementId": "R-C-D08-S-ca78dd072feb",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-ca78dd072feb"
       ],
@@ -13025,7 +13676,8 @@
     },
     {
       "requirementId": "R-C-D08-S-cbd40ce849ac",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-cbd40ce849ac"
       ],
@@ -13045,7 +13697,8 @@
     },
     {
       "requirementId": "R-C-D08-S-d3b307d32e2a",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-d3b307d32e2a"
       ],
@@ -13065,7 +13718,8 @@
     },
     {
       "requirementId": "R-C-D08-S-dd41c94b259d",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-dd41c94b259d"
       ],
@@ -13085,7 +13739,8 @@
     },
     {
       "requirementId": "R-C-D08-S-de8aa1c5d8cf",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-de8aa1c5d8cf"
       ],
@@ -13105,7 +13760,8 @@
     },
     {
       "requirementId": "R-C-D08-S-e2cbfe2da09c",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-e2cbfe2da09c"
       ],
@@ -13125,7 +13781,8 @@
     },
     {
       "requirementId": "R-C-D08-S-e32fd6ade479",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-e32fd6ade479"
       ],
@@ -13145,7 +13802,8 @@
     },
     {
       "requirementId": "R-C-D08-S-e4b63d794258",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-e4b63d794258"
       ],
@@ -13165,7 +13823,8 @@
     },
     {
       "requirementId": "R-C-D08-S-ec706afe13e8",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-ec706afe13e8"
       ],
@@ -13185,7 +13844,8 @@
     },
     {
       "requirementId": "R-C-D08-S-ecff3a579d1f",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-ecff3a579d1f"
       ],
@@ -13205,7 +13865,8 @@
     },
     {
       "requirementId": "R-C-D08-S-f26d3391e24a",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-f26d3391e24a"
       ],
@@ -13225,7 +13886,8 @@
     },
     {
       "requirementId": "R-C-D08-S-f3e602eb7c58",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-f3e602eb7c58"
       ],
@@ -13245,7 +13907,8 @@
     },
     {
       "requirementId": "R-C-D08-S-f5a9ab90a41c",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-f5a9ab90a41c"
       ],
@@ -13265,7 +13928,8 @@
     },
     {
       "requirementId": "R-C-D08-S-f7b4b4cf7fae",
-      "task": "P2-RESEARCH-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D08-S-f7b4b4cf7fae"
       ],
@@ -13285,7 +13949,8 @@
     },
     {
       "requirementId": "R-C-D09-S-08a90c9cc54b",
-      "task": "P4-COMMERCIAL-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-08a90c9cc54b"
       ],
@@ -13305,7 +13970,8 @@
     },
     {
       "requirementId": "R-C-D09-S-0eb5707aa7cd",
-      "task": "P3-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-0eb5707aa7cd"
       ],
@@ -13325,7 +13991,8 @@
     },
     {
       "requirementId": "R-C-D09-S-0ee93bcc9dfc",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-0ee93bcc9dfc"
       ],
@@ -13345,7 +14012,8 @@
     },
     {
       "requirementId": "R-C-D09-S-16e9855909a7",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-16e9855909a7"
       ],
@@ -13365,7 +14033,8 @@
     },
     {
       "requirementId": "R-C-D09-S-27f573087049",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-27f573087049"
       ],
@@ -13385,7 +14054,8 @@
     },
     {
       "requirementId": "R-C-D09-S-2ab82bfb94a3",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-2ab82bfb94a3"
       ],
@@ -13405,7 +14075,8 @@
     },
     {
       "requirementId": "R-C-D09-S-3c4731640f84",
-      "task": "P2-RELEASE-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-3c4731640f84"
       ],
@@ -13425,7 +14096,8 @@
     },
     {
       "requirementId": "R-C-D09-S-4bd3767e3b26",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-4bd3767e3b26"
       ],
@@ -13445,7 +14117,8 @@
     },
     {
       "requirementId": "R-C-D09-S-4f42bfa64ace",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-4f42bfa64ace"
       ],
@@ -13465,7 +14138,8 @@
     },
     {
       "requirementId": "R-C-D09-S-5019f0146510",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-5019f0146510"
       ],
@@ -13485,7 +14159,8 @@
     },
     {
       "requirementId": "R-C-D09-S-528a4e4d83cc",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-528a4e4d83cc"
       ],
@@ -13505,7 +14180,8 @@
     },
     {
       "requirementId": "R-C-D09-S-5c772d207e0f",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-5c772d207e0f"
       ],
@@ -13525,7 +14201,8 @@
     },
     {
       "requirementId": "R-C-D09-S-647f08c8c890",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-647f08c8c890"
       ],
@@ -13545,7 +14222,8 @@
     },
     {
       "requirementId": "R-C-D09-S-66688bd79b3d",
-      "task": "P3-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-66688bd79b3d"
       ],
@@ -13565,7 +14243,8 @@
     },
     {
       "requirementId": "R-C-D09-S-66b5e4468dbe",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-66b5e4468dbe"
       ],
@@ -13585,7 +14264,8 @@
     },
     {
       "requirementId": "R-C-D09-S-6a2cd62d9e36",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-6a2cd62d9e36"
       ],
@@ -13605,7 +14285,8 @@
     },
     {
       "requirementId": "R-C-D09-S-6b4d11019d82",
-      "task": "P3-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-6b4d11019d82"
       ],
@@ -13625,7 +14306,8 @@
     },
     {
       "requirementId": "R-C-D09-S-6e7e74e1681e",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-6e7e74e1681e"
       ],
@@ -13645,7 +14327,8 @@
     },
     {
       "requirementId": "R-C-D09-S-77c2c397f822",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-77c2c397f822"
       ],
@@ -13665,7 +14348,8 @@
     },
     {
       "requirementId": "R-C-D09-S-7f3963ff8b23",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-7f3963ff8b23"
       ],
@@ -13685,7 +14369,8 @@
     },
     {
       "requirementId": "R-C-D09-S-864cd50359a9",
-      "task": "P3-EXCLUDED-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-864cd50359a9"
       ],
@@ -13705,7 +14390,8 @@
     },
     {
       "requirementId": "R-C-D09-S-8b9fb4ffd9a0",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-8b9fb4ffd9a0"
       ],
@@ -13725,7 +14411,8 @@
     },
     {
       "requirementId": "R-C-D09-S-8fd287813fd8",
-      "task": "P3-DISCOVERY-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-8fd287813fd8"
       ],
@@ -13745,7 +14432,8 @@
     },
     {
       "requirementId": "R-C-D09-S-97ecf0e52146",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-97ecf0e52146"
       ],
@@ -13765,7 +14453,8 @@
     },
     {
       "requirementId": "R-C-D09-S-9a8086400dd0",
-      "task": "P3-AUTOMATION-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-9a8086400dd0"
       ],
@@ -13785,7 +14474,8 @@
     },
     {
       "requirementId": "R-C-D09-S-9d1beb7ae7bc",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-9d1beb7ae7bc"
       ],
@@ -13805,7 +14495,8 @@
     },
     {
       "requirementId": "R-C-D09-S-a0739c7dda26",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-a0739c7dda26"
       ],
@@ -13825,7 +14516,8 @@
     },
     {
       "requirementId": "R-C-D09-S-aa025c11f613",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-aa025c11f613"
       ],
@@ -13845,7 +14537,8 @@
     },
     {
       "requirementId": "R-C-D09-S-b4197c6081d7",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-b4197c6081d7"
       ],
@@ -13865,7 +14558,8 @@
     },
     {
       "requirementId": "R-C-D09-S-b4e747f6f5f2",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-b4e747f6f5f2"
       ],
@@ -13885,7 +14579,8 @@
     },
     {
       "requirementId": "R-C-D09-S-bc2c49031f54",
-      "task": "P3-EXCLUDED-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-bc2c49031f54"
       ],
@@ -13905,7 +14600,8 @@
     },
     {
       "requirementId": "R-C-D09-S-bd363e3be364",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-bd363e3be364"
       ],
@@ -13925,7 +14621,8 @@
     },
     {
       "requirementId": "R-C-D09-S-cdf2b5d38689",
-      "task": "P3-EXCLUDED-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-cdf2b5d38689"
       ],
@@ -13945,7 +14642,8 @@
     },
     {
       "requirementId": "R-C-D09-S-dda86ac0e4f0",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-dda86ac0e4f0"
       ],
@@ -13965,7 +14663,8 @@
     },
     {
       "requirementId": "R-C-D09-S-e65890946e9d",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-e65890946e9d"
       ],
@@ -13985,7 +14684,8 @@
     },
     {
       "requirementId": "R-C-D09-S-ebab0001bcf9",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-ebab0001bcf9"
       ],
@@ -14005,7 +14705,8 @@
     },
     {
       "requirementId": "R-C-D09-S-ec2e6988abc3",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-ec2e6988abc3"
       ],
@@ -14025,7 +14726,8 @@
     },
     {
       "requirementId": "R-C-D09-S-edd2dc8013b2",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-edd2dc8013b2"
       ],
@@ -14045,7 +14747,8 @@
     },
     {
       "requirementId": "R-C-D09-S-f7d0823dba37",
-      "task": "P3-EXCLUDED-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-f7d0823dba37"
       ],
@@ -14065,7 +14768,8 @@
     },
     {
       "requirementId": "R-C-D09-S-fd1a6d4a30cf",
-      "task": "P3-TRUST-001",
+      "task": null,
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-fd1a6d4a30cf"
       ],
@@ -14085,7 +14789,8 @@
     },
     {
       "requirementId": "R-C-D10-S-0ab60f4204d6",
-      "task": "P2-PLAN-001",
+      "task": "P1-RELEASE-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-0ab60f4204d6"
       ],
@@ -14105,7 +14810,8 @@
     },
     {
       "requirementId": "R-C-D10-S-296555bcfe75",
-      "task": "P2-CLEAN-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-296555bcfe75"
       ],
@@ -14125,7 +14831,8 @@
     },
     {
       "requirementId": "R-C-D10-S-36011ac14ff8",
-      "task": "P2-SCHEDULE-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-36011ac14ff8"
       ],
@@ -14145,7 +14852,8 @@
     },
     {
       "requirementId": "R-C-D10-S-38f330569d94",
-      "task": "P2-VERIFY-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-38f330569d94"
       ],
@@ -14165,7 +14873,8 @@
     },
     {
       "requirementId": "R-C-D10-S-39a69c10e9e4",
-      "task": "P2-DEPLOY-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-39a69c10e9e4"
       ],
@@ -14185,7 +14894,8 @@
     },
     {
       "requirementId": "R-C-D10-S-4540c90ef50b",
-      "task": "P2-VERIFY-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-4540c90ef50b"
       ],
@@ -14205,7 +14915,8 @@
     },
     {
       "requirementId": "R-C-D10-S-574481d73201",
-      "task": "P2-ACT-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-574481d73201"
       ],
@@ -14225,7 +14936,8 @@
     },
     {
       "requirementId": "R-C-D10-S-61fa8542796b",
-      "task": "P3-PLAN-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-61fa8542796b"
       ],
@@ -14245,7 +14957,8 @@
     },
     {
       "requirementId": "R-C-D10-S-659ee8e5398d",
-      "task": "P3-VERIFY-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-659ee8e5398d"
       ],
@@ -14265,7 +14978,8 @@
     },
     {
       "requirementId": "R-C-D10-S-745a692f3a77",
-      "task": "P3-DEPLOY-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-745a692f3a77"
       ],
@@ -14285,7 +14999,8 @@
     },
     {
       "requirementId": "R-C-D10-S-79e583ae7b2d",
-      "task": "P3-ACT-001",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-79e583ae7b2d"
       ],
@@ -14306,6 +15021,7 @@
     {
       "requirementId": "R-C-D10-S-9aad1db4180d",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-9aad1db4180d"
       ],
@@ -14326,6 +15042,7 @@
     {
       "requirementId": "R-C-D10-S-b38e7c037606",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-b38e7c037606"
       ],
@@ -14346,6 +15063,7 @@
     {
       "requirementId": "R-C-D10-S-bea74b2cde9a",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-bea74b2cde9a"
       ],
@@ -14366,6 +15084,7 @@
     {
       "requirementId": "R-C-D10-S-c26317304ea2",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-c26317304ea2"
       ],
@@ -14386,6 +15105,7 @@
     {
       "requirementId": "R-C-D10-S-eab57ba8c909",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-eab57ba8c909"
       ],
@@ -14406,6 +15126,7 @@
     {
       "requirementId": "R-C-D10-S-ebe639899fcc",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-ebe639899fcc"
       ],
@@ -14426,6 +15147,7 @@
     {
       "requirementId": "R-C-D10-S-f3554ec57485",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-f3554ec57485"
       ],
@@ -14446,6 +15168,7 @@
     {
       "requirementId": "R-C-D10-S-ff63e18c03a5",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-ff63e18c03a5"
       ],
@@ -14466,6 +15189,7 @@
     {
       "requirementId": "R-C-D11-S-05d2a84212ce",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-05d2a84212ce"
       ],
@@ -14486,6 +15210,7 @@
     {
       "requirementId": "R-C-D11-S-06d0c50c6861",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-06d0c50c6861"
       ],
@@ -14506,6 +15231,7 @@
     {
       "requirementId": "R-C-D11-S-1db97e9eae09",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-1db97e9eae09"
       ],
@@ -14526,6 +15252,7 @@
     {
       "requirementId": "R-C-D11-S-23bd18a0ae86",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-23bd18a0ae86"
       ],
@@ -14546,6 +15273,7 @@
     {
       "requirementId": "R-C-D11-S-27fe77e0d3d1",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-27fe77e0d3d1"
       ],
@@ -14566,6 +15294,7 @@
     {
       "requirementId": "R-C-D11-S-2b37e9b7f922",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-2b37e9b7f922"
       ],
@@ -14586,6 +15315,7 @@
     {
       "requirementId": "R-C-D11-S-425789127cd2",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-425789127cd2"
       ],
@@ -14606,6 +15336,7 @@
     {
       "requirementId": "R-C-D11-S-5c336ec14c2f",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-5c336ec14c2f"
       ],
@@ -14626,6 +15357,7 @@
     {
       "requirementId": "R-C-D11-S-5e2c8e92a655",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-5e2c8e92a655"
       ],
@@ -14646,6 +15378,7 @@
     {
       "requirementId": "R-C-D11-S-6415337e0805",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-6415337e0805"
       ],
@@ -14666,6 +15399,7 @@
     {
       "requirementId": "R-C-D11-S-8507a8f4e954",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-8507a8f4e954"
       ],
@@ -14686,6 +15420,7 @@
     {
       "requirementId": "R-C-D11-S-94296e77afb9",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-94296e77afb9"
       ],
@@ -14706,6 +15441,7 @@
     {
       "requirementId": "R-C-D11-S-9702b1c7d3cb",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-9702b1c7d3cb"
       ],
@@ -14726,6 +15462,7 @@
     {
       "requirementId": "R-C-D11-S-9c8b99e7a689",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-9c8b99e7a689"
       ],
@@ -14746,6 +15483,7 @@
     {
       "requirementId": "R-C-D11-S-9d1529ab1186",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-9d1529ab1186"
       ],
@@ -14766,6 +15504,7 @@
     {
       "requirementId": "R-C-D11-S-9e55da6e68bf",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-9e55da6e68bf"
       ],
@@ -14786,6 +15525,7 @@
     {
       "requirementId": "R-C-D11-S-b2d920caec78",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-b2d920caec78"
       ],
@@ -14806,6 +15546,7 @@
     {
       "requirementId": "R-C-D11-S-b82650531d4e",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-b82650531d4e"
       ],
@@ -14826,6 +15567,7 @@
     {
       "requirementId": "R-C-D11-S-c0a417d90222",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-c0a417d90222"
       ],
@@ -14846,6 +15588,7 @@
     {
       "requirementId": "R-C-D11-S-c860832368e1",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-c860832368e1"
       ],
@@ -14866,6 +15609,7 @@
     {
       "requirementId": "R-C-D11-S-c944d4f78cfb",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-c944d4f78cfb"
       ],
@@ -14886,6 +15630,7 @@
     {
       "requirementId": "R-C-D11-S-cc7928e2068e",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-cc7928e2068e"
       ],
@@ -14906,6 +15651,7 @@
     {
       "requirementId": "R-C-D11-S-d1ed2eed083e",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-d1ed2eed083e"
       ],
@@ -14926,6 +15672,7 @@
     {
       "requirementId": "R-C-D11-S-d25671d2184e",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-d25671d2184e"
       ],
@@ -14946,6 +15693,7 @@
     {
       "requirementId": "R-C-D11-S-de8d291e3f89",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-de8d291e3f89"
       ],
@@ -14966,6 +15714,7 @@
     {
       "requirementId": "R-C-D11-S-f04d509e95a5",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-f04d509e95a5"
       ],
@@ -14986,6 +15735,7 @@
     {
       "requirementId": "R-C-D11-S-fc1453398739",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D11-S-fc1453398739"
       ],
@@ -15006,6 +15756,7 @@
     {
       "requirementId": "R-C-UI-S-00d7af4978e3",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-00d7af4978e3"
       ],
@@ -15026,6 +15777,7 @@
     {
       "requirementId": "R-C-UI-S-03e222c935e0",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-03e222c935e0"
       ],
@@ -15046,6 +15798,7 @@
     {
       "requirementId": "R-C-UI-S-1401f8093b36",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-1401f8093b36"
       ],
@@ -15066,6 +15819,7 @@
     {
       "requirementId": "R-C-UI-S-1b98731b3c94",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-1b98731b3c94"
       ],
@@ -15086,6 +15840,7 @@
     {
       "requirementId": "R-C-UI-S-1ea2f30f0bad",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-1ea2f30f0bad"
       ],
@@ -15106,6 +15861,7 @@
     {
       "requirementId": "R-C-UI-S-20cb76d2b5c7",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-20cb76d2b5c7"
       ],
@@ -15126,6 +15882,7 @@
     {
       "requirementId": "R-C-UI-S-28d5643db9a5",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-28d5643db9a5"
       ],
@@ -15146,6 +15903,7 @@
     {
       "requirementId": "R-C-UI-S-2f38af6bc5e7",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-2f38af6bc5e7"
       ],
@@ -15166,6 +15924,7 @@
     {
       "requirementId": "R-C-UI-S-3142c16beadf",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-3142c16beadf"
       ],
@@ -15186,6 +15945,7 @@
     {
       "requirementId": "R-C-UI-S-364c362694fd",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-364c362694fd"
       ],
@@ -15206,6 +15966,7 @@
     {
       "requirementId": "R-C-UI-S-3bf628718826",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-3bf628718826"
       ],
@@ -15226,6 +15987,7 @@
     {
       "requirementId": "R-C-UI-S-3d386c840146",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-3d386c840146"
       ],
@@ -15246,6 +16008,7 @@
     {
       "requirementId": "R-C-UI-S-3f3261e03fd1",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-3f3261e03fd1"
       ],
@@ -15266,6 +16029,7 @@
     {
       "requirementId": "R-C-UI-S-40c5040c1e89",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-40c5040c1e89"
       ],
@@ -15286,6 +16050,7 @@
     {
       "requirementId": "R-C-UI-S-414d4d89ffad",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-414d4d89ffad"
       ],
@@ -15306,6 +16071,7 @@
     {
       "requirementId": "R-C-UI-S-41b2c5137feb",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-41b2c5137feb"
       ],
@@ -15326,6 +16092,7 @@
     {
       "requirementId": "R-C-UI-S-4a4157e88f3e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-4a4157e88f3e"
       ],
@@ -15346,6 +16113,7 @@
     {
       "requirementId": "R-C-UI-S-58611790c044",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-58611790c044"
       ],
@@ -15366,6 +16134,7 @@
     {
       "requirementId": "R-C-UI-S-6005e11b0326",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-6005e11b0326"
       ],
@@ -15386,6 +16155,7 @@
     {
       "requirementId": "R-C-UI-S-70d0c831df12",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-70d0c831df12"
       ],
@@ -15406,6 +16176,7 @@
     {
       "requirementId": "R-C-UI-S-890253d8fdc0",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-890253d8fdc0"
       ],
@@ -15426,6 +16197,7 @@
     {
       "requirementId": "R-C-UI-S-8ea4571c3a6f",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-8ea4571c3a6f"
       ],
@@ -15446,6 +16218,7 @@
     {
       "requirementId": "R-C-UI-S-91d549741d45",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-91d549741d45"
       ],
@@ -15466,6 +16239,7 @@
     {
       "requirementId": "R-C-UI-S-93d29baa1411",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-93d29baa1411"
       ],
@@ -15486,6 +16260,7 @@
     {
       "requirementId": "R-C-UI-S-9cb7c4308193",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-9cb7c4308193"
       ],
@@ -15506,6 +16281,7 @@
     {
       "requirementId": "R-C-UI-S-a96f56ac9a13",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-a96f56ac9a13"
       ],
@@ -15526,6 +16302,7 @@
     {
       "requirementId": "R-C-UI-S-acf6a3633e34",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-acf6a3633e34"
       ],
@@ -15546,6 +16323,7 @@
     {
       "requirementId": "R-C-UI-S-b54b0b5ea94e",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-b54b0b5ea94e"
       ],
@@ -15566,6 +16344,7 @@
     {
       "requirementId": "R-C-UI-S-bb3f0d2c61b6",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-bb3f0d2c61b6"
       ],
@@ -15586,6 +16365,7 @@
     {
       "requirementId": "R-C-UI-S-cc1ae7fe2185",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-cc1ae7fe2185"
       ],
@@ -15606,6 +16386,7 @@
     {
       "requirementId": "R-C-UI-S-cd7bb56796dd",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-cd7bb56796dd"
       ],
@@ -15626,6 +16407,7 @@
     {
       "requirementId": "R-C-UI-S-ce8737bc44f2",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-ce8737bc44f2"
       ],
@@ -15646,6 +16428,7 @@
     {
       "requirementId": "R-C-UI-S-d893c0079a1b",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-d893c0079a1b"
       ],
@@ -15666,6 +16449,7 @@
     {
       "requirementId": "R-C-UI-S-dd9d86b58773",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-dd9d86b58773"
       ],
@@ -15686,6 +16470,7 @@
     {
       "requirementId": "R-C-UI-S-e05646c2073b",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-e05646c2073b"
       ],
@@ -15706,6 +16491,7 @@
     {
       "requirementId": "R-C-UI-S-e3ca6ea9f6c5",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-e3ca6ea9f6c5"
       ],
@@ -15726,6 +16512,7 @@
     {
       "requirementId": "R-C-UI-S-e3de2cf8f719",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-e3de2cf8f719"
       ],
@@ -15746,6 +16533,7 @@
     {
       "requirementId": "R-C-UI-S-e7a851b25db2",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-e7a851b25db2"
       ],
@@ -15766,6 +16554,7 @@
     {
       "requirementId": "R-C-UI-S-e7d7296d390f",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-e7d7296d390f"
       ],
@@ -15786,6 +16575,7 @@
     {
       "requirementId": "R-C-UI-S-f2b14fde9c11",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-f2b14fde9c11"
       ],
@@ -15806,6 +16596,7 @@
     {
       "requirementId": "R-C-UI-S-f90fc5f6de54",
       "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-UI-S-f90fc5f6de54"
       ],
@@ -15826,6 +16617,7 @@
     {
       "requirementId": "R-UD-001",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-001"
       ],
@@ -15853,6 +16645,7 @@
     {
       "requirementId": "R-UD-002",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-002"
       ],
@@ -15880,6 +16673,7 @@
     {
       "requirementId": "R-UD-003",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-003"
       ],
@@ -15928,6 +16722,7 @@
     {
       "requirementId": "R-UD-004",
       "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-004"
       ],
@@ -15948,6 +16743,7 @@
     {
       "requirementId": "R-UD-005",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-005"
       ],
@@ -15982,6 +16778,7 @@
     {
       "requirementId": "R-UD-006",
       "task": "P1-MOTION-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-006"
       ],
@@ -16016,6 +16813,7 @@
     {
       "requirementId": "R-UD-007",
       "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-007"
       ],
@@ -16064,6 +16862,7 @@
     {
       "requirementId": "R-UD-008",
       "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-UD-008"
       ],
