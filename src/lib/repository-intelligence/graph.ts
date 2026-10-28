@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 export type IntelligenceNode = {
@@ -40,6 +39,11 @@ type CanonicalGraph = {
 };
 
 const CODE_EXTENSIONS = new Set([".cjs", ".js", ".mjs", ".ps1", ".psm1", ".py", ".ts", ".tsx"]);
+const INDEXED_TEXT_EXTENSIONS = new Set([
+  ...CODE_EXTENSIONS,
+  ".css", ".graphql", ".html", ".json", ".md", ".mdx", ".scss", ".sh", ".sql", ".toml", ".txt", ".yaml", ".yml",
+]);
+const INDEXED_FILE_NAMES = new Set(["Dockerfile", "Procfile"]);
 const MODULE_EXTENSIONS = ["", ".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", "/index.ts", "/index.tsx", "/index.js"];
 
 function sha256(value: string | Buffer): string {
@@ -52,6 +56,25 @@ function normalizedPath(value: string): string {
 
 function edgeId(kind: string, from: string, to: string): string {
   return `${kind}:${sha256(`${from}|${to}`).slice(0, 20)}`;
+}
+
+function committedFiles(repositoryRoot: string): Map<string, Buffer> {
+  const archive = execFileSync("git", ["-C", repositoryRoot, "archive", "--format=tar", "HEAD"], { maxBuffer: 256 * 1024 * 1024 });
+  const files = new Map<string, Buffer>();
+  for (let offset = 0; offset + 512 <= archive.length;) {
+    const header = archive.subarray(offset, offset + 512);
+    if (header.every((byte) => byte === 0)) break;
+    const readField = (start: number, length: number) => header.subarray(start, start + length).toString("utf8").replace(/\0.*$/, "");
+    const name = readField(0, 100);
+    const prefix = readField(345, 155);
+    const size = Number.parseInt(readField(124, 12).trim() || "0", 8);
+    const type = readField(156, 1) || "0";
+    const filePath = normalizedPath(prefix ? `${prefix}/${name}` : name);
+    offset += 512;
+    if (type === "0") files.set(filePath, Buffer.from(archive.subarray(offset, offset + size)));
+    offset += Math.ceil(size / 512) * 512;
+  }
+  return files;
 }
 
 function resolveRelativeImport(sourcePath: string, specifier: string, tracked: Set<string>): string | null {
@@ -81,16 +104,12 @@ function extractImports(sourcePath: string, text: string, tracked: Set<string>):
 }
 
 export function buildRepositoryIntelligence(repositoryRoot: string): IntelligenceSnapshot {
-  const graphPath = path.join(repositoryRoot, "docs", "document-intelligence", "DOCUMENT_GRAPH.json");
-  const graphBytes = readFileSync(graphPath);
+  const committed = committedFiles(repositoryRoot);
+  const graphBytes = committed.get("docs/document-intelligence/DOCUMENT_GRAPH.json");
+  if (!graphBytes) throw new Error("Committed document graph is missing");
   const graph = JSON.parse(graphBytes.toString("utf8")) as CanonicalGraph;
   const commitSha = execFileSync("git", ["-C", repositoryRoot, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-  const trackedFiles = execFileSync("git", ["-C", repositoryRoot, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" })
-    .split("\0")
-    .filter(Boolean)
-    .map(normalizedPath)
-    .filter((file) => existsSync(path.join(repositoryRoot, file)))
-    .sort();
+  const trackedFiles = [...committed.keys()].sort();
   const tracked = new Set(trackedFiles);
   const nodes = new Map<string, IntelligenceNode>();
   const edges = new Map<string, IntelligenceEdge>();
@@ -118,18 +137,21 @@ export function buildRepositoryIntelligence(repositoryRoot: string): Intelligenc
     addNode({ id: finding.id, kind: "finding", label: finding.summary, payload: finding });
   }
   const sourceTexts = new Map<string, string>();
-  for (const file of trackedFiles.filter((file) => CODE_EXTENSIONS.has(path.extname(file)))) {
-    const text = readFileSync(path.join(repositoryRoot, file), "utf8");
+  const indexedTextFiles = trackedFiles.filter((file) => INDEXED_TEXT_EXTENSIONS.has(path.extname(file).toLowerCase()) || INDEXED_FILE_NAMES.has(path.basename(file)));
+  for (const file of indexedTextFiles) {
+    const text = committed.get(file)!.toString("utf8");
     sourceTexts.set(file, text);
     addNode({ id: `file:${file}`, kind: "file", path: file, label: file, payload: { sha256: sha256(text) } });
   }
   for (const relationship of graph.relationships) {
     addEdge({ id: relationship.id, from: relationship.from, to: relationship.to, kind: relationship.type, payload: relationship });
   }
-  for (const file of trackedFiles.filter((candidate) => CODE_EXTENSIONS.has(path.extname(candidate)))) {
+  for (const file of indexedTextFiles) {
     const text = sourceTexts.get(file)!;
-    for (const imported of extractImports(file, text, tracked)) {
-      addEdge({ id: edgeId("imports", `file:${file}`, `file:${imported}`), from: `file:${file}`, to: `file:${imported}`, kind: "imports", payload: {} });
+    if (CODE_EXTENSIONS.has(path.extname(file))) {
+      for (const imported of extractImports(file, text, tracked)) {
+        addEdge({ id: edgeId("imports", `file:${file}`, `file:${imported}`), from: `file:${file}`, to: `file:${imported}`, kind: "imports", payload: {} });
+      }
     }
     for (const match of text.matchAll(/\bD(?:0[1-9]|1[01])-S-[0-9a-f]{12}\b/g)) {
       addEdge({ id: edgeId("references", `file:${file}`, match[0]), from: `file:${file}`, to: match[0], kind: "references", payload: {} });

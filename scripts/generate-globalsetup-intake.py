@@ -24,10 +24,23 @@ OWNER_RETIRED_REQUIREMENTS = {
     "R-C-D03-S-87056c5d3838",
     "R-C-D04-S-c4b95ead9969",
     "R-C-D07-S-cda2f93a025a",
+    "R-C-D07-S-24ce753f0331",
+    "R-C-D07-S-51c73f72ca7f",
     "R-C-D08-S-1419bc672bd8",
     "R-C-D08-S-8a9b77a9a639",
     "R-C-D08-S-aeebd36c92f4",
 }
+
+
+def is_non_executable_retirement(requirement: dict[str, Any]) -> bool:
+    """Keep retirement notices and their historical context out of task mappings."""
+    if requirement["id"] in OWNER_RETIRED_REQUIREMENTS:
+        return True
+    statement = requirement.get("statement", "")
+    if "RETIRED 2026-10-28" not in statement:
+        return False
+    source_ids = {source.get("source_id") for source in requirement.get("sources", [])}
+    return bool(source_ids & {"D03", "D04", "D07", "D08"})
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -359,6 +372,10 @@ def bind_requirements_to_tasks(requirements: dict[str, Any], tasks: list[dict[st
             requirement["status"] = "owner-retired"
             requirement["tasks"] = []
             requirement["planned_outcome"] = "Retain this source statement for traceability without an executable mapping."
+        elif is_non_executable_retirement(requirement):
+            requirement["status"] = "separate-authority-required"
+            requirement["tasks"] = []
+            requirement["planned_outcome"] = "Retain this retirement context for traceability without an executable mapping."
         else:
             requirement["tasks"] = sorted(task_ids_by_requirement.get(requirement_id, []))
 
@@ -646,7 +663,12 @@ def render(args: argparse.Namespace) -> dict[str, str]:
         raise ValueError("document graph is stale relative to the source manifest")
     manifest, _, section_index = build_source_manifest(root, inventory)
     requirements, by_source = build_requirements(graph, section_index)
-    tasks = build_tasks(root, by_source)
+    non_executable_ids = {requirement["id"] for requirement in requirements["requirements"] if is_non_executable_retirement(requirement)}
+    executable_by_source = {
+        source_id: [requirement_id for requirement_id in requirement_ids if requirement_id not in non_executable_ids]
+        for source_id, requirement_ids in by_source.items()
+    }
+    tasks = build_tasks(root, executable_by_source)
     bind_requirements_to_tasks(requirements, tasks)
     digest = candidate_digest(manifest, requirements, tasks)
     contradictions = build_contradictions(graph, args)

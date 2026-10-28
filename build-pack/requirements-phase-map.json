@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T20:15:56.960Z",
+  "generatedAt": "2026-10-28T23:23:07.161Z",
   "denominatorCount": 803,
   "mappedAtLeast": 401,
   "requirements": [
@@ -11346,7 +11346,7 @@
     {
       "requirementId": "R-C-D07-S-24ce753f0331",
       "task": null,
-      "disposition": "separate-authority-required",
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D07-S-24ce753f0331"
       ],
@@ -11682,7 +11682,7 @@
     {
       "requirementId": "R-C-D07-S-51c73f72ca7f",
       "task": null,
-      "disposition": "separate-authority-required",
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D07-S-51c73f72ca7f"
       ],

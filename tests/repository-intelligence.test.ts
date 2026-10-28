@@ -16,6 +16,10 @@ test("repository intelligence deterministically combines semantic and code relat
   assert.ok(first.nodes.some((node) => node.kind === "file"));
   assert.ok(first.edges.some((edge) => edge.kind === "imports"));
   assert.ok(first.edges.some((edge) => edge.kind === "contains"));
+  assert.ok(first.nodes.some((node) => node.id === "file:vercel.json"), "deployment configuration must be indexed");
+  assert.ok(first.nodes.some((node) => node.id === "file:package.json"), "runtime configuration must be indexed");
+  const tracked = new Set(execFileSync("git", ["ls-files"], { cwd: root, encoding: "utf8" }).split(/\r?\n/).filter(Boolean));
+  assert.ok(first.nodes.filter((node) => node.kind === "file").every((node) => node.path && tracked.has(node.path)), "commit-bound snapshots must exclude untracked files");
 });
 
 test("offline impact traversal returns a bounded, stable neighbourhood", () => {

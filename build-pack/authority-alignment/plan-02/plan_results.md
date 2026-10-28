@@ -2,11 +2,12 @@
 
 ## Current status
 
-- Status: VERIFIED WORKTREE — candidate commit and independent review pending
+- Status: REMEDIATED AFTER INDEPENDENT REVIEW — current release state is recorded on PR #40
 - Branch: `codex/replace-both-with-neon`
 - Baseline commit: `b67a50425df71a3c98ee36f9543ddeadd815457d`
-- Candidate commit: not created
-- Exact next action: create the candidate commit, synchronize its exact snapshot to the isolated Neon branch, and request independent current-head review.
+- First reviewed commit: `a940ba0ae2c1f6f4abf075c67a3e9a2861ab6d28` (changes required)
+- Release record: `https://github.com/michaelchamboko/VettedSaaSBlueprint/pull/40`
+- Exact next action: commit the review remediation, rerun the required gates, and obtain independent review of the new exact head.
 
 ## Task checklist
 
@@ -18,7 +19,8 @@
 - [x] Delete tracked files and active contracts for the retired local graph tool.
 - [x] Add a repository-wide zero-trace regression test.
 - [x] Pass every required repository and release gate on the final worktree candidate.
-- [ ] Obtain independent review of the exact candidate commit.
+- [x] Obtain independent review of the first candidate commit and remediate its findings.
+- [ ] Obtain a clean independent review of the remediated exact head.
 - [ ] Merge, migrate production, synchronize the reviewed snapshot, deploy, and verify.
 
 ## Action ledger
@@ -46,7 +48,7 @@
 - Inputs: `docs/document-intelligence/DOCUMENT_GRAPH.json`, tracked repository files, TypeScript imports, stable source identifiers, `db/repository-intelligence-v001.sql`.
 - Command: direct implementation and focused test execution.
 - Expected: one snapshot joins document relationships with code files and imports and is bound to exact source and commit evidence.
-- Observed: dry-run snapshot contains 2,748 nodes and 3,379 edges and records commit, source-manifest, and graph hashes.
+- Observed: the initial pre-commit dry-run snapshot contained 2,748 nodes and 3,379 edges and recorded commit, source-manifest, and graph hashes. Counts evolve when tracked relationship surfaces change and are not release identity.
 - Evidence: `src/lib/repository-intelligence/`, `scripts/sync-repository-intelligence.ts`, `scripts/query-repository-impact.ts`, `tests/repository-intelligence.test.ts`.
 - Changed files: the paths listed above plus `package.json` and the migration scripts.
 - Decision: the replacement covers semantic persistence/query and code impact/navigation.
@@ -61,7 +63,7 @@
 - Inputs: Neon project `winter-truth-98410571`; validation branch `br-square-leaf-a6lqabvu`; schema `repository_intelligence_v1`.
 - Command: connected Neon branch operations plus `npm run intelligence:sync:apply` and `npm run intelligence:impact` equivalents.
 - Expected: schema objects exist; full upload succeeds; bounded queries return expected neighbours.
-- Observed: snapshot upload succeeded with 2,748 nodes and 3,379 edges; a script seed returned its imported service modules; document seed `D01` returned contained stable sections.
+- Observed: the initial isolated-branch snapshot upload succeeded with 2,748 nodes and 3,379 edges; a script seed returned its imported service modules; document seed `D01` returned contained stable sections.
 - Evidence: Neon validation branch and local migration/source verifiers.
 - Changed files: none from the database proof.
 - Decision: the schema and query are technically viable before production promotion.
@@ -110,11 +112,26 @@
 - Evidence: reproducible repository commands, current diff, and this ledger. The first sandbox test run failed on restricted atomic-link, localhost, and browser access; the required unsandboxed rerun passed. Two sandbox production-build attempts stalled after their child process disappeared; the required unsandboxed build completed successfully.
 - Changed files: final scoped diff.
 - Decision: the worktree is ready for a candidate commit and independent current-head review.
-- Limits: no commit, PR, production database migration, merge, or deployment has occurred yet.
+- Limits: this entry predates candidate commit `a940ba0`; PR #40 and the later ledger entry supersede its release-status wording.
 - Next action: commit the exact candidate through repository hooks.
+
+### A0007 — Independent review blocked release and remediation corrected the causes
+
+- Time: 2026-10-29T01:24:46+02:00
+- Status: PASS
+- Action: Submitted exact commit `a940ba0` for independent current-head review, accepted the changes-required verdict, and corrected every confirmed release blocker.
+- Inputs: PR #40; independent review of `a940ba0`; canonical execution-state producer; retired-workflow requirements; repository-intelligence snapshot builder.
+- Command: independent Codex review; direct source inspection; bounded producer regeneration; focused tests.
+- Expected: retired scheduled work cannot regain an executable mapping; completed Phase One state remains intact; regeneration preserves the required Neon capability; snapshots include tracked configuration and exclude uncommitted data; evidence does not claim an unreviewed release.
+- Observed: the corrected producer retains 803 requirements and all nine completed Phase One tasks; ten explicit retired requirements have no task mappings; the required Neon capability survives regeneration; snapshots are built from a `git archive` of `HEAD` and include `vercel.json`; focused repository-intelligence and retirement tests pass.
+- Evidence: `scripts/prepare-vetted-execution-state.mjs`; `scripts/generate-globalsetup-intake.py`; `src/lib/repository-intelligence/graph.ts`; `tests/repository-intelligence.test.ts`; `tests/retired-workflow-mapping.test.ts`; PR #40 review.
+- Changed files: the bounded paths listed above, regenerated requirements/phase map/execution state/capabilities, this ledger, and removal of the accidentally generated `build-pack/10-implementation-plan.md`.
+- Decision: the first candidate is not releasable; only a newly committed and independently reviewed head may proceed.
+- Limits: the remediated head is not yet committed, reviewed, synchronized to Neon, merged, or deployed.
+- Next action: run full gates, commit, push, and request independent current-head review.
 
 ## Open blockers and unresolved decisions
 
 - Production migration and production snapshot synchronization require the exact reviewed candidate and explicit execution at the release step.
-- Independent current-head review cannot begin until a candidate commit exists.
+- The first exact-head review required changes; a clean review of the remediated commit is still required.
 - Deployment verification cannot begin until the reviewed PR is merged.

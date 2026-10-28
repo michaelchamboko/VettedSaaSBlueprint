@@ -2,7 +2,7 @@
 
 ## Outcome
 
-The generic GlobalSetup runtime is installed only in this repository. Product meaning remains in repository-local sources and contracts. Neon repository intelligence is disabled; feature work, migration, publication, and deployment remain blocked pending the unresolved Grommet rows.
+The generic GlobalSetup runtime is installed only in this repository. Product meaning remains in repository-local sources and contracts. Neon repository intelligence is the required persistence and bounded impact-query service; it does not grant feature, publication, migration, or deployment authority. Those actions remain governed by planning, review, and release gates.
 
 ## Evidence
 
