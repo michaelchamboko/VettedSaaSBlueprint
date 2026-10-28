@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-28T12:06:56.945Z",
+  "generatedAt": "2026-10-28T20:15:56.960Z",
   "denominatorCount": 803,
-  "mappedAtLeast": 400,
+  "mappedAtLeast": 401,
   "requirements": [
     {
       "requirementId": "R-C-D01-S-0403b64da931",
@@ -10505,9 +10505,11 @@
     },
     {
       "requirementId": "R-C-D06-S-ac41adad0ebd",
-      "task": null,
-      "disposition": "candidate",
-      "acceptanceIds": [],
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
+      "acceptanceIds": [
+        "AC-C-D06-S-ac41adad0ebd"
+      ],
       "evidenceAcceptance": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md at D06-H081 (D06-S-ac41adad0ebd).",
         "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
@@ -11344,8 +11346,10 @@
     {
       "requirementId": "R-C-D07-S-24ce753f0331",
       "task": null,
-      "disposition": "candidate",
-      "acceptanceIds": [],
+      "disposition": "separate-authority-required",
+      "acceptanceIds": [
+        "AC-C-D07-S-24ce753f0331"
+      ],
       "evidenceAcceptance": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H080 (D07-S-24ce753f0331).",
         "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
@@ -11678,8 +11682,10 @@
     {
       "requirementId": "R-C-D07-S-51c73f72ca7f",
       "task": null,
-      "disposition": "candidate",
-      "acceptanceIds": [],
+      "disposition": "separate-authority-required",
+      "acceptanceIds": [
+        "AC-C-D07-S-51c73f72ca7f"
+      ],
       "evidenceAcceptance": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H130 (D07-S-51c73f72ca7f).",
         "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
@@ -13461,8 +13467,10 @@
     {
       "requirementId": "R-C-D08-S-b3ea66f554f2",
       "task": null,
-      "disposition": "candidate",
-      "acceptanceIds": [],
+      "disposition": "separate-authority-required",
+      "acceptanceIds": [
+        "AC-C-D08-S-b3ea66f554f2"
+      ],
       "evidenceAcceptance": [
         "The outcome cites docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md at D08-H087 (D08-S-b3ea66f554f2).",
         "Evidence demonstrates the cited section without adding product meaning beyond its exact text."

@@ -12,10 +12,10 @@ One entry per resolved finding. Amendments are prose-only within existing sectio
 - Exact changed scope: §7.10 body replaced with RETIRED note; §11.3 "preserve the daily publishing path" → "preserve the on-demand publishing path"; §11.4 body replaced with RETIRED note; §11.5 + §11.6 block replaced with RETIRED notes (line-sliced); Stage E body replaced with RETIRED note; §23 #15/#16 annotated (RETIRED 2026-10-28); §24 scheduler line annotated (RETIRED 2026-10-28); Priority 12 reason line annotated; two TOC lines annotated.
 - Heading/ID change map: none (no renames).
 - Affected refs/consumers: D03 only; no runtime/skill/prompt/test references found in the execution checkout (A0001).
-- Focused diff: see `git diff` on the execution checkout branch `codex/plan-01-authority-alignment` (uncommitted) and evidence/A0020-M001.diff (to be captured).
+- Focused diff: PR #39 on `codex/plan-01-authority-alignment`; historical evidence remains in the append-only ledger.
 - Verification: headings retained (D03 heading count unchanged); stable UIDs unchanged; section content SHA changes recorded on regeneration (T05). `npm run verify:agent-workflow`, `npm run lint`, `npm run typecheck`, `npm test` baseline green (A0004-A0008).
 - Ledger IDs: A0001, A0002, A0014, C001.
-- Commit: pending (Plan 1 not yet shipped).
+- Candidate: included in PR #39; obtain the exact current head from Git/PR metadata.
 
 ## M002 — C002: retire scheduled cloud execution
 
@@ -27,10 +27,10 @@ One entry per resolved finding. Amendments are prose-only within existing sectio
 - Exact changed scope: Stage E body (6 lines) replaced with RETIRED note.
 - Heading/ID change map: none.
 - Affected refs/consumers: D03 only.
-- Focused diff: execution checkout `git diff` (uncommitted).
+- Focused diff: PR #39 on `codex/plan-01-authority-alignment`.
 - Verification: heading retained; stable UID unchanged.
 - Ledger IDs: A0001, A0002, A0014, C002.
-- Commit: pending.
+- Candidate: included in PR #39; obtain the exact current head from Git/PR metadata.
 
 ## M003 — C003: retire scheduled optimisation
 
@@ -42,10 +42,10 @@ One entry per resolved finding. Amendments are prose-only within existing sectio
 - Exact changed scope: two sentence edits in §5.9; §26.10 body replaced with RETIRED note; §27 item 7 annotated.
 - Heading/ID change map: none.
 - Affected refs/consumers: D04 only.
-- Focused diff: execution checkout `git diff` (uncommitted).
+- Focused diff: PR #39 on `codex/plan-01-authority-alignment`.
 - Verification: heading retained; stable UID unchanged.
 - Ledger IDs: A0001, A0002, A0014, C003.
-- Commit: pending.
+- Candidate: included in PR #39; obtain the exact current head from Git/PR metadata.
 
 ## M004 — C004: remove stale daily publishing obligation
 
@@ -57,10 +57,10 @@ One entry per resolved finding. Amendments are prose-only within existing sectio
 - Exact changed scope: D01 §1.1 sentence reworded; D02 §3.2 blockquote and explanatory body amended; D03 §23 #3 annotated; D04 §5.9 reworded (shared with M003); D01-D10 each receive the same explicit cadence-supersession rule within an existing authoritative section.
 - Heading/ID decision: D02 §3.2 retains `3.2 Daily shipping rule` and stable UID `D02-S-0951e69fb4b0`. The abandoned intermediate UID `D02-S-e9102f3d6d0a` remains only in audit evidence.
 - Affected refs/consumers: D01-D10 and their generated source/intelligence/build-pack projections.
-- Focused diff: execution checkout `git diff` (uncommitted).
+- Focused diff: PR #39 on `codex/plan-01-authority-alignment`.
 - Verification: heading count unchanged; D02 §3.2 retains its original stable UID after regeneration.
 - Ledger IDs: A0001, A0002, A0012, A0014, C004.
-- Commit: pending.
+- Candidate: included in PR #39; obtain the exact current head from Git/PR metadata.
 
 ## M005 — C005: retire remaining fixed-time programme boundaries
 
@@ -73,4 +73,4 @@ One entry per resolved finding. Amendments are prose-only within existing sectio
 - Affected refs/consumers: D03, D06, D07, D08; generated inventory, candidates, graph, bridge, active requirements, phase map, and source manifest.
 - Verification: regression test requires the cross-document cadence rule and local retirement context for every 06:00, 20:00, and 23:00 occurrence; source count remains 12 and heading count remains 1,424.
 - Ledger IDs: A0048 onward; C005.
-- Commit: pending.
+- Candidate: included in PR #39; obtain the exact current head from Git/PR metadata.

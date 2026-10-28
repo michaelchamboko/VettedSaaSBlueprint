@@ -1,21 +1,21 @@
 # Plan 1 results
 ## Current state
-- Status: BLOCKED - verifier (B002) and independent review (REVIEW BLOCKED) remain unresolved; required code checks green
+- Status: CANDIDATE CORRECTED - mandatory repository gates pass; PR #39 exact-head re-review and clean-environment Vercel build/release status are external gates recorded after this packet commit
 - Execution checkout: `C:/Users/micha/.buzz/REPOS/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/plan-01-authority-alignment`
 - Branch: `codex/plan-01-authority-alignment` (tracking `origin/main`).
 - Baseline commit: `e48691c0bcd19043b14de55ad1f124c8e4542e9e` (= `origin/main` at fetch time).
-- Current commit: `e48691c0bcd19043b14de55ad1f124c8e4542e9e` (amendments uncommitted on the branch).
-- Independent review: BLOCKED (OCR has no LLM configured; no Codex review tool exposed).
-- Merge/deployment: NOT STARTED (withheld pending independent review).
-- Blockers: B002 (verifier remote/commit assertions), B003 (out of scope), REVIEW BLOCKED.
+- Current candidate: PR #39 on `codex/plan-01-authority-alignment`; use `git rev-parse HEAD` or the PR `headRefOid` for the exact enclosing commit because a committed file cannot self-record its own commit SHA.
+- Independent review: exact-head review of `31bbf074ddf6d4a215e513b19f98ede7a7ecfe8d` returned CHANGES REQUIRED; both findings are corrected in the current candidate and require re-review of the new head.
+- Merge/deployment: external release actions remain gated on a clean review and GitHub checks for the current head; their final status must be verified from PR #39 and Vercel rather than inferred here.
+- Remaining limitation: GitNexus reconciliation was skipped because pinned CLI 1.6.10 is unavailable; deterministic graph/bridge and stable-UID verification pass. B003 remains external to this branch.
 
 ## Tasks
 - [x] T01 Baseline - COMPLETE
 - [x] T02 Authority and consumer inventory - COMPLETE (authority_map.md)
-- [x] T03 Contradiction resolution - COMPLETE (contradiction_register.md, C001-C004)
-- [x] T04 Authoritative amendments - COMPLETE (M001-M004, planning.md scope registered)
-- [~] T05 Regeneration and verification - PARTIAL (regeneration reproducible; verifier blocked by B002)
-- [~] T06 Validation and independent review - PARTIAL (checks green; independent review BLOCKED)
+- [x] T03 Contradiction resolution - COMPLETE (contradiction_register.md, C001-C005)
+- [x] T04 Authoritative amendments - COMPLETE (M001-M005, planning.md scope registered)
+- [x] T05 Regeneration and verification - COMPLETE (12 sources, 1,424 headings, verifier and cross-engine portability pass)
+- [~] T06 Validation and independent review - IN PROGRESS (local checks green; corrected candidate requires exact-head re-review)
 - [x] T07 Plan 2 handoff - COMPLETE (plan_02_handoff.md)
 
 ## Tasks
@@ -856,3 +856,48 @@ Sync the execution-checkout packet copy back to the source checkout copy, run fi
 - Decision: Git commit/PR OIDs and canonical generated records are stronger candidate evidence than duplicate pre-closeout snapshots. Historical ledger entries remain unchanged and this correction supersedes their artifact-retention expectation.
 - Limits: `A0038` and `A0039` are historical metadata only and cannot approve the current head.
 - Next action: Restage the corrected packet, verify staged scope, and commit through the repository hook.
+
+### A0052 — T06 — Independent review rejected stale execution state and packet summaries
+
+- Time: 2026-10-28T22:12:39+02:00
+- Status: FAIL
+- Action: Submitted PR #39 head `31bbf074ddf6d4a215e513b19f98ede7a7ecfe8d` to an independent Codex reviewer and evaluated both returned findings against raw producers and current files.
+- Inputs: PR #39; baseline `e48691c0bcd19043b14de55ad1f124c8e4542e9e`; exact reviewed head `31bbf074ddf6d4a215e513b19f98ede7a7ecfe8d`; `scripts/prepare-vetted-execution-state.mjs`; `requirements.json`; `requirements-phase-map.json`; `execution-state.json`; Plan 1 top-level summaries.
+- Command: Independent direct diff and source inspection by `/root/current_head_review`; coordinating-agent inspection of the cited files and producer.
+- Expected: No actionable semantic, traceability, generated-state, or packet-currentness findings on the exact PR head.
+- Observed: Verdict CHANGES REQUIRED. Finding P1 established that `execution-state.json` still described 799 requirements while the regenerated requirements and phase map contained 803, with a stale digest. Finding P2 established that current-state summaries still described the baseline, uncommitted amendments, blocked verifier, and unavailable reviewer after those conditions had been superseded. The reviewer otherwise confirmed fixed-time retirement, stable IDs, focused tests, and both PowerShell verifier runs.
+- Evidence: Independent review result for exact SHA `31bbf074ddf6d4a215e513b19f98ede7a7ecfe8d`; cited current files and producer.
+- Changed files: none in this action.
+- Decision: The reviewed head is not eligible to merge. Both findings are accepted and must be corrected before a new exact-head review.
+- Limits: This finding does not establish correctness of the subsequent corrections.
+- Next action: Regenerate BuildRunner state with its canonical producer, add a cross-file invariant test, and correct only the superseded top-level packet summaries.
+
+### A0053 — T05/T06 — Review findings corrected with producer-backed state and explicit invariants
+
+- Time: 2026-10-28T22:12:39+02:00
+- Status: PASS
+- Action: Ran the canonical BuildRunner producer, added a requirements/phase-map/execution-state denominator and digest invariant, and corrected the current summaries in this ledger, the amendment register, and the authority map without rewriting historical ledger observations.
+- Inputs: `scripts/prepare-vetted-execution-state.mjs`; 803 current requirements; current phase map; `tests/test_authority_alignment_closeout.py`; review findings P1 and P2.
+- Command: `node scripts/prepare-vetted-execution-state.mjs`; direct bounded edits; focused Python closeout test (verification recorded by the next gate entry).
+- Expected: The execution state reports the same 803-item denominator as requirements and phase map, its digest is derived from the current phase-map requirements, and top-level packet summaries no longer present superseded pre-commit blockers as current.
+- Observed: Producer reports 803 requirements, 401 executable requirements, and nine populated Phase One tasks. `execution-state.json` now derives both denominators and its digest from the current data. The regression test independently recomputes the JavaScript-compatible SHA-256 digest and checks all three denominators. Packet summaries now identify PR #39, the rejected reviewed SHA, the corrected candidate, the external exact-head review/release gates, and the sole remaining GitNexus limitation.
+- Evidence: Current `build-pack/execution-state.json`; `requirements.json`; `requirements-phase-map.json`; `tests/test_authority_alignment_closeout.py`; corrected top-level packet records.
+- Changed files: `build-pack/execution-state.json`; `build-pack/requirements.json`; `build-pack/requirements-phase-map.json`; `tests/test_authority_alignment_closeout.py`; `plan_results.md`; `amendment_register.md`; `authority_map.md`.
+- Decision: Both independent-review findings have bounded corrections and automated coverage. The candidate must pass full gates and receive a new exact-head review before merge.
+- Limits: This action does not itself prove full-suite success or independent acceptance of the new head.
+- Next action: Run the focused invariant, document verifier, mandatory repository gates, build, and public-site validation; then commit, push, and request re-review.
+
+### A0054 — T06 — Corrected candidate passed mandatory gates; local Turbopack worker remained unavailable
+
+- Time: 2026-10-28T22:21:02+02:00
+- Status: PASS
+- Action: Ran the complete mandatory repository matrix after correcting the canonical producer, then investigated the only release-surface failure rather than retrying it speculatively.
+- Inputs: Corrected 803-requirement BuildRunner state; explicit eight-item retired-workflow set; five focused closeout tests; full repository test suite; Next.js production builders.
+- Command: `npm run verify:agent-workflow`; `npm run lint`; `npm run typecheck`; `npm test`; bundled Python `-m unittest tests.test_authority_alignment_closeout`; `verify-document-intelligence.ps1 -SkipGitNexus`; `npm run validate:public-site`; two bounded `npm run build` attempts; panic-log and process inspection; `npx next build --webpack`.
+- Expected: Mandatory gates and focused invariants pass; a production builder validates the application; any environmental failure is retained and diagnosed rather than overwritten.
+- Observed: Workflow verification passed. Lint passed with 0 errors and the same 15 pre-existing warnings. Typecheck passed. Full suite passed 394 tests: 391 passed, 3 environment skips, 0 failed. Five focused closeout tests passed. Document intelligence passed at 12 sources, 1,424 sections, 791 claims, 8 directives, 868 relationships, and 112 candidates. Public-site validation passed. The default Turbopack builder twice failed before CSS evaluation because its child Node process exited before connection; the panic log contains no source parse error. Process inspection found many long-lived Node workers across other worktrees, so a third identical retry was not attempted. The independent Next webpack production build exited 0. A clean Vercel build for the pushed exact head remains the authoritative default-builder release gate.
+- Evidence: Command outputs; Turbopack panic log `next-panic-b5ca93d7abe9f426b93e446f76b18117.log` outside the repository; GitHub/Vercel check on the next pushed head.
+- Changed files: this ledger entry only.
+- Decision: Source and mandatory repository correctness are established. Merge remains prohibited until the new exact head receives a clean independent review and a passing Vercel check.
+- Limits: The local default Turbopack command did not complete in the crowded host process environment; webpack success does not replace the required clean Vercel check.
+- Next action: Stage the eight corrected files, commit through the repository hook, push PR #39, then request exact-head re-review and wait for Vercel.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -18,6 +19,27 @@ def read_json(path: Path) -> dict:
 
 
 class AuthorityAlignmentCloseoutTests(unittest.TestCase):
+    def test_execution_state_matches_current_requirements_and_phase_map(self) -> None:
+        requirements = read_json(ROOT / "build-pack/requirements.json")
+        phase_map = read_json(ROOT / "build-pack/requirements-phase-map.json")
+        execution_state = read_json(ROOT / "build-pack/execution-state.json")
+        extensions = execution_state["extensions"]
+        denominator = len(requirements["requirements"])
+        phase_requirements = phase_map["requirements"]
+        expected_digest = hashlib.sha256(
+            json.dumps(
+                phase_requirements,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+
+        self.assertEqual(denominator, phase_map["denominatorCount"])
+        self.assertEqual(denominator, len(phase_requirements))
+        self.assertEqual(denominator, extensions["requirement_denominator"])
+        self.assertEqual(denominator, extensions["acceptance_denominator"])
+        self.assertEqual(expected_digest, extensions["digest"])
+
     def test_document_intelligence_reproducibility_is_encoding_and_format_independent(self) -> None:
         extractor = (ROOT / "scripts/extract-relationship-candidates.ps1").read_text(
             encoding="utf-8-sig"

@@ -16076,6 +16076,12 @@
           "heading": "17.5 Rescue and escalation",
           "hash": "ebb04d23b208a5567cbd1b921507aeeb85d26e4350545cba5085f383a4565b84"
         }
+      ],
+      "tasks": [
+        "P1-PLAN-001"
+      ],
+      "acceptance_ids": [
+        "AC-C-D06-S-ac41adad0ebd"
       ]
     },
     {
@@ -17352,7 +17358,7 @@
       "classification": "repository-fact",
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "separate-authority-required",
       "statement": "## 19. Daily Editorial Brief — 06:00 SAST\n\nRETIRED 2026-10-28: the fixed-time editorial brief and its scheduler are not part of the current execution path. The following subsections are retained as a historical brief schema only; an equivalent brief may be assembled inside an explicit manual or API-triggered run.\n",
       "planned_outcome": "Deliver or review 19. Daily Editorial Brief — 06:00 SAST within the editorial-operations boundary.",
       "acceptance_criteria": [
@@ -17372,6 +17378,10 @@
           "heading": "19. Daily Editorial Brief — 06:00 SAST",
           "hash": "edc194f4750eb832285bb30c8b994bde5106aa33019adef517d32699f8a6b787"
         }
+      ],
+      "tasks": [],
+      "acceptance_ids": [
+        "AC-C-D07-S-24ce753f0331"
       ]
     },
     {
@@ -17844,7 +17854,7 @@
       "classification": "repository-fact",
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "separate-authority-required",
       "statement": "### Stage 8 — Run the first 06:00 editorial brief\n\nRETIRED 2026-10-28: do not schedule a 06:00 editorial brief. An explicitly triggered run may generate a bounded queue from demand, evidence and page state.\n",
       "planned_outcome": "Deliver or review Stage 8 — Run the first 06:00 editorial brief within the editorial-operations boundary.",
       "acceptance_criteria": [
@@ -17864,6 +17874,10 @@
           "heading": "Stage 8 — Run the first 06:00 editorial brief",
           "hash": "3b3d1af6d2df9dfd0bc5451fe9dd56d7a78f43947ae75ad4f507a1516f0fd03b"
         }
+      ],
+      "tasks": [],
+      "acceptance_ids": [
+        "AC-C-D07-S-51c73f72ca7f"
       ]
     },
     {
@@ -20475,7 +20489,7 @@
       "classification": "repository-fact",
       "authority_domain": "research-and-knowledge-acquisition",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "candidate",
+      "status": "separate-authority-required",
       "statement": "## 34. Daily Research Success Criteria\n\nThe daily research cycle succeeds when it:\n\n1. checks the highest-priority active research areas;\n2. identifies meaningful changes where they exist;\n3. identifies customer-intent changes where they exist;\n4. records no-change states honestly;\n5. improves or confirms the durable knowledge base;\n6. (RETIRED 2026-10-28) does not target a scheduled 06:00 editorial brief; an explicitly triggered run may consume the same inputs;\n7. stays inside its resource budget;\n8. does not delay the daily public-output mandate.\n\n---\n",
       "planned_outcome": "Deliver or review 34. Daily Research Success Criteria within the research-and-knowledge-acquisition boundary.",
       "acceptance_criteria": [
@@ -20495,6 +20509,10 @@
           "heading": "34. Daily Research Success Criteria",
           "hash": "2a434c6d907a0b4fde2a877d89383bc2aa5b4ef77d0480e22b35b0aad392cab8"
         }
+      ],
+      "tasks": [],
+      "acceptance_ids": [
+        "AC-C-D08-S-b3ea66f554f2"
       ]
     },
     {

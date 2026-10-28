@@ -45,9 +45,11 @@ const taskForPhaseOneRequirement = (requirement) => {
 };
 
 const retiredWorkflowRequirementIds = new Set([
+  "R-C-D03-S-4cb790f028a7", // Retired fixed-time warning boundary
   "R-C-D03-S-5aed3f9cadd5", // Daily publishing watchdog
   "R-C-D03-S-87056c5d3838", // 23:00 SAST hard takeover
   "R-C-D04-S-c4b95ead9969", // Scheduled optimisation
+  "R-C-D07-S-cda2f93a025a", // Retired fixed-time editorial brief boundary
   "R-C-D08-S-1419bc672bd8", // Daily research must never prevent daily delivery
   "R-C-D08-S-8a9b77a9a639", // Daily research output
   "R-C-D08-S-aeebd36c92f4", // Daily Research Cycle
