@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
 import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
-import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-journey-production";
+import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-set-deployment";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import { importPresentationValidationSchema, type ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { approveFixture, fullRewriteNotes, presentFixture, rewriteAllProse } from "./fixtures/article-content-approval";
@@ -500,7 +500,7 @@ test("each content format invokes its own schema instead of accepting public-sit
 
 test("neutral production formats use their owner verifier without affiliate CTA evidence", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-format-targets-"));
-  try { for (const [format, script] of [["blog", "scripts/verify-blog-deployment.ts"], ["visibility", "scripts/verify-visibility-deployment.ts"], ["decision-set", "scripts/verify-decision-journey-production.ts"]] as const) {
+  try { for (const [format, script] of [["blog", "scripts/verify-blog-deployment.ts"], ["visibility", "scripts/verify-visibility-deployment.ts"], ["decision-set", "scripts/verify-decision-set-deployment.ts"]] as const) {
     const artifact = await formatFixture(format);
     await writeFile(path.join(root, "example.json"), JSON.stringify(artifact));
     const target = importArtifactTarget(format, artifact);

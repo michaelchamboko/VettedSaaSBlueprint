@@ -4,7 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { captureRoute } from "../scripts/verify-decision-journey-production";
+import { captureRoute } from "../scripts/verify-decision-set-deployment";
 import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
 import { assertVerifierResult } from "../src/lib/article-import/verification-evidence";
 

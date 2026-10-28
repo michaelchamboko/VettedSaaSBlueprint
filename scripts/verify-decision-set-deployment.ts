@@ -1,14 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
 
 import { chromium } from "@playwright/test";
+import { z } from "zod";
 
-import { productionQualityReceiptV2Schema } from "../src/lib/automation/contracts";
-import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
-import { decisionSetV2Schema, getDecisionSet, type DecisionJourneyRecordV2 } from "../src/lib/decision-journey/sets";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
 import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
+import { decisionSetV2Schema, getDecisionSet, type DecisionJourneyRecordV2 } from "../src/lib/decision-journey/sets";
 
 const defaultOrigin = "https://vettedsaasblueprint.online";
 let targets: Record<string, (typeof decisionJourneyCatalog)[string] | DecisionJourneyRecordV2> = decisionJourneyCatalog;
@@ -26,6 +26,25 @@ type Check = {
 };
 
 type Screenshot = { route: string; viewport: string; mode: string; path: string };
+
+const receiptSchema = z.object({
+  version: z.literal(2),
+  runId: z.string().uuid(),
+  passed: z.boolean(),
+  checks: z.array(z.object({
+    name: z.string().min(1),
+    passed: z.boolean(),
+    detail: z.string().min(1),
+    category: z.enum(["production", "content", "evidence", "visual", "motion", "accessibility"]),
+  }).strict()).min(1),
+  screenshots: z.array(z.object({
+    route: z.string().min(1),
+    viewport: z.string().min(1),
+    mode: z.string().min(1),
+    path: z.string().min(1),
+  }).strict()),
+  createdAt: z.string().datetime(),
+}).strict();
 
 /** Console errors and uncaught page exceptions stay separate so a silent page exception can never pass as clean. */
 export function browserErrorChecksFor(input: { route: string; profile: string; consoleErrors: readonly string[]; pageErrors: readonly string[] }): Check[] {
@@ -122,12 +141,12 @@ async function main() {
   }));
   const robotsOk = !/^Disallow:\s*\/\s*$/im.test(robots);
   const sitemapOk = Object.keys(targets).every((route) => sitemap.includes(`${canonicalOrigin}${route}`));
-  const output = path.resolve(argument("--screenshot-dir") ?? path.join(".automation", "receipts", "production-quality"));
+  const output = path.resolve(argument("--screenshot-dir") ?? path.join(".release-evidence", "decision-sets"));
   await mkdir(output, { recursive: true });
   const htmlChecks = await Promise.all(Object.keys(targets).map((route) => checkHtml(origin, route, canonicalOrigin)));
   const browserChecks = await Promise.all(Object.keys(targets).map((route) => captureRoute({ origin, route, output })));
   const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks)];
-  const receipt = productionQualityReceiptV2Schema.parse({
+  const receipt = receiptSchema.parse({
     version: 2,
     runId: argument("--run-id") ?? randomUUID(),
     passed: robotsOk && sitemapOk && checks.every((check) => check.passed),
@@ -141,4 +160,4 @@ async function main() {
   if (!receipt.passed) process.exitCode = 1;
 }
 
-if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/verify-decision-journey-production.ts")) void main();
+if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/verify-decision-set-deployment.ts")) void main();
