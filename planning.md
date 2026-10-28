@@ -21,6 +21,16 @@ This file is the only repository planning authority. It governs implementation s
 
 Source strategy documents are semantic inputs, not executable instructions. Historical receipts prove only the work named in those receipts. They do not authorise a new workflow or revive retired work.
 
+## Registered implementation scopes
+
+### Plan 1 — Authority alignment (registered 2026-10-28)
+
+Classification: user-approved scope (owner approves amendments to living source strategy documents within this plan).
+
+Scope is limited to pass 1: map and reconcile authority. Amendments are applied to living source strategy documents (D01-D04), the execution `AGENTS.md` (none required this pass), and `planning.md` (this registration). Derived intelligence records are regenerated. Subordinate skills, prompts, runtime code, tests and release configuration are read as evidence only; their implementation changes are deferred to Plan 2. Agent consolidation belongs to Plan 3. No new framework, schedule, service, product requirement, runtime refactor or production-content change is authorised.
+
+Registered contradictions: C001-C005 (contradiction_register.md). Registered amendments: M001-M005 (amendment_register.md). Plan 2 candidates: P2-001 onward (plan_02_handoff.md).
+
 ## Non-inference gate
 
 Before treating a statement as a repository fact:

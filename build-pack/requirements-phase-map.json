@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-10-28T12:06:56.945Z",
-  "denominatorCount": 799,
+  "denominatorCount": 803,
   "mappedAtLeast": 400,
   "requirements": [
     {
@@ -587,7 +587,7 @@
           "section_id": "D01-S-7d19567a803b",
           "display_id": "D01-H003",
           "heading": "1.1 Delivery continuity and revision invariant",
-          "hash": "23931c88108173facb685eb3a14e279d09dd3fa016724bf511c2489ef66c6910"
+          "hash": "6dce3cfdb7687b69a0d83ad3342c2fdc58ba257960e7b53ae010fe74c26bbbe0"
         }
       ]
     },
@@ -1070,7 +1070,7 @@
           "section_id": "D02-S-0951e69fb4b0",
           "display_id": "D02-H006",
           "heading": "3.2 Daily shipping rule",
-          "hash": "f590e50cb6d1a01c613fdf30e44491c12f9708e3be3c2cbe9bce3aba526b2dab"
+          "hash": "7ce13f473883ab911c5fc4e353ba137a10c525022e0556bf927bda4aeda9005e"
         }
       ]
     },
@@ -3002,7 +3002,7 @@
           "section_id": "D03-S-1591bfbb4a5d",
           "display_id": "D03-H160",
           "heading": "23. Decisions Locked by This Document",
-          "hash": "3064d65ea5f36162c8a7b9fc86a8b4d5fbbb4614fcb7eacf005f8272d78a2f33"
+          "hash": "8b30b8a3ef3adf2be1e29194973176955f62a5ed1c320e2af6fd0b23e03b53d5"
         }
       ]
     },
@@ -3513,7 +3513,7 @@
     {
       "requirementId": "R-C-D03-S-4cb790f028a7",
       "task": null,
-      "disposition": "separate-authority-required",
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D03-S-4cb790f028a7"
       ],
@@ -3527,7 +3527,7 @@
           "section_id": "D03-S-4cb790f028a7",
           "display_id": "D03-H072",
           "heading": "11.4 Pre-deadline status",
-          "hash": "2e4bb0072dee613e00f871d60fa381337e817d9817e1e9004bda5f818014db46"
+          "hash": "1e30b01ead376bb24afbd2614f3f807b5f9447c213af2ced77688c6c70f2e588"
         }
       ]
     },
@@ -3548,7 +3548,7 @@
           "section_id": "D03-S-51149f65d8b9",
           "display_id": "D03-H003",
           "heading": "2. Document Authority",
-          "hash": "856b11416f7ff9e435e46736d5b541e611c364b58611037ff8a0a9e30d5640d7"
+          "hash": "8b9d6f49b9c06f2d7d2c590d56bfb3ac75bb9f18c37103a8a9724ce4ba9aae3d"
         }
       ]
     },
@@ -3695,7 +3695,7 @@
           "section_id": "D03-S-5aed3f9cadd5",
           "display_id": "D03-H034",
           "heading": "7.10 Daily publishing watchdog",
-          "hash": "4965d55cddf9788fff8c2e421bf1d929d0ebacaf4e604f75c391ccdfe947cfc9"
+          "hash": "c52d33c2eaeb87bcfde3435cb6cc7e9479f8b3401151c7eb9192309710b154e3"
         }
       ]
     },
@@ -3779,7 +3779,7 @@
           "section_id": "D03-S-61259be0ec50",
           "display_id": "D03-H163",
           "heading": "26. Definition of Done for This Document",
-          "hash": "ecc7a0ecbe533f5fd223c1d45bfb652e4be8675e6a72ff3f444df6afa1d27939"
+          "hash": "89b79936484c006482935f33a39473f86f142df5a36e5ed70f1735be7472ffe1"
         }
       ]
     },
@@ -3989,7 +3989,7 @@
           "section_id": "D03-S-75d88f0be02c",
           "display_id": "D03-H164",
           "heading": "27. Relationship to the Wider Documentation Set",
-          "hash": "9a7b7d6239a99305ca834f42732f1efe1498a29fd04dd123775220fdee17af71"
+          "hash": "ea1d500de7e523a844c0dc69c7da90bc1e4b4b4a2c65c34b28f83dd6ede77c56"
         }
       ]
     },
@@ -4052,7 +4052,7 @@
           "section_id": "D03-S-87056c5d3838",
           "display_id": "D03-H073",
           "heading": "11.5 The 23:00 SAST hard takeover",
-          "hash": "ce5b621e15cd795d4f9bbd7fec64d258473d98487c41527004a050291dce73f9"
+          "hash": "b1da4a86e427c502aa6c8c7905a2702a0fb379922deee24ff4215c0e50517ba8"
         }
       ]
     },
@@ -4388,7 +4388,7 @@
           "section_id": "D03-S-ca4d710308b0",
           "display_id": "D03-H071",
           "heading": "11.3 Continuous progress rule",
-          "hash": "50d9450a70144a998928f76f49f4a7d90942ab001fb19abe2aed303e60a37e41"
+          "hash": "42f13610408109d0c0b419e89b414792e4fb03c7c95a8ce538284704b7c59015"
         }
       ]
     },
@@ -4682,7 +4682,7 @@
           "section_id": "D03-S-fa592ef88ff8",
           "display_id": "D03-H161",
           "heading": "24. Open Implementation Decisions",
-          "hash": "cba2ba25b5832dd5914378509d3cb325ace19ebaffc6064913c356bbe0a317b7"
+          "hash": "957785ea16e541a5518c3729690dbb4e0201a7def6eb99f1dfeef42e4caf3a7f"
         }
       ]
     },
@@ -4703,7 +4703,7 @@
           "section_id": "D03-S-fddd6f144f2c",
           "display_id": "D03-H002",
           "heading": "1. Purpose of This Document",
-          "hash": "a5e3f334c21977ca734227632b67361471990ce0178488064db66a073beafec1"
+          "hash": "e699cddffbc2331dfad83d314f6ef9d52f005acdac26cad2099a81896835650c"
         }
       ]
     },
@@ -5795,7 +5795,7 @@
           "section_id": "D04-S-7692d01dc6e6",
           "display_id": "D04-H003",
           "heading": "2. Relationship to the Other Planning Documents",
-          "hash": "2e6bb0b3a95606e2ccc3733b33b083637546adde5cf3c532d94e1cd56c45e397"
+          "hash": "3ccf7a42b0a5911cc4b95337e4a09aef046b82fd317fe2211584d70983c8ef51"
         }
       ]
     },
@@ -5942,7 +5942,7 @@
           "section_id": "D04-S-878e2b8062db",
           "display_id": "D04-H204",
           "heading": "34. Open Decisions",
-          "hash": "069370f0bb2364a2f1421f574eff1b6c30e200d638800a67b15f62cd9684f046"
+          "hash": "74070a94de06b8426c4a467f6ff54376be999d542e634e16200a2387e6160fa2"
         }
       ]
     },
@@ -6341,7 +6341,7 @@
           "section_id": "D04-S-c4b95ead9969",
           "display_id": "D04-H171",
           "heading": "26.10 Step 10 - Scheduled optimisation",
-          "hash": "f656899e6b40ace61dc24861660ee1955459cade53f8653a343cac187f94a9a1"
+          "hash": "a67a3ff130997d1f4a0931e91e8cef90390ee4c53671246e91203d6cc38c3da2"
         }
       ]
     },
@@ -6824,7 +6824,7 @@
           "section_id": "D04-S-f9d094ee76e2",
           "display_id": "D04-H019",
           "heading": "5.9 Publish first, improve continuously",
-          "hash": "361fd6e8e19051b7b5190dfa0370ea85b4465ee25fd8100edd51074f040997a2"
+          "hash": "b4a1efd06aa4c10b74aa6dfcdf3d2e1d2a614f35dd09edb256e4a14ff2d61c91"
         }
       ]
     },
@@ -8798,7 +8798,7 @@
           "section_id": "D05-S-bcda65d53c55",
           "display_id": "D05-H002",
           "heading": "1. Document Authority and Boundaries",
-          "hash": "4c18660d7e891e761ef1e974725193a4fe3fd833c3933dc065e0a1af3995621d"
+          "hash": "cf2bb7ccad9d5eee6aeb2127b0e6e33aad09f4a545ff2bd4fb5e9af006b6c09c"
         }
       ]
     },
@@ -10504,6 +10504,25 @@
       ]
     },
     {
+      "requirementId": "R-C-D06-S-ac41adad0ebd",
+      "task": null,
+      "disposition": "candidate",
+      "acceptanceIds": [],
+      "evidenceAcceptance": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md at D06-H081 (D06-S-ac41adad0ebd).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "evidenceSources": [
+        {
+          "source_id": "D06",
+          "section_id": "D06-S-ac41adad0ebd",
+          "display_id": "D06-H081",
+          "heading": "17.5 Rescue and escalation",
+          "hash": "ebb04d23b208a5567cbd1b921507aeeb85d26e4350545cba5085f383a4565b84"
+        }
+      ]
+    },
+    {
       "requirementId": "R-C-D06-S-acc2f7475b24",
       "task": "P1-PLAN-001",
       "disposition": "phase-one-complete",
@@ -10919,7 +10938,7 @@
           "section_id": "D06-S-d0f5b165a83f",
           "display_id": "D06-H003",
           "heading": "2. Document Authority",
-          "hash": "7fe33aa1fb5f8cf27bca79ecfe6446d26eb16f72bd676ba8cae78b9244a8eb0c"
+          "hash": "af296360e622445f1c4b0352e425e3b74acdd716ff6fc9194c4394428e1b0682"
         }
       ]
     },
@@ -11297,7 +11316,7 @@
           "section_id": "D07-S-1f772e34b52e",
           "display_id": "D07-H003",
           "heading": "2. Document Authority and Boundaries",
-          "hash": "e55710b18725736eec9344c698fb8cf105ff2497f0fd573ee87f87f9fc2c2937"
+          "hash": "eda2728f5a0f5e721ac7214a87f2816cb8bf3704c808af84e06e3bb2140ac9fc"
         }
       ]
     },
@@ -11319,6 +11338,25 @@
           "display_id": "D07-H028",
           "heading": "7.5 Dossier identity",
           "hash": "7b9642ce6e675ad23990955499e9d2b4163bc012ed256fef246196b919586387"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-C-D07-S-24ce753f0331",
+      "task": null,
+      "disposition": "candidate",
+      "acceptanceIds": [],
+      "evidenceAcceptance": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H080 (D07-S-24ce753f0331).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "evidenceSources": [
+        {
+          "source_id": "D07",
+          "section_id": "D07-S-24ce753f0331",
+          "display_id": "D07-H080",
+          "heading": "19. Daily Editorial Brief — 06:00 SAST",
+          "hash": "edc194f4750eb832285bb30c8b994bde5106aa33019adef517d32699f8a6b787"
         }
       ]
     },
@@ -11591,7 +11629,7 @@
           "section_id": "D07-S-4c6012467710",
           "display_id": "D07-H109",
           "heading": "27. Maintenance Operating Model",
-          "hash": "2f8f827d49f20f1649e552070a84e67cef1246e8e8e28e11fd7ae513ca90e3fa"
+          "hash": "ba29dfecde03255df2cc81e064b24e1dfa4a2d0523c271a74d92b07bc2bd62ae"
         }
       ]
     },
@@ -11634,6 +11672,25 @@
           "display_id": "D07-H102",
           "heading": "25. Content Lifecycle",
           "hash": "b3c29e0382de9f885b43090f70bd8a68858132700f4d99226d22cdf73c164fc2"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-C-D07-S-51c73f72ca7f",
+      "task": null,
+      "disposition": "candidate",
+      "acceptanceIds": [],
+      "evidenceAcceptance": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md at D07-H130 (D07-S-51c73f72ca7f).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "evidenceSources": [
+        {
+          "source_id": "D07",
+          "section_id": "D07-S-51c73f72ca7f",
+          "display_id": "D07-H130",
+          "heading": "Stage 8 — Run the first 06:00 editorial brief",
+          "hash": "3b3d1af6d2df9dfd0bc5451fe9dd56d7a78f43947ae75ad4f507a1516f0fd03b"
         }
       ]
     },
@@ -11759,7 +11816,7 @@
           "section_id": "D07-S-6aafd0d67023",
           "display_id": "D07-H002",
           "heading": "1. Purpose of This Document",
-          "hash": "85e4fc36ff9acc23550a21d32f2b3fddfbcc01b88be4a8a748c3ab8ac04c3dd4"
+          "hash": "8be4def9903e92d1cab5328cd3d327f702bf9c7f71d410424a82e53c7c97e273"
         }
       ]
     },
@@ -12312,7 +12369,7 @@
     {
       "requirementId": "R-C-D07-S-cda2f93a025a",
       "task": null,
-      "disposition": "separate-authority-required",
+      "disposition": "owner-retired",
       "acceptanceIds": [
         "AC-C-D07-S-cda2f93a025a"
       ],
@@ -12326,7 +12383,7 @@
           "section_id": "D07-S-cda2f93a025a",
           "display_id": "D07-H081",
           "heading": "19.1 Purpose",
-          "hash": "e164b8f859400a03d99787731666d22463277103890c9b33fa20de784a5aeb09"
+          "hash": "bd4ea4520628f7224d4d747c9b1b5dc1ee2b1347c129fabebdeeb8efc6fe4e07"
         }
       ]
     },
@@ -13376,7 +13433,7 @@
           "section_id": "D08-S-ac0299e768be",
           "display_id": "D08-H002",
           "heading": "1. Purpose of This Document",
-          "hash": "355e30f09960e89366436b198527559b3c9ec0a8d9178ab2018690c60d699afa"
+          "hash": "bc66d2578da4f75f0e3dcb2c6c2084215ef66376c997ad6bd67cc8b0b2d87f76"
         }
       ]
     },
@@ -13397,7 +13454,26 @@
           "section_id": "D08-S-aeebd36c92f4",
           "display_id": "D08-H054",
           "heading": "14. Daily Research Cycle",
-          "hash": "52cd04f01603d67715f6049402664c21378bd179a7d7d8461251048dd789c8b6"
+          "hash": "da03fe369fff057d6b76f8b5312409372e72bae08fc2bc58ba3cf0392c943186"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-C-D08-S-b3ea66f554f2",
+      "task": null,
+      "disposition": "candidate",
+      "acceptanceIds": [],
+      "evidenceAcceptance": [
+        "The outcome cites docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md at D08-H087 (D08-S-b3ea66f554f2).",
+        "Evidence demonstrates the cited section without adding product meaning beyond its exact text."
+      ],
+      "evidenceSources": [
+        {
+          "source_id": "D08",
+          "section_id": "D08-S-b3ea66f554f2",
+          "display_id": "D08-H087",
+          "heading": "34. Daily Research Success Criteria",
+          "hash": "2a434c6d907a0b4fde2a877d89383bc2aa5b4ef77d0480e22b35b0aad392cab8"
         }
       ]
     },
@@ -13754,7 +13830,7 @@
           "section_id": "D08-S-de8aa1c5d8cf",
           "display_id": "D08-H090",
           "heading": "ARR-001 — Global Daily Value Delivery Mandate",
-          "hash": "4b3d4e042956fe3c859409fbfcc96fe30b90ba69345bb3d149fddaa6c12ac43c"
+          "hash": "8f88a85b2fff7370c167457fa1b1c790da70f273666831cbb5c68262ca994712"
         }
       ]
     },
@@ -14699,7 +14775,7 @@
           "section_id": "D09-S-ebab0001bcf9",
           "display_id": "D09-H003",
           "heading": "2. Authority and boundaries",
-          "hash": "bafcab75993efda65ccde63b619a3ef941d901b98c5b1cce6a804fac7bb73619"
+          "hash": "be20a1d7f962720d4a075524ffeab6ed87c51370285feee44905c2ff43f97e82"
         }
       ]
     },
@@ -15140,7 +15216,7 @@
           "section_id": "D10-S-ebe639899fcc",
           "display_id": "D10-H002",
           "heading": "1. Purpose",
-          "hash": "8a8a51723cd70d770054b6732e065b9280ff3b4fc4ab01b3a94ebdb6f0dc19fa"
+          "hash": "2165ce78e4aef371d4aad1e25043b09807a84477cf66c256499bd361d25e5598"
         }
       ]
     },

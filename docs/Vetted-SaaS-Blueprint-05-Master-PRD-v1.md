@@ -12,6 +12,8 @@
 
 This document records the product decisions agreed during the discovery discussion. It is the authoritative product definition for the current planning phase.
 
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
+
 The words **MUST**, **SHOULD**, and **MAY** are used deliberately:
 
 - **MUST** means the requirement is mandatory.

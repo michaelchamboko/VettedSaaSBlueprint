@@ -39,7 +39,7 @@ foreach ($property in $aliasDocument.aliases.PSObject.Properties) { $aliases[$pr
 $candidates = [System.Collections.Generic.List[object]]::new()
 foreach ($source in $manifest.sources) {
     $sourcePath = Join-Path $repositoryRoot ($source.path -replace '/', '\')
-    $currentHash = Get-Sha256File -Path $sourcePath
+    $currentHash = Get-NormalizedFileSha256 -Path $sourcePath
     if ($currentHash -ne $source.sha256) { throw "Source drift detected before candidate extraction: $($source.path)" }
     $lines = [System.IO.File]::ReadAllLines($sourcePath)
     $sections = @(Get-DocumentSections -SourceId $source.source_id -Lines $lines)

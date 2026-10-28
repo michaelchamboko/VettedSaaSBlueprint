@@ -39,7 +39,9 @@ Assumptions must not be presented as proven market facts until the research work
 
 Market validation changes the evidence state, confidence, prioritisation, and later revision of public work. It does not authorise withholding the connected daily three-page decision set.
 
-Every active publishing day must deploy one Decision Hub, one Solution Hub, and one Decision Scenario. Found, partial, conflicting, missing, and stale evidence are all publishable states when represented truthfully. Missing evidence changes the answer; it does not cancel delivery.
+The three-page release unit (one Decision Hub, one Solution Hub, one Decision Scenario) is the delivery unit; it was delivered as the completed Phase One (see planning.md and build-pack/receipts/phase-one-release.json). Ongoing releases are on-demand via an explicit manual or API trigger (AGENTS.md). Found, partial, conflicting, missing, and stale evidence are all publishable states when represented truthfully. Missing evidence changes the answer; it does not cancel delivery.
+
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
 
 Every published page and asset remains versioned and revisitable. Newly discovered, corrected, or materially changed evidence must create an update task for the affected live work, followed by redistribution where the change matters to users.
 

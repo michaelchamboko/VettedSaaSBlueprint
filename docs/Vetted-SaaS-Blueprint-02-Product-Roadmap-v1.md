@@ -56,7 +56,9 @@ These pages must be connected to the same user problem, product category, outcom
 
 During active implementation and content-production work:
 
-> **Every build day MUST end with one complete three-page decision set live and working on Vercel.**
+> **Every build day MUST end with one complete three-page decision set live and working on Vercel.** (Build-phase obligation; satisfied by the completed Phase One. Ongoing releases are on-demand via an explicit manual or API trigger per AGENTS.md and planning.md.)
+
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
 
 A day spent only on invisible infrastructure, internal refactoring, orchestration, scraping, database work, agent prompts, or planning does not satisfy this rule.
 

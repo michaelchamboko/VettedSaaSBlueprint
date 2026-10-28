@@ -64,6 +64,8 @@ The words **MUST**, **SHOULD** and **MAY** are deliberate:
 - **SHOULD** means expected unless a documented repository fact supports a safer or simpler alternative.
 - **MAY** means optional, experimental or deferred.
 
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
+
 When requirements conflict, agents must apply this priority order:
 
 1. user safety, legal compliance and secret protection;
@@ -1031,7 +1033,7 @@ When a lower-cost model fails:
 5. use the premium reference model to finish the required daily output;
 6. log the failure as automation-improvement work.
 
-At the configured evening rescue point, and no later than the established 23:00 SAST publishing guarantee, unfinished required pages escalate to the premium model.
+RETIRED 2026-10-28: the configured evening rescue point and 23:00 SAST publishing guarantee are not part of the current execution path. Model escalation may occur only inside an explicitly triggered run under `AGENTS.md` and `planning.md`.
 
 ### 17.6 Never-empty implementation queue
 
@@ -1278,7 +1280,7 @@ It is not required for:
 - the daily production deployment;
 - running paid CI runners;
 - basic page generation;
-- the 23:00 rescue flow.
+- the 23:00 rescue flow (RETIRED 2026-10-28).
 
 ### 22.3 Backup cadence
 
@@ -1693,7 +1695,7 @@ Create typed contracts and fixtures for research, evidence validation, scoring, 
 
 ### 33.7 Evening optimisation schedule
 
-Configure a daily improvement run before the 23:00 SAST rescue point. The exact earlier time remains an operational configuration decision.
+RETIRED 2026-10-28: do not configure a daily improvement run or a 23:00 SAST rescue point. Improvements run only through explicitly initiated repository work.
 
 ### 33.8 Performance measurement
 

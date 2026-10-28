@@ -20,7 +20,7 @@ function Assert-True {
 Import-Module -Force -Name $modulePath
 
 $refreshScript = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'scripts\refresh-gitnexus.ps1')
-Assert-True ($refreshScript -match "expectedVersion\s*=\s*'1\.6\.9'") 'The refresh script does not pin GitNexus 1.6.9.'
+Assert-True ($refreshScript -match "expectedVersion\s*=\s*'1\.6\.10'") 'The refresh script does not pin GitNexus 1.6.10.'
 Assert-True ($refreshScript -match 'walCheckpointThreshold\s*=\s*67108864') 'The refresh script does not retain the verified Windows WAL checkpoint threshold.'
 Assert-True (($refreshScript -match '--index-only') -and ($refreshScript -match '--wal-checkpoint-threshold\s+\$walCheckpointThreshold')) 'The refresh script does not combine index-only mode with the configured WAL threshold.'
 $verifierScript = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'scripts\verify-document-intelligence.ps1')
@@ -98,10 +98,23 @@ $expectedAffiliateTargets = @($expectedAffiliateRequirements | ForEach-Object {
 })
 Assert-Equal (($affiliateEdges.to | Sort-Object) -join ',') (($expectedAffiliateTargets | Sort-Object) -join ',') 'UD-008 relationship targets do not match its requirements.'
 
-$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("vsb-document-graph-tests-" + [guid]::NewGuid().ToString('N'))
+$scratchRoot = Join-Path $repositoryRoot '.scratch'
+[void](New-Item -ItemType Directory -Path $scratchRoot -Force)
+$tempRoot = Join-Path $scratchRoot ("vsb-document-graph-tests-" + [guid]::NewGuid().ToString('N'))
 [void](New-Item -ItemType Directory -Path $tempRoot)
 
 try {
+    $lfFixture = Join-Path $tempRoot 'lf.md'
+    $crlfFixture = Join-Path $tempRoot 'crlf.md'
+    [System.IO.File]::WriteAllText($lfFixture, "# Root`nBody`n", [System.Text.UTF8Encoding]::new($false))
+    [System.IO.File]::WriteAllText($crlfFixture, "# Root`r`nBody`r`n", [System.Text.UTF8Encoding]::new($false))
+    Assert-Equal (Get-NormalizedFileSha256 -Path $lfFixture) (Get-NormalizedFileSha256 -Path $crlfFixture) 'Equivalent LF and CRLF source text produced different repository hashes.'
+
+    $gitState = Get-RepositoryLifecycleState -RepositoryRoot $repositoryRoot
+    Assert-True $gitState.IsInsideWorkTree 'A normal committed repository was not recognised as a Git worktree.'
+    Assert-True ($gitState.HeadCommit -match '^[0-9a-f]{40}$') 'The committed repository HEAD was not recorded.'
+    Assert-Equal (($gitState.Remotes | Sort-Object) -join ',') 'origin' 'The configured remote was not reported.'
+
     $original = @(
         '# Root',
         '',

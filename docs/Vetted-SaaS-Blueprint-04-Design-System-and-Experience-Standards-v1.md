@@ -53,6 +53,8 @@ The documents have different authority:
 
 Where a visual preference conflicts with decision clarity, accessibility, evidence integrity, or the daily publishing commitment, those product requirements take priority.
 
+**Cadence supersession (owner directive 2026-10-28):** Any "daily", "every active day", fixed-time, scheduled, watchdog, rescue, or recurring-publication wording in this document is retained only as historical batch terminology or traceability. It does not authorise a schedule or ongoing publication obligation. The release unit remains valid, but execution occurs only from an explicit manual or API trigger under `AGENTS.md` and `planning.md`.
+
 ---
 
 ## 3. Executive Design Thesis
@@ -273,9 +275,9 @@ The sequence is:
 5. queue and apply improvements;
 6. record what changed and why.
 
-Safety or correctness defects must be handled by removing, replacing, simplifying, or rolling back the affected claim, component, or interaction while the smallest safe and truthful connected set still publishes. They must not turn design review into a reason to miss the daily release.
+Safety or correctness defects must be handled by removing, replacing, simplifying, or rolling back the affected claim, component, or interaction while the smallest safe and truthful connected set still publishes. Design review may not block an approved on-demand release (AGENTS.md; planning.md).
 
-Missing, partial, conflicting, or stale evidence must have usable visual states. Those states publish on schedule, remain visibly qualified, and can be updated when stronger evidence becomes available. Every page and asset must support versioned post-publication improvement rather than waiting for visual or evidential completeness.
+Missing, partial, conflicting, or stale evidence must have usable visual states. Those states publish when approved and released, remain visibly qualified, and can be updated when stronger evidence becomes available. Every page and asset must support versioned post-publication improvement rather than waiting for visual or evidential completeness.
 
 ### 5.10 No design change without a reason
 
@@ -1753,7 +1755,7 @@ Run the full design checklist, collect screenshots, and assign improvements.
 
 ### 26.10 Step 10 - Scheduled optimisation
 
-Design improvements may run in scheduled evening optimisation windows. The exact schedule will be selected during implementation and coordinated with the existing 23:00 SAST publishing-rescue policy.
+RETIRED by owner directive 2026-10-28 (see planning.md "Product-owner retirement directive"): scheduled evening optimisation windows and the 23:00 SAST publishing-rescue policy are not part of the current execution path. Design improvements are applied in normal change windows via the isolate/build/prove/ship workflow. This section remains for traceability only. See contradiction register C003 and amendment M003.
 
 ### 26.11 Step 11 - Promote reusable improvements
 
@@ -2120,7 +2122,7 @@ The following must be resolved during design implementation rather than guessed 
 4. Final Taste Skill variance, motion, and density values per page type.
 5. Which open-source UI libraries enter the approved vault.
 6. Which motion library or libraries are standardised.
-7. Exact scheduled times for evening design-improvement runs.
+7. (RETIRED 2026-10-28) Exact scheduled times for evening design-improvement runs — retired by owner directive; see planning.md and AGENTS.md.
 8. Exact signature interaction used for each of the first three reference pages.
 9. Final image sourcing and licensing workflow.
 10. Whether a separate design-review page or internal visual dashboard is required.

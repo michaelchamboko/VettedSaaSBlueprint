@@ -97,7 +97,7 @@ foreach ($source in $sources) {
         authority_status = $source.Authority
         line_count = $lines.Count
         heading_count = $sections.Count
-        sha256 = Get-Sha256File -Path $path
+        sha256 = Get-NormalizedFileSha256 -Path $path
         sections = @($manifestSections)
     })
     $totalHeadings += $sections.Count

@@ -1,0 +1,46 @@
+﻿# A0002 — execution worktree baseline
+Captured (ISO 8601): 2026-10-28T17:29:25.2238941+02:00
+Working directory: C:\Users\micha\.buzz\REPOS\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\plan-01-authority-alignment
+
+## git branch --show-current
+codex/plan-01-authority-alignment
+
+## git rev-parse HEAD
+e48691c0bcd19043b14de55ad1f124c8e4542e9e
+
+## git rev-parse origin/main
+e48691c0bcd19043b14de55ad1f124c8e4542e9e
+
+## git merge-base --is-ancestor HEAD origin/main (exit)
+exit=0
+## git log --oneline -3
+e48691c Merge PR #38: Remove retired multi-stage automation workflow
+3f1fc2b Scope retired workflow mappings explicitly
+a22e73d Narrow retired workflow requirement matching
+
+## git status --porcelain=v1
+?? build-pack/authority-alignment/
+
+## git status --porcelain=v1 | count
+1
+## git diff --stat
+
+## node_modules present
+False
+## packet copy SHA256 (destination)
+A603CB83F2FCFA7F5A30FCFCD238830DE2C6BAC6C884A0150FBE2108D91C26EB  plan-01\amendment_register.md
+78A5E7A563D9966CDB2B584CE17A62CF3C976FAF455FBCF0BBD98EBE218577AE  plan-01\authority_map.md
+1DBCDC1CCE348E4288E239D2549B51F10BADBEE389AF7C8C343378E9FF3F8AE2  plan-01\contradiction_register.md
+92D5B5063F154D3E73FA6DD5778276D737A3F750A88D3EF3D4D6A5356FBFC98B  plan-01\implementation_plan.md
+578AED48D3478BC6C259759DE27071818BB152C631FF9F6DA5B7E3ACCFCE0AF1  plan-01\plan_02_handoff.md
+D83A6EB9BB2DD32E3DF548CF9680002506A36B9B699839158743E82ACA464052  plan-01\plan_results.md
+CADC0C0256F2B7386C3C6DA350596063F88EC9391CDDA3076DB16CA24DDFED65  plan-01\README.md
+922E01DFC9BD10F3D54C60E9A6C36FF624564022F16D4D2A26CCE626AFD46480  plan-01\evidence\A0001-baseline-source-checkout.txt
+F960E034B69FA4CBDCD0A213774435D3F74A90022FD0C8F1FAA5425870D01A79  plan-01\evidence\README.md
+## tool versions (execution checkout)
+v24.18.0
+
+12.0.0
+
+git version 2.55.0.windows.2
+

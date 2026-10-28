@@ -48,7 +48,7 @@ Assert-True (@($stableUids | Sort-Object -Unique).Count -eq $stableUids.Count) '
 foreach ($source in $manifest.sources) {
     $sourcePath = Join-Path $repositoryRoot ($source.path -replace '/', '\')
     Assert-True (Test-Path -LiteralPath $sourcePath -PathType Leaf) "Missing registered source: $($source.path)"
-    Assert-True ((Get-Sha256File -Path $sourcePath) -eq $source.sha256) "Source hash drift: $($source.path)"
+    Assert-True ((Get-NormalizedFileSha256 -Path $sourcePath) -eq $source.sha256) "Source hash drift: $($source.path)"
 }
 
 $verificationToken = [guid]::NewGuid().ToString('N')
@@ -94,12 +94,9 @@ Assert-True (-not (Test-Path -LiteralPath (Join-Path $repositoryRoot 'CLAUDE.md'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $repositoryRoot '.claude'))) '.claude must not exist in this agent-neutral workspace.'
 Assert-True ($agents -notmatch 'gitnexus:start') 'AGENTS.md contains a generated GitNexus block.'
 
-$gitSafeDirectory = "safe.directory=$repositoryRoot"
-$remotes = @(git -c $gitSafeDirectory -C $repositoryRoot remote)
-Assert-True ($LASTEXITCODE -eq 0) 'Unable to inspect Git remotes.'
-Assert-True ($remotes.Count -eq 0) 'This local-only repository must not have a remote.'
-$headCommit = git -c $gitSafeDirectory -C $repositoryRoot rev-list --max-count=1 --all
-Assert-True ([string]::IsNullOrWhiteSpace($headCommit)) 'A commit exists even though the baseline commit is deferred.'
+$repositoryState = Get-RepositoryLifecycleState -RepositoryRoot $repositoryRoot
+Assert-True $repositoryState.IsInsideWorkTree 'Document intelligence must be verified inside a Git worktree.'
+Assert-True ($repositoryState.HeadCommit -match '^[0-9a-f]{40}$') 'Unable to identify the committed verification baseline.'
 
 if (-not $SkipGitNexus) {
     $reconciliationPath = Join-Path $intelligenceRoot 'GITNEXUS_RECONCILIATION.json'
@@ -107,7 +104,7 @@ if (-not $SkipGitNexus) {
     $reconciliation = Get-Content -Raw -LiteralPath $reconciliationPath | ConvertFrom-Json
     Assert-True ($reconciliation.source_manifest_sha256 -eq $manifest.manifest_sha256) 'GitNexus reconciliation is stale relative to source manifest.'
     Assert-True ($reconciliation.document_graph_sha256 -eq (Get-Sha256File -Path $graphPath)) 'GitNexus reconciliation is stale relative to canonical graph.'
-    Assert-True ($reconciliation.gitnexus_version -eq '1.6.9') 'GitNexus reconciliation used an unapproved version.'
+    Assert-True ($reconciliation.gitnexus_version -eq '1.6.10') 'GitNexus reconciliation used an unapproved version.'
     Assert-True ($reconciliation.status -eq 'pass') 'GitNexus reconciliation did not pass.'
     Assert-True $reconciliation.exact_node_set_match 'GitNexus node-symbol set differs from bridge manifest.'
     Assert-True $reconciliation.exact_relation_set_match 'GitNexus relation-symbol set differs from bridge manifest.'
@@ -124,7 +121,7 @@ Write-Output "Relationships: $(@($graph.relationships).Count)"
 Write-Output "Candidates: $(@($graph.candidates).Count)"
 Write-Output "Bridge node exports: $($runtimeResult.nodeExports)"
 Write-Output "Bridge relation exports: $($runtimeResult.relationExports)"
-Write-Output 'Remote: none'
-Write-Output 'Commit baseline: deferred'
+Write-Output "Remotes: $(@($repositoryState.Remotes).Count) [$(@($repositoryState.Remotes) -join ', ')]"
+Write-Output "Commit baseline: $($repositoryState.HeadCommit)"
 Write-Output 'Agent injection: absent'
 Write-Output "GitNexus reconciliation: $(if ($SkipGitNexus) { 'skipped' } else { 'pass' })"

@@ -1,0 +1,15 @@
+﻿build-pack\authority-alignment\plan-01\amendment_register.md:58
+build-pack\authority-alignment\plan-01\plan_02_handoff.md:55
+build-pack\authority-alignment\plan-01\plan_02_handoff.md:58
+build-pack\authority-alignment\plan-01\plan_02_handoff.md:60
+build-pack\authority-alignment\plan-01\plan_results.md:599
+build-pack\requirements.json:1559
+build-pack\requirements.json:1567
+build-pack\requirements.json:1578
+build-pack\requirements.json:1586
+build-pack\requirements-phase-map.json:1057
+build-pack\requirements-phase-map.json:1061
+build-pack\requirements-phase-map.json:1064
+build-pack\requirements-phase-map.json:1070
+build-pack\source-manifest.json:2800
+build-pack\tasks\SLC-004.md:10
