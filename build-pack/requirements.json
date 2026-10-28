@@ -1715,7 +1715,7 @@
       "classification": "repository-fact",
       "authority_domain": "roadmap-and-delivery",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 4.1 Automation principle\n\nThe deterministic workflow owns the process. AI models perform narrow tasks inside it.\n\n> **The workflow is the production line. AI models are replaceable workers at controlled stations.**\n\nNo AI model may independently decide to skip required stages, invent new scoring logic, publish unsupported claims, or change the product methodology.\n",
       "planned_outcome": "Deliver or review 4.1 Automation principle within the roadmap-and-delivery boundary.",
       "acceptance_criteria": [
@@ -2366,7 +2366,7 @@
       "classification": "repository-fact",
       "authority_domain": "roadmap-and-delivery",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 17.2 Replace automation with direct execution\n\n6. Replace automated research with manual bounded research.\n7. Replace multi-agent work with one controlled worker.\n8. Replace dynamic orchestration with a fixed script.\n9. Replace a remote service with a local process.\n10. Replace a database dependency with validated local structured files.\n11. Replace dynamic page assembly with a fixed deterministic template.\n",
       "planned_outcome": "Deliver or review 17.2 Replace automation with direct execution within the roadmap-and-delivery boundary.",
       "acceptance_criteria": [
@@ -4133,7 +4133,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "# Vetted SaaS Blueprint — AI-First System Architecture and Automation Blueprint\n\n**Document:** 03 — mandatory architecture and automation companion document\n**Version:** 1.0\n**Status:** Working architectural contract\n**Date:** 27 August 2026\n**Product owner:** Michael Chamboko\n**Primary production environment:** Existing Vetted SaaS Blueprint website on Vercel\n**Related documents:**\n\n- `Vetted-SaaS-Blueprint-01-Market-Research-and-Opportunity-Plan-v1.md`\n- `Vetted-SaaS-Blueprint-02-Product-Roadmap-v1.md`\n- `Vetted-SaaS-Blueprint-Master-PRD-v1.md`\n\n> **Sequence note:** The original ten-document outline placed the Design System third. During roadmap definition, the product owner added this architecture and automation blueprint as a mandatory document because model independence, daily publishing, and incremental automation are central product requirements. The master document index may later label this file **03A** or renumber the remaining documents. Its requirements apply immediately regardless of final numbering.\n\n---\n",
       "planned_outcome": "Deliver or review Vetted SaaS Blueprint — AI-First System Architecture and Automation Blueprint within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -4257,7 +4257,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "#### Automation track\n\nAutomates or improves one bounded part of the proven process.\n\nThe automation track may not block the shipping track.\n",
       "planned_outcome": "Deliver or review Automation track within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -4598,7 +4598,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 6.6 Incremental automation\n\nAutomation must be added one proven module at a time.\n\nThe project must not attempt to automate the entire research-to-publish process before the premium reference process has produced a valid live result.\n",
       "planned_outcome": "Deliver or review 6.6 Incremental automation within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -4970,7 +4970,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 11.2 Shipping track and automation track\n\nThe day may contain two parallel tracks:\n",
       "planned_outcome": "Deliver or review 11.2 Shipping track and automation track within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -5249,7 +5249,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 13.6 Background automation is decoupled\n\nPublic rendering remains on Vercel.\n\nLong-running research, crawling, scheduling, or AI orchestration may run locally initially and later on a separate cloud runtime if that is more reliable and economical.\n\nThe public site must not wait synchronously for an entire research workflow before rendering an already published page.\n",
       "planned_outcome": "Deliver or review 13.6 Background automation is decoupled within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -5807,7 +5807,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "## 18. Initial Modular Automation Backlog\n\nAutomation should begin with modules that are bounded, repeatable, and easy to validate.\n",
       "planned_outcome": "Deliver or review 18. Initial Modular Automation Backlog within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -6055,7 +6055,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 17.6 Idempotency\n\nThe module must be safe to rerun without duplicating or corrupting results.\n",
       "planned_outcome": "Deliver or review 17.6 Idempotency within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -19464,7 +19464,7 @@
       "classification": "repository-fact",
       "authority_domain": "research-and-knowledge-acquisition",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### ADR-08-005 — Daily production outranks automation completion\n\n**Decision**\n\nIf the developing automation cannot deliver the required public output, use the working or premium fallback production path.\n\n**Reason**\n\nVetted SaaS Blueprint is a live commercial product and must accumulate public value while its automation matures.\n\n**Trade-off**\n\nSome early pages may later need enhancement or rebuilding.\n\n---\n",
       "planned_outcome": "Deliver or review ADR-08-005 — Daily production outranks automation completion within the research-and-knowledge-acquisition boundary.",
       "acceptance_criteria": [
@@ -20084,7 +20084,7 @@
       "classification": "repository-fact",
       "authority_domain": "research-and-knowledge-acquisition",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 4.2 Progressive automation rule\n\nThe platform is allowed to be imperfect while it develops.\n\nDay one must still deliver a usable product.\n\nNew automation and intelligence capabilities may be introduced progressively.\n\nEach new capability should be tested against the currently working production path.\n\nIf a new capability makes production unreliable, the platform should temporarily fall back to the previously proven production path while the new capability is repaired.\n",
       "planned_outcome": "Deliver or review 4.2 Progressive automation rule within the research-and-knowledge-acquisition boundary.",
       "acceptance_criteria": [
@@ -22737,7 +22737,7 @@
       "classification": "repository-fact",
       "authority_domain": "quality-assurance",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "candidate",
       "statement": "## 12. Automation boundaries\n\nAutomate checks when the result is repeatable and externally observable. Good candidates include URL availability, link integrity, metadata, schema syntax, accessibility signals, performance measurements, overflow detection, console errors, sitemap inclusion, and crawler responses.\n\nRetain human review for meaning, truthfulness, evidence context, art direction, visual hierarchy, motion purpose, recommendation integrity, and whether the page genuinely helps a decision.\n\nAutomated scores are evidence, not truth. A single aggregate score must never become a hidden release gate or replace the underlying observations.\n",
       "planned_outcome": "Deliver or review 12. Automation boundaries within the quality-assurance boundary.",
       "acceptance_criteria": [
@@ -22758,7 +22758,9 @@
           "hash": "89f141a188fdf2722366f32b9f2afe2d750804ace548c14b3aa1e813f1f607cb"
         }
       ],
-      "tasks": [],
+      "tasks": [
+        "P1-VERIFY-001"
+      ],
       "acceptance_ids": [
         "AC-C-D10-S-745a692f3a77"
       ]

@@ -981,6 +981,7 @@
         "R-C-D10-S-574481d73201",
         "R-C-D10-S-61fa8542796b",
         "R-C-D10-S-659ee8e5398d",
+        "R-C-D10-S-745a692f3a77",
         "R-C-D10-S-79e583ae7b2d",
         "R-C-D10-S-9aad1db4180d",
         "R-C-D10-S-b38e7c037606",
@@ -1182,9 +1183,9 @@
     "phase_one_receipt": "build-pack/receipts/phase-one-release.json",
     "planning_authority": "planning.md",
     "requirement_denominator": 799,
-    "executable_requirement_count": 399,
+    "executable_requirement_count": 400,
     "acceptance_denominator": 799,
     "baseline_commit": "956e3a830ea7c11ae4867635ff2edf8c5865c856",
-    "digest": "518ff6d9210627b936901a0307a29d6f3691002b5a8aa1cee45bd68c775d2625"
+    "digest": "3c1ef0d4ae92ef20e910ce6ace73c1085519b18a5f6b0a6586da5641bae82341"
   }
 }
