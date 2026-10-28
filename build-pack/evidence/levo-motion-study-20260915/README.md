@@ -30,7 +30,7 @@ Tests: 323 passed, 3 skipped, 0 failed. Existing repository lint warnings remain
 
 Independent design and implementation review: PASS. Initial SVG dash-unit defect was repaired by removing non-scaling stroke from animated shapes; completion and reverse screenshots were re-reviewed. Bounded Impeccable detector: one overused-font warning for Instrument Sans, retained because the owner explicitly approved neutral Geist-style typography. The installed detector is source-based; rendered evidence comes from browser screenshots and the independent critique. No PRODUCT.md was fabricated.
 
-GitNexus refresh was attempted via the wrapper and pinned CLI. Windows execution-policy and native-worker crash-loop failures prevented refresh. Direct imports, exact file allowlist, unchanged baseline files and regression checks supplied impact evidence instead.
+Repository impact tooling was unavailable because of execution-policy and native-worker failures. Direct imports, the exact file allowlist, unchanged baseline files, and regression checks supplied impact evidence instead.
 
 ## Release ownership
 

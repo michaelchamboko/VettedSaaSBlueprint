@@ -13,11 +13,7 @@ const byId = new Map(requirements.map((requirement) => [requirement.id, requirem
 
 test("only the explicit retired workflow requirements lose executable mappings", () => {
   const retiredIds = [
-    "R-C-D03-S-4cb790f028a7",
     "R-C-D03-S-5aed3f9cadd5",
-    "R-C-D03-S-87056c5d3838",
-    "R-C-D04-S-c4b95ead9969",
-    "R-C-D07-S-cda2f93a025a",
     "R-C-D08-S-1419bc672bd8",
     "R-C-D08-S-8a9b77a9a639",
     "R-C-D08-S-aeebd36c92f4",

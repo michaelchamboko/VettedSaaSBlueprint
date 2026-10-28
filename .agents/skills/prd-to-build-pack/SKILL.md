@@ -7,7 +7,7 @@ argument-hint: [PRD file path]
 Follow these steps to transform a confirmed Product Requirements Document (PRD) into a structured build pack:
 
 1. **Register Source Authority**: Inventory every approved PRD, product-truth document, blueprint, and explicit decision in `source_authority.approved_sources`. State the exact build intent, record contradictions, and resolve them with the operator.
-2. **Run Mandatory Grommet Review**: Use `reviewers/grommet.md` to compare the proposed build with the approved documents. GitNexus may supply dependency and impact evidence, but never requirements. Do not approve while any contradiction remains unresolved.
+2. **Run Mandatory Grommet Review**: Use `reviewers/grommet.md` to compare the proposed build with the approved documents. Neon repository intelligence may supply dependency and impact evidence, but never requirements. Do not approve while any contradiction remains unresolved.
 3. **Verify the PRD**: Read the confirmed PRD and run it through the checklist in `templates/prd/prd-review-checklist.md`.
 4. **Run Codebase Discovery**: Execute the `repo-discovery` skill to understand the existing technologies, architecture, deployment targets, and constraints.
 5. **Draft the Build Brief**: Create the build brief using `templates/build-requirements/build-brief-template.md`.

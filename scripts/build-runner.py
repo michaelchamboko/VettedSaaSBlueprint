@@ -25,9 +25,9 @@ REQUIRED_TIERS = {
     "medium": {"task", "affected"},
     "high": {"task", "affected", "full"},
 }
-GITNEXUS_STATUS_ARGV = ["node", ".gitnexus/run.cjs", "status"]
-GITNEXUS_SYNC_ARGV = ["node", ".gitnexus/run.cjs", "analyze", "--skip-agents-md", "--skip-skills"]
-GITNEXUS_VERSION = "1.6.10"
+REPOSITORY_INTELLIGENCE_STATUS_ARGV = ["npm", "run", "intelligence:sync"]
+REPOSITORY_INTELLIGENCE_SYNC_ARGV = ["npm", "run", "intelligence:sync:apply"]
+REPOSITORY_INTELLIGENCE_VERSION = "repository_intelligence_v1"
 JOURNAL_NAME = "execution-journal.jsonl"
 
 
@@ -256,9 +256,6 @@ def validate_contract(state: dict[str, Any], capabilities: dict[str, Any], root:
                     errors.append(f"{field} must be a non-empty repository-relative path")
                     continue
                 normalized = relative.replace("\\", "/")
-                if normalized == ".gitnexus" or normalized.startswith(".gitnexus/"):
-                    errors.append(f"{field} cannot use derived GitNexus data as product authority")
-                    continue
                 candidate = (root / relative).resolve()
                 try:
                     candidate.relative_to(root)
@@ -299,22 +296,19 @@ def validate_contract(state: dict[str, Any], capabilities: dict[str, Any], root:
     graph = capabilities.get("graph", {})
     if graph.get("required") is not True:
         errors.append("graph.required must be true")
-    if graph.get("provider") != "gitnexus":
-        errors.append("graph.provider must be gitnexus")
-    license_config = graph.get("license", {})
-    if license_config.get("spdx") != "PolyForm-Noncommercial-1.0.0":
-        errors.append("graph.license.spdx must record the GitNexus license")
-    if license_config.get("usage") != "noncommercial" or license_config.get("acknowledged") is not True:
-        errors.append("GitNexus use must be declared and acknowledged as noncommercial")
+    if graph.get("provider") != "neon-postgres":
+        errors.append("graph.provider must be neon-postgres")
+    if graph.get("schema") != REPOSITORY_INTELLIGENCE_VERSION:
+        errors.append(f"graph.schema must be {REPOSITORY_INTELLIGENCE_VERSION}")
     for field in ("status_argv", "sync_argv"):
         try:
             ensure_argv(graph.get(field), f"graph.{field}")
         except ContractError as exc:
             errors.append(str(exc))
-    if graph.get("status_argv") != GITNEXUS_STATUS_ARGV:
-        errors.append("graph.status_argv must use the repository-local GitNexus runner")
-    if graph.get("sync_argv") != GITNEXUS_SYNC_ARGV:
-        errors.append("graph.sync_argv must use the repository-local GitNexus runner")
+    if graph.get("status_argv") != REPOSITORY_INTELLIGENCE_STATUS_ARGV:
+        errors.append("graph.status_argv must build a deterministic repository snapshot")
+    if graph.get("sync_argv") != REPOSITORY_INTELLIGENCE_SYNC_ARGV:
+        errors.append("graph.sync_argv must apply the repository snapshot to Neon")
 
     tasks = state.get("tasks")
     if not isinstance(tasks, list) or not tasks:
@@ -488,16 +482,14 @@ def validate_v2_graph(capabilities: dict[str, Any]) -> dict[str, Any]:
         if "status_argv" in graph or "sync_argv" in graph:
             raise ContractError("disabled graph provider must not declare executable commands")
         return graph
-    if provider != "gitnexus" or graph.get("required") is not True:
-        raise ContractError("graph provider must be gitnexus or explicitly disabled")
-    if graph.get("version") != GITNEXUS_VERSION:
-        raise ContractError(f"GitNexus version must be pinned to {GITNEXUS_VERSION}")
-    if graph.get("license", {}).get("eligible") is not True:
-        raise ContractError("GitNexus license eligibility must be explicitly confirmed")
-    if graph.get("status_argv") != GITNEXUS_STATUS_ARGV:
-        raise ContractError("required graph provider gitnexus has an invalid status command")
+    if provider != "neon-postgres" or graph.get("required") is not True:
+        raise ContractError("graph provider must be neon-postgres or explicitly disabled")
+    if graph.get("schema") != REPOSITORY_INTELLIGENCE_VERSION:
+        raise ContractError(f"Neon repository intelligence schema must be {REPOSITORY_INTELLIGENCE_VERSION}")
+    if graph.get("status_argv") != REPOSITORY_INTELLIGENCE_STATUS_ARGV:
+        raise ContractError("required Neon graph provider has an invalid status command")
     if not isinstance(graph.get("sync_argv"), list) or not graph["sync_argv"]:
-        raise ContractError("required graph provider gitnexus has an invalid sync command")
+        raise ContractError("required Neon graph provider has an invalid sync command")
     return graph
 
 
@@ -505,16 +497,15 @@ def graph_status(root: Path, capabilities: dict[str, Any]) -> subprocess.Complet
     graph = validate_v2_graph(capabilities)
     if graph["provider"] == "disabled":
         return None
-    if graph.get("status_argv") != GITNEXUS_STATUS_ARGV:
-        raise ContractError("required graph provider gitnexus has an invalid status command")
-    argv = GITNEXUS_STATUS_ARGV
+    if graph.get("status_argv") != REPOSITORY_INTELLIGENCE_STATUS_ARGV:
+        raise ContractError("required Neon graph provider has an invalid status command")
+    argv = REPOSITORY_INTELLIGENCE_STATUS_ARGV
     result = run_argv(argv, root, timeout=int(graph.get("timeout_seconds", 900)))
-    fresh = re.search(
-        r"^\s*Status:\s*(?:✅\s*)?up[- ]to[- ]date\s*$",
-        result.stdout,
-        flags=re.IGNORECASE | re.MULTILINE,
-    )
-    if result.returncode != 0 or fresh is None:
+    try:
+        summary = json.loads(result.stdout.strip().splitlines()[-1])
+    except (IndexError, json.JSONDecodeError):
+        summary = {}
+    if result.returncode != 0 or summary.get("status") != "dry-run":
         raise ContractError(
             f"required graph provider {graph.get('provider')} is unavailable or stale: "
             f"{output_tail(result.stderr or result.stdout)}"
@@ -693,9 +684,9 @@ def command_graph_sync(
     if source_fingerprint(root) != verified_fingerprint:
         raise ContractError(f"task {task_id} source changed after verification; verify it again before graph-sync")
     graph = graph_config(capabilities)
-    if graph.get("sync_argv") != GITNEXUS_SYNC_ARGV:
-        raise ContractError("required graph provider gitnexus has an invalid sync command")
-    argv = GITNEXUS_SYNC_ARGV
+    if graph.get("sync_argv") != REPOSITORY_INTELLIGENCE_SYNC_ARGV:
+        raise ContractError("required Neon graph provider has an invalid sync command")
+    argv = REPOSITORY_INTELLIGENCE_SYNC_ARGV
     result = run_argv(argv, root, timeout=int(graph.get("timeout_seconds", 900)))
     if result.returncode != 0:
         raise ContractError(
@@ -746,7 +737,7 @@ def command_complete(
         task.pop("verified_source_fingerprint", None)
         write_json_atomic(state_path, state)
         raise ContractError(f"task {task_id} source changed after verification; verify it again")
-    # Completion owns the graph update so every done task has a fresh GitNexus receipt.
+    # Completion owns the graph update so every done task has a fresh Neon repository intelligence receipt.
     command_graph_sync(state, capabilities, state_path, root, task_id)
     task["status"] = "done"
     task["completed_at"] = now_utc()
@@ -812,7 +803,7 @@ def command_unblock(state: dict[str, Any], state_path: Path, task_id: str, resol
 V2_STATUSES = {"blocked", "ready", "in_progress", "verified", "integrated", "published", "done"}
 V2_ROOT_KEYS = {
     "schema_version", "mode", "capabilities_file", "source_manifest_file", "requirements_file",
-    "automation_authority", "tasks", "extensions",
+    "grommet_file", "automation_authority", "tasks", "extensions",
 }
 V2_TASK_KEYS = {
     "id", "title", "status", "dependencies", "risk", "risk_assessment", "source_changes",
@@ -946,7 +937,7 @@ def ensure_v2_fields(state: dict[str, Any], capabilities: dict[str, Any], root: 
             path.relative_to(root)
         except ValueError as exc:
             raise ContractError("source manifest path must stay inside the repository") from exc
-        if not path.is_file() or ".gitnexus" in path.parts:
+        if not path.is_file():
             raise ContractError(f"invalid product authority source: {relative}")
         for section in source.get("sections", []):
             if not isinstance(section, dict) or not isinstance(section.get("id"), str):
@@ -964,6 +955,19 @@ def ensure_v2_fields(state: dict[str, Any], capabilities: dict[str, Any], root: 
         if validate_v2_requirement_sources(requirement, source_authorities):
             deferred_requirement_ids.add(requirement["id"])
     validate_v2_graph(capabilities)
+    grommet_relative = state.get("grommet_file")
+    if not isinstance(grommet_relative, str) or not grommet_relative:
+        raise ContractError("grommet_file must be a repository-relative path")
+    grommet_path = (root / grommet_relative).resolve()
+    try:
+        grommet_path.relative_to(root)
+    except ValueError as exc:
+        raise ContractError("grommet_file must resolve inside the repository") from exc
+    grommet = read_json(grommet_path)
+    if grommet.get("status") != "approved":
+        raise ContractError("Grommet approval is required before execution")
+    if grommet.get("candidate_digest") != v2_digest(root, state, manifest, requirements):
+        raise ContractError("Grommet approval does not match the current candidate digest")
     for task in state.get("tasks", []):
         if not isinstance(task, dict):
             raise ContractError("tasks must be objects")
@@ -1136,7 +1140,7 @@ def v2_integrate(state: dict[str, Any], capabilities: dict[str, Any], root: Path
     run_git(["merge", "--no-ff", "--no-edit", task["workspace"]["branch"]], integration)
     result = graph_sync(integration, capabilities)
     if result is not None and result.returncode != 0:
-        raise ContractError(f"GitNexus sync failed after integration: {output_tail(result.stderr or result.stdout)}")
+        raise ContractError(f"Neon repository intelligence sync failed after integration: {output_tail(result.stderr or result.stdout)}")
     task.update({"status": "integrated", "integrated_at": now_utc(), "integration_commit": run_git(["rev-parse", "HEAD"], integration), "operation_phase": "verified"})
     write_json_atomic(state_path, state)
     append_journal(root, operation, "committed", {"integration_commit": task["integration_commit"]})
@@ -1319,7 +1323,9 @@ def command_migrate(root: Path, state_path: Path, apply: bool) -> dict[str, Any]
     migrated_caps = dict(capabilities)
     migrated_caps["schema_version"] = 2
     graph = dict(migrated_caps.get("graph", {}))
-    graph.update({"version": GITNEXUS_VERSION, "repository_alias": root.name, "branch": "globalsetup/integration", "license": {"spdx": "PolyForm-Noncommercial-1.0.0", "eligible": True}, "sync_argv": ["gitnexus", "analyze", "--index-only", "--skip-agents-md", "--skip-skills", "--name", root.name, "--branch", "globalsetup/integration"]})
+    graph.update({"required": True, "provider": "neon-postgres", "schema": REPOSITORY_INTELLIGENCE_VERSION, "status_argv": REPOSITORY_INTELLIGENCE_STATUS_ARGV, "sync_argv": REPOSITORY_INTELLIGENCE_SYNC_ARGV, "timeout_seconds": 900})
+    for obsolete in ("version", "repository_alias", "branch", "license"):
+        graph.pop(obsolete, None)
     migrated_caps["graph"] = graph
     migrated_caps["workspace"] = {"integration_branch": "globalsetup/integration", "serial": True}
     grommet = {"schema_version": 1, "status": "pending", "operator": "", "approved_at": "", "contradictions": state["source_authority"].get("contradictions", []), "candidate_digest": v2_digest(root, migrated, manifest, requirements)}
@@ -1348,10 +1354,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("next", help="Return the active or next dependency-ready task and its context files")
     subparsers.add_parser("status", help="Return the complete durable execution state")
     for name, help_text in (
-        ("start", "Claim one ready task after the GitNexus preflight"),
+        ("start", "Claim one ready task after the Neon repository intelligence preflight"),
         ("verify", "Run required local commands and consume recorded external receipts"),
-        ("complete", "Refresh GitNexus and complete a verified task"),
-        ("graph-sync", "Refresh GitNexus for a verified task without completing it"),
+        ("complete", "Refresh Neon repository intelligence and complete a verified task"),
+        ("graph-sync", "Refresh Neon repository intelligence for a verified task without completing it"),
     ):
         command = subparsers.add_parser(name, help=help_text, description=help_text)
         command.add_argument("task_id", help="Approved task identifier")

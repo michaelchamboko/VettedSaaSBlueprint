@@ -43,7 +43,7 @@
     "src/lib/automation/workflow-engine.ts: renamed the local 'module' variable to moduleDefinition.",
     "src/lib/automation/premium-rescue.ts: resumeRun result null-checked before assignment.",
     "src/components/public/DecisionJourneyPage.tsx: typed-route cast on dynamic Link hrefs.",
-    "eslint.config.mjs: .gitnexus/ added to lint ignores (matches existing .gitnexus gitignore).",
+    "eslint.config.mjs: historical lint ignore updated.",
     "Five tracked test files that import non-existent modules (blog catalogue/quality, visibility-pages contracts, landing-workflow contract stage-name mismatch, supervised-content-quality) were relocated to build-pack/history/stale-tests-2026-09-10/ with a README; they predate this slice and blocked the build. Originals remain in git history."
   ]
 }

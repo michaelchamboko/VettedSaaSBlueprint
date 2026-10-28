@@ -46579,7 +46579,7 @@
         "UD-001",
         "C-D08-S-01d4ffda4a5e"
       ],
-      "rationale": "The foundation phase keeps GitNexus subordinate to direct source authority.",
+      "rationale": "The foundation keeps persisted repository relationships subordinate to direct source authority.",
       "affected_documents": [
         "D08"
       ]
@@ -46645,7 +46645,7 @@
         "UD-004",
         "C-D08-S-01d4ffda4a5e"
       ],
-      "rationale": "No-commit scope limits GitNexus commit-delta analysis but not direct-source mapping.",
+      "rationale": "The historical no-commit scope did not prevent direct-source mapping; current snapshots bind an actual commit.",
       "affected_documents": [
         "D08"
       ]
@@ -48624,8 +48624,8 @@
     {
       "id": "F-009",
       "classification": "user-directive-plus-tool-observation",
-      "summary": "No baseline commit means GitNexus commit-delta analysis remains unavailable.",
-      "status": "mitigated-by-stable-uid-impact"
+      "summary": "Historical no-commit analysis is superseded by commit-bound repository snapshots.",
+      "status": "resolved-by-commit-bound-snapshot"
     },
     {
       "id": "F-010",

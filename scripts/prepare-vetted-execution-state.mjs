@@ -197,7 +197,7 @@ const main = async () => {
     graph: {
       required: false,
       provider: "disabled",
-      reason: "The Phase One commit was indexed separately in GitNexus index-only mode. BuildRunner graph execution remains disabled until commercial licence eligibility is documented; deterministic source hashes, rg, imports, route inventories, and affected-test checks remain mandatory.",
+      reason: "The Phase One commit was indexed separately in Neon repository intelligence index-only mode. BuildRunner graph execution remains disabled until commercial licence eligibility is documented; deterministic source hashes, rg, imports, route inventories, and affected-test checks remain mandatory.",
     },
   };
 

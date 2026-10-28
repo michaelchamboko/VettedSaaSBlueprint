@@ -2,17 +2,18 @@
 alwaysApply: false
 ---
 
-# GitNexus and BuildRunner Integration Rules
+# Neon repository intelligence and BuildRunner integration rules
 
-## GitNexus is required
+## Neon repository intelligence is required
 
-- The declared provider in `build-pack/capabilities.json` must be `gitnexus` with acknowledged noncommercial use.
-- Run `gitnexus status` before starting a task. Re-index if the index is absent or stale.
-- Use graph query/context for unfamiliar flows and impact analysis before editing an existing symbol or interface.
-- Run change detection before commit when supported. Every `complete` call must update GitNexus and record a fresh receipt; completion fails closed if the update fails.
-- Never invent graph results or silently fall back to text search when GitNexus is unavailable.
+- The declared provider in `build-pack/capabilities.json` must be `neon-postgres` with schema `repository_intelligence_v1`.
+- Run `npm run intelligence:sync` before impact-sensitive work. This produces a deterministic dry-run snapshot without changing the database.
+- Apply a snapshot only with an explicit database connection through `npm run intelligence:sync:apply`.
+- Query an applied snapshot with `npm run intelligence:impact -- --snapshot <sha256> --node <id> --depth <0-8>` and inspect every returned source directly.
+- Before commit, rebuild the snapshot and record its commit, source-manifest digest, graph digest, node count, and edge count.
+- Never invent database results. If Neon is unavailable, record the limitation and use the deterministic local snapshot, `rg`, imports, route inventories, and affected tests.
 
-Text search remains appropriate for exact strings and filenames after the relevant graph context is known.
+Database relationships are navigation evidence, not semantic authority. Text search remains appropriate for exact strings and filenames.
 
 ## BuildRunner is authoritative
 

@@ -21,7 +21,7 @@ Registered page type home, existing production dials variance6 / motion5 / densi
 
 All six release gates passed: lint, tests, typecheck, production build, public-site validation and design-standard verification. Existing warnings/skips retained in check receipts. Browser checks verify unchanged homepage text, exact header HTML and sitemap, keyboard dropdown, forward/midpoint/completed/reversed text movement, full opacity, responsive resize, short landscape and complete static fallbacks. Production checks repeat these against the live domain and verify existing buyer journeys and navigation. See production screenshots and JSON proofs.
 
-Independent code/design review: PASS. Bounded Impeccable source detector and rendered screenshots reviewed; findings retained in impeccable.json. No PRODUCT.md fabricated. GitNexus refresh remained unavailable after the prior wrapper policy/native-worker failures; direct import and three-file diff inspection supplied impact evidence for this scoped component change.
+Independent code/design review: PASS. Bounded Impeccable source detector and rendered screenshots reviewed; findings retained in impeccable.json. No PRODUCT.md fabricated. Repository impact tooling was unavailable at the time; direct import and three-file diff inspection supplied impact evidence for this scoped component change.
 
 ## Ownership and review
 

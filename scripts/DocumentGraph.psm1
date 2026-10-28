@@ -449,98 +449,6 @@ function New-CanonicalGraph {
     }
 }
 
-function New-GitNexusBridge {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]$Graph,
-        [Parameter(Mandatory)][string]$OutputRoot
-    )
-
-    $nodesRoot = Join-Path $OutputRoot 'nodes'
-    $relationshipsRoot = Join-Path $OutputRoot 'relationships'
-    [void](New-Item -ItemType Directory -Path $nodesRoot -Force)
-    [void](New-Item -ItemType Directory -Path $relationshipsRoot -Force)
-
-    foreach ($document in @($Graph.documents)) {
-        $nodeLines = [System.Collections.Generic.List[string]]::new()
-        $nodeLines.Add('// GENERATED - DO NOT EDIT. Canonical source: DOCUMENT_GRAPH.json')
-        $nodeLines.Add('')
-        foreach ($section in @($Graph.sections | Where-Object document_id -eq $document.id)) {
-            $name = ConvertTo-JavaScriptIdentifier "section_$($section.stable_uid)"
-            $value = ConvertTo-Json -Compress -InputObject ([string]$section.stable_uid)
-            $nodeLines.Add("export function $name() { return $value; }")
-        }
-        foreach ($claim in @($Graph.claims | Where-Object document_id -eq $document.id)) {
-            $name = ConvertTo-JavaScriptIdentifier "claim_$($claim.id)"
-            $value = ConvertTo-Json -Compress -InputObject ([string]$claim.id)
-            $nodeLines.Add("export function $name() { return $value; }")
-        }
-        [System.IO.File]::WriteAllLines((Join-Path $nodesRoot "$($document.id).mjs"), $nodeLines, [System.Text.UTF8Encoding]::new($false))
-    }
-
-    if (@($Graph.directives).Count -gt 0) {
-        $directiveLines = [System.Collections.Generic.List[string]]::new()
-        $directiveLines.Add('// GENERATED - DO NOT EDIT. Canonical source: DOCUMENT_GRAPH.json')
-        $directiveLines.Add('')
-        foreach ($directive in @($Graph.directives)) {
-            $name = ConvertTo-JavaScriptIdentifier "directive_$($directive.id)"
-            $value = ConvertTo-Json -Compress -InputObject ([string]$directive.id)
-            $directiveLines.Add("export function $name() { return $value; }")
-        }
-        [System.IO.File]::WriteAllLines((Join-Path $nodesRoot 'UD.mjs'), $directiveLines, [System.Text.UTF8Encoding]::new($false))
-    }
-
-    $claimLookup = @{}
-    foreach ($claim in @($Graph.claims)) { $claimLookup[$claim.id] = $claim.document_id }
-    $sectionLookup = @{}
-    foreach ($section in @($Graph.sections)) { $sectionLookup[$section.stable_uid] = $section.document_id }
-    $directiveLookup = @{}
-    foreach ($directive in @($Graph.directives)) { $directiveLookup[$directive.id] = 'UD' }
-
-    $originGroups = @($Graph.documents | ForEach-Object { [string]$_.id })
-    if (@($Graph.directives).Count -gt 0) { $originGroups += 'UD' }
-    foreach ($originId in $originGroups) {
-        $edges = @($Graph.relationships | Where-Object {
-            $fromDocument = if ($claimLookup.ContainsKey([string]$_.from)) { $claimLookup[[string]$_.from] } elseif ($sectionLookup.ContainsKey([string]$_.from)) { $sectionLookup[[string]$_.from] } else { $directiveLookup[[string]$_.from] }
-            $fromDocument -eq $originId
-        })
-        if ($edges.Count -eq 0) { continue }
-        $relationLines = [System.Collections.Generic.List[string]]::new()
-        $relationLines.Add('// GENERATED - DO NOT EDIT. Canonical source: DOCUMENT_GRAPH.json')
-        $relationLines.Add('')
-        $imports = @{}
-        foreach ($edge in $edges) {
-            foreach ($endpoint in @($edge.from, $edge.to)) {
-                $endpointDoc = if ($claimLookup.ContainsKey($endpoint)) { $claimLookup[$endpoint] } elseif ($sectionLookup.ContainsKey($endpoint)) { $sectionLookup[$endpoint] } else { $directiveLookup[$endpoint] }
-                $prefix = if ($endpoint -match '^C-') { 'claim' } elseif ($endpoint -match '^UD-') { 'directive' } else { 'section' }
-                $symbol = ConvertTo-JavaScriptIdentifier "${prefix}_$endpoint"
-                if (-not $imports.ContainsKey($endpointDoc)) { $imports[$endpointDoc] = [System.Collections.Generic.List[string]]::new() }
-                if (-not $imports[$endpointDoc].Contains($symbol)) { $imports[$endpointDoc].Add($symbol) }
-            }
-        }
-        foreach ($endpointDoc in @($imports.Keys | Sort-Object)) {
-            $symbols = @($imports[$endpointDoc] | Sort-Object) -join ', '
-            $relationLines.Add("import { $symbols } from '../nodes/$endpointDoc.mjs';")
-        }
-        $relationLines.Add('')
-        foreach ($edge in $edges) {
-            $fromPrefix = if ($edge.from -match '^C-') { 'claim' } elseif ($edge.from -match '^UD-') { 'directive' } else { 'section' }
-            $toPrefix = if ($edge.to -match '^C-') { 'claim' } elseif ($edge.to -match '^UD-') { 'directive' } else { 'section' }
-            $fromSymbol = ConvertTo-JavaScriptIdentifier "${fromPrefix}_$($edge.from)"
-            $toSymbol = ConvertTo-JavaScriptIdentifier "${toPrefix}_$($edge.to)"
-            $relationName = ConvertTo-JavaScriptIdentifier "relation_$($edge.id)"
-            $idLiteral = ConvertTo-Json -Compress -InputObject ([string]$edge.id)
-            $typeLiteral = ConvertTo-Json -Compress -InputObject ([string]$edge.type)
-            $classificationLiteral = ConvertTo-Json -Compress -InputObject ([string]$edge.classification)
-            $resolutionLiteral = ConvertTo-Json -Compress -InputObject ([string]$edge.resolution_state)
-            $relationLines.Add("export function $relationName() {")
-            $relationLines.Add("  return { id: $idLiteral, type: $typeLiteral, classification: $classificationLiteral, resolutionState: $resolutionLiteral, from: $fromSymbol(), to: $toSymbol() };")
-            $relationLines.Add('}')
-        }
-        [System.IO.File]::WriteAllLines((Join-Path $relationshipsRoot "$originId.mjs"), $relationLines, [System.Text.UTF8Encoding]::new($false))
-    }
-}
-
 function Get-GraphImpact {
     [CmdletBinding()]
     param(
@@ -570,4 +478,4 @@ function Get-GraphImpact {
     }
 }
 
-Export-ModuleMember -Function Get-NormalizedFileSha256, Get-RepositoryLifecycleState, Get-DocumentSections, Get-RelationshipCandidates, New-CanonicalGraph, Test-CanonicalGraph, New-GitNexusBridge, Get-GraphImpact
+Export-ModuleMember -Function Get-NormalizedFileSha256, Get-RepositoryLifecycleState, Get-DocumentSections, Get-RelationshipCandidates, New-CanonicalGraph, Test-CanonicalGraph, Get-GraphImpact

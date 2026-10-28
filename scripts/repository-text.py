@@ -12,7 +12,7 @@ from pathlib import Path
 
 TEXT_SUFFIXES = {".json", ".md", ".mdc", ".py", ".ps1", ".sh", ".toml", ".yaml", ".yml"}
 REFERENCE_SUFFIXES = {".json", ".md", ".mdc", ".py", ".ps1", ".sh"}
-IGNORED_PARTS = {".git", ".gitnexus", ".globalsetup-backups", "node_modules", "__pycache__"}
+IGNORED_PARTS = {".git", ".globalsetup-backups", "node_modules", "__pycache__"}
 MOJIBAKE_MARKERS = tuple(
     "".join(chr(codepoint) for codepoint in codepoints)
     for codepoints in (

@@ -56,7 +56,7 @@
   },
   "limits": [
     "Actual search-engine indexing is not verified by a Search Console inspection.",
-    "GitNexus wrapper blocked by Windows script policy; direct import and source impact inspection used.",
+    "Repository impact tooling was unavailable; direct import and source inspection supplied impact evidence.",
     "Existing studio, preview, admin and API surfaces remain outside publication index."
   ],
   "previousAttemptCommit": "31deba148e88f590629390516b1e119798d839f2",

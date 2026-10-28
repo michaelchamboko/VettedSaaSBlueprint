@@ -38,7 +38,7 @@ These are publication destinations only until the Grommet approves the migration
 4. Give every requirement a permanent ID and cite its exact source document, stable section locator, heading, and normalized hash.
 5. Preserve unresolved contradictions until the operator records a decision.
 6. When a source section changes, invalidate only the directly and transitively connected requirements, tasks, approvals, and evidence.
-7. GitNexus may describe structure, dependencies, and impact. It may not create, reinterpret, rank, approve, or resolve product requirements.
+7. Neon repository intelligence may describe structure, dependencies, and impact. It may not create, reinterpret, rank, approve, or resolve product requirements.
 
 ## How GlobalSetup Must Be Applied
 
@@ -72,10 +72,10 @@ Before mutating this repository:
 
 1. Verify repository identity, branch state, worktrees, remotes, and untracked files.
 2. Record that the repository currently has no established publication baseline if that remains true.
-3. Validate Git, Python, Node, npm, GlobalSetup, and GitNexus prerequisites.
+3. Validate Git, Python, Node, npm, GlobalSetup, and Neon repository intelligence prerequisites.
 4. Verify the exact released GlobalSetup version and source provenance.
-5. Determine whether GitNexus licensing lawfully permits use for this commercial project. Do not acknowledge eligibility without evidence.
-6. If GitNexus eligibility is unresolved, allow source intake and Grommet review only. Block implementation, integration, publication, and deployment.
+5. Determine whether Neon repository intelligence licensing lawfully permits use for this commercial project. Do not acknowledge eligibility without evidence.
+6. If Neon repository intelligence eligibility is unresolved, allow source intake and Grommet review only. Block implementation, integration, publication, and deployment.
 7. Produce a dry-run installation plan and list every file that would be created, replaced, or preserved.
 
 Completion requires repository evidence, prerequisite results, the GlobalSetup version, a license decision, and a reviewed mutation plan.
@@ -98,7 +98,7 @@ At minimum, surface these known review areas:
 - Motion and reduced-motion requirements
 - Research, editorial, and autonomous-publication authority
 - Existing hosted workflows versus GlobalSetup's local execution policy
-- GitNexus commercial-license eligibility
+- Neon repository intelligence commercial-license eligibility
 - Reconciliation of this repository with the existing GitHub default branch
 
 ## Phase 2: Mandatory Grommet
@@ -145,7 +145,7 @@ For each slice:
 7. Use a distinct verifier.
 8. Commit the verified task before integration.
 9. Integrate into the managed integration worktree.
-10. Refresh GitNexus, recompute impact, and rerun integrated checks.
+10. Refresh Neon repository intelligence, recompute impact, and rerun integrated checks.
 11. Advance the baseline only after all gates pass.
 
 ## Phase 4: GitHub And Vercel Migration
@@ -171,7 +171,7 @@ Production verification must cover Git provenance, critical routes, content trac
 ## Non-Negotiable Protections
 
 - Never use the noisy local VettedSaaSBlueprint checkout as implementation context.
-- Never infer product requirements from GlobalSetup templates or GitNexus output.
+- Never infer product requirements from GlobalSetup templates or Neon repository intelligence output.
 - Never infer approval from the presence of a document.
 - Never expose credentials or place secret values in contracts or receipts.
 - Never execute approved argument arrays through a shell.

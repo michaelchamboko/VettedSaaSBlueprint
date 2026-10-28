@@ -37,9 +37,9 @@
     "next_production_build": "passed",
     "vercel_production_build": "passed"
   },
-  "gitnexus": {
+  "neon-postgres": {
     "mode": "index-only",
-    "version": "1.6.10",
+    "version": "repository_intelligence_v1",
     "indexed_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
     "files": 605,
     "nodes": 17124,

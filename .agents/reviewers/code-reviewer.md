@@ -10,7 +10,7 @@ Review changes for logic correctness, maintainability, clean code patterns, test
 - [ ] **Net score recorded**: Append `net: -N lines possible` (or `Lean already. Ship.`) to the review report.
 
 ### Code Quality
-- [ ] **Dependency Impact**: Confirm that GitNexus impact and change analysis covers the modified symbols and flows.
+- [ ] **Dependency Impact**: Confirm that Neon repository intelligence impact and change analysis covers the modified symbols and flows.
 - [ ] **Governance Check**: Verify that the code conforms to the active task and approved build-pack contracts.
 - [ ] **Readability**: Code is easy to understand. Variable and function names are self-descriptive.
 - [ ] **DRY (Don't Repeat Yourself)**: No duplicate code blocks. Reuse existing functions and classes.

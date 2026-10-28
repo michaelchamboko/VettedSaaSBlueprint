@@ -2,14 +2,14 @@
 
 ## Outcome
 
-The generic GlobalSetup runtime is installed only in this repository. Product meaning remains in repository-local sources and contracts. GitNexus is disabled; feature work, migration, publication, and deployment remain blocked pending the unresolved Grommet rows.
+The generic GlobalSetup runtime is installed only in this repository. Product meaning remains in repository-local sources and contracts. Neon repository intelligence is disabled; feature work, migration, publication, and deployment remain blocked pending the unresolved Grommet rows.
 
 ## Evidence
 
 - Repository publication baseline: `absent`.
-- Source inventory: 12 sources and 1424 headings; digest `0ff15ab1723ae38f53e9f97a09519f765ebf0a930bd0089ef140a212ec03f0ac`.
+- Source inventory: 12 sources and 1424 headings; digest `fa4d058c60c874aa412936248e7298539d946988bb2023ee47a79a2943568d53`.
 - GlobalSetup candidate: `7bc03227e78a838c19f8a28d082b1d46e7e2f288`; release status `unreleased-main`; upstream tests `46 passed in 195.444s`.
-- GitNexus: `1.6.10`, `PolyForm-Noncommercial-1.0.0`, eligible=`false`.
+- Neon repository intelligence: schema `repository_intelligence_v1`, service basis `managed-neon-service`, eligible=`true`.
 - GitHub rollback baseline: `956e3a830ea7c11ae4867635ff2edf8c5865c856`.
 - Vercel rollback baseline: `dpl_E6HTSnuzu8BK4qCnjJZoZ8xPQH3Q` at `https://vetted-saa-s-blueprint-fszaa5ej7-michaelchamboko-gravityclaw.vercel.app`.
 
@@ -52,8 +52,8 @@ The generic GlobalSetup runtime is installed only in this repository. Product me
 
 ## Files preserved
 
-- `AGENTS.md`, all strategy documents under `docs/`, all existing document-intelligence scripts and artifacts, `.gitnexusrc`, and every external checkout.
-- No `.gitnexus/`, dependency, commit, remote, or deployment state is created or changed.
+- `AGENTS.md`, all strategy documents under `docs/`, all existing document-intelligence scripts and artifacts, production database state, and every external checkout.
+- No database schema or data, dependency, commit, remote, or deployment state is created or changed.
 
 ## Rollback
 

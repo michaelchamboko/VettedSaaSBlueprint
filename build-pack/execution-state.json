@@ -4,6 +4,7 @@
   "capabilities_file": "build-pack/capabilities.json",
   "source_manifest_file": "build-pack/source-manifest.json",
   "requirements_file": "build-pack/requirements.json",
+  "grommet_file": "build-pack/grommet-approval.json",
   "automation_authority": {
     "publication": {
       "enabled": false,
@@ -13,20 +14,22 @@
   },
   "tasks": [
     {
-      "id": "P1-PLAN-001",
-      "title": "Phase One authority and traceability",
-      "status": "done",
+      "id": "SLC-001",
+      "title": "Repository provenance and strategy contracts",
+      "status": "blocked",
       "dependencies": [],
       "risk": "medium",
       "risk_assessment": {
         "blast_radius": 1,
-        "reversibility": 1,
+        "reversibility": 0,
         "authority": 1,
         "sensitive_data": 0,
-        "external_impact": 0
+        "external_impact": 1
       },
-      "source_changes": true,
+      "source_changes": false,
       "requirement_ids": [
+        "R-C-D06-S-068fac7d8a4a",
+        "R-C-D06-S-09046b280098",
         "R-C-D06-S-0b7f522f60c6",
         "R-C-D06-S-0cb26574ee9e",
         "R-C-D06-S-10bee053bbb7",
@@ -120,153 +123,80 @@
         "R-C-D06-S-fa5ae1baf450",
         "R-C-D06-S-fcd9e9a95550",
         "R-UD-001",
-        "R-UD-004"
+        "R-UD-002",
+        "R-UD-004",
+        "R-UD-005",
+        "R-UD-006",
+        "R-UD-007",
+        "R-UD-008"
       ],
       "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
+        "GLOBALSETUP_APPLICATION_INSTRUCTION.md",
+        "docs/document-intelligence/SOURCE_MANIFEST.json",
+        "docs/document-intelligence/DOCUMENT_GRAPH.json",
+        "docs/Vetted-SaaS-Blueprint-06-Agent-Technology-and-Implementation-Standards.md"
       ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 2253065
+      },
+      "context_packet": {
+        "window_tokens": 2253065,
+        "initial_tokens": 901226,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
       "validation": [
         {
-          "name": "task checks",
+          "name": "focused document-intelligence tests",
           "tier": "task",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
         },
         {
-          "name": "affected checks",
+          "name": "affected source-intelligence verification",
           "tier": "affected",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
         }
       ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "One planning authority and the 799 requirement / 799 acceptance denominators validate."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "spark-ready-after-gate",
-        "verifier": "standard",
-        "escalation": "none"
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": false,
+        "reviewer_must_be_distinct": true
       },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
       },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z"
+      "extensions": {
+        "vertical_slice": true
+      }
     },
     {
-      "id": "RCV-002R",
-      "title": "Recovered baseline and active-test reconciliation",
-      "status": "done",
+      "id": "SLC-002",
+      "title": "Approved document harmonisation",
+      "status": "blocked",
       "dependencies": [
-        "P1-PLAN-001"
-      ],
-      "risk": "medium",
-      "risk_assessment": {
-        "blast_radius": 1,
-        "reversibility": 1,
-        "authority": 1,
-        "sensitive_data": 0,
-        "external_impact": 0
-      },
-      "source_changes": true,
-      "requirement_ids": [
-        "R-C-D06-S-068fac7d8a4a"
-      ],
-      "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
-      ],
-      "validation": [
-        {
-          "name": "task checks",
-          "tier": "task",
-          "kind": "command",
-          "location": "local",
-          "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
-        },
-        {
-          "name": "affected checks",
-          "tier": "affected",
-          "kind": "command",
-          "location": "local",
-          "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
-        }
-      ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "Immutable baseline manifest and active-test reconciliation are present."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "spark-ready-after-gate",
-        "verifier": "standard",
-        "escalation": "none"
-      },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
-      },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z"
-    },
-    {
-      "id": "RCV-004",
-      "title": "Reproducible toolchain and release gate",
-      "status": "done",
-      "dependencies": [
-        "RCV-002R"
+        "SLC-001"
       ],
       "risk": "high",
       "risk_assessment": {
@@ -274,108 +204,405 @@
         "reversibility": 1,
         "authority": 2,
         "sensitive_data": 0,
-        "external_impact": 2
+        "external_impact": 0
       },
       "source_changes": true,
       "requirement_ids": [
-        "R-C-D06-S-09046b280098"
+        "R-UD-001",
+        "R-UD-002",
+        "R-UD-004"
       ],
       "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
+        "docs/document-intelligence/FINDINGS_AND_CONFLICTS.md",
+        "docs/document-intelligence/RELATIONSHIP_MAP.md",
+        "docs/document-intelligence/DOCUMENT_GRAPH.json"
       ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 1487105
+      },
+      "context_packet": {
+        "window_tokens": 1487105,
+        "initial_tokens": 594842,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
       "validation": [
         {
-          "name": "task checks",
+          "name": "focused document-intelligence tests",
           "tier": "task",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
         },
         {
-          "name": "affected checks",
+          "name": "affected source-intelligence verification",
           "tier": "affected",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
         },
         {
-          "name": "full checks",
+          "name": "full GlobalSetup intake determinism check",
           "tier": "full",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "test"
-          ],
-          "timeout_seconds": 900
+            "python",
+            "scripts/generate-globalsetup-intake.py",
+            "--check-from-provenance"
+          ]
         }
       ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "Pinned npm 12 toolchain, zero-vulnerability audit, lint, typecheck, tests, validator, and build pass."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "standard",
-        "verifier": "standard",
-        "escalation": "operator"
-      },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
-      },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z",
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
       "review": {
-        "status": "passed",
-        "reviewer": "independent production verifier",
-        "summary": "Vercel readiness, custom-domain HTTP, browser modes, and repository gates passed.",
-        "receipt": "build-pack/receipts/phase-one-release.json",
-        "commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-        "reviewed_at": "2026-09-01T12:11:52.4007610Z"
+        "status": "pending",
+        "required": true,
+        "reviewer_must_be_distinct": true
+      },
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
+      },
+      "extensions": {
+        "vertical_slice": true
       }
     },
     {
-      "id": "P1-CONTENT-001",
-      "title": "Source-bound decision journey catalogue",
-      "status": "done",
+      "id": "SLC-003",
+      "title": "Content domain model and evidence architecture",
+      "status": "blocked",
       "dependencies": [
-        "RCV-004"
+        "SLC-002"
       ],
       "risk": "medium",
       "risk_assessment": {
         "blast_radius": 1,
         "reversibility": 1,
         "authority": 1,
-        "sensitive_data": 0,
+        "sensitive_data": 1,
         "external_impact": 0
       },
-      "source_changes": true,
+      "source_changes": false,
       "requirement_ids": [
+        "R-C-D01-S-0403b64da931",
+        "R-C-D01-S-065351a4fc18",
+        "R-C-D01-S-07051ecaa129",
+        "R-C-D01-S-0a7372c951e0",
+        "R-C-D01-S-110cd299ff09",
+        "R-C-D01-S-132cc4b30610",
+        "R-C-D01-S-16ec20be230d",
+        "R-C-D01-S-1b03f16605b0",
+        "R-C-D01-S-220619e18b58",
+        "R-C-D01-S-23bed128531b",
+        "R-C-D01-S-2a7ba1dff5bc",
+        "R-C-D01-S-2d96691de7bb",
+        "R-C-D01-S-2d96e24cd933",
+        "R-C-D01-S-300e3c563017",
+        "R-C-D01-S-33833a7e297f",
+        "R-C-D01-S-4155ab9ba6e3",
+        "R-C-D01-S-41adb5812148",
+        "R-C-D01-S-463b9cadb9fe",
+        "R-C-D01-S-4905a7b7127d",
+        "R-C-D01-S-4af9172d65c5",
+        "R-C-D01-S-4e70e673e3a3",
+        "R-C-D01-S-53465bf49238",
+        "R-C-D01-S-5fd369fea767",
+        "R-C-D01-S-6359d0adda59",
+        "R-C-D01-S-65b340d1876b",
+        "R-C-D01-S-71b55266e034",
+        "R-C-D01-S-72ad479ce03c",
+        "R-C-D01-S-7d19567a803b",
+        "R-C-D01-S-7e7756c6257a",
+        "R-C-D01-S-84d7c5b42335",
+        "R-C-D01-S-8c1b642fc5c6",
+        "R-C-D01-S-8d077f7680e1",
+        "R-C-D01-S-8f9ac6c18133",
+        "R-C-D01-S-928ff10dfa22",
+        "R-C-D01-S-9305c491bd4d",
+        "R-C-D01-S-96710293da27",
+        "R-C-D01-S-9e8b9d874f25",
+        "R-C-D01-S-a3c787e65ca1",
+        "R-C-D01-S-ab261d65fd41",
+        "R-C-D01-S-b6f7f1c0bc93",
+        "R-C-D01-S-b77597f4cc93",
+        "R-C-D01-S-ba45fe589675",
+        "R-C-D01-S-bf2619b36fe8",
+        "R-C-D01-S-c7b2a5fe3f65",
+        "R-C-D01-S-cc46d0766a4b",
+        "R-C-D01-S-e42e747aa0b8",
+        "R-C-D01-S-e95f71de2095",
+        "R-C-D01-S-eed8f3b858fe",
+        "R-C-D01-S-f3ad3fd4087f",
+        "R-C-D03-S-00e3d2058753",
+        "R-C-D03-S-02e75383e031",
+        "R-C-D03-S-062d46d3b5ea",
+        "R-C-D03-S-07039d9d509e",
+        "R-C-D03-S-09bc868d9534",
+        "R-C-D03-S-0bee80f1297b",
+        "R-C-D03-S-0d00b1a97035",
+        "R-C-D03-S-0dfba4e2eba9",
+        "R-C-D03-S-10d7b1a21529",
+        "R-C-D03-S-121df8f4c04b",
+        "R-C-D03-S-146bf02a9b34",
+        "R-C-D03-S-1482b8b9556f",
+        "R-C-D03-S-14cb5e08c0f8",
+        "R-C-D03-S-1591bfbb4a5d",
+        "R-C-D03-S-19556098c7fa",
+        "R-C-D03-S-1a9c746e5791",
+        "R-C-D03-S-1aa2954f80c6",
+        "R-C-D03-S-1d00f2519242",
+        "R-C-D03-S-2181e80969ad",
+        "R-C-D03-S-233a1f3697dd",
+        "R-C-D03-S-25e0ee293d19",
+        "R-C-D03-S-25e45ad6a2b9",
+        "R-C-D03-S-2606549a8476",
+        "R-C-D03-S-2893f1a4bd69",
+        "R-C-D03-S-289c34ddbcf4",
+        "R-C-D03-S-29a6f4ef102e",
+        "R-C-D03-S-2b1521d7cd59",
+        "R-C-D03-S-2e89d9a102da",
+        "R-C-D03-S-3517fe76d8b6",
+        "R-C-D03-S-39e729aad99b",
+        "R-C-D03-S-3c4bea822637",
+        "R-C-D03-S-3c922b544d30",
+        "R-C-D03-S-3e6a0e1355fd",
+        "R-C-D03-S-3f0b3fa68504",
+        "R-C-D03-S-425d869460f7",
+        "R-C-D03-S-45bb89df98ed",
+        "R-C-D03-S-47684fd634b4",
+        "R-C-D03-S-4819f47b3b3b",
+        "R-C-D03-S-51149f65d8b9",
+        "R-C-D03-S-5181c46c7f8d",
+        "R-C-D03-S-524087f29f1a",
+        "R-C-D03-S-567b4e8834ff",
+        "R-C-D03-S-5688799e263d",
+        "R-C-D03-S-58d68810bb78",
+        "R-C-D03-S-59f132ec85b4",
+        "R-C-D03-S-5aed3f9cadd5",
+        "R-C-D03-S-5c6c39cf00f1",
+        "R-C-D03-S-5dbb2dbbf90e",
+        "R-C-D03-S-611b9faf8ff1",
+        "R-C-D03-S-61259be0ec50",
+        "R-C-D03-S-63210fd7dae3",
+        "R-C-D03-S-64eb4ca4fdbc",
+        "R-C-D03-S-65340a851e44",
+        "R-C-D03-S-69aa3b854332",
+        "R-C-D03-S-6a087ec34299",
+        "R-C-D03-S-6cfe32822f41",
+        "R-C-D03-S-6db37f26b44b",
+        "R-C-D03-S-727445acfe9d",
+        "R-C-D03-S-73c41a77414c",
+        "R-C-D03-S-75d88f0be02c",
+        "R-C-D03-S-780ba9c55295",
+        "R-C-D03-S-84674ce11f36",
+        "R-C-D03-S-8b9784eaf13c",
+        "R-C-D03-S-90413d3a39c8",
+        "R-C-D03-S-92b5963026d8",
+        "R-C-D03-S-951d7c13d93f",
+        "R-C-D03-S-96566392e0d8",
+        "R-C-D03-S-98134a001b45",
+        "R-C-D03-S-9f16e1465f6b",
+        "R-C-D03-S-9f1d0077c6e5",
+        "R-C-D03-S-a6c6f23bbf94",
+        "R-C-D03-S-aaee7f8eb3dc",
+        "R-C-D03-S-aaef31cad93d",
+        "R-C-D03-S-ab88dbf70945",
+        "R-C-D03-S-b267fc5baab3",
+        "R-C-D03-S-b7aaeaae10ce",
+        "R-C-D03-S-c4178485ba76",
+        "R-C-D03-S-ca4d710308b0",
+        "R-C-D03-S-ca688e6ef4aa",
+        "R-C-D03-S-d0f7870843ab",
+        "R-C-D03-S-d3ecef07ba02",
+        "R-C-D03-S-dd445b101213",
+        "R-C-D03-S-deff7dd0b32f",
+        "R-C-D03-S-e23a9b6ba819",
+        "R-C-D03-S-e644533b4e3b",
+        "R-C-D03-S-eea38873c075",
+        "R-C-D03-S-f0eece1e7748",
+        "R-C-D03-S-f5c65a995b53",
+        "R-C-D03-S-f5e72d9d3822",
+        "R-C-D03-S-f7f24e35c72f",
+        "R-C-D03-S-f827bb379d9e",
+        "R-C-D03-S-fa592ef88ff8",
+        "R-C-D03-S-fddd6f144f2c",
+        "R-C-D03-S-ff00e8abfb7c",
+        "R-C-D03-S-ff80acec14ea",
+        "R-UD-003",
+        "R-UD-008"
+      ],
+      "context_files": [
+        "docs/Vetted-SaaS-Blueprint-01-Market-Research-and-Opportunity-Plan-v1.md",
+        "docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md"
+      ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 67375
+      },
+      "context_packet": {
+        "window_tokens": 67375,
+        "initial_tokens": 26950,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
+      "validation": [
+        {
+          "name": "focused document-intelligence tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
+        },
+        {
+          "name": "affected source-intelligence verification",
+          "tier": "affected",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": false,
+        "reviewer_must_be_distinct": true
+      },
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
+      },
+      "extensions": {
+        "vertical_slice": true
+      }
+    },
+    {
+      "id": "SLC-004",
+      "title": "Decision Hub, Solution Hub, and scenario experience",
+      "status": "blocked",
+      "dependencies": [
+        "SLC-003"
+      ],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 1,
+        "external_impact": 0
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "R-C-D02-S-05f896c95b2e",
+        "R-C-D02-S-0951e69fb4b0",
+        "R-C-D02-S-0a0d79eb77ee",
+        "R-C-D02-S-0a3d7fcaf5cd",
+        "R-C-D02-S-113ce637b814",
+        "R-C-D02-S-14ca15e67aec",
+        "R-C-D02-S-1529597091aa",
+        "R-C-D02-S-157c3623abc6",
+        "R-C-D02-S-1865e1ece388",
+        "R-C-D02-S-18fdcd2b5bc7",
+        "R-C-D02-S-1922efce18dd",
+        "R-C-D02-S-1b86534e5dbb",
+        "R-C-D02-S-1d99201cc922",
+        "R-C-D02-S-1fb058e6212b",
+        "R-C-D02-S-1fc1e7dde5c6",
+        "R-C-D02-S-2346cc7f6f68",
+        "R-C-D02-S-279d965231b3",
+        "R-C-D02-S-29f6b389e083",
+        "R-C-D02-S-3461b5e1b0de",
+        "R-C-D02-S-43ada931e3df",
+        "R-C-D02-S-455b8e41c2c4",
+        "R-C-D02-S-512fd0fd66ee",
+        "R-C-D02-S-53867c4d20e5",
+        "R-C-D02-S-60d7c461616b",
+        "R-C-D02-S-612bc3feca04",
+        "R-C-D02-S-663b0649da4b",
+        "R-C-D02-S-67781f6d0382",
+        "R-C-D02-S-69129bd07f11",
+        "R-C-D02-S-6b298d2a38ea",
+        "R-C-D02-S-6d2597911f8e",
+        "R-C-D02-S-758fea2986d4",
+        "R-C-D02-S-761824930dee",
+        "R-C-D02-S-782492896e19",
+        "R-C-D02-S-7842c686213b",
+        "R-C-D02-S-78dcb3877e85",
+        "R-C-D02-S-7d314a4d9107",
+        "R-C-D02-S-7fb597f70e93",
+        "R-C-D02-S-81fd3b11b2be",
+        "R-C-D02-S-851b97ade45a",
+        "R-C-D02-S-872b8c93d302",
+        "R-C-D02-S-881720dd0501",
+        "R-C-D02-S-8864961062df",
+        "R-C-D02-S-8a2e481e74c3",
+        "R-C-D02-S-8c939974289d",
+        "R-C-D02-S-913deec87f54",
+        "R-C-D02-S-94e1603ee78e",
+        "R-C-D02-S-96cd09713553",
+        "R-C-D02-S-9b7ffccbe304",
+        "R-C-D02-S-9df7a87f1da5",
+        "R-C-D02-S-9f89b0d4c650",
+        "R-C-D02-S-a5de85d631f5",
+        "R-C-D02-S-a68a51713e5e",
+        "R-C-D02-S-a92a015c2c5c",
+        "R-C-D02-S-afc2b6e79b02",
+        "R-C-D02-S-afc7a479ad42",
+        "R-C-D02-S-b54cb87301e7",
+        "R-C-D02-S-b56c824b86a5",
+        "R-C-D02-S-b56d3821b66b",
+        "R-C-D02-S-b8958e81a170",
+        "R-C-D02-S-bce84b9d8115",
+        "R-C-D02-S-bdb8e7d88a1b",
+        "R-C-D02-S-bfb0c8c7cacc",
+        "R-C-D02-S-c0fbaabd922f",
+        "R-C-D02-S-c1c5f122c7e9",
+        "R-C-D02-S-c258fe19f0bc",
+        "R-C-D02-S-c915c83f2ff0",
+        "R-C-D02-S-cd2f9138e67d",
+        "R-C-D02-S-cf1fdb42a93e",
+        "R-C-D02-S-cf2466bb9df6",
+        "R-C-D02-S-d675e8ab1702",
+        "R-C-D02-S-d6afb3c2c118",
+        "R-C-D02-S-d85498a8f4de",
+        "R-C-D02-S-e07ec8830ebb",
+        "R-C-D02-S-e1f6c021b576",
+        "R-C-D02-S-e2de7a1f509d",
+        "R-C-D02-S-e9de29282c4b",
+        "R-C-D02-S-f4d07d3b5b2b",
+        "R-C-D02-S-f5f9f1043d64",
+        "R-C-D02-S-f9046ecf5031",
+        "R-C-D02-S-ff59f3285fad",
         "R-C-D05-S-013ebbd8315e",
         "R-C-D05-S-051d1533454d",
         "R-C-D05-S-080be2a1384a",
@@ -490,71 +717,430 @@
         "R-UD-008"
       ],
       "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
+        "docs/Vetted-SaaS-Blueprint-02-Product-Roadmap-v1.md",
+        "docs/Vetted-SaaS-Blueprint-05-Master-PRD-v1.md"
       ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 77038
+      },
+      "context_packet": {
+        "window_tokens": 77038,
+        "initial_tokens": 30815,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
       "validation": [
         {
-          "name": "task checks",
+          "name": "focused document-intelligence tests",
           "tier": "task",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
         },
         {
-          "name": "affected checks",
+          "name": "affected source-intelligence verification",
           "tier": "affected",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
         }
       ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "DecisionJourneyRecordV1 content resolves to stable source UIDs, hashes, evidence states, and review dates."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "spark-ready-after-gate",
-        "verifier": "standard",
-        "escalation": "none"
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": false,
+        "reviewer_must_be_distinct": true
       },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
       },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z"
+      "extensions": {
+        "vertical_slice": true
+      }
     },
     {
-      "id": "P1-UI-001",
-      "title": "Server-rendered decision journey pages",
-      "status": "done",
+      "id": "SLC-005",
+      "title": "Research and editorial automation",
+      "status": "blocked",
       "dependencies": [
-        "P1-CONTENT-001"
+        "SLC-004"
+      ],
+      "risk": "high",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 2,
+        "sensitive_data": 1,
+        "external_impact": 1
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "R-C-D07-S-06ced30adea7",
+        "R-C-D07-S-0a4aeaeed1d8",
+        "R-C-D07-S-0d1d67a56415",
+        "R-C-D07-S-1210507b1eba",
+        "R-C-D07-S-1b002336e8d7",
+        "R-C-D07-S-1d0d6c2d52b9",
+        "R-C-D07-S-1e2f5a6c05e2",
+        "R-C-D07-S-1f772e34b52e",
+        "R-C-D07-S-2353b84a3aed",
+        "R-C-D07-S-24ce753f0331",
+        "R-C-D07-S-28f134bbdd45",
+        "R-C-D07-S-2946efc639cf",
+        "R-C-D07-S-29f460d87f63",
+        "R-C-D07-S-2e9f993d4a1b",
+        "R-C-D07-S-3341ffc7e1b2",
+        "R-C-D07-S-352ca93efb45",
+        "R-C-D07-S-36313e7d1411",
+        "R-C-D07-S-4369a2b78cd1",
+        "R-C-D07-S-44e8c076839a",
+        "R-C-D07-S-45d01a033541",
+        "R-C-D07-S-46a40778c60e",
+        "R-C-D07-S-48a3464fc77c",
+        "R-C-D07-S-4c6012467710",
+        "R-C-D07-S-4ec51be55a61",
+        "R-C-D07-S-4f56d4884b01",
+        "R-C-D07-S-51c73f72ca7f",
+        "R-C-D07-S-52fb8c8093bd",
+        "R-C-D07-S-5b69759cdb5d",
+        "R-C-D07-S-63619598cdf8",
+        "R-C-D07-S-637390190b9f",
+        "R-C-D07-S-64cb6b73237d",
+        "R-C-D07-S-6aafd0d67023",
+        "R-C-D07-S-6cd122ae6051",
+        "R-C-D07-S-7133c782782d",
+        "R-C-D07-S-761a1d533ac1",
+        "R-C-D07-S-7bf3f5c01031",
+        "R-C-D07-S-850ce45eea52",
+        "R-C-D07-S-873cb1cf22f6",
+        "R-C-D07-S-8e9018c6936d",
+        "R-C-D07-S-945e2e544de5",
+        "R-C-D07-S-9ceedb708249",
+        "R-C-D07-S-9ead36c026b3",
+        "R-C-D07-S-a05990604c19",
+        "R-C-D07-S-a1d9497b2412",
+        "R-C-D07-S-a30655462013",
+        "R-C-D07-S-a726acdb143b",
+        "R-C-D07-S-aa9cf3230b15",
+        "R-C-D07-S-b079578cb449",
+        "R-C-D07-S-b31fa4435e5a",
+        "R-C-D07-S-b5ed4fb49fee",
+        "R-C-D07-S-b735f485208b",
+        "R-C-D07-S-b830f780618b",
+        "R-C-D07-S-bb5e55f0f4bd",
+        "R-C-D07-S-bb805a6f78ef",
+        "R-C-D07-S-c1a46ced2f72",
+        "R-C-D07-S-c1c28109beda",
+        "R-C-D07-S-caf8fb67c548",
+        "R-C-D07-S-ccedf2277b04",
+        "R-C-D07-S-d4b2ca5eaa84",
+        "R-C-D07-S-d4ff81fcfb54",
+        "R-C-D07-S-e0b55db5b9ff",
+        "R-C-D07-S-ecd712a40cce",
+        "R-C-D07-S-ee6ada8c6ac2",
+        "R-C-D07-S-ef0124b3dff3",
+        "R-C-D07-S-ef4f0f73c9f6",
+        "R-C-D07-S-f37ffa1ac382",
+        "R-C-D07-S-f8a890823a23",
+        "R-C-D07-S-f93bda382dbf",
+        "R-C-D08-S-01d4ffda4a5e",
+        "R-C-D08-S-1316d0bd8449",
+        "R-C-D08-S-1419bc672bd8",
+        "R-C-D08-S-1d5b36c1ac53",
+        "R-C-D08-S-1ee053b47f28",
+        "R-C-D08-S-1f7042c67a99",
+        "R-C-D08-S-221172cd2424",
+        "R-C-D08-S-22f4dff8ae16",
+        "R-C-D08-S-262edcaad6b9",
+        "R-C-D08-S-28908b62071d",
+        "R-C-D08-S-2985dcc26daf",
+        "R-C-D08-S-339927efa67b",
+        "R-C-D08-S-356452f3f2cb",
+        "R-C-D08-S-3734376506a3",
+        "R-C-D08-S-3f902f41fc0e",
+        "R-C-D08-S-4610cc5c5531",
+        "R-C-D08-S-466fb6584a2a",
+        "R-C-D08-S-47be6ab5165f",
+        "R-C-D08-S-5a155ed672cc",
+        "R-C-D08-S-5a228bf34fa0",
+        "R-C-D08-S-5a90a5bf1be3",
+        "R-C-D08-S-5d0b58afa3f9",
+        "R-C-D08-S-605c941bed2f",
+        "R-C-D08-S-6265fce0ec48",
+        "R-C-D08-S-63578f8e9da1",
+        "R-C-D08-S-63d403698d77",
+        "R-C-D08-S-74c7eea8bdc1",
+        "R-C-D08-S-7e5339163f03",
+        "R-C-D08-S-884c29b5522d",
+        "R-C-D08-S-88dc49bcf374",
+        "R-C-D08-S-8a9b77a9a639",
+        "R-C-D08-S-93ab449c3013",
+        "R-C-D08-S-943cce428862",
+        "R-C-D08-S-9545135cc8c9",
+        "R-C-D08-S-96dec27effa1",
+        "R-C-D08-S-97753d9e9959",
+        "R-C-D08-S-9ff98a6b3c6b",
+        "R-C-D08-S-a9b6e1dccad7",
+        "R-C-D08-S-aab6ea0f7c1b",
+        "R-C-D08-S-ac0299e768be",
+        "R-C-D08-S-aeebd36c92f4",
+        "R-C-D08-S-b3ea66f554f2",
+        "R-C-D08-S-b58c071bbf9b",
+        "R-C-D08-S-b7ed7d1e96b9",
+        "R-C-D08-S-b9c4916c0dea",
+        "R-C-D08-S-bf34e3ca7c06",
+        "R-C-D08-S-c0206b8ba027",
+        "R-C-D08-S-c0af3bad5871",
+        "R-C-D08-S-c1f9d05c28fd",
+        "R-C-D08-S-c24f634c5e14",
+        "R-C-D08-S-c55f56741970",
+        "R-C-D08-S-c58729d2cea1",
+        "R-C-D08-S-c59729aa8ec4",
+        "R-C-D08-S-c9e114639f48",
+        "R-C-D08-S-ca78dd072feb",
+        "R-C-D08-S-cbd40ce849ac",
+        "R-C-D08-S-d3b307d32e2a",
+        "R-C-D08-S-dd41c94b259d",
+        "R-C-D08-S-de8aa1c5d8cf",
+        "R-C-D08-S-e2cbfe2da09c",
+        "R-C-D08-S-e32fd6ade479",
+        "R-C-D08-S-e4b63d794258",
+        "R-C-D08-S-ec706afe13e8",
+        "R-C-D08-S-ecff3a579d1f",
+        "R-C-D08-S-f26d3391e24a",
+        "R-C-D08-S-f3e602eb7c58",
+        "R-C-D08-S-f5a9ab90a41c",
+        "R-C-D08-S-f7b4b4cf7fae",
+        "R-UD-001",
+        "R-UD-004",
+        "R-UD-007",
+        "R-UD-008"
+      ],
+      "context_files": [
+        "docs/Vetted-SaaS-Blueprint-07-Content-Intelligence-and-Editorial-Operations.md",
+        "docs/Vetted-SaaS-Blueprint-08-Knowledge-Acquisition-and-Research-Operations.md",
+        "docs/document-intelligence/DOMAIN_QUERY_EVIDENCE.md"
+      ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 75785
+      },
+      "context_packet": {
+        "window_tokens": 75785,
+        "initial_tokens": 30314,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
+      "validation": [
+        {
+          "name": "focused document-intelligence tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
+        },
+        {
+          "name": "affected source-intelligence verification",
+          "tier": "affected",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
+        },
+        {
+          "name": "full GlobalSetup intake determinism check",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "python",
+            "scripts/generate-globalsetup-intake.py",
+            "--check-from-provenance"
+          ]
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": true,
+        "reviewer_must_be_distinct": true
+      },
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
+      },
+      "extensions": {
+        "vertical_slice": true
+      }
+    },
+    {
+      "id": "SLC-006",
+      "title": "Search, answer-engine, distribution, analytics, and crawlability",
+      "status": "blocked",
+      "dependencies": [
+        "SLC-005"
+      ],
+      "risk": "high",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 2,
+        "sensitive_data": 0,
+        "external_impact": 2
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "R-C-D09-S-08a90c9cc54b",
+        "R-C-D09-S-0eb5707aa7cd",
+        "R-C-D09-S-0ee93bcc9dfc",
+        "R-C-D09-S-16e9855909a7",
+        "R-C-D09-S-27f573087049",
+        "R-C-D09-S-2ab82bfb94a3",
+        "R-C-D09-S-3c4731640f84",
+        "R-C-D09-S-4bd3767e3b26",
+        "R-C-D09-S-4f42bfa64ace",
+        "R-C-D09-S-5019f0146510",
+        "R-C-D09-S-528a4e4d83cc",
+        "R-C-D09-S-5c772d207e0f",
+        "R-C-D09-S-647f08c8c890",
+        "R-C-D09-S-66688bd79b3d",
+        "R-C-D09-S-66b5e4468dbe",
+        "R-C-D09-S-6a2cd62d9e36",
+        "R-C-D09-S-6b4d11019d82",
+        "R-C-D09-S-6e7e74e1681e",
+        "R-C-D09-S-77c2c397f822",
+        "R-C-D09-S-7f3963ff8b23",
+        "R-C-D09-S-864cd50359a9",
+        "R-C-D09-S-8b9fb4ffd9a0",
+        "R-C-D09-S-8fd287813fd8",
+        "R-C-D09-S-97ecf0e52146",
+        "R-C-D09-S-9a8086400dd0",
+        "R-C-D09-S-9d1beb7ae7bc",
+        "R-C-D09-S-a0739c7dda26",
+        "R-C-D09-S-aa025c11f613",
+        "R-C-D09-S-b4197c6081d7",
+        "R-C-D09-S-b4e747f6f5f2",
+        "R-C-D09-S-bc2c49031f54",
+        "R-C-D09-S-bd363e3be364",
+        "R-C-D09-S-cdf2b5d38689",
+        "R-C-D09-S-dda86ac0e4f0",
+        "R-C-D09-S-e65890946e9d",
+        "R-C-D09-S-ebab0001bcf9",
+        "R-C-D09-S-ec2e6988abc3",
+        "R-C-D09-S-edd2dc8013b2",
+        "R-C-D09-S-f7d0823dba37",
+        "R-C-D09-S-fd1a6d4a30cf",
+        "R-UD-003",
+        "R-UD-007",
+        "R-UD-008"
+      ],
+      "context_files": [
+        "docs/Vetted-SaaS-Blueprint-09-Growth-and-Distribution-Strategy.md",
+        "docs/Vetted-SaaS-Blueprint-03-AI-First-System-Architecture-and-Automation-Blueprint-v1.md"
+      ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 55628
+      },
+      "context_packet": {
+        "window_tokens": 55628,
+        "initial_tokens": 22251,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
+      "validation": [
+        {
+          "name": "focused document-intelligence tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
+        },
+        {
+          "name": "affected source-intelligence verification",
+          "tier": "affected",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
+        },
+        {
+          "name": "full GlobalSetup intake determinism check",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "python",
+            "scripts/generate-globalsetup-intake.py",
+            "--check-from-provenance"
+          ]
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": true,
+        "reviewer_must_be_distinct": true
+      },
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
+      },
+      "extensions": {
+        "vertical_slice": true
+      }
+    },
+    {
+      "id": "SLC-007",
+      "title": "Design-system and UI-catalogue alignment",
+      "status": "blocked",
+      "dependencies": [
+        "SLC-004"
       ],
       "risk": "medium",
       "risk_assessment": {
@@ -562,9 +1148,9 @@
         "reversibility": 1,
         "authority": 1,
         "sensitive_data": 0,
-        "external_impact": 0
+        "external_impact": 1
       },
-      "source_changes": true,
+      "source_changes": false,
       "requirement_ids": [
         "R-C-D04-S-00e59116abe7",
         "R-C-D04-S-026ace36fbb5",
@@ -572,12 +1158,14 @@
         "R-C-D04-S-08fad9495add",
         "R-C-D04-S-0fe2380b7194",
         "R-C-D04-S-1497bdd3519d",
+        "R-C-D04-S-14d2041e9ffb",
         "R-C-D04-S-1bc5174a1466",
         "R-C-D04-S-1bee15809e88",
         "R-C-D04-S-1ebfc692b28b",
         "R-C-D04-S-2016736d7d93",
         "R-C-D04-S-2368af5f3463",
         "R-C-D04-S-29399c39d3c9",
+        "R-C-D04-S-29ac66f6e8c1",
         "R-C-D04-S-2b0d2c9186a7",
         "R-C-D04-S-2e9a6917f88d",
         "R-C-D04-S-324f9293f621",
@@ -628,10 +1216,12 @@
         "R-C-D04-S-9b1dade976e8",
         "R-C-D04-S-9c7926538997",
         "R-C-D04-S-a2bbcd69b901",
+        "R-C-D04-S-a366dfbac42e",
         "R-C-D04-S-a8f0c1c0bc44",
         "R-C-D04-S-ac7a9111559e",
         "R-C-D04-S-aca37ea5ca62",
         "R-C-D04-S-b15208e706b2",
+        "R-C-D04-S-b889df6e15e6",
         "R-C-D04-S-b993de145122",
         "R-C-D04-S-bce5e361ab6f",
         "R-C-D04-S-c056fee79a75",
@@ -703,89 +1293,87 @@
         "R-C-UI-S-e7a851b25db2",
         "R-C-UI-S-e7d7296d390f",
         "R-C-UI-S-f2b14fde9c11",
-        "R-C-UI-S-f90fc5f6de54"
+        "R-C-UI-S-f90fc5f6de54",
+        "R-UD-003",
+        "R-UD-005",
+        "R-UD-008"
       ],
       "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
+        "docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md",
+        "docs/APPROVED_UI_COMPONENT_CATALOGUE.md"
       ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 68613
+      },
+      "context_packet": {
+        "window_tokens": 68613,
+        "initial_tokens": 27445,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
       "validation": [
         {
-          "name": "task checks",
+          "name": "focused document-intelligence tests",
           "tier": "task",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
         },
         {
-          "name": "affected checks",
+          "name": "affected source-intelligence verification",
           "tier": "affected",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
         }
       ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "All three static-first routes expose complete principal content without JavaScript."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "spark-ready-after-gate",
-        "verifier": "standard",
-        "escalation": "none"
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": false,
+        "reviewer_must_be_distinct": true
       },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
       },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z"
+      "extensions": {
+        "vertical_slice": true
+      }
     },
     {
-      "id": "P1-MOTION-001",
-      "title": "Progressive decision-journey motion",
-      "status": "done",
+      "id": "SLC-008",
+      "title": "Representative ScrollCraft pilot after separate approval",
+      "status": "blocked",
       "dependencies": [
-        "P1-UI-001"
+        "SLC-007"
       ],
-      "risk": "medium",
+      "risk": "high",
       "risk_assessment": {
         "blast_radius": 1,
         "reversibility": 1,
-        "authority": 1,
+        "authority": 2,
         "sensitive_data": 0,
-        "external_impact": 0
+        "external_impact": 1
       },
-      "source_changes": true,
+      "source_changes": false,
       "requirement_ids": [
-        "R-C-D04-S-14d2041e9ffb",
-        "R-C-D04-S-29ac66f6e8c1",
-        "R-C-D04-S-a366dfbac42e",
-        "R-C-D04-S-b889df6e15e6",
         "R-C-D11-S-05d2a84212ce",
         "R-C-D11-S-06d0c50c6861",
         "R-C-D11-S-1db97e9eae09",
@@ -817,163 +1405,94 @@
         "R-UD-006"
       ],
       "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
+        "docs/Vetted-SaaS-Blueprint-11-ScrollCraft-Narrative-Motion-Strategy-and-Fork-Tailoring-Plan.md",
+        "docs/Vetted-SaaS-Blueprint-04-Design-System-and-Experience-Standards-v1.md"
       ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 56490
+      },
+      "context_packet": {
+        "window_tokens": 56490,
+        "initial_tokens": 22596,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
       "validation": [
         {
-          "name": "task checks",
+          "name": "focused document-intelligence tests",
           "tier": "task",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
         },
         {
-          "name": "affected checks",
+          "name": "affected source-intelligence verification",
           "tier": "affected",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
-        }
-      ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "Desktop, mobile, reduced-motion, cleanup, focus, and no-JavaScript paths pass."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "spark-ready-after-gate",
-        "verifier": "standard",
-        "escalation": "none"
-      },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
-      },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z"
-    },
-    {
-      "id": "P1-DISCOVERY-001",
-      "title": "Decision-guide navigation and sitemap discovery",
-      "status": "done",
-      "dependencies": [
-        "P1-UI-001"
-      ],
-      "risk": "medium",
-      "risk_assessment": {
-        "blast_radius": 1,
-        "reversibility": 1,
-        "authority": 1,
-        "sensitive_data": 0,
-        "external_impact": 0
-      },
-      "source_changes": true,
-      "requirement_ids": [
-        "R-C-D01-S-065351a4fc18",
-        "R-C-D01-S-16ec20be230d"
-      ],
-      "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
-      ],
-      "validation": [
-        {
-          "name": "task checks",
-          "tier": "task",
-          "kind": "command",
-          "location": "local",
-          "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
         },
         {
-          "name": "affected checks",
-          "tier": "affected",
+          "name": "full GlobalSetup intake determinism check",
+          "tier": "full",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
+            "python",
+            "scripts/generate-globalsetup-intake.py",
+            "--check-from-provenance"
+          ]
         }
       ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "Primary navigation, homepage cards, reciprocal links, canonicals, and sitemap discovery pass."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "spark-ready-after-gate",
-        "verifier": "standard",
-        "escalation": "none"
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
+      "review": {
+        "status": "pending",
+        "required": true,
+        "reviewer_must_be_distinct": true
       },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
       },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z"
+      "extensions": {
+        "vertical_slice": true
+      }
     },
     {
-      "id": "P1-VERIFY-001",
-      "title": "Phase One source, route, and accessibility verification",
-      "status": "done",
+      "id": "SLC-009",
+      "title": "Integrated quality, migration, and release verification",
+      "status": "blocked",
       "dependencies": [
-        "P1-MOTION-001",
-        "P1-DISCOVERY-001"
+        "SLC-006",
+        "SLC-008"
       ],
       "risk": "high",
       "risk_assessment": {
-        "blast_radius": 1,
-        "reversibility": 1,
+        "blast_radius": 2,
+        "reversibility": 2,
         "authority": 2,
-        "sensitive_data": 0,
-        "external_impact": 1
+        "sensitive_data": 1,
+        "external_impact": 2
       },
-      "source_changes": true,
+      "source_changes": false,
       "requirement_ids": [
+        "R-C-D10-S-0ab60f4204d6",
         "R-C-D10-S-296555bcfe75",
         "R-C-D10-S-36011ac14ff8",
         "R-C-D10-S-38f330569d94",
@@ -992,201 +1511,85 @@
         "R-C-D10-S-ebe639899fcc",
         "R-C-D10-S-f3554ec57485",
         "R-C-D10-S-ff63e18c03a5",
-        "R-UD-007"
+        "R-UD-005",
+        "R-UD-007",
+        "R-UD-008"
       ],
       "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
+        "docs/Vetted-SaaS-Blueprint-10-QA-and-Testing-Plan.md",
+        "GLOBALSETUP_APPLICATION_INSTRUCTION.md"
       ],
+      "model_route": {
+        "selection": "pending",
+        "minimum_context_window_tokens": 24775
+      },
+      "context_packet": {
+        "window_tokens": 24775,
+        "initial_tokens": 9910,
+        "basis": "minimum required capacity derived from the current context files; select an actual runtime model at task start"
+      },
       "validation": [
         {
-          "name": "task checks",
+          "name": "focused document-intelligence tests",
           "tier": "task",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "tests/document-intelligence.tests.ps1"
+          ]
         },
         {
-          "name": "affected checks",
+          "name": "affected source-intelligence verification",
           "tier": "affected",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            "scripts/verify-document-intelligence.ps1"
+          ]
         },
         {
-          "name": "full checks",
+          "name": "full GlobalSetup intake determinism check",
           "tier": "full",
           "kind": "command",
           "location": "local",
           "argv": [
-            "npm",
-            "test"
-          ],
-          "timeout_seconds": 900
+            "python",
+            "scripts/generate-globalsetup-intake.py",
+            "--check-from-provenance"
+          ]
         }
       ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "Repository gates plus live desktop, mobile, reduced-motion, no-JavaScript, and performance checks pass."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "standard",
-        "verifier": "standard",
-        "escalation": "operator"
-      },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
-      },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z",
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "blocked-before-start",
       "review": {
-        "status": "passed",
-        "reviewer": "independent production verifier",
-        "summary": "Vercel readiness, custom-domain HTTP, browser modes, and repository gates passed.",
-        "receipt": "build-pack/receipts/phase-one-release.json",
-        "commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-        "reviewed_at": "2026-09-01T12:11:52.4007610Z"
-      }
-    },
-    {
-      "id": "P1-RELEASE-001",
-      "title": "Phase One direct production deployment",
-      "status": "done",
-      "dependencies": [
-        "P1-VERIFY-001"
-      ],
-      "risk": "high",
-      "risk_assessment": {
-        "blast_radius": 1,
-        "reversibility": 1,
-        "authority": 2,
-        "sensitive_data": 0,
-        "external_impact": 2
+        "status": "pending",
+        "required": true,
+        "reviewer_must_be_distinct": true
       },
-      "source_changes": true,
-      "requirement_ids": [
-        "R-C-D10-S-0ab60f4204d6"
-      ],
-      "context_files": [
-        "planning.md",
-        "build-pack/requirements.json",
-        "build-pack/source-manifest.json"
-      ],
-      "validation": [
-        {
-          "name": "task checks",
-          "tier": "task",
-          "kind": "command",
-          "location": "local",
-          "argv": [
-            "npm",
-            "run",
-            "lint"
-          ],
-          "timeout_seconds": 900
-        },
-        {
-          "name": "affected checks",
-          "tier": "affected",
-          "kind": "command",
-          "location": "local",
-          "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "timeout_seconds": 900
-        },
-        {
-          "name": "full checks",
-          "tier": "full",
-          "kind": "command",
-          "location": "local",
-          "argv": [
-            "npm",
-            "test"
-          ],
-          "timeout_seconds": 900
-        },
-        {
-          "name": "production receipt",
-          "tier": "full",
-          "kind": "receipt",
-          "location": "vercel-production"
-        }
-      ],
-      "evidence": [
-        {
-          "name": "Phase One production receipt",
-          "kind": "receipt",
-          "location": "vercel-production",
-          "verified_at": "2026-09-01T12:11:52.4007610Z",
-          "release_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-          "deployment_id": "dpl_CWr7EUjipJJpwJKCjQp3jPArucbJ",
-          "task_summary": "Vercel deployment is READY, production-aliased, and all custom-domain URLs return expected content."
-        }
-      ],
-      "evidence_refs": [
-        "build-pack/receipts/phase-one-release.json"
-      ],
-      "model_route": {
-        "worker": "standard",
-        "verifier": "standard",
-        "escalation": "operator"
+      "blocker": {
+        "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
+        "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval."
       },
-      "context_packet": {
-        "window_tokens": 32000,
-        "initial_tokens": 12000,
-        "retrieval": "targeted"
-      },
-      "operation_phase": "committed",
-      "verified_commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-      "verified_at": "2026-09-01T12:11:52.4007610Z",
-      "completed_at": "2026-09-01T12:11:52.4007610Z",
-      "review": {
-        "status": "passed",
-        "reviewer": "independent production verifier",
-        "summary": "Vercel readiness, custom-domain HTTP, browser modes, and repository gates passed.",
-        "receipt": "build-pack/receipts/phase-one-release.json",
-        "commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
-        "reviewed_at": "2026-09-01T12:11:52.4007610Z"
+      "extensions": {
+        "vertical_slice": true
       }
     }
   ],
   "extensions": {
-    "lifecycle": "P1_VERIFIED_NO_ACTIVE_PROGRAMME",
-    "phase_one": "P1_VERIFIED",
-    "phase_one_receipt": "build-pack/receipts/phase-one-release.json",
-    "planning_authority": "planning.md",
-    "requirement_denominator": 803,
-    "executable_requirement_count": 401,
-    "acceptance_denominator": 803,
-    "baseline_commit": "956e3a830ea7c11ae4867635ff2edf8c5865c856",
-    "digest": "6d1715e8d4ed9ce6487b2f0585645ca39174b16a1e8b284cb92e4242d3668eaf"
+    "execution_blocked": true,
+    "globalsetup_commit": "7bc03227e78a838c19f8a28d082b1d46e7e2f288",
+    "globalsetup_release_status": "unreleased-main",
+    "preflight_evidence_file": "build-pack/preflight-evidence.json"
   }
 }

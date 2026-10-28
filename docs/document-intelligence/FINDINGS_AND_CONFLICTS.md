@@ -21,7 +21,7 @@ created: 2026-08-29
 | F-006 | user-directive-versus-repository-fact | open-for-harmonisation | The local foundation boundary and active-day deployment rules require later applicability adjudication. |
 | F-007 | user-directive-plus-repository-fact | mitigated-by-adjudicated-strategy | The adjudicated motion strategy permits qualified affiliate action only after evidence resolves the relevant decision; ranking, disclosure, and anti-deception constraints remain binding. |
 | F-008 | repository-fact-plus-user-directive | locked-interpretation | Reduced motion must not be reinterpreted as minimal default motion. |
-| F-009 | user-directive-plus-tool-observation | mitigated-by-stable-uid-impact | No baseline commit means GitNexus commit-delta analysis remains unavailable. |
+| F-009 | user-directive-plus-tool-observation | mitigated-by-stable-uid-impact | No baseline commit means Neon repository intelligence commit-delta analysis remains unavailable. |
 | F-010 | repository-fact | locked-boundary | Engineering graphs are not canonical business knowledge. |
 | F-011 | repository-fact-plus-user-directive | partially-mitigated | An explicit D10-to-D11 verification relationship now covers the narrative-motion verification matrix; UI-catalogue traceability remains a later amendment. |
 | F-013 | user-directive-plus-repository-fact | confirmed | ScrollCraft is the primary advanced narrative-motion engine; CSS/static is the baseline and reduced-motion path; GSAP requires a documented branching or reversible-interaction exception. |

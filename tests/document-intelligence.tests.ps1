@@ -19,10 +19,6 @@ function Assert-True {
 
 Import-Module -Force -Name $modulePath
 
-$refreshScript = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'scripts\refresh-gitnexus.ps1')
-Assert-True ($refreshScript -match "expectedVersion\s*=\s*'1\.6\.10'") 'The refresh script does not pin GitNexus 1.6.10.'
-Assert-True ($refreshScript -match 'walCheckpointThreshold\s*=\s*67108864') 'The refresh script does not retain the verified Windows WAL checkpoint threshold.'
-Assert-True (($refreshScript -match '--index-only') -and ($refreshScript -match '--wal-checkpoint-threshold\s+\$walCheckpointThreshold')) 'The refresh script does not combine index-only mode with the configured WAL threshold.'
 $verifierScript = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'scripts\verify-document-intelligence.ps1')
 Assert-True ($verifierScript.Contains('Test-Path -LiteralPath (Join-Path $repositoryRoot ''.claude'')')) 'The verifier does not fail closed on a generated .claude directory.'
 
@@ -248,16 +244,6 @@ try {
 
     $validation = Test-CanonicalGraph -Graph $graph
     Assert-True $validation.Valid 'The valid fixture graph failed validation.'
-
-    $bridgeRoot = Join-Path $tempRoot 'bridge'
-    New-GitNexusBridge -Graph $graph -OutputRoot $bridgeRoot
-    $nodeOne = Get-Content -Raw -LiteralPath (Join-Path $bridgeRoot 'nodes\D01.mjs')
-    $relationTwo = Get-Content -Raw -LiteralPath (Join-Path $bridgeRoot 'relationships\D02.mjs')
-    $relationDirective = Get-Content -Raw -LiteralPath (Join-Path $bridgeRoot 'relationships\UD.mjs')
-    Assert-True ($nodeOne -match 'export function claim_C_D01_S_one') 'The claim bridge symbol was not generated.'
-    Assert-True ($relationTwo -match 'export function relation_R_D02_S_two_DEPENDS_ON_D01_S_one') 'The relation bridge symbol was not generated.'
-    Assert-True (([regex]::Matches($relationTwo, 'claim_C_D0[12]_S_(one|two)\(\)')).Count -eq 2) 'The relation bridge does not call exactly two endpoints.'
-    Assert-True ($relationDirective -match 'export function relation_R_UD_999_CONSTRAINS_D01_S_one') 'A directive-origin relation was not generated.'
 
     $impact = Get-GraphImpact -Graph $graph -SectionUid 'D01-S-one'
     Assert-Equal $impact.Inbound.Count 2 'Inbound impact was not reported.'

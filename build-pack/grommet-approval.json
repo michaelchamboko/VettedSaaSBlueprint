@@ -13,14 +13,14 @@
     {
       "id": "GS-PREFLIGHT-002",
       "status": "resolved",
-      "summary": "GitNexus 1.6.10 is PolyForm-Noncommercial-1.0.0 and is not commercially eligible; this repository's local capability contract disables the graph provider and exposes no graph command.",
-      "recommendation": "Keep the provider disabled unless separate commercial rights are documented and a new digest is approved."
+      "summary": "Neon Postgres schema repository_intelligence_v1 is the approved persistence and impact-query boundary under managed-neon-service.",
+      "recommendation": "Test migrations on an isolated Neon branch and retain commit and digest evidence."
     },
     {
       "id": "GS-PREFLIGHT-003",
       "status": "resolved",
-      "summary": "The historic 1.6.9 repository pin and candidate 1.6.10 pin are non-operational because the local graph provider is disabled.",
-      "recommendation": "Do not install, update, or execute either GitNexus version for this project."
+      "summary": "The retired local graph index has been replaced by deterministic repository snapshots stored in Neon.",
+      "recommendation": "Use direct source inspection alongside bounded database impact queries."
     },
     {
       "id": "GS-PREFLIGHT-004",
@@ -65,5 +65,5 @@
       "recommendation": "Adjudicate through document harmonisation and regenerate the candidate digest."
     }
   ],
-  "candidate_digest": "1c2cecf1fe4dbc36da2e62d1cb45f08aed98d124571ae244b9777a639412b389"
+  "candidate_digest": "c3e8ab12cee7746854e08e596ab6070ef5c5035117d80ee51e58a76d0003f22f"
 }
