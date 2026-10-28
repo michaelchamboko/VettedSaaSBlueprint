@@ -52,6 +52,7 @@
         "R-C-D06-S-5953faaf8ad4",
         "R-C-D06-S-5d2f9675564f",
         "R-C-D06-S-5e69b826e65c",
+        "R-C-D06-S-5ec10576af1d",
         "R-C-D06-S-5f80a36ebdd0",
         "R-C-D06-S-6121faead65f",
         "R-C-D06-S-620b921d1c2c",
@@ -441,6 +442,7 @@
         "R-C-D05-S-8ec8f86fba3d",
         "R-C-D05-S-92035809db89",
         "R-C-D05-S-937663a3f069",
+        "R-C-D05-S-974b2b8309fc",
         "R-C-D05-S-979c1537cee4",
         "R-C-D05-S-97ab403d5dd6",
         "R-C-D05-S-97bd8125da96",
@@ -603,6 +605,7 @@
         "R-C-D04-S-5ba53213ffdf",
         "R-C-D04-S-5f86e810b854",
         "R-C-D04-S-6350ea793dd0",
+        "R-C-D04-S-64bac92ce5d5",
         "R-C-D04-S-69cf94366062",
         "R-C-D04-S-6b2e7707ce77",
         "R-C-D04-S-728fc453b792",
@@ -971,6 +974,7 @@
       "source_changes": true,
       "requirement_ids": [
         "R-C-D10-S-296555bcfe75",
+        "R-C-D10-S-36011ac14ff8",
         "R-C-D10-S-38f330569d94",
         "R-C-D10-S-39a69c10e9e4",
         "R-C-D10-S-4540c90ef50b",
@@ -1178,9 +1182,9 @@
     "phase_one_receipt": "build-pack/receipts/phase-one-release.json",
     "planning_authority": "planning.md",
     "requirement_denominator": 799,
-    "executable_requirement_count": 395,
+    "executable_requirement_count": 399,
     "acceptance_denominator": 799,
     "baseline_commit": "956e3a830ea7c11ae4867635ff2edf8c5865c856",
-    "digest": "6c15ca5ab6e54cf44481bdad88f774fabcfe0b8ebf587f5d5ddb66b4eb52f2b6"
+    "digest": "518ff6d9210627b936901a0307a29d6f3691002b5a8aa1cee45bd68c775d2625"
   }
 }

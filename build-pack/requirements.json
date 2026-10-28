@@ -2304,7 +2304,7 @@
       "classification": "repository-fact",
       "authority_domain": "roadmap-and-delivery",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 3.1 The three-page release unit\n\nThe smallest acceptable public product increment is one complete **three-page decision set**:\n\n1. **Decision Hub** — helps the user understand the problem, pain points, desired outcome, constraints, and important decision questions.\n2. **Solution Hub** — maps a defined outcome and situation to conditional best-fit solutions, reasoning, evidence, trade-offs, and next steps.\n3. **Decision Scenario** — resolves a specific real-world buying situation and compares options only where comparison is necessary to answer that situation.\n\nThese pages must be connected to the same user problem, product category, outcome, or buying scenario. They are not three unrelated articles.\n",
       "planned_outcome": "Deliver or review 3.1 The three-page release unit within the roadmap-and-delivery boundary.",
       "acceptance_criteria": [
@@ -5497,7 +5497,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 4.1 The daily release unit\n\nEvery active build day MUST end with one connected three-page decision set live on Vercel:\n\n1. **Decision Hub** — helps the customer understand the problem, pain points, desired outcome, constraints, and decision factors.\n2. **Solution Hub** — maps a customer outcome and situation to conditional best-fit solutions, reasoning, evidence, trade-offs, and next steps.\n3. **Decision Scenario** — resolves one specific real-world buying situation and compares products only where comparison is necessary to answer the decision.\n\nThe three pages must address the same customer problem, outcome, category, or buying journey. Three unrelated pages do not satisfy the requirement.\n",
       "planned_outcome": "Deliver or review 4.1 The daily release unit within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -6954,7 +6954,7 @@
       "classification": "repository-fact",
       "authority_domain": "architecture-and-automation",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 14.5 Release identity without GitHub\n\nEach production deployment must still record a local source revision, build identity, or content version even when the GitHub remote is unavailable.\n\n---\n",
       "planned_outcome": "Deliver or review 14.5 Release identity without GitHub within the architecture-and-automation boundary.",
       "acceptance_criteria": [
@@ -8402,7 +8402,7 @@
       "classification": "repository-fact",
       "authority_domain": "design-experience-and-motion",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "candidate",
       "statement": "## 28. Release Classification\n\nThe system must not use broad “design blocker” language.\n\nEvery issue receives one of these classifications:\n",
       "planned_outcome": "Deliver or review 28. Release Classification within the design-experience-and-motion boundary.",
       "acceptance_criteria": [
@@ -8423,7 +8423,9 @@
           "hash": "bdfe01ae971ae31ce81f0faf35d6e8c68a495bd4c4ea9a51f1d53685a5a40dcb"
         }
       ],
-      "tasks": [],
+      "tasks": [
+        "P1-UI-001"
+      ],
       "acceptance_ids": [
         "AC-C-D04-S-64bac92ce5d5"
       ]
@@ -12589,7 +12591,7 @@
       "classification": "repository-fact",
       "authority_domain": "product-requirements",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "candidate",
       "statement": "## 31. Initial Release Scope\n\nThe first release SHOULD prove the complete system in one bounded SaaS category before broad expansion.\n\nThe exact first category and product cohort remain an owner decision.\n\nThe initial release should include:\n\n- one approved-source registry for the selected category;\n- a bounded product cohort;\n- private raw evidence storage;\n- normalised product and evidence records;\n- Vetted Evaluation Framework version 1;\n- all three public page models;\n- at least one complete Decision Hub;\n- multiple outcome-focused Solution Hubs;\n- at least one real Decision Scenario;\n- affiliate disclosure and link management;\n- Personalised Decision Report lead asset;\n- deterministic Python orchestration;\n- model-adapter boundary;\n- validation gates;\n- audit logging;\n- evidence refresh scheduling;\n- public read-only experience with no user authentication.\n\nThe first release does not require:\n\n- a large product catalogue;\n- automated weight self-modification;\n- public user accounts;\n- an advanced AI chatbot;\n- unrestricted web crawling;\n- a public raw evidence browser;\n- a full interactive Vetted Decision Engine.\n\n---\n",
       "planned_outcome": "Deliver or review 31. Initial Release Scope within the product-requirements boundary.",
       "acceptance_criteria": [
@@ -12610,7 +12612,9 @@
           "hash": "031deeb95fbc25c6ff971dc6ad09f25bacd820a5efedffd8dcc660dc6c53312a"
         }
       ],
-      "tasks": [],
+      "tasks": [
+        "P1-CONTENT-001"
+      ],
       "acceptance_ids": [
         "AC-C-D05-S-974b2b8309fc"
       ]
@@ -14864,7 +14868,7 @@
       "classification": "repository-fact",
       "authority_domain": "implementation-and-agent-behaviour",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "candidate",
       "statement": "### 4.1 Daily release unit\n\nEvery active build day must produce one connected set of three live pages:\n\n1. **Decision Hub**\n2. **Solution Hub**\n3. **Decision Scenario**\n\nThey must address the same customer problem, outcome, category or decision journey.\n",
       "planned_outcome": "Deliver or review 4.1 Daily release unit within the implementation-and-agent-behaviour boundary.",
       "acceptance_criteria": [
@@ -14885,7 +14889,9 @@
           "hash": "d7d8f1d72aaad454d58eb9ffa95a73bb731968ce5e98bd4710f9c80a389e3d2a"
         }
       ],
-      "tasks": [],
+      "tasks": [
+        "P1-PLAN-001"
+      ],
       "acceptance_ids": [
         "AC-C-D06-S-5ec10576af1d"
       ]
@@ -21380,7 +21386,7 @@
       "classification": "repository-fact",
       "authority_domain": "growth-and-distribution",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 10.1 Daily release sequence\n\nFor each daily set, the distribution workflow MUST:\n\n1. deploy the canonical three pages;\n2. verify public availability and navigation;\n3. register or update sitemap and internal relationships;\n4. generate eligible derived assets;\n5. select channels based on decision and format fit;\n6. publish or queue channel outputs;\n7. record destinations and asset versions;\n8. start measurement;\n9. record failures without cancelling the canonical release;\n10. schedule later distribution and refresh actions.\n",
       "planned_outcome": "Deliver or review 10.1 Daily release sequence within the growth-and-distribution boundary.",
       "acceptance_criteria": [
@@ -21938,7 +21944,7 @@
       "classification": "repository-fact",
       "authority_domain": "growth-and-distribution",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "separate-authority-required",
       "statement": "### 3.1 Daily connected release\n\nEvery active operating day MUST publish and deploy one connected decision set:\n\n1. one **Decision Hub**;\n2. one **Solution Hub**;\n3. one **Decision Scenario**.\n\nThe three pages MUST address the same customer problem, outcome, category, or buying situation. They are one distribution unit, not three unrelated articles.\n",
       "planned_outcome": "Deliver or review 3.1 Daily connected release within the growth-and-distribution boundary.",
       "acceptance_criteria": [
@@ -22500,7 +22506,7 @@
       "classification": "repository-fact",
       "authority_domain": "quality-assurance",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "owner-retired",
+      "status": "candidate",
       "statement": "### 8.8 Learn across releases\n\nRepeated findings should improve templates, components, prompts, research operations, or deployment automation. Do not respond to every recurrence with another manual checklist item when a systemic fix is simpler.\n",
       "planned_outcome": "Deliver or review 8.8 Learn across releases within the quality-assurance boundary.",
       "acceptance_criteria": [
@@ -22521,7 +22527,9 @@
           "hash": "77c01e091ca64ee5493abbaab97d0f238fc4e7212f1f56353011f02094b445f3"
         }
       ],
-      "tasks": [],
+      "tasks": [
+        "P1-VERIFY-001"
+      ],
       "acceptance_ids": [
         "AC-C-D10-S-36011ac14ff8"
       ]

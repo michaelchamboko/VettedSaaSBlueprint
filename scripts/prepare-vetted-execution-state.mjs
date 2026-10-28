@@ -46,7 +46,7 @@ const taskForPhaseOneRequirement = (requirement) => {
 
 const isRetiredWorkflowRequirement = (requirement) => {
   const headings = requirement.sources.map((source) => source.heading ?? "").join(" ").toLowerCase();
-  return /daily research|editorial brief|scheduled optimisation|watchdog|hard takeover|retry|idempotency|lease|control plane|automation|automated publish|scheduled cycle/.test(headings);
+  return /daily research|editorial brief|scheduled optimisation|watchdog|hard takeover|retry|idempotency|\blease\b|control plane|automation|automated publish|scheduled cycle/.test(headings);
 };
 
 const command = (name, tier, argv) => ({ name, tier, kind: "command", location: "local", argv, timeout_seconds: 900 });
@@ -75,6 +75,8 @@ const main = async () => {
       if (requirement.sources.some((source) => source.source_id === "D11")) {
         requirement.owner_authorized_phase_one = true;
         requirement.status = "owner-authorized-phase-one";
+      } else if (requirement.status === "owner-retired") {
+        requirement.status = "candidate";
       }
     } else {
       delete requirement.owner_authorized_phase_one;

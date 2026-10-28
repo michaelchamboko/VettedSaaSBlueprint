@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-28T11:40:54.242Z",
+  "generatedAt": "2026-10-28T11:58:36.191Z",
   "denominatorCount": 799,
-  "mappedAtLeast": 395,
+  "mappedAtLeast": 399,
   "requirements": [
     {
       "requirementId": "R-C-D01-S-0403b64da931",
@@ -1560,7 +1560,7 @@
     {
       "requirementId": "R-C-D02-S-663b0649da4b",
       "task": null,
-      "disposition": "owner-retired",
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D02-S-663b0649da4b"
       ],
@@ -3723,7 +3723,7 @@
     {
       "requirementId": "R-C-D03-S-5dbb2dbbf90e",
       "task": null,
-      "disposition": "owner-retired",
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-5dbb2dbbf90e"
       ],
@@ -4710,7 +4710,7 @@
     {
       "requirementId": "R-C-D03-S-ff00e8abfb7c",
       "task": null,
-      "disposition": "owner-retired",
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D03-S-ff00e8abfb7c"
       ],
@@ -5633,8 +5633,8 @@
     },
     {
       "requirementId": "R-C-D04-S-64bac92ce5d5",
-      "task": null,
-      "disposition": "owner-retired",
+      "task": "P1-UI-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D04-S-64bac92ce5d5"
       ],
@@ -8300,8 +8300,8 @@
     },
     {
       "requirementId": "R-C-D05-S-974b2b8309fc",
-      "task": null,
-      "disposition": "owner-retired",
+      "task": "P1-CONTENT-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D05-S-974b2b8309fc"
       ],
@@ -9749,8 +9749,8 @@
     },
     {
       "requirementId": "R-C-D06-S-5ec10576af1d",
-      "task": null,
-      "disposition": "owner-retired",
+      "task": "P1-PLAN-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D06-S-5ec10576af1d"
       ],
@@ -14076,7 +14076,7 @@
     {
       "requirementId": "R-C-D09-S-3c4731640f84",
       "task": null,
-      "disposition": "owner-retired",
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-3c4731640f84"
       ],
@@ -14454,7 +14454,7 @@
     {
       "requirementId": "R-C-D09-S-9a8086400dd0",
       "task": null,
-      "disposition": "owner-retired",
+      "disposition": "separate-authority-required",
       "acceptanceIds": [
         "AC-C-D09-S-9a8086400dd0"
       ],
@@ -14831,8 +14831,8 @@
     },
     {
       "requirementId": "R-C-D10-S-36011ac14ff8",
-      "task": null,
-      "disposition": "owner-retired",
+      "task": "P1-VERIFY-001",
+      "disposition": "phase-one-complete",
       "acceptanceIds": [
         "AC-C-D10-S-36011ac14ff8"
       ],
