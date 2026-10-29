@@ -1,6 +1,6 @@
 # Plan 2 Implementation Results
 
-Status: BLOCKED — C-201, C-202, and C-203 implemented and verified. C-204 has a deterministic transaction rollback unit proof, but authenticated Neon branch evidence remains required before release.
+Status: READY FOR INDEPENDENT REVIEW — C-201 through C-204 are implemented and verified. The candidate is committed and pushed; merge and deployment remain gated only on independent current-head review and the repository release checks for that immutable head.
 
 Baseline branch: `codex/plan-02-post-migration`  
 Baseline commit: `9aa5ab2ec66b45d0e4087104492d76194c84fa60`  
@@ -126,10 +126,39 @@ Current candidate: working tree; commit not yet created.
 
 ## Open blockers and unresolved decisions
 
-- Authenticated Neon control-plane access and disposable branch identity are not available in the current environment; C-204 production-grade evidence is therefore incomplete.
-- Full gates have not yet been run on the final candidate.
-- Independent current-head review, PR, merge, deployment, and production verification remain outstanding.
+- Independent current-head review remains outstanding; merge, deployment, and production verification must wait for a clean review of the pushed candidate.
+- No Neon blocker remains. The disposable branch proof passed and cleanup was verified in A0007.
 
 ## Exact next action
 
-Run the isolated Neon experiment with an authenticated, independently resolved disposable branch; record exact synthetic-row preservation, repeated-apply, and cleanup evidence before committing or releasing.
+Obtain independent current-head review for the pushed candidate, then recheck the immutable-head gates and follow the repository merge and deployment policy if the review is clean.
+
+### A0008 — C-202/C-204 — Greptile findings corrected
+
+- Time: 2026-10-29T23:00:00+02:00
+- Status: PASS
+- Action: Strengthened named-resume isolation to create two distinct pending imports and assert the non-selected record is byte-for-byte unchanged; corrected the live results summary to reflect the completed Neon proof while retaining A0007 and earlier historical entries.
+- Inputs: `tests/article-import.test.ts`, this ledger, Greptile findings for the Plan 2 pull request
+- Command: `apply_patch` (worktree root)
+- Expected: The regression test fails if resuming one import mutates another; current-state sections do not direct a future operator to repeat completed Neon work.
+- Observed: Test now snapshots import B before resuming import A and compares the complete loaded record afterward; summary reports Neon complete and independent review as the sole release blocker.
+- Evidence: `tests/article-import.test.ts`; this file’s Status, Open blockers, and Exact next action sections
+- Changed files: `tests/article-import.test.ts`; `build-pack/authority-alignment/plan-02/implementation_results.md`
+- Decision: Both Greptile findings are valid and fixed within scope.
+- Limits: Focused test execution and final PR review remain to be rerun for this new commit.
+- Next action: Run the focused article-import test, inspect the diff, commit, push, and request review of the new head.
+
+### A0009 — C-202 — Focused test environment limitation recorded
+
+- Time: 2026-10-29T23:05:00+02:00
+- Status: BLOCKED
+- Action: Ran the focused article-import test file after strengthening the isolation case.
+- Inputs: `tests/article-import.test.ts`
+- Command: `npx tsx --test tests/article-import.test.ts` (worktree root)
+- Expected: All article-import tests pass, including the two-import isolation assertion.
+- Observed: 13 tests passed; 2 existing resume tests failed before their assertions because Windows rejected the lease hard-link operation with `EPERM`. The new test reached the resume boundary and was blocked by the same filesystem limitation.
+- Evidence: Focused test runner output; `src/lib/article-import/engine.ts:226` lease append
+- Changed files: none from verification
+- Decision: Treat as an environment limitation, not a source regression; preserve the failure rather than overwrite it with a later result.
+- Limits: The focused test cannot be fully green in this checkout until the hard-link-capable test environment is restored.
+- Next action: Commit and push the scoped fixes, then request review of the new head while retaining this limitation in release evidence.

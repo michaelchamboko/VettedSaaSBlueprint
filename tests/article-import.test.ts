@@ -144,12 +144,17 @@ test("named resume executes only the selected local stage", async () => {
   const root = await testRoot("article-import-resume-pending-");
   try {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
-    await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
-    const created = await createArticleImport(root, "article.md");
+    await (await import("node:fs/promises")).writeFile(path.join(root, "article-a.md"), source);
+    await (await import("node:fs/promises")).writeFile(path.join(root, "article-b.md"), source.replace("How to stream with Switcher Studio", "How to plan a Switcher Studio stream"));
+    const created = await createArticleImport(root, "article-a.md");
+    const other = await createArticleImport(root, "article-b.md");
     await recordImportFailure(root, created, { strategy: "research", classification: "transient", message: "provider unavailable" });
+    await recordImportFailure(root, other, { strategy: "research", classification: "transient", message: "provider unavailable" });
+    const otherBeforeResume = await loadImport(root, other.importId);
     const resumed = await executeImportCommand(root, { kind: "resume", importId: created.importId }) as { importId: string; stage: string };
     assert.equal(resumed.importId, created.importId);
     assert.equal(resumed.stage, "RESEARCHING");
+    assert.deepEqual(await loadImport(root, other.importId), otherBeforeResume);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
