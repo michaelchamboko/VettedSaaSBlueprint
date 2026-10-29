@@ -4,7 +4,7 @@ Status: COMPLETE WITH EXPLICIT LIMITATION — T01 through T07 are complete. No c
 
 Branch: `codex/plan-03-boundary-audit`
 Baseline commit: `958ff18deddc58630d65f60a09efa188f0226834` (fetched `origin/main`)
-Current commit: `958ff18deddc58630d65f60a09efa188f0226834` (deployed Plan 2 merge baseline; Plan 3 packet remains uncommitted)
+Current candidate: containing Git commit; resolve the exact SHA with `rtk git rev-parse HEAD`.
 
 ## Task checklist
 
@@ -23,7 +23,7 @@ Current commit: `958ff18deddc58630d65f60a09efa188f0226834` (deployed Plan 2 merg
 
 ## Exact next action
 
-Commit and publish the evidence-only Plan 3 packet; Plan 4 may begin with the bounded discovery tasks in `plan_04_handoff.md` after separate authorization.
+Open or update the PR for the pushed Plan 3 branch, bind review and required gates to the exact PR head, and keep Plan 4 implementation separately authorized.
 
 ## Append-only action ledger
 
@@ -266,3 +266,18 @@ Commit and publish the evidence-only Plan 3 packet; Plan 4 may begin with the bo
 - Decision: Plan 3 evaluation is complete. Retain the main loop, independent Codex review, Neon tool boundary, BuildRunner state, handoff evidence, and authenticated release adapters; do not create a permanent consolidation agent.
 - Limits: Review covered the uncommitted packet on baseline HEAD; final exact-commit review is required after commit.
 - Next action: Commit the packet, push the isolated branch, and obtain exact-commit review before any PR release action.
+
+### A0017 — T06 — Exact-commit stale-state correction
+
+- Time: 2026-10-30T02:20:00+02:00
+- Status: PASS
+- Action: Replaced the committed-packet summary’s stale SHA and commit instruction with a timeless Git-resolved candidate identity and the correct PR-head review next action.
+- Inputs: exact-commit review of `3bffae2`; `plan_results.md`
+- Command: bounded packet edit
+- Expected: A resumer never repeats commit work or treats the baseline SHA as the current candidate.
+- Observed: Current candidate is resolved by `git rev-parse HEAD`; next action is PR-head review and required gates.
+- Evidence: `plan_results.md` current candidate and Exact next action sections
+- Changed files: `plan_results.md`
+- Decision: Preserve A0016 as historical evidence and make the live summary timeless.
+- Limits: This correction creates a new commit requiring exact-head review again.
+- Next action: Commit and push this correction, then obtain final exact-head review.
