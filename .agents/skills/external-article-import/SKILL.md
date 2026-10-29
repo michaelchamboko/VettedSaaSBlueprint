@@ -25,18 +25,18 @@ Complete the next action in the receipt in order:
 3. Complete `.agents/skills/eleanor-editorial/SKILL.md` after evidence-backed drafting and before validation. Run `scripts/compare-editorial-artifacts.ts`; a partial rewrite, same-family cleanse, missing pass, protected-field or item-order change, or final score below 5/5 cannot leave `REFINING`.
 4. For an affiliate URL, use the exact resolved allowlisted URL in the transformation receipt. If the receipt says `decommercialized`, remove affiliate links and commercial CTAs and publish a neutral article. Never edit `approved-urls.md`.
 5. Run the format validator, quality checks, `npm run verify:agent-workflow`, lint, typecheck, tests, build, public-site validation, and applicable production verification. Repair the failed layer, then record a stage receipt.
-6. Release from a clean worktree after refreshing `main`. Recreate the content artifact if its target changed, stage only declared files, and open or reuse an import PR. Wait for owner-approved merge, then deploy the exact merged commit and verify the canonical URL. If verification fails, roll back the captured deployment, verify restoration, and fix forward.
+6. Release from a clean worktree after refreshing `main`. Recreate the content artifact if its target changed, stage only declared files, and open or reuse an import PR. An independent review of the current head plus every required gate permits automatic merge and deployment; owner authority remains required for product decisions, source amendments, affiliate destinations, and unresolved policy questions. Deploy the exact merged commit and verify the canonical URL. If verification fails, roll back the captured deployment, verify restoration, and fix forward.
 
-Use `npm run import:article -- --resume <import-id>` to inspect one run and `npm run import:article -- --resume-pending` for the quiet recovery heartbeat. A transient dependency failure is `WAITING_EXTERNAL`; a submission with no safe publishable topic is `QUARANTINED`.
+Use `npm run import:article -- --resume <import-id>` to inspect one named run. Continuation never scans or advances other pending imports. A transient dependency failure is `WAITING_EXTERNAL`; a submission with no safe publishable topic is `QUARANTINED`.
 
 ### Supervised heartbeat execution
 
 The Codex heartbeat is the supervising agent. The CLI executes local gates; it does not call a separate model service. During each existing heartbeat window:
 
-1. Run `npm run import:article -- --resume-pending`. For a productive stage, read the `*.work.json` path in `nextAction`. Execute its instructions with the existing research, editorial or presentation tools; do not stop after listing the packet.
+1. Run `npm run import:article -- --resume <import-id>` for the explicitly selected run. For a productive stage, read the `*.work.json` path in `nextAction`. Execute its instructions with the existing research, editorial or presentation tools; do not stop after listing the packet.
 2. Write the packet's `resultPath` atomically. Use its exact `idempotencyKey` and `sourceFingerprint`, a truthful `summary`, and a `work` object with the recorded `stage` and the stage's required fields below. Keep evidence files in the repository. Reuse existing matching evidence after interruption; never invent successful work.
 3. Run the packet's `resumeCommand`. The runner claims an exclusive lease and validates/executes that result. Repeat while productive work remains in the window. An external outage remains resumable; missing agent output is work for this heartbeat, not an external outage.
-4. For release, let the adapter create the PR and record its head. Obtain independent current-head Codex review, write its `ImportCodeReviewV1` receipt and add `codeReviewPath` to the release result. The adapter waits for the owner's merge; the heartbeat must not merge on the owner's behalf.
+4. For release, let the adapter create the PR and record its head. Obtain independent current-head Codex review, write its `ImportCodeReviewV1` receipt and add `codeReviewPath` to the release result. After the current head passes review and required gates, the existing release policy permits automatic merge and deployment; owner authority remains separate from merge mechanics.
 
 Stage result fields (in `work`):
 

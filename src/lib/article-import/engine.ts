@@ -283,12 +283,6 @@ export async function executePendingImport(repositoryRoot: string, importId: str
   } finally { await lease.release(); }
 }
 
-export async function resumePendingImports(repositoryRoot: string, execute: ImportStageExecutor): Promise<ExternalArticleImportV1[]> {
-  const results: ExternalArticleImportV1[] = [];
-  for (const record of await listPendingImports(repositoryRoot)) results.push(await executePendingImport(repositoryRoot, record.importId, execute));
-  return results;
-}
-
 async function listAllImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
   let names: string[];
   try { names = await readdir(storeRoot(repositoryRoot)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }

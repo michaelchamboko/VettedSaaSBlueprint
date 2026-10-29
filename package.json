@@ -58,7 +58,6 @@
     "landing:workflow:describe": "tsx scripts/describe-landing-workflow.ts",
     "import:article": "tsx scripts/import-article.ts",
     "import:article:resume": "tsx scripts/import-article.ts --resume",
-    "import:article:resume-pending": "tsx scripts/import-article.ts --resume-pending",
     "import:article:release": "tsx scripts/import-article-release.ts",
     "verify:runtime-contract": "node scripts/verify-runtime-contract.mjs"
   },

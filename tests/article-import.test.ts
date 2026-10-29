@@ -93,7 +93,7 @@ test("all documented command argument shapes parse", () => {
   assert.deepEqual(parseImportCommand(["--source", "article.md"]), { kind: "source", source: "article.md" });
   assert.deepEqual(parseImportCommand(["--resume", "article-123"]), { kind: "resume", importId: "article-123" });
   assert.deepEqual(parseImportCommand(["--resume", "--resume", "article-123"]), { kind: "resume", importId: "article-123" });
-  assert.deepEqual(parseImportCommand(["--resume-pending"]), { kind: "resume-pending" });
+  assert.throws(() => parseImportCommand(["--resume-pending"]), /Use --source <file> or --resume <import-id>/);
 });
 
 test("external article workflow keeps content and publication gates separate", async () => {
@@ -140,17 +140,16 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
   }
 });
 
-test("resume-pending executes the next local stage", async () => {
+test("named resume executes only the selected local stage", async () => {
   const root = await testRoot("article-import-resume-pending-");
   try {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
     await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
     const created = await createArticleImport(root, "article.md");
     await recordImportFailure(root, created, { strategy: "research", classification: "transient", message: "provider unavailable" });
-    const resumed = await executeImportCommand(root, { kind: "resume-pending" }) as Array<{ importId: string; stage: string }>;
-    assert.equal(resumed.length, 1);
-    assert.equal(resumed[0]?.importId, created.importId);
-    assert.equal(resumed[0]?.stage, "RESEARCHING");
+    const resumed = await executeImportCommand(root, { kind: "resume", importId: created.importId }) as { importId: string; stage: string };
+    assert.equal(resumed.importId, created.importId);
+    assert.equal(resumed.stage, "RESEARCHING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

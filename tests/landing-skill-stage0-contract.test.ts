@@ -31,6 +31,8 @@ test("landing-production skills keep design advisory and preserve implementation
     ["four supervised stages", /decide[\s\S]*evidence[\s\S]*quality[\s\S]*release/i],
     ["Vercel release verification", /Vercel deployment/i],
     ["specialist reviews are repair inputs", /repair inputs/i],
+    ["design-taste-frontend", /design-taste-frontend/i],
+    ["Impeccable before implementation", /design-taste-frontend[\s\S]*Impeccable[\s\S]*before qualifying UI implementation/i],
   ]);
 });
 

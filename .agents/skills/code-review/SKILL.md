@@ -2,7 +2,7 @@
 name: code-review
 description: >-
   Independently review a GitHub pull request using Codex Code Review before
-  owner approval. Validate findings, fix actionable defects, rerun checks,
+  automatic merge. Validate findings, fix actionable defects, rerun checks,
   and request a fresh review whenever the diff changes.
 compatibility: GitHub pull request access plus Codex Code Review via its plugin or enabled GitHub integration. GitHub CLI is optional.
 ---
@@ -47,13 +47,13 @@ report the blocker; do not imply that missing results mean approval.
 After **three unsuccessful fix/review rounds**, stop and identify the
 assumption to investigate. Do not chase a numeric score.
 
-## 4. Ready for owner approval
+## 4. Ready for automatic merge
 
 - Required checks pass with actual evidence.
 - Codex reviewed the latest diff, with no verified critical or high-severity
   defects left unresolved.
 - Remaining nonblocking comments and limitations are documented.
-- Owner approval remains separate. Do not merge automatically.
+- A clean current-head review and all required gates permit automatic merge and deployment. Owner authority remains separate for product decisions, source amendments, and unresolved policy questions.
 
 For oversized PRs, split independent changes when practical; there is no
 special large-PR reviewer or file-count bypass.
