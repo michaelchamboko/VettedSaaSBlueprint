@@ -8,7 +8,7 @@
 - Current candidate: the Git commit containing this ledger entry; resolve it with `git rev-parse HEAD` rather than embedding a self-referential SHA.
 - Last exact head reviewed: `c0270a1ce32fe8d6da7c83748863ceef9966ad7a` — CHANGES REQUIRED; corrections recorded below.
 - Historical migration ledger: [`evidence/historical-plan-results-pr40.md`](evidence/historical-plan-results-pr40.md)
-- Exact next action: commit the four review corrections and obtain independent review of that exact new head.
+- Exact next action: commit this ledger-only status correction and obtain independent review of that exact new head.
 
 ## Task checklist
 
@@ -23,7 +23,7 @@
 
 ## Open blockers and unresolved decisions
 
-- Packet completion is awaiting independent review of the corrected exact committed head.
+- Packet completion is awaiting independent review of the exact head containing this ledger-only status correction.
 - C-204 is an implementation-phase proof gap, not a planning blocker: the import transaction exists, but Plan 2 must demonstrate rollback on an isolated Neon branch with an injected failure.
 - The app-created worktree was not writable in the sandbox; the implementation branch therefore uses the repository's writable `.worktrees` directory.
 
@@ -343,3 +343,33 @@
 - Decision: commit the corrected packet and request independent review of the new exact head.
 - Limits: these checks do not execute Plan 2 or mutate Neon.
 - Next action: commit the corrective delta through repository hooks.
+
+### A0022 — Correction to A0021 — Corrective commit completed and reviewed
+
+- Time: 2026-10-29T08:52:31.1394192+02:00
+- Status: OBSERVED
+- Action: Recorded corrective commit `e4212895c7ee69f684ddc502d000ab8ae2742c3d` and its independent re-review; this entry supersedes A0021's now-completed next action without rewriting the historical entry.
+- Inputs: corrective commit `e4212895c7ee69f684ddc502d000ab8ae2742c3d`; independent review of that exact SHA.
+- Command: repository commit hook; independent current-head reviewer.
+- Expected: the four substantive findings are resolved and the ledger names the actual remaining action.
+- Observed: the reviewer confirmed all four substantive corrections and found no new overclaim. One P2 status defect remained: the packet's top-level next action still described the already-completed commit. The top-level status now correctly points to a ledger-only commit followed by exact-head review.
+- Evidence: independent review response retained in the task transcript; commit `e4212895c7ee69f684ddc502d000ab8ae2742c3d`.
+- Changed files: `build-pack/authority-alignment/plan-02/plan_results.md` only.
+- Decision: make one ledger-only commit, rerun required checks, and request final exact-head review.
+- Limits: `e421289` received CHANGES REQUIRED solely for stale ledger state; its implementation instructions and evidence claims were otherwise accepted.
+- Next action: commit this ledger-only correction and obtain final independent review of the resulting exact head.
+
+### A0023 — T07 — Ledger-only correction passed mandatory gates
+
+- Time: 2026-10-29T08:55:47.2188889+02:00
+- Status: PASS
+- Action: Repeated all mandatory repository checks after the ledger-only status correction.
+- Inputs: `build-pack/authority-alignment/plan-02/plan_results.md` delta on top of `e4212895c7ee69f684ddc502d000ab8ae2742c3d`.
+- Command: `rtk npm run verify:agent-workflow`; `rtk npm run lint`; `rtk npm run typecheck`; `rtk npm test`.
+- Expected: all four commands exit 0.
+- Observed: all four commands exited 0. Lint reported 0 errors and the same 15 warnings. Tests reported 397 tests, 394 passed, 0 failed, and 3 skipped.
+- Evidence: command outputs retained in the task transcript.
+- Changed files: none beyond this ledger.
+- Decision: commit this exact ledger state and request final independent review without further edits.
+- Limits: build and public-site validation remain unnecessary because no runtime or release surface changed.
+- Next action: commit and review the exact final head.
