@@ -1,16 +1,18 @@
 # Runtime Compatibility Policy
 
-## Approved baseline
+## Verified baseline
 
 - Node.js: 24.x
-- npm: 12.0.2, pinned through `packageManager`
+- npm: 12.0.2
+- Local package-manager pin: `packageManager` in `package.json`
+- Vercel deployment pin: `npx --yes npm@12.0.2 ci` in `vercel.json` `installCommand`
 - Lockfile: npm lockfileVersion 3
-- Application runtime: Vercel builds the Next.js application using `npm ci`.
+- Application runtime: Vercel runs the explicit `installCommand` above before the Next.js build.
 - Local runtime: optional for review and validation only; it is not the production runtime.
 
 ## Contract checks
 
-Run `npm run verify:runtime-contract` before any install, test, build, or deployment review. It verifies direct manifest versions, the pinned package manager, lockfile versions, Node policy, and `.nvmrc`.
+Run `npm run verify:runtime-contract` before any install, test, build, or deployment review. It verifies direct manifest versions, the local package-manager pin, the Vercel install command, lockfile versions, Node policy, and `.nvmrc`.
 
 ## Allowed baseline maintenance
 

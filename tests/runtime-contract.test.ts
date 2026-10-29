@@ -15,6 +15,7 @@ test("rejects a mutable direct dependency range", () => {
       packages: { "node_modules/next": { version: "16.2.7" } },
     },
     nodeVersionFile: "24\n",
+    vercelJson: { installCommand: "npx --yes npm@12.0.2 ci" },
   });
 
   assert.deepEqual(result.errors, ["dependencies.next must be an exact version; received latest"]);
@@ -33,6 +34,7 @@ test("accepts the approved runtime contract", () => {
       packages: { "node_modules/next": { version: "16.2.7" } },
     },
     nodeVersionFile: "24\n",
+    vercelJson: { installCommand: "npx --yes npm@12.0.2 ci" },
   });
 
   assert.deepEqual(result.errors, []);
@@ -51,6 +53,7 @@ test("rejects a lockfile mismatch and wrong Node policy", () => {
       packages: { "node_modules/next": { version: "16.2.6" } },
     },
     nodeVersionFile: "22\n",
+    vercelJson: { installCommand: "npx --yes npm@12.0.2 ci" },
   });
 
   assert.deepEqual(result.errors, [
@@ -72,6 +75,7 @@ test("rejects missing npm engine and incompatible lockfile format", () => {
       packages: { "node_modules/next": { version: "16.2.7" } },
     },
     nodeVersionFile: "24\n",
+    vercelJson: { installCommand: "npx --yes npm@12.0.2 ci" },
   });
 
   assert.deepEqual(
@@ -96,9 +100,31 @@ test("rejects an unapproved package manager", () => {
       packages: { "node_modules/next": { version: "16.3.4" } },
     },
     nodeVersionFile: "24\n",
+    vercelJson: { installCommand: "npx --yes npm@12.0.2 ci" },
   });
 
   assert.deepEqual(result.errors, [
     "package.json packageManager must be npm@12.0.2; received npm@12.0.1",
+  ]);
+});
+
+test("rejects an unapproved Vercel install command", () => {
+  const result = validateRuntimeContract({
+    packageJson: {
+      engines: { node: "24.x", npm: ">=12 <13" },
+      packageManager: "npm@12.0.2",
+      dependencies: { next: "16.3.4" },
+      devDependencies: {},
+    },
+    packageLock: {
+      lockfileVersion: 3,
+      packages: { "node_modules/next": { version: "16.3.4" } },
+    },
+    nodeVersionFile: "24\n",
+    vercelJson: { installCommand: "npm ci" },
+  });
+
+  assert.deepEqual(result.errors, [
+    "vercel.json installCommand must be npx --yes npm@12.0.2 ci; received npm ci",
   ]);
 });
