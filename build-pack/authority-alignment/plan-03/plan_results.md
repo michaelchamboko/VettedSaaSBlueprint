@@ -281,3 +281,18 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 - Decision: Preserve A0016 as historical evidence and make the live summary timeless.
 - Limits: This correction creates a new commit requiring exact-head review again.
 - Next action: Commit and push this correction, then obtain final exact-head review.
+
+### A0018 — T06 — Full repository gates recorded as environment-blocked
+
+- Time: 2026-10-30T02:45:00+02:00
+- Status: BLOCKED
+- Action: Attempted the required lint/typecheck/test/build command sequence on the exact Plan 3 branch.
+- Inputs: exact final commit `55e1099`; repository package scripts
+- Command: `rtk npm run lint`; `rtk npm run typecheck`; `rtk npm test`; `rtk npm run build` (worktree root)
+- Expected: Required gates complete for the repository-changing packet.
+- Observed: The command sequence produced no completion output within the bounded wait; the worktree has no `node_modules` directory. A separate `rtk npm run lint` attempt was also terminated after the same no-output timeout.
+- Evidence: command session output; `node_modules` absence inspection
+- Changed files: none from verification
+- Decision: Classify full gates as environment-blocked; do not claim they passed. The docs-only packet has independently reviewed evidence and the workflow contract passed.
+- Limits: Lint, typecheck, full tests, and build remain unverified in this fresh worktree until dependencies are provisioned.
+- Next action: Provision dependencies or carry this explicit blocker into the PR; do not deploy Plan 3 based on incomplete gates.
