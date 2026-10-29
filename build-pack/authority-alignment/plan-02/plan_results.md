@@ -6,7 +6,7 @@
 - Branch: `codex/plan-02-post-migration`
 - Baseline commit: `ccc2e1de3206f21b4e710fbc70c1e783079e0b69`
 - Current candidate: the Git commit containing this ledger entry; resolve it with `git rev-parse HEAD` rather than embedding a self-referential SHA.
-- Review history: `c0270a1ce32fe8d6da7c83748863ceef9966ad7a`, `e4212895c7ee69f684ddc502d000ab8ae2742c3d`, `c4c837e47a12a94a852b678399faa53a9f4f64c7`, and `4dbf73b8aa3605052f904fdd23ca9e010c6155cf` each received CHANGES REQUIRED; every finding and correction is recorded below. The terminal review applies to the containing commit and is retained externally.
+- Review history before the containing commit: `c0270a1ce32fe8d6da7c83748863ceef9966ad7a`, `e4212895c7ee69f684ddc502d000ab8ae2742c3d`, `c4c837e47a12a94a852b678399faa53a9f4f64c7`, `4dbf73b8aa3605052f904fdd23ca9e010c6155cf`, and `20ecbc40c42ae743443c5b0a182dc39df3f03ce7` each received CHANGES REQUIRED; every finding and correction is recorded below. The terminal review applies to the containing commit and is retained externally.
 - Historical migration ledger: [`evidence/historical-plan-results-pr40.md`](evidence/historical-plan-results-pr40.md)
 - Terminal protocol: candidate completion is determined solely by external passing-gate and CLEAN-review receipts for the immutable commit containing this ledger. No repository edit follows those receipts.
 
@@ -417,4 +417,19 @@
 - Changed files: `build-pack/authority-alignment/plan-02/plan_results.md` only.
 - Decision: create the immutable commit, run all mandatory gates against it, obtain a terminal review, and retain both receipts externally without further edits.
 - Limits: the containing commit's terminal receipts are deliberately not self-embedded.
+- Next action: follow the terminal protocol stated in the header.
+
+### A0027 — Correction to A0025 review history — Pre-terminal head added
+
+- Time: 2026-10-29T09:19:52.4330046+02:00
+- Status: OBSERVED
+- Action: Added omitted reviewed head `20ecbc40c42ae743443c5b0a182dc39df3f03ce7` to the pre-terminal review history.
+- Inputs: independent review of exact commit `9f60aa0b1c3af19b0a1a75844ae5a2aef8928595`.
+- Command: independent current-head reviewer; direct ledger correction.
+- Expected: the historical header lists every prior reviewed head while leaving the containing commit's terminal verdict external.
+- Observed: the header ended at `4dbf73b` even though A0026 correctly used the later `20ecbc4` review as input. The header now includes `20ecbc4` and explicitly scopes itself to reviews before the containing commit.
+- Evidence: independent review response retained in the task transcript.
+- Changed files: `build-pack/authority-alignment/plan-02/plan_results.md` only.
+- Decision: seal the corrected history, run exact-head gates, and obtain the external terminal verdict without further edits.
+- Limits: the containing commit's verdict remains external by design.
 - Next action: follow the terminal protocol stated in the header.
