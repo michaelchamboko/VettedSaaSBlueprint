@@ -29,6 +29,12 @@ Classification: explicit product-owner directive.
 
 Replace both document-intelligence persistence/query and repository code-impact/navigation with the existing Neon Postgres project. Remove the retired repository graph tool from the entire tracked tree, including configuration, generated bridges, scripts, tests, prompts, skills, planning records, manifests, evidence text, and active instructions. Preserve the twelve source strategy documents and the deterministic source manifest and canonical graph as auditable inputs. Store versioned semantic and code relationships in schema `repository_intelligence_v1`, prove migration and impact queries on an isolated Neon branch, obtain an independent review of the exact candidate head, then merge, apply the reviewed migration and snapshot, deploy the merged application commit, and verify production. This directive authorises no schedules, autonomous publication, or new product requirement.
 
+#### Plan 2 closeout — execution-guidance reconciliation (registered 2026-10-29)
+
+Classification: explicit product-owner directive.
+
+The post-migration acceptance audit and implementation packet are maintained under build-pack/authority-alignment/plan-02/. The closeout deepens evidence for the completed Neon replacement, reconciles outstanding Plan 1 findings, and limits the next implementation to confirmed contradictions C-201 through C-204: release guidance, explicit named article triggers, mandatory design-skill routing, and isolated transactional rollback proof. It introduces no schedule, product feature, publication authority, source-strategy amendment, or Plan 3 agent-boundary change.
+
 ### Plan 1 — Authority alignment (registered 2026-10-28)
 
 Classification: user-approved scope (owner approves amendments to living source strategy documents within this plan).
