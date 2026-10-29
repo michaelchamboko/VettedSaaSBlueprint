@@ -7,9 +7,10 @@ const expectedNodeVersion = "24";
 const expectedNodeEngine = "24.x";
 const expectedNpmEngine = ">=12 <13";
 const expectedPackageManager = "npm@12.0.2";
+const expectedVercelInstallCommand = "npx --yes npm@12.0.2 ci";
 const expectedLockfileVersion = 3;
 
-export function validateRuntimeContract({ packageJson, packageLock, nodeVersionFile }) {
+export function validateRuntimeContract({ packageJson, packageLock, nodeVersionFile, vercelJson }) {
   const errors = [];
   const sections = ["dependencies", "devDependencies"];
   const safePackageJson = packageJson ?? {};
@@ -45,6 +46,9 @@ export function validateRuntimeContract({ packageJson, packageLock, nodeVersionF
   if (safePackageJson.packageManager !== expectedPackageManager) {
     errors.push(`package.json packageManager must be ${expectedPackageManager}; received ${safePackageJson.packageManager ?? "missing"}`);
   }
+  if (vercelJson?.installCommand !== expectedVercelInstallCommand) {
+    errors.push(`vercel.json installCommand must be ${expectedVercelInstallCommand}; received ${vercelJson?.installCommand ?? "missing"}`);
+  }
 
   const normalizedNodeVersion = String(nodeVersionFile ?? "").trim();
   if (normalizedNodeVersion !== expectedNodeVersion) {
@@ -59,18 +63,20 @@ function main() {
   let packageJson;
   let packageLock;
   let nodeVersionFile;
+  let vercelJson;
 
   try {
     packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
     packageLock = JSON.parse(readFileSync(path.join(root, "package-lock.json"), "utf8"));
     nodeVersionFile = readFileSync(path.join(root, ".nvmrc"), "utf8");
+    vercelJson = JSON.parse(readFileSync(path.join(root, "vercel.json"), "utf8"));
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
     return;
   }
 
-  const { errors } = validateRuntimeContract({ packageJson, packageLock, nodeVersionFile });
+  const { errors } = validateRuntimeContract({ packageJson, packageLock, nodeVersionFile, vercelJson });
 
   if (errors.length > 0) {
     for (const error of errors) console.error(error);
