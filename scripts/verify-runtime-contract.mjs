@@ -5,7 +5,8 @@ import path from "node:path";
 const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const expectedNodeVersion = "24";
 const expectedNodeEngine = "24.x";
-const expectedNpmEngine = ">=11 <12";
+const expectedNpmEngine = ">=12 <13";
+const expectedPackageManager = "npm@12.0.2";
 const expectedLockfileVersion = 3;
 
 export function validateRuntimeContract({ packageJson, packageLock, nodeVersionFile }) {
@@ -40,6 +41,9 @@ export function validateRuntimeContract({ packageJson, packageLock, nodeVersionF
   }
   if (safePackageJson.engines?.npm !== expectedNpmEngine) {
     errors.push(`package.json engines.npm must be ${expectedNpmEngine}; received ${safePackageJson.engines?.npm ?? "missing"}`);
+  }
+  if (safePackageJson.packageManager !== expectedPackageManager) {
+    errors.push(`package.json packageManager must be ${expectedPackageManager}; received ${safePackageJson.packageManager ?? "missing"}`);
   }
 
   const normalizedNodeVersion = String(nodeVersionFile ?? "").trim();

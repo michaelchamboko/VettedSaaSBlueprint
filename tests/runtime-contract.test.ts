@@ -5,7 +5,8 @@ import { validateRuntimeContract } from "../scripts/verify-runtime-contract.mjs"
 test("rejects a mutable direct dependency range", () => {
   const result = validateRuntimeContract({
     packageJson: {
-      engines: { node: "24.x", npm: ">=11 <12" },
+      engines: { node: "24.x", npm: ">=12 <13" },
+      packageManager: "npm@12.0.2",
       dependencies: { next: "latest" },
       devDependencies: {},
     },
@@ -22,7 +23,8 @@ test("rejects a mutable direct dependency range", () => {
 test("accepts the approved runtime contract", () => {
   const result = validateRuntimeContract({
     packageJson: {
-      engines: { node: "24.x", npm: ">=11 <12" },
+      engines: { node: "24.x", npm: ">=12 <13" },
+      packageManager: "npm@12.0.2",
       dependencies: { next: "16.2.7" },
       devDependencies: {},
     },
@@ -39,7 +41,8 @@ test("accepts the approved runtime contract", () => {
 test("rejects a lockfile mismatch and wrong Node policy", () => {
   const result = validateRuntimeContract({
     packageJson: {
-      engines: { node: "24.x", npm: ">=11 <12" },
+      engines: { node: "24.x", npm: ">=12 <13" },
+      packageManager: "npm@12.0.2",
       dependencies: { next: "16.2.7" },
       devDependencies: {},
     },
@@ -60,6 +63,7 @@ test("rejects missing npm engine and incompatible lockfile format", () => {
   const result = validateRuntimeContract({
     packageJson: {
       engines: { node: "24.x" },
+      packageManager: "npm@12.0.2",
       dependencies: { next: "16.2.7" },
       devDependencies: {},
     },
@@ -73,8 +77,28 @@ test("rejects missing npm engine and incompatible lockfile format", () => {
   assert.deepEqual(
     [...result.errors].sort(),
     [
-      "package.json engines.npm must be >=11 <12; received missing",
+      "package.json engines.npm must be >=12 <13; received missing",
       "package-lock.json must use lockfileVersion 3; received 2",
     ].sort(),
   );
+});
+
+test("rejects an unapproved package manager", () => {
+  const result = validateRuntimeContract({
+    packageJson: {
+      engines: { node: "24.x", npm: ">=12 <13" },
+      packageManager: "npm@12.0.1",
+      dependencies: { next: "16.3.4" },
+      devDependencies: {},
+    },
+    packageLock: {
+      lockfileVersion: 3,
+      packages: { "node_modules/next": { version: "16.3.4" } },
+    },
+    nodeVersionFile: "24\n",
+  });
+
+  assert.deepEqual(result.errors, [
+    "package.json packageManager must be npm@12.0.2; received npm@12.0.1",
+  ]);
 });
