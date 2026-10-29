@@ -1,6 +1,6 @@
 # Handoff-loss register
 
-Record only observed evidence loss, duplicated work, contradictory authority, retry amplification, or context pressure. Unknown remains unknown.
+Record only observed evidence loss, duplicated work, contradictory authority, retry amplification, or review invalidation.
 
 | Finding ID | Observation | Raw evidence | Classification | Consequence | Status |
 |---|---|---|---|---|---|

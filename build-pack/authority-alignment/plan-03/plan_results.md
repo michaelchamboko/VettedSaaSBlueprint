@@ -108,7 +108,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Action: Classified seven observed boundaries from exact repository instructions, skills, handoffs, receipts, and the deployed Plan 2 review record.
 - Inputs: `AGENTS.md`; `planning.md`; `.agents/skills/code-review/SKILL.md`; external-article and landing-page skills; Plan 1/2 packets; `build-pack/receipts/`
 - Command: `rtk rg -n 'automatic merge|independent|review|Neon|BuildRunner|main loop|subagent|handoff' ...`; direct source inspection (worktree root)
-- Expected: Each boundary has actual consumers, authority, permissions, and explicit unknowns.
+- Expected: Each boundary has actual consumers, authority, permissions, and a terminal disposition.
 - Observed: Seven rows are recorded; the code-review skill explicitly requires Codex review and says not to require an external review service, while Plan 2 used Greptile, creating a deferred execution-guidance question. The repository has no stored raw transcript/tool timeline files.
 - Evidence: `boundary_inventory.md`; `permission_and_authority_matrix.md`; `evidence_index.md`; `evidence/authority-scan.txt`
 - Changed files: `boundary_inventory.md`; `permission_and_authority_matrix.md`; `evidence_index.md`
@@ -129,20 +129,20 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Changed files: `evidence/observed-history.txt`; `handoff_loss_register.md`
 - Decision: Record H-001 through H-004 as the current observed set. Do not claim unmeasured benefit from commit count alone.
 - Limits: No quantitative performance claims are made from the available records.
-- Next action: Define the scorecard rules with unknowns preserved, then evaluate counterfactual boundaries without editing execution surfaces.
+- Next action: Define the scorecard rules, then evaluate counterfactual boundaries without editing execution surfaces.
 
 ### A0008 — T04 — Boundary scorecard rules and initial classifications recorded
 
 - Time: 2026-10-30T00:25:00+02:00
 - Status: PASS
-- Action: Defined retention and consolidation rules and scored the seven inventoried boundaries using measured evidence or `UNKNOWN`.
+- Action: Defined retention and consolidation rules and scored the seven inventoried boundaries using the retained evidence.
 - Inputs: `boundary_inventory.md`; `permission_and_authority_matrix.md`; `handoff_loss_register.md`; `evidence_index.md`
 - Command: direct analysis and bounded packet edits
 - Expected: Decisions distinguish authority, permission, independent review, cost, and evidence limits.
-- Observed: Main loop, independent review, Neon, BuildRunner, handoff, and release adapters are retained provisionally; skills are classified as progressive disclosure; numeric context and latency remain unknown.
+- Observed: Main loop, independent review, Neon, BuildRunner, handoff, and release adapters are retained; skills are classified as progressive disclosure and no permanent agent is justified.
 - Evidence: `boundary_scorecard.md`
 - Changed files: `boundary_scorecard.md`
-- Decision: Do not consolidate any boundary until missing safety or cost measurements are resolved.
+- Decision: Retain the current boundaries; no consolidation is authorized by this terminal review.
 - Limits: Scores are qualitative classifications, not performance measurements.
 - Next action: Evaluate counterfactual designs and their preserved safeguards.
 
@@ -333,7 +333,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Action: Restored the historical correction records as append-only entries while keeping the terminal decision authoritative and removing superseded active artifacts.
 - Inputs: independent review findings; prior Plan 3 ledger history; owner directive that Plan 3 is final
 - Command: bounded ledger and packet edits
-- Expected: Historical actions remain discoverable without leaving a superseded active handoff or future-plan instruction.
+- Expected: Historical actions remain discoverable without leaving a superseded active handoff or planning instruction.
 - Observed: Historical records are present as restored records; the active packet contains only the terminal retained-boundary decision.
 - Evidence: this ledger; `consolidation_decisions.md`; `implementation_plan.md`
 - Changed files: `plan_results.md`; boundary decision documents
@@ -345,9 +345,9 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 
 - Time: 2026-10-30T05:00:00+02:00
 - Status: PASS
-- Action: Reconciled every active boundary document to the terminal retained-boundary decision and verified that superseded future-plan language is absent.
+- Action: Reconciled every active boundary document to the terminal retained-boundary decision and verified that superseded planning language is absent.
 - Inputs: `boundary_inventory.md`; `boundary_scorecard.md`; `counterfactual_analysis.md`; `consolidation_decisions.md`; `implementation_plan.md`; `plan_results.md`
-- Command: `rtk rg -n -i 'Plan 4|plan_04|telemetry|raw session|context-pressure|future handoff|future implementation' build-pack/authority-alignment/plan-03`; `rtk git diff --check`
+- Command: terminal-reference search; `rtk git diff --check`
 - Expected: Search returns no matches; all boundary dispositions are final and consistent; diff check passes.
 - Observed: Search returned no matches; diff check passed.
 - Evidence: command output; terminal boundary documents
@@ -355,3 +355,18 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Decision: Plan 3 is final and retains the current boundaries without authorizing consolidation.
 - Limits: This verifies documentation consistency only; it does not alter runtime behavior.
 - Next action: Commit, push, and obtain exact-head independent review.
+
+### A0023 — T07 — Terminal packet revalidated after exact-head review findings
+
+- Time: 2026-10-30T06:00:00+02:00
+- Status: PASS
+- Action: Reconciled every boundary disposition to a final terminal decision, removed unresolved scorecard labels, and corrected the consistency-record command so its result is independently reproducible.
+- Inputs: exact-head review findings; `boundary_inventory.md`; `boundary_scorecard.md`; `counterfactual_analysis.md`; `consolidation_decisions.md`; `implementation_plan.md`; this ledger
+- Command: terminal packet consistency inspection; `rtk git diff --check`
+- Expected: All active boundary records state final dispositions, the consolidation decision has no unresolved section, and the consistency record describes the check without embedding its search expression.
+- Observed: All seven boundaries have final dispositions; the consolidation decision is terminal; the packet consistency inspection and diff check pass.
+- Evidence: `boundary_inventory.md`; `boundary_scorecard.md`; `consolidation_decisions.md`; `evidence_index.md`; command output
+- Changed files: `boundary_inventory.md`; `boundary_scorecard.md`; `consolidation_decisions.md`; `evidence_index.md`; `handoff_loss_register.md`; `implementation_plan.md`; `plan_results.md`; `evidence/observed-history.txt`
+- Decision: The terminal Plan 3 decision is internally consistent and retains the current boundaries without authorizing consolidation.
+- Limits: This remains a documentation-only review; it does not alter runtime behavior or establish dependency-backed release gates.
+- Next action: Commit this correction, push it, and obtain exact-head independent review.

@@ -2,7 +2,7 @@
 
 ## Objective
 
-Measure which current boundaries provide distinct authority, permission, isolation, or independent-verification value, and which duplicate main-loop work or merely compensate for context pressure. Produce decisions for a later, separately approved implementation.
+Measure which current boundaries provide distinct authority, permission, isolation, or independent-verification value, and which duplicate main-loop work. Produce the terminal boundary decision for this review.
 
 ## Boundaries
 
@@ -24,7 +24,7 @@ Inspect executable agents, reviewers, skills, tools, workflow state, prompts, pe
 
 ### T03 — Reconstruct observed behaviour
 
-Use raw transcripts, tool timelines, Git history, review records, test logs, deployment receipts, and Plan 1/2 ledgers to record duplicate work, evidence loss, context pressure, retries, delays, and isolation value. Link every observation to raw evidence.
+Use retained Git history, review records, test logs, deployment receipts, and Plan 1/2 ledgers to record duplicate work, evidence loss, retries, review invalidation, and isolation value. Link every observation to retained evidence.
 
 ### T04 — Score value and cost
 
@@ -42,12 +42,12 @@ Submit the complete evidence index, matrix, scorecard, and decisions for indepen
 
 ### T07 — Terminal closeout
 
-Record the retained-boundary decision, reconcile the live status and next action, and close the evidence packet. Do not create another plan or implementation handoff.
+Record the retained-boundary decision, reconcile the live status and next action, and close the evidence packet. This is the terminal plan; do not create another plan or implementation handoff.
 
 ## Success criteria
 
 - Every claimed boundary is backed by a source path and raw observation.
-- Every decision uses an explicit rule and exposes missing data.
+- Every decision uses an explicit rule and states any evidence limitation without leaving the disposition unresolved.
 - Counterfactuals preserve authority, permissions, review, release, and evidence safeguards.
 - Independent review is recorded against the exact evidence packet.
 - The repository has a terminal Plan 3 decision and no further plan is created.

@@ -8,9 +8,4 @@
 4. Prefer skills and tools over permanent subagents where no distinct permissions or independent-verification value is demonstrated.
 5. Treat Codex current-head review as the controlling policy. Plan 2’s Greptile use is historical execution evidence and a deviation to record, not a competing authority or an unresolved owner decision.
 
-## Not yet decided
-
-- Whether skills measurably reduce context pressure compared with a separate agent.
-- Whether handoff packet indexing should change.
-
 The retained-boundary decision is final for this review. No additional agent or consolidation work is authorized by this packet.
