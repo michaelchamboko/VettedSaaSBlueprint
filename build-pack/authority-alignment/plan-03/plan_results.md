@@ -286,13 +286,28 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 
 - Time: 2026-10-30T02:45:00+02:00
 - Status: BLOCKED
-- Action: Attempted the required lint/typecheck/test/build command sequence on the exact Plan 3 branch.
+- Action: Attempted the required repository gate sequence on the exact Plan 3 branch.
 - Inputs: exact final commit `55e1099`; repository package scripts
-- Command: `rtk npm run lint`; `rtk npm run typecheck`; `rtk npm test`; `rtk npm run build` (worktree root)
+- Command: `rtk npm run verify:agent-workflow`; `rtk npm run lint`; `rtk npm run typecheck`; `rtk npm test`; `rtk npm run build` (worktree root)
 - Expected: Required gates complete for the repository-changing packet.
-- Observed: The command sequence produced no completion output within the bounded wait; the worktree has no `node_modules` directory. A separate `rtk npm run lint` attempt was also terminated after the same no-output timeout.
+- Observed: `verify:agent-workflow` passed on exact HEAD `07d5c89`; the remaining commands produced no completion output within the bounded wait; the worktree has no `node_modules` directory. A separate `rtk npm run lint` attempt was also terminated after the same no-output timeout.
 - Evidence: command session output; `node_modules` absence inspection
 - Changed files: none from verification
-- Decision: Classify full gates as environment-blocked; do not claim they passed. The docs-only packet has independently reviewed evidence and the workflow contract passed.
+- Decision: Classify lint, typecheck, full tests, and build as environment-blocked; do not claim they passed. The mandatory workflow contract passed on the exact current head.
 - Limits: Lint, typecheck, full tests, and build remain unverified in this fresh worktree until dependencies are provisioned.
 - Next action: Provision dependencies or carry this explicit blocker into the PR; do not deploy Plan 3 based on incomplete gates.
+
+### A0019 — T06 — Exact-head workflow gate recorded
+
+- Time: 2026-10-30T03:15:00+02:00
+- Status: PASS
+- Action: Re-ran the mandatory workflow contract check on the exact committed head after A0018.
+- Inputs: HEAD `07d5c898b6fd3d63efd5b65a0872aa5c9a086402`
+- Command: `rtk git rev-parse HEAD`; `rtk npm run verify:agent-workflow` (worktree root)
+- Expected: The mandatory workflow gate passes on the exact current commit.
+- Observed: HEAD is `07d5c89`; agent workflow contract passed.
+- Evidence: command output; A0018 gate record
+- Changed files: none from verification
+- Decision: Keep only lint, typecheck, full test, and build as environment-blocked gates.
+- Limits: This does not establish the four dependency-backed gates.
+- Next action: Commit this exact-head receipt, push, and obtain final review; do not merge or deploy while dependency-backed gates remain unverified.
