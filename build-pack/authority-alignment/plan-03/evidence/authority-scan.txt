@@ -1,0 +1,7 @@
+Plan 3 T02 authority scan (2026-10-29)
+
+- `AGENTS.md` requires one accountable main workflow, isolated current-head review, mandatory repository gates, Neon as evidence, and BuildRunner as lifecycle state.
+- `planning.md` names itself the sole planning authority and explicitly defers agent consolidation to Plan 3.
+- Plan 1 handoff says one main loop should own authority and that independent review is retained only where context isolation adds value.
+- Plan 2 handoff says Neon does not justify a repository-intelligence agent and BuildRunner is not an agent.
+- Plan 2 results contain historical failures and later corrections; the append-only history must not be treated as current state without reading the live summary sections.

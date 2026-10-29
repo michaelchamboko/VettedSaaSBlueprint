@@ -1,0 +1,9 @@
+Plan 3 baseline inspection (2026-10-29, client timezone Africa/Johannesburg)
+
+Branch: codex/plan-03-boundary-audit
+Initial local origin/main before fetch (historical observation): ccc2e1de3206f21b4e710fbc70c1e783079e0b69
+Fetched origin/main and aligned baseline: 958ff18deddc58630d65f60a09efa188f0226834
+Current HEAD after alignment: 958ff18deddc58630d65f60a09efa188f0226834
+Working tree: only the untracked Plan 3 packet; no pre-existing source changes.
+
+The stale local remote reference was refreshed and the worktree fast-forwarded before substantive analysis. The earlier ccc2e1d value is retained only as historical evidence of the discrepancy.
