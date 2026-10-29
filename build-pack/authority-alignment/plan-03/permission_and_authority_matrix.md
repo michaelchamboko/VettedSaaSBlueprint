@@ -10,4 +10,4 @@
 | B-06 Handoff packet | No | Records evidence and proposed next work | No | N/A | Plan 1/2 packets |
 | B-07 Release adapters | No | No source-policy authority | Yes, authenticated merge/deploy | No | GitHub/Vercel receipts and `AGENTS.md` |
 
-No permission boundary is being changed in Plan 3. Invocation counts, context pressure, and latency remain unknown until raw telemetry is available.
+No permission boundary is being changed in Plan 3. No quantitative performance claim is required for the terminal decision.

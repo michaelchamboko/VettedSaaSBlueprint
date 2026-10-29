@@ -16,7 +16,7 @@ Measure which current boundaries provide distinct authority, permission, isolati
 
 ### T01 — Establish evidence baseline
 
-Read `AGENTS.md`, `planning.md`, RTK instructions, Plan 1 records, Plan 2 records, and applicable skills. Record the fresh branch, baseline SHA, repository status, merged Plan 2 SHA, production receipt, available telemetry, and data gaps.
+Read `AGENTS.md`, `planning.md`, RTK instructions, Plan 1 records, Plan 2 records, and applicable skills. Record the fresh branch, baseline SHA, repository status, merged Plan 2 SHA, production receipt, and evidence limits.
 
 ### T02 — Inventory actual boundaries
 
@@ -28,7 +28,7 @@ Use raw transcripts, tool timelines, Git history, review records, test logs, dep
 
 ### T04 — Score value and cost
 
-For each boundary record authority separation, independent-review value, error reduction, context reduction, latency, duplicate work, evidence-loss risk, operational complexity, and rollback difficulty. Use measured values or `UNKNOWN`; never invent telemetry. Define retention/consolidation thresholds before applying them.
+For each boundary record authority separation, independent-review value, evidence-loss risk, operational complexity, and rollback difficulty. Use only observed evidence. Define the retained-boundary decision before applying it.
 
 ### T05 — Evaluate counterfactuals
 

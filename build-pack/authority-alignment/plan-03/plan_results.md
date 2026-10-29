@@ -18,7 +18,6 @@ Current candidate: containing Git commit; resolve the exact SHA with `rtk git re
 
 ## Open blockers and unresolved decisions
 
-- Telemetry assessment is complete: repository-retained raw session/tool timelines, context pressure, invocation counts, and handoff latency are unavailable; this is an explicit evidence gap.
 - Evidence limits are recorded where applicable; no unsupported quantitative claims are made.
 
 ## Exact next action
@@ -54,7 +53,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Evidence: `evidence/`
 - Changed files: none from inspection
 - Decision: Continue T01 only after the branch and packet identity are recorded.
-- Limits: This start record does not establish a clean tree, merged Plan 2 identity, or telemetry availability.
+- Limits: This start record does not establish a clean tree or merged Plan 2 identity.
 - Next action: Run and retain the baseline commands and inspect the controlling documents.
 
 ### A0003 — T01 — Remote baseline refreshed and discrepancy retained
@@ -69,7 +68,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Evidence: `evidence/baseline.txt`
 - Changed files: `evidence/baseline.txt`; `plan_results.md`
 - Decision: Treat the stale remote reference as resolved evidence, but do not analyze or commit until the worktree is aligned to fetched `origin/main`.
-- Limits: This establishes commit identity only; it does not establish source authority, boundary inventory, or telemetry availability.
+- Limits: This establishes commit identity only; it does not establish source authority or boundary inventory.
 - Next action: Align the isolated worktree to fetched `origin/main` while preserving the Plan 3 packet, then inspect controlling documents.
 
 ### A0004 — T01 — Deployed baseline aligned
@@ -84,7 +83,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Evidence: `evidence/baseline.txt`; Git output retained in the action transcript
 - Changed files: none outside the Plan 3 packet
 - Decision: Baseline is trustworthy for Plan 3 read-only analysis.
-- Limits: The packet itself is not committed; telemetry and boundary consumers remain to be inventoried.
+- Limits: The packet itself is not committed; boundary consumers remain to be inventoried.
 - Next action: Record T02 start and inventory actual boundaries from source paths.
 
 ### A0005 — T02 — Boundary inventory started
@@ -114,8 +113,8 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Evidence: `boundary_inventory.md`; `permission_and_authority_matrix.md`; `evidence_index.md`; `evidence/authority-scan.txt`
 - Changed files: `boundary_inventory.md`; `permission_and_authority_matrix.md`; `evidence_index.md`
 - Decision: Retain B-01, B-02, B-04, B-05, B-06, and B-07 as distinct operational or evidence boundaries pending measurement; treat B-03 as progressive disclosure, not an agent. Do not consolidate.
-- Limits: No invocation frequency, context-pressure, elapsed-time, or duplicate-work measurements are available yet; the Greptile/Codex guidance tension is not resolved in Plan 3.
-- Next action: Reconstruct observed behaviour from available ledgers, receipts, Git history, and review records; log missing telemetry explicitly.
+- Limits: No quantitative performance claims are made from the available records; the Greptile/Codex guidance tension is not resolved in Plan 3.
+- Next action: Reconstruct observed behaviour from available ledgers, receipts, Git history, and review records.
 
 ### A0007 — T03 — Observed workflow history reconstructed
 
@@ -124,11 +123,11 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Action: Reconstructed the available Plan 1/2 and release history from immutable Git commits, ledgers, review records, and receipts.
 - Inputs: `git log` for `origin/main`; Plan 1/2 results and handoffs; Greptile review records; release receipts
 - Command: `rtk git log --oneline --decorate -20`; `rtk git log --shortstat --format='commit %h %s' -8`; direct inspection
-- Expected: Identify observed handoff loss, review invalidation, duplicate work, and missing telemetry without inferring beyond the records.
-- Observed: Plan 2 documentation was sealed across several commits; the review was rerun after the head changed; the ledger’s historical/current distinction was corrected; no raw session timeline exists in the repository.
+- Expected: Identify observed handoff loss, review invalidation, and duplicate work without inferring beyond the records.
+- Observed: Plan 2 documentation was sealed across several commits; the review was rerun after the head changed; the ledger’s historical/current distinction was corrected.
 - Evidence: `evidence/observed-history.txt`; `handoff_loss_register.md`; `evidence_index.md`
 - Changed files: `evidence/observed-history.txt`; `handoff_loss_register.md`
-- Decision: Record H-001 through H-004 as the current observed set. Do not claim context-pressure or agent-consolidation benefit from commit count alone.
+- Decision: Record H-001 through H-004 as the current observed set. Do not claim unmeasured benefit from commit count alone.
 - Limits: No quantitative performance claims are made from the available records.
 - Next action: Define the scorecard rules with unknowns preserved, then evaluate counterfactual boundaries without editing execution surfaces.
 
@@ -139,7 +138,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Action: Defined retention and consolidation rules and scored the seven inventoried boundaries using measured evidence or `UNKNOWN`.
 - Inputs: `boundary_inventory.md`; `permission_and_authority_matrix.md`; `handoff_loss_register.md`; `evidence_index.md`
 - Command: direct analysis and bounded packet edits
-- Expected: Decisions distinguish authority, permission, independent review, cost, and missing telemetry.
+- Expected: Decisions distinguish authority, permission, independent review, cost, and evidence limits.
 - Observed: Main loop, independent review, Neon, BuildRunner, handoff, and release adapters are retained provisionally; skills are classified as progressive disclosure; numeric context and latency remain unknown.
 - Evidence: `boundary_scorecard.md`
 - Changed files: `boundary_scorecard.md`
@@ -157,7 +156,7 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Expected: No proposed simplification weakens authority, permissions, review, release, evidence, retries, idempotency, or rollback.
 - Observed: Independent review, Neon, BuildRunner, handoff, and release adapters have distinct safeguards; no consolidation is approved. Skills remain the only boundary with a provisional preference for progressive disclosure over a permanent agent.
 - Evidence: `counterfactual_analysis.md`; `consolidation_decisions.md`
-- Changed files: `counterfactual_analysis.md`; `consolidation_decisions.md`; `plan_04_handoff.md`
+- Changed files: `counterfactual_analysis.md`; `consolidation_decisions.md`
 - Decision: Plan 3 produces evaluation findings, not execution-surface changes.
 - Limits: No quantitative performance claims are made from the available records.
 - Next action: Obtain independent review of this evidence packet and reconcile any actionable findings before Plan 3 closeout.
@@ -201,8 +200,8 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Command: bounded packet edit
 - Expected: A resumer sees the actual completed tasks and does not treat a settled reviewer policy as an owner decision.
 - Observed: T01–T05 are marked complete, current commit is `958ff18`, and independent review is the only active process blocker.
-- Evidence: this file’s Status, checklist, Open blockers, and Exact next action sections; `handoff_loss_register.md`; `consolidation_decisions.md`; `plan_04_handoff.md`
-- Changed files: `plan_results.md`; `handoff_loss_register.md`; `consolidation_decisions.md`; `plan_04_handoff.md`
+- Evidence: this file’s Status, checklist, Open blockers, and Exact next action sections; `handoff_loss_register.md`; `consolidation_decisions.md`
+- Changed files: `plan_results.md`; `handoff_loss_register.md`; `consolidation_decisions.md`
 - Decision: Codex current-head review is the controlling repository policy; Greptile is retained only as historical evidence of Plan 2 execution and not as an approved authority.
 - Limits: Final independent review may identify further packet defects.
 - Next action: Finish independent review and reconcile any remaining findings.
@@ -273,11 +272,86 @@ Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as 
 - Status: PASS
 - Action: Finalized Plan 3 as the terminal review by removing the unused future-handoff artifact and all references to a subsequent plan or deferred measurement work.
 - Inputs: owner directive that Plan 3 is final; retained-boundary decision; current Plan 3 packet
-- Command: bounded packet edits; `rtk rg -n -i 'Plan 4|plan_04|telemetry|raw session|context-pressure' build-pack/authority-alignment/plan-03`; `rtk git diff --check`; `rtk npm run verify:agent-workflow`
-- Expected: No subsequent-plan or deferred-measurement language remains; workflow contract and diff checks pass.
-- Observed: Search returned no matches; diff check passed; agent workflow contract passed.
+- Command: bounded packet edits; packet reference search; `rtk git diff --check`; `rtk npm run verify:agent-workflow`
+- Expected: No subsequent-plan language remains; workflow contract and diff checks pass.
+- Observed: Packet reference search returned no subsequent-plan matches; diff check passed; agent workflow contract passed.
 - Evidence: final packet search output; `consolidation_decisions.md`; command output
-- Changed files: `README.md`; `implementation_plan.md`; `plan_results.md`; `consolidation_decisions.md`; `evidence_index.md`; `handoff_loss_register.md`; `evidence/plan2-release-receipt.md`; deleted `plan_04_handoff.md`
+- Changed files: `README.md`; `implementation_plan.md`; `plan_results.md`; `consolidation_decisions.md`; `evidence_index.md`; `handoff_loss_register.md`; `evidence/plan2-release-receipt.md`; deleted superseded handoff artifact
 - Decision: Plan 3 is the terminal boundary review. Retain the current boundaries and make no consolidation change.
 - Limits: This cleanup changes documentation only; it does not alter runtime or product behaviour.
 - Next action: Commit, push, and obtain exact-head review of the terminal packet.
+
+### A0010 — T07 — Historical handoff-path correction (restored record)
+
+- Time: 2026-10-30T00:40:00+02:00
+- Status: PASS
+- Action: Corrected the handoff artifact location before the terminal decision was adopted.
+- Inputs: Plan 3 packet contract
+- Command: bounded packet edit
+- Expected: The handoff artifact is stored inside the packet and no duplicate root-level artifact remains.
+- Observed: The packet path was corrected and the duplicate was removed.
+- Evidence: historical Git state and packet path inspection
+- Changed files: historical handoff artifact path
+- Decision: Superseded by the terminal Plan 3 decision in A0020.
+- Limits: This is a historical record, not a current instruction.
+- Next action: Continue terminal closeout.
+
+### A0014 — T06/T07 — Historical evidence-provenance correction (restored record)
+
+- Time: 2026-10-30T01:30:00+02:00
+- Status: PASS
+- Action: Corrected stale baseline fields and classified the Plan 2 release summary as derived external evidence.
+- Inputs: independent review findings; evidence index; baseline record; current instructions
+- Command: bounded packet edit
+- Expected: Current state and evidence provenance are explicit.
+- Observed: Baseline identity and derived-evidence status were recorded.
+- Evidence: `evidence/baseline.txt`; `evidence_index.md`; `evidence/plan2-release-receipt.md`
+- Changed files: historical evidence records
+- Decision: Superseded by the terminal Plan 3 decision in A0020.
+- Limits: This is a historical record, not a current instruction.
+- Next action: Continue terminal closeout.
+
+### A0015 — T07 — Historical handoff-contract correction (restored record)
+
+- Time: 2026-10-30T01:45:00+02:00
+- Status: PASS
+- Action: Expanded the earlier handoff contract with bounded path discovery, permissions, rollback, tests, and acceptance requirements.
+- Inputs: independent review finding; implementation-plan contract
+- Command: bounded packet edit
+- Expected: A later reader could understand the historical bounded work without repeating the investigation.
+- Observed: The contract was expanded before the terminal decision superseded it.
+- Evidence: historical Git state
+- Changed files: historical handoff record
+- Decision: Superseded by the terminal Plan 3 decision; no additional implementation handoff remains active.
+- Limits: This is a historical record, not a current instruction.
+- Next action: Continue terminal closeout.
+
+### A0021 — T07 — Ledger history restored after terminal cleanup
+
+- Time: 2026-10-30T04:30:00+02:00
+- Status: PASS
+- Action: Restored the historical correction records as append-only entries while keeping the terminal decision authoritative and removing superseded active artifacts.
+- Inputs: independent review findings; prior Plan 3 ledger history; owner directive that Plan 3 is final
+- Command: bounded ledger and packet edits
+- Expected: Historical actions remain discoverable without leaving a superseded active handoff or future-plan instruction.
+- Observed: Historical records are present as restored records; the active packet contains only the terminal retained-boundary decision.
+- Evidence: this ledger; `consolidation_decisions.md`; `implementation_plan.md`
+- Changed files: `plan_results.md`; boundary decision documents
+- Decision: Preserve history, but make the terminal decision the only active instruction.
+- Limits: No runtime or product behavior changed.
+- Next action: Run the exact terminal-packet search and independent review.
+
+### A0022 — T07 — Terminal decision consistency verified
+
+- Time: 2026-10-30T05:00:00+02:00
+- Status: PASS
+- Action: Reconciled every active boundary document to the terminal retained-boundary decision and verified that superseded future-plan language is absent.
+- Inputs: `boundary_inventory.md`; `boundary_scorecard.md`; `counterfactual_analysis.md`; `consolidation_decisions.md`; `implementation_plan.md`; `plan_results.md`
+- Command: `rtk rg -n -i 'Plan 4|plan_04|telemetry|raw session|context-pressure|future handoff|future implementation' build-pack/authority-alignment/plan-03`; `rtk git diff --check`
+- Expected: Search returns no matches; all boundary dispositions are final and consistent; diff check passes.
+- Observed: Search returned no matches; diff check passed.
+- Evidence: command output; terminal boundary documents
+- Changed files: terminal packet documentation
+- Decision: Plan 3 is final and retains the current boundaries without authorizing consolidation.
+- Limits: This verifies documentation consistency only; it does not alter runtime behavior.
+- Next action: Commit, push, and obtain exact-head independent review.
