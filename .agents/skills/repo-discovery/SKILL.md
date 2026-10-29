@@ -5,11 +5,11 @@ description: Use when a task needs unfamiliar architecture, flow, dependency, co
 
 # Repository discovery
 
-1. Run `gitnexus status`; run `gitnexus analyze` if the index is absent or stale.
-2. Use GitNexus query and context to identify architecture, entry points, modules, execution flows, and external boundaries.
-3. Use impact analysis on existing symbols and interfaces likely to change.
-4. Inspect exact configuration and filenames directly when graph context points to them.
-5. Record stack, conventions, reusable code, risks, test locations, and deployment boundaries in `build-pack/04-existing-codebase-discovery.md`.
+1. Confirm the selected checkout and build its deterministic snapshot with `npm run intelligence:sync`.
+2. When the snapshot has been applied to Neon, use `npm run intelligence:impact -- --snapshot <sha256> --node <id> --depth <0-8>` for a bounded relationship neighbourhood.
+3. Inspect every returned source, configuration, symbol, and test directly. Database relationships are navigation evidence, not semantic authority.
+4. Use `rg`, Git history, TypeScript imports, route inventories, and affected tests to check for relationships the snapshot parser does not model.
+5. Record stack, conventions, reusable code, risks, test locations, snapshot identity, and deployment boundaries in `build-pack/04-existing-codebase-discovery.md`.
 6. Run the simplicity audit only when existing-code bloat is relevant to the approved scope.
 
-Do not silently replace unavailable GitNexus evidence with guesses or broad text search.
+If Neon is unavailable, report that limitation and use the same deterministic snapshot plus direct repository evidence. Do not replace missing evidence with guesses.

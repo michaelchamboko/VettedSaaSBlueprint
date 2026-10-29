@@ -91,13 +91,6 @@ enforce the adopted policy. Plan 3 agent-boundary work remains out of scope.
 - Acceptance: negative tests fail for missing or stale receipts and pass for the
   exact reviewed artifact.
 
-## Conditional maintenance item
-
-If GitNexus is refreshed, it must target the selected checkout, use pinned
-version 1.6.10 in index-only mode, and regenerate
-`GITNEXUS_RECONCILIATION.json`. The non-skipped verifier must then prove exact
-node and relationship sets. GitNexus remains navigation evidence.
-
 ## Plan 3 observations
 
 - Consolidation must not reintroduce retired schedules as agent capabilities.

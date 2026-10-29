@@ -18,6 +18,36 @@ SOURCE_MANIFEST = "docs/document-intelligence/SOURCE_MANIFEST.json"
 DOCUMENT_GRAPH = "docs/document-intelligence/DOCUMENT_GRAPH.json"
 GLOBALSETUP_INSTRUCTION = "GLOBALSETUP_APPLICATION_INSTRUCTION.md"
 OPEN_FINDING_STATUSES = {"open-for-harmonisation", "open-and-visible", "partially-mitigated"}
+OWNER_RETIRED_REQUIREMENTS = {
+    "R-C-D03-S-4cb790f028a7",
+    "R-C-D03-S-5aed3f9cadd5",
+    "R-C-D03-S-87056c5d3838",
+    "R-C-D04-S-c4b95ead9969",
+    "R-C-D07-S-cda2f93a025a",
+    "R-C-D07-S-24ce753f0331",
+    "R-C-D07-S-51c73f72ca7f",
+    "R-C-D08-S-1419bc672bd8",
+    "R-C-D08-S-8a9b77a9a639",
+    "R-C-D08-S-aeebd36c92f4",
+}
+
+NON_EXECUTABLE_RETIREMENT_CONTEXT_REQUIREMENTS = {
+    "R-C-D03-S-1591bfbb4a5d",
+    "R-C-D03-S-51149f65d8b9",
+    "R-C-D03-S-61259be0ec50",
+    "R-C-D03-S-75d88f0be02c",
+    "R-C-D03-S-fa592ef88ff8",
+    "R-C-D03-S-fddd6f144f2c",
+    "R-C-D07-S-4c6012467710",
+    "R-C-D07-S-6aafd0d67023",
+    "R-C-D08-S-b3ea66f554f2",
+    "R-C-D08-S-de8aa1c5d8cf",
+}
+
+
+def is_non_executable_retirement(requirement: dict[str, Any]) -> bool:
+    """Keep only the owner-adjudicated retirement sections out of task mappings."""
+    return requirement["id"] in OWNER_RETIRED_REQUIREMENTS | NON_EXECUTABLE_RETIREMENT_CONTEXT_REQUIREMENTS
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -192,13 +222,21 @@ def build_requirements(graph: dict[str, Any], section_index: dict[str, dict[str,
             )
         if not references:
             raise ValueError(f"directive has no source reconciliation: {directive['id']}")
+        owner_authorized_proposal = (
+            directive["resolution_state"] == "confirmed"
+            and any(
+                source_classification(section_index[ref["section_id"]]["source"]["authority_status"])[1] == "proposed"
+                for ref in references
+            )
+        )
         requirements.append(
             {
                 "id": requirement_id,
                 "classification": "user-directive",
                 "authority_domain": directive["authority_domain"],
                 "implementation_relevance": "governance",
-                "status": directive["resolution_state"],
+                "status": "owner-authorized-phase-one" if owner_authorized_proposal else directive["resolution_state"],
+                **({"owner_authorized_phase_one": True} if owner_authorized_proposal else {}),
                 "statement": directive["exact_text"],
                 "planned_outcome": f"Preserve the operator's {directive['authority_domain']} decision at every connected task and approval gate.",
                 "acceptance_criteria": [
@@ -243,7 +281,7 @@ def validation_for(risk: str) -> list[dict[str, Any]]:
                 "tier": "affected",
                 "kind": "command",
                 "location": "local",
-                "argv": ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/verify-document-intelligence.ps1", "-SkipGitNexus"],
+                "argv": ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/verify-document-intelligence.ps1"],
             }
         )
     if risk == "high":
@@ -286,8 +324,8 @@ def build_tasks(root: Path, by_source: dict[str, list[str]]) -> list[dict[str, A
         requirement_ids = sorted({requirement_id for mapping in mappings for requirement_id in by_source.get(mapping, [])})
         if not requirement_ids:
             raise ValueError(f"task has no mapped requirements: {task_id}")
-        publication = task_id == "SLC-009"
-        assessment, risk = measured_risk(factors, force_high=publication)
+        release_task = task_id == "SLC-009"
+        assessment, risk = measured_risk(factors, force_high=release_task)
         initial_tokens = estimate_tokens(root, context_files)
         minimum_window = max(10_000, math.ceil(initial_tokens / 0.40))
         task: dict[str, Any] = {
@@ -312,19 +350,11 @@ def build_tasks(root: Path, by_source: dict[str, list[str]]) -> list[dict[str, A
             "operation_phase": "blocked-before-start",
             "review": {"status": "pending", "required": risk == "high", "reviewer_must_be_distinct": True},
             "blocker": {
-                "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; the commercial-ineligible graph provider is disabled.",
+                "reason": "Grommet approval and an immutable released GlobalSetup V2 ref are absent; repository intelligence does not grant execution authority.",
                 "resolution": "Resolve the recorded contradictions, reseal the digest, and obtain explicit operator approval.",
             },
             "extensions": {"vertical_slice": True},
         }
-        if publication:
-            task["publication"] = {
-                "destination": "github-and-existing-vercel-project",
-                "artifact": "reviewed commit reachable from the approved remote default branch",
-                "idempotency_key": "git-commit-sha-plus-vercel-deployment-id",
-                "credential_refs": [],
-                "attempts": [],
-            }
         tasks.append(task)
     return tasks
 
@@ -335,6 +365,26 @@ def candidate_digest(manifest: dict[str, Any], requirements: dict[str, Any], tas
         for task in tasks
     ]
     return sha256_text(stable_json({"manifest": manifest, "requirements": requirements, "task_plan": task_plan}))
+
+
+def bind_requirements_to_tasks(requirements: dict[str, Any], tasks: list[dict[str, Any]]) -> None:
+    task_ids_by_requirement: dict[str, list[str]] = {}
+    for task in tasks:
+        for requirement_id in task["requirement_ids"]:
+            task_ids_by_requirement.setdefault(requirement_id, []).append(task["id"])
+    for requirement in requirements["requirements"]:
+        requirement_id = requirement["id"]
+        requirement["acceptance_ids"] = [f"AC-{requirement_id.removeprefix('R-')}"]
+        if requirement_id in OWNER_RETIRED_REQUIREMENTS:
+            requirement["status"] = "owner-retired"
+            requirement["tasks"] = []
+            requirement["planned_outcome"] = "Retain this source statement for traceability without an executable mapping."
+        elif is_non_executable_retirement(requirement):
+            requirement["status"] = "separate-authority-required"
+            requirement["tasks"] = []
+            requirement["planned_outcome"] = "Retain this retirement context for traceability without an executable mapping."
+        else:
+            requirement["tasks"] = sorted(task_ids_by_requirement.get(requirement_id, []))
 
 
 def build_contradictions(graph: dict[str, Any], args: argparse.Namespace) -> list[dict[str, Any]]:
@@ -348,14 +398,14 @@ def build_contradictions(graph: dict[str, Any], args: argparse.Namespace) -> lis
         {
             "id": "GS-PREFLIGHT-002",
             "status": "resolved",
-            "summary": f"GitNexus {args.gitnexus_version} is {args.gitnexus_license} and is not commercially eligible; this repository's local capability contract disables the graph provider and exposes no graph command.",
-            "recommendation": "Keep the provider disabled unless separate commercial rights are documented and a new digest is approved.",
+            "summary": f"Neon Postgres schema {args.repository_intelligence_schema} is the approved persistence and impact-query boundary under {args.neon_service_basis}.",
+            "recommendation": "Test migrations on an isolated Neon branch and retain commit and digest evidence.",
         },
         {
             "id": "GS-PREFLIGHT-003",
             "status": "resolved",
-            "summary": "The historic 1.6.9 repository pin and candidate 1.6.10 pin are non-operational because the local graph provider is disabled.",
-            "recommendation": "Do not install, update, or execute either GitNexus version for this project.",
+            "summary": "The retired local graph index has been replaced by deterministic repository snapshots stored in Neon.",
+            "recommendation": "Use direct source inspection alongside bounded database impact queries.",
         },
         {
             "id": "GS-PREFLIGHT-004",
@@ -388,7 +438,7 @@ def preflight_evidence(root: Path, inventory: dict[str, Any], graph: dict[str, A
         "schema_version": 1,
         "repository": {
             "root": str(root),
-            "status": run_text(["git", "status", "--porcelain=v2", "--branch"], root),
+            "status": "not retained; inspect the current checkout at execution time",
             "remotes": run_text(["git", "remote", "-v"], root),
             "worktrees": run_text(["git", "worktree", "list", "--porcelain"], root),
             "publication_baseline": "absent",
@@ -398,7 +448,7 @@ def preflight_evidence(root: Path, inventory: dict[str, Any], graph: dict[str, A
             "python": sys.version.split()[0],
             "node": run_text(["node", "--version"], root),
             "npm": run_text(["npm", "--version"], root),
-            "gitnexus_installed": "not queried; provider disabled",
+            "neon_connection_available": "not probed during document generation",
         },
         "globalsetup": {
             "commit": args.globalsetup_commit,
@@ -411,16 +461,16 @@ def preflight_evidence(root: Path, inventory: dict[str, Any], graph: dict[str, A
             "source_snapshot": args.globalsetup_commit,
             "external_source_modified": False,
             "generic_adaptations": [
-                "optional disabled graph provider with no executable graph commands",
+                "Neon-backed repository snapshot with explicit dry-run and apply commands",
                 "hash-bound proposed sources remain explicitly non-executable",
             ],
         },
-        "gitnexus": {
-            "candidate_version": args.gitnexus_version,
-            "license": args.gitnexus_license,
+        "neon-postgres": {
+            "schema": args.repository_intelligence_schema,
+            "service_basis": args.neon_service_basis,
             "commercial_project": True,
-            "eligible": False,
-            "decision": "disabled in local capabilities; do not install, acknowledge, or execute",
+            "eligible": True,
+            "decision": "enabled through the repository capability contract",
         },
         "publication_baseline_evidence": {
             "github_main_commit": args.destination_github_head or "unverified",
@@ -481,14 +531,14 @@ def markdown_documents(
 
 ## Outcome
 
-The generic GlobalSetup runtime is installed only in this repository. Product meaning remains in repository-local sources and contracts. GitNexus is disabled; feature work, migration, publication, and deployment remain blocked pending the unresolved Grommet rows.
+The generic GlobalSetup runtime is installed only in this repository. Product meaning remains in repository-local sources and contracts. Neon repository intelligence is disabled; feature work, migration, publication, and deployment remain blocked pending the unresolved Grommet rows.
 
 ## Evidence
 
 - Repository publication baseline: `{evidence['repository']['publication_baseline']}`.
 - Source inventory: {evidence['source_intake']['source_count']} sources and {evidence['source_intake']['heading_count']} headings; digest `{evidence['source_intake']['manifest_sha256']}`.
 - GlobalSetup candidate: `{evidence['globalsetup']['commit']}`; release status `{evidence['globalsetup']['release_status']}`; upstream tests `{evidence['globalsetup']['upstream_tests']}`.
-- GitNexus: `{evidence['gitnexus']['candidate_version']}`, `{evidence['gitnexus']['license']}`, eligible=`false`.
+- Neon repository intelligence: schema `{evidence['neon-postgres']['schema']}`, service basis `{evidence['neon-postgres']['service_basis']}`, eligible=`true`.
 - GitHub rollback baseline: `{evidence['publication_baseline_evidence']['github_main_commit']}`.
 - Vercel rollback baseline: `{evidence['publication_baseline_evidence']['vercel_production_deployment']}` at `{evidence['publication_baseline_evidence']['vercel_production_url']}`.
 
@@ -507,8 +557,8 @@ The generic GlobalSetup runtime is installed only in this repository. Product me
 
 ## Files preserved
 
-- `AGENTS.md`, all strategy documents under `docs/`, all existing document-intelligence scripts and artifacts, `.gitnexusrc`, and every external checkout.
-- No `.gitnexus/`, dependency, commit, remote, or deployment state is created or changed.
+- `AGENTS.md`, all strategy documents under `docs/`, all existing document-intelligence scripts and artifacts, production database state, and every external checkout.
+- No database schema or data, dependency, commit, remote, or deployment state is created or changed.
 
 ## Rollback
 
@@ -524,7 +574,7 @@ Nine serial vertical outcomes cover provenance, harmonisation, evidence architec
 
 ## What will not be built under this approval
 
-This candidate does not authorize production code, ScrollCraft adoption, GitHub history changes, GitNexus execution, Vercel changes, secrets, autonomous publication, or deployment.
+This candidate does not authorize production code, ScrollCraft adoption, GitHub history changes, Neon repository intelligence execution, Vercel changes, secrets, autonomous publication, or deployment.
 
 ## Source classification
 
@@ -546,7 +596,7 @@ Approval is blocked while any row above remains blocking or open, any requiremen
 
 This repository currently contains strategy documents and document-intelligence tooling, not an application runtime. It has no commit or remote publication baseline. The existing VettedSaaSBlueprint checkout is expressly excluded as an implementation source and was not inspected or modified during intake.
 
-The reusable local foundation is the 12-source, stable-UID document graph. GitNexus reconciliation receipts are historical evidence only; no current GitNexus command is authorized by the present commercial-license decision.
+The reusable local foundation is the 12-source, stable-UID document graph plus a deterministic repository snapshot stored in Neon. Database results remain navigation evidence and never outrank cited source sections.
 """
     docs["05-architecture-map.md"] = """# Candidate Architecture And Dependency Map
 
@@ -584,7 +634,7 @@ Before implementation, rollback means deleting only the generated candidate pack
 """
     docs["16-definition-of-done.md"] = """# Definition Of Done
 
-GlobalSetup application is done only when an immutable released V2 engine is pinned, GitNexus use is lawfully authorized or removed by a reviewed released engine, all source conflicts are adjudicated, the digest is explicitly approved, the released engine validates the pack, every slice is independently verified and integrated, publication is Git-backed through the accepted review path, production health and provenance pass, and rollback evidence is retained. The current candidate intentionally does not satisfy these conditions.
+GlobalSetup application is done only when an immutable released V2 engine is pinned, Neon repository intelligence use is lawfully authorized or removed by a reviewed released engine, all source conflicts are adjudicated, the digest is explicitly approved, the released engine validates the pack, every slice is independently verified and integrated, publication is Git-backed through the accepted review path, production health and provenance pass, and rollback evidence is retained. The current candidate intentionally does not satisfy these conditions.
 """
     for task in tasks:
         requirements_list = "\n".join(f"- `{item}`" for item in task["requirement_ids"])
@@ -620,7 +670,13 @@ def render(args: argparse.Namespace) -> dict[str, str]:
         raise ValueError("document graph is stale relative to the source manifest")
     manifest, _, section_index = build_source_manifest(root, inventory)
     requirements, by_source = build_requirements(graph, section_index)
-    tasks = build_tasks(root, by_source)
+    non_executable_ids = {requirement["id"] for requirement in requirements["requirements"] if is_non_executable_retirement(requirement)}
+    executable_by_source = {
+        source_id: [requirement_id for requirement_id in requirement_ids if requirement_id not in non_executable_ids]
+        for source_id, requirement_ids in by_source.items()
+    }
+    tasks = build_tasks(root, executable_by_source)
+    bind_requirements_to_tasks(requirements, tasks)
     digest = candidate_digest(manifest, requirements, tasks)
     contradictions = build_contradictions(graph, args)
     evidence = getattr(args, "recorded_preflight", None) or preflight_evidence(root, inventory, graph, args)
@@ -629,9 +685,12 @@ def render(args: argparse.Namespace) -> dict[str, str]:
         "python": {"required": True, "minimum_version": "3.10", "observed_version": sys.version.split()[0]},
         "workspace": {"integration_branch": "globalsetup/integration", "serial": True},
         "graph": {
-            "required": False,
-            "provider": "disabled",
-            "reason": "GitNexus is not eligible for this commercial project; source hashes and repository-local verification remain authoritative.",
+            "required": True,
+            "provider": "neon-postgres",
+            "schema": args.repository_intelligence_schema,
+            "status_argv": ["npm", "run", "intelligence:sync"],
+            "sync_argv": ["npm", "run", "intelligence:sync:apply"],
+            "timeout_seconds": 900,
         },
     }
     state = {
@@ -644,7 +703,7 @@ def render(args: argparse.Namespace) -> dict[str, str]:
         "automation_authority": {
             "publication": {
                 "enabled": False,
-                "destinations": ["https://github.com/michaelchamboko/VettedSaaSBlueprint.git", "vercel:vetted-saa-s-blueprint"],
+                "destinations": [],
                 "command_prefixes": [],
             }
         },
@@ -697,8 +756,8 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--globalsetup-commit", required=False)
     result.add_argument("--globalsetup-release-status", required=False)
     result.add_argument("--globalsetup-test-result", required=False)
-    result.add_argument("--gitnexus-version", required=False)
-    result.add_argument("--gitnexus-license", required=False)
+    result.add_argument("--repository-intelligence-schema", required=False)
+    result.add_argument("--neon-service-basis", required=False)
     result.add_argument("--operator-name", required=False)
     result.add_argument("--destination-github-head", required=False)
     result.add_argument("--destination-vercel-deployment", required=False)
@@ -718,8 +777,8 @@ def hydrate_from_provenance(args: argparse.Namespace) -> None:
     args.globalsetup_commit = evidence["globalsetup"]["commit"]
     args.globalsetup_release_status = evidence["globalsetup"]["release_status"]
     args.globalsetup_test_result = evidence["globalsetup"]["upstream_tests"]
-    args.gitnexus_version = evidence["gitnexus"]["candidate_version"]
-    args.gitnexus_license = evidence["gitnexus"]["license"]
+    args.repository_intelligence_schema = evidence["neon-postgres"]["schema"]
+    args.neon_service_basis = evidence["neon-postgres"]["service_basis"]
     baseline = evidence.get("publication_baseline_evidence", {})
     args.destination_github_head = baseline.get("github_main_commit")
     args.destination_vercel_deployment = baseline.get("vercel_production_deployment")
@@ -737,8 +796,8 @@ def main() -> int:
             "globalsetup_commit",
             "globalsetup_release_status",
             "globalsetup_test_result",
-            "gitnexus_version",
-            "gitnexus_license",
+            "repository_intelligence_schema",
+            "neon_service_basis",
         )
         missing = [name for name in required if not getattr(args, name)]
         if missing:

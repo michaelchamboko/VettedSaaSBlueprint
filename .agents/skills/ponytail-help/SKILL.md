@@ -35,7 +35,7 @@ Level sticks until changed or session end.
 
 ## BuildRunner Boundary
 
-BuildRunner task state, required evidence, and GitNexus completion remain
+BuildRunner task state, required evidence, and Neon repository intelligence completion remain
 authoritative. Ponytail adds no automatic planning, review, resume, or shipping
 gate; invoke the specific skill only when its review is wanted.
 

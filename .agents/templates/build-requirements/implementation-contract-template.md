@@ -14,7 +14,7 @@ This contract binds the implementation to the confirmed PRD and build brief. Any
 - **Contradictions**: [Resolved contradiction records / None]
 - **Grommet review**: [Approved summary confirming source-to-build alignment]
 
-GitNexus supplies derived dependency and impact evidence only. It cannot introduce, reinterpret, or override requirements.
+Neon repository intelligence supplies derived dependency and impact evidence only. It cannot introduce, reinterpret, or override requirements.
 
 ## Automation Authority
 

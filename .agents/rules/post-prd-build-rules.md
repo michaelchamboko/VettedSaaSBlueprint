@@ -27,7 +27,7 @@ Keep tasks independently verifiable. Split by dependency or permission boundary,
 ## Execution gate
 
 - Use BuildRunner for every lifecycle transition; never maintain a competing status file.
-- Use GitNexus before editing existing symbols. BuildRunner completion must update GitNexus and record a fresh receipt after every task.
+- Use Neon repository intelligence before editing existing symbols. BuildRunner completion must update Neon repository intelligence and record a fresh receipt after every task.
 - Work on one in-progress task at a time.
 - A failed required check blocks that task. Do not run unrelated full-suite gates for low- or medium-risk work.
 - High-risk work requires full validation and independent review before completion.
@@ -35,4 +35,4 @@ Keep tasks independently verifiable. Split by dependency or permission boundary,
 
 ## Delivery boundary
 
-Validation must run where the approved task says it belongs. GitHub is source control and manual review only; GitHub Actions workflows and hosted runners are prohibited. Local application installs, servers, and production builds require an approved task exception. GlobalSetup and GitNexus bootstrap tools are allowed during setup.
+Validation must run where the approved task says it belongs. GitHub is source control and manual review only; GitHub Actions workflows and hosted runners are prohibited. Local application installs, servers, and production builds require an approved task exception. GlobalSetup and Neon repository intelligence bootstrap tools are allowed during setup.

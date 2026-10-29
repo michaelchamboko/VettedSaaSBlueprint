@@ -10,7 +10,7 @@ Use these norms when a task has consequential assumptions, unclear success crite
 
 1. Read the active task and its `context_files`.
 2. State only assumptions that could change scope, architecture, permissions, risk, or validation.
-3. Resolve cheap facts from code, approved documents, and GitNexus.
+3. Resolve cheap facts from code, approved documents, and Neon repository intelligence.
 4. Return to phase 1 only when an unresolved choice would materially change the approved build.
 
 ## During implementation
@@ -27,4 +27,4 @@ Use these norms when a task has consequential assumptions, unclear success crite
 - High risk adds full checks and a source-bound independent review receipt.
 - Record hosted evidence as a receipt from its declared runtime; record local commands as command evidence.
 
-The task is complete only after BuildRunner accepts the evidence, refreshes GitNexus, and records the completion. A failed required check, unavailable authority, or material contract contradiction is a blocker; routine transitions are not.
+The task is complete only after BuildRunner accepts the evidence, refreshes Neon repository intelligence, and records the completion. A failed required check, unavailable authority, or material contract contradiction is a blocker; routine transitions are not.

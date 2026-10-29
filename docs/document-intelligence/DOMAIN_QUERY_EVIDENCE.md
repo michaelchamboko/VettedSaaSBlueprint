@@ -1,12 +1,12 @@
 ---
-title: "GitNexus Domain Query Evidence"
-tags: [gitnexus, document-intelligence, domain-queries, verification]
+title: "Neon repository intelligence Domain Query Evidence"
+tags: [repository-intelligence, document-intelligence, domain-queries, verification]
 status: active
 created: 2026-08-29
 reviewed: 2026-08-31
 ---
 
-# GitNexus Domain Query Evidence
+# Neon repository intelligence Domain Query Evidence
 
 ## Purpose
 

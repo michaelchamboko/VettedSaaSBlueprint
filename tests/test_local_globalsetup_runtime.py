@@ -52,7 +52,7 @@ class LocalGlobalSetupRuntimeTests(unittest.TestCase):
                 "required": False,
                 "provider": "disabled",
                 "reason": "Commercial use is not eligible for the configured graph provider.",
-                "sync_argv": ["gitnexus", "analyze"],
+                "sync_argv": ["neon-postgres", "analyze"],
             }
         }
 
@@ -97,7 +97,15 @@ class LocalGlobalSetupRuntimeTests(unittest.TestCase):
             variant["properties"]["provider"]["const"]
             for variant in graph_schema["oneOf"]
         }
-        self.assertEqual({"disabled", "gitnexus"}, providers)
+        self.assertEqual({"disabled", "neon-postgres"}, providers)
+
+    def test_repository_capabilities_configure_the_neon_graph_contract(self) -> None:
+        runner = load_runner()
+        capabilities = json.loads((ROOT / "build-pack" / "capabilities.json").read_text(encoding="utf-8"))
+        graph = runner.validate_v2_graph(capabilities)
+        self.assertEqual("neon-postgres", graph["provider"])
+        self.assertEqual(["npm", "run", "intelligence:sync"], graph["status_argv"])
+        self.assertEqual(["npm", "run", "intelligence:sync:apply"], graph["sync_argv"])
 
     def test_v2_build_pack_validator_reaches_the_grommet_gate(self) -> None:
         result = subprocess.run(

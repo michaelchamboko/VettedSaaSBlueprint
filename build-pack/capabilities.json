@@ -10,8 +10,19 @@
     "serial": true
   },
   "graph": {
-    "required": false,
-    "provider": "disabled",
-    "reason": "The Phase One commit was indexed separately in GitNexus index-only mode. BuildRunner graph execution remains disabled until commercial licence eligibility is documented; deterministic source hashes, rg, imports, route inventories, and affected-test checks remain mandatory."
+    "required": true,
+    "provider": "neon-postgres",
+    "schema": "repository_intelligence_v1",
+    "status_argv": [
+      "npm",
+      "run",
+      "intelligence:sync"
+    ],
+    "sync_argv": [
+      "npm",
+      "run",
+      "intelligence:sync:apply"
+    ],
+    "timeout_seconds": 900
   }
 }

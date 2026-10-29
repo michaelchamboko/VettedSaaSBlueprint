@@ -38,9 +38,9 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 
 - Owner directive for supervised authoring: after evidence-backed drafting and before candidate validation, complete the mandatory full-article workflow in `.agents/skills/eleanor-editorial/SKILL.md`. This covers DecisionSetV2, direct-review landing blueprints, VisibilityPageV1 and individual BlogPostV1 records. Rewrite every editable prose field through all three SlopMonster passes, require a different-model-family cleanse, run the final fidelity review, and require a 5/5 CLEAN result. Save `EditorialEvidenceV2` under `build-pack/editorial`; preserve protected fields and semantic meaning; reuse it only for an unchanged artifact fingerprint and revision. A partial cleanup or missing pass cannot proceed. This does not authorise schedules, automated publication, or a change to source strategy.
 
-- GitNexus is a navigation and impact-analysis aid, not semantic authority.
-- `docs/document-intelligence/` is the explicit semantic layer.
-- Application code, workflows, tests, and deployment configuration created in this repository are members of its GitNexus index.
+- `docs/document-intelligence/` remains the reviewable semantic source layer. Neon schema `repository_intelligence_v1` stores versioned semantic and code relationships for query and impact analysis; it is evidence, not product authority.
+- Produce a deterministic snapshot with `npm run intelligence:sync`. Apply it only with an explicit database connection through `npm run intelligence:sync:apply`, then query bounded impact with `npm run intelligence:impact -- --snapshot <sha256> --node <id> --depth <0-8>`.
+- Application code, workflows, tests, deployment configuration, source sections, claims, directives, and relationships are members of the same snapshot. Each snapshot binds its Git commit, source-manifest digest, graph digest, node count, and edge count.
 - Source strategy documents remain unchanged unless the product owner separately approves an amendment.
 - Existing external VettedSaaSBlueprint code and deployments are migration context, not implementation authority.
 - Do not create or retain an authoritative `CLAUDE.md`.
@@ -49,7 +49,7 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 
 1. Select the smallest dependency-ready BuildRunner packet embedded in `planning.md` and materialised in `build-pack/execution-state.json`; `planning.md` is the only planning authority.
 2. Read the slice's exact source sections and stable identifiers before implementation.
-3. Refresh GitNexus before impact-sensitive work only when it indexes the selected checkout. When it resolves a worktree to another checkout, record deterministic source hashes and use `rg`, TypeScript imports, route inventories, and affected-test checks instead. Commercial activation remains fail-closed until licence rights are recorded.
+3. Before impact-sensitive work, build the snapshot from the selected checkout and confirm its commit and digests. Use direct source inspection, `rg`, TypeScript imports, route inventories, and affected-test checks alongside the database result. Commercial activation remains fail-closed until licence rights are recorded.
 4. Implement the slice with its automated checks and production-facing acceptance criteria.
 5. Deploy Phase One and later release slices to Vercel through the repository deployment configuration.
 6. Verify the deployed URLs independently of worker self-reporting and record the deployment receipt.
@@ -73,7 +73,7 @@ Run this workflow when source documents or their derived intelligence change:
 4. Record cross-document relationships and unresolved findings in the explicit relationship map.
 5. Run `scripts/verify-document-intelligence.ps1`, then the stable-UID impact command before proposing a later document amendment. Commit-delta detection remains unavailable while the baseline commit is deferred.
 
-During the owner-authorized non-commercial implementation phase, GitNexus may be refreshed with `powershell -NoProfile -File scripts/refresh-gitnexus.ps1` only when it targets the selected checkout. The wrapper pins GitNexus 1.6.10 and the repository-level `.gitnexusrc` enforces index-only mode so refreshes cannot inject tool-specific authority files. It remains navigation evidence, never semantic authority.
+When these records or repository relationships change, verify the SQL migration, rebuild the deterministic snapshot, inspect its counts and digests, and validate one known semantic path plus one known code-import path on an isolated Neon branch before applying the migration or snapshot to the production database branch. Never treat a database row as stronger authority than its cited source section.
 
 ## Affiliate-copy capability gate
 

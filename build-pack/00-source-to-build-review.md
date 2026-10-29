@@ -1,6 +1,6 @@
 # Mandatory Grommet Source-To-Build Review
 
-Candidate digest: `1c2cecf1fe4dbc36da2e62d1cb45f08aed98d124571ae244b9777a639412b389`
+Candidate digest: `c3e8ab12cee7746854e08e596ab6070ef5c5035117d80ee51e58a76d0003f22f`
 
 ## What will be built after approval
 
@@ -8,7 +8,7 @@ Nine serial vertical outcomes cover provenance, harmonisation, evidence architec
 
 ## What will not be built under this approval
 
-This candidate does not authorize production code, ScrollCraft adoption, GitHub history changes, GitNexus execution, Vercel changes, secrets, autonomous publication, or deployment.
+This candidate does not authorize production code, ScrollCraft adoption, GitHub history changes, Neon repository intelligence execution, Vercel changes, secrets, autonomous publication, or deployment.
 
 ## Source classification
 
@@ -32,8 +32,8 @@ This candidate does not authorize production code, ScrollCraft adoption, GitHub 
 | ID | Status | Practical impact | Recommendation |
 |---|---|---|---|
 | GS-PREFLIGHT-001 | blocking | GlobalSetup commit 7bc03227e78a838c19f8a28d082b1d46e7e2f288 is on main but is not a tagged release (unreleased-main). | Create or identify an immutable released V2 tag, then rerun intake with that ref. |
-| GS-PREFLIGHT-002 | resolved | GitNexus 1.6.10 is PolyForm-Noncommercial-1.0.0 and is not commercially eligible; this repository's local capability contract disables the graph provider and exposes no graph command. | Keep the provider disabled unless separate commercial rights are documented and a new digest is approved. |
-| GS-PREFLIGHT-003 | resolved | The historic 1.6.9 repository pin and candidate 1.6.10 pin are non-operational because the local graph provider is disabled. | Do not install, update, or execute either GitNexus version for this project. |
+| GS-PREFLIGHT-002 | resolved | Neon Postgres schema repository_intelligence_v1 is the approved persistence and impact-query boundary under managed-neon-service. | Test migrations on an isolated Neon branch and retain commit and digest evidence. |
+| GS-PREFLIGHT-003 | resolved | The retired local graph index has been replaced by deterministic repository snapshots stored in Neon. | Use direct source inspection alongside bounded database impact queries. |
 | GS-PREFLIGHT-004 | blocking | The workspace has no commit or remote baseline, while the eventual GitHub and Vercel destinations contain state that requires read-only provenance and rollback review. | Approve a history-reconciliation and in-place Vercel migration approach during the Grommet before publication work. |
 | GS-CONTRACT-001 | resolved | The local generic BuildRunner accepts hash-bound proposed sources while requiring every connected requirement and task to remain explicitly blocked. | Keep D11 proposal-only until a separate digest-bound operator approval grants implementation authority. |
 | F-002 | open-for-harmonisation | Some source relationship sections still describe an older ten-document set. | Adjudicate through document harmonisation and regenerate the candidate digest. |

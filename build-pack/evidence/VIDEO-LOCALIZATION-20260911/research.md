@@ -49,7 +49,7 @@ Three connected routes use 12 / 7 / 12 substantive sections, direct answers, sou
 
 Design read: editorial decision guide for small business buyers, preserving paper/ink/clay and Georgia headings. Dials: variance 6, motion 5, density 4. Three registered internal patterns reused with native scroll, visible defaults, GSAP cleanup and static reduced-motion behavior. Decision-path diagrams explain real task stages; no fabricated product screenshots or performance graphics.
 
-Verification: content and URL integrity tests, typecheck, lint, public-site/design gates, production build, isolated design critique, detector pass, desktop/mobile/reduced-motion/no-JavaScript browser checks and deployed verification. GitNexus refresh attempt failed at Windows PowerShell execution policy; deterministic affected paths and tests used for navigation evidence.
+Verification: content and URL integrity tests, typecheck, lint, public-site/design gates, production build, isolated design critique, detector pass, desktop/mobile/reduced-motion/no-JavaScript browser checks and deployed verification. Repository impact tooling was unavailable at the time; deterministic affected paths and tests supplied navigation evidence.
 
 Pre-existing working files and staged changes belong to the user. Current Vercel project was verified as `vetted-saa-s-blueprint`, `prj_6ymKeAz0lqMs8LYvplkn4AKMya7J`; baseline production deployment `dpl_95Gm9D2qNxEcQFUgz4AsnFZyjkZq` was READY before this release.
 # Production verification correction

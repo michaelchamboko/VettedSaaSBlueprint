@@ -28,10 +28,10 @@ class GlobalSetupIntakeTests(unittest.TestCase):
                 "unreleased-main",
                 "--globalsetup-test-result",
                 "46 passed in 195.444s",
-                "--gitnexus-version",
-                "1.6.10",
-                "--gitnexus-license",
-                "PolyForm-Noncommercial-1.0.0",
+                "--repository-intelligence-schema",
+                "repository_intelligence_v1",
+                "--neon-service-basis",
+                "managed-neon-service",
                 "--operator-name",
                 "mike jones",
                 "--destination-github-head",
@@ -69,10 +69,9 @@ class GlobalSetupIntakeTests(unittest.TestCase):
             self.assertEqual(("proposed", "proposed"), (sources["D11"]["classification"], sources["D11"]["authority"]))
 
             capabilities = json.loads((output / "capabilities.json").read_text(encoding="utf-8"))
-            self.assertEqual("disabled", capabilities["graph"]["provider"])
-            self.assertFalse(capabilities["graph"]["required"])
-            self.assertNotIn("status_argv", capabilities["graph"])
-            self.assertNotIn("sync_argv", capabilities["graph"])
+            self.assertEqual("neon-postgres", capabilities["graph"]["provider"])
+            self.assertTrue(capabilities["graph"]["required"])
+            self.assertEqual("repository_intelligence_v1", capabilities["graph"]["schema"])
 
             state = json.loads((output / "execution-state.json").read_text(encoding="utf-8"))
             self.assertEqual(9, len(state["tasks"]))
@@ -82,7 +81,16 @@ class GlobalSetupIntakeTests(unittest.TestCase):
             self.assertEqual("high", tasks["SLC-008"]["risk"])
             self.assertEqual("high", tasks["SLC-009"]["risk"])
             mapped_ids = {requirement_id for task in state["tasks"] for requirement_id in task["requirement_ids"]}
-            self.assertEqual(actual_ids, mapped_ids)
+            unmapped = {item["id"] for item in requirements["requirements"] if not item.get("tasks")}
+            self.assertEqual(actual_ids - unmapped, mapped_ids)
+            self.assertTrue(unmapped)
+            self.assertTrue(all(
+                item["status"] in {"owner-retired", "separate-authority-required"}
+                for item in requirements["requirements"]
+                if item["id"] in unmapped
+            ))
+            open_decisions = next(item for item in requirements["requirements"] if item["id"] == "R-C-D04-S-878e2b8062db")
+            self.assertTrue(open_decisions["tasks"], "unrelated D04 open decisions must not be retired by nested text")
             affected_checks = [
                 check
                 for task in state["tasks"]
@@ -90,11 +98,11 @@ class GlobalSetupIntakeTests(unittest.TestCase):
                 if check["name"] == "affected source-intelligence verification"
             ]
             self.assertTrue(affected_checks)
-            self.assertTrue(all("-SkipGitNexus" in check["argv"] for check in affected_checks))
+            self.assertTrue(all(check["argv"][-1] == "scripts/verify-document-intelligence.ps1" for check in affected_checks))
 
             preflight = json.loads((output / "preflight-evidence.json").read_text(encoding="utf-8"))
             self.assertEqual("46 passed in 195.444s", preflight["globalsetup"]["upstream_tests"])
-            self.assertEqual("not queried; provider disabled", preflight["prerequisites"]["gitnexus_installed"])
+            self.assertEqual("not probed during document generation", preflight["prerequisites"]["neon_connection_available"])
             self.assertEqual("this-repository-only", preflight["local_runtime"]["installation_scope"])
             self.assertFalse(preflight["local_runtime"]["external_source_modified"])
 

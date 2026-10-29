@@ -1,13 +1,13 @@
 ---
 title: "Vetted SaaS B Semantic Relationship Map"
-tags: [document-intelligence, relationships, gitnexus, generated]
+tags: [document-intelligence, relationships, repository-intelligence, generated]
 status: active
 created: 2026-08-29
 ---
 
 # Vetted SaaS B Semantic Relationship Map
 
-> GENERATED — DO NOT EDIT. Canonical source: `DOCUMENT_GRAPH.json`. GitNexus is structural corroboration, not semantic authority.
+> GENERATED — DO NOT EDIT. Canonical source: `DOCUMENT_GRAPH.json`. Neon repository intelligence is structural corroboration, not semantic authority.
 
 - Documents: 12
 - Sections: 1424
@@ -823,11 +823,11 @@ created: 2026-08-29
 | `R-D11-S-de8d291e3f89-DEFINES-C-D11-S-de8d291e3f89` | defines | proposal | confirmed | `D11-S-de8d291e3f89` | `C-D11-S-de8d291e3f89` | D11 | The reviewed source section contains one or more claim-bearing statements represented by its exact section text. |
 | `R-D11-S-f04d509e95a5-DEFINES-C-D11-S-f04d509e95a5` | defines | proposal | confirmed | `D11-S-f04d509e95a5` | `C-D11-S-f04d509e95a5` | D11 | The reviewed source section contains one or more claim-bearing statements represented by its exact section text. |
 | `R-D11-S-fc1453398739-DEFINES-C-D11-S-fc1453398739` | defines | proposal | confirmed | `D11-S-fc1453398739` | `C-D11-S-fc1453398739` | D11 | The reviewed source section contains one or more claim-bearing statements represented by its exact section text. |
-| `R-UD-001-CONSTRAINS-D08-H081` | constrains | user-directive | confirmed | `UD-001` | `C-D08-S-01d4ffda4a5e` | D08 | The foundation phase keeps GitNexus subordinate to direct source authority. |
+| `R-UD-001-CONSTRAINS-D08-H081` | constrains | user-directive | confirmed | `UD-001` | `C-D08-S-01d4ffda4a5e` | D08 | The foundation phase keeps Neon repository intelligence subordinate to direct source authority. |
 | `R-UD-002-CONSTRAINS-D05-H024` | constrains | user-directive | confirmed | `UD-002` | `C-D05-S-512aa0624ec2` | D05 | The user directive reinforces the repository evidence and anti-invention rule. |
 | `R-UD-002-CONSTRAINS-D06-H018` | constrains | user-directive | confirmed | `UD-002` | `C-D06-S-1c96d65d823b` | D06 | The user directive reinforces the implementation anti-hallucination rule. |
 | `R-UD-003-CONFLICTS-WITH-D05-H127` | conflicts-with | user-directive | unresolved | `UD-003` | `C-D05-S-8b31a6de2a36` | D05, D09, D11 | Commercial optimisation must be reconciled with ranking independence without pre-deciding the outcome. |
-| `R-UD-004-CONSTRAINS-D08-H081` | constrains | user-directive | confirmed | `UD-004` | `C-D08-S-01d4ffda4a5e` | D08 | No-commit scope limits GitNexus commit-delta analysis but not direct-source mapping. |
+| `R-UD-004-CONSTRAINS-D08-H081` | constrains | user-directive | confirmed | `UD-004` | `C-D08-S-01d4ffda4a5e` | D08 | No-commit scope limits Neon repository intelligence commit-delta analysis but not direct-source mapping. |
 | `R-UD-005-CONSTRAINS-D06-H052` | constrains | user-directive | confirmed | `UD-005` | `C-D06-S-9ed11e5a92d5` | D04, D06, D10, D11 | Reduced motion remains an equivalent information-and-action experience, not a default minimal-motion preference. |
 | `R-UD-006-CONSTRAINS-D11-H020` | constrains | user-directive | confirmed | `UD-006` | `C-D11-S-c944d4f78cfb` | D06, D11 | ScrollCraft is primary for advanced linear narrative motion; CSS/static is baseline and GSAP is an exception, not a fallback engine. |
 | `R-UD-007-CONSTRAINS-D06-H060` | constrains | user-directive | confirmed | `UD-007` | `C-D06-S-16d0589bdc14` | D06 | Marketing capabilities must be selected by declared page intent and page type rather than invoked as an unrestricted bundle. |

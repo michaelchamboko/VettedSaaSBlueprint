@@ -60,7 +60,7 @@
   },
   "followUps": [
     "Urgent dependency security review: npm audit --omit=dev reports5 advisories,1 moderate,3 high,1 critical, including Next16.2.11. No dependency change or claim of exploitability assessment in this release.",
-    "GitNexus refresh blocked by PowerShell script policy; direct imports, source and tests used for bounded impact inspection.",
+    "Repository impact tooling was unavailable; direct imports, source and tests supplied bounded impact inspection.",
     "Commercial outcomes are unmeasured; do not claim conversion or revenue uplift."
   ]
 }

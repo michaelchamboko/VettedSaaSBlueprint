@@ -17358,7 +17358,7 @@
       "classification": "repository-fact",
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "separate-authority-required",
+      "status": "owner-retired",
       "statement": "## 19. Daily Editorial Brief — 06:00 SAST\n\nRETIRED 2026-10-28: the fixed-time editorial brief and its scheduler are not part of the current execution path. The following subsections are retained as a historical brief schema only; an equivalent brief may be assembled inside an explicit manual or API-triggered run.\n",
       "planned_outcome": "Deliver or review 19. Daily Editorial Brief — 06:00 SAST within the editorial-operations boundary.",
       "acceptance_criteria": [
@@ -17854,7 +17854,7 @@
       "classification": "repository-fact",
       "authority_domain": "editorial-operations",
       "implementation_relevance": "strategy-and-future-implementation",
-      "status": "separate-authority-required",
+      "status": "owner-retired",
       "statement": "### Stage 8 — Run the first 06:00 editorial brief\n\nRETIRED 2026-10-28: do not schedule a 06:00 editorial brief. An explicitly triggered run may generate a bounded queue from demand, evidence and page state.\n",
       "planned_outcome": "Deliver or review Stage 8 — Run the first 06:00 editorial brief within the editorial-operations boundary.",
       "acceptance_criteria": [

@@ -7,7 +7,6 @@ const eslintConfig = [
       ".agents/skills/**",
       ".automation/**",
       ".freebuff/**",
-      ".gitnexus/**",
       ".globalsetup-backups/**",
       ".scratch/**",
       ".worktrees/**",

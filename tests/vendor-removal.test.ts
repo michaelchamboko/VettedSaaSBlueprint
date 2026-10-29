@@ -6,7 +6,7 @@ import test from "node:test";
 const forbidden = ["ora", "cle"].join("");
 // Workspace-local artifact directories are not repository content; the
 // historical runner assumed a clean checkout.
-const excludedDirectories = new Set([".git", ".next", "node_modules", ".worktrees", ".automation", ".gitnexus", ".stage2", ".freebuff", ".scratch", "build-pack", ".agents"]);
+const excludedDirectories = new Set([".git", ".next", "node_modules", ".worktrees", ".automation", ".stage2", ".freebuff", ".scratch", "build-pack", ".agents"]);
 
 function repositoryFiles(root: string, directory = root): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

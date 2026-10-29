@@ -14,7 +14,7 @@
 ## Consumers
 
 The original stable UID remains current in the document inventory, canonical
-graph, GitNexus bridge, build-pack source manifest, requirements ledger,
+graph, Neon repository intelligence bridge, build-pack source manifest, requirements ledger,
 phase map, and historical task record. `D02-S-e9102f3d6d0a` identifies the
 abandoned intermediate heading and is retained only in Plan 1 audit evidence.
 

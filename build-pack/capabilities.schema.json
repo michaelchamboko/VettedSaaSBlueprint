@@ -11,14 +11,11 @@
       "oneOf": [
         {
           "type": "object",
-          "required": ["required", "provider", "version", "repository_alias", "branch", "license", "status_argv", "sync_argv"],
+          "required": ["required", "provider", "schema", "status_argv", "sync_argv"],
           "properties": {
             "required": {"const": true},
-            "provider": {"const": "gitnexus"},
-            "version": {"const": "1.6.10"},
-            "repository_alias": {"type": "string", "minLength": 1},
-            "branch": {"type": "string", "minLength": 1},
-            "license": {"type": "object", "required": ["spdx", "eligible"]},
+            "provider": {"const": "neon-postgres"},
+            "schema": {"const": "repository_intelligence_v1"},
             "status_argv": {"type": "array", "minItems": 1},
             "sync_argv": {"type": "array", "minItems": 1},
             "timeout_seconds": {"type": "integer", "minimum": 1}

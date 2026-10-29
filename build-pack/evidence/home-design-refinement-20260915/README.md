@@ -25,7 +25,7 @@ Registered homepage dials6/5/5 retained. Paper/ink/clay palette, serif typograph
 
 Six release gates pass: lint, tests, typecheck, production build, public-site validation and design-standard verification. Browser proof covers unchanged homepage copy/header/sitemap, semantic heading word boundaries, keyboard dropdown, gradient progression, forward/reverse line movement, removed horizontal borders, mobile and short landscape, reduced motion, no JavaScript and forced colours. Local review corrected literal spaces between heading spans. Production checks repeated against the live domain; existing navigation and buyer journeys passed independently.
 
-Independent design and code critique: PASS. Bounded Impeccable source detector reported five existing warnings: three vertical borders in unrelated reference-page styles, the unchanged vertical disclosure accent, and the existing Arial fallback. None originates in the new CSS or motion; all retained within scope. Rendered screenshots supply visual evidence alongside the source detector. No PRODUCT.md fabricated. GitNexus remained unavailable after earlier wrapper policy/native-worker failures; direct imports and scoped diff supplied impact evidence.
+Independent design and code critique: PASS. Bounded Impeccable source detector reported five existing warnings: three vertical borders in unrelated reference-page styles, the unchanged vertical disclosure accent, and the existing Arial fallback. None originates in the new CSS or motion; all retained within scope. Rendered screenshots supply visual evidence alongside the source detector. No PRODUCT.md fabricated. Repository impact tooling was unavailable at the time; direct imports and the scoped diff supplied impact evidence.
 
 ## Release
 

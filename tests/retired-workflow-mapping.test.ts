@@ -6,6 +6,8 @@ type Requirement = {
   id: string;
   status: string;
   tasks: string[];
+  statement?: string;
+  sources?: Array<{ source_id?: string }>;
 };
 
 const requirements = JSON.parse(readFileSync("build-pack/requirements.json", "utf8")).requirements as Requirement[];
@@ -17,17 +19,22 @@ test("only the explicit retired workflow requirements lose executable mappings",
     "R-C-D03-S-5aed3f9cadd5",
     "R-C-D03-S-87056c5d3838",
     "R-C-D04-S-c4b95ead9969",
+    "R-C-D07-S-24ce753f0331",
+    "R-C-D07-S-51c73f72ca7f",
     "R-C-D07-S-cda2f93a025a",
     "R-C-D08-S-1419bc672bd8",
     "R-C-D08-S-8a9b77a9a639",
     "R-C-D08-S-aeebd36c92f4",
   ];
 
-  assert.deepEqual(
-    requirements.filter((requirement) => requirement.status === "owner-retired").map((requirement) => requirement.id),
-    retiredIds,
-  );
+  assert.deepEqual(requirements.filter((requirement) => requirement.status === "owner-retired").map((requirement) => requirement.id).sort(), retiredIds.sort());
   for (const id of retiredIds) assert.deepEqual(byId.get(id)?.tasks, []);
+
+  const scheduledRetirementContext = requirements.filter(
+    (requirement) => /RETIRED 2026-10-28/i.test(requirement.statement ?? "")
+      && requirement.sources?.some((source) => ["D03", "D07", "D08"].includes(source.source_id ?? "")),
+  );
+  for (const requirement of scheduledRetirementContext) assert.deepEqual(requirement.tasks, [], requirement.id);
 });
 
 test("generic automation and reliability requirements remain outside the retired programme", () => {

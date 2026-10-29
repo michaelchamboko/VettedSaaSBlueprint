@@ -1,6 +1,5 @@
 .env
 .env.*
-.gitnexus/
 .next/
 node_modules/
 node_modules.incomplete-recovery/

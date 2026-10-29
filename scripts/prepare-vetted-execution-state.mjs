@@ -50,6 +50,8 @@ const retiredWorkflowRequirementIds = new Set([
   "R-C-D03-S-87056c5d3838", // 23:00 SAST hard takeover
   "R-C-D04-S-c4b95ead9969", // Scheduled optimisation
   "R-C-D07-S-cda2f93a025a", // Retired fixed-time editorial brief boundary
+  "R-C-D07-S-24ce753f0331", // Retired 06:00 editorial brief parent section
+  "R-C-D07-S-51c73f72ca7f", // Retired first 06:00 editorial brief stage
   "R-C-D08-S-1419bc672bd8", // Daily research must never prevent daily delivery
   "R-C-D08-S-8a9b77a9a639", // Daily research output
   "R-C-D08-S-aeebd36c92f4", // Daily Research Cycle
@@ -175,6 +177,7 @@ const main = async () => {
     capabilities_file: "build-pack/capabilities.json",
     source_manifest_file: "build-pack/source-manifest.json",
     requirements_file: "build-pack/requirements.json",
+    grommet_file: "build-pack/grommet-approval.json",
     automation_authority: { publication: { enabled: false, destinations: [], command_prefixes: [] } },
     tasks,
     extensions: {
@@ -195,9 +198,12 @@ const main = async () => {
     python: { required: true, minimum_version: "3.10", observed_version: "3.11.15" },
     workspace: { integration_branch: "codex/vetted-saas-integration", serial: true },
     graph: {
-      required: false,
-      provider: "disabled",
-      reason: "The Phase One commit was indexed separately in GitNexus index-only mode. BuildRunner graph execution remains disabled until commercial licence eligibility is documented; deterministic source hashes, rg, imports, route inventories, and affected-test checks remain mandatory.",
+      required: true,
+      provider: "neon-postgres",
+      schema: "repository_intelligence_v1",
+      status_argv: ["npm", "run", "intelligence:sync"],
+      sync_argv: ["npm", "run", "intelligence:sync:apply"],
+      timeout_seconds: 900,
     },
   };
 

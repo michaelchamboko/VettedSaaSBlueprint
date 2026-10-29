@@ -4,5 +4,4 @@
 /docs/Vetted-SaaS-Blueprint-*.md text eol=lf
 /docs/document-intelligence/*.json text eol=lf
 /docs/document-intelligence/*.md text eol=lf
-/docs/document-intelligence/gitnexus-bridge/** text eol=lf
 /build-pack/*.json text eol=lf
