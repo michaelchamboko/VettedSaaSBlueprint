@@ -19,8 +19,8 @@ test("the default CLI consumes bound research output and rejects a result for an
     await writeFile(path.join(root, "approved-urls.md"), "");
     await writeFile(path.join(root, "article.md"), "# A practical guide\n\nThis sufficiently long article describes a workflow and its trade-offs so the supervising agent can research a defensible topic.");
     const created = await createArticleImport(root, "article.md");
-    await executeImportCommand(root, { kind: "resume-pending" });
-    await executeImportCommand(root, { kind: "resume-pending" });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const current = await loadImport(root, created.importId);
     const workPath = current.nextAction.match(/execute (.*?)\.work\.json/)![1];
     const packet = JSON.parse(await readFile(path.join(root, `${workPath}.work.json`), "utf8"));
@@ -28,22 +28,22 @@ test("the default CLI consumes bound research output and rejects a result for an
     await writeJsonAtomically(path.join(root, evidencePath), { sources: [{ url: "https://example.com/manual", claims: ["A mocked supported claim."] }] });
     const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: "0".repeat(64), summary: "Mocked research evidence.", work: { stage: "RESEARCHING", evidencePath } };
     await writeJsonAtomically(path.join(root, packet.resultPath), result);
-    await executeImportCommand(root, { kind: "resume-pending" });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const rejected = await loadImport(root, created.importId);
     assert.equal(rejected.stage, "WAITING_EXTERNAL");
     assert.equal(rejected.resumeStage, "RESEARCHING");
     assert.match(rejected.stageReceipts.at(-1)!.message, /STAGE_RESULT_BINDING_MISMATCH/);
     await writeJsonAtomically(path.join(root, packet.resultPath), { ...result, sourceFingerprint: created.sourceFingerprint });
-    await executeImportCommand(root, { kind: "resume-pending" });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
     assert.equal((await loadImport(root, created.importId)).stage, "TRANSFORMING");
     // A neutral (mode-"none") import must not be able to select the commercial direct-review format.
-    await executeImportCommand(root, { kind: "resume-pending" });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const transformPath = (await loadImport(root, created.importId)).nextAction.match(/execute (.*?)\.work\.json/)![1];
     const transformPacket = JSON.parse(await readFile(path.join(root, `${transformPath}.work.json`), "utf8"));
     const neutralArtifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
     await writeJsonAtomically(path.join(root, "src/generated/landing-pages/example.json"), neutralArtifact);
     await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", format: "direct-review" } });
-    await executeImportCommand(root, { kind: "resume-pending" });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const rejectedTransform = await loadImport(root, created.importId);
     assert.equal(rejectedTransform.stage, "WAITING_EXTERNAL");
     assert.match(rejectedTransform.stageReceipts.at(-1)!.message, /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
@@ -85,7 +85,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     const created = await createArticleImport(root, "article.md");
     importId = created.importId;
     // Each invocation constructs a fresh executor, as a later heartbeat process would.
-    const heartbeat = () => executeImportCommand(root, { kind: "resume-pending" }, createSupervisedImportExecutor(root, operations));
+    const heartbeat = () => executeImportCommand(root, { kind: "resume", importId: created.importId }, createSupervisedImportExecutor(root, operations));
     const current = () => loadImport(root, created.importId);
     const submit = async (work: Record<string, unknown>) => {
       await heartbeat();

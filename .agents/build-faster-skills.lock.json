@@ -19,7 +19,7 @@
     ".agents/skills/before-and-after/scripts/capture.sh": "a5df8a62e28e9c78df64c63bb2b6c3a8c9a3fbe7d6b99c2990d27f1b9ed052fb",
     ".agents/skills/before-and-after/scripts/upload-and-copy.sh": "b24c807e70ddd9590827aad41cc3b67a37aa8380280edc53b2987d32578a658f",
     ".agents/skills/before-and-after/SKILL.md": "8b3ce992ccf3153a9de5a83712968725946b3cd71a2a13a119bb60295713d8ad",
-    ".agents/skills/code-review/SKILL.md": "2f25829e278a76174c98ac5a7969a34be7219d95c9142328da7bcfda252d7a08",
+    ".agents/skills/code-review/SKILL.md": "6cf7c43896aa01ae33ed0c8a81080063bc7d5d1eab66e2a7263ce0fa16de39be",
     ".agents/skills/code-structure/SKILL.md": "2f0ed408b525c65d422699490a159584fd977d0cfca5b15a5c9a47cf07b95f71",
     ".agents/skills/evidence-driven-testing/scripts/evidence.py": "62ab4e8f689e3d19c9149999ec0d8fbca605f11c4e7581014ab1a34a4cc5a7cf",
     ".agents/skills/evidence-driven-testing/SKILL.md": "94556f36f386d897b9378d1c31408b567c77bc3f6eb9b133737996174f54577b",

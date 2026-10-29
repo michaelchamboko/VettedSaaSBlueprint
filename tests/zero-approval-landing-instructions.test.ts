@@ -13,6 +13,8 @@ const activeInstructionPaths = [
   "docs/deployment/public-site-release.md",
   "docs/landing-workflow/README.md",
   ".agents/skills/landing-page-production-orchestrator/SKILL.md",
+  ".agents/skills/external-article-import/SKILL.md",
+  ".agents/skills/code-review/SKILL.md",
   ".agents/skills/conversion-copy-review/SKILL.md",
   ".agents/skills/affiliate-compliance-review/SKILL.md",
   ".agents/skills/landing-page-batch-retro/SKILL.md",
@@ -63,6 +65,16 @@ test("active landing instructions do not stop a normal URL run for human approva
   }
 
   assert.deepEqual(failures, []);
+});
+
+test("release guidance permits automatic merge only after current-head review and gates", () => {
+  const sources = [
+    readFileSync(path.resolve(repositoryRoot, ".agents/skills/external-article-import/SKILL.md"), "utf8"),
+    readFileSync(path.resolve(repositoryRoot, ".agents/skills/code-review/SKILL.md"), "utf8"),
+  ].join("\n");
+  assert.match(sources, /independent review of the current head/i);
+  assert.match(sources, /automatic merge and deployment/i);
+  assert.doesNotMatch(sources, /wait for owner-approved merge/i);
 });
 
 test("active landing instructions define the database-free supervised release path", () => {
