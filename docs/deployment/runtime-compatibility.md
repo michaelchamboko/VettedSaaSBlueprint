@@ -3,14 +3,14 @@
 ## Approved baseline
 
 - Node.js: 24.x
-- npm: 11.x
+- npm: 12.0.2, pinned through `packageManager`
 - Lockfile: npm lockfileVersion 3
 - Application runtime: Vercel builds the Next.js application using `npm ci`.
 - Local runtime: optional for review and validation only; it is not the production runtime.
 
 ## Contract checks
 
-Run `npm run verify:runtime-contract` before any install, test, build, or deployment review. It verifies the direct manifest versions, lockfile versions, Node policy, and `.nvmrc`.
+Run `npm run verify:runtime-contract` before any install, test, build, or deployment review. It verifies direct manifest versions, the pinned package manager, lockfile versions, Node policy, and `.nvmrc`.
 
 ## Allowed baseline maintenance
 
