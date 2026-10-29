@@ -5,9 +5,10 @@
 - Status: READY FOR INDEPENDENT REVIEW
 - Branch: `codex/plan-02-post-migration`
 - Baseline commit: `ccc2e1de3206f21b4e710fbc70c1e783079e0b69`
-- Current commit: `ccc2e1de3206f21b4e710fbc70c1e783079e0b69`
+- Current candidate: the Git commit containing this ledger entry; resolve it with `git rev-parse HEAD` rather than embedding a self-referential SHA.
+- Last exact head reviewed: `c0270a1ce32fe8d6da7c83748863ceef9966ad7a` — CHANGES REQUIRED; corrections recorded below.
 - Historical migration ledger: [`evidence/historical-plan-results-pr40.md`](evidence/historical-plan-results-pr40.md)
-- Exact next action: obtain an independent review of the exact committed packet head, resolve any findings, and record the reviewed identity.
+- Exact next action: commit the four review corrections and obtain independent review of that exact new head.
 
 ## Task checklist
 
@@ -22,7 +23,7 @@
 
 ## Open blockers and unresolved decisions
 
-- Packet completion is awaiting independent review of the exact committed head.
+- Packet completion is awaiting independent review of the corrected exact committed head.
 - C-204 is an implementation-phase proof gap, not a planning blocker: the import transaction exists, but Plan 2 must demonstrate rollback on an isolated Neon branch with an injected failure.
 - The app-created worktree was not writable in the sandbox; the implementation branch therefore uses the repository's writable `.worktrees` directory.
 
@@ -297,3 +298,48 @@
 - Decision: commit this exact candidate through repository hooks for independent current-head review.
 - Limits: independent semantic review has not yet occurred.
 - Next action: commit the staged candidate and record its exact SHA.
+
+### A0019 — T07 — Independent review of c0270a1 required four corrections
+
+- Time: 2026-10-29T08:42:10.8806775+02:00
+- Status: FAIL
+- Action: Obtained an independent semantic and scope review of exact commit `c0270a1ce32fe8d6da7c83748863ceef9966ad7a`.
+- Inputs: full diff from `ccc2e1de3206f21b4e710fbc70c1e783079e0b69` to `c0270a1ce32fe8d6da7c83748863ceef9966ad7a`.
+- Command: independent current-head reviewer; no file edits by the reviewer.
+- Expected: no unresolved accuracy, safety, authorization, or handoff defect.
+- Observed: CHANGES REQUIRED. The reviewer found a stale current-commit field, insufficient authoritative binding of the rollback-test database target, ambiguous implementation authorization, and incomplete disposition of Plan 1 P2-005. The reviewer confirmed the remaining scope, migration claims, C-201 through C-204 grounding, retired-provider search, and whitespace were clean.
+- Evidence: independent review response retained in the task transcript; corrected packet sections cited in A0020.
+- Changed files: none by the reviewer.
+- Decision: correct all four findings together and re-review the new exact head.
+- Limits: the reviewer did not rerun the external Neon or Vercel queries.
+- Next action: apply bounded corrections to packet identity, database safety, authorization, and P2-005 disposition.
+
+### A0020 — T07 — Four independent-review findings corrected
+
+- Time: 2026-10-29T08:42:10.8806775+02:00
+- Status: PASS
+- Action: Replaced the self-referential commit field, added an explicit future owner-authorization gate, bound rollback testing to authenticated Neon control-plane identity, and fully disposed Plan 1 P2-005 without claiming an API implementation.
+- Inputs: review findings against `c0270a1`; Plan 1 handoff P2-005; current import scripts, engine, state, release adapters, routes, and tests.
+- Command: direct inspection and bounded documentation edits.
+- Expected: each review finding has an explicit correction and testable implementation instruction.
+- Observed: README and implementation plan now distinguish readiness from authorization; E02 requires authoritative project/branch/endpoint binding and disposable-branch cleanup; P-10 records current authentication, idempotency, observability, retry, and request-path evidence; the ledger identifies reviewed commits without pretending a file can embed its own containing SHA.
+- Evidence: `README.md`; `implementation_plan.md` E02/E03; `authority_execution_matrix.md` P-10 and P2-005 disposition; `post_migration_acceptance.md`.
+- Changed files: the five cited packet files.
+- Decision: rerun packet checks and obtain independent review of the corrective commit.
+- Limits: these are planning corrections; Plan 2 runtime and database proof remain unimplemented.
+- Next action: rerun whitespace, forbidden-token, and mandatory repository checks affected by the packet corrections.
+
+### A0021 — T07 — Corrected packet passed all required checks
+
+- Time: 2026-10-29T08:49:18.4700964+02:00
+- Status: PASS
+- Action: Repeated the mandatory repository gates and packet-specific checks after all four review corrections.
+- Inputs: corrected five-file packet delta on top of `c0270a1ce32fe8d6da7c83748863ceef9966ad7a`.
+- Command: `rtk npm run verify:agent-workflow`; `rtk npm run lint`; `rtk npm run typecheck`; `rtk npm test`; forbidden-token search; `rtk proxy git diff --check`.
+- Expected: all commands exit 0 except the no-match search, which must exit 1 with no output.
+- Observed: workflow verification, typecheck, lint, tests, and diff check passed. Lint retained 0 errors and 15 existing warnings. Tests reported 397 tests, 394 passed, 0 failed, and 3 skipped. The retired-provider search exited 1 with no matches. Diff check reported only configured LF-to-CRLF conversion notices and no whitespace defect.
+- Evidence: command outputs retained in the task transcript.
+- Changed files: none beyond the five corrected packet files.
+- Decision: commit the corrected packet and request independent review of the new exact head.
+- Limits: these checks do not execute Plan 2 or mutate Neon.
+- Next action: commit the corrective delta through repository hooks.

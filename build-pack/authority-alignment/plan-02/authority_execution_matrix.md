@@ -11,3 +11,12 @@
 | P-07 Retired scheduled programme cannot regain execution | AGENTS.md lines 30–35; planning.md line 14 | requirement mapper and retirement tests | Retired requirements remain unmapped | Aligned |
 | P-08 Full editorial and independent review receipts remain mandatory | AGENTS.md line 39; release contracts | article import approval and release code | Receipt binding and exact-head review are enforced | Aligned |
 | P-09 Database apply requires an explicit connection | AGENTS.md line 42 | BuildRunner graph sync and sync script | Apply fails without an explicit environment-provided connection | Intentional operational distinction |
+| P-10 Manual or API runs remain authenticated, idempotent, observable, retryable, and off public request paths | AGENTS.md execution workflow item 7; Plan 1 P2-005 | package scripts, import CLI, engine, supervised executor, local release adapter, recovery/release tests | Current trigger is a local manual CLI, not a public API route; durable atomic state, stage idempotency keys, leases, failure stages, retries, and authenticated GitHub/Vercel release adapters exist. Unbound bulk resume contradicts the named-run boundary | Aligned except C-202; any future API route requires authentication and separate evidence |
+
+## Plan 1 P2-005 disposition
+
+- Receipt enforcement is covered by P-08 and the release/presentation negative tests.
+- The current trigger surface is local CLI execution in the primary checkout. No `src/app` route imports the article-import engine, so no API capability is claimed and authoring remains outside latency-sensitive public requests.
+- Atomic state files, stage-scoped idempotency keys, leases, explicit waiting/failure states, recovery strategies, and retry tests provide the current observability, idempotency, and retry evidence.
+- GitHub and Vercel release operations use authenticated local adapters. A future API trigger would need an authenticated boundary before it could be accepted.
+- C-202 carries the one remaining enforcement mismatch: bulk `resume-pending` must be removed so continuation always names an existing run.

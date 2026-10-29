@@ -34,6 +34,7 @@ Plan 1 pass 1 is accepted on the current merged tree:
 - Line-ending-sensitive source hashes use normalized content.
 - The verifier requires a real Git worktree and committed HEAD without assuming a missing remote.
 - The reviewed PR head and merged release share the same tree.
+- Plan 1 P2-005 is explicitly disposed in `authority_execution_matrix.md`: current execution is a local manual CLI with durable idempotent state, leases, retries, observable failure stages, authenticated release adapters, and no public request-path consumer. No API trigger is claimed. C-202 carries the remaining unbound-resume defect.
 
 The article-import, code-review, and landing-design discrepancies were deliberately deferred to execution guidance. They remain Plan 2 work and do not reopen Plan 1 authority mapping.
 
