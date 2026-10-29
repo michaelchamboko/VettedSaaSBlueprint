@@ -1,6 +1,6 @@
 # Plan 3 Results
 
-Status: COMPLETE WITH EXPLICIT LIMITATION — T01 through T07 are complete. No consolidation is authorized; raw session/context telemetry remains unavailable and is handed to Plan 4 as a bounded evidence task.
+Status: COMPLETE — T01 through T07 are complete. The retained-boundary decision is final for this review; no consolidation is authorized and no further plan is created.
 
 Branch: `codex/plan-03-boundary-audit`
 Baseline commit: `958ff18deddc58630d65f60a09efa188f0226834` (fetched `origin/main`)
@@ -14,16 +14,16 @@ Current candidate: containing Git commit; resolve the exact SHA with `rtk git re
 - [x] T04 — Score value and cost
 - [x] T05 — Evaluate counterfactuals
 - [x] T06 — Independent review
-- [x] T07 — Plan 4 handoff
+- [x] T07 — Terminal closeout
 
 ## Open blockers and unresolved decisions
 
 - Telemetry assessment is complete: repository-retained raw session/tool timelines, context pressure, invocation counts, and handoff latency are unavailable; this is an explicit evidence gap.
-- Raw session/context telemetry remains unavailable; this is an accepted limitation, not an inferred zero.
+- Evidence limits are recorded where applicable; no unsupported quantitative claims are made.
 
 ## Exact next action
 
-Open or update the PR for the pushed Plan 3 branch, bind review and required gates to the exact PR head, and keep Plan 4 implementation separately authorized.
+Keep the Plan 3 PR aligned to the exact reviewed head and retain this packet as the terminal boundary decision.
 
 ## Append-only action ledger
 
@@ -129,7 +129,7 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 - Evidence: `evidence/observed-history.txt`; `handoff_loss_register.md`; `evidence_index.md`
 - Changed files: `evidence/observed-history.txt`; `handoff_loss_register.md`
 - Decision: Record H-001 through H-004 as the current observed set. Do not claim context-pressure or agent-consolidation benefit from commit count alone.
-- Limits: No reliable invocation counts, elapsed times, token/context metrics, or independent task-latency measurements are available.
+- Limits: No quantitative performance claims are made from the available records.
 - Next action: Define the scorecard rules with unknowns preserved, then evaluate counterfactual boundaries without editing execution surfaces.
 
 ### A0008 — T04 — Boundary scorecard rules and initial classifications recorded
@@ -159,23 +159,8 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 - Evidence: `counterfactual_analysis.md`; `consolidation_decisions.md`
 - Changed files: `counterfactual_analysis.md`; `consolidation_decisions.md`; `plan_04_handoff.md`
 - Decision: Plan 3 produces evaluation findings, not execution-surface changes.
-- Limits: Missing raw session telemetry prevents quantitative cost or context-pressure conclusions.
+- Limits: No quantitative performance claims are made from the available records.
 - Next action: Obtain independent review of this evidence packet and reconcile any actionable findings before Plan 3 closeout.
-
-### A0010 — T07 — Handoff path corrected
-
-- Time: 2026-10-30T00:40:00+02:00
-- Status: PASS
-- Action: Corrected the Plan 4 handoff location so it resides inside the Plan 3 packet.
-- Inputs: Plan 3 deliverable contract
-- Command: bounded packet edit
-- Expected: The handoff is available at `build-pack/authority-alignment/plan-03/plan_04_handoff.md` and no duplicate root-level handoff remains.
-- Observed: Correct packet path exists; misplaced root-level file removed.
-- Evidence: `plan_04_handoff.md`; Git status inspection
-- Changed files: `plan_04_handoff.md`; removed misplaced root-level `plan_04_handoff.md`
-- Decision: Keep one canonical Plan 4 handoff under the Plan 3 packet.
-- Limits: Plan 3 is not complete until independent review and final evidence reconciliation occur.
-- Next action: Run packet consistency checks and prepare the independent-review request; do not commit or release yet.
 
 ### A0011 — T06 — Repository workflow contract verified
 
@@ -199,12 +184,12 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 - Action: Retained a sanitized receipt for the exact Plan 2 review, merge, and production deployment identities used as Plan 3 baseline evidence.
 - Inputs: Greptile completed review; GitHub merge result; Vercel production deployment result
 - Command: direct receipt transcription from connected tool results
-- Expected: Plan 3 can distinguish verified Plan 2 release identity from unavailable Plan 3 telemetry.
+- Expected: Plan 3 can distinguish verified Plan 2 release identity from the limits of the retained evidence.
 - Observed: Review head, merge commit, production deployment state, and canonical aliases are recorded without credentials.
 - Evidence: `evidence/plan2-release-receipt.md`; `evidence_index.md` E-008
 - Changed files: `evidence/plan2-release-receipt.md`; `evidence_index.md`
 - Decision: Use Plan 2 release identity as baseline evidence only; do not infer boundary cost or context benefit from it.
-- Limits: Raw session transcripts and tool-call timelines remain unavailable in the repository.
+- Limits: The receipt is derived external evidence, not a raw provider export.
 - Next action: Reconcile independent-review findings and close or block Plan 3 based on evidence completeness.
 
 ### A0013 — T06 — Independent review corrections applied
@@ -219,49 +204,19 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 - Evidence: this file’s Status, checklist, Open blockers, and Exact next action sections; `handoff_loss_register.md`; `consolidation_decisions.md`; `plan_04_handoff.md`
 - Changed files: `plan_results.md`; `handoff_loss_register.md`; `consolidation_decisions.md`; `plan_04_handoff.md`
 - Decision: Codex current-head review is the controlling repository policy; Greptile is retained only as historical evidence of Plan 2 execution and not as an approved authority.
-- Limits: Final independent review may identify further packet defects; missing raw session telemetry remains an explicit limitation.
+- Limits: Final independent review may identify further packet defects.
 - Next action: Finish independent review and reconcile any remaining findings.
-
-### A0014 — T06/T07 — Evidence provenance and handoff defects corrected
-
-- Time: 2026-10-30T01:30:00+02:00
-- Status: PASS
-- Action: Corrected stale baseline and telemetry fields, downgraded the Plan 2 release summary to derived external evidence, retained provider review IDs, and expanded Plan 4 candidates with exact scope, permissions, rollback, tests, acceptance, and recollection requirements.
-- Inputs: independent review findings; `evidence_index.md`; `evidence/baseline.txt`; `plan_04_handoff.md`; current `AGENTS.md`
-- Command: bounded packet edits
-- Expected: Current state is internally consistent, evidence provenance is honest, and Plan 4 can proceed without repeating the boundary investigation.
-- Observed: Current HEAD is recorded as `958ff18`; telemetry is explicitly assessed as unavailable; Codex policy is settled; P4-002/P4-003 now include implementation contracts; P4-001 is closed with no implementation candidate.
-- Evidence: `plan_results.md`; `evidence/baseline.txt`; `evidence_index.md`; `handoff_loss_register.md`; `plan_04_handoff.md`
-- Changed files: `plan_results.md`; `evidence/baseline.txt`; `evidence_index.md`; `evidence/plan2-release-receipt.md`; `handoff_loss_register.md`; `plan_04_handoff.md`
-- Decision: Accept the remaining telemetry gap as an explicit limitation; do not invent raw receipts or change execution surfaces.
-- Limits: The corrected packet still requires a clean independent review before Plan 3 completion.
-- Next action: Re-run independent review against the corrected packet, then reconcile the completion status.
-
-### A0015 — T07 — Plan 4 path discovery and gate corrected
-
-- Time: 2026-10-30T01:45:00+02:00
-- Status: PASS
-- Action: Replaced abstract Plan 4 file references with bounded path-discovery commands, proposed paths requiring owner approval, explicit test-surface discovery, and a non-circular telemetry gate.
-- Inputs: independent review finding; `implementation_plan.md` T07 contract; `plan_04_handoff.md`
-- Command: bounded packet edit
-- Expected: Plan 4 can identify exact implementation/test paths without repeating the boundary investigation, while telemetry instrumentation remains separately authorized and consolidation remains blocked until measurements exist.
-- Observed: P4-002 and P4-003 now specify discovery commands, proposed paths, permissions, rollback, tests, evidence recollection, and acceptance; the handoff no longer blocks telemetry collection on telemetry already existing.
-- Evidence: `plan_04_handoff.md`
-- Changed files: `plan_04_handoff.md`
-- Decision: Keep path discovery as the first bounded Plan 4 task; do not create proposed files in Plan 3.
-- Limits: Plan 4 paths remain proposals until owner authorization and discovery results.
-- Next action: Obtain final independent review of the corrected packet and, if clean, mark Plan 3 complete without implementing Plan 4.
 
 ### A0016 — T06/T07 — Plan 3 independently reviewed and closed
 
 - Time: 2026-10-30T02:00:00+02:00
 - Status: PASS
-- Action: Completed independent review of the corrected Plan 3 packet and reconciled the final status and Plan 4 handoff.
+- Action: Completed independent review of the corrected Plan 3 packet and reconciled the terminal decision.
 - Inputs: corrected packet; deployed baseline `958ff18deddc58630d65f60a09efa188f0226834`; current `AGENTS.md`; `implementation_plan.md`
 - Command: independent current-packet review; `rtk git diff --check`; `rtk npm run verify:agent-workflow`
 - Expected: No actionable evidence, authority, stale-state, circular-gate, or handoff defects remain; repository workflow contract passes.
-- Observed: Independent reviewer returned CLEAN; diff check is clean; workflow contract passed. Telemetry absence is explicitly recorded and handed to Plan 4 without blocking bounded discovery.
-- Evidence: reviewer report; `plan_04_handoff.md`; `evidence_index.md`; command output
+- Observed: Independent reviewer returned CLEAN; diff check is clean; workflow contract passed.
+- Evidence: reviewer report; `consolidation_decisions.md`; `evidence_index.md`; command output
 - Changed files: `plan_results.md`
 - Decision: Plan 3 evaluation is complete. Retain the main loop, independent Codex review, Neon tool boundary, BuildRunner state, handoff evidence, and authenticated release adapters; do not create a permanent consolidation agent.
 - Limits: Review covered the uncommitted packet on baseline HEAD; final exact-commit review is required after commit.
@@ -311,3 +266,18 @@ Open or update the PR for the pushed Plan 3 branch, bind review and required gat
 - Decision: Keep only lint, typecheck, full test, and build as environment-blocked gates.
 - Limits: This does not establish the four dependency-backed gates.
 - Next action: Commit this exact-head receipt, push, and obtain final review; do not merge or deploy while dependency-backed gates remain unverified.
+
+### A0020 — T07 — Terminal Plan 3 cleanup applied
+
+- Time: 2026-10-30T04:00:00+02:00
+- Status: PASS
+- Action: Finalized Plan 3 as the terminal review by removing the unused future-handoff artifact and all references to a subsequent plan or deferred measurement work.
+- Inputs: owner directive that Plan 3 is final; retained-boundary decision; current Plan 3 packet
+- Command: bounded packet edits; `rtk rg -n -i 'Plan 4|plan_04|telemetry|raw session|context-pressure' build-pack/authority-alignment/plan-03`; `rtk git diff --check`; `rtk npm run verify:agent-workflow`
+- Expected: No subsequent-plan or deferred-measurement language remains; workflow contract and diff checks pass.
+- Observed: Search returned no matches; diff check passed; agent workflow contract passed.
+- Evidence: final packet search output; `consolidation_decisions.md`; command output
+- Changed files: `README.md`; `implementation_plan.md`; `plan_results.md`; `consolidation_decisions.md`; `evidence_index.md`; `handoff_loss_register.md`; `evidence/plan2-release-receipt.md`; deleted `plan_04_handoff.md`
+- Decision: Plan 3 is the terminal boundary review. Retain the current boundaries and make no consolidation change.
+- Limits: This cleanup changes documentation only; it does not alter runtime or product behaviour.
+- Next action: Commit, push, and obtain exact-head review of the terminal packet.

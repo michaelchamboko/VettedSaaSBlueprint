@@ -12,4 +12,4 @@ Start here:
 6. Do not change runtime, prompts, skills, manifests, permissions, or production configuration in Plan 3.
 7. Stop after three unsuccessful attempts at the same issue and investigate the assumption.
 
-Plan 3 is complete only when `consolidation_decisions.md` and `plan_04_handoff.md` are independently reproducible from the retained evidence.
+Plan 3 is complete only when `consolidation_decisions.md` is independently reproducible from the retained evidence and the retained-boundary decision is explicit.

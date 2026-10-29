@@ -40,9 +40,9 @@ Record the comparison in `counterfactual_analysis.md`.
 
 Submit the complete evidence index, matrix, scorecard, and decisions for independent review. Record disagreements and resolve them or carry them forward explicitly.
 
-### T07 — Plan 4 handoff
+### T07 — Terminal closeout
 
-Order any future implementation candidates by dependency and risk. Include exact files/symbols, current and required behaviour, permission impact, migration/rollback, tests, acceptance criteria, and evidence to recollect. Do not implement them.
+Record the retained-boundary decision, reconcile the live status and next action, and close the evidence packet. Do not create another plan or implementation handoff.
 
 ## Success criteria
 
@@ -50,4 +50,4 @@ Order any future implementation candidates by dependency and risk. Include exact
 - Every decision uses an explicit rule and exposes missing data.
 - Counterfactuals preserve authority, permissions, review, release, and evidence safeguards.
 - Independent review is recorded against the exact evidence packet.
-- Plan 4 can proceed without repeating this investigation.
+- The repository has a terminal Plan 3 decision and no further plan is created.

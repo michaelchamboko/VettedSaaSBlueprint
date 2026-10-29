@@ -13,4 +13,4 @@
 - Whether skills measurably reduce context pressure compared with a separate agent.
 - Whether handoff packet indexing should change.
 
-These remain open because the repository lacks raw session timelines, invocation counts, latency, and context-pressure telemetry.
+The retained-boundary decision is final for this review. No additional agent or consolidation work is authorized by this packet.
