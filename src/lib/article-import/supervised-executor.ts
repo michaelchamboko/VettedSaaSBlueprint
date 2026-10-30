@@ -64,7 +64,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     try { raw = await readRepositoryJson(root, resultPath); }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      return { ...record, nextAction: `Supervising heartbeat agent: execute ${workPath}, write its result to ${resultPath}, then resume this import.` };
+      return { ...record, nextAction: `Supervising executor: execute ${workPath}, write its result to ${resultPath}, then resume this import.` };
     }
     const result = resultSchema.parse(raw);
     if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work.stage !== stage) throw new Error("STAGE_RESULT_BINDING_MISMATCH");

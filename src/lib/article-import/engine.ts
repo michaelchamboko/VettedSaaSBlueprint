@@ -461,7 +461,7 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
   const exhausted = next === "quarantine";
   const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : exhausted ? "QUARANTINED" : "REPAIRING";
   const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
-  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
+  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Retry after the external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
   if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
   return updated;
