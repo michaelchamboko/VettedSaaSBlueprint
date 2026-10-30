@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "EditorialEvidenceV1",
+  "format": "decision",
+  "revision": "eleanor-v1:8e111f95a558f454aff6f6c0bfd7bb77dcd7e8a1",
+  "beforeFingerprint": "f064e31518a39835218132865ea0ce5fed8ca796952d12c2087cc1ba683aa605",
+  "afterFingerprint": "5e993986231a1b8a79e5ec0f11a64f519cb4e5338469c68b4e27506232af815d",
+  "changedPaths": [
+    "pages.decisionHub.decisionContext",
+    "pages.decisionHub.blocks.1.summary"
+  ],
+  "checker": {
+    "before": "629 words of visible copy\r\n\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (authority, controls, and human)\r\n    · rule-of-three list  (summaries, outlines, and meeting)\r\n    · rule-of-three list  (confidentiality, accuracy, and accountability)\r\n    · rule-of-three list  (reviewers, outputs, and failure)\r\n    · rule-of-three list  (retention, residency, and client)\r\n    · rule-of-three list  (logging, retention, and administrator)\r\n    · rule-of-three list  (omissions, tone, and client)\r\n    · rule-of-three list  (time, incidents, and exceptions)\r\n\r\n  score 4/5  needs a cleanse\r\n",
+    "after": "634 words of visible copy\r\n\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (authority, controls, and human)\r\n    · rule-of-three list  (summaries, outlines, and meeting)\r\n    · rule-of-three list  (confidentiality, accuracy, and accountability)\r\n    · rule-of-three list  (reviewers, outputs, and failure)\r\n    · rule-of-three list  (retention, residency, and client)\r\n    · rule-of-three list  (logging, retention, and administrator)\r\n    · rule-of-three list  (omissions, tone, and client)\r\n    · rule-of-three list  (time, incidents, and exceptions)\r\n\r\n  score 4/5  needs a cleanse\r\n"
+  },
+  "semanticNotes": "Both passages retain the controlled-pilot boundary and the comparison with the manual process. No recommendation, client-data permission or evidence certainty was added.",
+  "exceptions": [
+    "The eight retained rhythm hits name governance controls, workflow inputs or review criteria in unchanged passages. These are substantive lists, not new rhetorical filler; the two revised passages add no checker findings."
+  ],
+  "meaningPreserved": true,
+  "arrayOrderPreserved": true
+}
