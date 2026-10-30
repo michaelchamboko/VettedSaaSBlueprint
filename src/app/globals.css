@@ -332,7 +332,7 @@ button, input, textarea, select { font: inherit; }
   .decision-guide-catalogue__grid { grid-template-columns: 1fr; }
   .studio-category { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
   .studio-category > * { min-width: 0; }
-  .public-header nav a, .public-footer nav a, .affiliate-ribbon a, .decision-guide-catalogue__grid a, .editorial-callout .text-link { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+  .public-header nav a, .public-footer__brand, .public-footer nav a, .affiliate-ribbon a, .decision-guide-catalogue__grid a, .editorial-callout .text-link { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   .studio-category nav a { align-items: center; min-height: 44px; }
   .decision-journey__hero { grid-template-columns: 1fr; min-height: 0; }
   .decision-journey__hero-card { max-width: 32rem; }
