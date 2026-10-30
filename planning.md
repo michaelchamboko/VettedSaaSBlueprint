@@ -15,6 +15,12 @@ The source strategy documents remain unchanged as historical product inputs. The
 - No later-phase packet is dependency-ready or authorised.
 - The next implementation packet must be created by an explicit product-owner planning amendment.
 
+### Dependency security maintenance - Next.js and audit remediation (registered 2026-10-30)
+
+Classification: explicit product-owner directive.
+
+This bounded maintenance packet updates the direct dependencies and lockfile needed to clear the current critical Next.js and four high-severity audit groups. It does not activate a later-phase automation programme, change source strategy, add a product feature, or alter publication authority. The exact versions, compatibility evidence, and validation requirements are recorded in `docs/deployment/runtime-research/2026-10-30-dependency-security-remediation.md`.
+
 ## Binding scope
 
 This file is the only repository planning authority. It governs implementation sequencing and release decisions, subject to `AGENTS.md`, the source-intelligence records, and the non-inference gate.
