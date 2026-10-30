@@ -12,31 +12,31 @@
   "artifacts": {
     "page": {
       "path": "elevenlabs-ai-voice-generator.json",
-      "sha256": "896360a776c5103982ebd28bdd20ca41d21aea60235fedc9de341ce65cbe5135"
+      "sha256": "4ec6d4a8300539982c5d0d30e1a273ed94cf727d4f6e5de35a0bc68c209fb3cf"
     },
     "product_evidence": {
       "path": "releases/elevenlabs-ai-voice-generator/product-evidence.json",
-      "sha256": "ad4eea31229ef9a989369849975a9212f65a9505ad15a8ba7ef17645615ef124"
+      "sha256": "b6b8954f3a187eab18bbee4db4c4059808013a42af3dc97f1264557c9f167010"
     },
     "visual_review": {
       "path": "releases/elevenlabs-ai-voice-generator/visual-review.json",
-      "sha256": "2c5cf238305a3886d381e943a52eb97fd05c0ef224e11ef6742475cb3d9eda93"
+      "sha256": "1a30cea3a29ffcf0108de1ab6990a8412c7a84771e4c8f893ff2c89a9ff064b6"
     },
     "uniqueness_review": {
       "path": "releases/elevenlabs-ai-voice-generator/uniqueness-review.json",
-      "sha256": "755975d98e450b8c6c19982633203d74fc2d0103c14a4b09bdf43079ad73519e"
+      "sha256": "67f17dbeb54bdb45a7ce91f95bc024b51746c4bebe7b5c705a80d6762af9323b"
     },
     "compliance_review": {
       "path": "releases/elevenlabs-ai-voice-generator/compliance-review.json",
-      "sha256": "49d372517373662414780d81066f0e786a2b16f380c083a5f65288858408b433"
+      "sha256": "0486f512916e513a6d7ac2aa77775e8a181cceb2858b69ba4cae9b8bbd79c607"
     },
     "conversion_review": {
       "path": "releases/elevenlabs-ai-voice-generator/conversion-review.json",
-      "sha256": "02e3c19995d92dd78a5e61a8ea81fcfb8a1b9b68e286bc9a797a8a60a0f63faa"
+      "sha256": "21f49ee6e88254b7e25387ce37b857c94543a481afe36c6d553f740d92cf3efe"
     },
     "quality_receipt": {
       "path": "releases/elevenlabs-ai-voice-generator/quality.json",
-      "sha256": "191a62c967956648182f81582e29f34ccd47e49a1934c8e405815b43a316b8d8"
+      "sha256": "5fa6cdc3aecc90619c66c4d82b9be86cbc3182caa37c0d3df646b03aa1bfc959"
     }
   },
   "checks": {

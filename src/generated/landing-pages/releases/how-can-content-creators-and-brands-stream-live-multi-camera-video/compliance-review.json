@@ -2,7 +2,10 @@
   "schema_version": "LandingComplianceReviewV1",
   "status": "pass",
   "slug": "how-can-content-creators-and-brands-stream-live-multi-camera-video",
-  "reviewed_at": "2026-10-21T12:30:00+02:00",
+  "reviewed_at": "2026-10-30T12:00:00+02:00",
+  "publish_readiness": "eligible_for_conversion_review",
+  "reason_codes": [],
   "checks": {"affiliate_url_allowlisted": true, "disclosure_present": true, "unsupported_commercial_claims_removed": true, "experience_claims_removed": true, "source_mapping_present": true},
-  "notes": ["Exact approved URL ending fqvgdx9 is used.", "Pricing, discount, ranking, hardware-cost, and first-person claims are absent."]
+  "link_review": {"exact_url": "https://www.switcherstudio.com/product?campaign=05b030190a8c&medium=partners&source=affiliates&pscd=start.switcherstudio.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=dnR8i2UjJ1wIKi&gsxid=dnR8i2UjJ1wIKi&gspk=MDViMDMwMTkwYThj", "destination_http_status": 200, "checked_at": "2026-10-30T12:00:00+02:00"},
+  "notes": ["The approved Switcher URL returned HTTP 200 without a redirect during the 2026-10-30 destination review.", "Pricing, discount, ranking, hardware-cost, and first-person claims are absent."]
 }

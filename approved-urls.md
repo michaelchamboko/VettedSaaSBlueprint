@@ -19,4 +19,4 @@ content, or removes a large group of URLs without the explicit CI override.
 - https://referral.flippa.com/vettedsaasblueprint
 - https://join.glideapps.com/9r1tcciij70r
 - https://manychat.partnerlinks.io/vettedsaasblueprint
-- https://start.switcherstudio.com/anme6fqvgdx9
+- https://www.switcherstudio.com/product?campaign=05b030190a8c&medium=partners&source=affiliates&pscd=start.switcherstudio.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=dnR8i2UjJ1wIKi&gsxid=dnR8i2UjJ1wIKi&gspk=MDViMDMwMTkwYThj

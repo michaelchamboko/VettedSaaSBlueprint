@@ -36,7 +36,7 @@
     },
     "quality_receipt": {
       "path": "releases/moosend-email-marketing-automation/quality.json",
-      "sha256": "90205c126935e59833725e5758e75d11edc28ddc2ad7ba6eabde88850812f709"
+      "sha256": "9b4a22f96cc28e38c6446c60e9f86e22b498283e9895411f35612fb06f7bf8af"
     }
   },
   "checks": {

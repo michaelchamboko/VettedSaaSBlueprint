@@ -352,7 +352,7 @@ test("direct-review validation uses the exact artifact basename after identity b
 
 test("Switcher exact allowlist entry remains in the separately reviewed manifest", async () => {
   const manifest = await readFile(path.join(process.cwd(), "approved-urls.md"), "utf8");
-  assert.match(manifest, /https:\/\/start\.switcherstudio\.com\/anme6fqvgdx9/);
+  assert.ok(manifest.includes("https://www.switcherstudio.com/product?campaign=05b030190a8c&medium=partners&source=affiliates&pscd=start.switcherstudio.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=dnR8i2UjJ1wIKi&gsxid=dnR8i2UjJ1wIKi&gspk=MDViMDMwMTkwYThj"));
   assert.equal(isAllowedReleasePath("approved-urls.md", "direct-review", true), false);
 });
 
