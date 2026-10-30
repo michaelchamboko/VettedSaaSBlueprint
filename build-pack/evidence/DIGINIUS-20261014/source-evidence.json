@@ -1,0 +1,77 @@
+{
+  "review_basis": "Official documentation checked by parent researcher on 2026-10-14; no hands-on test",
+  "sources": [
+    {
+      "key": "agency",
+      "id": "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf",
+      "claim_id": "a73d1b2e-87bc-4114-9248-854f00b6f6d2",
+      "title": "Diginius agency pricing",
+      "url": "https://diginius.com/agency-pricing/",
+      "checked_at": "2026-10-14",
+      "basis": "Official vendor documentation; not hands-on testing"
+    },
+    {
+      "key": "pricing",
+      "id": "8beb35d7-c2de-4b98-983e-98a93b657065",
+      "claim_id": "ed1531f6-23ad-410c-93a2-8e39752d8d07",
+      "title": "Diginius business pricing",
+      "url": "https://diginius.com/pricing/",
+      "checked_at": "2026-10-14",
+      "basis": "Official vendor documentation; not hands-on testing"
+    },
+    {
+      "key": "ip",
+      "id": "71117e71-efcb-428f-94e3-164d6536bf13",
+      "claim_id": "ed20f97c-a681-4007-a67b-52d4d275727a",
+      "title": "Diginius IP tracking software",
+      "url": "https://diginius.com/ip-tracking-software/",
+      "checked_at": "2026-10-14",
+      "basis": "Official vendor documentation; not hands-on testing"
+    },
+    {
+      "key": "lead",
+      "id": "37943d86-2cb0-4822-8763-6ee44ebab3f3",
+      "claim_id": "6750c651-a667-42c5-85de-e7b02f3c82a3",
+      "title": "Diginius Lead Intelligence",
+      "url": "https://diginius.com/lead-intel/",
+      "checked_at": "2026-10-14",
+      "basis": "Official vendor documentation; not hands-on testing"
+    },
+    {
+      "key": "aa",
+      "id": "744200f9-dc6a-4928-892b-3504ac171a30",
+      "claim_id": "9d856989-6840-4dc6-a431-91762f98918a",
+      "title": "AgencyAnalytics pricing",
+      "url": "https://agencyanalytics.com/pricing",
+      "checked_at": "2026-10-14",
+      "basis": "Official vendor documentation; not hands-on testing"
+    },
+    {
+      "key": "sm",
+      "id": "3ee672b4-1753-4409-894e-5759c0ec2a93",
+      "claim_id": "e3776a2b-e910-429e-8895-accb00b66710",
+      "title": "Supermetrics documentation",
+      "url": "https://supermetrics.com/docs/",
+      "checked_at": "2026-10-14",
+      "basis": "Official vendor documentation; not hands-on testing"
+    }
+  ],
+  "ids": {
+    "product": "1b64e6a4-4148-4362-9cf7-486d5773f8da",
+    "affiliate": "7ea1c2f7-1c15-4522-9a1b-ca85cea0c8fe",
+    "page": "7cf1b59f-0a35-4282-a068-a0838135c363",
+    "batch": "47b83590-b35d-4f44-9422-e0b7cc929067"
+  },
+  "affiliate_url": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+  "claims_removed": [
+    "Unlimited client accounts",
+    "Two-seat all-feature savings comparison",
+    "Exact OAuth/history behavior",
+    "Cross-platform impression share",
+    "CRM-normalised ROAS",
+    "Named CRM connectors",
+    "Individual identification/ad-click attribution",
+    "Unreconciled business quotas and trial duration"
+  ],
+  "source_draft_sha256": "5234885bc6995149366a429509f51e533c38b615df9eaaa3372b4525580778c7"
+}

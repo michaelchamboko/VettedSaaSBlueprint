@@ -1,0 +1,220 @@
+{
+  "schema_version": "LandingDeploymentVerificationV1",
+  "status": "pass",
+  "origin": "https://vettedsaasblueprint.online",
+  "expected_commit": "cfe522c537050b6e8eae43be46757b88d0295af6",
+  "deployment": {
+    "commitSha": "cfe522c537050b6e8eae43be46757b88d0295af6",
+    "environment": "production"
+  },
+  "robots_ok": true,
+  "sitemap_ok": true,
+  "pages": [
+    {
+      "slug": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+      "path": "/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+      "exact_affiliate_url": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+      "desktop": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "mobile": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "reduced_motion": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      }
+    },
+    {
+      "slug": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+      "path": "/landing-page-builders/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+      "exact_affiliate_url": "https://try.webcatalog.io/vettedsaasblueprint",
+      "desktop": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "mobile": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "reduced_motion": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      }
+    },
+    {
+      "slug": "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+      "path": "/landing-page-builders/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+      "exact_affiliate_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+      "desktop": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "mobile": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "reduced_motion": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      }
+    },
+    {
+      "slug": "elevenlabs-ai-voice-generator",
+      "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "exact_affiliate_url": "https://try.elevenlabs.io/izj2b165mcsj",
+      "desktop": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "mobile": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "reduced_motion": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      }
+    },
+    {
+      "slug": "moosend-email-marketing-automation",
+      "path": "/landing-page-builders/moosend-email-marketing-automation",
+      "exact_affiliate_url": "https://trymoo.moosend.com/michaelmedium",
+      "desktop": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "mobile": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      },
+      "reduced_motion": {
+        "httpOk": true,
+        "disclosureOk": true,
+        "exactCtaCount": 2,
+        "allCtasExact": true,
+        "ctasFitViewport": true,
+        "allRevealSectionsVisible": true,
+        "horizontalPageScrollPossible": false,
+        "robots": "index, follow",
+        "errorOverlay": false,
+        "browserErrors": []
+      }
+    }
+  ],
+  "verified_at": "2026-10-14T08:46:42.673Z"
+}

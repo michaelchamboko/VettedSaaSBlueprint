@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "basis": "13 core automated scanners pass; three specialist outputs manually adjudicated with preserved raw reports. Parent independent content review passes.",
+  "raw_reports": "build-pack/evidence/DIGINIUS-20261014/quality",
+  "specialist_adjudication": [
+    "uniqueness-review.json",
+    "compliance-review.json",
+    "conversion-review.json"
+  ],
+  "browser": "build-pack/evidence/DIGINIUS-20261014/browser/checks.json",
+  "release_gate_status": "pass",
+  "core_gates": {
+    "lint": "pass; 0 errors, 222 existing warnings",
+    "typecheck": "pass",
+    "tests": "293 total; 290 pass, 3 Windows symlink privilege skips, 0 failures",
+    "build": "pass; 137 routes generated",
+    "public_site": "pass"
+  }
+}

@@ -1,0 +1,9 @@
+﻿node.exe : npm warn install-scripts .npmrc allow-scripts setting is being ignored because package.json declares its 
+own allowScripts field
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\micha\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn instal...owScripts field:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+found 0 vulnerabilities

@@ -1,0 +1,153 @@
+{
+  "schema_version": "1",
+  "kind": "owner-commissioned-page-delivery",
+  "status": "verified",
+  "authorized_by": "Product owner directive (2026-09-28): deliver one new connected Decision Hub, Solution Hub, and Decision Scenario to vettedsaasblueprint.online.",
+  "release_commit": "526a3b3aa11e14d43ca1b11cfe9a07212687d315",
+  "release_commit_author": "Mike Jones <michaelchamboko@gmail.com>",
+  "lineage_commits": [
+    {
+      "commit": "5161927908218ac6b42f36c50629769cc843e1bf",
+      "deployment_id": "dpl_DMt9N9MzjmzHw8z6Cov7JY2M27mT",
+      "role": "first release of the set; independent verification found that the jurisdiction limit appeared on only one of three pages"
+    },
+    {
+      "commit": "526a3b3aa11e14d43ca1b11cfe9a07212687d315",
+      "deployment_id": "dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G",
+      "role": "fix-forward release, final production identity"
+    }
+  ],
+  "recovery_mechanism": "Fix-forward deployment, per planning.md Operational contract. No rollback was performed and none was needed; the first deployment remains reachable at its own URL.",
+  "delivered_pages": {
+    "decision_hub": "https://vettedsaasblueprint.online/decision-hub/team-shared-account-access-control",
+    "solution_hub": "https://vettedsaasblueprint.online/solution-hub/team-shared-account-access-control",
+    "scenario": "https://vettedsaasblueprint.online/scenarios/team-shared-account-access-control"
+  },
+  "content_record": "src/content/decision-journeys/sets/team-shared-account-access-control.json",
+  "source_fingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a",
+  "evidence_state": "partial",
+  "evidence_records": [
+    "docs/research/2026-09-28-team-access-control-topic-selection.md",
+    "docs/research/2026-09-28-team-access-control-evidence-ledger.json"
+  ],
+  "reused_architecture": {
+    "routes": [
+      "src/app/decision-hub/[setSlug]/page.tsx",
+      "src/app/solution-hub/[setSlug]/page.tsx",
+      "src/app/scenarios/[setSlug]/page.tsx"
+    ],
+    "components": [
+      "src/components/public/DecisionJourneyPage.tsx",
+      "src/components/public/DecisionJourneyMotion.tsx",
+      "src/components/public/DecisionReport.tsx",
+      "src/components/public/PublicPageShell.tsx"
+    ],
+    "discovery": ["src/app/sitemap.ts", "src/app/page.tsx"],
+    "contract": ["src/lib/decision-journey/sets.ts", "src/lib/decision-journey/presentation.ts", "src/lib/decision-journey/presentation-options.ts"],
+    "note": "No application component, route, or layout file was added or modified. The set is data-driven content only."
+  },
+  "defects_fixed": [
+    {
+      "file": "tests/vendor-removal.test.ts",
+      "defect": "A Windows junction reports neither isDirectory() nor isFile() and throws EISDIR on read, so the guard against excluded directories never applied and the mandatory test gate could not pass in this checkout.",
+      "fix": "Skip reparse points at the root cause instead of adding the local junction name to an exclusion set.",
+      "verified": "The gate passed with .codegraph present. A regression test creates a real junction and asserts the walk returns only ordinary files."
+    },
+    {
+      "file": "scripts/run-active-tests.mjs",
+      "defect": "Node defaults test-file concurrency to every core. On this four-core host that oversubscribed the two Playwright-backed suites, whose tests carry a hard 20 s timeout, so the release gate failed on contention rather than behaviour and reported a cancelled test.",
+      "fix": "Bound test-file concurrency to at most two workers, reduced further on single-core hosts.",
+      "verified": "284 tests, 281 pass, 0 fail, 0 cancelled, 3 expected Windows privilege skips."
+    }
+  ],
+  "retained_optimisation_work": {
+    "vercelignore_upload_context": "15,028 files / 648.1 MB reduced to about 1,283 files / 49.0 MB",
+    "release_script_windows_shim": "scripts/release-decision-journey.ts executes on Windows instead of failing with spawn npm ENOENT",
+    "note": "Both changes from build-pack/evidence/OPTIMISATION-20260928 are retained and are part of the release commit."
+  },
+  "environment": {
+    "node": "v24.18.0",
+    "npm_local": "12.0.0",
+    "package_manager": "npm@12.0.2",
+    "next": "16.3.4",
+    "react": "19.2.7",
+    "typescript": "6.0.3",
+    "vercel_cli": "54.21.1",
+    "dependency_lock_sha256": "557b21620eaa57d76c50695f6626877fe80201b721f4c9769ba5960fe8b66057",
+    "dependency_lock_unchanged": true,
+    "vercel_project_id": "prj_6ymKeAz0lqMs8LYvplkn4AKMya7J",
+    "vercel_project": "vetted-saa-s-blueprint",
+    "vercel_org": "team_0Vjm5yuoHjiIcGq0hoJMm5vC",
+    "region": "cpt1",
+    "production_domain": "https://vettedsaasblueprint.online"
+  },
+  "repository_checks": {
+    "lint": "passed with 0 errors and 128 pre-existing warnings",
+    "typecheck": "passed",
+    "tests": "284 total, 281 passed, 0 failed, 0 cancelled, 3 expected Windows privilege skips",
+    "public_site_validator": "passed",
+    "next_production_build": "passed",
+    "prerendered_routes": [
+      "/decision-hub/team-shared-account-access-control",
+      "/solution-hub/team-shared-account-access-control",
+      "/scenarios/team-shared-account-access-control"
+    ],
+    "automatic_release_boundary": "npm run automation:release with this change set returns eligible false with reasons CHANGE_REQUIRES_REVIEW and OUTSIDE_STRUCTURED_CONTENT_ALLOWLIST. The release used the owner-commissioned path, not the content-only allowlist."
+  },
+  "deployment": {
+    "id": "dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G",
+    "state": "READY",
+    "target": "production",
+    "url": "vetted-saa-s-blueprint-ca8lak7eb-michaelchamboko-gravityclaw.vercel.app",
+    "inspector_url": "https://vercel.com/michaelchamboko-gravityclaw/vetted-saa-s-blueprint/FoVXNKqCcN9vRc4vywXgcJZctj2G",
+    "custom_domain": "https://vettedsaasblueprint.online",
+    "install_command": "npx --yes npm@12.0.2 ci",
+    "build_command": "npm run validate:public-site && next build",
+    "previous_production_deployment_id": "dpl_CHTbWYWtNMKDfQDH6U7SXJky5mXK"
+  },
+  "production_verification": {
+    "method": "Independent HTTP and Playwright checks against the custom domain after Vercel reported Ready. No worker self-reporting was used.",
+    "evidence": [
+      "build-pack/evidence/DELIVERY-20260928/post-deploy-identity.txt",
+      "build-pack/evidence/DELIVERY-20260928/browser/receipt.json",
+      "build-pack/evidence/DELIVERY-20260928/sitemap.xml"
+    ],
+    "routes_checked": 25,
+    "existing_routes_reverified": ["/", "/decision-hub", "/solution-hub", "/scenarios", "/decision-hub/governed-ai-client-work-preparation", "/solution-hub/governed-ai-client-work-preparation", "/scenarios/governed-ai-client-work-preparation", "/decision-hub/video-localization", "/solution-hub/video-localization", "/scenarios/video-localization", "/blog", "/trends/ai-agents", "/affiliate-disclosure", "/editorial-policy", "/accessibility", "/privacy", "/terms", "/contact", "/paia", "/sitemap.xml", "/robots.txt"],
+    "expected_404_confirmed": "/nonexistent-route-check returns 404, so the 404 path is intact.",
+    "browser_profiles": ["desktop 1440x1000", "mobile 390x844 reduced motion", "mobile 390x844 JavaScript disabled"],
+    "browser_checks_passed": "21 of 21 route and profile combinations",
+    "per_new_page_assertions": {
+      "http_status": 200,
+      "single_h1": true,
+      "canonical_matches_url": true,
+      "server_rendered_section_counts": "12 / 7 / 12",
+      "evidence_markers_present": true,
+      "distinct_composition_families": ["diagnostic-split", "fit-map", "constraint-bento"],
+      "reciprocal_links_to_other_two_pages": true,
+      "printable_report_on_scenario": true,
+      "jurisdiction_limit_in_server_rendered_html": true,
+      "no_console_errors": true,
+      "no_horizontal_overflow": true
+    },
+    "homepage_discovery": "The set title and all three canonical paths appear in the served homepage HTML.",
+    "sitemap_discovery": "All three paths appear in the live sitemap with lastmod 2026-09-28; total URLs rose from 27 to 30."
+  },
+  "elapsed_delivery_time": {
+    "authoring_and_gates_minutes": 67.7,
+    "first_deploy_minutes": 1.8,
+    "found_defect_fix_and_revalidate_minutes": 8.7,
+    "fix_forward_deploy_minutes": 1.8,
+    "independent_verification_minutes": 6.4,
+    "total_to_verified_production_minutes": 88.6,
+    "note": "Measured from the owner commission (2026-09-28T20:41:05Z) to completed independent verification (2026-09-28T22:09:39Z). Two production deployments were required because verification found a real disclosure defect; a single-deploy path would have been about 10 minutes shorter."
+  },
+  "boundaries_preserved": {
+    "automation_authority_publication_enabled": false,
+    "P2-ACT-001": "blocked, unchanged",
+    "schedules": "No Codex automation schedule was added, removed, or altered.",
+    "affiliate": "No affiliate link, destination, price, ranking, or product test appears on any delivered page.",
+    "source_documents": "Unchanged. No strategy document was amended.",
+    "gates": "No release gate, evidence threshold, or quality gate was added, removed, or waived."
+  }
+}

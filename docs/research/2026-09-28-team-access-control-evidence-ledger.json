@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "topic": "Team shared-account access control without a technical administrator",
+  "selectionRecord": "docs/research/2026-09-28-team-access-control-topic-selection.md",
+  "reviewedAt": "2026-09-28",
+  "sources": [
+    {
+      "documentId": "UK-DSIT-CSBS-20252026",
+      "heading": "Cyber Security Breaches Survey 2025 to 2026",
+      "sectionUid": "external-uk-dsit-csbs-20252026",
+      "url": "https://www.gov.uk/government/statistics/cyber-security-breaches-survey-20252026/cyber-security-breaches-survey-20252026",
+      "role": "Demand and context; authoritative UK business-population statistics",
+      "extract": "DSIT and the Home Office report that 43% of UK businesses identified a cyber breach or attack in the last 12 months, that 74% of businesses have a password policy while only 47% require two-factor authentication, and that two-factor use among micro businesses rose from 35% to 43%. Fieldwork ran August to December 2025; the release was published 30 April 2026.",
+      "limits": "UK population statistics by business size band, self-reported and limited to identified attacks. They do not measure any five-person business, any password-manager product, or any shared-account practice, and they do not show that a vault reduces breach risk."
+    },
+    {
+      "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+      "heading": "Password manager buyers guide",
+      "sectionUid": "external-ncsc-password-manager-buyers-guide",
+      "url": "https://www.ncsc.gov.uk/collection/passwords/password-manager-buyers-guide",
+      "role": "Evidence; public-authority selection criteria and documented trade-offs",
+      "extract": "The NCSC states that users coping with password overload resort to insecure workarounds such as password reuse, that a manager stores credentials in a vault reached through a master password, and that the right choice is the one that is useful and usable for the people in the organisation while suitably protecting stored credentials. It names on-device and cloud-sync types, warns that a manager is a natural target because one success exposes every stored password, and notes that an effective single sign-on process can make a manager unnecessary.",
+      "limits": "Guidance for system owners, not a product test, ranking, price statement, or certification. It gives no adoption figure and no outcome guarantee, and it does not address non-UK jurisdictions."
+    },
+    {
+      "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+      "heading": "Password administration for system owners",
+      "sectionUid": "external-ncsc-password-administration-collection",
+      "url": "https://www.ncsc.gov.uk/collection/passwords",
+      "role": "Context; the authority's own position and its currency",
+      "extract": "The collection states that it outlines password strategies to help an organisation remain secure, is primarily for system owners setting password policy, and is written for cyber security professionals, large organisations, and the public sector. It was published and last reviewed on 19 November 2018 at version 1.0.",
+      "limits": "The review date is 2018, and the stated audience is not a five-person business without an administrator. Its usability and role-based advice is used here as criteria to check, not as current market evidence."
+    },
+    {
+      "documentId": "NCSC-PASSKEYS-2026",
+      "heading": "Leave passwords in the past - passkeys are the future",
+      "sectionUid": "external-ncsc-passkeys-2026",
+      "url": "https://www.ncsc.gov.uk/news/ncsc-leave-passwords-in-the-past-passkeys-are-the-future",
+      "role": "Counter-evidence; the same authority's newer position",
+      "extract": "On 23 April 2026 the NCSC announced that it no longer recommends individuals use passwords where passkeys are available, describing passwords as lacking relative resilience to modern cyber threats and passkeys as ready for mass adoption. The announcement is addressed to consumers and digital services.",
+      "limits": "It concerns individual consumer sign-in, not team ownership of shared business accounts, and it does not state that passkeys remove the need for a record of who may reach each account. It is newer than the 2018 password-administration collection, so the two positions are presented together rather than merged."
+    },
+    {
+      "documentId": "BW-ORGANIZATIONS-DOCS",
+      "heading": "Get to know your organization",
+      "sectionUid": "external-bitwarden-organizations-docs",
+      "url": "https://bitwarden.com/help/getting-started-organizations/",
+      "role": "Evidence; vendor primary documentation of one documented capability family",
+      "extract": "Bitwarden documents that organizations add a layer of collaboration and sharing to password management, relate users and vault items for secure sharing of logins owned by the organization, and give administrators an Admin Console to manage items and users, run reports, and configure organization settings.",
+      "limits": "Vendor documentation is not independent testing. It does not verify any plan entitlement, price, region, data residency, audit result, or security outcome, and no comparison with other products was performed in this run."
+    },
+    {
+      "documentId": "HN-TEAM-PASSWORD-MANAGER-QUESTIONS",
+      "heading": "Hacker News team password-manager questions",
+      "sectionUid": "external-hn-team-password-manager-questions",
+      "url": "https://hn.algolia.com/api/v1/search?query=password%20manager%20team&tags=story",
+      "role": "Demand; dated community selection questions",
+      "extract": "The archive holds dated community questions on this decision, including \"Ask HN: Which Password Manager for Teams?\" (2017-11-28) and \"Ask HN: Best password manager for teams?\" (2018-12-28), alongside team-manager launches that drew several hundred votes and comments.",
+      "limits": "Community questions prove that the selection question is asked. They are not a query volume, not a five-person professional-services sample, and cannot establish the answer, per D07 9.3."
+    }
+  ],
+  "internalRequirementSources": [
+    {
+      "documentId": "D07",
+      "heading": "18.3 Hard exclusions",
+      "sectionUid": "D07-S-c87bcf7ab169",
+      "contentHash": "3e9a17a20e0e1b2fcfdcc833c83bf40ca8f9cd736a4d0daf39f9b62f4a338de7",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D08",
+      "heading": "11. Source Hierarchy",
+      "sectionUid": "D08-S-e4b63d794258",
+      "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D04",
+      "heading": "18.3 Motion eligibility test",
+      "sectionUid": "D04-S-7c9f562cef00",
+      "contentHash": "8dd3668096f583e2b789abfa5967b9a84cbca7bafae79f2240a981a966db618a",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D07",
+      "heading": "9.3 Demand-source rule",
+      "sectionUid": "D07-S-a52b46a6e024",
+      "contentHash": "27b01d342afd4a4f0c44c68b8cae4d88f0ee7ed99727b348187aafd29db2e254",
+      "reviewedAt": "2026-09-28"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+﻿git : warning: in the working copy of '.stage2/landing-visual/no-v2-pages/summary.json', LF will be replaced by CRLF 
+the next time Git touches it
+At line:2 char:1
++ git -C ".worktrees/phase-two" --no-pager merge ce522648f7949c60654550 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error: The following untracked working tree files would be overwritten by merge:
+	build-pack/execution-journal.jsonl
+	tests/decision-journey-production-verifier.test.ts
+Please move or remove them before you merge.
+Aborting
+Already up to date.
+Merge with strategy ort failed.
+Auto-merging .gitignore
+CONFLICT (content): Merge conflict in .gitignore
+Auto-merging .vercelignore
+CONFLICT (content): Merge conflict in .vercelignore
+Auto-merging AGENTS.md
+Auto-merging automation/codex/editorial-brief.md
+CONFLICT (add/add): Merge conflict in automation/codex/editorial-brief.md
+Auto-merging automation/codex/manifest.json
+CONFLICT (add/add): Merge conflict in automation/codex/manifest.json
+Auto-merging automation/codex/production-watchdog.md
+CONFLICT (add/add): Merge conflict in automation/codex/production-watchdog.md
+Auto-merging build-pack/execution-state.json
+CONFLICT (content): Merge conflict in build-pack/execution-state.json
+Auto-merging eslint.config.mjs
+CONFLICT (content): Merge conflict in eslint.config.mjs
+Auto-merging scripts/prepare-vetted-execution-state.mjs
+CONFLICT (content): Merge conflict in scripts/prepare-vetted-execution-state.mjs
+Auto-merging scripts/release-decision-journey.ts
+CONFLICT (add/add): Merge conflict in scripts/release-decision-journey.ts
+Auto-merging scripts/run-active-tests.mjs
+CONFLICT (add/add): Merge conflict in scripts/run-active-tests.mjs
+Auto-merging scripts/verify-decision-journey-production.ts
+CONFLICT (add/add): Merge conflict in scripts/verify-decision-journey-production.ts
+Auto-merging src/app/globals.css
+CONFLICT (add/add): Merge conflict in src/app/globals.css
+Auto-merging src/lib/automation/authority.ts
+CONFLICT (add/add): Merge conflict in src/lib/automation/authority.ts
+Auto-merging src/lib/automation/contracts.ts
+CONFLICT (add/add): Merge conflict in src/lib/automation/contracts.ts
+Auto-merging tests/automation-authority.test.ts
+CONFLICT (add/add): Merge conflict in tests/automation-authority.test.ts
+Auto-merging tests/decision-sets.test.ts
+CONFLICT (add/add): Merge conflict in tests/decision-sets.test.ts
+Auto-merging tests/vendor-removal.test.ts
+CONFLICT (add/add): Merge conflict in tests/vendor-removal.test.ts
+Automatic merge failed; fix conflicts and then commit the result.

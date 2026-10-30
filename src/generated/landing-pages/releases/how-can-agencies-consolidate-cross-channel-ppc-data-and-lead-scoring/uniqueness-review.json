@@ -1,0 +1,12 @@
+{
+  "status": "pass",
+  "basis": "Editorial review plus raw specialist report",
+  "buyer_decision": "Can an agency consolidate supported PPC reporting and company-level lead signals without overstating attribution or package scope?",
+  "closest_siblings": [
+    "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces"
+  ],
+  "distinctiveness": "Existing siblings address email brand-control journeys and desktop workspace organization. This page addresses channel reconciliation, company matching, intent qualification and agency invoicing; none of those buyer tasks are owned by a sibling.",
+  "raw_findings": "No duplicate, near-duplicate, composite or semantic groups. Similar editorial score values do not establish copied content. Scores are subjective assessments, not measured results or release authority.",
+  "adjudication": "Score proximity false positive; no score changed to evade the detector."
+}

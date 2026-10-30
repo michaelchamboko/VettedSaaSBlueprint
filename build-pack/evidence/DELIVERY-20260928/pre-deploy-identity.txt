@@ -1,0 +1,13 @@
+﻿# Pre-deployment production identity
+# Captured before vercel deploy --prod --yes for release commit 5161927908218ac6b42f36c50629769cc843e1bf
+# Project prj_6ymKeAz0lqMs8LYvplkn4AKMya7J, org team_0Vjm5yuoHjiIcGq0hoJMm5vC, region cpt1
+current_production_deployment_id=dpl_CHTbWYWtNMKDfQDH6U7SXJky5mXK
+current_production_url=vetted-saa-s-blueprint-lgdgcl0rp-michaelchamboko-gravityclaw.vercel.app
+pre_status 200 /
+pre_status 200 /decision-hub
+pre_status 200 /solution-hub
+pre_status 200 /scenarios
+pre_status 200 /decision-hub/governed-ai-client-work-preparation
+pre_status 404 /decision-hub/team-shared-account-access-control
+pre_status 404 /solution-hub/team-shared-account-access-control
+pre_status 404 /scenarios/team-shared-account-access-control

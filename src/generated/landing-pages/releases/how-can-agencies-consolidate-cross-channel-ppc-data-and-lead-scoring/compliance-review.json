@@ -1,0 +1,27 @@
+{
+  "status": "pass",
+  "basis": "Parent independently checked official source claims; exact URL is present in approved-urls.md; rendered disclosure and sponsored attributes verified in four modes.",
+  "limitations": "No unpublished program terms are asserted. No click or conversion outcome claimed.",
+  "adjudicated_findings": [
+    {
+      "finding": "SSO regex matches associate",
+      "decision": "False positive: company matching description is not an SSO claim."
+    },
+    {
+      "finding": "Privacy notice and consent review reminder",
+      "decision": "A reader checklist, not a certification or assertion of legal compliance."
+    },
+    {
+      "finding": "not guaranteed / not verified / not independently prove / hands-on question",
+      "decision": "Explicitly negated or questioned assertions; answer expressly states no product testing."
+    },
+    {
+      "finding": "USD seat price",
+      "decision": "Official agency pricing checked 2026-10-14 supports USD $25 monthly or $240 yearly per user; limitations qualify total package cost and client capacity."
+    },
+    {
+      "finding": "High compliance score",
+      "decision": "Subjective editorial value cannot establish approval; independent source and browser evidence are the basis."
+    }
+  ]
+}

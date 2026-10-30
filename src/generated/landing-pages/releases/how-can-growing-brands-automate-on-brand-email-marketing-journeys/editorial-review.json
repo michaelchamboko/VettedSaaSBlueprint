@@ -1,0 +1,32 @@
+{
+  "schema_version": "LandingEditorialReviewV1",
+  "status": "editorial_pass",
+  "reviewed_at": "2026-10-13T06:44:16.000Z",
+  "scores": {
+    "evidence_score": 78,
+    "originality_score": 82,
+    "conversion_score": 80,
+    "compliance_score": 95,
+    "readability_score": 88,
+    "seo_safety_score": 86,
+    "overall_score": 84
+  },
+  "score_basis": {
+    "classification": "editorial judgments, not measurements",
+    "evidence": "One official plan comparison limits evidence breadth; claims confined to documented features.",
+    "originality": "Email-template handoff and journey evaluation overlaps the site's existing email category; rated below the distinct desktop-account decision.",
+    "conversion": "Exact CTA and concrete evaluation next step; no urgency or outcome guarantees.",
+    "compliance": "Disclosure precedes CTA; unsupported claims removed; live destination reported matching by parent audit.",
+    "readability": "Short decision-focused sections with a bounded workflow.",
+    "seo": "Unique metadata, canonical target, explicit limitations and visible official source."
+  },
+  "claims_removed_or_softened": [
+    "Removed unverified regional dollar prices and universal annual-discount claims.",
+    "Removed competitor superiority, deliverability and no-code outcome guarantees.",
+    "Replaced assumed plan access with explicit checks against current official documentation."
+  ],
+  "required_remaining": [
+    "remote preview verification",
+    "release receipt"
+  ]
+}

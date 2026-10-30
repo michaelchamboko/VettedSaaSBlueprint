@@ -10,6 +10,8 @@ import { listPublishedVisibilityPageSummaries } from "@/lib/visibility-pages/cat
 import { indexableVisibilitySummaries } from "@/lib/visibility-pages/link-graph";
 import type { VisibilityPublicationSummary } from "@/lib/visibility-pages/contracts";
 import { listDecisionSets } from "@/lib/decision-journey/sets";
+import { localizationPaths } from "@/lib/decision-journey/video-localization";
+import { trendReports } from "@/lib/trends/trend-reports";
 import {
   loadPublicSiteConfig,
   type PublicSiteConfig,
@@ -43,6 +45,14 @@ export function buildPublicSitemap(
     }),
   );
 
+  const discoveryEntries = [
+    ...localizationPaths,
+    ...trendReports.map((report) => report.canonicalPath),
+  ].map<MetadataRoute.Sitemap[number]>((route) => ({
+    url: new URL(route, config.canonicalOrigin).toString(),
+    changeFrequency: "weekly",
+  }));
+
   const reviewEntries = reviews.map<MetadataRoute.Sitemap[number]>((review) => ({
     url: new URL(review.path, config.canonicalOrigin).toString(),
     lastModified: review.publishedAt,
@@ -61,7 +71,7 @@ export function buildPublicSitemap(
     changeFrequency: "monthly",
   }));
 
-  return [...staticEntries, ...reviewEntries, ...visibilityEntries, ...blogEntries];
+  return [...staticEntries, ...discoveryEntries, ...reviewEntries, ...visibilityEntries, ...blogEntries];
 }
 
 export const dynamic = "force-dynamic";

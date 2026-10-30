@@ -1,0 +1,379 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 4a3901f..60c27f9 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -57,6 +57,14 @@ Run this workflow when source documents or their derived intelligence change:
+ 
+ During the owner-authorized non-commercial implementation phase, GitNexus may be refreshed with `powershell -NoProfile -File scripts/refresh-gitnexus.ps1` only when it targets the selected checkout. The wrapper pins GitNexus 1.6.10 and the repository-level `.gitnexusrc` enforces index-only mode so refreshes cannot inject tool-specific authority files. It remains navigation evidence, never semantic authority.
+ 
++## Mandatory frontend design workflow
++
++- Every agent and model that creates or changes a page, component, layout, typography, styling, or motion must use both `design-taste-frontend` and the project-local Impeccable skill, including scheduled page-building runs and low-cost models.
++- Before implementation, read `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or a checkout copy), state its one-line Design Read, and choose page-type direction from the approved visual references and dials in D04 §6.2 (`D04-S-c5113e3d7e2d`) and D04 §32 Stage 4 (`D04-S-1daaf8613a03`). Preserve the established site identity unless the approved brief calls for a redesign.
++- Before a UI edit, run `.agents/skills/impeccable/scripts/impeccable.cmd context --target <source-file-or-route>`, follow its context, and read `.agents/skills/impeccable/reference/craft-floor.md`. If unavailable, follow the skill's documented fallback and report that the detector did not run.
++- After rendering, inspect desktop and mobile together; run `.agents/skills/impeccable/scripts/impeccable.cmd critique <target>`, `audit <target>`, and `detect <target>`, fix findings in one bounded pass, and confirm once. A clean mechanical detector alone is not a design pass.
++- Before page work, verify the global Taste skill or checkout copy and `.agents/skills/impeccable/SKILL.md` plus its launcher exist. Restore a missing skill before continuing. Codex users must approve the project hook through `/hooks` once.
++
+ ## Affiliate-copy capability gate
+ 
+ - Before planning or drafting affiliate copy, read `docs/document-intelligence/DOMAIN_QUERY_EVIDENCE.md` sections **External Hormozi-skills review**, **Affiliate-safe Hormozi output map**, and **Affiliate-safe Hormozi invocation chain**.
+diff --git a/automation/codex/editorial-brief.md b/automation/codex/editorial-brief.md
+index 303e2cd..39c30fb 100644
+--- a/automation/codex/editorial-brief.md
++++ b/automation/codex/editorial-brief.md
+@@ -4,6 +4,10 @@ Run only from the working directory recorded in `automation/codex/manifest.json`
+ 
+ Require the final completed Research receipt from the same scheduled window and require its result to be `EvidenceUpdateV2`. A Research `no_change` result produces a truthful no-work `EditorialBriefV2`. Where the research pack supports a bounded inference, partial or conflicting evidence creates publication-authorising work: make the inference, assumptions, uncertainty, limitations, contradictions, and non-fit conditions explicit. An unsupported core conclusion or an unbounded commercial or safety-sensitive claim remains ineligible.
+ 
++Before composing any page blueprint, read `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or the checkout copy) and `.agents/skills/impeccable/SKILL.md`; follow the mandatory frontend design workflow in `AGENTS.md`. Treat Decision Hub, Solution Hub, and Scenario as distinct page types, preserve the established site identity, and derive composition from approved visual references rather than a generic template. Do not skip this because the run uses a lower-cost model.
++
+ For eligible evidence, produce exactly three `EditorialBriefV2` page blueprints: a 12-section Decision Hub, a 7-section Solution Hub, and a 12-section Scenario. Each blueprint must record its depth target, direct answers, explanations, evidence focus, the labelled inference and its uncertainty, approved catalogue references, composition family, no more than three purposeful motion patterns, mobile treatment, and reduced-motion treatment.
+ 
++Check every numeric step claim in a headline, premise, or blueprint against its structured section count. For rendered UI changes, require the builder to run Impeccable critique, accessibility/responsive audit, and detector after rendering; inspect desktop and mobile screenshots; and resolve findings in one bounded pass. Unresolved findings fail quality acceptance; a blueprint or clean mechanical scan alone is not a visual pass.
++
+ Complete with a schema-valid `EditorialBriefV2` and a final completed receipt. Do not modify code, deploy, create infrastructure, change schedules, or introduce a requirement not present in the repository authority.
+diff --git a/automation/codex/manifest.json b/automation/codex/manifest.json
+index 220fbfe..6e0e9fe 100644
+--- a/automation/codex/manifest.json
++++ b/automation/codex/manifest.json
+@@ -17,7 +17,7 @@
+       "type": "editorial_brief",
+       "timeSast": "06:00",
+       "promptFile": "automation/codex/editorial-brief.md",
+-      "promptSha256": "714417a1acb45485f8e5ed5d24f0af6cb5575849622f1fe4a115411adad89b45",
++      "promptSha256": "f7e0137083815160e6de5fb47c2fc9e77ed7fc37e07bb56f5429f71fa197326c",
+       "desktopBootstrap": "Use C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\phase-two as the working directory. Load automation/codex/editorial-brief.md, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
+     },
+     {
+@@ -33,7 +33,7 @@
+       "type": "watchdog",
+       "timeSast": "23:00",
+       "promptFile": "automation/codex/production-watchdog.md",
+-      "promptSha256": "eac426da51eb03b6efd3ae7302b9c39c053b28df37a674263edd3e6f28bddefc",
++      "promptSha256": "5faf845c4220abcc54a709e0edd38c0c1010e5f9ae58d069bb34b7e6e7bf8275",
+       "desktopBootstrap": "Use C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\phase-two as the working directory. Load automation/codex/production-watchdog.md, verify its SHA-256 against automation/codex/manifest.json, and follow it exactly. Do not add requirements or capabilities."
+     }
+   ]
+diff --git a/automation/codex/production-watchdog.md b/automation/codex/production-watchdog.md
+index acb42c6..815ff05 100644
+--- a/automation/codex/production-watchdog.md
++++ b/automation/codex/production-watchdog.md
+@@ -2,6 +2,6 @@
+ 
+ Run only from the working directory recorded in `automation/codex/manifest.json`. Verify `AGENTS.md`, the active authority in `planning.md`, this prompt's manifest fingerprint, and repository identity. Use the supplied scheduled window unchanged and start exactly one idempotent `watchdog` run. Runtime state and receipts belong only under ignored `.automation/`.
+ 
+-Verify the production homepage, the existing three decision routes, and every new production decision-set route in scope. Produce `ProductionQualityReceiptV2`. Verify required section counts, stable evidence references, approved catalogue composition, purposeful motion, mobile layout, reduced-motion rendering, JavaScript-disabled rendering, accessibility, console errors, canonicals, horizontal overflow, and connected routes.
++Verify the production homepage, the existing three decision routes, and every new production decision-set route in scope. Bind `ProductionQualityReceiptV2` to the exact deployed Git revision: inspect current production deployment metadata and invoke `npm run automation:watchdog:verify -- --revision <40-character-deployed-commit-sha>`. Never reuse a receipt from another revision. Verify required section counts, agreement between numeric step claims and rendered section counts, stable evidence references, approved catalogue composition, purposeful motion, mobile layout, reduced-motion rendering, JavaScript-disabled rendering, accessibility, console errors, canonicals, horizontal overflow, and connected routes.
+ 
+-Capture first-screen and full-page screenshots for desktop, mobile reduced-motion, and mobile without JavaScript. A page that merely loads but lacks required content, evidence, composition, motion, accessibility, or screenshots must fail. Record a final completed receipt with the completion time and result reference. Verify and report only; do not change code, deploy, create infrastructure, change schedules, or invent recovery requirements.
++Capture first-screen and full-page screenshots for desktop, mobile reduced-motion, and mobile without JavaScript. Read the Taste and Impeccable skills and inspect desktop/mobile screenshots. Run `.agents/skills/impeccable/scripts/impeccable.cmd critique src/components/public/DecisionJourneyPage.tsx`, then `audit` and `detect` with the same target; record each result. A clean detector does not replace visual inspection. Missing content, evidence, composition, motion, accessibility, visual quality, or screenshots fail. Record a final completed receipt. Verify only; do not change code, deploy, create infrastructure, change schedules, or invent recovery requirements.
+diff --git a/build-pack/execution-state.json b/build-pack/execution-state.json
+index 99b88d0..4d1859c 100644
+--- a/build-pack/execution-state.json
++++ b/build-pack/execution-state.json
+@@ -1565,7 +1565,7 @@
+     {
+       "id": "P2-RESEARCH-001",
+       "title": "Reuse-first daily evidence refresh",
+-      "status": "done",
++      "status": "ready",
+       "dependencies": [
+         "P2-RUNNER-001"
+       ],
+@@ -1685,17 +1685,8 @@
+           "timeout_seconds": 900
+         }
+       ],
+-      "evidence": [
+-        {
+-          "name": "Phase Two implementation and deployment receipt",
+-          "kind": "receipt",
+-          "location": "planning.md",
+-          "task_summary": "Recorded in the Phase Two deployment and activation receipt; P2-ACT-001 remains the only active Phase Two acceptance gate."
+-        }
+-      ],
+-      "evidence_refs": [
+-        "planning.md#phase-two-deployment-and-activation-receipt--2026-09-01"
+-      ],
++      "evidence": [],
++      "evidence_refs": [],
+       "model_route": {
+         "worker": "standard",
+         "verifier": "standard",
+@@ -1706,15 +1697,12 @@
+         "initial_tokens": 12000,
+         "retrieval": "targeted"
+       },
+-      "operation_phase": "committed",
+-      "completed_at": "2026-09-01T00:00:00Z",
+-      "verified_at": "2026-09-01T00:00:00Z",
+-      "verified_commit": "6697f4bb635921c7f4cd62fb990958e844f99b5f"
++      "operation_phase": "prepared"
+     },
+     {
+       "id": "P2-EDITORIAL-001",
+       "title": "Editorial brief and bounded work queue",
+-      "status": "done",
++      "status": "blocked",
+       "dependencies": [
+         "P2-RESEARCH-001"
+       ],
+@@ -1772,17 +1760,8 @@
+           "timeout_seconds": 900
+         }
+       ],
+-      "evidence": [
+-        {
+-          "name": "Phase Two implementation and deployment receipt",
+-          "kind": "receipt",
+-          "location": "planning.md",
+-          "task_summary": "Recorded in the Phase Two deployment and activation receipt; P2-ACT-001 remains the only active Phase Two acceptance gate."
+-        }
+-      ],
+-      "evidence_refs": [
+-        "planning.md#phase-two-deployment-and-activation-receipt--2026-09-01"
+-      ],
++      "evidence": [],
++      "evidence_refs": [],
+       "model_route": {
+         "worker": "standard",
+         "verifier": "standard",
+@@ -1793,10 +1772,7 @@
+         "initial_tokens": 12000,
+         "retrieval": "targeted"
+       },
+-      "operation_phase": "committed",
+-      "completed_at": "2026-09-01T00:00:00Z",
+-      "verified_at": "2026-09-01T00:00:00Z",
+-      "verified_commit": "6697f4bb635921c7f4cd62fb990958e844f99b5f"
++      "operation_phase": "prepared"
+     },
+     {
+       "id": "P2-OPT-001",
+@@ -1888,7 +1864,7 @@
+     {
+       "id": "P2-WATCH-001",
+       "title": "Production watchdog and rescue queue",
+-      "status": "done",
++      "status": "ready",
+       "dependencies": [
+         "P2-OPT-001"
+       ],
+@@ -1948,17 +1924,8 @@
+           "timeout_seconds": 900
+         }
+       ],
+-      "evidence": [
+-        {
+-          "name": "Phase Two implementation and deployment receipt",
+-          "kind": "receipt",
+-          "location": "planning.md",
+-          "task_summary": "Recorded in the Phase Two deployment and activation receipt; P2-ACT-001 remains the only active Phase Two acceptance gate."
+-        }
+-      ],
+-      "evidence_refs": [
+-        "planning.md#phase-two-deployment-and-activation-receipt--2026-09-01"
+-      ],
++      "evidence": [],
++      "evidence_refs": [],
+       "model_route": {
+         "worker": "standard",
+         "verifier": "standard",
+@@ -1969,10 +1936,7 @@
+         "initial_tokens": 12000,
+         "retrieval": "targeted"
+       },
+-      "operation_phase": "committed",
+-      "completed_at": "2026-09-01T00:00:00Z",
+-      "verified_at": "2026-09-01T00:00:00Z",
+-      "verified_commit": "6697f4bb635921c7f4cd62fb990958e844f99b5f"
++      "operation_phase": "prepared"
+     },
+     {
+       "id": "P2-RELEASE-001",
+@@ -2161,7 +2125,7 @@
+     {
+       "id": "P2-VERIFY-001",
+       "title": "Automation and production verification",
+-      "status": "done",
++      "status": "ready",
+       "dependencies": [
+         "P2-RELEASE-001"
+       ],
+@@ -2220,17 +2184,8 @@
+           "timeout_seconds": 900
+         }
+       ],
+-      "evidence": [
+-        {
+-          "name": "Phase Two implementation and deployment receipt",
+-          "kind": "receipt",
+-          "location": "planning.md",
+-          "task_summary": "Recorded in the Phase Two deployment and activation receipt; P2-ACT-001 remains the only active Phase Two acceptance gate."
+-        }
+-      ],
+-      "evidence_refs": [
+-        "planning.md#phase-two-deployment-and-activation-receipt--2026-09-01"
+-      ],
++      "evidence": [],
++      "evidence_refs": [],
+       "model_route": {
+         "worker": "standard",
+         "verifier": "standard",
+@@ -2241,10 +2196,7 @@
+         "initial_tokens": 12000,
+         "retrieval": "targeted"
+       },
+-      "operation_phase": "committed",
+-      "completed_at": "2026-09-01T00:00:00Z",
+-      "verified_at": "2026-09-01T00:00:00Z",
+-      "verified_commit": "6697f4bb635921c7f4cd62fb990958e844f99b5f"
++      "operation_phase": "prepared"
+     },
+     {
+       "id": "P2-DEPLOY-001",
+@@ -2412,7 +2364,11 @@
+         "initial_tokens": 12000,
+         "retrieval": "targeted"
+       },
+-      "operation_phase": "prepared"
++      "operation_phase": "prepared",
++      "blocker": {
++        "reason": "The v2.2 correction excludes earlier cycles; corrected activation requires a fresh release, one manual canary, then three consecutive corrected scheduled cycles.",
++        "recorded_at": "2026-09-29T00:00:00Z"
++      }
+     },
+     {
+       "id": "P3-PLAN-001",
+diff --git a/scripts/prepare-vetted-execution-state.mjs b/scripts/prepare-vetted-execution-state.mjs
+index 281f27d..20a7ab0 100644
+--- a/scripts/prepare-vetted-execution-state.mjs
++++ b/scripts/prepare-vetted-execution-state.mjs
+@@ -27,6 +27,14 @@ const phaseOneTaskIds = new Set([
+   "P1-RELEASE-001",
+ ]);
+ 
++const reopenedP2TaskIds = new Set([
++  "P2-RESEARCH-001",
++  "P2-EDITORIAL-001",
++  "P2-WATCH-001",
++  "P2-VERIFY-001",
++  "P2-ACT-001",
++]);
++
+ const taskDefinitions = [
+   ["P1-PLAN-001", "Phase One authority and traceability", [], "medium", [1, 1, 1, 0, 0]],
+   ["RCV-002R", "Recovered baseline and active-test reconciliation", ["P1-PLAN-001"], "medium", [1, 1, 1, 0, 0]],
+@@ -176,12 +184,14 @@ const main = async () => {
+   const tasks = taskDefinitions.map(([id, title, dependencies, risk, scores]) => {
+     const requirementIds = requirements.requirements.filter((requirement) => assignments.get(requirement.id) === id).map((requirement) => requirement.id);
+     const completedPhaseOneTask = phaseOneVerified && phaseOneTaskIds.has(id);
+-    const completedPhaseTwoTask = ["P2-PLAN-001", "P2-CLEAN-001", "P2-RUNNER-001", "P2-RESEARCH-001", "P2-EDITORIAL-001", "P2-OPT-001", "P2-WATCH-001", "P2-RELEASE-001", "P2-SCHEDULE-001", "P2-VERIFY-001", "P2-DEPLOY-001"].includes(id);
++    const completedPhaseTwoTask = ["P2-PLAN-001", "P2-CLEAN-001", "P2-RUNNER-001", "P2-RESEARCH-001", "P2-EDITORIAL-001", "P2-OPT-001", "P2-WATCH-001", "P2-RELEASE-001", "P2-SCHEDULE-001", "P2-VERIFY-001", "P2-DEPLOY-001"].includes(id) && !reopenedP2TaskIds.has(id);
+     const completedPhaseThreePlanningTask = ["P3-PLAN-001", "P3-EXCLUDED-001"].includes(id);
+     const task = {
+       id,
+       title,
+-      status: completedPhaseOneTask || completedPhaseTwoTask || completedPhaseThreePlanningTask
++      status: reopenedP2TaskIds.has(id)
++        ? id === "P2-RESEARCH-001" || id === "P2-WATCH-001" || id === "P2-VERIFY-001" ? "ready" : "blocked"
++        : completedPhaseOneTask || completedPhaseTwoTask || completedPhaseThreePlanningTask
+         ? "done"
+         : "blocked",
+       dependencies,
+@@ -213,6 +223,12 @@ const main = async () => {
+       context_packet: { window_tokens: 32000, initial_tokens: 12000, retrieval: "targeted" },
+       operation_phase: completedPhaseOneTask || completedPhaseTwoTask || completedPhaseThreePlanningTask ? "committed" : "prepared",
+     };
++    if (id === "P2-ACT-001") {
++      task.blocker = {
++        reason: "The v2.2 correction excludes earlier cycles; corrected activation requires a fresh release, one manual canary, then three consecutive corrected scheduled cycles.",
++        recorded_at: "2026-09-29T00:00:00Z",
++      };
++    }
+     if (completedPhaseOneTask) {
+       task.verified_commit = releaseReceipt.release_commit;
+       task.verified_at = releaseReceipt.verified_at;
+diff --git a/scripts/verify-decision-journey-production.ts b/scripts/verify-decision-journey-production.ts
+index ea4d3ba..9c4baa0 100644
+--- a/scripts/verify-decision-journey-production.ts
++++ b/scripts/verify-decision-journey-production.ts
+@@ -1,6 +1,7 @@
+ import { mkdir } from "node:fs/promises";
++import { createHash, randomUUID } from "node:crypto";
+ import path from "node:path";
+-import { randomUUID } from "node:crypto";
++import { fileURLToPath } from "node:url";
+ 
+ import { chromium } from "@playwright/test";
+ 
+@@ -9,6 +10,19 @@ import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
+ 
+ const defaultOrigin = "https://vettedsaasblueprint.online";
+ 
++const stepWords: Record<string, number> = {
++  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
++  nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
++  fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
++};
++
++export function headlineStepCountMatches(headline: string, stepCount: number): boolean {
++  const match = headline.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)-step\b/i);
++  if (!match) return true;
++  const declared = /^\d+$/.test(match[1]) ? Number(match[1]) : stepWords[match[1].toLowerCase()];
++  return declared === stepCount;
++}
++
+ function argument(name: string): string | undefined {
+   const index = process.argv.indexOf(name);
+   return index >= 0 ? process.argv[index + 1] : undefined;
+@@ -86,14 +100,29 @@ async function captureRoute(input: { origin: string; route: keyof typeof decisio
+ 
+ async function main() {
+   const origin = argument("--origin") ?? defaultOrigin;
++  const revision = argument("--revision") ?? process.env.VERCEL_GIT_COMMIT_SHA;
++  if (!revision || !/^[a-f0-9]{40}$/i.test(revision)) {
++    throw new Error("Pass --revision <40-character git commit SHA> (or set VERCEL_GIT_COMMIT_SHA) to bind this receipt to the verified code revision.");
++  }
+   const output = path.resolve(argument("--screenshot-dir") ?? path.join(".automation", "receipts", "production-quality"));
+   await mkdir(output, { recursive: true });
+   const htmlChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => checkHtml(origin, route as keyof typeof decisionJourneyCatalog)));
+   const browserChecks = await Promise.all(Object.keys(decisionJourneyCatalog).map((route) => captureRoute({ origin, route: route as keyof typeof decisionJourneyCatalog, output })));
+-  const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks)];
++  const semanticChecks: Check[] = Object.entries(decisionJourneyCatalog).map(([route, record]) => {
++    const matches = headlineStepCountMatches(record.headline, record.blocks.length);
++    return {
++      name: `${route}: headline step count`,
++      passed: matches,
++      detail: matches ? `Any declared step count matches the ${record.blocks.length} catalogue sections.` : `Headline declares a different number of steps than the ${record.blocks.length} catalogue sections.`,
++      category: "content",
++    };
++  });
++  const checks = [...htmlChecks.flat(), ...browserChecks.flatMap((result) => result.checks), ...semanticChecks];
+   const receipt = productionQualityReceiptV2Schema.parse({
+     version: 2,
+     runId: argument("--run-id") ?? randomUUID(),
++    revision: revision.toLowerCase(),
++    catalogueFingerprint: createHash("sha256").update(JSON.stringify(decisionJourneyCatalog), "utf8").digest("hex"),
+     passed: checks.every((check) => check.passed),
+     checks,
+     screenshots: browserChecks.flatMap((result) => result.screenshots),
+@@ -103,4 +132,4 @@ async function main() {
+   if (!receipt.passed) process.exitCode = 1;
+ }
+ 
+-void main();
++if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) void main();
+diff --git a/src/lib/automation/contracts.ts b/src/lib/automation/contracts.ts
+index a3da3ea..b283899 100644
+--- a/src/lib/automation/contracts.ts
++++ b/src/lib/automation/contracts.ts
+@@ -127,6 +127,8 @@ export const validationReceiptSchema = z.object({
+ 
+ export const productionQualityReceiptV2Schema = validationReceiptSchema.omit({ version: true, checks: true }).extend({
+   version: z.literal(2),
++  revision: z.string().regex(/^[a-f0-9]{40}$/),
++  catalogueFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+   checks: z.array(z.object({
+     name: z.string().min(1),
+     passed: z.boolean(),

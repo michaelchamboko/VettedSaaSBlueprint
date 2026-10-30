@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-page-duplicates",
+  "input_mode": "draft",
+  "target_dir": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\generated\\landing-pages",
+  "target": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
+  "status": "fail",
+  "report_only": false,
+  "scanned_count": 8,
+  "thresholds": {
+    "short_field_token_similarity": 0.8,
+    "composite_visible_page_similarity": 0.72,
+    "score_delta_max": 5
+  },
+  "duplicate_groups": [],
+  "near_duplicate_groups": [],
+  "composite_fingerprint_groups": [],
+  "semantic_pattern_groups": [],
+  "score_signature_groups": [],
+  "score_delta_groups": [
+    {
+      "type": "score_delta_similarity",
+      "reason_code": "copied_score_signature",
+      "files": [
+        "carepatron-ai-clinical-documentation.json",
+        "getresponse-studio.json",
+        "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json"
+      ],
+      "pairs": [
+        {
+          "files": [
+            "carepatron-ai-clinical-documentation.json",
+            "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json"
+          ],
+          "max_delta": 2,
+          "avg_delta": 0.86,
+          "deltas": {
+            "evidence_score": 0,
+            "originality_score": 0,
+            "conversion_score": 2,
+            "compliance_score": 2,
+            "readability_score": 1,
+            "seo_safety_score": 1,
+            "overall_score": 0
+          },
+          "reason_code": "copied_score_signature"
+        },
+        {
+          "files": [
+            "getresponse-studio.json",
+            "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json"
+          ],
+          "max_delta": 5,
+          "avg_delta": 2.43,
+          "deltas": {
+            "evidence_score": 3,
+            "originality_score": 5,
+            "conversion_score": 2,
+            "compliance_score": 2,
+            "readability_score": 4,
+            "seo_safety_score": 0,
+            "overall_score": 1
+          },
+          "reason_code": "copied_score_signature"
+        }
+      ],
+      "threshold": 5,
+      "max_delta": 5,
+      "avg_delta": 2.11
+    }
+  ],
+  "artifact_qa_issues": [
+    {
+      "field": "how_it_works.2.description",
+      "reason_code": "unsupported_sensitive_claim",
+      "file": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
+      "message": "how_it_works.2.description contains claim language that requires claim-level evidence (\\b(discount|free trial|guarantee|guaranteed|refund|pricing|security|privacy|compliance)\\b)"
+    },
+    {
+      "field": "faq.3.answer",
+      "reason_code": "unsupported_sensitive_claim",
+      "file": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
+      "message": "faq.3.answer contains claim language that requires claim-level evidence (\\b(discount|free trial|guarantee|guaranteed|refund|pricing|security|privacy|compliance)\\b)"
+    },
+    {
+      "field": "faq.5.question",
+      "reason_code": "review_basis_overclaim",
+      "file": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
+      "message": "faq.5.question contains claim language that requires claim-level evidence (\\b(independent|trusted|verified|tested|hands[-\\s]?on|recommended|evidence[-\\s]?backed)\\b)"
+    }
+  ],
+  "summary": {
+    "duplicate_group_count": 0,
+    "near_duplicate_group_count": 0,
+    "composite_fingerprint_group_count": 0,
+    "semantic_pattern_group_count": 0,
+    "score_signature_group_count": 0,
+    "score_delta_group_count": 1,
+    "artifact_issue_count": 3,
+    "finding_count": 4
+  }
+}

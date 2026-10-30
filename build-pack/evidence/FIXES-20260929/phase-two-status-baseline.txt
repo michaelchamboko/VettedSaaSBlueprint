@@ -1,0 +1,13 @@
+ M .stage2/landing-visual/no-v2-pages/summary.json
+ M AGENTS.md
+ M automation/codex/editorial-brief.md
+ M automation/codex/manifest.json
+ M automation/codex/production-watchdog.md
+ M build-pack/execution-state.json
+ M scripts/prepare-vetted-execution-state.mjs
+ M scripts/verify-decision-journey-production.ts
+ M src/lib/automation/contracts.ts
+?? .agents/skills/impeccable/
+?? .codex/
+?? build-pack/execution-journal.jsonl
+?? tests/decision-journey-production-verifier.test.ts

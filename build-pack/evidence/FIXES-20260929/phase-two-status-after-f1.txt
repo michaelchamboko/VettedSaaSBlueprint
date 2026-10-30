@@ -1,0 +1,30 @@
+﻿ M .gitignore
+ M .stage2/landing-visual/no-v2-pages/summary.json
+ M .vercelignore
+ M AGENTS.md
+ M automation/codex/editorial-brief.md
+ M automation/codex/manifest.json
+ M automation/codex/production-watchdog.md
+ M build-pack/execution-state.json
+ M docs/research/2026-09-02-e2e-canary-opportunity.md
+ M docs/research/2026-09-03-governed-ai-evidence-ledger.json
+ M eslint.config.mjs
+ M next-env.d.ts
+ M scripts/prepare-vetted-execution-state.mjs
+ M scripts/release-decision-journey.ts
+ M scripts/run-active-tests.mjs
+ M scripts/verify-decision-journey-production.ts
+ M src/app/globals.css
+ M src/lib/automation/authority.ts
+ M src/lib/automation/contracts.ts
+ M tests/automation-authority.test.ts
+ M tests/decision-sets.test.ts
+ M tests/vendor-removal.test.ts
+?? .agents/skills/impeccable/
+?? .codex/
+?? build-pack/execution-journal.jsonl
+?? docs/research/2026-09-28-team-access-control-evidence-ledger.json
+?? docs/research/2026-09-28-team-access-control-topic-selection.md
+?? src/content/decision-journeys/sets/team-shared-account-access-control.json
+?? tests/decision-journey-production-verifier.test.ts
+?? tests/release-decision-journey.test.ts

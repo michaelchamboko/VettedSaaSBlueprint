@@ -8,6 +8,8 @@ import { StudioCategoryGallery } from "@/components/public/StudioCategoryGallery
 import { listPublishedLandingPageSummaries } from "@/lib/generated/landing-pages";
 import { getStudioCategories } from "@/lib/studio-catalogue";
 import { listDecisionSets } from "@/lib/decision-journey/sets";
+import { localizationPages } from "@/lib/decision-journey/video-localization";
+import { trendReports } from "@/lib/trends/trend-reports";
 
 const vettingPrinciples = [
   ["Evidence before adjectives", "Claims need a traceable source. If the evidence is thin, the wording stays modest."],
@@ -83,6 +85,36 @@ export default function Home() {
             </div>
           </section>
         ))}
+
+        <section className="home-section" aria-labelledby="latest-guides-title">
+          <div className="section-heading" data-home-motion="reveal">
+            <p className="eyebrow">Latest evidence-led guides</p>
+            <h2 id="latest-guides-title">Questions worth working through.</h2>
+            <p>Use the connected localization journey and current trend reports to frame a better software decision.</p>
+          </div>
+          <div className="studio-category-list">
+            <div className="studio-category" data-home-motion="reveal">
+              <div>
+                <p className="eyebrow">Video localization</p>
+                <h3>One connected journey from question to pilot.</h3>
+                <p>Start with audience fit, compare workable routes, then test the workflow against a real tutorial.</p>
+              </div>
+              <nav aria-label="Video localization guides">
+                {localizationPages.map((page) => <Link key={page.path} href={page.path}>{page.type}<span aria-hidden="true">↗</span></Link>)}
+              </nav>
+            </div>
+            <div className="studio-category" data-home-motion="reveal">
+              <div>
+                <p className="eyebrow">Trend reports</p>
+                <h3>Context for the next software conversation.</h3>
+                <p>Read the evidence, boundaries, and buyer questions behind the current SaaS shifts.</p>
+              </div>
+              <nav aria-label="Trend reports">
+                {trendReports.map((report) => <Link key={report.canonicalPath} href={report.canonicalPath}>{report.navLabel}<span aria-hidden="true">↗</span></Link>)}
+              </nav>
+            </div>
+          </div>
+        </section>
 
         <section className="home-section review-catalogue" id="reviews" aria-labelledby="reviews-title">
           <div className="section-heading" data-home-motion="reveal">
