@@ -330,7 +330,7 @@ button, input, textarea, select { font: inherit; }
   .home-hero { min-height: 48rem; }
   .home-hero__support, .section-heading, .affiliate-ribbon, .vetting-section { grid-template-columns: 1fr; }
   .decision-guide-catalogue__grid { grid-template-columns: 1fr; }
-  .studio-category { grid-template-columns: 1fr; gap: 2rem; }
+  .studio-category { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
   .studio-category > * { min-width: 0; }
   .public-header nav a, .public-footer nav a, .affiliate-ribbon a, .decision-guide-catalogue__grid a, .editorial-callout .text-link { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   .studio-category nav a { align-items: center; min-height: 44px; }
