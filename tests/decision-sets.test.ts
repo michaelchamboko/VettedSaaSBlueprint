@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { decisionSetV2Schema, fingerprintDecisionSetSources, loadDecisionSetsFromDirectory } from "../src/lib/decision-journey/sets";
+import { decisionSetV2Schema, fingerprintDecisionSetSources, listDecisionSets, loadDecisionSetsFromDirectory } from "../src/lib/decision-journey/sets";
 
 const source = {
   documentId: "D07",
@@ -118,5 +120,143 @@ test("the set loader discovers JSON directly and binds each filename to its slug
     assert.throws(() => loadDecisionSetsFromDirectory(directory), /filename must match/i);
   } finally {
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+// The shipped sets are the publication input for three live routes each, so their identity
+// is checked here rather than only in the per-page renderer tests.
+test("every shipped decision set keeps its structure, routes, and derived source identity", () => {
+  const sets = listDecisionSets();
+  assert.ok(sets.length >= 1);
+
+  for (const set of sets) {
+    assert.equal(set.pages.decisionHub.blocks.length, 12, `${set.slug} decision hub`);
+    assert.equal(set.pages.solutionHub.blocks.length, 7, `${set.slug} solution hub`);
+    assert.equal(set.pages.scenario.blocks.length, 12, `${set.slug} scenario`);
+
+    assert.equal(set.pages.decisionHub.canonicalPath, `/decision-hub/${set.slug}`);
+    assert.equal(set.pages.solutionHub.canonicalPath, `/solution-hub/${set.slug}`);
+    assert.equal(set.pages.scenario.canonicalPath, `/scenarios/${set.slug}`);
+    assert.deepEqual(set.pages.decisionHub.connectedRoutes.slice().sort(), [`/scenarios/${set.slug}`, `/solution-hub/${set.slug}`]);
+    assert.deepEqual(set.pages.solutionHub.connectedRoutes.slice().sort(), [`/decision-hub/${set.slug}`, `/scenarios/${set.slug}`]);
+    assert.deepEqual(set.pages.scenario.connectedRoutes.slice().sort(), [`/decision-hub/${set.slug}`, `/solution-hub/${set.slug}`]);
+    assert.equal(set.report.fullReasoningPath, `/decision-hub/${set.slug}`);
+
+    assert.equal(
+      fingerprintDecisionSetSources(set.sourceReferences),
+      set.sourceFingerprint,
+      `${set.slug} fingerprint must be reproducible from its declared sources`,
+    );
+    for (const page of Object.values(set.pages)) {
+      assert.equal(page.sourceFingerprint, set.sourceFingerprint, `${set.slug} ${page.pageType}`);
+      assert.equal(page.evidenceState, set.evidenceState, `${set.slug} ${page.pageType}`);
+      assert.deepEqual(page.motionBrief.majorPatterns.length <= 3, true);
+    }
+
+    const declaredUids = new Set(set.sourceReferences.map((reference) => reference.sectionUid));
+    for (const page of Object.values(set.pages)) {
+      for (const block of page.blocks) {
+        for (const claim of block.claims) {
+          assert.ok(claim.sources.length > 0, `${set.slug} ${page.pageType}/${block.id} needs a source-bound claim`);
+          for (const source of claim.sources) {
+            assert.ok(declaredUids.has(source.sectionUid), `${set.slug} claim cites an undeclared source: ${source.sectionUid}`);
+            assert.match(source.contentHash, /^[a-f0-9]{64}$/);
+          }
+        }
+      }
+    }
+  }
+});
+
+test("every shipped set discloses its conditions and limits", () => {
+  for (const set of listDecisionSets()) {
+    assert.ok(set.report.limitations.length >= 3, `${set.slug} needs disclosed limitations`);
+    assert.ok(set.report.conditions.length >= 3, `${set.slug} needs stated conditions`);
+    assert.equal(set.report.evidenceState, set.evidenceState, `${set.slug} report must carry the set evidence state`);
+  }
+});
+
+// D08 "11. Source Hierarchy": vendor documentation is a statement about intent, not
+// independent proof, so a claim resting only on vendor documentation cannot be validated.
+test("no shipped claim is marked validated on vendor documentation alone", () => {
+  const vendorDocuments = new Set(["MS-LEARN-COPILOT-CONTROLS", "MS-LEARN-COPILOT-PRIVACY", "BW-ORGANIZATIONS-DOCS"]);
+
+  for (const set of listDecisionSets()) {
+    for (const page of Object.values(set.pages)) {
+      for (const block of page.blocks) {
+        for (const claim of block.claims) {
+          const documents = new Set(claim.sources.map((source) => source.documentId));
+          const vendorOnly = [...documents].every((document) => vendorDocuments.has(document));
+          if (vendorOnly) {
+            assert.notEqual(claim.evidenceState, "validated", `${set.slug} ${page.pageType}/${block.id} rests only on vendor documentation`);
+          }
+        }
+      }
+    }
+  }
+});
+
+// The printable report renders only on the scenario page, so this set's own selection
+// record (docs/research/2026-09-28-team-access-control-topic-selection.md) promised that
+// its jurisdiction limit be disclosed on every page rather than only in the report.
+// Applied to this set only: the earlier governed-AI set is sector context, not headline
+// statistics, and changing published claims is owner-adjudicable work, not a silent fix.
+test("the shared-account set names its evidence jurisdiction on every page", () => {
+  const set = listDecisionSets().find((record) => record.slug === "team-shared-account-access-control");
+  assert.ok(set, "the shared-account set must be discoverable");
+
+  for (const page of Object.values(set.pages)) {
+    const body = [page.decisionContext, ...page.blocks.flatMap((block) => [block.summary, ...block.claims.map((claim) => claim.statement)])].join(" ");
+    assert.match(body, /United Kingdom/, `${page.pageType} must name the evidence jurisdiction`);
+  }
+  assert.match(set.report.limitations.join(" "), /South Africa/, "the report must disclose the operator jurisdiction gap");
+});
+
+test("external source hashes in each shipped set are reproducible from its evidence ledger", () => {
+  const ledgerDirectory = path.join("docs", "research");
+  const ledgers = readdirSync(ledgerDirectory)
+    .filter((name) => name.endsWith(".json"))
+    .map((name) => JSON.parse(readFileSync(path.join(ledgerDirectory, name), "utf8")) as { sources?: Record<string, string>[] });
+  assert.ok(ledgers.length >= 1, "at least one evidence ledger must exist under docs/research");
+
+  for (const set of listDecisionSets()) {
+    const external = set.sourceReferences.filter((reference) => !reference.sectionUid.startsWith("D"));
+    assert.ok(external.length > 0, `${set.slug} must cite at least one external source`);
+
+    for (const reference of external) {
+      const record = ledgers
+        .flatMap((ledger) => ledger.sources ?? [])
+        .find((source) => source.documentId === reference.documentId);
+      assert.ok(record, `${set.slug} cites ${reference.documentId} with no ledger record`);
+      assert.equal(
+        createHash("sha256").update(JSON.stringify(record), "utf8").digest("hex"),
+        reference.contentHash,
+        `${set.slug} ${reference.documentId} content hash must equal sha256(its ledger record)`,
+      );
+    }
+  }
+});
+
+test("internal source hashes in each shipped set match the generated document inventory", () => {
+  const manifest = JSON.parse(readFileSync(path.join("docs", "document-intelligence", "SOURCE_MANIFEST.json"), "utf8")) as unknown;
+  const sections = new Map<string, string>();
+  const collect = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    const record = node as { stable_uid?: string; content_sha256?: string };
+    if (typeof record.stable_uid === "string" && typeof record.content_sha256 === "string") {
+      sections.set(record.stable_uid, record.content_sha256);
+    }
+    for (const value of Object.values(node)) collect(value);
+  };
+  collect(manifest);
+
+  for (const set of listDecisionSets()) {
+    for (const reference of set.sourceReferences.filter((item) => item.sectionUid.startsWith("D"))) {
+      assert.equal(
+        sections.get(reference.sectionUid),
+        reference.contentHash,
+        `${set.slug} cites ${reference.sectionUid} with a hash that is not the inventory content hash`,
+      );
+    }
   }
 });

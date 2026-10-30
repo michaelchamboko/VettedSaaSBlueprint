@@ -110,9 +110,28 @@ test("all hero and section-family compositions have distinct selectors", () => {
   ]) assert.match(css, new RegExp(`data-(?:hero-variant|section-family)="${value}"`));
 });
 
+test("reference pages share the public brand palette across surfaces and actions", () => {
+  const css = source(cssPath);
+  const sharedTokens = css.match(/\.public-site,\s*\.landing-reference-composed\s*\{([^}]+)\}/)?.[1];
+  assert.ok(sharedTokens, "standalone review pages must receive the same public tokens");
+  for (const token of ["paper", "paper-strong", "ink", "muted-ink", "rule", "sage", "clay"]) {
+    assert.match(sharedTokens, new RegExp(`--${token}:`));
+  }
+  const palette = css.match(/\.landing-reference-composed\s*\{\s*--font-reference[\s\S]*?\n\}/)?.[0];
+  assert.ok(palette);
+  for (const [role, token] of Object.entries({ ink: "ink", muted: "muted-ink", line: "rule", panel: "paper-strong", accent: "clay" })) {
+    assert.ok(palette.includes(`--reference-${role}: var(--${token});`));
+  }
+  assert.match(palette, /background:\s*var\(--paper\)/);
+  const scoped = css.slice(css.indexOf(palette));
+  assert.doesNotMatch(scoped, /#[\da-f]{3,8}\b/i, "review surfaces must not introduce a separate hardcoded palette");
+  assert.match(scoped, /\.landing-reference-composed__cta\s*\{[^}]*color:\s*var\(--paper-strong\)/);
+  assert.match(scoped, /data-section-family="decision_matrix"[^}]*__entry\s*\{[^}]*background:\s*var\(--reference-panel\)/);
+});
+
 test("CTA and responsive styles prohibit sticky, fixed, gradients, and overlap", () => {
   const css = source(cssPath);
-  const scoped = css.slice(css.indexOf(".landing-reference-composed"));
+  const scoped = css.slice(css.indexOf("  --font-reference-fraunces:"));
   assert.match(scoped, /white-space:\s*nowrap/);
   assert.match(scoped, /@media \(max-width: 767px\)/);
   assert.match(scoped, /@media \(max-width: 360px\)/);
@@ -183,7 +202,7 @@ test("all 64 section-key and family combinations use the shared entry compositio
 test("interleaved mobile strategy explicitly orders intro, media, and decision content", () => {
   const renderer = source(referenceComposedPath);
   const css = source(cssPath);
-  const scoped = css.slice(css.indexOf(".landing-reference-composed"));
+  const scoped = css.slice(css.indexOf("  --font-reference-fraunces:"));
 
   for (const className of ["hero-intro", "hero-media", "hero-decision"]) assert.match(renderer, new RegExp(className));
   assert.match(scoped, /data-mobile-strategy="interleaved"[^}]*\{[^}]*display:\s*grid[^}]*\}/);
@@ -194,7 +213,7 @@ test("interleaved mobile strategy explicitly orders intro, media, and decision c
 
 test("proof strips and 320px CTAs preserve content and icon integrity", () => {
   const css = source(cssPath);
-  const scoped = css.slice(css.indexOf(".landing-reference-composed"));
+  const scoped = css.slice(css.indexOf("  --font-reference-fraunces:"));
 
   assert.match(scoped, /data-section-family="proof_strip"[^}]*scroll-snap-type:\s*x mandatory/);
   assert.match(scoped, /landing-reference-composed__cta\s*\{[^}]*max-width:\s*100%[^}]*min-width:\s*0/);

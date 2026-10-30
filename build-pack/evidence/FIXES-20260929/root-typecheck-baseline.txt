@@ -1,0 +1,12 @@
+﻿node.exe : npm notice run typecheck
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\micha\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run typecheck:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run next typegen && tsc --noEmit
+Generating route types...
+⚠ The Edge Runtime is deprecated. You can use the "nodejs" runtime instead. Learn more: 
+https://nextjs.org/docs/messages/edge-runtime-deprecated
+✓ Types generated successfully

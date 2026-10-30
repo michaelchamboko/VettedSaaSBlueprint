@@ -1,0 +1,200 @@
+{
+  "metadata": {
+    "product_id": "3d324254-a146-4d92-8e94-510949fecc18",
+    "page_type": "direct_review",
+    "target_keyword": "Campaign Monitor review",
+    "search_intent": "commercial investigation",
+    "geo_target": null,
+    "category_slug": "marketing-tools",
+    "url_slug": "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "title_tag": "Campaign Monitor: Check Brand Control and Email Journey Fit",
+    "meta_description": "Evaluate Campaign Monitor for branded email journeys: check editing permissions, plan access and one welcome sequence before moving your list.",
+    "canonical_url": "https://vettedsaasblueprint.online/landing-page-builders/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "robots": "index,follow",
+    "reviewed_at": "2026-10-13T06:44:16.000Z",
+    "motion_profile": "gsap_editorial",
+    "design_profile": "reference_composed_v1"
+  },
+  "affiliate_disclosure": {
+    "short_disclosure": "We may earn a commission if you purchase through this link.",
+    "full_disclosure": "This page contains an affiliate link to Campaign Monitor. We may earn a commission if you purchase through it. The relationship does not change our evaluation questions or limitations.",
+    "placement": "above_first_cta"
+  },
+  "hero": {
+    "headline": "Keep email journeys on brand",
+    "subheadline": "Campaign Monitor is a candidate for teams that need email creation and automated follow-up. Evaluate one approved template and one welcome journey together. Confirm the required plan and permissions before moving a live subscriber list.",
+    "primary_cta_label": "Explore Campaign Monitor",
+    "primary_cta_link_id": "47c9de73-4d27-4b39-9063-e4c299df9fca",
+    "risk_reversal": "Check current terms and suitability before committing.",
+    "social_proof_summary": null,
+    "answer_snippet": "Campaign Monitor is a candidate for teams that need email creation and automated follow-up. Evaluate one approved template and one welcome journey together. Confirm the required plan and permissions before moving a live subscriber list.",
+    "visual_asset": null
+  },
+  "problem_solution": {
+    "problem": "Can colleagues edit an email without changing its approved design?",
+    "agitation": "A successful template handoff does not prove a subscriber journey works. Review both before importing a larger audience.",
+    "solution": "Use one real template, one permitted editor and one welcome sequence to assess both brand control and the follow-up process."
+  },
+  "benefits": [
+    {
+      "benefit_title": "Test the template handoff",
+      "benefit_description": "Have the colleague who will maintain campaigns edit a representative message and submit it for review.",
+      "feature_supporting_it": "Drag-and-drop email builder",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Check what editors may change",
+      "benefit_description": "Identify the layout elements that should stay fixed and verify the selected plan and account permissions.",
+      "feature_supporting_it": "Email section locking is listed for Premier",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ],
+      "visual_asset": null
+    },
+    {
+      "benefit_title": "Map the next message",
+      "benefit_description": "Write down the trigger, delay, audience and stopping condition before configuring a live sequence.",
+      "feature_supporting_it": "Automation and subscriber journey features",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ],
+      "visual_asset": null
+    }
+  ],
+  "proof_blocks": [
+    {
+      "proof_type": "Official plan comparison",
+      "summary": "The official pricing comparison lists an email builder, segmentation and automation. Premier lists email section locking; Essentials lists unlimited email sends and inbox preview. Confirm the current features for your account before purchasing.",
+      "source_reference_id": "b9531446-ac7f-4f57-a3f0-69813f30f9b2",
+      "source_url": "https://www.campaignmonitor.com/pricing/",
+      "evidence_claim_id": "832bbd09-e04c-42ba-8d5d-adfb97793b79",
+      "confidence_score": 0.9
+    }
+  ],
+  "how_it_works": [
+    {
+      "step_number": 1,
+      "title": "Prepare an approved template",
+      "description": "Use real headings, images and links. Mark which parts a campaign editor should be able to change."
+    },
+    {
+      "step_number": 2,
+      "title": "Map one welcome journey",
+      "description": "Specify the intended audience and follow-up conditions. Include what should happen when a subscriber no longer belongs in the sequence."
+    },
+    {
+      "step_number": 3,
+      "title": "Review before activating",
+      "description": "Check links, unsubscribe behavior, message timing and rendering with a small authorized test audience before sending to your live list."
+    }
+  ],
+  "limitations": [
+    {
+      "limitation": "Plan and account details matter",
+      "who_it_affects": "Teams depending on editing restrictions or testing tools",
+      "mitigation": "Confirm feature availability, subscriber volume, send limits and billing region in the current official comparison.",
+      "evidence_claim_id": null
+    },
+    {
+      "limitation": "Software does not choose the campaign",
+      "who_it_affects": "Teams without an agreed audience, message or follow-up rule",
+      "mitigation": "Define the campaign logic and review owner first. A simpler newsletter process may be enough for occasional announcements.",
+      "evidence_claim_id": null
+    }
+  ],
+  "objection_handling": [
+    {
+      "objection": "What would make this a poor fit?",
+      "response": "Define the campaign logic and review owner first. A simpler newsletter process may be enough for occasional announcements.",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ]
+    }
+  ],
+  "cta_blocks": [
+    {
+      "placement": "closing",
+      "label": "Explore Campaign Monitor",
+      "supporting_text": "Use your own workflow to make the decision.",
+      "affiliate_link_id": "47c9de73-4d27-4b39-9063-e4c299df9fca"
+    }
+  ],
+  "faq": [
+    {
+      "question": "Should we check the design in different inboxes?",
+      "answer": "Yes. Check the clients your readers use and review the final message before sending. A visual editor alone does not establish consistent rendering.",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ]
+    },
+    {
+      "question": "Should we migrate our entire list first?",
+      "answer": "Start with a small authorized test and a migration checklist. Check consent records, suppression handling and the journey logic before wider use.",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ]
+    },
+    {
+      "question": "What is the review based on?",
+      "answer": "This review uses official documentation checked on 13 October 2026. It does not claim measured deliverability or conversion results.",
+      "source_reference_ids": [
+        "b9531446-ac7f-4f57-a3f0-69813f30f9b2"
+      ]
+    }
+  ],
+  "schema_markup": {
+    "faq_schema": {},
+    "breadcrumb_schema": {}
+  },
+  "quality_scores": {
+    "evidence_score": 78,
+    "originality_score": 82,
+    "conversion_score": 80,
+    "compliance_score": 95,
+    "readability_score": 88,
+    "seo_safety_score": 86,
+    "overall_score": 84
+  },
+  "presentation": {
+    "hero": "media_first_offset",
+    "typography": "dm_serif_instrument_sans",
+    "section_order": [
+      "problem_solution",
+      "benefits",
+      "proof_blocks",
+      "how_it_works",
+      "limitations",
+      "objection_handling",
+      "faq",
+      "closing_cta"
+    ],
+    "section_variants": {
+      "problem_solution": "closing_manifesto",
+      "benefits": "alternating_story",
+      "proof_blocks": "decision_matrix",
+      "how_it_works": "split_editorial",
+      "limitations": "proof_strip",
+      "objection_handling": "process_timeline",
+      "faq": "objection_accordion",
+      "closing_cta": "numbered_ledger"
+    },
+    "cta": "inline_decision",
+    "motion": "split_reveal",
+    "mobile": "copy_first",
+    "design_dials": {
+      "design_variance": 7,
+      "motion_intensity": 6,
+      "visual_density": 4
+    },
+    "reference_ids": [
+      "lp-ref-0002",
+      "lp-ref-0029",
+      "lp-ref-0030"
+    ],
+    "recipe_id": "recipe-af7e9c8af1c28ec6",
+    "fingerprint": "af7e9c8af1c28ec607e2b99703ed7db69c74059aa77542ba2ef4275b3e1ce3d3"
+  }
+}

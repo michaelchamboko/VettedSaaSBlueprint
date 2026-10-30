@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "outcome": "partial",
+  "sourceFingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a",
+  "sourceReferences": [
+    "external-uk-dsit-csbs-20252026",
+    "external-ncsc-password-manager-buyers-guide"
+  ],
+  "reviewedAt": "2026-09-28T21:40:00.000Z",
+  "summary": "Bounded external evidence pass for the shared team account access decision."
+}

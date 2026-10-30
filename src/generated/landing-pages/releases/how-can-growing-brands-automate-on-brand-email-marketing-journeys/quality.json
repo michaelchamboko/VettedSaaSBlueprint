@@ -1,0 +1,48 @@
+{
+  "page_slug": "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+  "reviewed_at": "2026-10-13T07:11:09.000Z",
+  "schema_version": "LandingReleaseQualityV1",
+  "status": "local_candidate_pass_remote_release_pending",
+  "checks": [
+    {
+      "name": "candidate_scanners",
+      "status": "pass",
+      "evidence": "All16 scanners pass; durable summary in build-pack/evidence/AFFILIATE-DRAFTS-20261013/campaign-monitor/landing-candidate-quality-summary.json"
+    },
+    {
+      "name": "focused_tests",
+      "status": "pass",
+      "evidence": "20 source metadata, renderer and preview tests pass."
+    },
+    {
+      "name": "lint",
+      "status": "pass",
+      "evidence": "0 errors;222 existing warnings."
+    },
+    {
+      "name": "public_site_validation",
+      "status": "pass"
+    },
+    {
+      "name": "production_build",
+      "status": "pass",
+      "evidence": "Next16.3.4 build generated134 routes after mobile repair."
+    },
+    {
+      "name": "browser_modes",
+      "status": "pass",
+      "evidence": "build-pack/evidence/AFFILIATE-DRAFTS-20261013/browser-verification.json"
+    },
+    {
+      "name": "full_active_suite",
+      "status": "pass",
+      "evidence": "293 tests: 290 passed, 3 environment skips, 0 failed after updating both preview catalogue expectations."
+    }
+  ],
+  "release_pending": [
+    "exact reviewed commit",
+    "remote preview verification if required",
+    "production manifest entry and hashed release receipt",
+    "production deployment and independent live verification"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": "ProductEvidencePackV1",
+  "status": "candidate",
+  "product": {
+    "id": "3d324254-a146-4d92-8e94-510949fecc18",
+    "name": "Campaign Monitor"
+  },
+  "review_basis": {
+    "basis": "vendor_docs",
+    "summary": "Official source retrieved on 2026-10-13; editorial workflow suggestions are not measured outcomes.",
+    "first_hand_boundary": "No hands-on evaluation, benchmark, deliverability or performance result claimed."
+  },
+  "sources": [
+    {
+      "id": "b9531446-ac7f-4f57-a3f0-69813f30f9b2",
+      "source_type": "official_pricing_comparison",
+      "url": "https://www.campaignmonitor.com/pricing/",
+      "retrieved_at": "2026-10-13T06:44:16.000Z",
+      "observation": "The official pricing comparison lists an email builder, segmentation and automation. Premier lists email section locking; Essentials lists unlimited email sends and inbox preview. Confirm the current features for your account before purchasing."
+    }
+  ],
+  "evidence_claims": [
+    {
+      "id": "832bbd09-e04c-42ba-8d5d-adfb97793b79",
+      "source_id": "b9531446-ac7f-4f57-a3f0-69813f30f9b2",
+      "claim": "The official pricing comparison lists an email builder, segmentation and automation. Premier lists email section locking; Essentials lists unlimited email sends and inbox preview. Confirm the current features for your account before purchasing."
+    }
+  ],
+  "affiliate": {
+    "original_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+    "authorization_source": "approved-urls.md",
+    "destination_review": {
+      "exact_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+      "state": "reviewed",
+      "checked_at": "2026-10-13T07:36:00.000Z",
+      "http_status": 200,
+      "redirect_count": 2,
+      "redirect_chain": [
+        "https://partners.campaignmonitor.com/vettedsaasblueprint",
+        "https://www.campaignmonitor.com/pricing/?source=referral_partner&pscd=partners.campaignmonitor.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=za90CO0gy4WNMN&gsxid=za90CO0gy4WNMN&gspk=MDViMDMwMTkwYThj"
+      ],
+      "final_visible_url": "https://www.campaignmonitor.com/pricing/?source=referral_partner&pscd=partners.campaignmonitor.com&ps_partner_key=MDViMDMwMTkwYThj&ps_xid=za90CO0gy4WNMN&gsxid=za90CO0gy4WNMN&gspk=MDViMDMwMTkwYThj"
+    }
+  },
+  "program_rules": {
+    "state": "documented",
+    "rules": [
+      {
+        "name": "exact_url",
+        "value": "allowed",
+        "source": "user_product_owner_directive_2026-10-13"
+      }
+    ],
+    "unknown_reason": null
+  },
+  "claims_removed_or_softened": [
+    "Removed unverified regional dollar prices and universal annual-discount claims.",
+    "Removed competitor superiority, deliverability and no-code outcome guarantees.",
+    "Replaced assumed plan access with explicit checks against current official documentation."
+  ],
+  "quality_note": "See editorial-review.json for documented editorial scores. Scores are review judgments, not measurements."
+}

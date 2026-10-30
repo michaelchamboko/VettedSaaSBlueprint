@@ -1,0 +1,40 @@
+﻿node.exe : Vercel CLI 54.21.1 (Node.js 24.18.0)
+At C:\Users\micha\AppData\Roaming\npm\vercel.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/vercel/dist/vc.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Vercel CLI 54.21.1 (Node.js 24.18.0):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Fetching deployment "vettedsaasblueprint.online" in michaelchamboko-gravityclaw
+> Fetched deployment "vetted-saa-s-blueprint-8rkp6l98x-michaelchamboko-gravityclaw.vercel.app" in 
+michaelchamboko-gravityclaw [851ms]
+
+  General
+
+    id		dpl_Gr3tpzhokvwJ29EDJEr3TZGigt1o
+    name	vetted-saa-s-blueprint
+    target	production
+    status	● Ready
+    url		https://vetted-saa-s-blueprint-8rkp6l98x-michaelchamboko-gravityclaw.vercel.app
+    created	Tue Sep 29 2026 21:12:11 GMT+0200 (South Africa Standard Time) [3m ago]
+
+
+  Aliases
+
+    ╶ https://vettedsaasblueprint.online
+    ╶ https://vetted-saa-s-blueprint.vercel.app
+    ╶ https://www.vettedsaasblueprint.online
+    ╶ https://vetted-saa-s-blueprint-michaelchamboko-gravityclaw.vercel.app
+    
+
+  Builds
+
+    ┌ .        [0ms]
+    ├── λ _middleware (72.73KB) [bom1, fra1, gru1, iad1, lhr1, sfo1, sin1, syd1]
+    ├── λ index (10.82MB) [cpt1]
+    ├── λ _global-error (10.82MB) [cpt1]
+    ├── λ _global-error.rsc (10.82MB) [cpt1]
+    ├── λ _global-error.segments/__PAGE__.segment.rsc (10.82MB) [cpt1]
+    └── 622 output items hidden
+    
+

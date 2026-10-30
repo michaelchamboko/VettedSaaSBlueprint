@@ -1,0 +1,965 @@
+{
+  "version": 2,
+  "slug": "team-shared-account-access-control",
+  "title": "Shared team account access without a technical administrator",
+  "userProblem": "Should a five-person business without a technical administrator move shared account access out of a password spreadsheet and into a managed team vault, and what must be true before it does?",
+  "publishedAt": "2026-09-28",
+  "reviewDate": "2026-09-28",
+  "evidenceState": "partial",
+  "sourceFingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a",
+  "sourceReferences": [
+    {
+      "documentId": "UK-DSIT-CSBS-20252026",
+      "heading": "Cyber Security Breaches Survey 2025 to 2026",
+      "sectionUid": "external-uk-dsit-csbs-20252026",
+      "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+      "heading": "Password manager buyers guide",
+      "sectionUid": "external-ncsc-password-manager-buyers-guide",
+      "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+      "heading": "Password administration for system owners",
+      "sectionUid": "external-ncsc-password-administration-collection",
+      "contentHash": "47639d4ad1ae0dcb38f77922a60c7958dae7aa24d4e04c4f1e15ab87096c28e1",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "NCSC-PASSKEYS-2026",
+      "heading": "Leave passwords in the past - passkeys are the future",
+      "sectionUid": "external-ncsc-passkeys-2026",
+      "contentHash": "9c4d54a8c359f918663eaa2204e66bc812622ee32d52d04ad5edb6ed7aa3035e",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "BW-ORGANIZATIONS-DOCS",
+      "heading": "Get to know your organization",
+      "sectionUid": "external-bitwarden-organizations-docs",
+      "contentHash": "db549770227432cee7de2543df758e6b2f92aa4006b976db813c0fb8b76a1f0e",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "HN-TEAM-PASSWORD-MANAGER-QUESTIONS",
+      "heading": "Hacker News team password-manager questions",
+      "sectionUid": "external-hn-team-password-manager-questions",
+      "contentHash": "78474097fa8b0acc700b63da640065bde4d8157f26129d1aa3eebc3e1d86f359",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D07",
+      "heading": "18.3 Hard exclusions",
+      "sectionUid": "D07-S-c87bcf7ab169",
+      "contentHash": "3e9a17a20e0e1b2fcfdcc833c83bf40ca8f9cd736a4d0daf39f9b62f4a338de7",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D08",
+      "heading": "11. Source Hierarchy",
+      "sectionUid": "D08-S-e4b63d794258",
+      "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D04",
+      "heading": "18.3 Motion eligibility test",
+      "sectionUid": "D04-S-7c9f562cef00",
+      "contentHash": "8dd3668096f583e2b789abfa5967b9a84cbca7bafae79f2240a981a966db618a",
+      "reviewedAt": "2026-09-28"
+    },
+    {
+      "documentId": "D07",
+      "heading": "9.3 Demand-source rule",
+      "sectionUid": "D07-S-a52b46a6e024",
+      "contentHash": "27b01d342afd4a4f0c44c68b8cae4d88f0ee7ed99727b348187aafd29db2e254",
+      "reviewedAt": "2026-09-28"
+    }
+  ],
+  "pages": {
+    "decisionHub": {
+      "version": 2,
+      "pageType": "decision-hub",
+      "canonicalPath": "/decision-hub/team-shared-account-access-control",
+      "headline": "Should a five-person business move shared logins into a team vault?",
+      "decisionContext": "Start with who must reach each account and what happens when they leave, before comparing any password-manager product.",
+      "evidenceState": "partial",
+      "reviewDate": "2026-09-28",
+      "blocks": [
+        {
+          "id": "direct-answer",
+          "title": "Direct answer",
+          "summary": "Consider a managed team vault only as one part of an access plan. Do not adopt one until every shared account is named, an owner exists for each, and the exit of one person can be reversed without a hunt for a lost spreadsheet.",
+          "claims": [
+            {
+              "statement": "A public authority frames the choice as an organisational policy decision that depends on how people actually work, not as a product feature contest.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "decision-question",
+          "title": "The real decision",
+          "summary": "The decision is not which vault to buy. It is whether the business will keep proving who was allowed to reach an account, and after this change whether that proof still exists when someone leaves or loses a device.",
+          "claims": [
+            {
+              "statement": "Reported breach prevalence is measured against all businesses, so it establishes that the exposure is common rather than that a particular team is exposed.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "audience",
+          "title": "Who this is for",
+          "summary": "An owner or operations lead who is also a user, holds no separate administrator role, and shares logins for banking, hosting, marketing platforms, and suppliers with four other people.",
+          "claims": [
+            {
+              "statement": "The published guidance is written for system owners setting policy and names large organisations and public sector readers, so a team without an administrator must translate rather than inherit it.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+                  "heading": "Password administration for system owners",
+                  "sectionUid": "external-ncsc-password-administration-collection",
+                  "contentHash": "47639d4ad1ae0dcb38f77922a60c7958dae7aa24d4e04c4f1e15ab87096c28e1",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "importance",
+          "title": "Why it matters now",
+          "summary": "Two things can be true at once: most businesses have a written rule about passwords, and far fewer enforce a second step. A rule that is not enforced is the gap the decision has to close.",
+          "claims": [
+            {
+              "statement": "In the 2025 to 2026 survey 74% of businesses reported a password policy while 47% required two-factor authentication, and two-factor use among micro businesses rose from 35% to 43%.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "current-workflow",
+          "title": "Map what is shared today",
+          "summary": "List every account more than one person can reach, the path each person uses to find its secret, and where a copy survives the change. Browser autofill, a shared document, a notes app, and a password reset email are all copies.",
+          "claims": [
+            {
+              "statement": "The authority describes password reuse and other insecure workarounds as the predictable response to password overload, which is the behaviour the spreadsheet is currently absorbing.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "account-ownership",
+          "title": "Name an owner per account",
+          "summary": "Assign one accountable person to each account before migration. Ownership decides who may grant, change, and revoke access, and it survives the tool. Without it a vault becomes a shared spreadsheet with better typography.",
+          "claims": [
+            {
+              "statement": "Vendor documentation describes organisation-owned vaults whose items are shared to members and administered from a console, which is the capability that makes revocation possible in principle.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "BW-ORGANIZATIONS-DOCS",
+                  "heading": "Get to know your organization",
+                  "sectionUid": "external-bitwarden-organizations-docs",
+                  "contentHash": "db549770227432cee7de2543df758e6b2f92aa4006b976db813c0fb8b76a1f0e",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "control-test",
+          "title": "Test the controls, not the marketing",
+          "summary": "Prove four things on one low-stakes account: a member can be removed and loses access immediately, a secret can be recovered when its holder is absent, an admin can see who reached what, and the vault itself cannot be unlocked from a lost laptop alone.",
+          "claims": [
+            {
+              "statement": "The same guidance warns that a manager is a natural target because one successful attack can expose every stored password, so the master secret and the device are part of the test.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "human-review",
+          "title": "Keep a person accountable",
+          "summary": "Someone must own the exception list. Where an account cannot be vaulted, or shared access cannot be revoked, that fact needs a named decision-maker and a date, not a silent workaround.",
+          "claims": [
+            {
+              "statement": "The authority recommends periodic review of how the product is actually used after implementation, precisely because benefit is lost if people stop using it.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tradeoffs",
+          "title": "Make the trade-offs visible",
+          "summary": "Choosing speed of adoption over control concentrates risk in one master secret. Choosing per-person accounts over shared logins may require vendor support you do not yet have. Choosing a cloud-sync vault over an on-device one trades device isolation for access from several devices.",
+          "claims": [
+            {
+              "statement": "On-device managers are described as unsuitable where the same service must be reached from several devices, while cloud-sync managers add considerations for data in transit and remote account compromise.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "counter-evidence",
+          "title": "The advice is moving under the decision",
+          "summary": "A vault is a bridge, not a destination. The authority that publishes the buyers guide now states that passwords lack relative resilience and that passkeys should be the default where offered, which changes the order in which accounts should be fixed.",
+          "claims": [
+            {
+              "statement": "In April 2026 the same technical authority said it no longer recommends passwords where passkeys are available, addressing consumers and digital services rather than team ownership of shared business accounts.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSKEYS-2026",
+                  "heading": "Leave passwords in the past - passkeys are the future",
+                  "sectionUid": "external-ncsc-passkeys-2026",
+                  "contentHash": "9c4d54a8c359f918663eaa2204e66bc812622ee32d52d04ad5edb6ed7aa3035e",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            },
+            {
+              "statement": "The two positions are not merged here: the newer statement is about individual sign-in and the older guidance is about organisational credential policy, so the tension is disclosed rather than resolved.",
+              "evidenceState": "conflicting",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSKEYS-2026",
+                  "heading": "Leave passwords in the past - passkeys are the future",
+                  "sectionUid": "external-ncsc-passkeys-2026",
+                  "contentHash": "9c4d54a8c359f918663eaa2204e66bc812622ee32d52d04ad5edb6ed7aa3035e",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+                  "heading": "Password administration for system owners",
+                  "sectionUid": "external-ncsc-password-administration-collection",
+                  "contentHash": "47639d4ad1ae0dcb38f77922a60c7958dae7aa24d4e04c4f1e15ab87096c28e1",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "methodology",
+          "title": "How this page was built",
+          "summary": "Claims are bound to dated sources and labelled with their evidence state. Demand evidence proves the question is asked; it never proves the answer. Where a needed source was unavailable, the gap is stated instead of filled.",
+          "claims": [
+            {
+              "statement": "Community questions establish that the selection question is asked, and the governing editorial rule prevents that signal from being read as a finding about fit or outcome.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "HN-TEAM-PASSWORD-MANAGER-QUESTIONS",
+                  "heading": "Hacker News team password-manager questions",
+                  "sectionUid": "external-hn-team-password-manager-questions",
+                  "contentHash": "78474097fa8b0acc700b63da640065bde4d8157f26129d1aa3eebc3e1d86f359",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D07",
+                  "heading": "9.3 Demand-source rule",
+                  "sectionUid": "D07-S-a52b46a6e024",
+                  "contentHash": "27b01d342afd4a4f0c44c68b8cae4d88f0ee7ed99727b348187aafd29db2e254",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            },
+            {
+              "statement": "Hard exclusions still apply here: fabricated claims, undisclosed commercial bias, and a duplicated primary intent cannot be outweighed by decision value.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "D07",
+                  "heading": "18.3 Hard exclusions",
+                  "sectionUid": "D07-S-c87bcf7ab169",
+                  "contentHash": "3e9a17a20e0e1b2fcfdcc833c83bf40ca8f9cd736a4d0daf39f9b62f4a338de7",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            },
+            {
+              "statement": "The prevalence and control-gap figures on this page are United Kingdom population statistics. They are not South African evidence, and no local law, reporting duty, or regulator position is asserted here.",
+              "evidenceState": "insufficient",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "conditional-decision",
+          "title": "Conditional decision",
+          "summary": "Move to a managed team vault if the four control tests pass and every shared account has an owner. Fix passkey-capable accounts first and let the vault cover only what cannot yet be migrated. Stay with documented manual control if no owner can be named, because a vault without revocation adds a copy rather than removing one.",
+          "claims": [
+            {
+              "statement": "The authority notes that an effective single sign-on process can make a password manager unnecessary for work passwords, so the correct answer for one business may be a different control entirely.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "motionBrief": {
+        "majorPatterns": [
+          "hero orientation",
+          "one-time evidence reveal",
+          "decision progress"
+        ],
+        "reducedMotion": "All twelve sections and every evidence marker remain complete, ordered, and readable without animation."
+      },
+      "presentation": {
+        "compositionFamily": "diagnostic-split",
+        "catalogueReferences": [
+          "Tailblocks Classic Light Split Hero",
+          "UI Layouts Condition Grid"
+        ],
+        "artDirection": "Use the split orientation and a progressive evidence rail so the enforced-control gap and the counter-evidence stay legible beside the decision."
+      },
+      "connectedRoutes": [
+        "/solution-hub/team-shared-account-access-control",
+        "/scenarios/team-shared-account-access-control"
+      ],
+      "sourceFingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a"
+    },
+    "solutionHub": {
+      "version": 2,
+      "pageType": "solution-hub",
+      "canonicalPath": "/solution-hub/team-shared-account-access-control",
+      "headline": "A seven-step path from shared passwords to revocable team access",
+      "decisionContext": "This is a control sequence for evaluating an approach. It is not a recommendation for a named product or a ranking of any vault.",
+      "evidenceState": "partial",
+      "reviewDate": "2026-09-28",
+      "blocks": [
+        {
+          "id": "scope",
+          "title": "1. Bound one account group",
+          "summary": "Pick the smallest set of shared accounts where loss of access is painful but recovery is cheap, such as marketing and supplier logins. Leave banking and hosting out until the sequence has been exercised once.",
+          "claims": [
+            {
+              "statement": "Population statistics do not establish a safe local scope for one business, so scope is a documented judgement rather than an inferred threshold.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "inventory",
+          "title": "2. Record what exists",
+          "summary": "For each account write down who can reach it, how the secret is found today, whether the provider supports per-person logins, and whether passkeys are offered. Where a field cannot be answered, that is the work rather than a gap in the page.",
+          "claims": [
+            {
+              "statement": "The guidance treats usability and actual usage patterns as prerequisites for choosing a product, which requires knowing the current pattern first.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "identity",
+          "title": "3. Separate the person from the secret",
+          "summary": "Give each member an individual identity before any secret is shared with them. A vault that models organisation-owned items shared to named members supports revocation; a list of credentials shared as one secret does not.",
+          "claims": [
+            {
+              "statement": "Vendor documentation describes organisations as relating named users to shared vault items managed from an administrator console, which is the documented shape of this capability.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "BW-ORGANIZATIONS-DOCS",
+                  "heading": "Get to know your organization",
+                  "sectionUid": "external-bitwarden-organizations-docs",
+                  "contentHash": "db549770227432cee7de2543df758e6b2f92aa4006b976db813c0fb8b76a1f0e",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "passkeys-first",
+          "title": "4. Retire the password where you can",
+          "summary": "Migrate any account that already supports passkeys before moving its secret into a vault. A stored password you no longer need is a smaller exposure than a well-encrypted one.",
+          "claims": [
+            {
+              "statement": "The technical authority states that passkeys are at least as secure as traditional credentials and should be the default where available, a position newer than the 2018 password-administration collection.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSKEYS-2026",
+                  "heading": "Leave passwords in the past - passkeys are the future",
+                  "sectionUid": "external-ncsc-passkeys-2026",
+                  "contentHash": "9c4d54a8c359f918663eaa2204e66bc812622ee32d52d04ad5edb6ed7aa3035e",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+                  "heading": "Password administration for system owners",
+                  "sectionUid": "external-ncsc-password-administration-collection",
+                  "contentHash": "47639d4ad1ae0dcb38f77922a60c7958dae7aa24d4e04c4f1e15ab87096c28e1",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "recovery",
+          "title": "5. Prove recovery without a hero",
+          "summary": "Test break-glass access while the usual holder is unavailable. Record who approved it, what was reached, and how access returned to normal. An untested recovery route is a rumour about resilience.",
+          "claims": [
+            {
+              "statement": "The survey records that restricted administrator rights are common while staff training remains low across businesses, which makes a written recovery route more reliable than remembered procedure.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "review-gate",
+          "title": "6. Review use, not purchase",
+          "summary": "After one month check whether members actually reach the vault or have returned to a copy elsewhere. If usage has decayed, the control failed even though the purchase succeeded.",
+          "claims": [
+            {
+              "statement": "The authority recommends periodic review of how the product is used after implementation because benefit and cost are wasted if workarounds persist.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "expand-or-stop",
+          "title": "7. Expand, hold, or stop",
+          "summary": "Expand to the next account group only when revocation, recovery, and review have each been exercised once. Hold where a provider cannot support per-person access. Stop where naming an owner is impossible, because no tool supplies accountability.",
+          "claims": [
+            {
+              "statement": "Selection criteria are stated as conditional on how an organisation intends to use the product, so a hold or stop outcome is a compliant reading rather than a failure.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D07",
+                  "heading": "18.3 Hard exclusions",
+                  "sectionUid": "D07-S-c87bcf7ab169",
+                  "contentHash": "3e9a17a20e0e1b2fcfdcc833c83bf40ca8f9cd736a4d0daf39f9b62f4a338de7",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            },
+            {
+              "statement": "These seven steps rest on United Kingdom authority and vendor documentation. They carry no South African legal, regulatory, or breach-notification conclusion, and no local equivalent was acquired in this pass.",
+              "evidenceState": "insufficient",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "motionBrief": {
+        "majorPatterns": [
+          "hero orientation",
+          "one-time step reveal",
+          "desktop step progress"
+        ],
+        "reducedMotion": "All seven steps and their evidence markers remain complete and readable without animation."
+      },
+      "presentation": {
+        "compositionFamily": "fit-map",
+        "catalogueReferences": [
+          "Preline Hero with Client Logo Row",
+          "UI Layouts Condition Grid"
+        ],
+        "artDirection": "Present the seven steps as an accountable sequence with the governing evidence beside each control, and no logo row implying endorsement."
+      },
+      "connectedRoutes": [
+        "/decision-hub/team-shared-account-access-control",
+        "/scenarios/team-shared-account-access-control"
+      ],
+      "sourceFingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a"
+    },
+    "scenario": {
+      "version": 2,
+      "pageType": "scenario",
+      "canonicalPath": "/scenarios/team-shared-account-access-control",
+      "headline": "A five-person design studio shares eleven logins",
+      "decisionContext": "A worked scenario showing how partial evidence becomes a reversible decision rather than an automatic purchase.",
+      "evidenceState": "partial",
+      "reviewDate": "2026-09-28",
+      "blocks": [
+        {
+          "id": "team",
+          "title": "The team",
+          "summary": "Five people, one shared MacBook in the studio, no technical administrator, and an operations lead who is also a designer. Client work passes through hosting, two stock libraries, a proofing platform, an invoicing tool, and one business bank account.",
+          "claims": [
+            {
+              "statement": "The requested team size is a scenario constraint. The available statistics come from a United Kingdom survey reported by micro, small, medium, and large bands, so no figure here is attributed to five people or to a South African business.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D07",
+                  "heading": "9.3 Demand-source rule",
+                  "sectionUid": "D07-S-a52b46a6e024",
+                  "contentHash": "27b01d342afd4a4f0c44c68b8cae4d88f0ee7ed99727b348187aafd29db2e254",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pressure",
+          "title": "The pressure",
+          "summary": "A freelancer who worked on the studio account last quarter still has the shared credentials in a personal notes app. Nobody knows which of the eleven logins she could still reach.",
+          "claims": [
+            {
+              "statement": "Password overload is described as producing workarounds such as reuse and unencrypted storage, which is the exposure the studio has just discovered rather than a hypothetical one.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "constraint",
+          "title": "The hard constraint",
+          "summary": "Client delivery cannot pause and no account may become unreachable while the change is made. Two supplier platforms support only one login, which limits what revocation can mean for those two.",
+          "claims": [
+            {
+              "statement": "Documented capability is limited to what a vendor states, and no per-provider support was verified in this run, so the constraint is recorded as unresolved.",
+              "evidenceState": "insufficient",
+              "sources": [
+                {
+                  "documentId": "BW-ORGANIZATIONS-DOCS",
+                  "heading": "Get to know your organization",
+                  "sectionUid": "external-bitwarden-organizations-docs",
+                  "contentHash": "db549770227432cee7de2543df758e6b2f92aa4006b976db813c0fb8b76a1f0e",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "baseline",
+          "title": "The baseline",
+          "summary": "Today the eleven secrets live in a spreadsheet shared with edit access to everyone, plus browser autofill on the studio machine. Revocation means editing a row and hoping. Recovery means finding the operations lead.",
+          "claims": [
+            {
+              "statement": "A written password policy is reported by most businesses while a second authentication step is enforced by fewer, so a policy document is not evidence of an enforced control.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pilot",
+          "title": "The pilot",
+          "summary": "Three accounts only: the proofing platform, one stock library, and the invoicing tool. Individual identities for all five people, one named owner per account, and the spreadsheet row is retained but marked stale so the old path is visible during review.",
+          "claims": [
+            {
+              "statement": "The guidance treats a bounded trial and observed usage as the basis for choosing, rather than a feature comparison across products.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "controls",
+          "title": "The controls",
+          "summary": "Removal must take effect before the next working day. Break-glass recovery must work with the operations lead unreachable. The studio machine must not unlock the vault from its own disk. Every exception is written down with a date.",
+          "claims": [
+            {
+              "statement": "A manager is described as a natural target because one compromise can expose all stored passwords, which is why device isolation and the master secret are verified rather than assumed.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reviewer",
+          "title": "The reviewer",
+          "summary": "The operations lead owns the vault and the exception list. A second person is named for holiday cover. Neither role is an administrator, and that is disclosed rather than papered over.",
+          "claims": [
+            {
+              "statement": "Published credential guidance is written for system owners, so a team without an administrator is operating outside the stated audience of the advice it follows.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+                  "heading": "Password administration for system owners",
+                  "sectionUid": "external-ncsc-password-administration-collection",
+                  "contentHash": "47639d4ad1ae0dcb38f77922a60c7958dae7aa24d4e04c4f1e15ab87096c28e1",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "measurement",
+          "title": "The measurement",
+          "summary": "After one month: can anyone still reach an account through the spreadsheet path, did any recovery test succeed without the usual holder, and how many of the eleven accounts are now individually attributable? No claim of reduced breach likelihood is made.",
+          "claims": [
+            {
+              "statement": "Prevalence statistics describe what businesses reported about breaches, not the outcome of any control, so outcome claims are outside what this evidence supports.",
+              "evidenceState": "partial",
+              "sources": [
+                {
+                  "documentId": "UK-DSIT-CSBS-20252026",
+                  "heading": "Cyber Security Breaches Survey 2025 to 2026",
+                  "sectionUid": "external-uk-dsit-csbs-20252026",
+                  "contentHash": "59a0ecea0b8947e424356e83e62b90e72011145a06e00aa95059d0d99a1578ae",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D07",
+                  "heading": "9.3 Demand-source rule",
+                  "sectionUid": "D07-S-a52b46a6e024",
+                  "contentHash": "27b01d342afd4a4f0c44c68b8cae4d88f0ee7ed99727b348187aafd29db2e254",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "failure",
+          "title": "A failed gate",
+          "summary": "The stock library will not issue per-person logins on the studio's current plan. The account stays outside the vault, keeps its spreadsheet entry, and carries a written exception naming who may use it and when the decision is revisited.",
+          "claims": [
+            {
+              "statement": "Plan entitlements and per-account support were not verified against any provider documentation in this run, so the failure is recorded as an unresolved condition rather than a product verdict.",
+              "evidenceState": "insufficient",
+              "sources": [
+                {
+                  "documentId": "BW-ORGANIZATIONS-DOCS",
+                  "heading": "Get to know your organization",
+                  "sectionUid": "external-bitwarden-organizations-docs",
+                  "contentHash": "db549770227432cee7de2543df758e6b2f92aa4006b976db813c0fb8b76a1f0e",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "D08",
+                  "heading": "11. Source Hierarchy",
+                  "sectionUid": "D08-S-e4b63d794258",
+                  "contentHash": "402d3fcc082adc8bfda78ad95c30f16bbeb296350dc7c5675baeaa6bc345e0c9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tradeoff",
+          "title": "The trade-off",
+          "summary": "The studio chose coverage over purity. Two accounts remain shared, so the vault does not fully answer the original question about the freelancer's access. Removing that row from the spreadsheet would have hidden the exposure instead of closing it.",
+          "claims": [
+            {
+              "statement": "The guidance states that workarounds persist when a product is not usable enough, and that persistent workarounds waste both the benefit and the cost.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSWORD-MANAGER-BUYERS-GUIDE",
+                  "heading": "Password manager buyers guide",
+                  "sectionUid": "external-ncsc-password-manager-buyers-guide",
+                  "contentHash": "843e79067126b975f26d45631758c69ac48703fb70222d2d458dedfbd81de6f9",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "outcome",
+          "title": "The conditional outcome",
+          "summary": "Proceed to the remaining accounts only after a successful removal and a successful break-glass test. Where a supplier platform offers passkeys, migrate it there first and let the vault cover only what cannot yet be migrated. If no owner can hold the exception list, stop and keep the documented manual process.",
+          "claims": [
+            {
+              "statement": "The newer passkey position and the older credential guidance are both in force here, so the sequence is stated conditionally rather than as a settled hierarchy.",
+              "evidenceState": "conflicting",
+              "sources": [
+                {
+                  "documentId": "NCSC-PASSKEYS-2026",
+                  "heading": "Leave passwords in the past - passkeys are the future",
+                  "sectionUid": "external-ncsc-passkeys-2026",
+                  "contentHash": "9c4d54a8c359f918663eaa2204e66bc812622ee32d52d04ad5edb6ed7aa3035e",
+                  "reviewedAt": "2026-09-28"
+                },
+                {
+                  "documentId": "NCSC-PASSWORD-ADMIN-COLLECTION",
+                  "heading": "Password administration for system owners",
+                  "sectionUid": "external-ncsc-password-administration-collection",
+                  "contentHash": "47639d4ad1ae0dcb38f77922a60c7958dae7aa24d4e04c4f1e15ab87096c28e1",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "next-action",
+          "title": "The next action",
+          "summary": "Write the eleven-account inventory today, name an owner beside each, and run one removal test before any purchase. If those three steps are impossible, the business is not ready for a vault and no product will change that.",
+          "claims": [
+            {
+              "statement": "Motion and presentation on this page exist to carry the reader from constraint to conditional verdict; the decision itself rests on the dated evidence recorded beside each statement.",
+              "evidenceState": "validated",
+              "sources": [
+                {
+                  "documentId": "D04",
+                  "heading": "18.3 Motion eligibility test",
+                  "sectionUid": "D04-S-7c9f562cef00",
+                  "contentHash": "8dd3668096f583e2b789abfa5967b9a84cbca7bafae79f2240a981a966db618a",
+                  "reviewedAt": "2026-09-28"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "motionBrief": {
+        "majorPatterns": [
+          "hero orientation",
+          "one-time scenario reveal",
+          "next-action reveal"
+        ],
+        "reducedMotion": "All twelve scenario sections, the evidence markers, and the printable report remain complete without animation."
+      },
+      "presentation": {
+        "compositionFamily": "constraint-bento",
+        "catalogueReferences": [
+          "daisyUI Hero with Figure",
+          "UI Layouts Stats Bento"
+        ],
+        "artDirection": "Use alternating constraint cards and full-width decision moments so the failed gate and the trade-off stay visible next to the verdict."
+      },
+      "connectedRoutes": [
+        "/decision-hub/team-shared-account-access-control",
+        "/solution-hub/team-shared-account-access-control"
+      ],
+      "sourceFingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a"
+    }
+  },
+  "report": {
+    "version": 1,
+    "context": "A five-person business with shared logins and no technical administrator, deciding whether a managed team vault is the right control.",
+    "evidenceState": "partial",
+    "conditions": [
+      "Every shared account is inventoried and has one named owner.",
+      "Member removal takes effect before the next working day and was tested.",
+      "Break-glass recovery works with the usual holder unreachable.",
+      "The vault cannot be unlocked from a lost device alone.",
+      "Accounts offering passkeys are migrated there before any secret is stored.",
+      "Usage is reviewed one month after adoption, not only at purchase."
+    ],
+    "limitations": [
+      "Every statistic and every authority acquired here is United Kingdom based, while the site operator is South African. No local jurisdiction, law, or breach-notification duty is asserted.",
+      "No adoption rate for team password managers was found, and no figure is attributed to a five-person business.",
+      "No product was tested, ranked, priced, or recommended. Vendor statements are labelled as vendor statements.",
+      "Per-provider support for individual logins was not verified for any account in the scenario.",
+      "No reduction in breach likelihood, cost, or severity is claimed for any control on these pages.",
+      "The governing authority's passkey position is newer than its credential guidance; the two are presented together rather than reconciled."
+    ],
+    "fullReasoningPath": "/decision-hub/team-shared-account-access-control"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "verified",
+  "deployment_id": "dpl_B9MpQhS2gZWAGKgbiXYdCi7oT7Xd",
+  "deployment_url": "https://vetted-saa-s-blueprint-5m586dhcq-michaelchamboko-gravityclaw.vercel.app",
+  "public_url": "https://vettedsaasblueprint.online/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+  "ready_state": "READY",
+  "release_commit": "20639d56ebb3f733331dd11f9d88cd9910e1729d",
+  "reviewed_candidate_commit": "8d3cd1bbaf4d5de8ac72c541844ac97d6d9f473a",
+  "lock_sha256": "557b21620eaa57d76c50695f6626877fe80201b721f4c9769ba5960fe8b66057",
+  "verified_at": "2026-10-14T07:40:31.351Z",
+  "validation": {
+    "candidate_lint": "0 errors; 222 existing warnings",
+    "candidate_typecheck": "pass",
+    "full_tests": "290 passed, 3 Windows symlink skips; 0 fail",
+    "activation_catalogue_tests": "7 passed",
+    "activation_build": "pass; 138 routes",
+    "live_modes": [
+      "desktop",
+      "mobile",
+      "reduced",
+      "no-js"
+    ],
+    "home_and_sitemap_discovery": "pass",
+    "existing_routes": "HTTP 200",
+    "independent_parent_review": "HTTP 200, correct title, index/follow, disclosure, exact affiliate URL and company-level boundary verified"
+  },
+  "notes": [
+    "Preview is protected and verified using authenticated vercel curl; production is publicly accessible.",
+    "No source strategy, automation schedule, shared renderer or CSS changes.",
+    "Specialist false positives retained and manually adjudicated; no unsupported hands-on or unlimited-account claim."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+    "checkout":  "codex/vetted-saas-phase-two@dda861d",
+    "prerequisite_gates":  [
+                               {
+                                   "outcome":  "rejected exit 1",
+                                   "gate":  "editorial requires research receipt",
+                                   "window":  "2026-09-30-prereq-check-canary"
+                               },
+                               {
+                                   "outcome":  "rejected exit 1",
+                                   "gate":  "release requires optimise receipt",
+                                   "window":  "2026-09-30-release-gate-check-canary"
+                               }
+                           ],
+    "verified_at":  "2026-09-30T05:15:00Z",
+    "window":  "2026-09-30-automation-chain-canary",
+    "retry_verification":  {
+                               "outcome":  "3 failures -\u003e blocked, escalation receipt written",
+                               "runId":  "879d0be4-b1fe-42ff-834f-f4aad6576501",
+                               "window":  "2026-09-30-retry-check-canary"
+                           },
+    "chain":  [
+                  {
+                      "result":  "no_change EvidenceUpdateV2",
+                      "runId":  "6690e281-a600-4cb4-a72f-05ef66e6b251",
+                      "type":  "research",
+                      "state":  "completed"
+                  },
+                  {
+                      "result":  "no-work EditorialBriefV2",
+                      "runId":  "efd5e5aa-0b48-435f-afb8-7b87a1d1480d",
+                      "type":  "editorial_brief",
+                      "state":  "completed"
+                  },
+                  {
+                      "result":  "content-only no-change PageSetChangeV1",
+                      "runId":  "42fdf232-2c10-43ed-8fc6-2a52aedda6bf",
+                      "type":  "optimise",
+                      "state":  "completed"
+                  },
+                  {
+                      "result":  "ProductionQualityReceiptV2 passed 183/183 revision f8eeef8",
+                      "runId":  "72517c86-0741-4e35-a6ac-a58f48d0ac3e",
+                      "type":  "watchdog",
+                      "state":  "completed"
+                  }
+              ]
+}

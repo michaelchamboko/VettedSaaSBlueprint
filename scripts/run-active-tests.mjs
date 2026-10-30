@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { spawnSync } from "node:child_process";
 import { readdir } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -12,9 +13,15 @@ if (testFiles.length === 0) {
   throw new Error(`No active tests found in ${testDirectory}.`);
 }
 
+// Node defaults test-file concurrency to every available core. On a four-core host that
+// oversubscribes the two Playwright-backed suites, whose tests carry a hard 20 s timeout,
+// so the release gate fails on contention rather than behaviour. Two workers keep a
+// browser launch and a file walk from competing for the same core.
+const concurrency = Math.max(1, Math.min(2, availableParallelism() - 1));
+
 const result = spawnSync(
   process.execPath,
-  ["--test", "--import", "tsx", ...testFiles],
+  ["--test", `--test-concurrency=${concurrency}`, "--import", "tsx", ...testFiles],
   { stdio: "inherit" },
 );
 

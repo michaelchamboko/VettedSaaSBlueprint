@@ -1,0 +1,75 @@
+{
+  "schema_version": "LandingCandidateQualityV1",
+  "artifact": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces.json",
+  "target_dir": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\generated\\landing-pages",
+  "report_dir": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\build-pack\\evidence\\AFFILIATE-DRAFTS-20261013\\webcatalog",
+  "status": "pass",
+  "check_count": 16,
+  "failed_checks": [],
+  "checks": [
+    {
+      "check": "route",
+      "status": "pass"
+    },
+    {
+      "check": "structure",
+      "status": "pass"
+    },
+    {
+      "check": "hero",
+      "status": "pass"
+    },
+    {
+      "check": "cta",
+      "status": "pass"
+    },
+    {
+      "check": "seo",
+      "status": "pass"
+    },
+    {
+      "check": "a11y",
+      "status": "pass"
+    },
+    {
+      "check": "links",
+      "status": "pass"
+    },
+    {
+      "check": "forms",
+      "status": "pass"
+    },
+    {
+      "check": "conversion",
+      "status": "pass"
+    },
+    {
+      "check": "responsive",
+      "status": "pass"
+    },
+    {
+      "check": "assets",
+      "status": "pass"
+    },
+    {
+      "check": "publish-readiness",
+      "status": "pass"
+    },
+    {
+      "check": "editorial-v2",
+      "status": "pass"
+    },
+    {
+      "check": "summarize-page-duplicates",
+      "status": "pass"
+    },
+    {
+      "check": "summarize-compliance-risks",
+      "status": "pass"
+    },
+    {
+      "check": "summarize-conversion-copy-risks",
+      "status": "pass"
+    }
+  ]
+}

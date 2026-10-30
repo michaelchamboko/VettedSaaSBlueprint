@@ -38,12 +38,26 @@ async function writeMoosendPageWithReceiptNewlines(
 
 test("verified agent releases are exposed as published slugs", () => {
   const slugs = listPublishedLandingPageSlugs();
-  assert.deepEqual(slugs, ["how-can-content-creators-and-brands-stream-live-multi-camera-video", "elevenlabs-ai-voice-generator", "moosend-email-marketing-automation"]);
+  assert.deepEqual(slugs, [
+    "how-can-content-creators-and-brands-stream-live-multi-camera-video",
+    "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+    "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+    "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "elevenlabs-ai-voice-generator",
+    "moosend-email-marketing-automation",
+  ]);
 });
 
 test("generated slugs param helper returns route params", () => {
   const params = listPublishedLandingPageParams();
-  assert.deepEqual(params, [{ slug: "how-can-content-creators-and-brands-stream-live-multi-camera-video" }, { slug: "elevenlabs-ai-voice-generator" }, { slug: "moosend-email-marketing-automation" }]);
+  assert.deepEqual(params, [
+    { slug: "how-can-content-creators-and-brands-stream-live-multi-camera-video" },
+    { slug: "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring" },
+    { slug: "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces" },
+    { slug: "how-can-growing-brands-automate-on-brand-email-marketing-journeys" },
+    { slug: "elevenlabs-ai-voice-generator" },
+    { slug: "moosend-email-marketing-automation" },
+  ]);
 });
 
 test("published landing page can be retrieved and is schema-valid", () => {
@@ -60,8 +74,8 @@ test("invalid slug format is blocked", () => {
   const invalid = getPublishedLandingPage("../bad/slug");
   assert.equal(invalid, null);
   const manifest = getLandingPageManifest();
-  assert.equal(manifest.length, 3);
-  assert.equal(manifest[1]?.slug, "elevenlabs-ai-voice-generator");
+  assert.equal(manifest.length, 6);
+  assert.equal(manifest[0]?.slug, "how-can-content-creators-and-brands-stream-live-multi-camera-video");
 });
 
 test("missing generated manifest is a valid empty public catalogue", async () => {
@@ -86,7 +100,7 @@ test("manifest entries without audited publication provenance are rejected", asy
 test("release fingerprints accept LF artifacts with CRLF receipts", async () => {
   await withLandingPageFixture(async (directory) => {
     await writeMoosendPageWithReceiptNewlines(directory, "\n", "\r\n");
-    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 3);
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 6);
   });
 });
 
@@ -99,14 +113,14 @@ test("Moosend release fingerprints accept an LF-only checkout", async () => {
       const artifact = (await readFile(artifactPath, "utf8")).replace(/\r\n/g, "\n");
       await writeFile(artifactPath, artifact);
     }
-    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 3);
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 6);
   });
 });
 
 test("release fingerprints accept CRLF artifacts with LF receipts", async () => {
   await withLandingPageFixture(async (directory) => {
     await writeMoosendPageWithReceiptNewlines(directory, "\r\n", "\n");
-    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 3);
+    assert.equal(loadPublishedLandingPageSummariesFromDirectory(directory).length, 6);
   });
 });
 

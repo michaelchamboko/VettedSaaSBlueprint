@@ -1,0 +1,31 @@
+﻿# Post-deployment verification
+# release_commit=526a3b3aa11e14d43ca1b11cfe9a07212687d315
+# deploy1: commit 5161927908218ac6b42f36c50629769cc843e1bf -> dpl_DMt9N9MzjmzHw8z6Cov7JY2M27mT (READY, aliased) start 2026-09-28T21:50:59Z end 2026-09-28T21:52:46Z
+# deploy2 (fix-forward): commit 526a3b3aa11e14d43ca1b11cfe9a07212687d315 -> dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G (READY, aliased) start 2026-09-28T22:01:30Z end 2026-09-28T22:03:16Z
+final_production_deployment_id=dpl_FoVXNKqCcN9vRc4vywXgcJZctj2G
+final_production_url=vetted-saa-s-blueprint-ca8lak7eb-michaelchamboko-gravityclaw.vercel.app
+status 200 1.366147 /
+status 200 1.244855 /decision-hub
+status 200 0.875516 /solution-hub
+status 200 1.231810 /scenarios
+status 200 0.677572 /decision-hub/team-shared-account-access-control
+status 200 0.762989 /solution-hub/team-shared-account-access-control
+status 200 0.389205 /scenarios/team-shared-account-access-control
+status 200 0.444850 /decision-hub/governed-ai-client-work-preparation
+status 200 0.435013 /solution-hub/governed-ai-client-work-preparation
+status 200 0.428214 /scenarios/governed-ai-client-work-preparation
+status 200 0.544229 /decision-hub/video-localization
+status 200 0.691831 /solution-hub/video-localization
+status 200 0.432754 /scenarios/video-localization
+status 200 0.547556 /sitemap.xml
+status 200 0.402344 /robots.txt
+status 200 0.420857 /blog
+status 200 0.448968 /trends/ai-agents
+status 200 0.408331 /affiliate-disclosure
+status 200 0.472303 /editorial-policy
+status 200 0.419589 /accessibility
+status 200 0.448592 /privacy
+status 200 0.412826 /terms
+status 200 0.403227 /contact
+status 200 0.417244 /paia
+status 404 0.443158 /nonexistent-route-check

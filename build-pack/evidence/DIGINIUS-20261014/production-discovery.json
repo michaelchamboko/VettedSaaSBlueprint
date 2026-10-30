@@ -1,0 +1,31 @@
+{
+  "verified_at": "2026-10-14T07:39:25.485Z",
+  "results": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200
+    },
+    {
+      "path": "/decision-hub",
+      "status": 200
+    },
+    {
+      "path": "/solution-hub",
+      "status": 200
+    },
+    {
+      "path": "/scenarios",
+      "status": 200
+    },
+    {
+      "path": "/landing-page-builders/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+      "status": 200
+    }
+  ],
+  "home_discovery": true,
+  "sitemap": true
+}

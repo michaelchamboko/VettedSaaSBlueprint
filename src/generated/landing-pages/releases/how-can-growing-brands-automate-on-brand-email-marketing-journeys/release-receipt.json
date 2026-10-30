@@ -1,0 +1,64 @@
+{
+  "schema_version": "LandingReleaseReceiptV1",
+  "slug": "how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+  "path": "/landing-page-builders/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+  "exact_affiliate_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+  "url_fingerprint": "ffdcdf4bd2de587c117946ab79914e024e0970d84c18469cd53e98001b9b190d",
+  "authorization": {
+    "source": "approved-urls.md",
+    "exact_url": "https://partners.campaignmonitor.com/vettedsaasblueprint",
+    "url_fingerprint": "ffdcdf4bd2de587c117946ab79914e024e0970d84c18469cd53e98001b9b190d"
+  },
+  "artifacts": {
+    "page": {
+      "path": "how-can-growing-brands-automate-on-brand-email-marketing-journeys.json",
+      "sha256": "50302613f42a681516554a920e828937022e1d2b193db57473ff8b5a7dff7ce4"
+    },
+    "product_evidence": {
+      "path": "releases/how-can-growing-brands-automate-on-brand-email-marketing-journeys/product-evidence.json",
+      "sha256": "438ea76489c8b851a6de09754fa0091947922710861c1ad109c690357a1a1b39"
+    },
+    "visual_review": {
+      "path": "releases/how-can-growing-brands-automate-on-brand-email-marketing-journeys/visual-review.json",
+      "sha256": "d77efe21025d329b0e5c8762b90afba3f704834c493fbf1a85ef72975de9f5b5"
+    },
+    "uniqueness_review": {
+      "path": "releases/how-can-growing-brands-automate-on-brand-email-marketing-journeys/uniqueness-review.json",
+      "sha256": "b1b0f6cee93a7ac994c0e9a0ea6b447dfb9e0583b16dbbd8e02f60b09f72e992"
+    },
+    "compliance_review": {
+      "path": "releases/how-can-growing-brands-automate-on-brand-email-marketing-journeys/compliance-review.json",
+      "sha256": "8e803f8c93ba8788cffd2bd172a114474954205ce1f50162d2744b7e21580016"
+    },
+    "conversion_review": {
+      "path": "releases/how-can-growing-brands-automate-on-brand-email-marketing-journeys/conversion-review.json",
+      "sha256": "d70178bd238ccabac26af4923d28a2bd68516382879d6b6ff165140ba6e1e409"
+    },
+    "quality_receipt": {
+      "path": "releases/how-can-growing-brands-automate-on-brand-email-marketing-journeys/quality.json",
+      "sha256": "bb42413902c474060c54434daa17eb4d04d1e0b6701e62f772c936dae3d47ad8"
+    }
+  },
+  "checks": {
+    "product_evidence": true,
+    "visual": true,
+    "uniqueness": true,
+    "compliance": true,
+    "conversion": true,
+    "quality": true,
+    "exact_cta": true,
+    "disclosure": true,
+    "preview": true,
+    "clean_build": true
+  },
+  "release": {
+    "reviewed_commit": "525b21c4c8a48c8a9dfd7d72dc5bc971c2080ef1",
+    "preview_url": "https://vetted-saa-s-blueprint-iiig853bb-michaelchamboko-gravityclaw.vercel.app/landing-page-previews/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "verified_at": "2026-10-13T07:36:00.000Z"
+  },
+  "claims_removed_or_softened": [
+    "Removed unverified regional dollar prices and universal annual-discount claims.",
+    "Removed competitor superiority, deliverability and no-code outcome guarantees.",
+    "Replaced assumed plan access with explicit checks against current official documentation."
+  ]
+}

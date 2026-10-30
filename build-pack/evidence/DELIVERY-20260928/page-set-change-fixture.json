@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "paths": [
+    "/decision-hub",
+    "/solution-hub",
+    "/scenarios"
+  ],
+  "sourceFingerprint": "01c093c3e8b748efa1fce4dda450f2be957a3f2f2b15e0b1aa1ab68181e0ce4a",
+  "contentOnly": false,
+  "requiresReview": true
+}

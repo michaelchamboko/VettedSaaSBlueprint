@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-compliance-risks",
+  "input_mode": "draft",
+  "status": "pass",
+  "publish_readiness": "eligible_for_conversion_review",
+  "target_dir": "C:\\Users\\micha\\.buzz\\REPOS\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\src\\generated\\landing-pages",
+  "target": "how-can-growing-brands-automate-on-brand-email-marketing-journeys.json",
+  "report_only": false,
+  "scanned_count": 7,
+  "reason_codes": [
+    "inflated_or_copied_scores"
+  ],
+  "issue_arrays": {
+    "disclosure_issues": [],
+    "claim_issues": [],
+    "evidence_issues": [
+      {
+        "file": "how-can-growing-brands-automate-on-brand-email-marketing-journeys.json",
+        "input_path": "quality_scores.compliance_score",
+        "category": "evidence_issues",
+        "severity": "warning",
+        "reason_code": "inflated_or_copied_scores",
+        "message": "High compliance score cannot prove program rules, link state, destination review, or release authorization.",
+        "required_fix": "Resolve external compliance/profile/program/link/destination records; do not rely on generated scores.",
+        "evidence": {
+          "value": 95
+        }
+      }
+    ],
+    "partnerstack_issues": [],
+    "destination_issues": [],
+    "artifact_qa_issues": [],
+    "renderer_static_issues": []
+  },
+  "duplicate_like_risk_groups": [],
+  "files": [
+    {
+      "file": "how-can-growing-brands-automate-on-brand-email-marketing-journeys.json",
+      "status": "pass",
+      "reason_codes": [
+        "inflated_or_copied_scores"
+      ],
+      "blocker_count": 0,
+      "finding_count": 1
+    }
+  ],
+  "summary": {
+    "disclosure_issue_count": 0,
+    "claim_issue_count": 0,
+    "evidence_issue_count": 1,
+    "partnerstack_issue_count": 0,
+    "destination_issue_count": 0,
+    "artifact_qa_issue_count": 0,
+    "renderer_static_issue_count": 0,
+    "duplicate_like_group_count": 0,
+    "blocker_count": 0,
+    "finding_count": 1
+  }
+}

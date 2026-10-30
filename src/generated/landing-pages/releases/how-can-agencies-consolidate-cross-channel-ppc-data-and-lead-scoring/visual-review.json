@@ -1,0 +1,126 @@
+{
+  "status": "pass",
+  "mode": "Manual worker critique/audit with parent independent preview review; CLI critique and audit returned Unknown command, detector returned [].",
+  "design_read": "Editorial buyer guide for agency operators; evidence-led, preserving existing reference-composed identity.",
+  "design_dials": {
+    "design_variance": 7,
+    "motion_intensity": 6,
+    "visual_density": 4
+  },
+  "authority": [
+    "D04-S-c5113e3d7e2d imagery/evidence",
+    "D04-S-1daaf8613a03 Taste and Impeccable"
+  ],
+  "incumbent": "ReferenceComposedReviewPage; existing typography, lime accent and GSAP split reveal recipe retained.",
+  "observations": [
+    "Desktop and mobile content readable, no clipping or horizontal overflow.",
+    "Opening gives the question, answer, clear disclosure and one CTA.",
+    "Eight sections preserve source, limits, steps and alternatives; FAQs expand.",
+    "No invented dashboard image or outcome graphic.",
+    "Reduced-motion and no-JavaScript checks keep every section visible."
+  ],
+  "limitations": [
+    "Inherited template eyebrow and strong borders remain; no shared-design refactor was introduced for this content-only addition.",
+    "Manual review is not a complete WCAG conformance audit.",
+    "No browser detector overlay was injected."
+  ],
+  "checks": [
+    {
+      "name": "desktop",
+      "status": 200,
+      "h1": 1,
+      "heading": "Bring PPC reporting and lead signals together",
+      "overflow": 0,
+      "sections": 8,
+      "ctas": [
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        },
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        }
+      ],
+      "disclosure": "Paid-link note: We may earn a commission if you purchase through this Diginius link.",
+      "bodyWords": 1385,
+      "robots": "noindex, nofollow",
+      "hiddenSections": 0,
+      "ctaHeight": 57,
+      "errors": []
+    },
+    {
+      "name": "mobile",
+      "status": 200,
+      "h1": 1,
+      "heading": "Bring PPC reporting and lead signals together",
+      "overflow": 0,
+      "sections": 8,
+      "ctas": [
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        },
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        }
+      ],
+      "disclosure": "Paid-link note: We may earn a commission if you purchase through this Diginius link.",
+      "bodyWords": 1385,
+      "robots": "noindex, nofollow",
+      "hiddenSections": 0,
+      "ctaHeight": 57,
+      "errors": []
+    },
+    {
+      "name": "reduced",
+      "status": 200,
+      "h1": 1,
+      "heading": "Bring PPC reporting and lead signals together",
+      "overflow": 0,
+      "sections": 8,
+      "ctas": [
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        },
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        }
+      ],
+      "disclosure": "Paid-link note: We may earn a commission if you purchase through this Diginius link.",
+      "bodyWords": 1385,
+      "robots": "noindex, nofollow",
+      "hiddenSections": 0,
+      "ctaHeight": 57,
+      "errors": []
+    },
+    {
+      "name": "no-js",
+      "status": 200,
+      "h1": 1,
+      "heading": "Bring PPC reporting and lead signals together",
+      "overflow": 0,
+      "sections": 8,
+      "ctas": [
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        },
+        {
+          "href": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
+          "rel": "nofollow sponsored"
+        }
+      ],
+      "disclosure": "Paid-link note: We may earn a commission if you purchase through this Diginius link.",
+      "bodyWords": 1385,
+      "robots": "noindex, nofollow",
+      "hiddenSections": 0,
+      "ctaHeight": 57,
+      "errors": []
+    }
+  ],
+  "independent_parent_review": "Parent inspected desktop and mobile screenshots and approved on 2026-10-14; layout cohesive and readable, no visible clipping or overflow."
+}

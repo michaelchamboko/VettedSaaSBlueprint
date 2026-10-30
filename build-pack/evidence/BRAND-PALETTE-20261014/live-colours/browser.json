@@ -1,0 +1,122 @@
+[
+  {
+    "device": "desktop",
+    "path": "/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "desktop",
+    "path": "/landing-page-builders/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "desktop",
+    "path": "/landing-page-builders/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "desktop",
+    "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "desktop",
+    "path": "/landing-page-builders/moosend-email-marketing-automation",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "mobile",
+    "path": "/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "mobile",
+    "path": "/landing-page-builders/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "mobile",
+    "path": "/landing-page-builders/how-can-growing-brands-automate-on-brand-email-marketing-journeys",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "mobile",
+    "path": "/landing-page-builders/elevenlabs-ai-voice-generator",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  },
+  {
+    "device": "mobile",
+    "path": "/landing-page-builders/moosend-email-marketing-automation",
+    "status": 200,
+    "background": "rgb(242, 238, 229)",
+    "ink": "rgb(29, 33, 29)",
+    "muted": "#62665e",
+    "accent": "#a85436",
+    "ctaBackground": "rgb(168, 84, 54)",
+    "ctaInk": "rgb(251, 248, 241)",
+    "overflow": false
+  }
+]

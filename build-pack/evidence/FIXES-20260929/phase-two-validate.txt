@@ -1,0 +1,9 @@
+﻿node.exe : npm notice run validate:public-site
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\micha\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run validate:public-site:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run tsx scripts/validate-public-site.ts
+Public site release configuration is valid.

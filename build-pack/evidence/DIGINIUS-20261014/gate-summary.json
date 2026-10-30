@@ -1,0 +1,11 @@
+{
+  "lint": "pass; 0 errors, 222 existing warnings",
+  "typecheck": "pass",
+  "tests": "293 total; 290 pass, 3 Windows symlink privilege skips, 0 failures",
+  "build": "pass; 137 routes generated",
+  "public_site": "pass",
+  "first_test_run": "Two new-route inventory assertions updated; unrelated browser test timed out under concurrent compilation. Final full rerun passed.",
+  "candidate_content_review": "Parent passes",
+  "visual_review": "Parent passes",
+  "preview": "http://localhost:3421/landing-page-previews/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring"
+}
