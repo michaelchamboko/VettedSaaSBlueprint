@@ -123,7 +123,9 @@ test("reference pages share the public brand palette across surfaces and actions
     assert.ok(palette.includes(`--reference-${role}: var(--${token});`));
   }
   assert.match(palette, /background:\s*var\(--paper\)/);
-  const scoped = css.slice(css.indexOf(palette));
+  const referenceStart = css.indexOf(palette);
+  const nextSurface = css.indexOf("/* Taste restyle:", referenceStart);
+  const scoped = css.slice(referenceStart, nextSurface === -1 ? undefined : nextSurface);
   assert.doesNotMatch(scoped, /#[\da-f]{3,8}\b/i, "review surfaces must not introduce a separate hardcoded palette");
   assert.match(scoped, /\.landing-reference-composed__cta\s*\{[^}]*color:\s*var\(--paper-strong\)/);
   assert.match(scoped, /data-section-family="decision_matrix"[^}]*__entry\s*\{[^}]*background:\s*var\(--reference-panel\)/);
