@@ -19,6 +19,8 @@ The source strategy documents remain unchanged as historical product inputs. The
 
 The explicit manual article trigger now supports a fixed snapshot of the files present in `Article Intake` at start time. The snapshot is processed in stable order through the existing research, transformation, Eleanor editorial, validation, release, merge, deployment, and production-verification gates. Article-specific blockers continue to the next entry; shared release or capability failures stop the run. New files wait for the next manual start. Processing completion with exceptions is distinct from an all-published result.
 
+The supervisor must finish each work packet and resume the same import before selecting another entry. Executor output errors remain repair work at the productive stage; filesystem and state-write failures remain external blockers. Intake state records blocker scope and bound import integrity, and explicit retry is required to clear an article blocker.
+
 ## Binding scope
 
 This file is the only repository planning authority. It governs implementation sequencing and release decisions, subject to `AGENTS.md`, the source-intelligence records, and the non-inference gate.

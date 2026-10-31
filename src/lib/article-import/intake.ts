@@ -14,6 +14,7 @@ export type IntakeEntry = {
   status: "PENDING" | "SKIPPED" | "BLOCKED" | "PROCESSING" | "LIVE" | "QUARANTINED";
   reason?: string;
   importId?: string;
+  blocker?: { scope: "article" | "shared"; code: string; stage?: string; message: string };
 };
 
 export type IntakeRun = {
@@ -24,6 +25,7 @@ export type IntakeRun = {
   entries: IntakeEntry[];
   activeEntry?: string;
   outcome: "OPEN" | "PROCESSING_PASS_FINISHED" | "PUBLISHED_WITH_EXCEPTIONS";
+  blocker?: { scope: "shared"; code: string; stage?: string; message: string };
 };
 
 function runPath(root: string, runId: string): string { return path.join(root, INTAKE_ROOT, runId, "run.json"); }
@@ -58,14 +60,38 @@ export async function createIntakeRun(root: string, sourceDirectory = "Article I
 }
 
 export function nextIntakeEntry(run: IntakeRun): IntakeEntry | undefined {
-  return run.entries.find((entry) => entry.status === "PENDING");
+  if (run.blocker) return undefined;
+  return run.entries.find((entry) => entry.status === "PROCESSING") ?? run.entries.find((entry) => entry.status === "PENDING");
 }
 
 export async function markIntakeEntry(root: string, run: IntakeRun, relativePath: string, status: IntakeEntry["status"], patch: Partial<IntakeEntry> = {}): Promise<IntakeRun> {
   const entries = run.entries.map((entry) => entry.relativePath === relativePath ? { ...entry, ...patch, status } : entry);
   const open = entries.some((entry) => entry.status === "PENDING" || entry.status === "PROCESSING");
   const outcome: IntakeRun["outcome"] = open ? "OPEN" : entries.some((entry) => entry.status === "BLOCKED" || entry.status === "QUARANTINED") ? "PUBLISHED_WITH_EXCEPTIONS" : "PROCESSING_PASS_FINISHED";
-  const updated = { ...run, entries, activeEntry: open ? relativePath : undefined, outcome };
+  const activeEntry = entries.find((entry) => entry.status === "PROCESSING")?.relativePath;
+  const updated = { ...run, entries, activeEntry, outcome };
+  await saveRun(root, updated);
+  return updated;
+}
+
+export async function setIntakeBlocker(root: string, run: IntakeRun, blocker: IntakeEntry["blocker"] & { scope: "shared" }): Promise<IntakeRun> {
+  const updated = { ...run, blocker, outcome: "PUBLISHED_WITH_EXCEPTIONS" as const };
+  await saveRun(root, updated);
+  return updated;
+}
+
+export async function clearIntakeBlocker(root: string, run: IntakeRun, relativePath: string): Promise<IntakeRun> {
+  const entry = run.entries.find((item) => item.relativePath === relativePath);
+  if (!entry?.blocker || entry.blocker.scope !== "article") throw new Error("INTAKE_ARTICLE_BLOCKER_REQUIRED");
+  const entries = run.entries.map((item) => item.relativePath === relativePath ? { ...item, status: "PROCESSING" as const, blocker: undefined } : item);
+  const updated = { ...run, entries, activeEntry: relativePath, outcome: "OPEN" as const };
+  await saveRun(root, updated);
+  return updated;
+}
+
+export async function clearSharedIntakeBlocker(root: string, run: IntakeRun): Promise<IntakeRun> {
+  if (!run.blocker) throw new Error("INTAKE_SHARED_BLOCKER_REQUIRED");
+  const updated = { ...run, blocker: undefined, outcome: "OPEN" as const };
   await saveRun(root, updated);
   return updated;
 }

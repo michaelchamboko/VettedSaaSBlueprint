@@ -84,6 +84,10 @@ Run this workflow when source documents or their derived intelligence change:
 
 When these records or repository relationships change, verify the SQL migration, rebuild the deterministic snapshot, inspect its counts and digests, and validate one known semantic path plus one known code-import path on an isolated Neon branch before applying the migration or snapshot to the production database branch. Never treat a database row as stronger authority than its cited source section.
 
+## Article handoff continuation
+
+The supervising agent must execute every manual or API article work packet through LIVE, QUARANTINED, or a durable documented blocker. A missing packet result, editorial receipt, or validation artifact is unfinished agent work and must be completed before selecting another fixed-snapshot entry. Folder intake resumes the earliest PROCESSING entry before PENDING entries and preserves captured source bytes and order. Article-specific blockers may advance the folder; shared capability, access, integrity, or release blockers stop it. Never substitute a scanner report or another article's receipt for EditorialEvidenceV2.
+
 ## Affiliate-copy capability gate
 
 - Before planning or drafting affiliate copy, read `docs/document-intelligence/DOMAIN_QUERY_EVIDENCE.md` sections **External Hormozi-skills review**, **Affiliate-safe Hormozi output map**, and **Affiliate-safe Hormozi invocation chain**.
