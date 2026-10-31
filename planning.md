@@ -15,6 +15,10 @@ The source strategy documents remain unchanged as historical product inputs. The
 - No later-phase packet is dependency-ready or authorised.
 - The next implementation packet must be created by an explicit product-owner planning amendment.
 
+### Article intake completion amendment — 2026-10-31
+
+The explicit manual article trigger now supports a fixed snapshot of the files present in `Article Intake` at start time. The snapshot is processed in stable order through the existing research, transformation, Eleanor editorial, validation, release, merge, deployment, and production-verification gates. Article-specific blockers continue to the next entry; shared release or capability failures stop the run. New files wait for the next manual start. Processing completion with exceptions is distinct from an all-published result.
+
 ## Binding scope
 
 This file is the only repository planning authority. It governs implementation sequencing and release decisions, subject to `AGENTS.md`, the source-intelligence records, and the non-inference gate.

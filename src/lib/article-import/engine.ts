@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { link, mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
@@ -48,7 +48,10 @@ function extractUrl(value: string | undefined): string | undefined {
 }
 
 export function parseExternalArticle(markdown: string): { title: string; primaryQuestion: string; affiliateName?: string; affiliateUrl?: string; body: string; promptInjectionDetected: boolean; unusableReason?: string; inferredFields: string[] } {
-  const lines = markdown.replace(/^\uFEFF/, "").split(/\r?\n/);
+  const normalized = markdown.replace(/^\uFEFF/, "");
+  const fenced = normalized.match(/^[\s\S]*?```(?:markdown|md)?\s*\r?\n(---[\s\S]*?)(?:\r?\n```\s*)?$/i);
+  const input = fenced?.[1] && /^---\s*\r?\n/.test(fenced[1]) ? fenced[1] : normalized;
+  const lines = input.split(/\r?\n/);
   const metadata: Record<string, string> = {};
   let bodyStart = 0;
   let malformedFrontmatter = false;
@@ -220,15 +223,19 @@ export async function claimImportLease(repositoryRoot: string, importId: string,
     return JSON.parse(await readFile(path.join(directory, `${Math.max(...generations)}.json`), "utf8")) as LeaseRecord;
   };
   const append = async (record: LeaseRecord): Promise<boolean> => {
-    const temporary = path.join(directory, `${randomUUID()}.tmp`);
-    await writeJsonAtomically(temporary, record);
+    const target = path.join(directory, `${record.generation}.json`);
+    let handle;
     try {
-      await link(temporary, path.join(directory, `${record.generation}.json`));
+      // Windows does not permit hard-link creation in some managed workspaces.
+      // Exclusive creation preserves the compare-and-swap property without a link.
+      handle = await open(target, "wx");
+      await handle.writeFile(`${JSON.stringify(record, null, 2)}\n`, "utf8");
+      await handle.sync();
       return true;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
       throw error;
-    } finally { await unlink(temporary); }
+    } finally { await handle?.close(); }
   };
   const previous = await latest();
   if (previous && previous.expiresAt > Date.now()) return undefined;

@@ -33,6 +33,7 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 - Before proposing new automation, inspect `AGENTS.md`, `planning.md`, and the source-intelligence records. Source strategy language and historical receipts do not reactivate retired work.
 - Ask the product owner only when a specific, documented stage cannot proceed because a required authority, input, or external state is genuinely absent. State that exact blocker and no invented remedy.
 - The article-to-page workflow runs only from an explicit manual or API trigger in the primary checkout. Scheduled execution and secondary-worktree execution are prohibited. A trigger must not weaken evidence, receipt, quality, review, or deployment gates.
+- A manual intake start snapshots the regular Markdown/text files present in `Article Intake` at start time. The snapshot is immutable; later files wait for the next start. The supervising agent processes entries in stable filename order, executes every recorded action through verified publication, then advances to the next entry. Article-specific blockers are recorded and skipped; shared Git, credential, editorial-tool, or deployment failures stop the run. A processing pass can finish with exceptions; it is not an all-published result.
 
 ## Repository boundaries
 
