@@ -10,6 +10,12 @@ The source strategy documents remain unchanged as historical product inputs. The
 
 ## Current state
 
+### Runtime contract reconciliation — 2026-10-31
+
+Classification: explicit product-owner directive.
+
+Keep npm 12.0.2, align the runtime compatibility policy and validator with npm 12.x, and pin Motion to its existing locked version. Scope is limited to the manifest, lockfile root metadata, runtime validator, focused tests, compatibility policy, and release evidence. This maintenance change introduces no new automation, schedule, product requirement, or publication authority.
+
 - Phase One is complete and verified in production.
 - There is no active retired multi-stage automation programme, scheduled research/editorial/optimisation/watchdog cycle, or publication path owned by that programme. The separate article-to-page workflow remains available only through an explicit manual or API trigger under `AGENTS.md`.
 - No later-phase packet is dependency-ready or authorised.

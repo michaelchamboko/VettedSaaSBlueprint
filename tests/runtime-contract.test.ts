@@ -5,7 +5,7 @@ import { validateRuntimeContract } from "../scripts/verify-runtime-contract.mjs"
 test("rejects a mutable direct dependency range", () => {
   const result = validateRuntimeContract({
     packageJson: {
-      engines: { node: "24.x", npm: ">=11 <12" },
+      engines: { node: "24.x", npm: ">=12 <13" },
       dependencies: { next: "latest" },
       devDependencies: {},
     },
@@ -22,7 +22,7 @@ test("rejects a mutable direct dependency range", () => {
 test("accepts the approved runtime contract", () => {
   const result = validateRuntimeContract({
     packageJson: {
-      engines: { node: "24.x", npm: ">=11 <12" },
+      engines: { node: "24.x", npm: ">=12 <13" },
       dependencies: { next: "16.2.7" },
       devDependencies: {},
     },
@@ -36,10 +36,29 @@ test("accepts the approved runtime contract", () => {
   assert.deepEqual(result.errors, []);
 });
 
-test("rejects a lockfile mismatch and wrong Node policy", () => {
+test("rejects the retired npm 11 engine range", () => {
   const result = validateRuntimeContract({
     packageJson: {
       engines: { node: "24.x", npm: ">=11 <12" },
+      dependencies: { next: "16.2.7" },
+      devDependencies: {},
+    },
+    packageLock: {
+      lockfileVersion: 3,
+      packages: { "node_modules/next": { version: "16.2.7" } },
+    },
+    nodeVersionFile: "24\n",
+  });
+
+  assert.deepEqual(result.errors, [
+    "package.json engines.npm must be >=12 <13; received >=11 <12",
+  ]);
+});
+
+test("rejects a lockfile mismatch and wrong Node policy", () => {
+  const result = validateRuntimeContract({
+    packageJson: {
+      engines: { node: "24.x", npm: ">=12 <13" },
       dependencies: { next: "16.2.7" },
       devDependencies: {},
     },
@@ -73,7 +92,7 @@ test("rejects missing npm engine and incompatible lockfile format", () => {
   assert.deepEqual(
     [...result.errors].sort(),
     [
-      "package.json engines.npm must be >=11 <12; received missing",
+      "package.json engines.npm must be >=12 <13; received missing",
       "package-lock.json must use lockfileVersion 3; received 2",
     ].sort(),
   );

@@ -5,7 +5,7 @@ import path from "node:path";
 const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const expectedNodeVersion = "24";
 const expectedNodeEngine = "24.x";
-const expectedNpmEngine = ">=11 <12";
+const expectedNpmEngine = ">=12 <13";
 const expectedLockfileVersion = 3;
 
 export function validateRuntimeContract({ packageJson, packageLock, nodeVersionFile }) {
