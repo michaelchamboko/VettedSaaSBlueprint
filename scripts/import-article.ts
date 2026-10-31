@@ -46,7 +46,8 @@ export async function executeImportCommand(root: string, command: ImportCommand,
         const terminal = await markIntakeEntry(root, run, entry.relativePath, imported.stage);
         return { ...terminal, importState: imported };
       }
-      if (imported.stage === "REPAIRING" || imported.stage === "WAITING_EXTERNAL") {
+      const lastReceipt = imported.stageReceipts.at(-1);
+      if (imported.stage === "REPAIRING" || imported.stage === "WAITING_EXTERNAL" || lastReceipt?.status === "failed") {
         const shared = imported.blockerScope === "shared";
         if (shared) return setIntakeBlocker(root, run, { scope: "shared", code: imported.stage, stage: imported.resumeStage ?? imported.stage, message: imported.nextAction });
         const blocked = await markIntakeEntry(root, run, entry.relativePath, "BLOCKED", { blocker: { scope: "article", code: imported.stage, stage: imported.resumeStage ?? imported.stage, message: imported.nextAction } });
