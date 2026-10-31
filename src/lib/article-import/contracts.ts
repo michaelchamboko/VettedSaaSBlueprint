@@ -123,6 +123,7 @@ export const externalArticleImportSchema = z.object({
   sourceFile: z.string().min(1),
   stage: importStageSchema,
   resumeStage: importStageSchema.optional(),
+  blockerScope: z.enum(["article", "shared"]).optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
   sourceDeletedAt: z.string().datetime({ offset: true }).optional(),

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { link, mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
@@ -48,7 +48,10 @@ function extractUrl(value: string | undefined): string | undefined {
 }
 
 export function parseExternalArticle(markdown: string): { title: string; primaryQuestion: string; affiliateName?: string; affiliateUrl?: string; body: string; promptInjectionDetected: boolean; unusableReason?: string; inferredFields: string[] } {
-  const lines = markdown.replace(/^\uFEFF/, "").split(/\r?\n/);
+  const normalized = markdown.replace(/^\uFEFF/, "");
+  const fenced = normalized.match(/^[\s\S]*?```(?:markdown|md)?\s*\r?\n(---[\s\S]*?)(?:\r?\n```\s*)?$/i);
+  const input = fenced?.[1] && /^---\s*\r?\n/.test(fenced[1]) ? fenced[1] : normalized;
+  const lines = input.split(/\r?\n/);
   const metadata: Record<string, string> = {};
   let bodyStart = 0;
   let malformedFrontmatter = false;
@@ -220,15 +223,19 @@ export async function claimImportLease(repositoryRoot: string, importId: string,
     return JSON.parse(await readFile(path.join(directory, `${Math.max(...generations)}.json`), "utf8")) as LeaseRecord;
   };
   const append = async (record: LeaseRecord): Promise<boolean> => {
-    const temporary = path.join(directory, `${randomUUID()}.tmp`);
-    await writeJsonAtomically(temporary, record);
+    const target = path.join(directory, `${record.generation}.json`);
+    let handle;
     try {
-      await link(temporary, path.join(directory, `${record.generation}.json`));
+      // Windows does not permit hard-link creation in some managed workspaces.
+      // Exclusive creation preserves the compare-and-swap property without a link.
+      handle = await open(target, "wx");
+      await handle.writeFile(`${JSON.stringify(record, null, 2)}\n`, "utf8");
+      await handle.sync();
       return true;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
       throw error;
-    } finally { await unlink(temporary); }
+    } finally { await handle?.close(); }
   };
   const previous = await latest();
   if (previous && previous.expiresAt > Date.now()) return undefined;
@@ -273,7 +280,12 @@ export async function executePendingImport(repositoryRoot: string, importId: str
         result = await execute({ record, stage: record.stage, strategy, attempt: failures % 3 + 1, idempotencyKey, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
       } catch (error) {
         await lease.assertOwned();
-        return recordImportFailure(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, classification: "transient", message: error instanceof Error ? error.message : String(error) });
+        const message = error instanceof Error ? error.message : String(error);
+        const code = (error as NodeJS.ErrnoException).code;
+        if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
+          return recordImportFailure(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, classification: "transient", message });
+        }
+        return recordImportRepair(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, message });
       }
       if (result.importId !== importId || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("Stage executor changed import identity.");
       await lease.assertOwned();
@@ -281,6 +293,22 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       return result;
     });
   } finally { await lease.release(); }
+}
+
+/** Executor output is repair work, not an external outage or an automatic quarantine. */
+export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string }): Promise<ExternalArticleImportV1> {
+  const attemptKey = `repair:${input.strategy}:${fingerprint(input.message)}`;
+  const attempt = (record.strategyAttempts[attemptKey] ?? 0) + 1;
+  const attempts = { ...record.strategyAttempts, [attemptKey]: attempt };
+  const at = now();
+  const diagnostic = attempt >= 3;
+  const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
+  const updated = externalArticleImportSchema.parse({ ...record, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", updatedAt: at,
+    stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
+    nextAction: diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`,
+  });
+  await saveImport(repositoryRoot, updated);
+  return updated;
 }
 
 async function listAllImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
@@ -461,7 +489,7 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
   const exhausted = next === "quarantine";
   const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : exhausted ? "QUARANTINED" : "REPAIRING";
   const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
-  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
+  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
   if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
   return updated;

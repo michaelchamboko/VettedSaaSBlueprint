@@ -11,6 +11,7 @@ import { executeImportCommand, parseImportCommand } from "../scripts/import-arti
 import { writeJsonAtomically } from "../src/lib/article-import/engine";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
+import { createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake";
 
 const allowlist = "- https://start.switcherstudio.com/anme6fqvgdx9\n- https://try.example.com/ref\n";
 const source = `---\ntitle: "How to stream with Switcher Studio"\nprimary_question: "How can a creator stream with multiple iOS cameras?"\naffiliate_name: "Switcher Studio"\naffiliate_url: "[https://start.switcherstudio.com/anme6fqvgd](https://start.switcherstudio.com/anme6fqvgd)"\n---\n\nA practical guide for creators using several iOS devices in one production workflow. It explains the operating choices and trade-offs clearly.\n`;
@@ -29,6 +30,27 @@ test("parses frontmatter, resolves the Switcher URL, and ignores prompt instruct
   assert.equal(transform.format, "direct-review");
   assert.equal(transform.resolvedAffiliateUrl, "https://start.switcherstudio.com/anme6fqvgdx9");
   assert.equal(transform.commercialMode, "approved");
+});
+
+test("unwraps a single fenced article after a descriptive preamble", () => {
+  const parsed = parseExternalArticle("# Batch wrapper\n\n" + "```markdown\n" + source + "\n```\n");
+  assert.equal(parsed.title, "How to stream with Switcher Studio");
+  assert.equal(parsed.affiliateName, "Switcher Studio");
+});
+
+test("intake snapshots eligible files and excludes files added later", async () => {
+  const root = await testRoot("article-intake-");
+  try {
+    await mkdir(path.join(root, "Article Intake"), { recursive: true });
+    await writeFile(path.join(root, "approved-urls.md"), allowlist);
+    await writeFile(path.join(root, "Article Intake", "a.md"), source);
+    await writeFile(path.join(root, "Article Intake", "notes.csv"), "skip");
+    const run = await createIntakeRun(root);
+    await writeFile(path.join(root, "Article Intake", "late.md"), source);
+    const loaded = await loadIntakeRun(root, run.runId);
+    assert.deepEqual(loaded.entries.map((entry) => entry.relativePath), ["Article Intake/a.md", "Article Intake/notes.csv"]);
+    assert.equal(loaded.entries.find((entry) => entry.relativePath.endsWith("notes.csv"))?.status, "SKIPPED");
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("stores only sanitized source text for supervised authoring", async () => {

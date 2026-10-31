@@ -30,7 +30,7 @@ test("the default CLI consumes bound research output and rejects a result for an
     await writeJsonAtomically(path.join(root, packet.resultPath), result);
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const rejected = await loadImport(root, created.importId);
-    assert.equal(rejected.stage, "WAITING_EXTERNAL");
+    assert.equal(rejected.stage, "RESEARCHING");
     assert.equal(rejected.resumeStage, "RESEARCHING");
     assert.match(rejected.stageReceipts.at(-1)!.message, /STAGE_RESULT_BINDING_MISMATCH/);
     await writeJsonAtomically(path.join(root, packet.resultPath), { ...result, sourceFingerprint: created.sourceFingerprint });
@@ -45,8 +45,26 @@ test("the default CLI consumes bound research output and rejects a result for an
     await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", format: "direct-review" } });
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const rejectedTransform = await loadImport(root, created.importId);
-    assert.equal(rejectedTransform.stage, "WAITING_EXTERNAL");
+    assert.equal(rejectedTransform.stage, "TRANSFORMING");
     assert.match(rejectedTransform.stageReceipts.at(-1)!.message, /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("executor output failures remain repair work at the productive stage", async () => {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "supervised-repair-"));
+  const { writeFile } = await import("node:fs/promises");
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# Repairable guide\n\nThis article contains enough material for a supervised research handoff.");
+    const created = await createArticleImport(root, "article.md");
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, async () => { throw new Error("INVALID_STAGE_RESULT"); });
+    const current = await loadImport(root, created.importId);
+    assert.equal(current.stage, "RESEARCHING");
+    assert.match(current.nextAction, /Repair researching output/);
+    assert.equal(current.stageReceipts.at(-1)?.status, "failed");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

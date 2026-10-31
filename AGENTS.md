@@ -33,6 +33,7 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 - Before proposing new automation, inspect `AGENTS.md`, `planning.md`, and the source-intelligence records. Source strategy language and historical receipts do not reactivate retired work.
 - Ask the product owner only when a specific, documented stage cannot proceed because a required authority, input, or external state is genuinely absent. State that exact blocker and no invented remedy.
 - The article-to-page workflow runs only from an explicit manual or API trigger in the primary checkout. Scheduled execution and secondary-worktree execution are prohibited. A trigger must not weaken evidence, receipt, quality, review, or deployment gates.
+- A manual intake start snapshots the regular Markdown/text files present in `Article Intake` at start time. The snapshot is immutable; later files wait for the next start. The supervising agent processes entries in stable filename order, executes every recorded action through verified publication, then advances to the next entry. Article-specific blockers are recorded and skipped; shared Git, credential, editorial-tool, or deployment failures stop the run. A processing pass can finish with exceptions; it is not an all-published result.
 
 ## Repository boundaries
 
@@ -82,6 +83,10 @@ Run this workflow when source documents or their derived intelligence change:
 5. Run `scripts/verify-document-intelligence.ps1`, then the stable-UID impact command before proposing a later document amendment. Commit-delta detection remains unavailable while the baseline commit is deferred.
 
 When these records or repository relationships change, verify the SQL migration, rebuild the deterministic snapshot, inspect its counts and digests, and validate one known semantic path plus one known code-import path on an isolated Neon branch before applying the migration or snapshot to the production database branch. Never treat a database row as stronger authority than its cited source section.
+
+## Article handoff continuation
+
+The supervising agent must execute every manual or API article work packet through LIVE, QUARANTINED, or a durable documented blocker. A missing packet result, editorial receipt, or validation artifact is unfinished agent work and must be completed before selecting another fixed-snapshot entry. Folder intake resumes the earliest PROCESSING entry before PENDING entries and preserves captured source bytes and order. Article-specific blockers may advance the folder; shared capability, access, integrity, or release blockers stop it. Never substitute a scanner report or another article's receipt for EditorialEvidenceV2.
 
 ## Affiliate-copy capability gate
 
