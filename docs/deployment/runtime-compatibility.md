@@ -3,7 +3,7 @@
 ## Approved baseline
 
 - Node.js: 24.x
-- npm: 11.x
+- npm: 12.x (the repository installer is npm@12.0.2)
 - Lockfile: npm lockfileVersion 3
 - Application runtime: Vercel builds the Next.js application using `npm ci`.
 - Local runtime: optional for review and validation only; it is not the production runtime.
