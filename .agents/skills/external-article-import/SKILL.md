@@ -39,6 +39,7 @@ The Codex heartbeat is the supervising agent. The CLI executes local gates; it d
 2. Write the packet's `resultPath` atomically. Use its exact `idempotencyKey` and `sourceFingerprint`, a truthful `summary`, and a `work` object with the recorded `stage` and the stage's required fields below. Keep evidence files in the repository. Reuse existing matching evidence after interruption; never invent successful work.
 3. Run the packet's `resumeCommand`. The runner claims an exclusive lease and validates/executes that result. Repeat while productive work remains in the window. An external outage remains resumable; missing agent output is work for this heartbeat, not an external outage.
 4. For release, let the adapter create the PR and record its head. Obtain independent current-head Codex review, write its `ImportCodeReviewV1` receipt and add `codeReviewPath` to the release result. After the current head passes review and required gates, the existing release policy permits automatic merge and deployment; owner authority remains separate from merge mechanics.
+5. Before reporting completion, run `npm run import:article -- --check-completion <import-id>`. Only `COMPLETE` is completion. `WORK`, `REPAIR`, and `WAIT` require the agent to continue or resume at the persisted deadline; `BLOCKED` requires the recorded scope, attempted recovery, and exact resumption requirement. Progress messages and packet creation never count as completion.
 
 #### Complete editorial work before retrying
 
@@ -46,7 +47,7 @@ Missing or invalid `EditorialEvidenceV2` is unfinished agent work. Complete `.ag
 
 Do not resubmit unchanged failing input. Diagnose the failure and repair the relevant artifact, evidence, or packet first. After three unsuccessful repairs, stop speculative retries and investigate the underlying assumption; continue when a verified remedy is available. Preserve existing retry counters and all quality and publication gates.
 
-Missing work alone does not justify a durable blocker or selecting the next entry. Record a blocker only for a demonstrated obstacle, with its cause, attempted recovery, and exact requirement for resumption. Genuine article-specific blockers follow the existing continuation policy; shared capability, model-access, integrity, or release failures stop the run. Use explicit intake retry only after resolving the article blocker's cause, then resume the same immutable snapshot. Processing completion does not establish publication.
+Missing work alone does not justify a durable blocker or selecting the next entry. Record a blocker only for a demonstrated obstacle, with its cause, attempted recovery, and exact requirement for resumption. Genuine article-specific blockers follow the existing continuation policy; shared capability, model-access, integrity, or release failures stop the run. A pending external dependency is a persisted wait, not an article blocker: release the import lease, poll at the recorded deadline, and resume the same immutable snapshot. Use explicit intake retry only after resolving the article blocker's cause, then resume the same immutable snapshot. Processing completion does not establish publication.
 
 Stage result fields (in `work`):
 

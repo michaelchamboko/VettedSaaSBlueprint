@@ -1,9 +1,10 @@
 import { createArticleImport, executePendingImport, type ImportStageExecutor } from "../src/lib/article-import/engine";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
+import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker } from "../src/lib/article-import/intake";
 
-export type ImportCommand = { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string };
+export type ImportCommand = { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string };
 
 export function parseImportCommand(argv: string[]): ImportCommand {
   if (argv[0] === "--source" && argv[1]) return { kind: "source", source: argv[1] };
@@ -11,6 +12,7 @@ export function parseImportCommand(argv: string[]): ImportCommand {
     const importId = argv.slice(1).find((argument) => argument !== "--resume" && !argument.startsWith("--"));
     if (importId) return { kind: "resume", importId };
   }
+  if (argv[0] === "--check-completion" && argv[1]) return { kind: "check-completion", importId: argv[1] };
   if (argv[0] === "--intake") return { kind: "intake", directory: argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined };
   if (argv[0] === "--intake-resume" && argv[1]) return { kind: "intake-resume", runId: argv[1] };
   if (argv[0] === "--intake-status" && argv[1]) return { kind: "intake-status", runId: argv[1] };
@@ -23,6 +25,7 @@ export async function executeImportCommand(root: string, command: ImportCommand,
   if (command.kind === "source") {
     return createArticleImport(root, command.source);
   }
+  if (command.kind === "check-completion") return inspectImportCompletion(root, command.importId);
   if (command.kind === "intake") return createIntakeRun(root, command.directory);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
   if (command.kind === "intake-retry") {
@@ -47,7 +50,7 @@ export async function executeImportCommand(root: string, command: ImportCommand,
         return { ...terminal, importState: imported };
       }
       const lastReceipt = imported.stageReceipts.at(-1);
-      if (imported.stage === "REPAIRING" || imported.stage === "WAITING_EXTERNAL" || lastReceipt?.status === "failed") {
+      if (imported.stage === "REPAIRING" || (imported.stage === "WAITING_EXTERNAL" && imported.blockerScope === "shared") || lastReceipt?.status === "failed") {
         const shared = imported.blockerScope === "shared";
         if (shared) return setIntakeBlocker(root, run, { scope: "shared", code: imported.stage, stage: imported.resumeStage ?? imported.stage, message: imported.nextAction });
         const blocked = await markIntakeEntry(root, run, entry.relativePath, "BLOCKED", { blocker: { scope: "article", code: imported.stage, stage: imported.resumeStage ?? imported.stage, message: imported.nextAction } });
@@ -65,12 +68,17 @@ export async function executeImportCommand(root: string, command: ImportCommand,
 
 async function main(): Promise<void> {
   const command = parseImportCommand(process.argv.slice(2));
-  process.stdout.write(`${JSON.stringify(await executeImportCommand(process.cwd(), command), null, 2)}\n`);
+  const result = await executeImportCommand(process.cwd(), command);
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (command.kind === "check-completion") process.exitCode = ({ COMPLETE: 0, WORK: 10, REPAIR: 10, WAIT: 10, BLOCKED: 20 } as Record<string, number>)[(result as { status: string }).status] ?? 30;
 }
 
 if (process.argv[1]?.replaceAll("\\", "/").endsWith("/scripts/import-article.ts")) {
+  const command = (() => {
+    try { return parseImportCommand(process.argv.slice(2)); } catch { return undefined; }
+  })();
   main().catch((error: unknown) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-    process.exitCode = 1;
+    process.exitCode = command?.kind === "check-completion" ? 30 : 1;
   });
 }

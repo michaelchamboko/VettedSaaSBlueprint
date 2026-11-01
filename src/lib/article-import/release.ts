@@ -19,7 +19,7 @@ export async function recordImportCodeReview(repositoryRoot: string, record: Ext
   const current = await operations.inspectPullRequest(pending.pullRequestUrl);
   if (current.headRefOid !== codeReview.reviewedCommitSha) throw new Error("CODE_REVIEW_HEAD_CHANGED");
   await operations.verifyCodeReview(codeReview.pullRequestUrl, codeReview.evidenceUrl, current.headRefOid);
-  const updated = { ...record, pendingRelease: { ...pending, codeReview }, updatedAt: new Date().toISOString() };
+  const updated = { ...record, pendingRelease: { ...pending, codeReview, operations: { ...pending.operations, review: { reviewedHeadSha: codeReview.reviewedCommitSha, evidenceUrl: codeReview.evidenceUrl } } }, updatedAt: new Date().toISOString() };
   await saveImport(repositoryRoot, updated);
   return updated;
 }
@@ -450,7 +450,7 @@ export async function assessImportRelease(input: {
     let pendingRelease = input.record.pendingRelease;
     if (!pendingRelease) {
       const reviewedCommitSha = await input.operations.commit(input.commitMessage ?? ("publish imported article " + input.record.importId), declaredFiles);
-      pendingRelease = { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha, branch: "codex/article-import/" + input.record.importId, createdAt: new Date().toISOString(), rollbackDeploymentId: previous.deploymentId, rollbackCommitSha: previous.commitSha };
+      pendingRelease = { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha, branch: "codex/article-import/" + input.record.importId, createdAt: new Date().toISOString(), rollbackDeploymentId: previous.deploymentId, rollbackCommitSha: previous.commitSha, operations: { commit: { reviewedCommitSha } } };
       input.record = { ...input.record, pendingRelease };
       await saveImport(input.repositoryRoot, input.record);
     } else if (!pendingRelease.rollbackDeploymentId || !pendingRelease.rollbackCommitSha) {
@@ -461,13 +461,13 @@ export async function assessImportRelease(input: {
     if (!pendingRelease.pullRequestUrl) {
       const pullRequest = await input.operations.preparePullRequest(pendingRelease.reviewedCommitSha);
       if (pullRequest.reviewedCommitSha !== pendingRelease.reviewedCommitSha || pullRequest.branch !== pendingRelease.branch) throw new Error("PULL_REQUEST_COMMIT_MISMATCH");
-      pendingRelease = { ...pendingRelease, pullRequestUrl: pullRequest.url };
+      pendingRelease = { ...pendingRelease, pullRequestUrl: pullRequest.url, operations: { ...pendingRelease.operations, push: { branch: pullRequest.branch, pullRequestUrl: pullRequest.url } } };
       input.record = { ...input.record, pendingRelease };
       await saveImport(input.repositoryRoot, input.record);
       return await waitForCodeReview(input.repositoryRoot, input.record);
     }
     const pullRequest = await input.operations.inspectPullRequest(pendingRelease.pullRequestUrl);
-    if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED");
+    if (pullRequest.headRefOid !== pendingRelease.reviewedCommitSha) return await waitForCodeReview(input.repositoryRoot, input.record, "PULL_REQUEST_HEAD_CHANGED", pullRequest.headRefOid);
     const codeReview = pendingRelease.codeReview;
     if (!codeReview || codeReview.reviewedCommitSha !== pullRequest.headRefOid || codeReview.pullRequestUrl !== pendingRelease.pullRequestUrl) {
       return await waitForCodeReview(input.repositoryRoot, input.record);
@@ -504,12 +504,15 @@ export async function assessImportRelease(input: {
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
     requireImportPresentationBinding(mergedApproval);
-    pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha };
+    pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha, operations: { ...pendingRelease.operations, merge: { reviewedHeadSha: pullRequest.headRefOid, mergeCommitSha: commitSha } } };
     input.record = { ...input.record, pendingRelease };
     await saveImport(input.repositoryRoot, input.record);
     // The adapter can fail after its production side effect, so every attempt needs rollback.
     deploymentStarted = true;
     const deployment = await input.operations.deploy(commitSha);
+    pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deployment: { commitSha, operationKey: `deployment:${commitSha}`, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl } } };
+    input.record = { ...input.record, pendingRelease };
+    await saveImport(input.repositoryRoot, input.record);
     if (deployment.commitSha !== commitSha) {
       throw new Error("DEPLOYMENT_COMMIT_MISMATCH");
     }
@@ -526,6 +529,10 @@ export async function assessImportRelease(input: {
       try {
         const rollback = await input.operations.rollback(previous.deploymentId);
         restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
+        if (restored) {
+          pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, rollback: { deploymentId: previous.deploymentId, restoredCommitSha: previous.commitSha } } };
+          await saveImport(input.repositoryRoot, { ...input.record, pendingRelease });
+        }
       } catch {
         restored = false;
       }
@@ -565,11 +572,13 @@ export async function assessImportRelease(input: {
 
 export { COMMON_VALIDATION_COMMANDS };
 
-async function waitForCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, reason = "CURRENT_HEAD_CODEX_REVIEW_REQUIRED"): Promise<ReleaseAssessment> {
+async function waitForCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, reason = "CURRENT_HEAD_CODEX_REVIEW_REQUIRED", reviewedHeadSha?: string): Promise<ReleaseAssessment> {
   const pending = record.pendingRelease;
   if (!pending?.pullRequestUrl) throw new Error("PULL_REQUEST_URL_MISSING");
   const at = new Date().toISOString();
-  await saveImport(repositoryRoot, { ...record, pendingRelease: { ...pending, codeReview: undefined }, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at,
+  const previousWait = record.continuation?.kind === "wait" ? record.continuation : undefined;
+  const rebound = reviewedHeadSha ? { ...pending, reviewedCommitSha: reviewedHeadSha, codeReview: undefined, operations: { ...pending.operations, commit: { reviewedCommitSha: reviewedHeadSha }, review: undefined, merge: undefined, deployment: undefined } } : { ...pending, codeReview: undefined, operations: { ...pending.operations, review: undefined } };
+  await saveImport(repositoryRoot, { ...record, continuation: { kind: "wait", resumeStage: "RELEASING", dependency: reason, externalId: pending.pullRequestUrl, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? 60_000 : 15_000)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + 2 * 60 * 60_000).toISOString() }, pendingRelease: rebound, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at,
     nextAction: "Record a passed independent Codex review of the current PR head; the next release pass merges and deploys it automatically: " + pending.pullRequestUrl,
     stageReceipts: [...record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: reason + ": " + pending.pullRequestUrl }],
   });
