@@ -27,6 +27,16 @@ The explicit manual article trigger now supports a fixed snapshot of the files p
 
 The supervisor must finish each work packet and resume the same import before selecting another entry. Executor output errors remain repair work at the productive stage; filesystem and state-write failures remain external blockers. Intake state records blocker scope and bound import integrity, and explicit retry is required to clear an article blocker.
 
+### Editorial work continuation amendment, 2026-11-01
+
+Classification: explicit product-owner directive.
+
+Clarify supervisor instructions for existing manual/API article imports. Missing or invalid `EditorialEvidenceV2` requires completion of `.agents/skills/eleanor-editorial/SKILL.md` before another validation submission. Keep editorial mechanics in that skill. The supervisor must repair the relevant artifact, evidence, or bound packet before retrying; unchanged failing submissions are prohibited. After three unsuccessful repairs, investigate the underlying assumption and continue only when a verified remedy is available. Preserve existing retry counters.
+
+Unfinished editorial work alone is not a durable blocker. A demonstrated obstacle must record its cause, attempted recovery, and exact requirement for resumption. Genuine article-specific blockers retain the existing continuation policy; shared capability, model-access, integrity, or release failures stop the run. Resolve an article blocker's cause before explicit intake retry, preserving the same snapshot and publication gates.
+
+This instruction-only amendment authorizes changes to `AGENTS.md`, the external-article-import skill, and supporting review/evidence documents. It also authorizes recovery inspection and completion of the existing import `article-c23a6320-0ba7-45e3-88dd-9160ce979f18` in snapshot `intake-c8e12e5b-e280-41d4-8cf5-e10a780cb9d1`, subject to verified persisted state and available capabilities. It adds no runtime code, schema, schedule, source-strategy change, or release authority. Intake execution remains confined to the primary checkout. The agreed brief, plan, and actual EGM findings are in `docs/designs/editorial-work-continuation/`.
+
 ## Binding scope
 
 This file is the only repository planning authority. It governs implementation sequencing and release decisions, subject to `AGENTS.md`, the source-intelligence records, and the non-inference gate.

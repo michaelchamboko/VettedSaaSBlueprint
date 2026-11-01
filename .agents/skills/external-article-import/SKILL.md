@@ -40,6 +40,14 @@ The Codex heartbeat is the supervising agent. The CLI executes local gates; it d
 3. Run the packet's `resumeCommand`. The runner claims an exclusive lease and validates/executes that result. Repeat while productive work remains in the window. An external outage remains resumable; missing agent output is work for this heartbeat, not an external outage.
 4. For release, let the adapter create the PR and record its head. Obtain independent current-head Codex review, write its `ImportCodeReviewV1` receipt and add `codeReviewPath` to the release result. After the current head passes review and required gates, the existing release policy permits automatic merge and deployment; owner authority remains separate from merge mechanics.
 
+#### Complete editorial work before retrying
+
+Missing or invalid `EditorialEvidenceV2` is unfinished agent work. Complete `.agents/skills/eleanor-editorial/SKILL.md`, which remains authoritative for the editorial procedure, before submitting another validation result. Never substitute `LandingEditorialReviewV1`, another article's evidence, or fabricated attestations. Submit the current artifact, its genuine matching editorial receipt, required quality evidence, and correctly bound work packet.
+
+Do not resubmit unchanged failing input. Diagnose the failure and repair the relevant artifact, evidence, or packet first. After three unsuccessful repairs, stop speculative retries and investigate the underlying assumption; continue when a verified remedy is available. Preserve existing retry counters and all quality and publication gates.
+
+Missing work alone does not justify a durable blocker or selecting the next entry. Record a blocker only for a demonstrated obstacle, with its cause, attempted recovery, and exact requirement for resumption. Genuine article-specific blockers follow the existing continuation policy; shared capability, model-access, integrity, or release failures stop the run. Use explicit intake retry only after resolving the article blocker's cause, then resume the same immutable snapshot. Processing completion does not establish publication.
+
 Stage result fields (in `work`):
 
 | Stage | Required fields |

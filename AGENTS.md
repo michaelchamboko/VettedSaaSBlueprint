@@ -88,6 +88,12 @@ When these records or repository relationships change, verify the SQL migration,
 
 The supervising agent must execute every manual or API article work packet through LIVE, QUARANTINED, or a durable documented blocker. A missing packet result, editorial receipt, or validation artifact is unfinished agent work and must be completed before selecting another fixed-snapshot entry. Folder intake resumes the earliest PROCESSING entry before PENDING entries and preserves captured source bytes and order. Article-specific blockers may advance the folder; shared capability, access, integrity, or release blockers stop it. Never substitute a scanner report or another article's receipt for EditorialEvidenceV2.
 
+Missing or invalid `EditorialEvidenceV2` requires the supervising agent to complete `.agents/skills/eleanor-editorial/SKILL.md` before submitting another validation result. That skill owns the editorial procedure. Never substitute `LandingEditorialReviewV1` or fabricated attestations. Submit the current artifact, its genuine matching editorial receipt, required quality evidence, and correctly bound work packet.
+
+Do not resubmit unchanged failing input. Diagnose the failure and complete the relevant artifact, evidence, or packet repair before retrying. After three unsuccessful repairs, stop speculative retries and investigate the underlying assumption; continue when a verified remedy is available. Preserve existing retry counters and all editorial and release gates.
+
+Missing work alone does not justify a durable blocker or skipping an article. Record a blocker only for a specific, demonstrated obstacle, including its cause, attempted recovery, and exact requirement for resumption. Genuine article-specific blockers follow the existing continuation policy. Shared capability, model-access, integrity, or release failures stop the run. Clear an article blocker through the existing explicit intake-retry operation only after resolving its cause, then resume the same immutable snapshot. Processing completion does not establish publication.
+
 ## Affiliate-copy capability gate
 
 - Before planning or drafting affiliate copy, read `docs/document-intelligence/DOMAIN_QUERY_EVIDENCE.md` sections **External Hormozi-skills review**, **Affiliate-safe Hormozi output map**, and **Affiliate-safe Hormozi invocation chain**.
