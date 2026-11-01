@@ -1,0 +1,6 @@
+{
+  "format": "direct-review",
+  "artifactFingerprint": "cc8a84427b59c823fd1ed6ecc415a992197562de7100fc06c39152f99ec5b3a8",
+  "passed": true,
+  "gate": "landing:quality:candidate"
+}
