@@ -576,8 +576,9 @@ async function waitForCodeReview(repositoryRoot: string, record: ExternalArticle
   const pending = record.pendingRelease;
   if (!pending?.pullRequestUrl) throw new Error("PULL_REQUEST_URL_MISSING");
   const at = new Date().toISOString();
+  const previousWait = record.continuation?.kind === "wait" ? record.continuation : undefined;
   const rebound = reviewedHeadSha ? { ...pending, reviewedCommitSha: reviewedHeadSha, codeReview: undefined, operations: { ...pending.operations, commit: { reviewedCommitSha: reviewedHeadSha }, review: undefined, merge: undefined, deployment: undefined } } : { ...pending, codeReview: undefined, operations: { ...pending.operations, review: undefined } };
-  await saveImport(repositoryRoot, { ...record, continuation: { kind: "wait", resumeStage: "RELEASING", dependency: reason, externalId: pending.pullRequestUrl, waitStartedAt: at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + 15_000).toISOString(), timeoutAt: new Date(Date.now() + 2 * 60 * 60_000).toISOString() }, pendingRelease: rebound, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at,
+  await saveImport(repositoryRoot, { ...record, continuation: { kind: "wait", resumeStage: "RELEASING", dependency: reason, externalId: pending.pullRequestUrl, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? 60_000 : 15_000)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + 2 * 60 * 60_000).toISOString() }, pendingRelease: rebound, stage: "WAITING_EXTERNAL", resumeStage: "RELEASING", updatedAt: at,
     nextAction: "Record a passed independent Codex review of the current PR head; the next release pass merges and deploys it automatically: " + pending.pullRequestUrl,
     stageReceipts: [...record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: reason + ": " + pending.pullRequestUrl }],
   });
