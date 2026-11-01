@@ -27,6 +27,14 @@ The explicit manual article trigger now supports a fixed snapshot of the files p
 
 The supervisor must finish each work packet and resume the same import before selecting another entry. Executor output errors remain repair work at the productive stage; filesystem and state-write failures remain external blockers. Intake state records blocker scope and bound import integrity, and explicit retry is required to clear an article blocker.
 
+### Local article loop continuation amendment — 2026-11-01
+
+Classification: explicit product-owner directive with pre-approved merge and deployment after all required gates pass.
+
+Packet `ARTICLE-LOOP-001` authorizes completion of the existing local supervising-agent loop for the article-to-page workflow. The selected local agent must execute each bound packet, persist its result atomically, repair changed failures, wait and resume external checks, and continue the same fixed snapshot until `LIVE`, `QUARANTINED`, processing completion with exceptions, or a durable blocker. Existing lifecycle stages, receipts, editorial requirements, review gates, primary-checkout execution, fixed-snapshot ordering, and shared-failure rules remain authoritative.
+
+This amendment authorizes only backward-compatible continuation metadata, read-only completion inspection, wait/repair/reconciliation behavior, focused tests, and the associated documentation. It does not add a stage, scheduler, paid service, model client, Durable Harness, or second article orchestrator. The approved brief, implementation plan, and actual EGM findings are persisted under `docs/designs/article-loop-continuation/`. The exact reviewed PR head may be merged into `main` and the exact merged commit deployed once every required gate passes.
+
 ### Editorial work continuation amendment, 2026-11-01
 
 Classification: explicit product-owner directive.

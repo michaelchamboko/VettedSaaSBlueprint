@@ -1180,6 +1180,15 @@
     }
   ],
   "extensions": {
+    "article_loop_continuation": {
+      "packet_id": "ARTICLE-LOOP-001",
+      "status": "ready",
+      "authority": "planning.md#local-article-loop-continuation-amendment-2026-11-01",
+      "scope": "Complete the existing local supervising-agent loop without changing article stages or adding a second orchestrator.",
+      "constraints": ["local runtime", "agent/model agnostic", "no scheduler", "no paid services", "no Durable Harness"],
+      "preapproval": {"merge": "exact reviewed head after all gates", "deploy": "exact merged commit after all gates"},
+      "acceptance": "A fixed-snapshot canary survives productive handoffs, a changed repair, an external wait, and a restart with no duplicate release effects or false LIVE receipt."
+    },
     "lifecycle": "P1_VERIFIED_NO_ACTIVE_PROGRAMME",
     "phase_one": "P1_VERIFIED",
     "phase_one_receipt": "build-pack/receipts/phase-one-release.json",

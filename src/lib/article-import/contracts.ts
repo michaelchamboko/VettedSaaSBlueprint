@@ -104,6 +104,19 @@ export const importCodeReviewSchema = z.object({
   reviewedAt: z.string().datetime({ offset: true }),
 }).strict();
 
+const continuationBase = {
+  idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+};
+export const importContinuationSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), ...continuationBase }).strict(),
+  z.object({ kind: z.literal("repair"), stage: importStageSchema, failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
+  z.object({ kind: z.literal("wait"), resumeStage: importStageSchema, dependency: z.string().min(1), externalId: z.string().min(1).optional(), waitStartedAt: z.string().datetime({ offset: true }), lastProgressAt: z.string().datetime({ offset: true }), nextCheckAt: z.string().datetime({ offset: true }), timeoutAt: z.string().datetime({ offset: true }) }).strict(),
+  z.object({ kind: z.literal("blocked"), scope: z.enum(["article", "shared"]), cause: z.string().min(1), attemptedRecovery: z.string().min(1), resumptionRequirement: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal("complete"), result: z.enum(["LIVE", "QUARANTINED", "PUBLISHED_WITH_EXCEPTIONS"]), receiptPaths: z.array(z.string().min(1)).min(1) }).strict(),
+]);
+export type ImportContinuation = z.infer<typeof importContinuationSchema>;
+
 export const importPendingReleaseSchema = z.object({
   schemaVersion: z.literal("ImportPendingReleaseV1"),
   reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
@@ -113,6 +126,14 @@ export const importPendingReleaseSchema = z.object({
   mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
   rollbackDeploymentId: z.string().min(1).optional(),
   rollbackCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
+  operations: z.object({
+    commit: z.object({ reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict().optional(),
+    push: z.object({ branch: z.string().min(1), pullRequestUrl: z.string().url() }).strict().optional(),
+    review: z.object({ reviewedHeadSha: z.string().regex(/^[a-f0-9]{40}$/), evidenceUrl: z.string().url() }).strict().optional(),
+    merge: z.object({ reviewedHeadSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict().optional(),
+    deployment: z.object({ commitSha: z.string().regex(/^[a-f0-9]{40}$/), operationKey: z.string().min(1), deploymentId: z.string().min(1), url: z.string().min(1) }).strict().optional(),
+    rollback: z.object({ deploymentId: z.string().min(1), restoredCommitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict().optional(),
+  }).strict().optional(),
   codeReview: importCodeReviewSchema.optional().catch(undefined),
 }).strict();
 
@@ -124,6 +145,7 @@ export const externalArticleImportSchema = z.object({
   stage: importStageSchema,
   resumeStage: importStageSchema.optional(),
   blockerScope: z.enum(["article", "shared"]).optional(),
+  continuation: importContinuationSchema.optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
   sourceDeletedAt: z.string().datetime({ offset: true }).optional(),
