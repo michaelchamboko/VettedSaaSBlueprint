@@ -31,7 +31,7 @@ Read the persisted import and both intake records without executing another vali
 
 The import's sourceFile points to `intake-97e6c2cc-e8a2-4c06-9ef8-58d75b0b2204`. Both captured sources hash to `860f40f630bdc9b771ca7871a80ec8698be36c3206bc2993d4dada2b8b5849c5`. `createArticleImport` reuses a non-LIVE import by source fingerprint, explaining the shared import ID without changing snapshot membership or captured bytes.
 
-No `claude` or `gemini` executable or provider API-key variables were found in the inspected environment. OpenCode does have configured provider credentials and lists `minimax-coding-plan/MiniMax-M3` and `minimax-coding-plan/MiniMax-M3.1-Flash`. Listing credentials and models does not prove a successful model call. Different-family availability is not declared absent, and no cleanse is claimed.
+No alternate-family executable or provider API-key variables were found in the inspected environment. An installed CLI had configured provider credentials and exposed alternate-family models, but listing credentials and models does not prove a successful model call. Different-family availability is not declared absent, and no cleanse is claimed.
 
 The demonstrated shared blocker is the failing required test gate. Intake was not advanced, its blocker was not cleared, and no editorial receipt was fabricated. No publication, merge, deployment, or new LIVE receipt is claimed.
 
