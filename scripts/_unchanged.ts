@@ -1,8 +1,0 @@
-import { editorialProsePaths } from "../src/lib/editorial/refinement";
-import fs from "node:fs";
-const a=JSON.parse(fs.readFileSync("src/generated/landing-pages/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json","utf8"));
-const before=JSON.parse(fs.readFileSync("C:/Users/micha/AppData/Local/Temp/opencode/wk/before.json","utf8"));
-function get(obj:any, path:string){ return path.split(".").reduce((o:any,k:any)=>Array.isArray(o)?o[Number(k)]:o?.[k],obj); }
-const paths=editorialProsePaths("landing", a);
-for (const p of paths) { if (get(a,p)===get(before,p)) console.log("UNCHANGED:", p); }
-console.log("done");
