@@ -10,7 +10,7 @@ Verification: renderer suite 14/14; complete suite 291 pass, 0 fail, 3 skipped; 
 
 Impeccable context ran and permitted narrow incumbent refinement. critique/audit commands were unavailable; detect completed with eight incumbent thick-border/font findings. Degraded manual single-context craft review used desktop/mobile captures, followed by independent parent review. Palette checks: CTA contrast 4.97:1; muted text 5.06:1; clay on paper 4.55:1. Ten built desktop/mobile captures returned HTTP 200 with canonical computed colours and no horizontal overflow. Parent independently approved contact sheet.
 
-GitNexus refresh attempted; PowerShell AuthorizationManager prevented the wrapper. Deterministic source hashes, renderer imports, five published route inventory, targeted tests and full build provide impact evidence. See source-hashes.json and browser.json.
+The retired graph-tool refresh was attempted; PowerShell AuthorizationManager prevented the wrapper. Deterministic source hashes, renderer imports, five published route inventory, targeted tests and full build provide impact evidence. See source-hashes.json and browser.json.
 
 Local release commit: cfe522c537050b6e8eae43be46757b88d0295af6. Mike Jones <michaelchamboko@gmail.com>. Repository guard and text-validation hooks passed using installed Python313. No GitHub push.
 

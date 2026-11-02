@@ -15,7 +15,7 @@ async function fixture() {
   return { root, record };
 }
 
-test("each recovery strategy executes three times, starting at strategy zero", async () => {
+test("three failed repairs require diagnosis before any further execution", async () => {
   const { root, record } = await fixture();
   const strategies: string[] = [];
   const attempts: number[] = [];
@@ -27,9 +27,14 @@ test("each recovery strategy executes three times, starting at strategy zero", a
         return recordImportFailure(root, context.record, { strategy: "research", classification: "deterministic", message: "Claim has no support." });
       });
     }
-    assert.deepEqual(strategies, ["alternate-source", "alternate-source", "alternate-source", "narrow-claim", "narrow-claim", "narrow-claim", "remove-claim", "remove-claim", "remove-claim"]);
-    assert.deepEqual(attempts, [1, 2, 3, 1, 2, 3, 1, 2, 3]);
-    assert.equal((await loadImport(root, record.importId)).stage, "QUARANTINED");
+    assert.deepEqual(strategies, ["alternate-source", "alternate-source", "alternate-source"]);
+    assert.deepEqual(attempts, [1, 2, 3]);
+    const stopped = await loadImport(root, record.importId);
+    assert.equal(stopped.stage, "REPAIRING");
+    assert.equal(stopped.continuation?.kind, "repair");
+    assert.ok(stopped.continuation?.kind === "repair" && stopped.continuation.diagnosisRequired);
+    assert.equal(stopped.sourceDeletedAt, undefined);
+    assert.ok(await readFile(path.join(root, ".automation/article-imports", `${record.importId}.source.md`), "utf8"));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

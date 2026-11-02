@@ -23,6 +23,6 @@
     }
   ],
   "route_inventory": "One new noindex preview; public route not added until reviewed release receipt exists.",
-  "gitnexus": "No impact-sensitive shared renderer edit; deterministic file hashes and import/route inventory used.",
+  "retiredGraphTool": "No impact-sensitive shared renderer edit; deterministic file hashes and import/route inventory used.",
   "rtk": "Command unavailable on PATH; direct PowerShell fallback."
 }
