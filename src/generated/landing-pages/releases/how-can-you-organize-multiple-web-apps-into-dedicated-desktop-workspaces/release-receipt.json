@@ -12,7 +12,7 @@
   "artifacts": {
     "page": {
       "path": "how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces.json",
-      "sha256": "0a1f6df497d9046459a592d0f8b523a90a2f2690c60e4da7df4719228a583d21"
+      "sha256": "c979c187fa29ce9162c1ca7f3531a9ecd40ff7ea1a84a01d080e431c72bf75b8"
     },
     "product_evidence": {
       "path": "releases/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces/product-evidence.json",
