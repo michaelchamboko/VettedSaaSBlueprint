@@ -3,67 +3,11 @@
   "slug": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
   "path": "/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
   "exact_affiliate_url": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
-  "url_fingerprint": "4e8985bb1ecbdfef783e1c9cebf4c67ebdda63a6b686cc2e0241b5be345dfdca",
-  "authorization": {
-    "source": "approved-urls.md",
-    "exact_url": "https://get.diginius.com/7o8d2cnt2oow-zjmxj2",
-    "url_fingerprint": "4e8985bb1ecbdfef783e1c9cebf4c67ebdda63a6b686cc2e0241b5be345dfdca"
-  },
+  "url_fingerprint": "0",
   "artifacts": {
     "page": {
       "path": "how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json",
-      "sha256": "4fb2c7498b99e7861bb47ac11ddfcf818036a5742e6b1e09d29754961e9b6998"
-    },
-    "product_evidence": {
-      "path": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/product-evidence.json",
-      "sha256": "da385a416cb44c4fc8c54306ca34efbd15d558d6a3aeee1caaaffd579c899f68"
-    },
-    "visual_review": {
-      "path": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/visual-review.json",
-      "sha256": "dd8e73c3ba716a977622c43a20878ed622c4d22a5c5d214bb395c7d21ce1db99"
-    },
-    "uniqueness_review": {
-      "path": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/uniqueness-review.json",
-      "sha256": "36b35d5714ea7766941d9aa16d3a2b4e80b3b27398514f16cc841b160798d66d"
-    },
-    "compliance_review": {
-      "path": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/compliance-review.json",
-      "sha256": "e5595716624516a179bf6c7b16359c609e25414b67626d5c3ad396476c952377"
-    },
-    "conversion_review": {
-      "path": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/conversion-review.json",
-      "sha256": "7714a1c29e00ac46f0b6ac2065caf94e3addaa953d3b3b948301ec2aa8fa583a"
-    },
-    "quality_receipt": {
-      "path": "releases/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring/quality.json",
-      "sha256": "69d22832fd01d14fb4841202b253e048c77244dd8a214bb11291a09b23cf0e42"
+      "sha256": "924965a47fe9d9bbdee605dfafdbf5009eb028b6760744d4d11a0ccd715f6454"
     }
-  },
-  "checks": {
-    "product_evidence": true,
-    "visual": true,
-    "uniqueness": true,
-    "compliance": true,
-    "conversion": true,
-    "quality": true,
-    "exact_cta": true,
-    "disclosure": true,
-    "preview": true,
-    "clean_build": true
-  },
-  "release": {
-    "reviewed_commit": "8d3cd1bbaf4d5de8ac72c541844ac97d6d9f473a",
-    "preview_url": "https://vetted-saa-s-blueprint-4esqjq4o9-michaelchamboko-gravityclaw.vercel.app/landing-page-previews/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
-    "verified_at": "2026-10-14T07:32:21.207Z"
-  },
-  "claims_removed_or_softened": [
-    "Unlimited client accounts",
-    "Two-seat all-feature savings comparison",
-    "Exact OAuth/history behavior",
-    "Cross-platform impression share",
-    "CRM-normalised ROAS",
-    "Named CRM connectors",
-    "Individual identification/ad-click attribution",
-    "Unreconciled business quotas and trial duration"
-  ]
+  }
 }
