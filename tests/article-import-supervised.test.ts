@@ -68,7 +68,8 @@ test("executor output failures remain repair work at the productive stage", asyn
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("heartbeat consumes durable work after interruption and releases only after review and owner merge", async () => {
+test("heartbeat consumes durable work after interruption and releases only after review and owner merge", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const parent = path.join(process.cwd(), ".scratch");
   await mkdir(parent, { recursive: true });
   const root = await mkdtemp(path.join(parent, "supervised-import-"));
@@ -105,6 +106,11 @@ test("heartbeat consumes durable work after interruption and releases only after
     // Each invocation constructs a fresh executor, as a later heartbeat process would.
     const heartbeat = () => executeImportCommand(root, { kind: "resume", importId: created.importId }, createSupervisedImportExecutor(root, operations));
     const current = () => loadImport(root, created.importId);
+    const reachNextCheck = async () => {
+      const waiting = await current();
+      assert.ok(waiting.continuation?.kind === "wait");
+      t.mock.timers.setTime(Date.parse(waiting.continuation.nextCheckAt));
+    };
     const submit = async (work: Record<string, unknown>) => {
       await heartbeat();
       const record = await current();
@@ -154,10 +160,15 @@ test("heartbeat consumes durable work after interruption and releases only after
     const codeReviewPath = ".automation/article-imports/reviews/review.json";
     await writeJsonAtomically(path.join(root, codeReviewPath), { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: commit, pullRequestUrl: pr, evidenceUrl: `${pr}#issuecomment-review`, reviewedAt: new Date().toISOString() });
     await writeJsonAtomically(path.join(root, release.packet.resultPath), { ...release.result, work: { ...release.result.work, codeReviewPath } });
+    await reachNextCheck();
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");
     assert.equal(deployments, 0);
     merged = true;
+    await heartbeat();
+    assert.equal((await current()).stage, "WAITING_EXTERNAL");
+    assert.equal(deployments, 0);
+    await reachNextCheck();
     await heartbeat();
     assert.equal((await current()).stage, "LIVE");
     await heartbeat();

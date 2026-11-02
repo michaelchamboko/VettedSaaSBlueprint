@@ -5,6 +5,7 @@ import test from "node:test";
 import { createIntakeRun, markIntakeEntry, nextIntakeEntry } from "../src/lib/article-import/intake";
 
 test("fixed snapshot resumes PROCESSING before later PENDING entries", async () => {
+  await mkdir(path.join(process.cwd(), ".scratch"), { recursive: true });
   const root = await mkdtemp(path.join(process.cwd(), ".scratch", "intake-loop-"));
   try {
     await mkdir(path.join(root, "Article Intake"), { recursive: true });
@@ -22,6 +23,7 @@ test("fixed snapshot resumes PROCESSING before later PENDING entries", async () 
 });
 
 test("article-specific blockers do not become a shared folder stop", async () => {
+  await mkdir(path.join(process.cwd(), ".scratch"), { recursive: true });
   const root = await mkdtemp(path.join(process.cwd(), ".scratch", "intake-blocker-"));
   try {
     await mkdir(path.join(root, "Article Intake"), { recursive: true });

@@ -4,7 +4,7 @@ index 4a3901f..60c27f9 100644
 +++ b/AGENTS.md
 @@ -57,6 +57,14 @@ Run this workflow when source documents or their derived intelligence change:
  
- During the owner-authorized non-commercial implementation phase, GitNexus may be refreshed with `powershell -NoProfile -File scripts/refresh-gitnexus.ps1` only when it targets the selected checkout. The wrapper pins GitNexus 1.6.10 and the repository-level `.gitnexusrc` enforces index-only mode so refreshes cannot inject tool-specific authority files. It remains navigation evidence, never semantic authority.
+ [Historical tool instruction redacted under planning.md's repository-wide retirement directive. Original context remains in Git history before this recovery change.]
  
 +## Mandatory frontend design workflow
 +

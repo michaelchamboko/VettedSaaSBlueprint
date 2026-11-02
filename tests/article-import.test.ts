@@ -133,7 +133,8 @@ test("classifies neutral article formats and flags risky claims", () => {
   assert.ok(transform.claimRisks.includes("unsupported_certainty"));
 });
 
-test("state transitions, strategy changes, waiting, quarantine, atomic resume, and raw deletion work", async () => {
+test("state transitions, strategy changes, waiting, quarantine, atomic resume, and raw deletion work", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const root = await testRoot("article-import-");
   try {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
@@ -150,6 +151,12 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
     assert.equal(run.stage, "RESEARCHING");
     run = await recordImportFailure(root, run, { strategy: "research", classification: "transient", message: "Provider timeout." });
     assert.equal(run.stage, "WAITING_EXTERNAL");
+    let earlyExecutions = 0;
+    const waiting = await executeImportCommand(root, { kind: "resume", importId: run.importId }, async ({ record }) => { earlyExecutions++; return record; });
+    assert.equal(earlyExecutions, 0, "must not execute before the retry deadline");
+    assert.equal(waiting.stage, "WAITING_EXTERNAL");
+    assert.ok(run.continuation?.kind === "wait");
+    t.mock.timers.setTime(Date.parse(run.continuation.nextCheckAt));
     run = await executeImportCommand(root, { kind: "resume", importId: run.importId }, async ({ record }) => record) as typeof run;
     assert.equal(run.stage, "RESEARCHING");
     const resumed = await loadImport(root, run.importId);
@@ -162,7 +169,8 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
   }
 });
 
-test("named resume executes only the selected local stage", async () => {
+test("named resume executes only the selected local stage", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const root = await testRoot("article-import-resume-pending-");
   try {
     await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
@@ -173,6 +181,8 @@ test("named resume executes only the selected local stage", async () => {
     await recordImportFailure(root, created, { strategy: "research", classification: "transient", message: "provider unavailable" });
     await recordImportFailure(root, other, { strategy: "research", classification: "transient", message: "provider unavailable" });
     const otherBeforeResume = await loadImport(root, other.importId);
+    assert.ok(otherBeforeResume.continuation?.kind === "wait");
+    t.mock.timers.setTime(Date.parse(otherBeforeResume.continuation.nextCheckAt));
     const resumed = await executeImportCommand(root, { kind: "resume", importId: created.importId }) as { importId: string; stage: string };
     assert.equal(resumed.importId, created.importId);
     assert.equal(resumed.stage, "RESEARCHING");
