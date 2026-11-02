@@ -52,9 +52,9 @@
     "clean_build": true
   },
   "release": {
-    "reviewed_commit": "5da3127428155a2af35e33c233a59c6b8c49d7a6",
+    "reviewed_commit": "5972fa2",
     "preview_url": "https://vettedsaasblueprint.online/landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring",
-    "verified_at": "2026-11-02T11:02:18.710Z"
+    "verified_at": "2026-11-02T19:22:10.589Z"
   },
   "claims_removed_or_softened": [
     "Price claims softened to official vendor figures."
