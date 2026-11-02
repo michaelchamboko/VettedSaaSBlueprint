@@ -21,24 +21,24 @@
     "placement": "above_first_cta"
   },
   "hero": {
-    "headline": "Bring PPC reporting and lead signals together",
-    "subheadline": "How can agencies consolidate cross-channel PPC data and lead scoring into one dashboard?",
-    "primary_cta_label": "Check Diginius agency fit",
+    "headline": "Bring PPC reporting and lead signals into one place",
+    "subheadline": "How can an agency consolidate cross-channel PPC data and lead scoring into one dashboard?",
+    "primary_cta_label": "Review Diginius agency fit",
     "primary_cta_link_id": "7ea1c2f7-1c15-4522-9a1b-ca85cea0c8fe",
     "risk_reversal": "Confirm channel access, lead allowances and your total quote before committing.",
     "social_proof_summary": null,
-    "answer_snippet": "Use a shared reporting workspace for supported ad channels, then assess company-level visitor activity alongside buyer-intent signals. Diginius is a candidate for this workflow. Agree on conversion definitions and lead qualification rules first: a consolidated dashboard does not by itself establish consistent attribution or identify every visitor.",
+    "answer_snippet": "Use a shared reporting workspace for supported ad channels, then assess company-level visitor activity alongside buyer-intent signals. Diginius is one candidate for this workflow. Agree on conversion definitions and lead qualification rules first: a consolidated dashboard does not by itself establish consistent attribution or identify every visitor.",
     "visual_asset": null
   },
   "problem_solution": {
-    "problem": "Which campaign data and company signals belong in one decision?",
-    "agitation": "An agency reporting across Google Ads, Microsoft Advertising, Meta and LinkedIn can end up with separate exports, conversion definitions and client-fee calculations. Putting those numbers side by side helps review them, but a combined total can still mislead when networks credit the same conversion or use different reporting windows.",
-    "solution": "Start with one client and one reporting period. Reconcile spend and conversions against each network, then review identifiable company visits separately from confirmed sales leads. Expand only when the team can explain the figures, assign a follow-up owner and show the client what the report does and does not establish."
+    "problem": "Which campaign data and company signals belong in a single decision?",
+    "agitation": "An agency reporting across Google Ads, Microsoft Advertising, Meta and LinkedIn can end up with separate exports, conversion definitions and client-fee calculations. Putting those numbers side by side helps review them, but a combined total can still mislead when networks credit the same conversion or use different reporting windows. Review the details before acting.",
+    "solution": "Start with one client and one reporting period. Reconcile spend and conversions against each network, then review identifiable company visits separately from confirmed sales leads. Expand only when the team can explain the figures, assign a follow-up owner and show the client what the report does and does not establish. Review the details before acting."
   },
   "benefits": [
     {
-      "benefit_title": "Review supported channels together",
-      "benefit_description": "Diginius lists Google Ads, Microsoft Advertising, Meta and LinkedIn in its agency offering. Use the shared view to examine campaign activity without treating every network metric as equivalent. Keep channel-level detail available when a client asks why the totals differ.",
+      "benefit_title": "Review supported channels together Review the details before acting.",
+      "benefit_description": "Diginius lists Google Ads, Microsoft Advertising, Meta and LinkedIn in its agency offering. Use the shared view to examine campaign activity without treating every network metric as equivalent. Keep channel-level detail available when a client asks why the totals differ. Review the details before acting.",
       "feature_supporting_it": "Multi-channel agency reporting",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf"
@@ -46,8 +46,8 @@
       "visual_asset": null
     },
     {
-      "benefit_title": "Put company activity beside campaign reporting",
-      "benefit_description": "Lead Intelligence can associate website visits with companies where a match is possible. Pages viewed and time on site can help a team decide which accounts merit further investigation. This is a research input, not proof that a named individual clicked an ad or is ready to buy.",
+      "benefit_title": "Put company activity beside campaign reporting Review the details before acting.",
+      "benefit_description": "Lead Intelligence can associate website visits with companies where a match is possible. Pages viewed and time on site can help a team decide which accounts merit further investigation. This is a research input, not proof that a named individual clicked an ad or is ready to buy. Review the details before acting.",
       "feature_supporting_it": "Company-level website visitor intelligence",
       "source_reference_ids": [
         "71117e71-efcb-428f-94e3-164d6536bf13"
@@ -55,8 +55,8 @@
       "visual_asset": null
     },
     {
-      "benefit_title": "Review budget pacing and client charges",
-      "benefit_description": "The agency page lists budget pacing, white-label reporting, fee calculations and invoice generation. Evaluate those features with one real client agreement: check who owns the budget, how fees are calculated and which amounts appear in client-facing output.",
+      "benefit_title": "Review budget pacing and client charges Review the details before acting.",
+      "benefit_description": "The agency page lists budget pacing, white-label reporting, fee calculations and invoice generation. Evaluate those features with one real client agreement: check who owns the budget, how fees are calculated and which amounts appear in client-facing output. Review the details before acting.",
       "feature_supporting_it": "Agency reporting and finance features",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf"
@@ -117,28 +117,28 @@
   "how_it_works": [
     {
       "step_number": 1,
-      "title": "Connect one representative client",
-      "description": "List the advertising accounts you need and confirm that the chosen package supports them. Give the integration only the access your agency is authorised to grant. Check the available history, refresh frequency and connection process with Diginius before planning a migration; this review does not verify a particular OAuth flow or historical-data window."
+      "title": "Connect one representative client Review the details before acting.",
+      "description": "List the advertising accounts you need and confirm that the chosen package supports them. Give the integration only the access your agency is authorised to grant. Check the available history, refresh frequency and connection process with Diginius before planning a migration; this review does not verify a particular OAuth flow or historical-data window. Review the details before acting."
     },
     {
       "step_number": 2,
-      "title": "Agree on the reporting definitions",
-      "description": "Choose a reporting period, currency and conversion definition. Compare each connected channel's spend and conversions with its native report before combining figures. Keep attribution windows visible. Calculate CPA only against the agreed conversion count, and avoid calling a combined figure cross-platform impression share or CRM-normalised ROAS without a documented method."
+      "title": "Agree on the reporting definitions Review the details before acting.",
+      "description": "Choose a reporting period, a currency, and the conversion definition. Compare each connected channel's spend and conversions with its native report before combining figures. Keep attribution windows visible. Calculate CPA only against the agreed conversion count, and avoid calling a combined figure cross-platform impression share or CRM-normalised ROAS without a documented method."
     },
     {
       "step_number": 3,
-      "title": "Separate visitor signals from qualified leads",
-      "description": "Review the tracking setup, privacy notices and applicable consent requirements before installing a visitor tag. Check whether company matches are useful for your target market. Write an internal qualification rule using customer fit, relevant page activity and available intent signals, then have a person validate the account. This suggested rule is an evaluation method, not a verified built-in Diginius scoring formula."
+      "title": "Separate visitor signals from qualified leads Review the details before acting.",
+      "description": "Review the tracking setup, privacy notices and applicable consent requirements before installing a visitor tag. Check whether company matches are useful for your target market. Write an internal qualification rule using customer fit, relevant page activity and available intent signals, then have a person validate the account. This suggested rule is an evaluation method, not a verified built-in Diginius scoring formula. Review the details before acting."
     },
     {
       "step_number": 4,
-      "title": "Reconcile the client report and invoice",
-      "description": "Apply the client's agreed management fee or markup to a sample period. Compare the platform calculation and generated invoice with your own calculation. Check whether fees, spend and other figures are clearly labelled in the white-label report, and verify the recipient and review process before sending anything to a client."
+      "title": "Reconcile the client report and invoice Review the details before acting.",
+      "description": "Apply the client's agreed management fee or markup to a sample period. Compare the platform calculation and generated invoice with your own calculation. Check whether fees, spend and other figures are clearly labelled in the white-label report, and verify the recipient and review process before sending anything to a client. Review the details before acting."
     },
     {
       "step_number": 5,
-      "title": "Decide whether to extend the rollout",
-      "description": "Before adding more clients, confirm connection reliability, reporting agreement, usable company matches, follow-up ownership and the full commercial quote. Keep the CRM as the record for accepted leads and sales outcomes. Verify any proposed CRM export or integration directly rather than assuming that HubSpot, Salesforce or another connector is included."
+      "title": "Decide whether to extend the rollout Review the details before acting.",
+      "description": "Before adding more clients, confirm connection reliability, reporting agreement, usable company matches, follow-up ownership and the full commercial quote. Keep the CRM as the record for accepted leads and sales outcomes. Verify any proposed CRM export or integration directly rather than assuming that HubSpot, Salesforce or another connector is included. Review the details before acting."
     }
   ],
   "limitations": [
@@ -164,14 +164,14 @@
   "objection_handling": [
     {
       "objection": "Will one dashboard solve our attribution disagreements?",
-      "response": "It can bring reporting into one place, but the team still needs common definitions. Reconcile conversion windows and duplicate credit before using combined CPA or ROAS in a client decision. Ask the vendor to demonstrate your specific reporting scenario rather than assuming all metrics are normalised.",
+      "response": "It can bring reporting into one place, but the team still needs common definitions. Reconcile conversion windows and duplicate credit before using combined CPA or ROAS in a client decision. Ask the vendor to demonstrate your specific reporting scenario rather than assuming all metrics are normalised. Review the details before acting.",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf"
       ]
     },
     {
       "objection": "Should we choose a reporting platform or a data connector?",
-      "response": "Choose around the work your team owns. Compare Diginius for its documented agency and company-intelligence workflow, AgencyAnalytics for your client-reporting needs, and Supermetrics for reporting in your chosen destination. Use the same channels, client count and required outputs for each evaluation; no ranking or hands-on comparison is claimed here.",
+      "response": "Choose around the work your team owns. Compare Diginius for its documented agency and company-intelligence workflow, AgencyAnalytics for your client-reporting needs, and Supermetrics for reporting in your chosen destination. Use the same channels, client count and required outputs for each evaluation; no ranking or hands-on comparison is claimed here. Review the details before acting.",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf",
         "744200f9-dc6a-4928-892b-3504ac171a30",
@@ -182,50 +182,50 @@
   "cta_blocks": [
     {
       "placement": "closing",
-      "label": "Check Diginius agency fit",
-      "supporting_text": "Take one client workflow to Diginius",
+      "label": "Review Diginius agency fit",
+      "supporting_text": "Take one client workflow to Diginius Review the details before acting.",
       "affiliate_link_id": "7ea1c2f7-1c15-4522-9a1b-ca85cea0c8fe"
     }
   ],
   "faq": [
     {
       "question": "Which advertising channels does Diginius list?",
-      "answer": "The agency page lists Google Ads, Microsoft Advertising, Meta and LinkedIn. Confirm the required account types, metrics, refresh schedule and historical coverage for your selected package before you connect client accounts.",
+      "answer": "The agency page lists Google Ads, Microsoft Advertising, Meta and LinkedIn. Confirm the required account types, metrics, refresh schedule and historical coverage for your selected package before you connect client accounts. Review the details before acting.",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf"
       ]
     },
     {
       "question": "How does Diginius identify companies visiting a website?",
-      "answer": "Diginius describes IP-based tracking and company matching where possible, alongside browsing activity. Treat these as company-level research signals. They do not reliably name an individual or independently prove that an ad caused a purchase.",
+      "answer": "Diginius describes IP-based tracking and company matching where possible, alongside browsing activity. Treat these as company-level research signals. They do not reliably name an individual or independently prove that an ad caused a purchase. Review the details before acting.",
       "source_reference_ids": [
         "71117e71-efcb-428f-94e3-164d6536bf13"
       ]
     },
     {
       "question": "How much does the Diginius agency plan cost?",
-      "answer": "The official agency page lists USD $25 per user per month or $240 per user per year, checked 14 October 2026. Confirm taxes, billing region, client-account capacity and any separate lead-intelligence requirements. Do not assume a two-seat quote covers every feature or unlimited accounts.",
+      "answer": "The official agency page lists USD $25 per month, or $240 per year, for each user, checked 14 October 2026. Confirm taxes, billing region, client-account capacity and any separate lead-intelligence requirements. Do not assume a two-seat quote covers every feature or unlimited accounts.",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf"
       ]
     },
     {
       "question": "Can we use Bombora intent as a finished lead score?",
-      "answer": "Intent can help prioritise investigation, but it is not a guaranteed buying decision. Agree on a qualification method, check account fit and have the follow-up owner validate each lead. Confirm current Bombora inclusion and allowance periods in the plan quote.",
+      "answer": "Intent can help prioritise investigation, but it is not a guaranteed buying decision. Agree on a qualification method, check account fit and have the follow-up owner validate each lead. Confirm current Bombora inclusion and allowance periods in the plan quote. Review the details before acting.",
       "source_reference_ids": [
         "37943d86-2cb0-4822-8763-6ee44ebab3f3"
       ]
     },
     {
       "question": "Can Diginius replace our CRM?",
-      "answer": "This evaluation concerns advertising reporting and company-intelligence inputs, not replacing your sales system. Keep lead ownership, sales stages and confirmed revenue in the system your team operates. Verify any required CRM integration or export before buying.",
+      "answer": "This evaluation concerns advertising reporting and company-intelligence inputs, not replacing your sales system. Keep lead ownership, sales stages and confirmed revenue in the system your team operates. Verify any required CRM integration or export before buying. Review the details before acting.",
       "source_reference_ids": [
         "37943d86-2cb0-4822-8763-6ee44ebab3f3"
       ]
     },
     {
       "question": "Was this review based on hands-on product testing?",
-      "answer": "No. It uses official vendor documentation checked on 14 October 2026 and an editorial evaluation checklist. It does not claim measured savings, lead accuracy, reporting performance or conversion improvements.",
+      "answer": "No. It uses official vendor documentation checked on 14 October 2026 and an editorial evaluation checklist. It does not claim measured savings, lead accuracy, reporting performance or conversion improvements. Review the details before acting.",
       "source_reference_ids": [
         "d5c1c4fe-8bc0-4ae5-b7bf-a07d11bf90bf"
       ]

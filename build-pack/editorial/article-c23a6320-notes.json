@@ -1,0 +1,18 @@
+{
+  "semanticNotes": "Rewrote every eligible prose field for a direct review while preserving the evidence boundary, uncertainty, disclosures, URLs, claims, and decision structure.",
+  "exceptions": [
+    "Protected metadata, evidence references, affiliate destination, presentation settings, and schema fields were not edited."
+  ],
+  "meaningPreserved": true,
+  "arrayOrderPreserved": true,
+  "rewriteMode": "full_article",
+  "writerModelFamily": "Gemini",
+  "cleanseModelFamily": "OpenAI Codex",
+  "passes": {
+    "purposeAndStructure": true,
+    "meaningAndEvidence": true,
+    "wordingAndRhythm": true,
+    "rivalFamilyCleanse": true,
+    "finalFidelityReview": true
+  }
+}

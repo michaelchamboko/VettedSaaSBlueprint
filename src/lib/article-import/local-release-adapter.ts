@@ -14,7 +14,7 @@ export type ReleaseCommandRunner = (command: string, args: readonly string[]) =>
 export type ReleaseJsonFetcher = (url: string) => Promise<Record<string, unknown>>;
 
 function defaultRunner(repositoryRoot: string): ReleaseCommandRunner {
-  return async (command, args) => execFile(command, [...args], { cwd: repositoryRoot, windowsHide: true, maxBuffer: 2_000_000 });
+  return async (command, args) => execFile(command, [...args], { cwd: repositoryRoot, windowsHide: true, maxBuffer: 2_000_000, shell: true });
 }
 
 function sha(value: string): string { return value.trim().split(/\s+/)[0] ?? ""; }

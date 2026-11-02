@@ -21,24 +21,24 @@
     "placement": "above_first_cta"
   },
   "hero": {
-    "headline": "Give each client a clearer workspace",
-    "subheadline": "WebCatalog is a candidate for people organizing several web apps and accounts. Evaluate it with one client workflow before moving everything. The decision is whether its desktop apps, profiles and spaces make your own work easier to navigate.",
-    "primary_cta_label": "Explore WebCatalog",
+    "headline": "Keep each client workspace easier to read",
+    "subheadline": "WebCatalog may suit people who manage several web apps and accounts. Test it with one client workflow before moving your wider setup. The decision is whether its desktop apps, profiles and spaces make your work easier to follow.",
+    "primary_cta_label": "Review WebCatalog",
     "primary_cta_link_id": "35c8a2e7-3847-45c0-ab42-577e246ddf35",
     "risk_reversal": "Check current terms and suitability before committing.",
     "social_proof_summary": null,
-    "answer_snippet": "WebCatalog is a candidate for people organizing several web apps and accounts. Evaluate it with one client workflow before moving everything. The decision is whether its desktop apps, profiles and spaces make your own work easier to navigate.",
+    "answer_snippet": "WebCatalog may suit people who manage several web apps and accounts. Test it with one client workflow before moving your wider setup. The decision is whether its desktop apps, profiles and spaces make your work easier to follow.",
     "visual_asset": null
   },
   "problem_solution": {
-    "problem": "Which account and project should be open right now?",
-    "agitation": "Adding another tool is only useful if the arrangement remains understandable when work is interrupted.",
-    "solution": "Start with one project and a short list of daily tasks. Compare completing those tasks in your existing browser setup with completing them in WebCatalog."
+    "problem": "Which account and project needs your attention now?",
+    "agitation": "A new tool helps only when the arrangement still makes sense after an interruption.",
+    "solution": "Pick one project and a few daily tasks. Compare those tasks in your current browser setup and in WebCatalog."
   },
   "benefits": [
     {
-      "benefit_title": "Check your workspace needs",
-      "benefit_description": "List the apps, accounts and project groups you need before choosing a plan.",
+      "benefit_title": "List the workspace you need",
+      "benefit_description": "Write down the apps, accounts and project groups you use before choosing a plan.",
       "feature_supporting_it": "Desktop apps, profiles and spaces",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
@@ -46,8 +46,8 @@
       "visual_asset": null
     },
     {
-      "benefit_title": "Separate individual and team needs",
-      "benefit_description": "Decide whether you need a personal arrangement or a shared setup maintained for colleagues.",
+      "benefit_title": "Separate personal and team needs",
+      "benefit_description": "Decide whether you need a personal arrangement or a shared setup for colleagues.",
       "feature_supporting_it": "Shared spaces appear in the Business plan",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
@@ -55,8 +55,8 @@
       "visual_asset": null
     },
     {
-      "benefit_title": "Make a small evaluation",
-      "benefit_description": "Try one representative workflow and note any login, notification or navigation problems.",
+      "benefit_title": "Run a small evaluation",
+      "benefit_description": "Try one representative workflow and note login, notification, or navigation friction.",
       "feature_supporting_it": "Basic has 2 desktop apps, 2 profiles and 1 space",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
@@ -77,18 +77,18 @@
   "how_it_works": [
     {
       "step_number": 1,
-      "title": "Choose a representative project",
-      "description": "Use a project with two accounts you regularly confuse. Record the tasks you need to complete."
+      "title": "Pick a representative project",
+      "description": "Choose a project with two accounts you often mix up. Write down the tasks you need to finish."
     },
     {
       "step_number": 2,
-      "title": "Build a small arrangement",
-      "description": "Name each account and project clearly. Check that you can recognize the active context before sending or editing anything."
+      "title": "Set up a small arrangement",
+      "description": "Name each account and project clearly. Confirm the active context before you send or edit anything."
     },
     {
       "step_number": 3,
-      "title": "Compare a normal work session",
-      "description": "Record setup effort, interruptions and resource usage on your own device. Keep your existing setup if the new one adds friction."
+      "title": "Compare a normal session",
+      "description": "Record setup effort and resource use across interruptions. Keep the current setup if the new one adds friction."
     }
   ],
   "limitations": [
@@ -108,7 +108,7 @@
   "objection_handling": [
     {
       "objection": "What would make this a poor fit?",
-      "response": "Compare with your current browser profiles before paying for a separate workspace tool.",
+      "response": "Compare it with your current browser profiles before paying for another workspace tool.",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
       ]
@@ -117,29 +117,29 @@
   "cta_blocks": [
     {
       "placement": "closing",
-      "label": "Explore WebCatalog",
-      "supporting_text": "Use your own workflow to make the decision.",
+      "label": "Review WebCatalog",
+      "supporting_text": "Use one of your own workflows to decide.",
       "affiliate_link_id": "35c8a2e7-3847-45c0-ab42-577e246ddf35"
     }
   ],
   "faq": [
     {
       "question": "Will it use less memory than my browser?",
-      "answer": "We have not measured that. Compare the same apps and workload on your own device; do not assume an app container is lighter.",
+      "answer": "We have not measured that. Compare the same apps and workload on your device, and do not assume an app container is lighter.",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
       ]
     },
     {
       "question": "Should I choose a shared setup?",
-      "answer": "First agree who maintains it and which client accounts may be included. Then verify that the current plan supports your collaboration needs.",
+      "answer": "Agree who will maintain it and which client accounts may be included. Then check whether the current plan supports your collaboration needs.",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
       ]
     },
     {
       "question": "What is the review based on?",
-      "answer": "This review uses official documentation checked on 13 October 2026. The workflow checks are editorial suggestions, not test results.",
+      "answer": "This review uses official documentation checked on 13 October 2026. The workflow checks are editorial guidance, not test results.",
       "source_reference_ids": [
         "3d6682a0-ad6e-4898-a956-cb86c7c00eb1"
       ]
