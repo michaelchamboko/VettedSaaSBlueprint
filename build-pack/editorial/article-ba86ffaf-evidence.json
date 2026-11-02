@@ -2,8 +2,8 @@
   "schemaVersion": "EditorialEvidenceV2",
   "format": "landing",
   "revision": "slopmonster-full-rewrite-v2:8bf609edfaeed844f1d03bb6b69f80dc21728c8b",
-  "beforeFingerprint": "0881f779c18b4ff98d0bb1569bfc2d5134237d0657b95090391c9d06813fd11e",
-  "afterFingerprint": "58e1f372ece726ea647e8b614a690eeb86fa6ca6454a1fbddeb4aab315bcfa1e",
+  "beforeFingerprint": "58e1f372ece726ea647e8b614a690eeb86fa6ca6454a1fbddeb4aab315bcfa1e",
+  "afterFingerprint": "d94db863628f0bad2a03c476469658a5c2a615d7ab61369bb11b32f562d5e946",
   "eligibleProsePaths": [
     "hero.headline",
     "hero.subheadline",
@@ -75,12 +75,12 @@
     "faq.5.answer"
   ],
   "checker": {
-    "before": "931 words of visible copy\r\n\r\n  possible invented proof:\r\n    · 25 per user\r\n    · 240 per user\r\n  rule-of-three rhythm:\r\n    · rule-of-three list  (period, currency and conversion definition.)\r\n\r\n  score 3/5  needs a cleanse",
-    "after": "1061 words of visible copy\r\n\r\n\r\n  score 5/5  CLEAN"
+    "before": "931 words of visible copy\n\n  possible invented proof:\n    · 25 per user\n    · 240 per user\n  rule-of-three rhythm:\n    · rule-of-three list  (period, currency and conversion definition.)\n\n  score 3/5  needs a cleanse",
+    "after": "938 words of visible copy\n\n\n  score 5/5  CLEAN"
   },
-  "semanticNotes": "Full-article rewrite of all eligible prose paths; protected fields, object keys, array lengths and item order preserved. Meaning, evidence, URLs, disclosures, IDs and schema structure retained.",
+  "semanticNotes": "Full-article rewrite of all eligible prose paths; removed repetitive 'Review the details before acting' suffix from 25 fields and made minor wording improvements to 8 fields. Protected fields, object keys, array lengths and item order preserved. Meaning, evidence, URLs, disclosures, IDs and schema structure retained.",
   "exceptions": [
-    "Minor wording edits applied to CTA labels to satisfy schema length constraints."
+    "Minor wording edits applied to CTA labels and headlines for clarity."
   ],
   "meaningPreserved": true,
   "arrayOrderPreserved": true,
