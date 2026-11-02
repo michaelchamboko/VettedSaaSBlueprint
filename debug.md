@@ -166,3 +166,24 @@ The owner explicitly approved including the additional release-blocking failures
 - Dry-run intelligence snapshot for the working tree: key `106ff5f01c8a16821617e91a375f6305599c114d5efc89dd77e9d6b9171a39b3`, base commit `81f3993e931aae2a08992b73cf130cd5f8ec4ab5`, manifest `fa4d058c60c874aa412936248e7298539d946988bb2023ee47a79a2943568d53`, graph `13fc7548dcc06c241446c8cc89e5e1daed170d47d0bf644ba17842fa9f264045`, 3455 nodes and 12577 edges. No database mutation was performed.
 
 Continuation instruction: `docs/opencode-webcatalog-continuation.md`. It requires logging each repair and verification, genuine presentation evidence, and commit/deployment alignment before the bound article resumes. No article intake was executed during this repair.
+
+## ISSUE-20261102-003 — Diginius editorial voice and presentation evidence
+
+Context: Owner reported that the published Diginius page did not sound like Dr Eleanor Hayes and did not visibly reflect the approved design guidance. Scope is limited to this page; no other article is being processed.
+
+Raw evidence:
+- Live canonical page returned HTTP 200, but the rendered page contained `Review the details before acting.` 26 times, including 9 section headings.
+- `src/generated/landing-pages/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring.json` contained the same sentence across problem/solution, benefits, workflow titles/descriptions, objections, CTA support, and FAQ answers. The proof block also referred to a `supplied draft`, an internal drafting phrase.
+- The page presentation recipe referenced the approved `lp-ref-0002`, `lp-ref-0029`, and `lp-ref-0030` records and the existing `reference_composed_v1` renderer. The historical visual review was for an earlier commit and its mode recorded CLI critique/audit as `Unknown command`; no current-revision desktop/mobile capture or independent rubric result was bound to the published revision.
+
+Diagnosis:
+- Confirmed editorial failure: a broad refinement mutation introduced repetitive, internal-sounding closure language into prose and headings. Earliest observed stage: post-draft refinement; later CLEAN scoring did not assess usefulness, voice, or heading integrity.
+- Confirmed evidence gap: release allowed a stale presentation review and unsupported command status to stand as current evidence. The existing renderer and approved recipe remain in scope; no evidence supports a site-wide redesign.
+
+The page-artifact rewrite was intentionally not retained after owner clarification: this task is a workflow correction, not a page rebuild. No new editorial or release receipt is claimed for the page.
+
+Automation correction (owner clarification): the objective is prevention in the next OpenCode run, not a renderer redesign. Added two fail-closed guards:
+- `assertEditorialVoiceSignals` rejects the demonstrated injected closure (`Review the details before acting`) and internal drafting/model phrases such as `supplied draft` before EditorialEvidenceV2 can be created; it also rejects repeated long sentences across editable prose.
+- `pageDesignValidationSchema` rejects presentation evidence whose notes say a required check was unknown/not run/unavailable and requires explicit `desktop` and `mobile` inspection notes, so boolean attestations cannot stand alone.
+
+Regression coverage was added for both guards. The page copy correction remains limited to the demonstrated Diginius artifact; no renderer or site-wide visual redesign was made.

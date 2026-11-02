@@ -45,7 +45,15 @@ export const pageDesignValidationSchema = z.object({
     askSonner: z.enum(["passed", "not_applicable"]),
   }).strict(),
   notes: z.string().min(1),
-}).strict();
+}).strict().superRefine((design, context) => {
+  const notes = design.notes.toLocaleLowerCase();
+  if (notes.includes("unknown command") || notes.includes("not run") || notes.includes("unavailable")) {
+    context.addIssue({ code: "custom", path: ["notes"], message: "Presentation evidence cannot pass when a required design check was unavailable or not run." });
+  }
+  for (const viewport of ["desktop", "mobile"]) {
+    if (!notes.includes(viewport)) context.addIssue({ code: "custom", path: ["notes"], message: `Presentation notes must record the ${viewport} inspection.` });
+  }
+});
 
 export const importPresentationValidationSchema = z.object({
   schemaVersion: z.literal("ImportPresentationValidationV1"),

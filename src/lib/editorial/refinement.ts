@@ -114,6 +114,29 @@ export function editorialProsePaths(format: string, value: unknown): string[] {
   return paths;
 }
 
+/**
+ * Deterministic guardrails for the full-article rewrite. A CLEAN score is a
+ * necessary wording check, not proof that a rewrite is usable. These checks
+ * catch the two failure modes that previously reached publication: a repeated
+ * stock sentence injected into many fields and internal drafting language.
+ */
+export function assertEditorialVoiceSignals(format: string, value: unknown): void {
+  const prose = editorialProse(format, value);
+  const sentences = prose
+    .split(/[.!?]+/)
+    .map((sentence) => sentence.trim().replace(/\s+/g, " ").toLocaleLowerCase())
+    .filter((sentence) => sentence.length >= 10);
+  const counts = new Map<string, number>();
+  for (const sentence of sentences) counts.set(sentence, (counts.get(sentence) ?? 0) + 1);
+  const repeated = [...counts.entries()].filter(([, count]) => count >= 3).map(([sentence]) => sentence);
+  if (repeated.length > 0) {
+    throw new Error(`Editorial voice guard rejected repeated prose sentence(s): ${repeated.slice(0, 3).join(" | ")}`);
+  }
+  if (/\b(?:review\s+the\s+details\s+before\s+acting|supplied\s+draft|draft['’]s|as\s+an\s+ai|generated\s+copy|placeholder\s+text)\b/i.test(prose)) {
+    throw new Error("Editorial voice guard rejected internal drafting or model language in editable prose.");
+  }
+}
+
 const rewritePassesSchema = z.object({
   purposeAndStructure: z.literal(true),
   meaningAndEvidence: z.literal(true),
@@ -174,6 +197,7 @@ export function createEditorialEvidence(
   notes: unknown, checker: { before: string; after: string },
 ) {
   const changedPaths = compareEditorialArtifacts(format, before, after);
+  assertEditorialVoiceSignals(format, after);
   const review = notesSchema.parse(notes);
   const eligibleProsePaths = editorialProsePaths(format, before);
   const unchangedPaths = eligibleProsePaths.filter((path) => !changedPaths.includes(path));
