@@ -25,7 +25,7 @@ export const validPageDesignReceipt = {
     pickUiLibrary: "not_applicable",
     askSonner: "not_applicable",
   },
-  notes: "The fixture models a changed page using the established design authority.",
+  notes: "The fixture models a changed page using the established reference design authority; desktop and mobile inspections were recorded.",
 } as const;
 
 export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {

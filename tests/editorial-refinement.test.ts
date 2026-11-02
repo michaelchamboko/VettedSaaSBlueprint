@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
-  canReuseEditorialEvidence, compareEditorialArtifacts, createEditorialEvidence, editorialProse, editorialProsePaths,
+  assertEditorialVoiceSignals, canReuseEditorialEvidence, compareEditorialArtifacts, createEditorialEvidence, editorialProse, editorialProsePaths,
 } from "../src/lib/editorial/refinement";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
@@ -144,6 +144,19 @@ test("full rewrite evidence rejects partial cleanup, same-family review and a no
     { ...notes, cleanseModelFamily: notes.writerModelFamily }, { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" }), /different model family/);
   assert.throws(() => createEditorialEvidence("landing", samplePageBlueprint, revised, notes,
     { before: "score 4/5 needs a cleanse", after: "score 4/5 needs a cleanse" }), /5\/5 CLEAN/);
+});
+
+test("voice guard rejects repeated injected prose and internal drafting language", () => {
+  const repeated = structuredClone(samplePageBlueprint);
+  const injected = "Review the details before acting on this decision.";
+  repeated.hero.subheadline = injected;
+  repeated.problem_solution.agitation = injected;
+  repeated.problem_solution.solution = injected;
+  assert.throws(() => assertEditorialVoiceSignals("landing", repeated), /Editorial voice guard/);
+
+  const internal = structuredClone(samplePageBlueprint);
+  internal.hero.answer_snippet = "Do not rely on the supplied draft when making this decision.";
+  assert.throws(() => assertEditorialVoiceSignals("landing", internal), /internal drafting/);
 });
 
 test("vendored upstream bytes match pinned Git blob hashes", () => {
