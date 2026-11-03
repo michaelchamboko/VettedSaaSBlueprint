@@ -45,6 +45,12 @@ Unfinished editorial work alone is not a durable blocker. A demonstrated obstacl
 
 This instruction-only amendment authorizes changes to `AGENTS.md`, the external-article-import skill, and supporting review/evidence documents. It also authorizes recovery inspection and completion of the existing import `article-c23a6320-0ba7-45e3-88dd-9160ce979f18` in snapshot `intake-c8e12e5b-e280-41d4-8cf5-e10a780cb9d1`, subject to verified persisted state and available capabilities. It adds no runtime code, schema, schedule, source-strategy change, or release authority. Intake execution remains confined to the primary checkout. The agreed brief, plan, and actual EGM findings are in `docs/designs/editorial-work-continuation/`.
 
+### Research recovery and dependency security amendment, 2026-11-03
+
+Classification: explicit product-owner directive.
+
+Combine the remaining dependency security repairs from PR #45 with mandatory research recovery in the existing article-to-page workflow. Missing or invalid research must require actual research and revalidation. Return downstream work to RESEARCHING and invalidate dependent approvals before release starts; preserve existing release attempts for verified integrity recovery. Preserve valid evidence reuse, source snapshots, retry/diagnosis rules, model identities, independent review and release gates. Add focused regression tests and explicit supervisor instructions. This authorizes the combined PR, merge and deployment after required checks and current-head review, followed by cleanup of obsolete clean merged worktrees. Preserve dirty or unmerged worktrees. Provide a continuation instruction for the existing automation after deployment; do not run real article imports or create schedules during implementation.
+
 ## Binding scope
 
 ### Verified automation model configuration, 2026-11-03

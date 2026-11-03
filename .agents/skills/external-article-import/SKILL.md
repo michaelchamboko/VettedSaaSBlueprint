@@ -49,6 +49,20 @@ The Codex heartbeat is the supervising agent. The CLI executes local gates; it d
 4. For release, let the adapter create the PR and record its head. Obtain independent current-head Codex review, write its `ImportCodeReviewV1` receipt and add `codeReviewPath` to the release result. After the current head passes review and required gates, the existing release policy permits automatic merge and deployment; owner authority remains separate from merge mechanics.
 5. Before reporting completion, run `npm run import:article -- --check-completion <import-id>`. Only `COMPLETE` is completion. `WORK`, `REPAIR`, and `WAIT` require the agent to continue or resume at the persisted deadline; `BLOCKED` requires the recorded scope, attempted recovery, and exact resumption requirement. Progress messages and packet creation never count as completion.
 
+#### Complete research work before retrying
+
+This is a non-negotiable requirement. When research evidence is missing, invalid, stale or insufficient, the supervising agent must conduct research before retrying or advancing. A failed evidence gate is a research task, not permission to skip the article, declare missing work a blocker, or fabricate a receipt.
+
+1. Read the failure diagnostics and identify the affected claims. Follow D08, sections 3, 12, 24, 26, 29 and 33, together with the active manual/API workflow. Check existing dossiers and retained evidence first; reuse only evidence that remains valid, relevant and current for the decision.
+2. Conduct targeted gap research. Use last30days for recent-market and customer-language discovery where relevant, and Scrapling or an approved alternate acquisition method for primary-source capture. Discovery summaries and community discussion do not establish product facts. Follow each invoked provider's installed instructions and preserve unavailable-source errors and fallback attempts. Keep the existing free-first and configured-model boundaries.
+3. Verify material claims against attributable primary sources. Retain source bytes, retrieval dates, exact supporting excerpts, applicability, conflicts, limitations and freshness in the bound ResearchEvidenceV2. Prices require currency, billing period, plan and restrictions. Do not invent testing experience.
+4. Narrow, qualify or remove unsupported claims after researching them. If the supplied article has no defensible core, research a fresh article on the same viable topic. Quarantine is not a shortcut for failed evidence or unavailable first-choice sources.
+5. Write the exact bound packet result atomically and resume the same import. Do not resubmit unchanged failing evidence. After three failed repairs, retain the diagnosis and complete the verified remedy before retrying. New research invalidates dependent assessment, editorial approval, presentation and release evidence; complete those gates again.
+
+If research fails after a release attempt exists, preserve its structured journal and known-good rollback target. Conduct research and reconcile the existing attempt through explicit verified integrity recovery before further release actions. Do not clear a merged or deployed attempt to make a retry look new.
+
+A demonstrated access or capability obstacle must retain its cause, attempted alternate recovery and exact resumption requirement. Preserve existing wait deadlines, leases, snapshot order, retry counters and blocker recovery rules. Never bypass the research gate because a tool is unavailable. No new schedule or automatic article trigger is authorized.
+
 #### Complete editorial work before retrying
 
 Missing or invalid `EditorialEvidenceV2` is unfinished agent work. Complete `.agents/skills/eleanor-editorial/SKILL.md`, which remains authoritative for the editorial procedure, before submitting another validation result. Never substitute `LandingEditorialReviewV1`, another article's evidence, or fabricated attestations. Submit the current artifact, its genuine matching editorial receipt, required quality evidence, and correctly bound work packet.

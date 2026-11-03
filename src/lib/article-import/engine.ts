@@ -9,8 +9,8 @@ import { externalArticleImportSchema, type ExternalArticleImportV1, type Failure
 import { createImportPresentation, verifyImportPresentationEvidence } from "./presentation";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
-import { WORKFLOW_REVISION } from "./workflow-requirements";
-import { evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence } from "./workflow-evidence";
+import { RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
+import { evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateResearchEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
 
@@ -328,12 +328,14 @@ export async function executePendingImport(repositoryRoot: string, importId: str
   if (!lease) return loadImport(repositoryRoot, importId);
   try {
     return await activeLease.run(lease, async () => {
-      const current = await loadImport(repositoryRoot, importId);
+      let current = await loadImport(repositoryRoot, importId);
       assertCurrentImport(current);
       if (["LIVE", "QUARANTINED"].includes(current.stage)) {
         if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
         return current;
       }
+      if (current.continuation?.kind === "blocked") return current;
+      if (current.continuation?.kind !== "wait" && !(current.continuation?.kind === "repair" && current.continuation.diagnosisRequired)) current = await ensureImportResearch(repositoryRoot, current);
       if (current.continuation?.kind === "blocked") return current;
       if (current.continuation?.kind === "repair") {
         const repair = current.continuation;
@@ -353,10 +355,13 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       }
       if (current.unusableReason) return quarantineUnusableImport(repositoryRoot, current);
       const record = await resumeImport(repositoryRoot, current);
+      if (record.continuation?.kind === "blocked") return record;
       const group = strategyGroup(record.stage);
       const failures = record.strategyAttempts[group] ?? 0;
       const strategy = STRATEGIES[group][Math.min(Math.floor(failures / 3), STRATEGIES[group].length - 1)];
-      const idempotencyKey = fingerprint(`${importId}:${record.sourceFingerprint}:${record.stage}:${strategy}`);
+      const recoveryGeneration = record.stageReceipts.filter((receipt) => receipt.stage === "RESEARCHING" && receipt.message.startsWith("RESEARCH_RECOVERY_REQUIRED:")).length;
+      const recoveryBinding = record.stage === "RESEARCHING" && recoveryGeneration ? `:research-recovery-${recoveryGeneration}` : "";
+      const idempotencyKey = fingerprint(`${importId}:${record.sourceFingerprint}:${record.stage}:${strategy}${recoveryBinding}`);
       await lease.assertOwned();
       let result: ExternalArticleImportV1;
       try {
@@ -387,12 +392,13 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
   const at = now();
   const stageTotal = (record.repairStageTotals?.[record.resumeStage ?? record.stage] ?? 0) + 1;
   const diagnostic = stageTotal >= 3;
+  const researchRecovery = record.stage === "RESEARCHING" || input.message.includes("ASSESSMENT_RULE_FAILED:claims") ? ` ${RESEARCH_RECOVERY_INSTRUCTION}` : "";
   const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
   const submittedFingerprint = await canonicalSubmissionFingerprint(record, repositoryRoot);
   if (record.continuation?.kind === "repair" && record.continuation.submittedFingerprint === submittedFingerprint) return record;
-  const updated = externalArticleImportSchema.parse({ ...record, repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
+  const updated = externalArticleImportSchema.parse({ ...record, repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: (diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
     stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
-    nextAction: diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`,
+    nextAction: (diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`) + researchRecovery,
   });
   await saveImport(repositoryRoot, updated);
   return updated;
@@ -537,7 +543,7 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
     record = checked;
   }
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, continuation: undefined, blockerScope: undefined, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
+  const updated = externalArticleImportSchema.parse({ ...record, continuation: undefined, resumeStage: undefined, blockerScope: undefined, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
@@ -595,8 +601,49 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
   return deleteRawSource(repositoryRoot, updated.importId, updated, at);
 }
 
+/** Invalid research invalidates every dependent approval before more work or release side effects. */
+async function ensureImportResearch(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  const productiveStage = ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK"].includes(record.stage) ? record.resumeStage : record.stage;
+  if (!productiveStage || !["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING", "VERIFYING"].includes(productiveStage)) return record;
+  try {
+    if (!record.evidenceRefs?.research) throw new Error("WORKFLOW_EVIDENCE_REQUIRED:research");
+    await validateResearchEvidence(repositoryRoot, record.evidenceRefs.research, record);
+    const lastFailure = record.stageReceipts.at(-1);
+    if (lastFailure?.status === "failed" && lastFailure.message.includes("ASSESSMENT_RULE_FAILED:claims")) throw new Error("ASSESSMENT_RULE_FAILED:claims");
+    return record;
+  } catch (error) {
+    if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;
+    const at = now();
+    const cause = error instanceof Error ? error.message : String(error);
+    if (record.pendingRelease || record.release) {
+      const blocked = externalArticleImportSchema.parse({ ...record, updatedAt: at, blockerScope: "shared",
+        continuation: { kind: "blocked", scope: "shared", cause: `STATE_INTEGRITY: research failed during an existing release: ${cause}`,
+          attemptedRecovery: "Revalidated retained research and preserved the existing release journal and rollback target.",
+          resumptionRequirement: "Conduct research and restore authentic, matching research evidence for this release; reconcile any merged or deployed attempt and its rollback target before explicit verified recovery." },
+        stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message: `RESEARCH_RECOVERY_REQUIRED: ${cause}. Existing release requires verified integrity recovery.` }],
+        nextAction: `${RESEARCH_RECOVERY_INSTRUCTION} Preserve the existing release journal and rollback target; complete explicit verified recovery before further release actions.`,
+      });
+      await saveImport(repositoryRoot, blocked);
+      return blocked;
+    }
+    // Retain the prior references in history; the files themselves are never deleted.
+    const prior = { stage: record.stage, evidenceRefs: record.evidenceRefs, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release };
+    const updated = externalArticleImportSchema.parse({ ...record, stage: "RESEARCHING", resumeStage: undefined,
+      evidenceRefs: {}, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined,
+      continuation: undefined, blockerScope: undefined, updatedAt: at,
+      stageReceipts: [...record.stageReceipts, { stage: "RESEARCHING", status: "failed", at,
+        message: `RESEARCH_RECOVERY_REQUIRED: ${cause}. Invalidated dependent evidence: ${JSON.stringify(prior)}` }],
+      nextAction: RESEARCH_RECOVERY_INSTRUCTION,
+    });
+    await saveImport(repositoryRoot, updated);
+    return updated;
+  }
+}
+
 export async function resumeImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
   assertCurrentImport(record);
+  record = await ensureImportResearch(repositoryRoot, record);
+  if (record.continuation?.kind === "blocked") return record;
   if (["VALIDATING", "RELEASING", "VERIFYING"].includes(record.resumeStage ?? record.stage)) {
     const checked = await ensureImportContentApproval(repositoryRoot, record);
     if (!checked.contentApproval) return checked;

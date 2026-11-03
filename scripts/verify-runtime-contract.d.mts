@@ -5,6 +5,7 @@ export type RuntimeContractPackageJson = {
   };
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  packageManager?: string;
 };
 
 export type RuntimeContractPackageLock = {
@@ -17,6 +18,9 @@ export type RuntimeContractInput = {
   packageLock?: RuntimeContractPackageLock;
   workflowText?: string;
   nodeVersionFile?: string;
+  vercelJson?: {
+    installCommand?: string;
+  };
 };
 
 export declare function validateRuntimeContract(args: RuntimeContractInput): { errors: string[] };
