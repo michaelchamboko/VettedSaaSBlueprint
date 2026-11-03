@@ -64,6 +64,16 @@ export function artifactProseProjection(format: string, artifact: unknown): Reco
   if (!selected) throw new Error("EVIDENCE_FORMAT_UNSUPPORTED");
   return Object.fromEntries(editorialProsePaths(selected, artifact).map((key) => [key, z.string().parse(atPath(artifact, key))]));
 }
+/** Assess the whole page contract and retained sources, not only editorially editable prose. */
+export async function contentAssessmentReviewInput(root: string, artifact: unknown, researchEvidence: unknown, researchRef: EvidenceRef): Promise<Record<string, string>> {
+  const research = researchEvidenceSchema.parse(researchEvidence);
+  const sourceSnapshots = [];
+  for (const source of research.sources) {
+    await verifyEvidenceRef(root, source.snapshotRef);
+    sourceSnapshots.push({ sourceId: source.id, ref: source.snapshotRef, text: (await readEvidenceBytes(root, source.snapshotRef.path)).toString("utf8") });
+  }
+  return { artifact: JSON.stringify(artifact), research: JSON.stringify(research), researchRef: JSON.stringify(evidenceRefSchema.parse(researchRef)), sourceSnapshots: JSON.stringify(sourceSnapshots) };
+}
 async function artifactFor(root: string, binding: EvidenceBinding): Promise<unknown> {
   if (!binding.artifactPath) throw new Error("EVIDENCE_ARTIFACT_REQUIRED");
   const value: unknown = JSON.parse((await readEvidenceBytes(root, binding.artifactPath)).toString("utf8"));
@@ -109,8 +119,9 @@ export async function validateContentAssessment(root: string, ref: EvidenceRef, 
     for (const evidence of finding.evidenceRefs) await verifyEvidenceRef(root, evidence);
   }
   const execution = await validateExecutionEvidence(root, value.reviewerExecutionRef);
-  if (execution.kind !== "opencode" || proseProjectionDigest(execution.input) !== proseProjectionDigest(artifactProseProjection(binding.format, artifact))) throw new Error("ASSESSMENT_EXECUTION_MISMATCH");
-  const assessed = { intent: value.intent, claimCoverage: value.claimCoverage, ruleResults: value.ruleResults, findings: value.findings };
+  const reviewInput = await contentAssessmentReviewInput(root, artifact, research, value.researchRef);
+  if (execution.kind !== "opencode" || execution.pass !== "content-assessment" || proseProjectionDigest(execution.input) !== proseProjectionDigest(reviewInput) || !execution.inputRefs.some((ref) => ref.path === value.researchRef.path && ref.sha256 === value.researchRef.sha256)) throw new Error("ASSESSMENT_EXECUTION_MISMATCH");
+  const assessed = { format: value.format, schemaRevision: value.schemaRevision, artifactFingerprint: value.artifactFingerprint, sourceFingerprint: value.sourceFingerprint, requirementRevision: value.requirementRevision, researchRef: value.researchRef, intent: value.intent, claimCoverage: value.claimCoverage, ruleResults: value.ruleResults, findings: value.findings };
   if (execution.output.assessment !== JSON.stringify(assessed)) throw new Error("ASSESSMENT_JUDGMENT_MISMATCH");
   // Final assessments are repeated in REFINING; either authentic stage packet is valid.
   try { assertPacket(execution.packetId, binding, "TRANSFORMING"); } catch { assertPacket(execution.packetId, binding, "REFINING"); }

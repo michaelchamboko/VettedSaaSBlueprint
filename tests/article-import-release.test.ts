@@ -23,6 +23,25 @@ const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated
 const fixtureImports = new Map<string, { importId: string; sourceFingerprint: string; format: ExternalArticleImportV1["format"]; artifactPath: string }>();
 const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\n\nThis is a sufficiently long article body for the release coordinator test and its deterministic validation path.\n";
 
+test("merged rendering changes stop release before deployment or rollback", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-merged-rendering-"));
+  try {
+    const record = await releasingRecord(root);
+    let deployments = 0;
+    let rollbacks = 0;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true,
+      artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root, {
+        checkoutMergedCommit: async () => { await writeFile(path.join(root, "src/app/globals.css"), "body { color: red; }"); },
+        deploy: async () => { deployments += 1; throw new Error("must not deploy stale presentation"); },
+        rollback: async () => { rollbacks += 1; return { ok: true, summary: "must not need rollback" }; },
+      }) });
+    assert.equal(result.status, "REPAIRING");
+    assert.ok(result.reasons.some((reason) => reason.includes("RENDER_INPUT_CHANGED:src/app/globals.css")), result.reasons.join("; "));
+    assert.equal(deployments, 0);
+    assert.equal(rollbacks, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("presentation validation fails closed without complete Impeccable evidence", () => {
   const base = { schemaVersion: "ImportPresentationValidationV1", format: "blog", artifactFingerprint: "a".repeat(64), renderedRoutes: ["/blog/example"], checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true }, evidencePaths: ["build-pack/evidence.json"], notes: "Candidate proof." };
   assert.throws(() => importPresentationValidationSchema.parse(base));

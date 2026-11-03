@@ -17,3 +17,7 @@ The fresh-context reviewer completed exact-head review of `ce1288b` and reported
 Integration tests also found a submission-digest bug: public route paths were treated as evidence files during repair. Discovery now follows typed evidence references and explicit file fields. The regression confirms that public routes are ignored while changed dependency bytes still change the submission digest.
 
 No article or publication authority was exercised. The owner restricted this work to automation code and synthetic verification; commits remain local.
+
+## PR 57 follow-up
+
+After the owner authorized merge and deployment, GitHub Codex review of `3c8d804` identified three further P1 gaps. The corrections bind full assessment inputs and source snapshots to the captured exchange and judgment, preserve work-packet dependencies across work-to-repair transitions, and repeat workflow validation on the merged checkout before deployment. The targeted assessment suite passed 13 tests, the repair suite passed 7, and the merged-rendering regression passed with zero deploy or rollback calls. The updated head requires fresh PR review and full validation before merge. Real article runs remain outside the authorization.

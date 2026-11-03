@@ -9,6 +9,7 @@ import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { recoverWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import { storeEvidence } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution } from "../src/lib/article-import/execution-evidence";
+import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch"); await mkdir(parent, { recursive: true });
@@ -97,6 +98,34 @@ test("repair digest ignores public route paths and binds transitive evidence byt
     assert.notEqual(await canonicalSubmissionFingerprint(record, root), before);
     const repaired = await recordImportRepair(root, record, { strategy: "release", message: "Synthetic release validation failure" });
     assert.equal(repaired.continuation?.kind, "repair");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("supervised work-to-repair transition preserves digest and rejects unchanged resubmission", async () => {
+  const root = await fixture();
+  try {
+    const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
+    const supervised = createSupervisedImportExecutor(root);
+    let executions = 0;
+    const execute: typeof supervised = async (context) => { executions++; return supervised(context); };
+    const pending = await executePendingImport(root, record.importId, execute);
+    assert.ok(pending.continuation?.kind === "work");
+    const packet = pending.continuation;
+    await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [] }));
+    await writeFile(path.resolve(root, packet.resultPath), JSON.stringify({ idempotencyKey: packet.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Synthetic invalid research submission", work: { stage: "RESEARCHING", evidencePath: "research.json" } }));
+    const failed = await executePendingImport(root, record.importId, execute);
+    assert.ok(failed.continuation?.kind === "repair");
+    assert.equal(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
+    await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
+    assert.equal(executions, 2);
+    await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [{ url: "https://example.com/source" }] }));
+    assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
+    const retried = await executePendingImport(root, record.importId, execute);
+    assert.equal(executions, 3, "changed evidence reaches validation without granting passage");
+    assert.ok(retried.continuation?.kind === "repair");
+    assert.equal(await canonicalSubmissionFingerprint(retried, root), retried.continuation.submittedFingerprint);
+    await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
+    assert.equal(executions, 3);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

@@ -6,10 +6,10 @@ import os from "node:os";
 import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
-import { createEditorialEvidence } from "../src/lib/editorial/refinement";
+import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
-import { editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
-import { captureCommandExecution, evidenceReference, extractOpenCodeExecution, freezeEvidenceGraph, proseProjectionDigest, sha256, validateExecutionEvidence, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
+import { artifactProseProjection, contentAssessmentSchema, editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
+import { captureCommandExecution, evidenceReference, executionEvidenceSchema, extractOpenCodeExecution, freezeEvidenceGraph, proseProjectionDigest, sha256, validateExecutionEvidence, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
@@ -58,6 +58,47 @@ test("research rejects changed snapshot bytes and unsupported excerpts", async (
     await assert.rejects(validateResearchEvidence(root, await storeEvidence(root, id, value), record), /EXCERPT_MISMATCH/);
     await writeFile(path.join(root, value.sources[0].snapshotRef.path), "changed");
     await assert.rejects(validateResearchEvidence(root, record.evidenceRefs!.research!, record), /HASH_MISMATCH/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("rebinding assessment envelopes cannot reuse a prose-only review after metadata or disclosure changes", async () => {
+  const { root, record } = await fixture();
+  try {
+    const approved = contentAssessmentSchema.parse(await readEvidence(root, record.evidenceRefs!.assessment!));
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, approved.reviewerExecutionRef));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const bytes = await readFile(path.join(root, record.artifactPath!), "utf8");
+    for (const [field, replacement] of [["title_tag", "Unreviewed search title"], ["meta_description", "Unreviewed search summary"], ["robots", "noindex,nofollow"], ["canonical_url", "https://example.test/unreviewed"], ["full_disclosure", "A materially different disclosure."]] as const) {
+      const artifact = JSON.parse(bytes) as { metadata: Record<string, string>; affiliate_disclosure: Record<string, string> };
+      if (field === "full_disclosure") artifact.affiliate_disclosure[field] = replacement;
+      else artifact.metadata[field] = replacement;
+      await writeFile(path.join(root, record.artifactPath!), JSON.stringify(artifact));
+      const current = await evidenceReference(root, record.artifactPath!);
+      // Retarget only untrusted envelope refs/fingerprints; the captured model input stays unchanged.
+      const rebind = (refs: typeof execution.inputRefs) => refs.map((ref) => ref.path === current.path ? current : ref);
+      const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: rebind(execution.inputRefs), outputRefs: rebind(execution.outputRefs) });
+      const rebound = await storeEvidence(root, id, { ...approved, artifactFingerprint: fingerprintEditorialArtifact(artifact), reviewerExecutionRef });
+      await assert.rejects(validateContentAssessment(root, rebound, record), /ASSESSMENT_EXECUTION_MISMATCH/, field);
+    }
+    await writeFile(path.join(root, record.artifactPath!), bytes);
+    const legacyInput = artifactProseProjection(record.format, JSON.parse(bytes));
+    const legacyExecution = await storeEvidence(root, id, { ...execution, input: legacyInput, inputDigest: proseProjectionDigest(legacyInput) });
+    await assert.rejects(validateContentAssessment(root, await storeEvidence(root, id, { ...approved, reviewerExecutionRef: legacyExecution }), record), /ASSESSMENT_EXECUTION_MISMATCH/);
+    await validateContentAssessment(root, record.evidenceRefs!.assessment!, record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("rebinding a research receipt cannot retain the old captured assessment", async () => {
+  const { root, record } = await fixture();
+  try {
+    const approved = contentAssessmentSchema.parse(await readEvidence(root, record.evidenceRefs!.assessment!));
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, approved.reviewerExecutionRef));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const research = await readEvidence(root, approved.researchRef) as Record<string, unknown>;
+    const researchRef = await storeEvidence(root, id, { ...research, freshness: "Changed evidence qualification absent from the captured assessment." });
+    const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: execution.inputRefs.map((ref) => ref.sha256 === approved.researchRef.sha256 ? researchRef : ref) });
+    await assert.rejects(validateContentAssessment(root, await storeEvidence(root, id, { ...approved, researchRef, reviewerExecutionRef }), record), /ASSESSMENT_EXECUTION_MISMATCH/);
+    assert.ok(execution.input.research.includes("Fixed synthetic input"));
+    assert.ok(execution.input.sourceSnapshots.includes("Synthetic source supports this scoped fixture claim."));
+    await validateContentAssessment(root, record.evidenceRefs!.assessment!, record);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test("echo-like success output cannot replace the pinned checker, detector or scoped design review", async () => {

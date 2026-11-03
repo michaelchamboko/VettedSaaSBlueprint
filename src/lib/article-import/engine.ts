@@ -253,22 +253,24 @@ function strategyGroup(stage: ImportStage): string {
 export async function canonicalSubmissionFingerprint(record: ExternalArticleImportV1, root: string): Promise<string> {
   const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, artifactPath: record.artifactPath, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
   const files = new Set<string>();
+  const addFile = (file: string) => files.add(path.relative(path.resolve(root), path.resolve(root, file)).replaceAll("\\", "/"));
   // Explicit supervised-result/approval dependencies; never infer files from arbitrary article path keys.
   const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "evidencePath", "codeReviewPath", "workPath", "resultPath"]);
   function collect(value: unknown): void {
     if (!value || typeof value !== "object") return;
     const ref = evidenceRefSchema.safeParse(value);
-    if (ref.success) { files.add(ref.data.path); return; }
+    if (ref.success) { addFile(ref.data.path); return; }
     for (const [key, entry] of Object.entries(value)) {
-      if (fileFields.has(key) && typeof entry === "string") files.add(entry);
+      if (fileFields.has(key) && typeof entry === "string") addFile(entry);
       else collect(entry);
     }
   }
   collect(inputs);
-  if (record.continuation?.kind === "work") { files.add(record.continuation.workPath); files.add(record.continuation.resultPath); }
+  // Resolve persisted packets independently of continuation: recording a repair must not
+  // drop the work packet (or change path spelling/order) from the submitted byte set.
   const workDir = path.join(storeRoot(root), "work", record.importId);
-  for (const name of await readdir(workDir).catch((e: NodeJS.ErrnoException) => { if (e.code === "ENOENT") return []; throw e; })) {
-    if (name.endsWith(".result.json")) files.add(path.relative(root, path.join(workDir, name)));
+  for (const name of (await readdir(workDir).catch((e: NodeJS.ErrnoException) => { if (e.code === "ENOENT") return []; throw e; })).sort()) {
+    if (name.endsWith(".work.json") || name.endsWith(".result.json")) addFile(path.join(workDir, name));
   }
   for (const file of files) {
     const resolved = path.resolve(root, file);

@@ -514,6 +514,11 @@ export async function assessImportRelease(input: {
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
     requireImportPresentationBinding(mergedApproval);
+    const mergedWorkflow = await evaluateWorkflowEvidence(mergedApproval, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: input.artifactPath });
+    if (!mergedWorkflow.ok) {
+      await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout workflow evidence invalid: ${mergedWorkflow.diagnostics.join("; ")}` });
+      return { status: "REPAIRING", reasons: mergedWorkflow.diagnostics };
+    }
     pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha, operations: { ...pendingRelease.operations, review: { reviewedHeadSha: pullRequest.headRefOid, evidenceUrl: codeReview.evidenceUrl }, merge: { reviewedHeadSha: pullRequest.headRefOid, mergeCommitSha: commitSha } } };
     input.record = { ...input.record, pendingRelease };
     await saveImport(input.repositoryRoot, input.record);

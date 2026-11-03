@@ -1,7 +1,7 @@
 /** Synthetic adapter fixtures only. Never use these producers from the production CLI. */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { artifactProseProjection, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, contentAssessmentReviewInput, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
 import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION, workflowRequirements } from "../../src/lib/article-import/workflow-requirements";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../../src/lib/editorial/refinement";
@@ -29,14 +29,14 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const save = (value: unknown) => storeEvidence(root, record.importId, value);
   const packet = (stage: string) => sha256(`${record.importId}:${record.sourceFingerprint}:${stage}:${stage === "TRANSFORMING" ? "field-repair" : "targeted-repair"}`);
   const beforeRef = await save(input.before), afterRef = await evidenceReference(root, input.artifactPath);
-  async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>) {
-    const projection = artifactProseProjection(input.format, before), result = reviewOutput ?? artifactProseProjection(input.format, after);
+  async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>) {
+    const projection = assessmentInput ?? artifactProseProjection(input.format, before), result = reviewOutput ?? artifactProseProjection(input.format, after);
     const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : "REFINING");
     const instructions = (pass.startsWith("design:") ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
     return save(extractOpenCodeExecution({ info: { id: "fixture-session" }, messages: [
       { info: { id: "fixture-user", role: "user", sessionID: "fixture-session" }, parts: [{ type: "text", text: JSON.stringify({ packetId, pass, prose: projection, digest: proseProjectionDigest(projection), instructions }) }] },
       { info: { id: "fixture-assistant", role: "assistant", sessionID: "fixture-session", parentID: "fixture-user", providerID: "fixture", modelID: modelId, time: { created: 1793664000000, completed: 1793664001000 }, finish: "stop" }, parts: [{ type: "reasoning", text: "Must never be retained." }, { type: "text", text: JSON.stringify(result) }] },
-    ] }, { version: "1.19.4", sessionId: "fixture-session", userMessageId: "fixture-user", assistantMessageId: "fixture-assistant", packetId, pass, input: projection, output: result, families, instructions, inputRefs: [inputRef, ...(pass.startsWith("design:") && renderInputsRef ? [renderInputsRef] : [])], outputRefs: [outputRef] }));
+    ] }, { version: "1.19.4", sessionId: "fixture-session", userMessageId: "fixture-user", assistantMessageId: "fixture-assistant", packetId, pass, input: projection, output: result, families, instructions, inputRefs: [inputRef, ...(pass === "content-assessment" ? [research] : []), ...(pass.startsWith("design:") && renderInputsRef ? [renderInputsRef] : [])], outputRefs: [outputRef] }));
   }
   const researchSnapshot = await save({ source: "Synthetic source supports this scoped fixture claim." });
   const research = await save({ ...common, schemaVersion: "ResearchEvidenceV2", sources: [{ id: "source", url: "https://example.test/source", retrievedAt: now, snapshotRef: researchSnapshot }], claims: [{ id: "claim", text: "Synthetic source supports this scoped fixture claim.", sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: "Synthetic source supports this scoped fixture claim." }], limitations: ["Synthetic fixture; no real research."] }], freshness: "Fixed synthetic input for deterministic tests." });
@@ -53,8 +53,9 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   }
   const checkerExecutionRef = await save({ schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: EDITORIAL_REVISION, startedAt: now, completedAt: now, inputRefs: [afterRef, pinRef(checkerFile)], outputRefs: [], executable: "python", argv: [checkerFile, "--text", editorialProse(format[input.format], input.after)], cwd: root, stdout: "score 5/5 CLEAN", stderr: "", exitCode: 0 });
   const editorial = await save({ ...common, schemaVersion: "EditorialExecutionV1", format: input.format, editorialEvidenceRef: await evidenceReference(root, input.editorialEvidencePath), schemaRevision, eligibleProsePaths: paths, passes, checkerExecutionRef });
-  const assessed = { intent: { audience: "Fixture reader", decision: "Fixture decision", query: "Fixture query", pageType: input.format }, claimCoverage: [{ claimId: "claim", artifactPaths: [paths[0]] }], ruleResults: workflowRequirements.map((rule) => ({ ruleId: rule.id, revision: WORKFLOW_REVISION, status: "pass", rationale: "Synthetic assessment for pipeline tests.", evidenceRefs: [research] })), findings: [] };
-  const assessment = await save({ ...common, schemaVersion: "ContentAssessmentV1", format: input.format, artifactFingerprint: fingerprintEditorialArtifact(input.after), schemaRevision, ...assessed, researchRef: research, reviewerExecutionRef: await model("content-assessment", input.after, input.after, afterRef, afterRef, "writer", { assessment: JSON.stringify(assessed) }) });
+  const assessed = { format: input.format, schemaRevision, artifactFingerprint: fingerprintEditorialArtifact(input.after), sourceFingerprint: record.sourceFingerprint, requirementRevision: WORKFLOW_REVISION, researchRef: research, intent: { audience: "Fixture reader", decision: "Fixture decision", query: "Fixture query", pageType: input.format }, claimCoverage: [{ claimId: "claim", artifactPaths: [paths[0]] }], ruleResults: workflowRequirements.map((rule) => ({ ruleId: rule.id, revision: WORKFLOW_REVISION, status: "pass", rationale: "Synthetic assessment for pipeline tests.", evidenceRefs: [research] })), findings: [] };
+  const reviewInput = await contentAssessmentReviewInput(root, input.after, await readEvidence(root, research), research);
+  const assessment = await save({ ...common, schemaVersion: "ContentAssessmentV1", ...assessed, reviewerExecutionRef: await model("content-assessment", input.after, input.after, afterRef, afterRef, "writer", { assessment: JSON.stringify(assessed) }, reviewInput) });
   const rules = ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
   const target = importArtifactTarget(input.format, input.after);
   for (const file of [detectorCoreFiles[input.format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/fixture-renderer.css", "package-lock.json"]) {
