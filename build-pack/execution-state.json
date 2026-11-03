@@ -1181,7 +1181,7 @@
     {
       "id": "ARTICLE-HARDENING-002",
       "title": "Enforce local article workflow evidence and recovery gates",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [],
       "risk": "high",
       "risk_assessment": {
@@ -1234,9 +1234,10 @@
       ],
       "evidence": [],
       "evidence_refs": [
-        "docs/designs/article-automation-hardening/goldfish_review_report.md"
+        "docs/designs/article-automation-hardening/goldfish_review_report.md",
+        "docs/designs/article-automation-hardening/verification.md"
       ],
-      "operation_phase": "implementation",
+      "operation_phase": "committed",
       "publication": {
         "enabled": false
       },

@@ -8,7 +8,11 @@ The reviewer identified three P1 gaps:
 2. Editorial instruction references were detached from the captured model exchange. The correction includes actual pinned instruction text in the selected exchange and rejects missing or retroactively attached instructions.
 3. Presentation proof survived CSS or component changes. The correction captures renderer, source-data, asset and configuration inputs and rejects changed files or inventories. Historical proof uses frozen inputs rather than current files.
 
-Focused regression tests for these corrections have passed. Final exact-head review and full-suite results will be recorded in verification evidence after integration. This initial review is not a clean-head approval.
+Focused regression tests for these corrections passed. The initial review was not a clean-head approval.
+
+The next review at `fc6007e` found two remaining P1 issues. Repair digests omitted three submitted evidence paths, and detector captures could cover unrelated files. Commit `ce1288b` includes all three typed evidence paths and requires complete format-specific detector coverage. Work packets expose the same targets that validation requires.
+
+The fresh-context reviewer completed exact-head review of `ce1288b` and reported both findings resolved, with no remaining findings in the reviewed scope. It read the committed changes, surrounding implementation and regression assertions and confirmed a clean working tree. It did not run tests or live operations. The coordinating agent ran the checks recorded in `verification.md`.
 
 Integration tests also found a submission-digest bug: public route paths were treated as evidence files during repair. Discovery now follows typed evidence references and explicit file fields. The regression confirms that public routes are ignored while changed dependency bytes still change the submission digest.
 
