@@ -1,5 +1,6 @@
 /** Synthetic adapter fixtures only. Never use these producers from the production CLI. */
 import { mkdir, writeFile } from "node:fs/promises";
+import { importPacketId } from "../../src/lib/article-import/packet-binding";
 import path from "node:path";
 import { artifactProseProjection, contentAssessmentReviewInput, designReviewInput, editorialJudgmentReviewInput, editorialPassReviewInput, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
 import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
@@ -10,7 +11,7 @@ import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requi
 
 const families = { "fixture/writer": "fixture-writer-family", "fixture/cleanser": "fixture-cleanser-family" };
 const now = "2026-11-03T00:00:00.000Z";
-type RecordIdentity = { importId: string; sourceFingerprint: string };
+type RecordIdentity = { importId: string; sourceFingerprint: string; researchGeneration?: number };
 export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string }) {
   await mkdir(path.join(root, "config"), { recursive: true });
   const editorialFiles = ["SKILL.md", "references/principles.md", "references/signs-of-ai-writing.md", "references/dr-eleanor-hayes.md", "prompts/cleanse.txt"].map((file) => `.agents/skills/eleanor-editorial/${file}`);
@@ -27,7 +28,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   await writeFile(path.join(root, "config/article-workflow-capabilities.json"), JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "1.19.4", modelFamilies: families, files: pinFiles.map(pinRef) }));
   const common = { id: "synthetic-adapter-fixture", createdAt: now, importId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: WORKFLOW_REVISION };
   const save = (value: unknown) => storeEvidence(root, record.importId, value);
-  const packet = (stage: string) => sha256(`${record.importId}:${record.sourceFingerprint}:${stage}:${stage === "TRANSFORMING" ? "field-repair" : "targeted-repair"}`);
+  const packet = (stage: string) => importPacketId(record, stage, stage === "TRANSFORMING" ? "field-repair" : "targeted-repair");
   const beforeRef = await save(input.before), afterRef = await evidenceReference(root, input.artifactPath);
   async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>) {
     const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);

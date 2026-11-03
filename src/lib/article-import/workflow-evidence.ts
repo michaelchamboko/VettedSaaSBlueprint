@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { importPacketId, type ResearchGenerationBinding } from "./packet-binding";
 import path from "node:path";
 import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialEvidenceSchema, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
 import { importArtifactTarget, validateImportArtifact } from "./format-validation";
@@ -20,12 +21,12 @@ const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm",
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
 export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
-  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
+  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("quarantine"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), reasonCode: z.enum(["empty", "unusable", "unsupported-format"]), dispositionEvidenceRef: evidenceRefSchema }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
 export const diagnosisSchema = z.object({ ...common, schemaVersion: z.literal("DiagnosisV1"), stage: z.enum(WORKFLOW_SEQUENCE), failedSubmissionDigest: hashSchema, failureCode: nonempty, cause: nonempty, attemptedRecoveryRefs: z.array(evidenceRefSchema).min(1), remedyEvidenceRefs: z.array(evidenceRefSchema).min(1), replacementSubmissionDigest: hashSchema, consumedAt: z.string().datetime({ offset: true }).optional() }).strict();
-export type EvidenceBinding = { importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string };
+export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef }; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string };
 type Bound = { importId: string; sourceFingerprint: string; requirementRevision: string };
 function assertBinding(value: Bound, binding: EvidenceBinding): void {
   if (value.importId !== binding.importId || value.sourceFingerprint !== binding.sourceFingerprint || value.requirementRevision !== (binding.requirementRevision ?? WORKFLOW_REVISION)) throw new Error("EVIDENCE_BINDING_MISMATCH");
@@ -52,7 +53,7 @@ async function pinnedInstructions(root: string, execution: ExecutionEvidence, re
 }
 function assertPacket(packetId: string, binding: EvidenceBinding, stage: string): void {
   const strategies = stage === "REFINING" || stage === "VALIDATING" ? ["targeted-repair", "fresh-rewrite", "fresh-topic"] : ["field-repair", "reconstruct-schema", "reclassify"];
-  if (!strategies.some((strategy) => sha256(`${binding.importId}:${binding.sourceFingerprint}:${stage}:${strategy}`) === packetId)) throw new Error("EXECUTION_PACKET_MISMATCH");
+  if (!strategies.some((strategy) => importPacketId(binding, stage, strategy) === packetId)) throw new Error("EXECUTION_PACKET_MISMATCH");
 }
 const editorialFormats = { "direct-review": "landing", blog: "blog", visibility: "visibility", "decision-set": "decision" } as const;
 const revisions = { "direct-review": "PageBlueprintV1", blog: "BlogPostV1", visibility: "VisibilityPageV1", "decision-set": "DecisionSetV2" } as const;
@@ -122,6 +123,8 @@ export async function validateContentAssessment(root: string, ref: EvidenceRef, 
   assertBinding(value, binding);
   const artifact = await artifactFor(root, binding);
   if (value.format !== binding.format || value.artifactFingerprint !== fingerprintEditorialArtifact(artifact) || value.schemaRevision !== revisions[value.format]) throw new Error("ASSESSMENT_ARTIFACT_MISMATCH");
+  const currentResearch = binding.evidenceRefs?.research;
+  if (currentResearch && (value.researchRef.path !== currentResearch.path || value.researchRef.sha256 !== currentResearch.sha256)) throw new Error("ASSESSMENT_RESEARCH_MISMATCH");
   const research = await validateResearchEvidence(root, value.researchRef, binding);
   unique(value.ruleResults.map((x) => x.ruleId));
   if (value.ruleResults.length !== workflowRequirements.length) throw new Error("ASSESSMENT_RULE_MISSING");

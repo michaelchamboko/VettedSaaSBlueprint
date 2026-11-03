@@ -15,11 +15,13 @@ import { createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
+import { readEvidence } from "../src/lib/article-import/workflow-evidence";
 
-async function releaseFixture(root: string) {
+async function releaseFixture(root: string, recovered = false) {
   await writeFile(path.join(root, "approved-urls.md"), allowlist);
   await writeFile(path.join(root, "article.md"), source);
   let record = await createArticleImport(root, "article.md");
+  if (recovered) record.stageReceipts.push({ stage: "RESEARCHING", status: "failed", at: new Date().toISOString(), message: "RESEARCH_RECOVERY_REQUIRED: synthetic recovered evidence" });
   record = await approveFixture(root, { ...record, stage: "REFINING" });
   record = { ...record, stage: "VALIDATING" };
   record = await presentFixture(root, record);
@@ -47,10 +49,11 @@ test("verified synthetic completion freezes proof before deleting disposable sou
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("duplicate refers to validated origin rather than cloning its receipt identity", async () => {
+test("duplicate reuses recovered terminal proof with its retained research generation", async () => {
   const root = await testRoot("article-import-duplicate-");
   try {
-    const live = await verifyImportRelease(root, await releaseFixture(root));
+    const live = await verifyImportRelease(root, await releaseFixture(root, true));
+    assert.equal((await readEvidence(root, live.terminalRef!) as { researchGeneration: number }).researchGeneration, 1);
     const reused = await createArticleImport(root, "article.md");
     assert.equal(reused.importId, live.importId);
     assert.deepEqual(reused.terminalRef, live.terminalRef);
