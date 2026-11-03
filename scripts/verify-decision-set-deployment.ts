@@ -6,7 +6,7 @@ import { chromium } from "@playwright/test";
 import { z } from "zod";
 
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { observeProductionCommit, verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 import { decisionJourneyCatalog } from "../src/lib/decision-journey/catalogue";
 import { decisionSetV2Schema, getDecisionSet, type DecisionJourneyRecordV2 } from "../src/lib/decision-journey/sets";
 
@@ -124,6 +124,8 @@ export async function captureRoute(input: { origin: string; route: keyof typeof 
 
 async function main() {
   const context = verificationContext({ mode: argument("--mode"), origin: argument("--origin") ?? defaultOrigin, canonicalOrigin: argument("--canonical-origin"), expectedCommit: argument("--expected-sha") });
+  const expectedCommit = argument("--expected-sha");
+  await observeProductionCommit(context, expectedCommit);
   const { origin, canonicalOrigin } = context;
   const artifactPath = argument("--artifact");
   const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "decision-set", artifactPath, argument("--slug")) : undefined;
@@ -154,7 +156,8 @@ async function main() {
     screenshots: browserChecks.flatMap((result) => result.screenshots),
     createdAt: new Date().toISOString(),
   });
-  const result = { ...receipt, ...context, robots_ok: robotsOk, sitemap_ok: sitemapOk, browser_errors_ok: browserErrorsOkFrom(checks) };
+  const deployment = await observeProductionCommit(context, expectedCommit);
+  const result = { ...receipt, ...context, ...(deployment ? { expected_commit: expectedCommit, deployment } : {}), robots_ok: robotsOk, sitemap_ok: sitemapOk, browser_errors_ok: browserErrorsOkFrom(checks) };
   await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
   if (!receipt.passed) process.exitCode = 1;

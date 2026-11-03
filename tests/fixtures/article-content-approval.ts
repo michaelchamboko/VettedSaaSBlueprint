@@ -5,6 +5,8 @@ import type { ExternalArticleImportV1 } from "../../src/lib/article-import/contr
 import { createEditorialEvidence, editorialProsePaths, fingerprintEditorialArtifact, type EditorialFormat } from "../../src/lib/editorial/refinement";
 import { samplePageBlueprint as baseBlueprint } from "./sample-page-blueprint";
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
+import { buildWorkflowFixture } from "./article-workflow-evidence";
+import { editorialExecutionSchema, readEvidence } from "../../src/lib/article-import/workflow-evidence";
 const samplePageBlueprint = { ...baseBlueprint, metadata: { ...baseBlueprint.metadata, url_slug: "example", canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
 
 export const fullRewriteNotes = {
@@ -40,7 +42,7 @@ export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   return revised;
 }
 
-export async function approveFixture(root: string, record: ExternalArticleImportV1) {
+export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1) {
   const artifactPath = "src/generated/landing-pages/example.json";
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
@@ -51,10 +53,17 @@ export async function approveFixture(root: string, record: ExternalArticleImport
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
-  return approveImportContent(root, record, { artifactPath, editorialEvidencePath, formatQualityPath });
+  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath });
+  return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
+}
+
+export async function approveFixture(root: string, record: ExternalArticleImportV1) {
+  const { evidenceRefs, ...files } = await prepareApprovalFixture(root, record);
+  return approveImportContent(root, { ...record, evidenceRefs }, files);
 }
 
 export async function presentFixture(root: string, record: ExternalArticleImportV1) {
+  record = await refreshPresentationFixture(root, record);
   if (!record.contentApproval) throw new Error("Fixture content approval is required.");
   const evidencePath = "build-pack/article-import/verifier.json";
   const approvedArtifact = JSON.parse(await readFile(path.join(root, record.contentApproval.artifactPath), "utf8"));
@@ -74,4 +83,19 @@ export async function presentFixture(root: string, record: ExternalArticleImport
       notes: "Mocked browser evidence for importer state tests.",
     },
   });
+}
+
+/** Explicit synthetic re-render after fixture publication inputs have been prepared. */
+export async function refreshPresentationFixture(root: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  if (!record.contentApproval || !record.evidenceRefs?.editorial || record.format === "agent_review_required") throw new Error("Fixture approved editorial inputs are required.");
+  const approval = record.contentApproval;
+  const after = JSON.parse(await readFile(path.join(root, approval.artifactPath), "utf8"));
+  if (fingerprintEditorialArtifact(after) !== approval.artifactFingerprint) throw new Error("Fixture content changed; editorial approval must be renewed before presentation.");
+  const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs.editorial));
+  const before = await readEvidence(root, editorial.passes[0].inputRef);
+  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath });
+  for (const key of ["research", "assessment", "editorial"] as const) {
+    if (fresh[key].sha256 !== record.evidenceRefs[key]?.sha256) throw new Error(`Fixture presentation refresh changed ${key} evidence.`);
+  }
+  return { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: fresh.presentation } };
 }

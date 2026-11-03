@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { contentApprovalSchema } from "./content-approval";
 
+const stateEvidenceRef = z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
+export const recoveryEvidenceSchema = z.object({ schemaVersion: z.literal("RecoveryEvidenceV1"), importId: z.string(), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), cause: z.string().min(1), checkedAt: z.string().datetime({ offset: true }), executionRefs: z.array(stateEvidenceRef).min(1), resumptionRequirement: z.string().min(1) }).strict();
+export const diagnosisSchema = z.object({
+  schemaVersion: z.literal("DiagnosisV1"), importId: z.string(), sourceFingerprint: z.string(), stage: z.string(),
+  failedSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/), replacementSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/),
+  failureCode: z.string().min(1), cause: z.string().min(1), attemptedRecoveryRefs: z.array(stateEvidenceRef).min(1),
+  remedyEvidenceRefs: z.array(stateEvidenceRef).min(1), createdAt: z.string().datetime({ offset: true }), consumedAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
+
 export const importStageSchema = z.enum([
   "INGESTING", "RESEARCHING", "TRANSFORMING", "REFINING", "VALIDATING",
   "RELEASING", "VERIFYING", "REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK",
@@ -97,6 +106,7 @@ export const importReleaseSchema = z.object({
     browserErrorsOk: z.literal(true),
   }).strict(),
   previousDeploymentId: z.string().min(1).optional(),
+  productionVerifierRef: stateEvidenceRef.optional(),
   presentationFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 }).strict();
 export type ImportReleaseV1 = z.infer<typeof importReleaseSchema>;
@@ -142,11 +152,21 @@ export const importPendingReleaseSchema = z.object({
     deployment: z.object({ commitSha: z.string().regex(/^[a-f0-9]{40}$/), operationKey: z.string().min(1), deploymentId: z.string().min(1), url: z.string().min(1) }).strict().optional(),
     rollback: z.object({ deploymentId: z.string().min(1), restoredCommitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict().optional(),
   }).strict().optional(),
-  codeReview: importCodeReviewSchema.optional().catch(undefined),
+  codeReview: importCodeReviewSchema.optional(),
 }).strict();
 
 export const externalArticleImportSchema = z.object({
-  schemaVersion: z.literal("ExternalArticleImportV1"),
+  schemaVersion: z.enum(["ExternalArticleImportV1", "ExternalArticleImportV2"]),
+  workflowVersion: z.literal(2).optional(),
+  requirementRevision: z.string().min(1).optional(),
+  evidenceRefs: z.object({ research: stateEvidenceRef.optional(), assessment: stateEvidenceRef.optional(), editorial: stateEvidenceRef.optional(), presentation: stateEvidenceRef.optional(), production: stateEvidenceRef.optional() }).strict().optional(),
+  terminalRef: stateEvidenceRef.optional(),
+  sourceRef: stateEvidenceRef.optional(),
+  artifactPath: z.string().min(1).optional(),
+  repairStageTotals: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  diagnoses: z.array(diagnosisSchema).optional(),
+  recoveryRefs: z.array(stateEvidenceRef).optional(),
+  legacyDiagnostics: z.array(z.string()).optional(),
   importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   sourceFile: z.string().min(1),
@@ -163,8 +183,8 @@ export const externalArticleImportSchema = z.object({
   promptInjectionDetected: z.boolean(),
   unusableReason: z.string().optional(),
   transformation: importTransformationSchema.optional(),
-  contentApproval: contentApprovalSchema.optional().catch(undefined),
-  presentation: importPresentationReceiptSchema.optional().catch(undefined),
+  contentApproval: contentApprovalSchema.optional(),
+  presentation: importPresentationReceiptSchema.optional(),
   pendingRelease: importPendingReleaseSchema.optional(),
   release: importReleaseSchema.optional(),
   stageReceipts: z.array(z.object({

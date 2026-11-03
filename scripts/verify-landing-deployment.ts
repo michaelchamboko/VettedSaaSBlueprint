@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { chromium, type Browser, type Page, type ViewportSize } from "playwright";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { observeProductionCommit, verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 import { pageBlueprintSchema } from "../src/lib/schemas/contracts";
 
 type LandingTarget = {
@@ -391,6 +391,7 @@ export async function verifyLandingDeployment({
         reduced_motion: reducedMotion,
       });
     }
+    await observeProductionCommit(context, expectedCommit);
     return {
       schema_version: "LandingDeploymentVerificationV1",
       status: "pass",

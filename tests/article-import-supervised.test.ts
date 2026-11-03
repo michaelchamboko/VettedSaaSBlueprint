@@ -7,7 +7,11 @@ import { executeImportCommand } from "../scripts/import-article";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import type { ReleaseOperations } from "../src/lib/article-import/release";
-import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { prepareApprovalFixture, presentFixture } from "./fixtures/article-content-approval";
+import { storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { productionFixture } from "./fixtures/article-production-evidence";
+import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 test("the default CLI consumes bound research output and rejects a result for another source", async () => {
@@ -25,7 +29,8 @@ test("the default CLI consumes bound research output and rejects a result for an
     const workPath = current.nextAction.match(/execute (.*?)\.work\.json/)![1];
     const packet = JSON.parse(await readFile(path.join(root, `${workPath}.work.json`), "utf8"));
     const evidencePath = "build-pack/article-import/research.json";
-    await writeJsonAtomically(path.join(root, evidencePath), { sources: [{ url: "https://example.com/manual", claims: ["A mocked supported claim."] }] });
+    const snapshotRef = await storeEvidence(root, created.importId, { source: "A mocked supported claim." });
+    await writeJsonAtomically(path.join(root, evidencePath), { schemaVersion: "ResearchEvidenceV2", id: "research-fixture", createdAt: "2026-11-03T00:00:00.000Z", importId: created.importId, sourceFingerprint: created.sourceFingerprint, requirementRevision: WORKFLOW_REVISION, sources: [{ id: "source", url: "https://example.com/manual", retrievedAt: "2026-11-03T00:00:00.000Z", snapshotRef }], claims: [{ id: "claim", text: "A mocked supported claim.", sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: "A mocked supported claim." }], limitations: [] }], freshness: "Synthetic fixture." });
     const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: "0".repeat(64), summary: "Mocked research evidence.", work: { stage: "RESEARCHING", evidencePath } };
     await writeJsonAtomically(path.join(root, packet.resultPath), result);
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
@@ -42,7 +47,7 @@ test("the default CLI consumes bound research output and rejects a result for an
     const transformPacket = JSON.parse(await readFile(path.join(root, `${transformPath}.work.json`), "utf8"));
     const neutralArtifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
     await writeJsonAtomically(path.join(root, "src/generated/landing-pages/example.json"), neutralArtifact);
-    await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", format: "direct-review" } });
+    await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", assessmentPath: "unused-because-commercial-gate-rejects.json", format: "direct-review" } });
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const rejectedTransform = await loadImport(root, created.importId);
     assert.equal(rejectedTransform.stage, "TRANSFORMING");
@@ -94,7 +99,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
     deploy: async (commitSha) => { deployments++; return { deploymentId: "dpl-current", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
-    verifyProduction: async () => ({ routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true }),
+    verifyProduction: async (deployment) => productionFixture(root, importId, importArtifactTarget("direct-review", JSON.parse(await readFile(path.join(root, artifactPath), "utf8"))), deployment, (await loadImport(root, importId)).sourceFingerprint),
     rollback: async () => ({ ok: true, summary: "Mocked rollback." }),
     verifyRollback: async () => true,
   };
@@ -103,6 +108,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     await writeFile(path.join(root, "article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
     const created = await createArticleImport(root, "article.md");
     importId = created.importId;
+    const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" });
     // Each invocation constructs a fresh executor, as a later heartbeat process would.
     const heartbeat = () => executeImportCommand(root, { kind: "resume", importId: created.importId }, createSupervisedImportExecutor(root, operations));
     const current = () => loadImport(root, created.importId);
@@ -124,35 +130,31 @@ test("heartbeat consumes durable work after interruption and releases only after
     };
     await heartbeat();
     assert.equal((await current()).stage, "RESEARCHING");
-    await writeJsonAtomically(path.join(root, "build-pack/article-import/research.json"), { sources: [{ url: "https://example.com/documentation", claims: ["Mock evidence for the test workflow."] }] });
-    const research = await submit({ stage: "RESEARCHING", evidencePath: "build-pack/article-import/research.json" });
+    const research = await submit({ stage: "RESEARCHING", evidencePath: prepared.evidenceRefs.research.path });
     // The process stopped after producing evidence; the next invocation consumes it.
     assert.equal((await current()).stage, "RESEARCHING");
     await heartbeat();
     assert.equal((await current()).stage, "TRANSFORMING");
-    const artifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
-    await writeJsonAtomically(path.join(root, artifactPath), artifact);
     // Approved direct-review releases bind to the manifest-selected receipt URL and artefact fingerprint.
     await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
-    await submit({ stage: "TRANSFORMING", artifactPath, format: "direct-review" });
+    await submit({ stage: "TRANSFORMING", artifactPath, format: "direct-review", assessmentPath: prepared.evidenceRefs.assessment.path });
     await heartbeat();
     assert.equal((await current()).stage, "REFINING");
-    const approved = await approveFixture(root, await current());
-    const refinement = await submit({ stage: "REFINING", artifactPath, editorialEvidencePath: approved.contentApproval!.editorialEvidencePath, formatQualityPath: approved.contentApproval!.formatQualityPath });
-    assert.match(refinement.packet.instructions, /mandatory full-article SlopMonster rewrite/i);
-    assert.match(refinement.packet.instructions, /different model family/i);
+    const refinement = await submit({ stage: "REFINING", artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath, editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path });
+    assert.match(refinement.packet.instructions, /eleanor-editorial/i);
+    assert.match(refinement.packet.instructions, /different.family/i);
     assert.match(refinement.packet.instructions, /5\/5 CLEAN/i);
     await heartbeat();
     assert.equal((await current()).stage, "VALIDATING");
     const validationReceiptPath = "build-pack/article-import/presentation.json";
-    const presented = await presentFixture(root, await current());
-    await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
-    await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout" });
-    await heartbeat();
-    assert.equal((await current()).stage, "RELEASING");
-    // The approval loop rewrites the artefact; bind the receipt to the final approved bytes.
+    // Publication inputs exist before presentation captures rendering dependencies.
     const artifactFingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath))).toString("utf8").replace(/\r\n/g, "\n")).digest("hex");
     await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: artifactFingerprint } } });
+    const presented = await presentFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
+    await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
+    await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.evidenceRefs!.presentation!.path });
+    await heartbeat();
+    assert.equal((await current()).stage, "RELEASING");
     const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" });
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");

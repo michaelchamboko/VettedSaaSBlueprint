@@ -11,6 +11,8 @@ import { loadPublishedVisibilityPagesFromDirectories, type PublishedVisibilityPa
 import { requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { readImportArtifactTarget } from "./format-validation";
 import { importCodeReviewSchema } from "./contracts";
+import { readProductionVerifierEvidence, type VerifierEvidenceRef } from "./verification-evidence";
+import { evaluateWorkflowEvidence } from "./workflow-evidence";
 
 export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">): Promise<ExternalArticleImportV1> {
   const codeReview = importCodeReviewSchema.parse(receipt);
@@ -25,6 +27,7 @@ export async function recordImportCodeReview(repositoryRoot: string, record: Ext
 }
 
 export type FullProductionChecks = {
+  productionVerifierRef?: VerifierEvidenceRef;
   routeOk: boolean;
   contentOk: boolean;
   disclosureOk: boolean;
@@ -320,7 +323,7 @@ export async function assertPublicationAuthorityBinding(repositoryRoot: string, 
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const candidate = value as Record<string, unknown>;
-  if (Object.keys(candidate).sort().join(",") !== [...PRODUCTION_CHECK_KEYS].sort().join(",")) return undefined;
+  if (Object.keys(candidate).some((key) => ![...PRODUCTION_CHECK_KEYS, "productionVerifierRef"].includes(key))) return undefined;
   if (PRODUCTION_CHECK_KEYS.some((key) => candidate[key] !== true)) return undefined;
   return candidate as FullProductionChecks;
 }
@@ -375,6 +378,13 @@ export async function assessImportRelease(input: {
   if (input.execute && reasons.length) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: reasons.join("; ") });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons };
+  }
+  if (input.execute) {
+    const workflow = await evaluateWorkflowEvidence(input.record, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: input.artifactPath });
+    if (!workflow.ok) {
+      await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: workflow.diagnostics.join("; ") });
+      return { status: "REPAIRING", reasons: workflow.diagnostics };
+    }
   }
   try {
     const preflight = await input.operations.preflight();
@@ -504,7 +514,12 @@ export async function assessImportRelease(input: {
     const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
     requireImportPresentationBinding(mergedApproval);
-    pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha, operations: { ...pendingRelease.operations, merge: { reviewedHeadSha: pullRequest.headRefOid, mergeCommitSha: commitSha } } };
+    const mergedWorkflow = await evaluateWorkflowEvidence(mergedApproval, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: input.artifactPath });
+    if (!mergedWorkflow.ok) {
+      await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout workflow evidence invalid: ${mergedWorkflow.diagnostics.join("; ")}` });
+      return { status: "REPAIRING", reasons: mergedWorkflow.diagnostics };
+    }
+    pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha, operations: { ...pendingRelease.operations, review: { reviewedHeadSha: pullRequest.headRefOid, evidenceUrl: codeReview.evidenceUrl }, merge: { reviewedHeadSha: pullRequest.headRefOid, mergeCommitSha: commitSha } } };
     input.record = { ...input.record, pendingRelease };
     await saveImport(input.repositoryRoot, input.record);
     // The adapter can fail after its production side effect, so every attempt needs rollback.
@@ -517,10 +532,20 @@ export async function assessImportRelease(input: {
       throw new Error("DEPLOYMENT_COMMIT_MISMATCH");
     }
     let checks: FullProductionChecks | undefined;
+    let productionVerifierRef: VerifierEvidenceRef | undefined;
     let verificationFailure: string | undefined;
     try {
       checks = parseProductionChecks(await input.operations.verifyProduction(deployment));
       if (!checks) verificationFailure = "INCOMPLETE_PRODUCTION_CHECKS";
+      else {
+        productionVerifierRef = checks.productionVerifierRef;
+        if (!productionVerifierRef) throw new Error("PRODUCTION_EVIDENCE_REQUIRED");
+        const { target } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.artifactPath!, input.slug);
+        await readProductionVerifierEvidence(input.repositoryRoot, productionVerifierRef, { importId: input.record.importId, sourceFingerprint: input.record.sourceFingerprint, target, deployment });
+        const { productionVerifierRef: retainedRef, ...verifiedChecks } = checks;
+        void retainedRef;
+        checks = verifiedChecks;
+      }
     } catch (error) {
       verificationFailure = error instanceof Error ? error.message : String(error);
     }
@@ -543,9 +568,11 @@ export async function assessImportRelease(input: {
       if (input.operations.fixForward && await input.operations.fixForward(1)) return { status: "ROLLED_BACK", reasons: ["FIX_FORWARD_REQUIRED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
       return { status: "ROLLED_BACK", reasons: ["PRODUCTION_CHECK_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
     }
-    const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
+    input.record = { ...input.record, evidenceRefs: { ...input.record.evidenceRefs, production: productionVerifierRef } };
+    const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, productionVerifierRef, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
     requireImportPresentationBinding(withReceipt);
-    await verifyImportRelease(input.repositoryRoot, withReceipt);
+    const verified = await verifyImportRelease(input.repositoryRoot, withReceipt);
+    if (verified.stage !== "LIVE") throw new Error("TERMINAL_PUBLICATION_UNVERIFIED");
     return { status: "LIVE", reasons: [], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

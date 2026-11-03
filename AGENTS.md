@@ -64,14 +64,6 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 - After rendering, inspect desktop and mobile together; run `.agents/skills/impeccable/scripts/impeccable.cmd critique <target>`, `audit <target>`, and `detect <target>` for the changed surface, correct the findings in one bounded pass, then confirm once. Preserve content, evidence, responsive behavior, accessibility, and reduced-motion requirements. Do not claim a design pass from a clean mechanical detector alone.
 - Keep both skills available to page-building runs: `design-taste-frontend` is installed at `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or `.agents/skills/design-taste-frontend/SKILL.md` when provisioned in the checkout); Impeccable must be installed at `.agents/skills/impeccable/SKILL.md` with its local launcher. Check these paths before page work and restore a missing skill before proceeding. Use the Impeccable project hook after user approval in Codex `/hooks`.
 
-## Mandatory frontend design workflow
-
-- Every agent and model that creates or changes a page, component, layout, typography, styling, or motion must use both `design-taste-frontend` and the project-local Impeccable skill. This applies to scheduled page-building runs and low-cost models as well as interactive work; do not treat either as optional inspiration.
-- Before implementation, read `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or the checkout copy if provisioned), state its one-line Design Read, and choose a page-type direction using the approved visual references and dials in D04 §6.2 (`D04-S-c5113e3d7e2d`) and D04 §32 Stage 4 (`D04-S-1daaf8613a03`). Preserve the established site identity unless the approved brief calls for a redesign.
-- Before a UI edit, run `.agents/skills/impeccable/scripts/impeccable.cmd context --target <source-file-or-route>` from the repository root, follow its project context, and read `.agents/skills/impeccable/reference/craft-floor.md`. If the launcher is unavailable, follow the Impeccable skill's documented fallback and report that the detector did not run.
-- After rendering, inspect desktop and mobile together; run `.agents/skills/impeccable/scripts/impeccable.cmd critique <target>`, `audit <target>`, and `detect <target>` for the changed surface, correct the findings in one bounded pass, then confirm once. Preserve content, evidence, responsive behavior, accessibility, and reduced-motion requirements. Do not claim a design pass from a clean mechanical detector alone.
-- Keep both skills available to page-building runs: `design-taste-frontend` is installed at `C:/Users/micha/.agents/skills/design-taste-frontend/SKILL.md` (or `.agents/skills/design-taste-frontend/SKILL.md` when provisioned in the checkout); Impeccable must be installed at `.agents/skills/impeccable/SKILL.md` with its local launcher. Check these paths before page work and restore a missing skill before proceeding. Use the Impeccable project hook after user approval in Codex `/hooks`.
-
 ## Source-intelligence workflow
 
 Run this workflow when source documents or their derived intelligence change:
@@ -85,6 +77,12 @@ Run this workflow when source documents or their derived intelligence change:
 When these records or repository relationships change, verify the SQL migration, rebuild the deterministic snapshot, inspect its counts and digests, and validate one known semantic path plus one known code-import path on an isolated Neon branch before applying the migration or snapshot to the production database branch. Never treat a database row as stronger authority than its cited source section.
 
 ## Article handoff continuation
+
+The mandatory sequence and machine-readable rule registry are exposed by `npm run import:article -- --describe-workflow`. Read that output and run `--preflight` before a future authorized article trigger. Evidence research precedes a complete draft and intent/SEO/AEO assessment; Eleanor's full workflow precedes final assessment and approval; design/browser validation precedes release; retained production proof precedes LIVE. Work packets include the exact result schema. Missing work is not a reason to skip an article.
+
+New automation records use workflow version 2. Historical records remain inspectable; never edit their JSON to fabricate approval or mark an entry LIVE. Explicit upgrade, reconciliation and diagnosis commands validate bindings and preserve history. Read-only checks never repair state. Expired leases do not authorize takeover; recovery requires verified exit of the owning local process. Unverified ownership stops execution.
+
+Packet ARTICLE-HARDENING-002 authorizes automation-code work and synthetic tests only. Do not build articles, resume real imports, migrate actual records, merge, deploy or publish as part of that packet.
 
 The supervising agent must execute every manual or API article work packet through LIVE, QUARANTINED, or a durable documented blocker. A missing packet result, editorial receipt, or validation artifact is unfinished agent work and must be completed before selecting another fixed-snapshot entry. Folder intake resumes the earliest PROCESSING entry before PENDING entries and preserves captured source bytes and order. Article-specific blockers may advance the folder; shared capability, access, integrity, or release blockers stop it. Never substitute a scanner report or another article's receipt for EditorialEvidenceV2.
 

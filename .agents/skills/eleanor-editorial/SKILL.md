@@ -30,6 +30,8 @@ The checker uses the existing local Python runtime. If Python is not on PATH, se
 
 The CLI records both fingerprints, the pinned revision, every eligible prose path, changed paths and actual before/after checker output. It rejects partial rewrites, same-family review, missing passes, a non-clean final score and overwritten receipts. No evidence fields belong in rendered content.
 
+For workflow version 2, supply the `EditorialExecutionV1` execution manifest as a sixth CLI argument. The producer inserts the actual checker execution and editorial receipt references, validates the ordered pass chain and scoped judgments, and returns the companion reference. Each pass includes captured input/output artifacts, pinned instructions, an actual OpenCode execution reference and a judgment whose execution output matches its recorded findings. Use `scripts/capture-article-execution.ts` for completed OpenCode exchanges. The five-argument comparison receipt alone cannot advance automation. Do not fabricate pass histories or model families.
+
 ## Authority and scope
 
 User directive, 27 October 2026: replace the previous one-pass cleanup with a mandatory full-article rewrite based on SlopMonster. Source authority remains D07 §32 Editorial Quality Standard (D07-S-761a1d533ac1) and D10 §9.4 Content and editorial quality (D10-S-574481d73201). This adapter pins SlopMonster commit `8bf609edfaeed844f1d03bb6b69f80dc21728c8b`. It adds no publication authority. See `UPSTREAM.json` and `LICENSE` for provenance.

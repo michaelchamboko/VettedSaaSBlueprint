@@ -12,6 +12,50 @@ import { writeJsonAtomically } from "../src/lib/article-import/engine";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake";
+import { importArtifactTarget } from "../src/lib/article-import/format-validation";
+import { productionFixture } from "./fixtures/article-production-evidence";
+import { inspectImportCompletion } from "../src/lib/article-import/completion";
+
+async function releaseFixture(root: string) {
+  await writeFile(path.join(root, "approved-urls.md"), allowlist);
+  await writeFile(path.join(root, "article.md"), source);
+  let record = await createArticleImport(root, "article.md");
+  record = await approveFixture(root, { ...record, stage: "REFINING" });
+  record = { ...record, stage: "VALIDATING" };
+  record = await presentFixture(root, record);
+  record = await advanceImport(root, record, "Synthetic candidate passed.");
+  const artifact = JSON.parse(await readFile(path.resolve(root, record.contentApproval!.artifactPath), "utf8"));
+  const target = importArtifactTarget(record.format as "direct-review", artifact);
+  const commitSha = "b".repeat(40), reviewedCommitSha = "a".repeat(40);
+  const deployment = { commitSha, deploymentId: "dpl_fixture", canonicalUrl: new URL(target.renderedRoutes[0], "https://vettedsaasblueprint.online").href };
+  const checks = await productionFixture(root, record.importId, target, deployment, record.sourceFingerprint);
+  record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha } } };
+  return recordImportRelease(root, record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, presentationFingerprint: fingerprintEditorialArtifact(record.presentation), verifiedAt: new Date().toISOString(), productionVerifierRef: checks.productionVerifierRef, checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
+}
+
+test("verified synthetic completion freezes proof before deleting disposable source", async () => {
+  const root = await testRoot("article-import-live-");
+  try {
+    const record = await verifyImportRelease(root, await releaseFixture(root));
+    assert.equal(record.stage, "LIVE"); assert.ok(record.terminalRef); assert.ok(record.sourceRef);
+    await assert.rejects(readFile(path.join(root, ".automation/article-imports", `${record.importId}.source.md`)));
+    assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
+    assert.equal(await readFile(path.resolve(root, record.sourceRef!.path), "utf8"), source);
+    await writeFile(path.resolve(root, record.contentApproval!.artifactPath), "{}");
+    assert.equal((await inspectImportCompletion(root, record.importId)).status, "COMPLETE", "historical proof uses frozen bytes");
+    await assert.rejects(createArticleImport(root, "article.md"), /DUPLICATE_REVALIDATION_REQUIRED/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("duplicate refers to validated origin rather than cloning its receipt identity", async () => {
+  const root = await testRoot("article-import-duplicate-");
+  try {
+    const live = await verifyImportRelease(root, await releaseFixture(root));
+    const reused = await createArticleImport(root, "article.md");
+    assert.equal(reused.importId, live.importId);
+    assert.deepEqual(reused.terminalRef, live.terminalRef);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 const allowlist = "- https://start.switcherstudio.com/anme6fqvgdx9\n- https://try.example.com/ref\n";
 const source = `---\ntitle: "How to stream with Switcher Studio"\nprimary_question: "How can a creator stream with multiple iOS cameras?"\naffiliate_name: "Switcher Studio"\naffiliate_url: "[https://start.switcherstudio.com/anme6fqvgd](https://start.switcherstudio.com/anme6fqvgd)"\n---\n\nA practical guide for creators using several iOS devices in one production workflow. It explains the operating choices and trade-offs clearly.\n`;
@@ -133,7 +177,7 @@ test("classifies neutral article formats and flags risky claims", () => {
   assert.ok(transform.claimRisks.includes("unsupported_certainty"));
 });
 
-test("state transitions, strategy changes, waiting, quarantine, atomic resume, and raw deletion work", async (t) => {
+test("repair and external wait preserve productive stage and source without automatic quarantine", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const root = await testRoot("article-import-");
   try {
@@ -145,8 +189,8 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
     run = await advanceImport(root, run, "Source normalized.");
     assert.equal(run.stage, "RESEARCHING");
     run = await recordImportFailure(root, run, { strategy: "research", classification: "deterministic", message: "Source claim needs support." });
-    assert.equal(run.stage, "REPAIRING");
-    assert.match(run.nextAction, /alternate-source/);
+    assert.equal(run.stage, "RESEARCHING");
+    assert.match(run.nextAction, /Repair/);
     run = await resumeImport(root, run);
     assert.equal(run.stage, "RESEARCHING");
     run = await recordImportFailure(root, run, { strategy: "research", classification: "transient", message: "Provider timeout." });
@@ -161,9 +205,10 @@ test("state transitions, strategy changes, waiting, quarantine, atomic resume, a
     assert.equal(run.stage, "RESEARCHING");
     const resumed = await loadImport(root, run.importId);
     assert.equal(resumed.stage, "RESEARCHING");
-    for (let i = 0; i < 9; i += 1) run = await recordImportFailure(root, run, { strategy: "validate", classification: "deterministic", message: `Invalid candidate ${i}` });
-    assert.equal(run.stage, "QUARANTINED");
-    assert.equal(run.sourceDeletedAt !== undefined, true);
+    for (let i = 0; i < 3; i += 1) run = await recordImportFailure(root, { ...run, transformation: { ...run.transformation!, title: `Candidate ${i}` } }, { strategy: "validate", classification: "deterministic", message: `Invalid candidate ${i}` });
+    assert.equal(run.stage, "RESEARCHING");
+    assert.ok(run.continuation?.kind === "repair" && run.continuation.diagnosisRequired);
+    assert.equal(run.sourceDeletedAt, undefined);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -216,51 +261,4 @@ test("atomic replacement retries transient filesystem locks", async () => {
     assert.equal(attempts, 3);
     assert.deepEqual(JSON.parse(await readFile(file, "utf8")), { version: 2 });
   } finally { await rm(root, { recursive: true, force: true }); }
-});
-
-test("live completion deletes raw source and retains the receipt", async () => {
-  const root = await testRoot("article-import-live-");
-  try {
-    await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
-    await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
-    let run = await createArticleImport(root, "article.md");
-    for (const message of ["research", "transform", "refine", "validate", "release"]) {
-      if (run.stage === "REFINING") run = await approveFixture(root, run);
-      if (run.stage === "VALIDATING") run = await presentFixture(root, run);
-      run = await advanceImport(root, run, message);
-    }
-    assert.equal(run.stage, "RELEASING");
-    await assert.rejects(() => advanceImport(root, run, "pretend release"), /cannot advance/);
-    const release = { schemaVersion: "ImportReleaseV1", commitSha: "a".repeat(40), deploymentId: "dpl_test", canonicalUrl: "https://example.com/imported-guide", presentationFingerprint: fingerprintEditorialArtifact(run.presentation), verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } };
-    run = await recordImportRelease(root, run, release);
-    assert.equal(run.stage, "VERIFYING");
-    run = await verifyImportRelease(root, run);
-    assert.equal(run.stage, "LIVE");
-    await assert.rejects(() => readFile(path.join(root, ".automation/article-imports", `${run.importId}.source.md`)));
-    assert.equal((await loadImport(root, run.importId)).stage, "LIVE");
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("LIVE duplicate creates an explicit reuse receipt", async () => {
-  const root = await testRoot("article-import-duplicate-");
-  try {
-    await (await import("node:fs/promises")).writeFile(path.join(root, "approved-urls.md"), allowlist);
-    await (await import("node:fs/promises")).writeFile(path.join(root, "article.md"), source);
-    let live = await createArticleImport(root, "article.md");
-    for (const message of ["research", "transform", "refine", "validate", "release"]) {
-      if (live.stage === "REFINING") live = await approveFixture(root, live);
-      if (live.stage === "VALIDATING") live = await presentFixture(root, live);
-      live = await advanceImport(root, live, message);
-    }
-    live = await recordImportRelease(root, live, { schemaVersion: "ImportReleaseV1", commitSha: "b".repeat(40), deploymentId: "dpl_live", canonicalUrl: "https://example.com/imported-guide", presentationFingerprint: fingerprintEditorialArtifact(live.presentation), verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
-    live = await verifyImportRelease(root, live);
-    const reused = await createArticleImport(root, "article.md");
-    assert.equal(reused.stage, "LIVE");
-    assert.equal(reused.duplicateOf, live.importId);
-    assert.match(reused.nextAction, /Reused live result/);
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
 });

@@ -1177,6 +1177,73 @@
         "commit": "7b6d36c80734185f562ffd19b17c85f917974ffd",
         "reviewed_at": "2026-09-01T12:11:52.4007610Z"
       }
+    },
+    {
+      "id": "ARTICLE-HARDENING-002",
+      "title": "Enforce local article workflow evidence and recovery gates",
+      "status": "done",
+      "dependencies": [],
+      "risk": "high",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "OWNER-2026-11-03-AUTOMATION-HARDENING"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "docs/designs/article-automation-hardening/automation-hardening-plan.md"
+      ],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "validation": [
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "tests",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "test"
+          ],
+          "timeout_seconds": 1800
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "docs/designs/article-automation-hardening/goldfish_review_report.md",
+        "docs/designs/article-automation-hardening/verification.md"
+      ],
+      "operation_phase": "committed",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit owner directive in planning.md; synthetic tests only, no real imports or publication"
+      }
     }
   ],
   "extensions": {
@@ -1185,8 +1252,17 @@
       "status": "ready",
       "authority": "planning.md#local-article-loop-continuation-amendment-2026-11-01",
       "scope": "Complete the existing local supervising-agent loop without changing article stages or adding a second orchestrator.",
-      "constraints": ["local runtime", "agent/model agnostic", "no scheduler", "no paid services", "no Durable Harness"],
-      "preapproval": {"merge": "exact reviewed head after all gates", "deploy": "exact merged commit after all gates"},
+      "constraints": [
+        "local runtime",
+        "agent/model agnostic",
+        "no scheduler",
+        "no paid services",
+        "no Durable Harness"
+      ],
+      "preapproval": {
+        "merge": "exact reviewed head after all gates",
+        "deploy": "exact merged commit after all gates"
+      },
       "acceptance": "A fixed-snapshot canary survives productive handoffs, a changed repair, an external wait, and a restart with no duplicate release effects or false LIVE receipt."
     },
     "lifecycle": "P1_VERIFIED_NO_ACTIVE_PROGRAMME",

@@ -3,24 +3,22 @@ import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { advanceImport, createArticleImport, ensureImportContentApproval, ensureImportPresentation, loadImport, recordImportFailure, resumeImport } from "../src/lib/article-import/engine";
-import { approveFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
-import { recordArticlePresentation } from "../scripts/record-article-presentation";
+import { advanceImport, createArticleImport, ensureImportContentApproval, loadImport, recordImportFailure, resumeImport } from "../src/lib/article-import/engine";
+import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
 
 async function setup() {
   const root = await mkdtemp(path.join(os.tmpdir(), "content-approval-"));
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), "---\ntitle: Example\naffiliate_name: Example\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\nAn article with enough text to qualify as useful source content for the import pipeline and its approval tests.");
-  let record = await createArticleImport(root, "article.md");
-  for (let i = 0; i < 3; i++) record = await advanceImport(root, record, "Stage completed.");
-  return { root, record };
+  const initial = await createArticleImport(root, "article.md");
+  // Arrange a synthetic stage boundary; advancing real work requires producer evidence.
+  return { root, record: { ...initial, stage: "REFINING" as const } };
 }
 
-test("legacy imports cannot enter presentation without content approval", async () => {
+test("imports cannot enter presentation without the mandatory evidence chain", async () => {
   const { root, record } = await setup();
   try {
-    assert.equal((await advanceImport(root, record, "No evidence")).stage, "REFINING");
-    assert.equal((await resumeImport(root, { ...record, stage: "RELEASING" })).stage, "REFINING");
+    await assert.rejects(advanceImport(root, record, "No evidence"), /WORKFLOW_EVIDENCE_INVALID/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -37,9 +35,13 @@ for (const target of ["artifactPath", "editorialEvidencePath", "formatQualityPat
       else if (target === "editorialEvidencePath") value.semanticNotes = "Changed review notes after content approval.";
       else value.gate = "another-gate";
       await writeFile(file, JSON.stringify(value));
-      const checked = await advanceImport(root, validating, "Ready to release");
-      assert.equal(checked.stage, "REFINING");
-      assert.equal((await loadImport(root, record.importId)).contentApproval, undefined);
+      if (target === "formatQualityPath") {
+        assert.equal((await advanceImport(root, validating, "Ready to release")).stage, "REFINING");
+        assert.equal((await loadImport(root, record.importId)).contentApproval, undefined);
+      } else {
+        await assert.rejects(advanceImport(root, validating, "Ready to release"), /WORKFLOW_EVIDENCE_INVALID/);
+        assert.equal((await loadImport(root, record.importId)).stage, "VALIDATING");
+      }
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 }
@@ -59,12 +61,12 @@ test("presentation repair preserves approval, but source identity and artifact s
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("legacy presentation loads as absent and migrates without losing content approval", async () => {
+test("invalid legacy receipts remain diagnostic and reads never silently migrate them", async () => {
   const { root, record } = await setup();
   try {
     const approved = await approveFixture(root, record);
     const presented = await presentFixture(root, await advanceImport(root, approved, "Approved content"));
-    const legacy = { ...presented, stage: "RELEASING", resumeStage: "RELEASING", presentation: { ...presented.presentation!, evidenceFiles: undefined },
+    const legacy = { ...presented, schemaVersion: "ExternalArticleImportV1", workflowVersion: undefined, requirementRevision: undefined, stage: "RELEASING", resumeStage: "RELEASING", presentation: { ...presented.presentation!, evidenceFiles: undefined },
       pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "a".repeat(40), branch: "codex/article-import/example", createdAt: new Date().toISOString() },
       release: { schemaVersion: "ImportReleaseV1", commitSha: "a".repeat(40), deploymentId: "legacy-deployment", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", verifiedAt: new Date().toISOString(), checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } },
     };
@@ -73,21 +75,9 @@ test("legacy presentation loads as absent and migrates without losing content ap
     const loaded = await loadImport(root, record.importId);
     assert.equal(loaded.presentation, undefined);
     assert.deepEqual(loaded.contentApproval, approved.contentApproval);
-    const validating = await ensureImportPresentation(root, loaded);
-    assert.equal(validating.stage, "VALIDATING");
-    assert.equal(validating.pendingRelease, undefined);
-    assert.equal(validating.release, undefined);
-    assert.equal(validating.resumeStage, undefined);
-    await writeFile(statePath, JSON.stringify(legacy));
-    const designReceiptPath = path.join(root, "build-pack/article-import/page-design.json");
-    await writeFile(designReceiptPath, JSON.stringify(validPageDesignReceipt));
-    const migrated = await recordArticlePresentation(root, record.importId, "build-pack/article-import/verifier.json", designReceiptPath);
-    assert.equal(migrated.stage, "RELEASING");
-    assert.equal((await loadImport(root, record.importId)).stage, "RELEASING");
-    assert.equal(migrated.presentation?.evidenceFiles.length, 1);
-    assert.equal(migrated.pendingRelease, undefined);
-    assert.equal(migrated.release, undefined);
-    assert.deepEqual(migrated.contentApproval, approved.contentApproval);
+    assert.ok(loaded.legacyDiagnostics?.includes("INVALID_LEGACY_EVIDENCE:presentation"));
+    await assert.rejects(resumeImport(root, loaded), /LEGACY_UPGRADE_REQUIRED/);
+    assert.equal(await readFile(statePath, "utf8"), JSON.stringify(legacy));
     await writeFile(statePath, JSON.stringify({ ...legacy, presentation: { invalid: true } }));
     assert.equal((await loadImport(root, record.importId)).presentation, undefined);
   } finally { await rm(root, { recursive: true, force: true }); }

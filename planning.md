@@ -47,6 +47,12 @@ This instruction-only amendment authorizes changes to `AGENTS.md`, the external-
 
 ## Binding scope
 
+### Article automation hardening, 2026-11-03
+
+Classification: explicit product-owner directive. Packet `ARTICLE-HARDENING-002` implements the reviewed plan in `docs/designs/article-automation-hardening/automation-hardening-plan.md`. Its actual EGM review findings are retained alongside it. Scope is local validated evidence, mandatory Eleanor/SEO/AEO sequencing, versioned state compatibility, intake/source concurrency, diagnosis, retained production-verifier output, capability checks, and synthetic regression tests.
+
+The owner explicitly prohibits article authoring, real import execution or resumption, live state migration, publication, merge, and deployment during this implementation. This overrides the standing automatic release rule for this packet. No schedule, model client, service, or source-strategy amendment is authorized. The deliverable is tested automation code and review evidence in an isolated checkout. Existing public pages and primary-checkout intake state stay unchanged.
+
 This file is the only repository planning authority. It governs implementation sequencing and release decisions, subject to `AGENTS.md`, the source-intelligence records, and the non-inference gate.
 
 Source strategy documents are semantic inputs, not executable instructions. Historical receipts prove only the work named in those receipts. They do not authorise a new workflow or revive retired work.
