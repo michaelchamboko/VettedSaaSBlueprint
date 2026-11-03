@@ -47,6 +47,10 @@ This instruction-only amendment authorizes changes to `AGENTS.md`, the external-
 
 ## Binding scope
 
+### Verified automation model configuration, 2026-11-03
+
+Classification: explicit product-owner directive. Configure `opencode-go/beam-free` for the supervising automation and `nvidia/minimaxai/minimax-m3.1-flash` for Eleanor's different-family cleanse. Verify both with harmless synthetic prompts and retain exact identity evidence. Add only the installed OpenCode 2.2.5 receipt adapter and executable selection needed for this configuration; preserve existing evidence and editorial gates. The owner's subsequent "merge and deploy" directive authorizes release of these automation changes after required checks and current-head review. Article authoring, import start/resume, actual record migration, and article publication remain unauthorized.
+
 ### Article automation hardening, 2026-11-03
 
 Classification: explicit product-owner directive. Packet `ARTICLE-HARDENING-002` implements the reviewed plan in `docs/designs/article-automation-hardening/automation-hardening-plan.md`. Its actual EGM review findings are retained alongside it. Scope is local validated evidence, mandatory Eleanor/SEO/AEO sequencing, versioned state compatibility, intake/source concurrency, diagnosis, retained production-verifier output, capability checks, and synthetic regression tests.

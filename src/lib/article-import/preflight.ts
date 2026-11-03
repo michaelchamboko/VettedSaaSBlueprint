@@ -4,11 +4,12 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { z } from "zod";
+import { normalizeOpenCodeVersion, openCodeExecutable, openCodeVersionSchema } from "./opencode-runtime";
 
 const run = promisify(execFile);
 const manifestSchema = z.object({
   schemaVersion: z.literal("ArticleWorkflowCapabilitiesV1"),
-  openCodeVersion: z.literal("1.19.4"),
+  openCodeVersion: openCodeVersionSchema,
   modelFamilies: z.record(z.string(), z.string().min(1)),
   files: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1),
 }).strict();
@@ -24,7 +25,7 @@ export async function assertPrimaryArticleCheckout(root: string): Promise<void> 
 
 export type CapabilityProbe = (tool: "opencode" | "python", args: string[]) => Promise<string>;
 const probe: CapabilityProbe = async (tool, args) => {
-  const executable = tool === "python" ? process.env.PYTHON || "python" : "opencode";
+  const executable = tool === "python" ? process.env.PYTHON || "python" : openCodeExecutable();
   const result = await run(executable, args, { windowsHide: true, timeout: 10_000, maxBuffer: 64 * 1024 });
   return result.stdout.trim();
 };
@@ -44,7 +45,7 @@ export async function inspectArticlePreflight(root: string, checkTool: Capabilit
   for (const required of [".agents/skills/impeccable/SKILL.md", ".agents/skills/design-taste-frontend/SKILL.md", ".agents/skills/eleanor-editorial/SKILL.md"]) {
     if (!manifest.files.some(file => file.path === required)) diagnostics.push({ code: "CAPABILITY_UNPINNED", path: required, detail: "Required skill missing from manifest" });
   }
-  try { if (await checkTool("opencode", ["--version"]) !== manifest.openCodeVersion) throw new Error("Unsupported OpenCode version"); }
+  try { if (normalizeOpenCodeVersion(await checkTool("opencode", ["--version"])) !== manifest.openCodeVersion) throw new Error("Unsupported OpenCode version"); }
   catch (error) { diagnostics.push({ code: "CAPABILITY_UNAVAILABLE", detail: String(error) }); }
   try { if (!(await checkTool("python", ["--version"])).startsWith("Python 3.")) throw new Error("Python 3 required"); }
   catch (error) { diagnostics.push({ code: "CAPABILITY_UNAVAILABLE", detail: String(error) }); }

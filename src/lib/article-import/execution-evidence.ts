@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import { readFile, realpath, stat, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { normalizeOpenCodeVersion, openCodeExecutable, openCodeExportArgs, openCodeVersionSchema } from "./opencode-runtime";
 
 export const sha256 = (value: string | Buffer): string => createHash("sha256").update(value).digest("hex");
 export const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);
@@ -125,22 +126,54 @@ const capturedInstructionSchema = evidenceRefSchema.extend({ text: z.string() })
 export const executionEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({ ...base, kind: z.literal("command"), executable: z.string().min(1), argv: z.array(z.string()), cwd: z.string().min(1), stdout: z.string(), stderr: z.string(), exitCode: z.number().int() }).strict(),
   z.object({ ...base, kind: z.literal("browser"), target: z.string().url(), routes: z.array(z.string().startsWith("/")).min(1), viewport: z.object({ width: z.number().int().positive(), height: z.number().int().positive(), reducedMotion: z.boolean() }).strict(), checks: z.record(z.string(), z.boolean()), screenshots: z.array(evidenceRefSchema).min(1) }).strict(),
-  z.object({ ...base, kind: z.literal("opencode"), toolVersion: z.literal("1.19.4"), sessionId: z.string().min(1), userMessageId: z.string().min(1), assistantMessageId: z.string().min(1), providerId: z.string().min(1), modelId: z.string().min(1), family: z.string().min(1), packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection, inputDigest: hashSchema, outputDigest: hashSchema, instructions: z.array(capturedInstructionSchema) }).strict(),
+  z.object({ ...base, kind: z.literal("opencode"), toolVersion: openCodeVersionSchema, sessionId: z.string().min(1), userMessageId: z.string().min(1), assistantMessageId: z.string().min(1), providerId: z.string().min(1), modelId: z.string().min(1), family: z.string().min(1), packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection, inputDigest: hashSchema, outputDigest: hashSchema, instructions: z.array(capturedInstructionSchema) }).strict(),
 ]);
 export type ExecutionEvidence = z.infer<typeof executionEvidenceSchema>;
 export const proseProjectionDigest = (value: Record<string, string>): string => sha256(JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))));
 
 type ExportSelection = { version: string; sessionId: string; userMessageId: string; assistantMessageId: string; packetId: string; pass: string; input: Record<string, string>; output: Record<string, string>; families: Readonly<Record<string, string>>; inputRefs?: EvidenceRef[]; outputRefs?: EvidenceRef[]; instructions?: z.infer<typeof capturedInstructionSchema>[] };
+/** V2 has no parentID. Only a dedicated, completed session establishes association. */
+function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
+  const object = z.record(z.string(), z.unknown()).parse(raw);
+  const payload = "data" in object ? z.object({ data: z.unknown() }).strict().parse(object).data : object;
+  const model = z.object({ providerID: z.string().min(1), id: z.string().min(1), variant: z.string().optional() }).strict();
+  const time = z.object({ created: z.number().nonnegative() }).strict();
+  const envelope = z.object({
+    info: z.object({ id: z.string(), model, outcome: z.literal("succeeded"), parentID: z.never().optional(), fork: z.never().optional(), revert: z.never().optional() }).passthrough(),
+    messages: z.tuple([
+      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time }).strict(),
+      z.object({ id: z.string(), type: z.literal("assistant"), model,
+        time: z.object({ created: z.number().nonnegative(), streamed: z.number().nonnegative(), completed: z.number().nonnegative() }).strict(),
+        finish: z.literal("stop"), rawFinish: z.literal("stop").optional(), agent: z.string().optional(),
+        cost: z.number().optional(), tokens: z.record(z.string(), z.unknown()).optional(),
+        content: z.array(z.union([
+          z.object({ type: z.literal("text"), text: z.string() }).strict(),
+          z.object({ type: z.literal("reasoning"), text: z.string(), native: z.record(z.string(), z.unknown()).optional(), time: z.object({ created: z.number(), completed: z.number() }).strict().optional() }).strict(),
+        ])),
+      }).strict(),
+      z.object({ id: z.string(), type: z.literal("idle"), outcome: z.literal("succeeded"), time }).strict(),
+    ]),
+  }).strict().parse(payload);
+  const [user, assistant, idle] = envelope.messages;
+  if (envelope.info.id !== selected.sessionId) throw new Error("EXECUTION_SESSION_MISMATCH");
+  if (user.id !== selected.userMessageId || assistant.id !== selected.assistantMessageId || new Set([user.id, assistant.id, idle.id]).size !== 3 || JSON.stringify(envelope.info.model) !== JSON.stringify(assistant.model)) throw new Error("EXECUTION_MESSAGE_MISMATCH");
+  if (user.time.created > assistant.time.created || assistant.time.created > assistant.time.streamed || assistant.time.streamed > assistant.time.completed || assistant.time.completed > idle.time.created) throw new Error("EXECUTION_INCOMPLETE");
+  return { info: { id: envelope.info.id }, messages: [
+    { info: { id: user.id, role: "user", sessionID: envelope.info.id }, parts: [{ type: "text", text: user.text }] },
+    { info: { id: assistant.id, role: "assistant", sessionID: envelope.info.id, providerID: assistant.model.providerID, modelID: assistant.model.id, time: assistant.time, finish: assistant.finish }, parts: assistant.content },
+  ] };
+}
 /** Extract only the selected text exchange; reasoning, tools and unrelated messages never survive. */
 export function extractOpenCodeExecution(raw: unknown, selected: ExportSelection): ExecutionEvidence {
-  if (selected.version !== "1.19.4") throw new Error("EVIDENCE_UNSUPPORTED");
+  if (!openCodeVersionSchema.safeParse(selected.version).success) throw new Error("EVIDENCE_UNSUPPORTED");
+  if (selected.version === "2.2.5") raw = dedicatedV2Exchange(raw, selected);
   const envelope = z.object({ info: z.object({ id: z.string() }).passthrough(), messages: z.array(z.object({ info: z.record(z.string(), z.unknown()), parts: z.array(z.record(z.string(), z.unknown())) }).passthrough()) }).passthrough().parse(raw);
   if (envelope.info.id !== selected.sessionId) throw new Error("EXECUTION_SESSION_MISMATCH");
   const users = envelope.messages.filter((m) => m.info.id === selected.userMessageId);
   const assistants = envelope.messages.filter((m) => m.info.id === selected.assistantMessageId);
   if (users.length !== 1 || assistants.length !== 1) throw new Error("EVIDENCE_UNSUPPORTED");
   const user = users[0], assistant = assistants[0];
-  if (user.info.role !== "user" || assistant.info.role !== "assistant" || user.info.sessionID !== selected.sessionId || assistant.info.sessionID !== selected.sessionId || assistant.info.parentID !== selected.userMessageId || assistant.info.error) throw new Error("EXECUTION_MESSAGE_MISMATCH");
+  if (user.info.role !== "user" || assistant.info.role !== "assistant" || user.info.sessionID !== selected.sessionId || assistant.info.sessionID !== selected.sessionId || (selected.version === "1.19.4" && assistant.info.parentID !== selected.userMessageId) || assistant.info.error) throw new Error("EXECUTION_MESSAGE_MISMATCH");
   const time = z.object({ created: z.number().nonnegative(), completed: z.number().nonnegative() }).parse(assistant.info.time);
   if (time.completed < time.created || assistant.info.finish !== "stop") throw new Error("EXECUTION_INCOMPLETE");
   const text = (parts: typeof user.parts): string => {
@@ -180,7 +213,7 @@ export async function validateExecutionEvidence(root: string, ref: EvidenceRef):
 }
 
 async function readModelCapabilities(root: string) {
-  return z.object({ schemaVersion: z.literal("ArticleWorkflowCapabilitiesV1"), openCodeVersion: z.literal("1.19.4"), modelFamilies: z.record(z.string(), z.string().min(1)) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
+  return z.object({ schemaVersion: z.literal("ArticleWorkflowCapabilitiesV1"), openCodeVersion: openCodeVersionSchema, modelFamilies: z.record(z.string(), z.string().min(1)) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
 }
 const runFile = promisify(execFile);
 /** Uses argv without shell expansion and bounded output/time. Call only for an authorized tool. */
@@ -195,9 +228,10 @@ export async function captureCommandExecution(root: string, input: { executable:
 export async function captureOpenCodeExecution(root: string, selected: Omit<ExportSelection, "families" | "version" | "instructions"> & { instructionRefs?: EvidenceRef[] }): Promise<ExecutionEvidence> {
   const capabilities = await readModelCapabilities(root);
   const options = { cwd: root, encoding: "utf8" as const, timeout: 30_000, maxBuffer: MAX_EVIDENCE_BYTES, windowsHide: true };
-  const version = (await runFile("opencode", ["--version"], options)).stdout.trim();
+  const executable = openCodeExecutable();
+  const version = normalizeOpenCodeVersion((await runFile(executable, ["--version"], options)).stdout);
   if (version !== capabilities.openCodeVersion) throw new Error("EVIDENCE_UNSUPPORTED");
-  const exported = await runFile("opencode", ["export", selected.sessionId], options);
+  const exported = await runFile(executable, openCodeExportArgs(version, selected.sessionId), options);
   const instructions = [];
   for (const ref of selected.instructionRefs ?? []) {
     await verifyEvidenceRef(root, ref);

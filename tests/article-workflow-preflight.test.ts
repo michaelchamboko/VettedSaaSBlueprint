@@ -26,6 +26,10 @@ test("preflight is read-only, checks pinned bytes and requires two known model f
   assert.equal(await readFile(manifestPath, "utf8"), JSON.stringify(manifest));
   await writeFile(manifestPath, JSON.stringify({ ...manifest, modelFamilies: { "fixture/a": "a", "fixture/b": "b" } }));
   assert.equal((await inspectArticlePreflight(root, probe)).ok, true);
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, openCodeVersion: "2.2.5", modelFamilies: { "fixture/a": "a", "fixture/b": "b" } }));
+  assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.2.5" : "Python 3.13.0")).ok, true);
+  assert.equal((await inspectArticlePreflight(root, probe)).ok, false);
+  assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.2.6" : "Python 3.13.0")).ok, false);
   await writeFile(path.join(root, files[0].path), "changed");
   assert.equal((await inspectArticlePreflight(root, probe)).ok, false);
 });
