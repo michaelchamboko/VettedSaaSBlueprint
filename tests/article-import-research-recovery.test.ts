@@ -154,6 +154,6 @@ test("failed material-claims assessment requires research even when the receipt 
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const transforming = await loadImport(root, record.importId);
     if (transforming.continuation?.kind !== "work") throw new Error("Missing transform work");
-    assert.equal(transforming.continuation.idempotencyKey, sha256(record.importId + ":" + record.sourceFingerprint + ":TRANSFORMING:field-repair"));
+    assert.equal(transforming.continuation.idempotencyKey, sha256(record.importId + ":" + record.sourceFingerprint + ":TRANSFORMING:field-repair:research-recovery-1"));
   } finally { await rm(root, { recursive: true, force: true }); }
 });

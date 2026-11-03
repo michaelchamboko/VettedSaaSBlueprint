@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { importPacketId, researchRecoveryGeneration } from "./packet-binding";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { mkdir, open, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -359,9 +360,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       const group = strategyGroup(record.stage);
       const failures = record.strategyAttempts[group] ?? 0;
       const strategy = STRATEGIES[group][Math.min(Math.floor(failures / 3), STRATEGIES[group].length - 1)];
-      const recoveryGeneration = record.stageReceipts.filter((receipt) => receipt.stage === "RESEARCHING" && receipt.message.startsWith("RESEARCH_RECOVERY_REQUIRED:")).length;
-      const recoveryBinding = record.stage === "RESEARCHING" && recoveryGeneration ? `:research-recovery-${recoveryGeneration}` : "";
-      const idempotencyKey = fingerprint(`${importId}:${record.sourceFingerprint}:${record.stage}:${strategy}${recoveryBinding}`);
+      const idempotencyKey = importPacketId(record, record.stage, strategy);
       await lease.assertOwned();
       let result: ExternalArticleImportV1;
       try {
@@ -594,7 +593,7 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
   if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha || record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
   const mergeEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { reviewedCommitSha: merge.reviewedHeadSha, mergeCommitSha: merge.mergeCommitSha, pullRequestUrl: record.pendingRelease.pullRequestUrl, evidenceUrl: review.evidenceUrl });
   const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
-  const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", artifactRef, evidenceRefs: record.evidenceRefs, frozenFiles, format: record.format, reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
+  const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, frozenFiles, format: record.format, reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
   const updated = externalArticleImportSchema.parse({ ...presented, terminalRef, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
   if (!(await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
   await saveImport(repositoryRoot, updated);

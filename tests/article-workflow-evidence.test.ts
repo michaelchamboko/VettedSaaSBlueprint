@@ -21,14 +21,14 @@ function recaptureStoredExchange(value: unknown, inputRefs: Array<{ path: string
     { info: { id: execution.assistantMessageId, role: "assistant", sessionID: execution.sessionId, parentID: execution.userMessageId, providerID: execution.providerId, modelID: execution.modelId, time: { created: Date.parse(execution.startedAt), completed: Date.parse(execution.completedAt) }, finish: "stop" }, parts: [{ type: "text", text: JSON.stringify(execution.output) }] },
   ] }, { version: execution.toolVersion, sessionId: execution.sessionId, userMessageId: execution.userMessageId, assistantMessageId: execution.assistantMessageId, packetId: execution.packetId, pass: execution.pass, input: execution.input, output: execution.output, instructions: execution.instructions, families: { [`${execution.providerId}/${execution.modelId}`]: execution.family }, inputRefs, outputRefs });
 }
-async function fixture() {
+async function fixture(researchGeneration = 0) {
   const root = await mkdtemp(path.join(os.tmpdir(), "workflow-proof-"));
   const before = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://example.test/example", url_slug: "example" } };
   const after = rewriteAllProse("landing", before);
   const artifactPath = "artifact.json", editorialEvidencePath = "editorial.json";
   await writeFile(path.join(root, artifactPath), JSON.stringify(after));
   await writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, fullRewriteNotes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
-  const record: WorkflowEvidenceRecord = { importId: id, sourceFingerprint: sha256("source"), format: "direct-review", stage: "RELEASING", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, artifactPath };
+  const record: WorkflowEvidenceRecord = { researchGeneration, importId: id, sourceFingerprint: sha256("source"), format: "direct-review", stage: "RELEASING", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, artifactPath };
   record.evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before, after, editorialEvidencePath });
   return { root, record };
 }
@@ -103,7 +103,7 @@ test("rebinding a research receipt cannot retain the old captured assessment", a
     const research = await readEvidence(root, approved.researchRef) as Record<string, unknown>;
     const researchRef = await storeEvidence(root, id, { ...research, freshness: "Changed evidence qualification absent from the captured assessment." });
     const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: execution.inputRefs.map((ref) => ref.sha256 === approved.researchRef.sha256 ? researchRef : ref) });
-    await assert.rejects(validateContentAssessment(root, await storeEvidence(root, id, { ...approved, researchRef, reviewerExecutionRef }), record), /ASSESSMENT_EXECUTION_MISMATCH/);
+    await assert.rejects(validateContentAssessment(root, await storeEvidence(root, id, { ...approved, researchRef, reviewerExecutionRef }), { ...record, evidenceRefs: { ...record.evidenceRefs, research: researchRef } }), /ASSESSMENT_EXECUTION_MISMATCH/);
     assert.ok(execution.input.research.includes("Fixed synthetic input"));
     assert.ok(execution.input.sourceSnapshots.includes("Synthetic source supports this scoped fixture claim."));
     await validateContentAssessment(root, record.evidenceRefs!.assessment!, record);
@@ -275,5 +275,22 @@ test("renderer JSON freezes as opaque data instead of following catalogue-relati
     await writeFile(path.join(root, file), "{}");
     const frozen = await withEvidenceSnapshot(graph, () => validateRenderingInputs(root, rendering, { historical: true }));
     assert.deepEqual(await withEvidenceSnapshot(graph, () => readEvidence(root, frozen.files[0])), data);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test("recovered evidence accepts current generation and rejects prior generation at every downstream validator", async () => {
+  const { root, record } = await fixture(1);
+  try {
+    assert.deepEqual((await evaluateWorkflowEvidence(record, { root })).diagnostics, []);
+    const previous = { ...record, researchGeneration: 0 };
+    await assert.rejects(validateContentAssessment(root, record.evidenceRefs!.assessment!, previous), /EXECUTION_PACKET_MISMATCH/);
+    await assert.rejects(validateEditorialExecution(root, record.evidenceRefs!.editorial!, previous), /EXECUTION_PACKET_MISMATCH/);
+    await assert.rejects(validatePresentationEvidence(root, record.evidenceRefs!.presentation!, previous), /EXECUTION_PACKET_MISMATCH/);
+    const archived = await freezeEvidenceGraph(root, id, Object.values(record.evidenceRefs!));
+    assert.deepEqual((await withEvidenceSnapshot(archived, () => evaluateWorkflowEvidence(record, { root }))).diagnostics, []);
+    const research = await readEvidence(root, record.evidenceRefs!.research!) as Record<string, unknown>;
+    const replacement = await storeEvidence(root, id, { ...research, freshness: "Replacement research requires a new assessment." });
+    await assert.rejects(validateContentAssessment(root, record.evidenceRefs!.assessment!, { ...record, evidenceRefs: { ...record.evidenceRefs, research: replacement } }), /ASSESSMENT_RESEARCH_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
