@@ -99,6 +99,36 @@ test("repair digest ignores public route paths and binds transitive evidence byt
     assert.equal(repaired.continuation?.kind, "repair");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+for (const evidenceField of ["assessmentPath", "editorialExecutionPath", "presentationEvidencePath"] as const) {
+  test(`failed submission retries after in-place ${evidenceField} repair before evidence refs were persisted`, async () => {
+    const root = await fixture();
+    try {
+      const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
+      const workDirectory = path.join(root, ".automation/article-imports/work", record.importId);
+      await mkdir(workDirectory, { recursive: true });
+      const evidencePath = `${evidenceField}.json`;
+      await writeFile(path.join(root, evidencePath), JSON.stringify({ ready: false, path: "/public-route" }));
+      await writeFile(path.join(workDirectory, "synthetic.result.json"), JSON.stringify({ work: { stage: record.stage, [evidenceField]: evidencePath } }));
+      let executions = 0;
+      const executor = async ({ record: current }: { record: typeof record }) => {
+        executions++;
+        const evidence = JSON.parse(await readFile(path.join(root, evidencePath), "utf8"));
+        if (!evidence.ready) throw new Error("Synthetic stage evidence failed before assigning evidenceRefs");
+        return current;
+      };
+      const failed = await executePendingImport(root, record.importId, executor);
+      assert.equal(failed.continuation?.kind, "repair");
+      assert.deepEqual(failed.evidenceRefs, {});
+      const before = await canonicalSubmissionFingerprint(failed, root);
+      await assert.rejects(executePendingImport(root, record.importId, executor), /UNCHANGED_SUBMISSION/);
+      await writeFile(path.join(root, evidencePath), JSON.stringify({ ready: true, path: "/public-route" }));
+      assert.notEqual(await canonicalSubmissionFingerprint(failed, root), before);
+      await executePendingImport(root, record.importId, executor);
+      assert.equal(executions, 2);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+}
 test("explicit legacy upgrade preserves history and terminal mismatch cannot skip", async () => {
   const root = await fixture();
   try {

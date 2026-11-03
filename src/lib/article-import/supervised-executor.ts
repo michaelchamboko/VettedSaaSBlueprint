@@ -4,11 +4,12 @@ import { z } from "zod";
 import { advanceImport, approveImportContent, loadImport, recordImportPresentation, verifyImportRelease, writeJsonAtomically, type ImportStageExecutor } from "./engine";
 import { importFormatSchema } from "./contracts";
 import { assertIgnoredImportStatePath } from "./automation-state";
-import { validateImportArtifact } from "./format-validation";
+import { validateImportArtifact, importArtifactTarget } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
 import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
 import { evidenceReference, validateResearchEvidence } from "./workflow-evidence";
 import { instructionsForStage, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
+import { captureRenderingInputs, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 
 const file = z.string().min(1);
 const resultSchema = z.object({
@@ -48,11 +49,18 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     const resultPath = `${directory}/${context.idempotencyKey}.result.json`;
     await assertIgnoredImportStatePath(root, workPath);
     await assertIgnoredImportStatePath(root, resultPath);
+    let renderingInputs;
+    if (stage === "VALIDATING" && record.contentApproval && record.format !== "agent_review_required") {
+      const reference = await captureRenderingInputs(root, record.importId);
+      const manifest = await validateRenderingInputs(root, reference);
+      const target = importArtifactTarget(record.format, await readRepositoryJson(root, record.contentApproval.artifactPath));
+      renderingInputs = { reference, detectorTargets: requiredDetectorInputs(manifest, target) };
+    }
     await writeJsonAtomically(path.join(root, workPath), {
       schemaVersion: "ImportSupervisedWorkV1", importId: record.importId,
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
       idempotencyKey: context.idempotencyKey, sourcePath: `.automation/article-imports/${record.importId}.source.md`,
-      record, resultSchema: z.toJSONSchema(resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements,
+      record, resultSchema: z.toJSONSchema(resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
       instructions: instructionsForStage(stage), resultPath,
       resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,

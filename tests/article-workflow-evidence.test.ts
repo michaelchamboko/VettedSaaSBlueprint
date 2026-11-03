@@ -10,7 +10,7 @@ import { createEditorialEvidence } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution, evidenceReference, extractOpenCodeExecution, freezeEvidenceGraph, proseProjectionDigest, sha256, validateExecutionEvidence, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
-import { captureRenderingInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
+import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
 async function fixture() {
@@ -85,6 +85,35 @@ test("editorial instructions must be present in the captured exchange, not attac
     editorial.passes[0].executionRef = await storeEvidence(root, id, { ...execution, instructions: [] });
     await assert.rejects(validateEditorialExecution(root, await storeEvidence(root, id, editorial), record), /INSTRUCTION_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("authentic detector command shape cannot substitute an unrelated inventory file or partial coverage", async () => {
+  const { root, record } = await fixture();
+  try {
+    const original = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const partial = structuredClone(original), partialRule = partial.ruleResults.find((rule) => rule.ruleId === "detect")!;
+    partialRule.evidenceRefs = partialRule.evidenceRefs.slice(0, 1);
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, partial), record), /DETECTOR_COVERAGE_INCOMPLETE/);
+    const unrelated = structuredClone(original), detectorRule = unrelated.ruleResults.find((rule) => rule.ruleId === "detect")!;
+    const captured = await readEvidence(root, detectorRule.evidenceRefs[0]) as { inputRefs: Array<{ path: string; sha256: string }>; argv: string[] };
+    const lockfile = await evidenceReference(root, "package-lock.json");
+    // Preserve the real producer's executable/version/output contract; only the scanned scope differs.
+    const unrelatedScan = { ...captured, argv: ["detect", "--json", "--no-config", lockfile.path], inputRefs: [...captured.inputRefs, lockfile] };
+    detectorRule.evidenceRefs = [await storeEvidence(root, id, unrelatedScan)];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, unrelated), record), /DETECTOR_TARGET_OUTSIDE_SCOPE:package-lock.json/);
+    await validatePresentationEvidence(root, record.evidenceRefs!.presentation!, record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("detector scope requires each format core, shared shell and matching dynamic route files", () => {
+  for (const format of Object.keys(detectorCoreFiles) as Array<keyof typeof detectorCoreFiles>) {
+    const paths = [...new Set([detectorCoreFiles[format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/shared.css", "src/components/public/Header.tsx", "src/app/(public)/[slug]/page.tsx", "src/app/(public)/[slug]/page.module.css", "src/app/unrelated/page.tsx", "package-lock.json"])].sort();
+    const files = paths.map((file) => ({ path: file, sha256: "a".repeat(64) }));
+    const manifest = renderingInputsSchema.parse({ schemaVersion: "RenderingInputsV1", inventoryVersion: 1, files, digest: sha256(JSON.stringify(files)) });
+    const scope = requiredDetectorInputs(manifest, { format, renderedRoutes: ["/article"] }).map((ref) => ref.path);
+    for (const expected of [detectorCoreFiles[format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/shared.css", "src/app/(public)/[slug]/page.tsx", "src/app/(public)/[slug]/page.module.css"]) assert.ok(scope.includes(expected), `${format}: ${expected}`);
+    assert.equal(scope.includes("src/components/public/Header.tsx"), format !== "direct-review");
+    assert.equal(scope.includes("package-lock.json"), false); assert.equal(scope.includes("src/app/unrelated/page.tsx"), false);
+    assert.throws(() => requiredDetectorInputs({ ...manifest, files: files.filter((ref) => ref.path !== detectorCoreFiles[format]) }, { format, renderedRoutes: ["/article"] }), /CORE_INPUT_MISSING/);
+  }
 });
 test("OpenCode extraction rejects unknown versions and mismatched parent linkage", () => {
   const input = { title: "Before" }, output = { title: "After" }, packetId = sha256("packet");

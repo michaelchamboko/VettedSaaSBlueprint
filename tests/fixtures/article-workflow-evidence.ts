@@ -1,12 +1,12 @@
 /** Synthetic adapter fixtures only. Never use these producers from the production CLI. */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { artifactProseProjection, evidenceReference, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
 import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION, workflowRequirements } from "../../src/lib/article-import/workflow-requirements";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../../src/lib/editorial/refinement";
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
-import { captureRenderingInputs } from "../../src/lib/article-import/rendering-inputs";
+import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs } from "../../src/lib/article-import/rendering-inputs";
 
 const families = { "fixture/writer": "fixture-writer-family", "fixture/cleanser": "fixture-cleanser-family" };
 const now = "2026-11-03T00:00:00.000Z";
@@ -57,10 +57,13 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const assessment = await save({ ...common, schemaVersion: "ContentAssessmentV1", format: input.format, artifactFingerprint: fingerprintEditorialArtifact(input.after), schemaRevision, ...assessed, researchRef: research, reviewerExecutionRef: await model("content-assessment", input.after, input.after, afterRef, afterRef, "writer", { assessment: JSON.stringify(assessed) }) });
   const rules = ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
   const target = importArtifactTarget(input.format, input.after);
-  const scannedFile = "src/styles/fixture-renderer.css";
-  await mkdir(path.dirname(path.join(root, scannedFile)), { recursive: true }); await writeFile(path.join(root, scannedFile), "body { color: black; background: white; }\n");
-  const scannedRef = await evidenceReference(root, scannedFile);
+  for (const file of [detectorCoreFiles[input.format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/fixture-renderer.css", "package-lock.json"]) {
+    await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+    const bytes = file.endsWith(".css") ? "body { color: black; background: white; }\n" : file.endsWith(".tsx") ? "export default function Fixture() { return <main>Fixture</main>; }\n" : "{}";
+    await writeFile(path.join(root, file), bytes, { flag: "wx" }).catch((error: NodeJS.ErrnoException) => { if (error.code !== "EEXIST") throw error; });
+  }
   const renderInputsRef = await captureRenderingInputs(root, record.importId);
+  const detectorInputs = requiredDetectorInputs(renderingInputsSchema.parse(await readEvidence(root, renderInputsRef)), target);
   const ruleResults = [];
   for (const rule of rules) {
     if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
@@ -68,9 +71,13 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
       ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await model(`design:${rule}`, input.after, input.after, afterRef, afterRef, "writer", { designReview: JSON.stringify(review) })] });
       continue;
     }
-    const execution = ["desktop", "mobile", "reduced-motion"].includes(rule)
-      ? { schemaVersion: "ExecutionEvidenceV1", kind: "browser", toolVersion: "fixture-1", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef], outputRefs: [], target: "http://127.0.0.1:3000", routes: target.renderedRoutes, viewport: { width: rule === "mobile" ? 390 : 1440, height: 900, reducedMotion: rule === "reduced-motion" }, checks: { rendered: true }, screenshots: [await save({ screenshot: "synthetic browser fixture" })] }
-      : { schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: "0.1.5", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef, scannedRef, pinRef(detectorFile), pinRef(detectorVersion)], outputRefs: [], executable: detectorFile, argv: ["detect", "--json", "--no-config", scannedFile], cwd: root, stdout: "[]", stderr: "", exitCode: 0 };
+    if (rule === "detect") {
+      const evidenceRefs = [];
+      for (const scannedRef of detectorInputs) evidenceRefs.push(await save({ schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: "0.1.5", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef, scannedRef, pinRef(detectorFile), pinRef(detectorVersion)], outputRefs: [], executable: detectorFile, argv: ["detect", "--json", "--no-config", scannedRef.path], cwd: root, stdout: "[]", stderr: "", exitCode: 0 }));
+      ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: "Synthetic captured detector output for the complete required surface.", evidenceRefs });
+      continue;
+    }
+    const execution = { schemaVersion: "ExecutionEvidenceV1", kind: "browser", toolVersion: "fixture-1", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef], outputRefs: [], target: "http://127.0.0.1:3000", routes: target.renderedRoutes, viewport: { width: rule === "mobile" ? 390 : 1440, height: 900, reducedMotion: rule === "reduced-motion" }, checks: { rendered: true }, screenshots: [await save({ screenshot: "synthetic browser fixture" })] };
     ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await save(execution)] });
   }
   const presentation = await save({ ...common, schemaVersion: "WorkflowEvidenceV1", stage: "VALIDATING", packetId: packet("VALIDATING"), artifactRef: afterRef, renderInputsRef, predecessorRefs: [assessment, editorial], ruleResults });

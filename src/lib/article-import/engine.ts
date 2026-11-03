@@ -253,7 +253,8 @@ function strategyGroup(stage: ImportStage): string {
 export async function canonicalSubmissionFingerprint(record: ExternalArticleImportV1, root: string): Promise<string> {
   const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, artifactPath: record.artifactPath, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
   const files = new Set<string>();
-  const fileFields = new Set(["artifactPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "evidencePath", "codeReviewPath", "workPath", "resultPath"]);
+  // Explicit supervised-result/approval dependencies; never infer files from arbitrary article path keys.
+  const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "evidencePath", "codeReviewPath", "workPath", "resultPath"]);
   function collect(value: unknown): void {
     if (!value || typeof value !== "object") return;
     const ref = evidenceRefSchema.safeParse(value);

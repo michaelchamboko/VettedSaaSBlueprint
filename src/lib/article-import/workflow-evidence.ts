@@ -4,7 +4,7 @@ import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialProse, e
 import { importArtifactTarget, validateImportArtifact } from "./format-validation";
 import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, type WorkflowStage } from "./workflow-requirements";
 import { evidenceRefSchema, frozenFileSchema, withEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
-import { validateRenderingInputs } from "./rendering-inputs";
+import { requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 export { evidenceRefSchema, evidenceReference, readEvidence, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
@@ -204,6 +204,8 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   const artifact = await artifactFor(root, binding);
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
   const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
+  const detectorInputs = requiredDetectorInputs(rendering, target);
+  const detectedFiles = new Set<string>();
   if (fingerprintEditorialArtifact(await readEvidence(root, value.artifactRef)) !== fingerprintEditorialArtifact(artifact)) throw new Error("PRESENTATION_ARTIFACT_MISMATCH");
   for (const predecessor of value.predecessorRefs) await verifyEvidenceRef(root, predecessor);
   const rules = ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
@@ -229,8 +231,10 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         const version = (await readEvidenceBytes(root, versionFile)).toString("utf8").trim();
         const scannedFile = execution.argv[3];
         if (version !== "0.1.5" || execution.toolVersion !== version || path.resolve(root, execution.executable) !== path.resolve(root, binary) || path.resolve(execution.cwd) !== path.resolve(root) || execution.argv.length !== 4 || execution.argv.slice(0, 3).join(" ") !== "detect --json --no-config" || !scannedFile || !execution.inputRefs.some((ref) => ref.path === scannedFile && rendering.files.some((item) => item.path === ref.path && item.sha256 === ref.sha256))) throw new Error("PRESENTATION_DETECTOR_COMMAND_MISMATCH");
+        if (!detectorInputs.some((ref) => ref.path === scannedFile && execution.inputRefs.some((item) => item.path === ref.path && item.sha256 === ref.sha256))) throw new Error(`PRESENTATION_DETECTOR_TARGET_OUTSIDE_SCOPE:${scannedFile}`);
         // The pinned engine emits an array; [] is the unambiguous clean result.
         z.array(z.unknown()).length(0).parse(JSON.parse(execution.stdout));
+        detectedFiles.add(scannedFile);
       }
       if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
         if (execution.kind !== "opencode" || execution.pass !== `design:${rule}` || proseProjectionDigest(execution.input) !== proseProjectionDigest(artifactProseProjection(binding.format, artifact))) throw new Error("PRESENTATION_JUDGMENT_REQUIRED");
@@ -245,6 +249,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
       }
     }
   }
+  if (detectorInputs.some((ref) => !detectedFiles.has(ref.path))) throw new Error("PRESENTATION_DETECTOR_COVERAGE_INCOMPLETE");
   return value;
 }
 export async function validateTerminalEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding, seen = new Set<string>()): Promise<void> {

@@ -25,6 +25,48 @@ export const renderingInputsSchema = z.object({
   if (manifest.digest !== sha256(JSON.stringify(manifest.files))) context.addIssue({ code: "custom", message: "Rendering input digest does not match its file references." });
 });
 
+export const detectorCoreFiles = {
+  "direct-review": "src/components/landing/DirectReviewPage.tsx",
+  blog: "src/app/blog/[slug]/page.tsx",
+  visibility: "src/components/visibility/VisibilityPage.tsx",
+  "decision-set": "src/components/public/DecisionJourneyPage.tsx",
+} as const;
+const RENDERABLE = /\.(?:tsx?|jsx?|css|scss|sass|less|html|vue|svelte)$/;
+const PAGE_ENTRY = /^(?:page|layout|template)\.(?:tsx?|jsx?)$/;
+const STYLE = /\.(?:css|scss|sass|less)$/;
+function routeDirectoryMatches(directory: string, route: string, prefix: boolean): boolean {
+  const pattern = directory.split("/").filter((part) => part && !/^\(.*\)$/.test(part));
+  const segments = route.split("/").filter(Boolean);
+  let cursor = 0;
+  for (const part of pattern) {
+    if (/^\[\[\.\.\..+\]\]$/.test(part)) return true;
+    if (/^\[\.\.\..+\]$/.test(part)) return cursor < segments.length;
+    if (cursor >= segments.length || (!/^\[[^\]]+\]$/.test(part) && part !== segments[cursor])) return false;
+    cursor += 1;
+  }
+  return prefix || cursor === segments.length;
+}
+
+/** Format-owned surface coverage, not a whole-site scan or caller-selected clean file. */
+export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsSchema>, target: { format: string; renderedRoutes: string[] }): EvidenceRef[] {
+  const core = detectorCoreFiles[target.format as keyof typeof detectorCoreFiles];
+  if (!core || !target.renderedRoutes.length || target.renderedRoutes.some((route) => !route.startsWith("/") || route.split("/").includes(".."))) throw new Error("DETECTOR_TARGET_UNSUPPORTED");
+  const required = [core, "src/app/layout.tsx", "src/app/globals.css"];
+  for (const file of required) if (!manifest.files.some((ref) => ref.path === file)) throw new Error(`DETECTOR_CORE_INPUT_MISSING:${file}`);
+  const subtree = core.slice(0, core.lastIndexOf("/") + 1);
+  return manifest.files.filter((ref) => {
+    const file = ref.path;
+    if (required.includes(file)) return true;
+    if (!RENDERABLE.test(file)) return false;
+    if (file.startsWith(subtree) || file.startsWith("src/styles/") || (target.format !== "direct-review" && file.startsWith("src/components/public/"))) return true;
+    if (!file.startsWith("src/app/")) return false;
+    const relative = file.slice("src/app/".length), slash = relative.lastIndexOf("/");
+    const directory = slash < 0 ? "" : relative.slice(0, slash), name = relative.slice(slash + 1);
+    if (!PAGE_ENTRY.test(name) && !STYLE.test(name)) return false;
+    return target.renderedRoutes.some((route) => routeDirectoryMatches(directory, route, name.startsWith("layout.") || name.startsWith("template.") || STYLE.test(name)));
+  });
+}
+
 /** Deterministic, read-only inventory; symlinks cannot hide external or omitted inputs. */
 export async function renderingInputPaths(root: string): Promise<string[]> {
   const files: string[] = [];
