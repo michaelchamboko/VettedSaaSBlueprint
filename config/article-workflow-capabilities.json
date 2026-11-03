@@ -1,7 +1,10 @@
 {
   "schemaVersion": "ArticleWorkflowCapabilitiesV1",
-  "openCodeVersion": "1.19.4",
-  "modelFamilies": {},
+  "openCodeVersion": "2.2.5",
+  "modelFamilies": {
+    "opencode-go/beam-free": "reflection-beam",
+    "nvidia/minimaxai/minimax-m3.1-flash": "minimax"
+  },
   "files": [
     {
       "path": ".agents/skills/impeccable/reference/adapt.md",
