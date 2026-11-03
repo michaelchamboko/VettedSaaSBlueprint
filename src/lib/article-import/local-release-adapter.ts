@@ -6,7 +6,7 @@ import type { ReleaseOperations, ReleaseDeployment, ReleaseGitSnapshot, FullProd
 import type { ImportFormat } from "./contracts";
 import { validateReleasePaths } from "./release";
 import { readImportArtifactTarget } from "./format-validation";
-import { assertVerifierResult, requireVerificationMode } from "./verification-evidence";
+import { assertVerifierResult, requireVerificationMode, storeProductionVerifierEvidence } from "./verification-evidence";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
 const execFile = promisify(execFileCallback);
@@ -46,7 +46,7 @@ async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot
   return { clean, changedFiles, headSha, originMainSha, fastForwardable };
 }
 
-export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string; importId?: string }): ReleaseOperations {
+export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string; importId?: string; sourceFingerprint?: string }): ReleaseOperations {
   const runner = options.runner ?? defaultRunner(repositoryRoot);
   const defaultFetchJson: ReleaseJsonFetcher = async (url) => {
     const response = await fetch(url);
@@ -172,12 +172,29 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
     },
     async verifyProduction(deployment): Promise<FullProductionChecks> {
       if (!options.artifactPath) throw new Error("ARTIFACT_PATH_REQUIRED");
+      if (!options.importId) throw new Error("PRODUCTION_IMPORT_ID_REQUIRED");
+      if (!options.sourceFingerprint) throw new Error("PRODUCTION_SOURCE_FINGERPRINT_REQUIRED");
       const { target } = await readImportArtifactTarget(repositoryRoot, options.format, options.artifactPath, options.slug);
       if (deployment.canonicalUrl !== new URL(target.renderedRoutes[0], origin).href) throw new Error("DEPLOYMENT_CANONICAL_MISMATCH");
+      const deploymentBefore = await verifiedDeployment(origin);
+      if (deploymentBefore.id !== deployment.deploymentId || deploymentBefore.commitSha !== deployment.commitSha) throw new Error("PRODUCTION_DEPLOYMENT_MISMATCH");
+      async function capture(command: string, args: string[]) {
+        const output = await runner(command, args);
+        const result = JSON.parse(output.stdout) as Record<string, unknown>;
+        const deploymentAfter = await verifiedDeployment(origin);
+        const productionVerifierRef = await storeProductionVerifierEvidence(repositoryRoot, options.importId!, {
+          schemaVersion: "ImportProductionVerifierEvidenceV1", importId: options.importId!, sourceFingerprint: options.sourceFingerprint!, target, deployment,
+          deploymentBefore: { ...deploymentBefore, target: "production", readyState: "READY" },
+          deploymentAfter: { ...deploymentAfter, target: "production", readyState: "READY" },
+          command: { command, args, stdout: output.stdout, stderr: output.stderr, exitCode: 0 }, result,
+        });
+        return { result, productionVerifierRef };
+      }
       if (options.format !== "direct-review") {
         const script = { blog: "scripts/verify-blog-deployment.ts", visibility: "scripts/verify-visibility-deployment.ts", "decision-set": "scripts/verify-decision-set-deployment.ts" }[options.format as "blog" | "visibility" | "decision-set"];
         if (!script) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
-        const result = JSON.parse((await runner("npx", ["tsx", script, "--origin", origin, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; ok?: boolean; passed?: boolean; browser_errors_ok?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
+        const captured = await capture("npx", ["tsx", script, "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath]);
+        const result = captured.result as { target?: unknown; ok?: boolean; passed?: boolean; browser_errors_ok?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
         if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
         requireVerificationMode(result, "production");
         assertVerifierResult(target, result);
@@ -186,16 +203,17 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
           : result.ok === true && (result.routes ?? 0) > 0 && (result.viewportChecks ?? 0) >= 2;
         if (!passed) throw new Error(`FORMAT_VERIFIER_FAILED:${options.format}`);
         // These formats prohibit affiliate destinations; their owner checks apply.
-        return { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: options.format === "decision-set" ? result.browser_errors_ok === true : true };
+        return { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: options.format === "decision-set" ? result.browser_errors_ok === true : true, productionVerifierRef: captured.productionVerifierRef };
       }
-      const result = JSON.parse((await runner("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath])).stdout) as { target?: unknown; status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
+      const captured = await capture("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath]);
+      const result = captured.result as { target?: unknown; status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
       if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
       requireVerificationMode(result, "production");
       assertVerifierResult(target, result);
       const pages = result.pages ?? [];
       const snapshots = pages.flatMap((page) => [page.desktop, page.mobile]).filter((page): page is NonNullable<typeof page> => Boolean(page));
       if (result.status !== "pass" || pages.length === 0) throw new Error("LANDING_VERIFIER_FAILED");
-      return { routeOk: snapshots.every((page) => page.httpOk === true), contentOk: snapshots.every((page) => page.allRevealSectionsVisible === true), disclosureOk: snapshots.every((page) => page.disclosureOk === true), exactCtaOk: snapshots.every((page) => page.allCtasExact === true), desktopOk: pages.every((page) => page.desktop?.httpOk === true), mobileOk: pages.every((page) => page.mobile?.httpOk === true), robotsOk: result.robots_ok === true, sitemapOk: result.sitemap_ok === true, browserErrorsOk: snapshots.every((page) => (page.browserErrors?.length ?? 1) === 0) };
+      return { routeOk: snapshots.every((page) => page.httpOk === true), contentOk: snapshots.every((page) => page.allRevealSectionsVisible === true), disclosureOk: snapshots.every((page) => page.disclosureOk === true), exactCtaOk: snapshots.every((page) => page.allCtasExact === true), desktopOk: pages.every((page) => page.desktop?.httpOk === true), mobileOk: pages.every((page) => page.mobile?.httpOk === true), robotsOk: result.robots_ok === true, sitemapOk: result.sitemap_ok === true, browserErrorsOk: snapshots.every((page) => (page.browserErrors?.length ?? 1) === 0), productionVerifierRef: captured.productionVerifierRef };
     },
     async rollback(deploymentId) { try { await runner("vercel", withToken(["rollback", deploymentId, "--yes"], token)); return { ok: true, summary: "rollback completed" }; } catch (error) { return { ok: false, summary: String(error) }; } },
     async verifyRollback(deploymentId, expectedCommitSha) {

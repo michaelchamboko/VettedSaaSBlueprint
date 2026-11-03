@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { listPublishedBlogPosts } from "../src/lib/blog/catalogue";
 import { blogPostSchema } from "../src/lib/blog/contracts";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { observeProductionCommit, verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 function argument(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
@@ -32,6 +32,8 @@ async function loadLazyImages(page: import("playwright").Page) {
 async function main() {
   const context = verificationContext({ mode: argument(process.argv.slice(2), "--mode"), origin: argument(process.argv.slice(2), "--origin") ?? "https://vettedsaasblueprint.online", canonicalOrigin: argument(process.argv.slice(2), "--canonical-origin"), expectedCommit: argument(process.argv.slice(2), "--expected-sha") });
   const { origin, canonicalOrigin } = context;
+  const expectedCommit = argument(process.argv.slice(2), "--expected-sha");
+  await observeProductionCommit(context, expectedCommit);
   const output = path.resolve(argument(process.argv.slice(2), "--screenshot-dir") ?? path.join(".stage2", "blog-verification"));
   const slug = argument(process.argv.slice(2), "--slug");
   const artifactPath = argument(process.argv.slice(2), "--artifact");
@@ -117,7 +119,8 @@ async function main() {
     await browser.close();
   }
 
-  const result = { ok: true, ...context, routes: posts.length + 6, verifiedRoutes: posts.map((post) => post.canonicalPath), viewportChecks: results.length, screenshots: output };
+  const deployment = await observeProductionCommit(context, expectedCommit);
+  const result = { ok: true, ...context, ...(deployment ? { expected_commit: expectedCommit, deployment } : {}), routes: posts.length + 6, verifiedRoutes: posts.map((post) => post.canonicalPath), viewportChecks: results.length, viewportResults: results, screenshots: output };
   await writeImportVerifierEvidence(argument(process.argv.slice(2), "--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }, null, 2));
 }

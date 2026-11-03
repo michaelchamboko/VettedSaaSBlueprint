@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { advanceImport, createArticleImport, recordImportFailure, saveImport } from "../src/lib/article-import/engine";
 
 async function fixture() {
-  const root = await mkdtemp(path.join(os.tmpdir(), "article-completion-"));
+  const parent = path.join(process.cwd(), ".scratch"); await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "article-completion-"));
   await writeFile(path.join(root, "approved-urls.md"), "");
   await writeFile(path.join(root, "article.md"), "# A workflow guide\n\nThis practical guide describes workflow choices and their limitations for a production team.");
   const record = await advanceImport(root, await createArticleImport(root, "article.md"), "Source captured.");

@@ -5,9 +5,12 @@ import { contentApprovalMatches } from "./content-approval";
 import { validateImportArtifact } from "./format-validation";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
 import { readImportVerifierEvidence } from "./verification-evidence";
+import { evaluateWorkflowEvidence, validatePresentationEvidence } from "./workflow-evidence";
 
 export async function createImportPresentation(root: string, record: ExternalArticleImportV1, input: { validationGate: string; validationReceipt: unknown }) {
   if (record.stage !== "VALIDATING") throw new Error("PRESENTATION_REQUIRES_VALIDATING_STAGE");
+  const workflow = await evaluateWorkflowEvidence(record, { root, throughStage: "RELEASING" });
+  if (!workflow.ok) throw new Error(workflow.diagnostics.join("; "));
   const approval = record.contentApproval;
   if (!approval || !await contentApprovalMatches(root, approval, record.format, record.sourceFingerprint)) throw new Error("CONTENT_APPROVAL_INVALID");
   const artifact = JSON.parse(await readFile(path.resolve(root, approval.artifactPath), "utf8"));
@@ -24,6 +27,8 @@ export async function createImportPresentation(root: string, record: ExternalArt
 }
 
 export async function verifyImportPresentationEvidence(root: string, record: ExternalArticleImportV1): Promise<void> {
+  const workflow = await evaluateWorkflowEvidence(record, { root, throughStage: "RELEASING" });
+  if (!workflow.ok) throw new Error(workflow.diagnostics.join("; "));
   requireImportPresentationBinding(record);
   const presentation = record.presentation!;
   const current = await Promise.all(presentation.validation.evidencePaths.map((file) => readImportVerifierEvidence(root, file, presentation)));
@@ -33,6 +38,8 @@ export async function verifyImportPresentationEvidence(root: string, record: Ext
 export async function presentationInputFromVerifier(root: string, record: ExternalArticleImportV1, evidencePath: string, pageDesignReceipt: unknown) {
   const approval = record.contentApproval;
   if (!approval) throw new Error("CONTENT_APPROVAL_INVALID");
+  if (!record.evidenceRefs?.presentation) throw new Error("WORKFLOW_EVIDENCE_REQUIRED:presentation");
+  await validatePresentationEvidence(root, record.evidenceRefs.presentation, { ...record, artifactPath: approval.artifactPath });
   const artifact = JSON.parse(await readFile(path.resolve(root, approval.artifactPath), "utf8"));
   const renderedRoutes = validateImportArtifact(record.format, artifact);
   await readImportVerifierEvidence(root, evidencePath, { format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes });

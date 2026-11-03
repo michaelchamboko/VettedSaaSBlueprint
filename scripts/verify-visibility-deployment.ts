@@ -4,12 +4,14 @@ import { chromium } from "playwright";
 import { getPublishedVisibilityPage } from "../src/lib/visibility-pages/catalogue";
 import { visibilityPageSchema } from "../src/lib/visibility-pages/contracts";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
-import { verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { observeProductionCommit, verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
 
 function argument(name: string) { const index = process.argv.indexOf(name); return index >= 0 ? process.argv[index + 1] : undefined; }
 async function main() {
   const context = verificationContext({ mode: argument("--mode"), origin: argument("--origin") ?? "https://vettedsaasblueprint.online", canonicalOrigin: argument("--canonical-origin"), expectedCommit: argument("--expected-sha") });
   const { origin, canonicalOrigin } = context;
+  const expectedCommit = argument("--expected-sha");
+  await observeProductionCommit(context, expectedCommit);
   const artifactPath = argument("--artifact");
   const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "visibility", artifactPath, argument("--slug")) : undefined;
   const route = approved?.target.renderedRoutes[0] ?? `/${(argument("--slug") ?? "").replace(/^\//, "")}`;
@@ -25,6 +27,7 @@ async function main() {
   const output = path.resolve(".automation/receipts/visibility-production");
   await mkdir(output, { recursive: true });
   const browser = await chromium.launch({ headless: true });
+  const viewportResults = [];
   try {
     for (const profile of [{ name: "desktop", width: 1440, height: 900 }, { name: "mobile", width: 390, height: 844 }]) {
       const page = await browser.newPage({ viewport: profile, reducedMotion: "reduce" });
@@ -40,11 +43,13 @@ async function main() {
         sections: document.querySelectorAll("main section").length,
       }));
       if (!response?.ok() || checks.headline !== record.page.hero.headline || checks.canonical !== `${canonicalOrigin}${route}` || checks.noindex || checks.overflow || !checks.sections || errors.length) throw new Error(`Visibility ${profile.name} checks failed: ${JSON.stringify({ checks, errors })}`);
+      viewportResults.push({ viewport: profile.name, route, checks, errors });
       await page.screenshot({ path: path.join(output, `${route.slice(1).replaceAll("/", "-")}-${profile.name}.png`), fullPage: true });
       await page.close();
     }
   } finally { await browser.close(); }
-  const result = { ok: true, ...context, routes: 1, verifiedRoutes: [route], viewportChecks: 2 };
+  const deployment = await observeProductionCommit(context, expectedCommit);
+  const result = { ok: true, ...context, ...(deployment ? { expected_commit: expectedCommit, deployment } : {}), routes: 1, verifiedRoutes: [route], viewportChecks: 2, viewportResults };
   await writeImportVerifierEvidence(argument("--receipt"), approved?.target, result);
   console.log(JSON.stringify({ ...result, target: approved?.target }));
 }

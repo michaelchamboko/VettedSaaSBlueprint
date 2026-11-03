@@ -5,6 +5,7 @@ import type { ExternalArticleImportV1 } from "../../src/lib/article-import/contr
 import { createEditorialEvidence, editorialProsePaths, fingerprintEditorialArtifact, type EditorialFormat } from "../../src/lib/editorial/refinement";
 import { samplePageBlueprint as baseBlueprint } from "./sample-page-blueprint";
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
+import { buildWorkflowFixture } from "./article-workflow-evidence";
 const samplePageBlueprint = { ...baseBlueprint, metadata: { ...baseBlueprint.metadata, url_slug: "example", canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
 
 export const fullRewriteNotes = {
@@ -40,7 +41,7 @@ export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   return revised;
 }
 
-export async function approveFixture(root: string, record: ExternalArticleImportV1) {
+export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1) {
   const artifactPath = "src/generated/landing-pages/example.json";
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
@@ -51,7 +52,13 @@ export async function approveFixture(root: string, record: ExternalArticleImport
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
-  return approveImportContent(root, record, { artifactPath, editorialEvidencePath, formatQualityPath });
+  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath });
+  return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
+}
+
+export async function approveFixture(root: string, record: ExternalArticleImportV1) {
+  const { evidenceRefs, ...files } = await prepareApprovalFixture(root, record);
+  return approveImportContent(root, { ...record, evidenceRefs }, files);
 }
 
 export async function presentFixture(root: string, record: ExternalArticleImportV1) {

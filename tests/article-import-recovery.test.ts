@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { executeImportCommand } from "../scripts/import-article";
-import { advanceImport, claimImportLease, createArticleImport, executePendingImport, loadImport, recordImportFailure } from "../src/lib/article-import/engine";
+import { advanceImport, claimImportLease, createArticleImport, executePendingImport, loadImport, recordImportFailure, recordImportRepair } from "../src/lib/article-import/engine";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -20,17 +20,15 @@ test("three failed repairs require diagnosis before any further execution", asyn
   const strategies: string[] = [];
   const attempts: number[] = [];
   try {
-    for (let i = 0; i < 9; i++) {
-      await executePendingImport(root, record.importId, async (context) => {
-        strategies.push(context.strategy);
-        attempts.push(context.attempt);
-        return recordImportFailure(root, context.record, { strategy: "research", classification: "deterministic", message: "Claim has no support." });
-      });
+    let current = record;
+    for (let i = 0; i < 3; i++) {
+      current = await recordImportRepair(root, { ...current, transformation: { ...current.transformation!, title: `Attempt ${i}` } }, { strategy: "research", message: `Claim ${i} has no support.` });
     }
-    assert.deepEqual(strategies, ["alternate-source", "alternate-source", "alternate-source"]);
-    assert.deepEqual(attempts, [1, 2, 3]);
+    await assert.rejects(executePendingImport(root, record.importId, async (context) => { strategies.push(context.strategy); attempts.push(context.attempt); return context.record; }), /UNCHANGED_SUBMISSION/);
+    assert.deepEqual(strategies, []);
+    assert.deepEqual(attempts, []);
     const stopped = await loadImport(root, record.importId);
-    assert.equal(stopped.stage, "REPAIRING");
+    assert.equal(stopped.stage, "RESEARCHING");
     assert.equal(stopped.continuation?.kind, "repair");
     assert.ok(stopped.continuation?.kind === "repair" && stopped.continuation.diagnosisRequired);
     assert.equal(stopped.sourceDeletedAt, undefined);
@@ -69,28 +67,30 @@ test("a concurrent resume cannot execute an already claimed import", async () =>
       calls++;
       started();
       await waiting;
-      return advanceImport(root, current, "Research completed.");
+      return current;
     });
     await ready;
     await executePendingImport(root, record.importId, async ({ record: current }) => { calls++; return current; });
     finish();
     await first;
     assert.equal(calls, 1);
-    assert.equal((await loadImport(root, record.importId)).stage, "TRANSFORMING");
+    assert.equal((await loadImport(root, record.importId)).stage, "RESEARCHING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("expired owners cannot release or validate a successor lease", async () => {
+test("expiry never admits a successor while the owning process is live", async () => {
   const { root, record } = await fixture();
   try {
     const old = await claimImportLease(root, record.importId, 10);
     assert.ok(old);
     await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(await claimImportLease(root, record.importId), undefined);
+    await old.assertOwned();
+    await old.release();
     const successor = await claimImportLease(root, record.importId);
     assert.ok(successor);
     assert.notEqual(old.ownerToken, successor.ownerToken);
-    await old.release();
-    await assert.rejects(old.assertOwned, /expired or changed owner/);
+    await assert.rejects(old.assertOwned, /LEASE_OWNER_CHANGED/);
     await successor.assertOwned();
     assert.equal(await claimImportLease(root, record.importId), undefined);
     await successor.release();

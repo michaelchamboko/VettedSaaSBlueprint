@@ -1,5 +1,8 @@
 # Preserve pinned SlopMonster bytes on Windows checkouts.
 /.agents/skills/eleanor-editorial/** text eol=lf
+# Capability manifests bind exact provisioned bytes, including Windows launchers.
+/.agents/skills/impeccable/** -text
+/.agents/skills/design-taste-frontend/** -text
 /docs/APPROVED_UI_COMPONENT_CATALOGUE.md text eol=lf
 /docs/Vetted-SaaS-Blueprint-*.md text eol=lf
 /docs/document-intelligence/*.json text eol=lf

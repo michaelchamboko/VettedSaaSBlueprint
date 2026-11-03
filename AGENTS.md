@@ -86,6 +86,12 @@ When these records or repository relationships change, verify the SQL migration,
 
 ## Article handoff continuation
 
+The mandatory sequence and machine-readable rule registry are exposed by `npm run import:article -- --describe-workflow`. Read that output and run `--preflight` before a future authorized article trigger. Evidence research precedes a complete draft and intent/SEO/AEO assessment; Eleanor's full workflow precedes final assessment and approval; design/browser validation precedes release; retained production proof precedes LIVE. Work packets include the exact result schema. Missing work is not a reason to skip an article.
+
+New automation records use workflow version 2. Historical records remain inspectable; never edit their JSON to fabricate approval or mark an entry LIVE. Explicit upgrade, reconciliation and diagnosis commands validate bindings and preserve history. Read-only checks never repair state. Expired leases do not authorize takeover; recovery requires verified exit of the owning local process. Unverified ownership stops execution.
+
+Packet ARTICLE-HARDENING-002 authorizes automation-code work and synthetic tests only. Do not build articles, resume real imports, migrate actual records, merge, deploy or publish as part of that packet.
+
 The supervising agent must execute every manual or API article work packet through LIVE, QUARANTINED, or a durable documented blocker. A missing packet result, editorial receipt, or validation artifact is unfinished agent work and must be completed before selecting another fixed-snapshot entry. Folder intake resumes the earliest PROCESSING entry before PENDING entries and preserves captured source bytes and order. Article-specific blockers may advance the folder; shared capability, access, integrity, or release blockers stop it. Never substitute a scanner report or another article's receipt for EditorialEvidenceV2.
 
 Missing or invalid `EditorialEvidenceV2` requires the supervising agent to complete `.agents/skills/eleanor-editorial/SKILL.md` before submitting another validation result. That skill owns the editorial procedure. Never substitute `LandingEditorialReviewV1` or fabricated attestations. Submit the current artifact, its genuine matching editorial receipt, required quality evidence, and correctly bound work packet.

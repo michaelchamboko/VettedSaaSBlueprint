@@ -7,6 +7,12 @@ import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, type ApprovalFiles } from "./content-approval";
 import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 import { createImportPresentation, verifyImportPresentationEvidence } from "./presentation";
+import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
+export { recoverWorkflowLease } from "./workflow-lease";
+import { WORKFLOW_REVISION } from "./workflow-requirements";
+import { evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence } from "./workflow-evidence";
+import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
+import { readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
 
 const ROOT = ".automation/article-imports";
 const activeLease = new AsyncLocalStorage<ImportLease>();
@@ -145,7 +151,7 @@ export function prepareTransformation(parsed: ReturnType<typeof parseExternalArt
 function initialRecord(input: { importId: string; sourceFile: string; sourceFingerprint: string; parsed: ReturnType<typeof parseExternalArticle>; transformation: ImportTransformationV1 }): ExternalArticleImportV1 {
   const at = now();
   return {
-    schemaVersion: "ExternalArticleImportV1", importId: input.importId, sourceFingerprint: input.sourceFingerprint,
+    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], importId: input.importId, sourceFingerprint: input.sourceFingerprint,
     sourceFile: input.sourceFile, stage: "INGESTING", createdAt: at, updatedAt: at,
     title: input.parsed.title, primaryQuestion: input.parsed.primaryQuestion, format: input.transformation.format,
     promptInjectionDetected: input.parsed.promptInjectionDetected, ...(input.parsed.unusableReason ? { unusableReason: input.parsed.unusableReason } : {}),
@@ -192,6 +198,7 @@ export async function writeJsonAtomically(file: string, value: unknown, replace:
 
 export async function saveImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<string> {
   const parsed = externalArticleImportSchema.parse(record);
+  assertCurrentImport(parsed);
   const file = recordPath(repositoryRoot, parsed.importId);
   const lease = activeLease.getStore();
   await lease?.assertOwned();
@@ -203,54 +210,34 @@ export async function saveImport(repositoryRoot: string, record: ExternalArticle
 }
 
 export async function loadImport(repositoryRoot: string, importId: string): Promise<ExternalArticleImportV1> {
-  return externalArticleImportSchema.parse(JSON.parse(await readFile(recordPath(repositoryRoot, importId), "utf8")));
+  if (!/^article-[0-9a-f-]{36}$/.test(importId)) throw new Error("INVALID_IMPORT_ID");
+  const raw = JSON.parse(await readFile(recordPath(repositoryRoot, importId), "utf8"));
+  if (raw.schemaVersion === "ExternalArticleImportV1") {
+    const diagnostics: string[] = [];
+    for (const field of ["contentApproval", "presentation"] as const) {
+      if (raw[field] !== undefined && !externalArticleImportSchema.shape[field].safeParse(raw[field]).success) { diagnostics.push(`INVALID_LEGACY_EVIDENCE:${field}`); delete raw[field]; }
+    }
+    if (raw.pendingRelease?.codeReview && !externalArticleImportSchema.shape.pendingRelease.unwrap().shape.codeReview.safeParse(raw.pendingRelease.codeReview).success) {
+      diagnostics.push("INVALID_LEGACY_EVIDENCE:pendingRelease.codeReview"); delete raw.pendingRelease.codeReview;
+    }
+    raw.legacyDiagnostics = diagnostics;
+  }
+  return externalArticleImportSchema.parse(raw);
 }
 
 export async function listPendingImports(repositoryRoot: string): Promise<ExternalArticleImportV1[]> {
   return (await listAllImports(repositoryRoot)).filter((record) => !["LIVE", "QUARANTINED"].includes(record.stage));
 }
 
-type LeaseRecord = { generation: number; ownerToken: string; expiresAt: number };
-export type ImportLease = { ownerToken: string; expiresAt: number; assertOwned: () => Promise<void>; release: () => Promise<void> };
+
+export type ImportLease = WorkflowLease;
 
 // Immutable generations make exclusive hard-link creation a filesystem compare-and-swap.
 // An expired owner can never delete or overwrite a successor's lease.
 export async function claimImportLease(repositoryRoot: string, importId: string, ttlMs = 30 * 60_000): Promise<ImportLease | undefined> {
-  if (!/^article-[0-9a-f-]{36}$/.test(importId) || ttlMs <= 0) throw new Error("Invalid import lease request.");
-  const directory = path.join(storeRoot(repositoryRoot), "leases", importId);
-  await mkdir(directory, { recursive: true });
-  const latest = async (): Promise<LeaseRecord | undefined> => {
-    const generations = (await readdir(directory)).filter((name) => /^\d+\.json$/.test(name)).map((name) => Number(name.slice(0, -5)));
-    if (!generations.length) return undefined;
-    return JSON.parse(await readFile(path.join(directory, `${Math.max(...generations)}.json`), "utf8")) as LeaseRecord;
-  };
-  const append = async (record: LeaseRecord): Promise<boolean> => {
-    const target = path.join(directory, `${record.generation}.json`);
-    let handle;
-    try {
-      // Windows does not permit hard-link creation in some managed workspaces.
-      // Exclusive creation preserves the compare-and-swap property without a link.
-      handle = await open(target, "wx");
-      await handle.writeFile(`${JSON.stringify(record, null, 2)}\n`, "utf8");
-      await handle.sync();
-      return true;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
-      throw error;
-    } finally { await handle?.close(); }
-  };
-  const previous = await latest();
-  if (previous && previous.expiresAt > Date.now()) return undefined;
-  const record = { generation: (previous?.generation ?? 0) + 1, ownerToken: randomUUID(), expiresAt: Date.now() + ttlMs };
-  if (!await append(record)) return undefined;
-  const assertOwned = async () => {
-    const current = await latest();
-    if (current?.ownerToken !== record.ownerToken || current.expiresAt <= Date.now()) throw new Error("Import lease expired or changed owner.");
-  };
-  return { ownerToken: record.ownerToken, expiresAt: record.expiresAt, assertOwned, release: async () => {
-    const current = await latest();
-    if (current?.ownerToken === record.ownerToken) await append({ generation: current.generation + 1, ownerToken: record.ownerToken, expiresAt: 0 });
-  } };
+  const legacyFiles = await readdir(path.join(storeRoot(repositoryRoot), "leases", importId)).catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return []; throw error; });
+  if (legacyFiles.length) throw new Error("LEASE_RECOVERY_UNVERIFIED");
+  return claimWorkflowLease(repositoryRoot, "import", importId, ttlMs);
 }
 
 export type ImportExecutionContext = {
@@ -263,8 +250,71 @@ function strategyGroup(stage: ImportStage): string {
   return ({ RESEARCHING: "research", TRANSFORMING: "transform", REFINING: "validate", VALIDATING: "validate", RELEASING: "release", VERIFYING: "release" } as Partial<Record<ImportStage, string>>)[stage] ?? "research";
 }
 
-function canonicalSubmissionFingerprint(record: ExternalArticleImportV1): string {
-  return fingerprint(JSON.stringify({ stage: record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release }));
+export async function canonicalSubmissionFingerprint(record: ExternalArticleImportV1, root: string): Promise<string> {
+  const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
+  const files = new Set<string>();
+  function collect(value: unknown): void {
+    if (!value || typeof value !== "object") return;
+    for (const [key, entry] of Object.entries(value)) {
+      if ((key === "path" || key.endsWith("Path")) && typeof entry === "string") files.add(entry);
+      else collect(entry);
+    }
+  }
+  collect(inputs);
+  if (record.continuation?.kind === "work") { files.add(record.continuation.workPath); files.add(record.continuation.resultPath); }
+  const workDir = path.join(storeRoot(root), "work", record.importId);
+  for (const name of await readdir(workDir).catch((e: NodeJS.ErrnoException) => { if (e.code === "ENOENT") return []; throw e; })) {
+    if (name.endsWith(".result.json")) files.add(path.relative(root, path.join(workDir, name)));
+  }
+  for (const file of files) {
+    const resolved = path.resolve(root, file);
+    const relative = path.relative(path.resolve(root), resolved);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("EVIDENCE_PATH_ESCAPE");
+    try { const bytes = await readEvidenceBytes(root, file); inputs.push([file, fingerprint(bytes)]); if (file.endsWith(".json")) { try { collect(JSON.parse(bytes.toString("utf8"))); } catch (error) { if (!(error instanceof SyntaxError)) throw error; } } }
+    catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") inputs.push([file, "missing"]); else throw e; }
+  }
+  return fingerprint(JSON.stringify(inputs));
+}
+
+export function assertCurrentImport(record: ExternalArticleImportV1): void {
+  if (record.schemaVersion !== "ExternalArticleImportV2" || record.workflowVersion !== 2) throw new Error("LEGACY_UPGRADE_REQUIRED");
+}
+
+/** Standalone mutation entry points share the same ownership context as resume. */
+export async function withImportLease<T>(root: string, importId: string, action: (record: ExternalArticleImportV1) => Promise<T>): Promise<T> {
+  if (activeLease.getStore()) throw new Error("NESTED_IMPORT_LEASE");
+  const lease = await claimImportLease(root, importId);
+  if (!lease) throw new Error("IMPORT_LEASE_BUSY");
+  try {
+    return await activeLease.run(lease, async () => {
+      const record = await loadImport(root, importId); assertCurrentImport(record);
+      await lease.assertOwned();
+      return action(record);
+    });
+  } finally { await lease.release(); }
+}
+
+export async function clearImportBlocker(root: string, importId: string, recoveryRef: EvidenceRef): Promise<ExternalArticleImportV1> {
+  return withImportLease(root, importId, async (record) => {
+    const prior = record.continuation;
+    const recovery = recoveryEvidenceSchema.parse(await readEvidence(root, recoveryRef));
+    if (!prior || (prior.kind !== "blocked" && prior.kind !== "wait")) {
+      if (recovery.importId === importId && recovery.sourceFingerprint === record.sourceFingerprint && record.recoveryRefs?.some((ref) => ref.path === recoveryRef.path && ref.sha256 === recoveryRef.sha256)) return record;
+      throw new Error("IMPORT_BLOCKER_REQUIRED");
+    }
+    const cause = prior.kind === "blocked" ? prior.cause : record.nextAction;
+    const requirement = prior.kind === "blocked" ? prior.resumptionRequirement : prior.dependency;
+    if (recovery.importId !== importId || recovery.sourceFingerprint !== record.sourceFingerprint || recovery.cause !== cause || recovery.resumptionRequirement !== requirement || Date.parse(recovery.checkedAt) < Date.parse(record.updatedAt) || Date.parse(recovery.checkedAt) > Date.now()) throw new Error("RECOVERY_EVIDENCE_MISMATCH");
+    for (const ref of recovery.executionRefs) {
+      const execution = await validateExecutionEvidence(root, ref);
+      if (Date.parse(execution.completedAt) < Date.parse(record.updatedAt) || Date.parse(execution.completedAt) > Date.parse(recovery.checkedAt)) throw new Error("RECOVERY_EXECUTION_STALE");
+    }
+    const stage = prior.kind === "wait" ? prior.resumeStage : record.resumeStage ?? record.stage;
+    if (!["INGESTING", "RESEARCHING", "TRANSFORMING", "REFINING", "VALIDATING", "RELEASING", "VERIFYING"].includes(stage)) throw new Error("RECOVERY_STAGE_INVALID");
+    const at = now();
+    const updated = externalArticleImportSchema.parse({ ...record, stage, resumeStage: undefined, continuation: undefined, blockerScope: undefined, updatedAt: at, recoveryRefs: [...(record.recoveryRefs ?? []), recoveryRef], stageReceipts: [...record.stageReceipts, { stage, status: "started", at, message: `Explicit verified recovery: ${JSON.stringify({ prior, recoveryRef })}` }], nextAction: `Resume ${stage.toLowerCase()} after verified recovery; all workflow gates remain required.` });
+    await saveImport(root, updated); return updated;
+  });
 }
 
 export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor): Promise<ExternalArticleImportV1> {
@@ -273,9 +323,23 @@ export async function executePendingImport(repositoryRoot: string, importId: str
   try {
     return await activeLease.run(lease, async () => {
       const current = await loadImport(repositoryRoot, importId);
-      if (["LIVE", "QUARANTINED"].includes(current.stage)) return current;
+      assertCurrentImport(current);
+      if (["LIVE", "QUARANTINED"].includes(current.stage)) {
+        if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
+        return current;
+      }
       if (current.continuation?.kind === "blocked") return current;
-      if (current.continuation?.kind === "repair" && current.continuation.diagnosisRequired) return current;
+      if (current.continuation?.kind === "repair") {
+        const repair = current.continuation;
+        const digest = await canonicalSubmissionFingerprint(current, repositoryRoot);
+        if (digest === current.continuation.submittedFingerprint) throw new Error("UNCHANGED_SUBMISSION");
+        if (current.continuation.diagnosisRequired) {
+          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
+          if (!diagnosis) return current;
+          diagnosis.consumedAt = now();
+          await saveImport(repositoryRoot, current);
+        }
+      }
       if (current.continuation?.kind === "wait") {
         const currentTime = Date.now();
         if (currentTime >= Date.parse(current.continuation.timeoutAt)) return recordImportFailure(repositoryRoot, current, { strategy: "release", classification: "transient", message: "External dependency wait timed out; shared capability must be restored." });
@@ -295,7 +359,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);
         const code = (error as NodeJS.ErrnoException).code;
-        if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
+        if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
           return recordImportFailure(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, classification: "transient", message });
         }
         return recordImportRepair(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, message });
@@ -310,15 +374,17 @@ export async function executePendingImport(repositoryRoot: string, importId: str
 
 /** Executor output is repair work, not an external outage or an automatic quarantine. */
 export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string }): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   const attemptKey = `repair:${input.strategy}:${fingerprint(input.message)}`;
   const attempt = (record.strategyAttempts[attemptKey] ?? 0) + 1;
   const attempts = { ...record.strategyAttempts, [attemptKey]: attempt };
   const at = now();
-  const diagnostic = attempt >= 3;
+  const stageTotal = (record.repairStageTotals?.[record.resumeStage ?? record.stage] ?? 0) + 1;
+  const diagnostic = stageTotal >= 3;
   const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
-  const submittedFingerprint = canonicalSubmissionFingerprint(record);
+  const submittedFingerprint = await canonicalSubmissionFingerprint(record, repositoryRoot);
   if (record.continuation?.kind === "repair" && record.continuation.submittedFingerprint === submittedFingerprint) return record;
-  const updated = externalArticleImportSchema.parse({ ...record, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
+  const updated = externalArticleImportSchema.parse({ ...record, repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
     stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
     nextAction: diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`,
   });
@@ -331,7 +397,8 @@ async function listAllImports(repositoryRoot: string): Promise<ExternalArticleIm
   try { names = await readdir(storeRoot(repositoryRoot)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
   const records: ExternalArticleImportV1[] = [];
   for (const name of names.filter((entry) => entry.endsWith(".json"))) {
-    const record = externalArticleImportSchema.parse(JSON.parse(await readFile(path.join(storeRoot(repositoryRoot), name), "utf8")));
+    if (!/^article-[0-9a-f-]{36}\.json$/.test(name)) continue;
+    const record = await loadImport(repositoryRoot, name.slice(0, -5));
     records.push(record);
   }
   return records.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
@@ -339,40 +406,64 @@ async function listAllImports(repositoryRoot: string): Promise<ExternalArticleIm
 
 export async function createArticleImport(repositoryRoot: string, sourceFile: string, allowlistFile = "approved-urls.md"): Promise<ExternalArticleImportV1> {
   const absoluteSource = path.resolve(repositoryRoot, sourceFile);
-  const raw = await readFile(absoluteSource, "utf8");
-  const parsed = parseExternalArticle(raw);
+  const raw = await readFile(absoluteSource);
+  const parsed = parseExternalArticle(raw.toString("utf8"));
   const sourceFingerprint = fingerprint(raw);
-  const existing = (await listAllImports(repositoryRoot)).find((record) => record.sourceFingerprint === sourceFingerprint);
-  if (existing?.stage === "LIVE") {
-    const at = now();
-    const reused = externalArticleImportSchema.parse({
-      ...existing,
-      importId: `article-${randomUUID()}`,
-      sourceFile: absoluteSource,
-      createdAt: at,
-      updatedAt: at,
-      duplicateOf: existing.importId,
-      sourceDeletedAt: at,
-      stageReceipts: [...existing.stageReceipts, { stage: "LIVE", status: "passed", at, message: `Reused live result ${existing.importId}.` }],
-      nextAction: `Reused live result ${existing.importId}.`,
-    });
-    await saveImport(repositoryRoot, reused);
-    return reused;
-  }
-  if (existing) return existing;
-  const allowlist = await readFile(path.resolve(repositoryRoot, allowlistFile), "utf8");
-  const transformation = prepareTransformation(parsed, allowlist);
-  const importId = `article-${randomUUID()}`;
-  const record = initialRecord({ importId, sourceFile: absoluteSource, sourceFingerprint, parsed, transformation });
-  await mkdir(storeRoot(repositoryRoot), { recursive: true });
-  await writeFile(sourcePath(repositoryRoot, importId), parsed.body, "utf8");
-  if (record.unusableReason) return quarantineUnusableImport(repositoryRoot, record);
-  await saveImport(repositoryRoot, record);
-  return record;
+  const claim = await claimWorkflowLease(repositoryRoot, "source", sourceFingerprint);
+  if (!claim) throw new Error("SOURCE_CLAIM_BUSY");
+  try {
+    const indexPath = path.join(storeRoot(repositoryRoot), "source-index", `${sourceFingerprint}.json`);
+    let reservation: { importId: string; sourceFingerprint: string; sourceRef: { path: string; sha256: string } } | undefined;
+    try { reservation = JSON.parse(await readFile(indexPath, "utf8")); }
+    catch (e) { if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e; }
+    if (reservation) {
+      if (reservation.sourceFingerprint !== sourceFingerprint) throw new Error("SOURCE_RESERVATION_INVALID");
+      const bytes = await readFile(path.resolve(repositoryRoot, reservation.sourceRef.path));
+      if (fingerprint(bytes) !== sourceFingerprint || reservation.sourceRef.sha256 !== sourceFingerprint) throw new Error("SOURCE_RESERVATION_INVALID");
+      try {
+        const existing = await loadImport(repositoryRoot, reservation.importId);
+        if (existing.sourceFingerprint !== sourceFingerprint) throw new Error("SOURCE_IDENTITY_CONFLICT");
+        if (existing.stage === "LIVE") {
+          const historical = await evaluateWorkflowEvidence(existing, { root: repositoryRoot }, "historical-terminal");
+          if (!historical.ok) throw new Error("DUPLICATE_TERMINAL_PROOF_INVALID");
+          const reusable = await evaluateWorkflowEvidence(existing, { root: repositoryRoot, throughStage: "LIVE" }, "duplicate-reuse");
+          if (!reusable.ok) throw new Error(`DUPLICATE_REVALIDATION_REQUIRED:${reusable.earliestRequiredStage}`);
+        }
+        return existing;
+      } catch (e) { if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e; }
+    } else {
+      const existing = (await listAllImports(repositoryRoot)).filter((record) => record.sourceFingerprint === sourceFingerprint);
+      if (existing.length > 1) throw new Error("SOURCE_IDENTITY_CONFLICT");
+      const importId = existing[0]?.importId ?? `article-${randomUUID()}`;
+      const relativeSource = `${ROOT}/evidence/${importId}/${sourceFingerprint}.source`;
+      await mkdir(path.dirname(path.join(repositoryRoot, relativeSource)), { recursive: true });
+      try { await writeFile(path.join(repositoryRoot, relativeSource), raw, { flag: "wx" }); }
+      catch (e) { if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e; }
+      reservation = { importId, sourceFingerprint, sourceRef: { path: relativeSource, sha256: sourceFingerprint } };
+      await claim.assertOwned();
+      await writeJsonAtomically(indexPath, reservation);
+      if (existing[0]) {
+        if (existing[0].stage === "LIVE" && !(await evaluateWorkflowEvidence(existing[0], { root: repositoryRoot, throughStage: "LIVE" }, "duplicate-reuse")).ok) throw new Error("DUPLICATE_REVALIDATION_REQUIRED");
+        return existing[0];
+      }
+    }
+    const allowlist = await readFile(path.resolve(repositoryRoot, allowlistFile), "utf8");
+    const transformation = prepareTransformation(parsed, allowlist);
+    const record = initialRecord({ importId: reservation.importId, sourceFile: absoluteSource, sourceFingerprint, parsed, transformation });
+    record.sourceRef = reservation.sourceRef;
+    await claim.assertOwned();
+    await writeFile(sourcePath(repositoryRoot, record.importId), parsed.body, "utf8");
+    if (record.unusableReason) return quarantineUnusableImport(repositoryRoot, record);
+    await saveImport(repositoryRoot, record);
+    return record;
+  } finally { await claim.release(); }
 }
 
 const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEARCHING", RESEARCHING: "TRANSFORMING", TRANSFORMING: "REFINING", REFINING: "VALIDATING", VALIDATING: "RELEASING" };
 export async function approveImportContent(repositoryRoot: string, record: ExternalArticleImportV1, files: ApprovalFiles): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
+  const evaluated = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: "VALIDATING", artifactPath: files.artifactPath }, "current-transition");
+  if (!evaluated.ok) throw new Error(`WORKFLOW_EVIDENCE_INVALID:${JSON.stringify(evaluated.diagnostics)}`);
   if (record.stage !== "REFINING") throw new Error("Content approval requires REFINING.");
   const contentApproval = await createContentApproval(repositoryRoot, { ...files, format: record.format, sourceFingerprint: record.sourceFingerprint });
   const updated = externalArticleImportSchema.parse({ ...record, contentApproval, presentation: undefined, pendingRelease: undefined, release: undefined, updatedAt: now() });
@@ -381,6 +472,7 @@ export async function approveImportContent(repositoryRoot: string, record: Exter
 }
 
 export async function ensureImportContentApproval(repositoryRoot: string, record: ExternalArticleImportV1, artifactPath?: string): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   if (await contentApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint, artifactPath)) return record;
   const at = now();
   const updated = externalArticleImportSchema.parse({ ...record, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined, resumeStage: undefined, stage: "REFINING", updatedAt: at,
@@ -392,6 +484,7 @@ export async function ensureImportContentApproval(repositoryRoot: string, record
 }
 
 export async function ensureImportPresentation(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   try {
     await verifyImportPresentationEvidence(repositoryRoot, record);
     return record;
@@ -421,9 +514,12 @@ export async function recordImportPresentation(repositoryRoot: string, record: E
 }
 
 export async function advanceImport(repositoryRoot: string, record: ExternalArticleImportV1, message: string): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   if (record.unusableReason) return quarantineUnusableImport(repositoryRoot, record);
   const stage = nextStage[record.stage];
   if (!stage) throw new Error("Stage " + record.stage + " cannot advance automatically.");
+  const evidence = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: stage }, "current-transition");
+  if (!evidence.ok) throw new Error(`WORKFLOW_EVIDENCE_INVALID:${JSON.stringify(evidence.diagnostics)}`);
   if (["VALIDATING", "RELEASING"].includes(stage)) {
     const checked = await ensureImportContentApproval(repositoryRoot, record);
     if (!checked.contentApproval) return checked;
@@ -441,8 +537,14 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
 }
 
 async function quarantineUnusableImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
+  if (!record.sourceRef || !record.unusableReason) throw new Error("QUARANTINE_PROOF_REQUIRED");
+  const captured = await readFile(path.resolve(repositoryRoot, record.sourceRef.path));
+  if (fingerprint(captured) !== record.sourceFingerprint || !parseExternalArticle(captured.toString("utf8")).unusableReason) throw new Error("QUARANTINE_PROOF_INVALID");
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...record, continuation: { kind: "complete", result: "QUARANTINED", receiptPaths: [`${ROOT}/${record.importId}.json`] }, stage: "QUARANTINED", updatedAt: at,
+  const dispositionEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { sourceFingerprint: record.sourceFingerprint, reasonCode: "empty", reason: record.unusableReason });
+  const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "quarantine", reasonCode: "empty", dispositionEvidenceRef });
+  const updated = externalArticleImportSchema.parse({ ...record, terminalRef, continuation: { kind: "complete", result: "QUARANTINED", receiptPaths: [terminalRef.path] }, stage: "QUARANTINED", updatedAt: at,
     stageReceipts: [...record.stageReceipts, { stage: "QUARANTINED", status: "quarantined", at, message: record.unusableReason }], nextAction: "none",
   });
   await saveImport(repositoryRoot, updated);
@@ -450,30 +552,45 @@ async function quarantineUnusableImport(repositoryRoot: string, record: External
 }
 
 export async function recordImportRelease(repositoryRoot: string, record: ExternalArticleImportV1, releaseInput: unknown): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   if (record.stage !== "RELEASING") throw new Error("A release receipt can only be recorded from RELEASING.");
   const checked = await ensureImportContentApproval(repositoryRoot, record);
   if (!checked.contentApproval) return checked;
   const release = externalArticleImportSchema.shape.release.unwrap().parse(releaseInput);
+  if (!release.productionVerifierRef) throw new Error("PRODUCTION_VERIFIER_EVIDENCE_REQUIRED");
   const presented = await ensureImportPresentation(repositoryRoot, { ...checked, release });
   if (!presented.presentation) return presented;
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...presented, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
+  const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
   await saveImport(repositoryRoot, updated);
   return updated;
 }
 
 export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   if (record.stage !== "VERIFYING" || !record.release) throw new Error("A validated release receipt is required before production verification.");
   const release = externalArticleImportSchema.shape.release.unwrap().parse(record.release);
   const presented = await ensureImportPresentation(repositoryRoot, { ...record, release });
   if (!presented.presentation) return presented;
   if (Object.values(release.checks).some((check) => check !== true)) throw new Error("Every required production check must pass before LIVE.");
+  const evaluated = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: "LIVE" }, "current-transition");
+  if (!evaluated.ok || !record.sourceRef || !record.contentApproval) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(evaluated.diagnostics)}`);
   const at = now();
-  const updated = externalArticleImportSchema.parse({ ...presented, continuation: { kind: "complete", result: "LIVE", receiptPaths: [`${ROOT}/${record.importId}.json`] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+  const artifact = JSON.parse(await readFile(path.resolve(repositoryRoot, record.contentApproval.artifactPath), "utf8"));
+  const artifactRef = await storeEvidence(repositoryRoot, record.importId, artifact);
+  const merge = record.pendingRelease?.operations?.merge, review = record.pendingRelease?.operations?.review;
+  if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha || record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
+  const mergeEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { reviewedCommitSha: merge.reviewedHeadSha, mergeCommitSha: merge.mergeCommitSha, pullRequestUrl: record.pendingRelease.pullRequestUrl, evidenceUrl: review.evidenceUrl });
+  const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
+  const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", artifactRef, evidenceRefs: record.evidenceRefs, frozenFiles, format: record.format, reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
+  const updated = externalArticleImportSchema.parse({ ...presented, terminalRef, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+  if (!(await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
+  await saveImport(repositoryRoot, updated);
   return deleteRawSource(repositoryRoot, updated.importId, updated, at);
 }
 
 export async function resumeImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  assertCurrentImport(record);
   if (["VALIDATING", "RELEASING", "VERIFYING"].includes(record.resumeStage ?? record.stage)) {
     const checked = await ensureImportContentApproval(repositoryRoot, record);
     if (!checked.contentApproval) return checked;
@@ -495,6 +612,7 @@ export async function resumeImport(repositoryRoot: string, record: ExternalArtic
   return updated;
 }
 export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; message: string }): Promise<ExternalArticleImportV1> {
+  if (input.classification !== "transient") return recordImportRepair(repositoryRoot, record, input);
   const attemptKey = input.classification === "transient" ? `transient:${input.strategy}` : input.strategy;
   const attempt = (record.strategyAttempts[attemptKey] ?? 0) + 1;
   const attempts = { ...record.strategyAttempts, [attemptKey]: attempt };
@@ -504,9 +622,9 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
   const exhausted = next === "quarantine";
   const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : exhausted ? "QUARANTINED" : "REPAIRING";
   const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
-  const capabilityBlock = input.classification === "transient" && /credentials missing|git unavailable|model access|editorial tool|integrity|vercel timeout/i.test(input.message);
+  const capabilityBlock = input.classification === "transient" && /credentials missing|git unavailable|model[ _]access|editorial[ _]tool|integrity|vercel timeout|CAPABILITY_UNAVAILABLE|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED/i.test(input.message);
   const previousWait = record.continuation?.kind === "wait" ? record.continuation : undefined;
-  const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, cause: input.message, attemptedRecovery: "Retried the bound operation once and preserved the import state.", resumptionRequirement: "Restore the shared capability, then resume this same import." } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint: canonicalSubmissionFingerprint(record), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
+  const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, cause: input.message, attemptedRecovery: "Retried the bound operation once and preserved the import state.", resumptionRequirement: "Restore the shared capability, then resume this same import." } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
   const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
   if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
@@ -518,4 +636,45 @@ async function deleteRawSource(repositoryRoot: string, importId: string, record:
   const updated = externalArticleImportSchema.parse({ ...record, sourceDeletedAt: at });
   await saveImport(repositoryRoot, updated);
   return updated;
+}
+
+export async function upgradeImportEvidence(root: string, importId: string): Promise<ExternalArticleImportV1> {
+  const lease = await claimImportLease(root, importId);
+  if (!lease) throw new Error("IMPORT_BUSY");
+  try { return await activeLease.run(lease, async () => {
+    const record = await loadImport(root, importId);
+    if (record.schemaVersion === "ExternalArticleImportV2") return record;
+    const bytes = await readFile(recordPath(root, importId));
+    const archive = path.join(storeRoot(root), "archives", `${importId}-${fingerprint(bytes)}.json`);
+    await mkdir(path.dirname(archive), { recursive: true });
+    await writeFile(archive, bytes, { flag: "wx" }).catch((e: NodeJS.ErrnoException) => { if (e.code !== "EEXIST") throw e; });
+    const raw = await readFile(record.sourceFile);
+    if (fingerprint(raw) !== record.sourceFingerprint) throw new Error("SOURCE_IDENTITY_CONFLICT");
+    const source = `${ROOT}/evidence/${importId}/${record.sourceFingerprint}.source`;
+    await mkdir(path.dirname(path.resolve(root, source)), { recursive: true });
+    await writeFile(path.resolve(root, source), raw, { flag: "wx" }).catch((e: NodeJS.ErrnoException) => { if (e.code !== "EEXIST") throw e; });
+    const totals: Record<string, number> = {};
+    for (const receipt of record.stageReceipts) if (receipt.status === "failed") {
+      if (!["INGESTING", "RESEARCHING", "TRANSFORMING", "REFINING", "VALIDATING", "RELEASING", "VERIFYING"].includes(receipt.stage)) throw new Error("REPAIR_HISTORY_INCOMPLETE");
+      totals[receipt.stage] = (totals[receipt.stage] ?? 0) + 1;
+    }
+    const attemptedRepairs = Object.entries(record.strategyAttempts).filter(([key]) => key.startsWith("repair:")).reduce((sum, [, count]) => sum + count, 0);
+    if (attemptedRepairs > record.stageReceipts.filter((r) => r.status === "failed").length) throw new Error("REPAIR_HISTORY_INCOMPLETE");
+    const updated = externalArticleImportSchema.parse({ ...record, schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, sourceRef: { path: source, sha256: record.sourceFingerprint }, evidenceRefs: {}, diagnoses: [], repairStageTotals: totals, stage: "RESEARCHING", resumeStage: undefined, continuation: undefined, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined, terminalRef: undefined, nextAction: "Legacy evidence archived; complete current research requirements before advancing.", updatedAt: now() });
+    await saveImport(root, updated);
+    return updated;
+  }); } finally { await lease.release(); }
+}
+
+export async function submitImportDiagnosis(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
+  const lease = await claimImportLease(root, importId);
+  if (!lease) throw new Error("IMPORT_BUSY");
+  try { return await activeLease.run(lease, async () => {
+    const record = await loadImport(root, importId); assertCurrentImport(record);
+    const diagnosis = diagnosisSchema.parse(input);
+    if (diagnosis.consumedAt || diagnosis.importId !== importId || diagnosis.sourceFingerprint !== record.sourceFingerprint || diagnosis.stage !== record.stage || record.continuation?.kind !== "repair" || diagnosis.failedSubmissionDigest !== record.continuation.submittedFingerprint || diagnosis.replacementSubmissionDigest !== await canonicalSubmissionFingerprint(record, root)) throw new Error("DIAGNOSIS_BINDING_MISMATCH");
+    for (const ref of [...diagnosis.attemptedRecoveryRefs, ...diagnosis.remedyEvidenceRefs]) await readEvidence(root, ref);
+    const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), diagnosis] };
+    await saveImport(root, updated); return updated;
+  }); } finally { await lease.release(); }
 }
