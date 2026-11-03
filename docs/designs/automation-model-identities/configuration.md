@@ -1,6 +1,6 @@
 # Verified automation models
 
-Owner directive, 2026-11-03: configure and test the models only. Do not build articles, start or resume imports, publish, merge, or deploy.
+Owner directives, 2026-11-03: configure and test the models, then merge and deploy the reviewed automation changes. Do not build articles, start or resume imports, migrate real records, or publish articles.
 
 | Role | Exact provider/model ID | Family |
 | --- | --- | --- |
@@ -32,4 +32,6 @@ One follow-up session creation hit a local CLI timeout under concurrent test loa
 - [NVIDIA MiniMax model card](https://build.nvidia.com/minimaxai/minimax-m3.1-flash/modelcard) identifies the MiniMax family. NVIDIA describes its endpoint as a research/development trial; this probe does not establish production usage rights or an unlimited free allowance.
 - [OpenCode Go documentation](https://opencode.ai/v2/docs/console/go/) lists Beam Free as limited-time and region-dependent.
 
-The local runtime configuration is active. Repository adapter and capability-manifest changes remain on `codex/automation-model-identities` until separately released. The primary checkout still has its previously deployed manifest and adapter. No real article acceptance run has been authorized or performed.
+The local runtime configuration is active. Repository adapter and capability-manifest changes are released through the reviewed PR from `codex/automation-model-identities`. Verify the merged primary checkout and the deployed commit before reporting release completion. No real article acceptance run has been authorized or performed.
+
+Before release, the full regression suite passed 465 tests with no failures and three Windows symlink-privilege skips. Lint reported no errors and 15 existing warnings; type checking and the agent-workflow check passed. Both genuine synthetic model exchanges passed receipt capture, read-only capability preflight returned no diagnostics, and independent local review found no actionable issues.
