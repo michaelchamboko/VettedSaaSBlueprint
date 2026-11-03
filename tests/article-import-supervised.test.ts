@@ -147,14 +147,14 @@ test("heartbeat consumes durable work after interruption and releases only after
     await heartbeat();
     assert.equal((await current()).stage, "VALIDATING");
     const validationReceiptPath = "build-pack/article-import/presentation.json";
-    const presented = await presentFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
-    await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
-    await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: prepared.evidenceRefs.presentation.path });
-    await heartbeat();
-    assert.equal((await current()).stage, "RELEASING");
-    // The approval loop rewrites the artefact; bind the receipt to the final approved bytes.
+    // Publication inputs exist before presentation captures rendering dependencies.
     const artifactFingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath))).toString("utf8").replace(/\r\n/g, "\n")).digest("hex");
     await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: artifactFingerprint } } });
+    const presented = await presentFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
+    await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
+    await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.evidenceRefs!.presentation!.path });
+    await heartbeat();
+    assert.equal((await current()).stage, "RELEASING");
     const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" });
     await heartbeat();
     assert.equal((await current()).stage, "WAITING_EXTERNAL");

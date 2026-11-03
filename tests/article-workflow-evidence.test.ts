@@ -8,8 +8,9 @@ import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
 import { createEditorialEvidence } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
-import { evaluateWorkflowEvidence, readEvidence, storeEvidence, validateEditorialExecution, validateResearchEvidence, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
+import { editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution, evidenceReference, extractOpenCodeExecution, freezeEvidenceGraph, proseProjectionDigest, sha256, validateExecutionEvidence, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
+import { captureRenderingInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
 async function fixture() {
@@ -59,6 +60,32 @@ test("research rejects changed snapshot bytes and unsupported excerpts", async (
     await assert.rejects(validateResearchEvidence(root, record.evidenceRefs!.research!, record), /HASH_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+test("echo-like success output cannot replace the pinned checker, detector or scoped design review", async () => {
+  const { root, record } = await fixture();
+  try {
+    const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs!.editorial!));
+    const checker = await readEvidence(root, editorial.checkerExecutionRef) as Record<string, unknown>;
+    const echo = await storeEvidence(root, id, { ...checker, executable: "echo", argv: ["score 5/5 CLEAN"] });
+    await assert.rejects(validateEditorialExecution(root, await storeEvidence(root, id, { ...editorial, checkerExecutionRef: echo }), record), /CHECKER_COMMAND_MISMATCH/);
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const detect = presentation.ruleResults.find((rule) => rule.ruleId === "detect")!;
+    const detector = await readEvidence(root, detect.evidenceRefs[0]) as Record<string, unknown>;
+    detect.evidenceRefs = [await storeEvidence(root, id, { ...detector, executable: "echo", argv: ["[]"] })];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /DETECTOR_COMMAND_MISMATCH/);
+    const context = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    context.ruleResults.find((rule) => rule.ruleId === "context")!.evidenceRefs = [echo];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, context), record), /JUDGMENT_REQUIRED|RENDER_INPUT_BINDING_MISMATCH/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("editorial instructions must be present in the captured exchange, not attached afterward", async () => {
+  const { root, record } = await fixture();
+  try {
+    const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs!.editorial!));
+    const execution = await readEvidence(root, editorial.passes[0].executionRef) as Record<string, unknown>;
+    editorial.passes[0].executionRef = await storeEvidence(root, id, { ...execution, instructions: [] });
+    await assert.rejects(validateEditorialExecution(root, await storeEvidence(root, id, editorial), record), /INSTRUCTION_MISMATCH/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 test("OpenCode extraction rejects unknown versions and mismatched parent linkage", () => {
   const input = { title: "Before" }, output = { title: "After" }, packetId = sha256("packet");
   const selection = { version: "1.19.4", sessionId: "session", userMessageId: "user", assistantMessageId: "answer", packetId, pass: "test", input, output, families: { "fixture/model": "family" } };
@@ -98,5 +125,23 @@ test("frozen historical graph survives later source edits and rejects archive ta
     assert.deepEqual(await withEvidenceSnapshot(frozen, () => readEvidence(root, original)), { retained: "original" });
     await writeFile(path.join(root, frozen.find((entry) => entry.path === "mutable.json")!.archiveRef.path), "tampered archive");
     await assert.rejects(withEvidenceSnapshot(frozen, () => readEvidence(root, original)), /SNAPSHOT_BYTES_CHANGED/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("renderer JSON freezes as opaque data instead of following catalogue-relative metadata paths", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "render-data-proof-"));
+  try {
+    await mkdir(path.join(root, "config"));
+    await writeFile(path.join(root, "config/article-workflow-capabilities.json"), "{}");
+    const file = "src/generated/landing-pages/example.release.json";
+    await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+    const data = { artifacts: { page: { path: "example.json", sha256: "a".repeat(64) } } };
+    await writeFile(path.join(root, file), JSON.stringify(data));
+    const rendering = await captureRenderingInputs(root, id);
+    const graph = await freezeEvidenceGraph(root, id, [rendering]);
+    assert.ok(graph.some((entry) => entry.path === file));
+    assert.equal(graph.some((entry) => entry.path === "example.json"), false);
+    await writeFile(path.join(root, file), "{}");
+    const frozen = await withEvidenceSnapshot(graph, () => validateRenderingInputs(root, rendering, { historical: true }));
+    assert.deepEqual(await withEvidenceSnapshot(graph, () => readEvidence(root, frozen.files[0])), data);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

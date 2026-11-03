@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { executeImportCommand } from "../scripts/import-article";
-import { advanceImport, claimImportLease, createArticleImport, executePendingImport, loadImport, recordImportFailure, recordImportRepair } from "../src/lib/article-import/engine";
+import { advanceImport, claimImportLease, createArticleImport, executePendingImport, loadImport, recordImportRepair } from "../src/lib/article-import/engine";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");

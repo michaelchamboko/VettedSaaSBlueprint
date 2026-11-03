@@ -9,6 +9,7 @@ const selectionSchema = z.object({
   packetId: z.string().regex(/^[a-f0-9]{64}$/), pass: text,
   input: z.record(text, z.string()), output: z.record(text, z.string()),
   inputRefs: z.array(evidenceRefSchema), outputRefs: z.array(evidenceRefSchema),
+  instructionRefs: z.array(evidenceRefSchema).optional(),
 }).strict();
 const commandSchema = z.object({ executable: text, argv: z.array(z.string()), toolVersion: text, inputRefs: z.array(evidenceRefSchema), outputRefs: z.array(evidenceRefSchema) }).strict();
 

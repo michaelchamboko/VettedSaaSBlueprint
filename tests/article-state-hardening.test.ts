@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { hostname } from "node:os";
 import test from "node:test";
 import { advanceImport, canonicalSubmissionFingerprint, claimImportLease, clearImportBlocker, createArticleImport, executePendingImport, loadImport, recordImportFailure, recordImportRepair, saveImport, submitImportDiagnosis, upgradeImportEvidence } from "../src/lib/article-import/engine";
 import { claimNextIntakeEntry, createIntakeRun, markIntakeEntry, loadIntakeRun, checkIntakeRun, reconcileIntakeEntry, upgradeIntakeRun } from "../src/lib/article-import/intake";
@@ -83,6 +84,21 @@ test("same evidence path with changed bytes changes submission digest", async ()
     assert.notEqual(await canonicalSubmissionFingerprint(record, root), before);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test("repair digest ignores public route paths and binds transitive evidence bytes", async () => {
+  const root = await fixture();
+  try {
+    const record = await createArticleImport(root, "Article Intake/a.md");
+    await writeFile(path.join(root, "dependency.json"), JSON.stringify({ observed: "before" }));
+    await writeFile(path.join(root, "candidate.json"), JSON.stringify({ path: "/public-route", canonicalPath: "/canonical-route", links: [{ path: "/related" }], evidence: { path: "dependency.json", sha256: "a".repeat(64) } }));
+    record.artifactPath = "candidate.json";
+    const before = await canonicalSubmissionFingerprint(record, root);
+    await writeFile(path.join(root, "dependency.json"), JSON.stringify({ observed: "after" }));
+    assert.notEqual(await canonicalSubmissionFingerprint(record, root), before);
+    const repaired = await recordImportRepair(root, record, { strategy: "release", message: "Synthetic release validation failure" });
+    assert.equal(repaired.continuation?.kind, "repair");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 test("explicit legacy upgrade preserves history and terminal mismatch cannot skip", async () => {
   const root = await fixture();
   try {
@@ -162,7 +178,29 @@ test("explicit recovery validates retained execution then clears blocked import 
     const restored = await clearImportBlocker(root, record.importId, proof);
     assert.equal(restored.stage, "RESEARCHING"); assert.equal(restored.continuation, undefined);
     assert.deepEqual(restored.strategyAttempts, blocked.strategyAttempts); assert.equal(restored.recoveryRefs?.length, 1);
-    assert.deepEqual(await clearImportBlocker(root, record.importId, proof), restored);
+    const statePath = path.join(root, ".automation/article-imports", `${record.importId}.json`);
+    const beforeReplay = await readFile(statePath, "utf8");
+    assert.equal((await clearImportBlocker(root, record.importId, proof)).stage, restored.stage);
+    assert.equal(await readFile(statePath, "utf8"), beforeReplay);
     await assert.rejects(clearImportBlocker(root, record.importId, invalid), /IMPORT_BLOCKER_REQUIRED/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("confirmed dead-owner recovery admits one successor and does not execute work", async () => {
+  const root = await fixture();
+  try {
+    const record = await createArticleImport(root, "Article Intake/a.md");
+    const child = await captureCommandExecution(root, { executable: process.execPath, argv: ["-e", "console.log(JSON.stringify({pid:process.pid,processStart:new Date(Date.now()-process.uptime()*1000).toISOString()}))"], toolVersion: process.version, inputRefs: [] });
+    assert.equal(child.kind, "command"); if (child.kind !== "command") throw new Error("command required");
+    const identity = JSON.parse(child.stdout) as { pid: number; processStart: string };
+    const directory = path.join(root, ".automation/article-imports/leases/import", record.importId);
+    await mkdir(directory, { recursive: true });
+    await writeFile(path.join(directory, "1.json"), JSON.stringify({ generation: 1, ownerToken: "exited-test-worker", expiresAt: 0, machine: hostname(), ...identity, released: false }));
+    const recovered = await Promise.allSettled([recoverWorkflowLease(root, "import", record.importId), recoverWorkflowLease(root, "import", record.importId)]);
+    assert.ok(recovered.some((result) => result.status === "fulfilled"));
+    const candidates = await Promise.all([claimImportLease(root, record.importId), claimImportLease(root, record.importId)]);
+    assert.equal(candidates.filter(Boolean).length, 1);
+    await candidates.find(Boolean)!.release();
+    assert.equal((await loadImport(root, record.importId)).stage, "INGESTING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });

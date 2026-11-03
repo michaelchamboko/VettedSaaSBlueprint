@@ -10,7 +10,7 @@ import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, vali
 import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-set-deployment";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import { importPresentationValidationSchema, type ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
-import { approveFixture, fullRewriteNotes, presentFixture, rewriteAllProse } from "./fixtures/article-content-approval";
+import { approveFixture, fullRewriteNotes, presentFixture, refreshPresentationFixture, rewriteAllProse } from "./fixtures/article-content-approval";
 import { importArtifactTarget, readImportArtifactTarget, validateImportArtifact } from "../src/lib/article-import/format-validation";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
@@ -20,7 +20,7 @@ import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
 const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
-const fixtureImports = new Map<string, { importId: string; sourceFingerprint: string }>();
+const fixtureImports = new Map<string, { importId: string; sourceFingerprint: string; format: ExternalArticleImportV1["format"]; artifactPath: string }>();
 const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\n\nThis is a sufficiently long article body for the release coordinator test and its deterministic validation path.\n";
 
 test("presentation validation fails closed without complete Impeccable evidence", () => {
@@ -35,16 +35,14 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await mkdir(path.join(root, "src/generated/landing-pages/releases/example"), { recursive: true });
   await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] }));
   let record = await createArticleImport(root, "article.md");
-  fixtureImports.set(root, record);
-  record = { ...record, stage: "REFINING" };
-  for (let i = 0; i < 2; i += 1) {
-    if (record.stage === "REFINING") record = await approveFixture(root, record);
-    if (record.stage === "VALIDATING") record = await presentFixture(root, record);
-    record = await advanceImport(root, record, "stage complete");
-  }
+  fixtureImports.set(root, { ...record, format: "direct-review", artifactPath: "src/generated/landing-pages/example.json" });
+  record = await approveFixture(root, { ...record, stage: "REFINING" });
   // The receipt binds the approved artefact fingerprint (LF-normalised, matching the loader).
   const artifactBytes = await readFile(path.join(root, "src/generated/landing-pages/example.json"));
   await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: createHash("sha256").update(artifactBytes.toString("utf8").replace(/\r\n/g, "\n")).digest("hex") } } }));
+  record = await advanceImport(root, record, "editorial complete");
+  record = await presentFixture(root, record);
+  record = await advanceImport(root, record, "presentation complete");
   return { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } };
 }
 
@@ -63,9 +61,9 @@ function operations(root: string, overrides: Partial<ReleaseOperations> = {}): R
     mergePullRequest: async () => ({ mergeCommitSha: "d".repeat(40) }),
     deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }),
     verifyProduction: async (deployment) => {
-      const { target } = await readImportArtifactTarget(root, "direct-review", "src/generated/landing-pages/example.json");
       const identity = fixtureImports.get(root);
       if (!identity) throw new Error("SYNTHETIC_IMPORT_REQUIRED");
+      const { target } = await readImportArtifactTarget(root, identity.format, identity.artifactPath);
       return productionFixture(root, identity.importId, target, deployment, identity.sourceFingerprint);
     },
     rollback: async () => ({ ok: true, summary: "restored" }),
@@ -93,6 +91,7 @@ async function approveBlogFixture(root: string, record: ExternalArticleImportV1,
 }
 
 async function presentBlogFixture(root: string, record: ExternalArticleImportV1, post: Record<string, unknown>) {
+  record = await refreshPresentationFixture(root, record);
   if (!record.contentApproval) throw new Error("Fixture content approval is required.");
   const evidencePath = "build-pack/article-import/verifier-blog.json";
   const target = importArtifactTarget("blog", post);
@@ -123,7 +122,7 @@ async function blogReleasingRecord(root: string): Promise<{ record: ExternalArti
   await mkdir(path.join(root, "src/generated/blog-posts"), { recursive: true });
   await writeFile(path.join(root, "src/generated/blog-posts/posts.json"), JSON.stringify([post]));
   let record: ExternalArticleImportV1 = { ...(await createArticleImport(root, "article.md")), format: "blog" as const, stage: "REFINING" };
-  fixtureImports.set(root, record);
+  fixtureImports.set(root, { ...record, artifactPath });
   for (let i = 0; i < 2; i += 1) {
     if (record.stage === "REFINING") {
       record = await approveBlogFixture(root, record, post, artifactPath);
@@ -596,7 +595,8 @@ test("disallowed paths and caller artifact identity errors are deterministic rep
     assert.equal(result.status, "REPAIRING");
     assert.equal(preflightCalls, 0);
     const saved = await loadImport(root, record.importId);
-    assert.equal(saved.strategyAttempts.release, 1);
+    assert.equal(saved.repairStageTotals?.RELEASING, 1);
+    assert.equal(saved.continuation?.kind, "repair");
     assert.equal(saved.strategyAttempts["transient:release"], undefined);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -1082,7 +1082,7 @@ test("a matching blog authority release still deploys to LIVE", async () => {
         deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: `https://vettedsaasblueprint.online${post.canonicalPath}`, commitSha }),
       }),
     });
-    assert.equal(result.status, "LIVE");
+    assert.equal(result.status, "LIVE", JSON.stringify(result));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

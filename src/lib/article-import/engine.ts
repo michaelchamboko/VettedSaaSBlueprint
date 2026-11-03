@@ -12,7 +12,7 @@ export { recoverWorkflowLease } from "./workflow-lease";
 import { WORKFLOW_REVISION } from "./workflow-requirements";
 import { evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
-import { readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
+import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
 
 const ROOT = ".automation/article-imports";
 const activeLease = new AsyncLocalStorage<ImportLease>();
@@ -251,12 +251,15 @@ function strategyGroup(stage: ImportStage): string {
 }
 
 export async function canonicalSubmissionFingerprint(record: ExternalArticleImportV1, root: string): Promise<string> {
-  const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
+  const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, artifactPath: record.artifactPath, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
   const files = new Set<string>();
+  const fileFields = new Set(["artifactPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "evidencePath", "codeReviewPath", "workPath", "resultPath"]);
   function collect(value: unknown): void {
     if (!value || typeof value !== "object") return;
+    const ref = evidenceRefSchema.safeParse(value);
+    if (ref.success) { files.add(ref.data.path); return; }
     for (const [key, entry] of Object.entries(value)) {
-      if ((key === "path" || key.endsWith("Path")) && typeof entry === "string") files.add(entry);
+      if (fileFields.has(key) && typeof entry === "string") files.add(entry);
       else collect(entry);
     }
   }
@@ -418,7 +421,7 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
     catch (e) { if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e; }
     if (reservation) {
       if (reservation.sourceFingerprint !== sourceFingerprint) throw new Error("SOURCE_RESERVATION_INVALID");
-      const bytes = await readFile(path.resolve(repositoryRoot, reservation.sourceRef.path));
+      const bytes = await readEvidenceBytes(repositoryRoot, reservation.sourceRef.path);
       if (fingerprint(bytes) !== sourceFingerprint || reservation.sourceRef.sha256 !== sourceFingerprint) throw new Error("SOURCE_RESERVATION_INVALID");
       try {
         const existing = await loadImport(repositoryRoot, reservation.importId);
@@ -539,7 +542,7 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
 async function quarantineUnusableImport(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
   assertCurrentImport(record);
   if (!record.sourceRef || !record.unusableReason) throw new Error("QUARANTINE_PROOF_REQUIRED");
-  const captured = await readFile(path.resolve(repositoryRoot, record.sourceRef.path));
+  const captured = await readEvidenceBytes(repositoryRoot, record.sourceRef.path);
   if (fingerprint(captured) !== record.sourceFingerprint || !parseExternalArticle(captured.toString("utf8")).unusableReason) throw new Error("QUARANTINE_PROOF_INVALID");
   const at = now();
   const dispositionEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { sourceFingerprint: record.sourceFingerprint, reasonCode: "empty", reason: record.unusableReason });

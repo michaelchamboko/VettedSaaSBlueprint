@@ -10,7 +10,8 @@ const excludedDirectories = new Set([".git", ".next", "node_modules", ".worktree
 
 function repositoryFiles(root: string, directory = root): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.isDirectory() && excludedDirectories.has(entry.name)) return [];
+    // Dependency directories may be junctions in an isolated Windows checkout.
+    if (excludedDirectories.has(entry.name)) return [];
 
     const path = join(directory, entry.name);
     return entry.isDirectory() ? repositoryFiles(root, path) : [relative(root, path)];

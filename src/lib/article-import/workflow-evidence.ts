@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialProsePaths, fingerprintEditorialArtifact } from "../editorial/refinement";
+import path from "node:path";
+import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
 import { importArtifactTarget, validateImportArtifact } from "./format-validation";
 import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, type WorkflowStage } from "./workflow-requirements";
-import { evidenceRefSchema, frozenFileSchema, withEvidenceSnapshot, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef } from "./execution-evidence";
+import { evidenceRefSchema, frozenFileSchema, withEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
+import { validateRenderingInputs } from "./rendering-inputs";
 export { evidenceRefSchema, evidenceReference, readEvidence, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
@@ -11,7 +13,7 @@ const nonempty = z.string().trim().min(1);
 const common = { id: nonempty, createdAt: z.string().datetime({ offset: true }), importId: z.string().regex(/^article-[0-9a-f-]{36}$/), sourceFingerprint: hashSchema, requirementRevision: z.literal(WORKFLOW_REVISION) };
 const formatSchema = z.enum(CONTENT_FORMATS);
 export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal(WORKFLOW_REVISION), status: z.enum(["pass", "fail", "not-applicable", "recommendation-not-adopted"]), rationale: nonempty, evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict();
-export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("WorkflowEvidenceV1"), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
+export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("WorkflowEvidenceV1"), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
 export const researchEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("ResearchEvidenceV2"), sources: z.array(z.object({ id: nonempty, url: z.string().url(), retrievedAt: z.string().datetime({ offset: true }), snapshotRef: evidenceRefSchema }).strict()).min(1), claims: z.array(z.object({ id: nonempty, text: nonempty, sourceIds: z.array(nonempty).min(1), excerptLocations: z.array(z.object({ sourceId: nonempty, quote: nonempty }).strict()).min(1), limitations: z.array(nonempty), price: z.object({ amount: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/), period: nonempty, plan: nonempty, restrictions: z.array(nonempty) }).strict().optional() }).strict()).min(1), freshness: nonempty }).strict();
 export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview"] as const;
@@ -29,6 +31,25 @@ function assertBinding(value: Bound, binding: EvidenceBinding): void {
   if (value.importId !== binding.importId || value.sourceFingerprint !== binding.sourceFingerprint || value.requirementRevision !== (binding.requirementRevision ?? WORKFLOW_REVISION)) throw new Error("EVIDENCE_BINDING_MISMATCH");
 }
 function unique(values: string[]): void { if (new Set(values).size !== values.length) throw new Error("EVIDENCE_DUPLICATE_ID"); }
+const ELEANOR_ROOT = ".agents/skills/eleanor-editorial/";
+const IMPECCABLE_ROOT = ".agents/skills/impeccable/";
+const requiredEditorialInstructions = ["SKILL.md", "references/principles.md", "references/signs-of-ai-writing.md", "references/dr-eleanor-hayes.md"].map((item) => ELEANOR_ROOT + item);
+async function pinnedInput(root: string, execution: ExecutionEvidence, file: string): Promise<EvidenceRef> {
+  const manifest = z.object({ files: z.array(evidenceRefSchema) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
+  const refs = manifest.files.filter((ref) => ref.path === file);
+  if (refs.length !== 1 || !execution.inputRefs.some((ref) => ref.path === file && ref.sha256 === refs[0].sha256)) throw new Error(`EXECUTION_PINNED_INPUT_REQUIRED:${file}`);
+  await verifyEvidenceRef(root, refs[0]);
+  return refs[0];
+}
+async function pinnedInstructions(root: string, execution: ExecutionEvidence, required: string[], declared?: EvidenceRef[]): Promise<void> {
+  if (execution.kind !== "opencode") throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
+  const captured = execution.instructions.map(({ path, sha256 }) => ({ path, sha256 }));
+  if (declared && (declared.length !== captured.length || declared.some((ref) => !captured.some((item) => item.path === ref.path && item.sha256 === ref.sha256)))) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
+  for (const file of required) {
+    const pin = await pinnedInput(root, execution, file);
+    if (!execution.instructions.some((item) => item.path === pin.path && item.sha256 === pin.sha256 && sha256(item.text) === pin.sha256)) throw new Error(`EXECUTION_INSTRUCTION_REQUIRED:${file}`);
+  }
+}
 function assertPacket(packetId: string, binding: EvidenceBinding, stage: string): void {
   const strategies = stage === "REFINING" || stage === "VALIDATING" ? ["targeted-repair", "fresh-rewrite", "fresh-topic"] : ["field-repair", "reconstruct-schema", "reclassify"];
   if (!strategies.some((strategy) => sha256(`${binding.importId}:${binding.sourceFingerprint}:${stage}:${strategy}`) === packetId)) throw new Error("EXECUTION_PACKET_MISMATCH");
@@ -111,6 +132,7 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
     const execution = await validateExecutionEvidence(root, pass.executionRef);
     if (execution.kind !== "opencode" || execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(artifactProseProjection(value.format, before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
     assertPacket(execution.packetId, binding, "REFINING");
+    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(pass.name === "rivalFamilyCleanse" ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
     if (index === 0) writerFamily = execution.family;
     if (index < 3 && execution.family !== writerFamily) throw new Error("EDITORIAL_WRITER_FAMILY_MISMATCH");
     if (index === 3 && execution.family === writerFamily) throw new Error("EDITORIAL_CLEANSE_FAMILY_MISMATCH");
@@ -121,11 +143,15 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
     const judgmentText = { ...judgment, executionRef: undefined };
     if (judgmentExecution.kind !== "opencode" || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(artifactProseProjection(value.format, after)) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
     assertPacket(judgmentExecution.packetId, binding, "REFINING");
+    await pinnedInstructions(root, judgmentExecution, requiredEditorialInstructions);
     previous = pass.outputRef.sha256;
     if (index === 4 && fingerprintEditorialArtifact(after) !== fingerprintEditorialArtifact(artifact)) throw new Error("EDITORIAL_FINAL_ARTIFACT_MISMATCH");
   }
   const checker = await validateExecutionEvidence(root, value.checkerExecutionRef);
   if (checker.kind !== "command" || !/score\s+5\/5\s+CLEAN/.test(checker.stdout) || !checker.inputRefs.some((r) => r.sha256 === previous)) throw new Error("EDITORIAL_CHECKER_FAILED");
+  const checkerScript = ELEANOR_ROOT + "tools/deslop.py";
+  if (!/^python(?:3(?:\.\d+)?)?(?:\.exe)?$/i.test(checker.executable.replaceAll("\\", "/").split("/").at(-1) ?? "") || checker.toolVersion !== EDITORIAL_REVISION || path.resolve(checker.cwd) !== path.resolve(root) || JSON.stringify(checker.argv) !== JSON.stringify([checkerScript, "--text", editorialProse(format, artifact)])) throw new Error("EDITORIAL_CHECKER_COMMAND_MISMATCH");
+  await pinnedInput(root, checker, checkerScript);
   return value;
 }
 
@@ -177,6 +203,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   assertPacket(value.packetId, binding, "VALIDATING");
   const artifact = await artifactFor(root, binding);
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
+  const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
   if (fingerprintEditorialArtifact(await readEvidence(root, value.artifactRef)) !== fingerprintEditorialArtifact(artifact)) throw new Error("PRESENTATION_ARTIFACT_MISMATCH");
   for (const predecessor of value.predecessorRefs) await verifyEvidenceRef(root, predecessor);
   const rules = ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
@@ -187,6 +214,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
     if (!result || result.status !== "pass") throw new Error(`PRESENTATION_RULE_FAILED:${rule}`);
     for (const evidence of result.evidenceRefs) {
       const execution = await validateExecutionEvidence(root, evidence);
+      if (!execution.inputRefs.some((ref) => ref.path === value.renderInputsRef.path && ref.sha256 === value.renderInputsRef.sha256)) throw new Error("PRESENTATION_RENDER_INPUT_BINDING_MISMATCH");
       let boundInput = false;
       for (const input of execution.inputRefs) {
         try { if (fingerprintEditorialArtifact(await readEvidence(root, input)) === fingerprintEditorialArtifact(artifact)) boundInput = true; } catch { /* Non-JSON command input is not artifact proof. */ }
@@ -194,6 +222,23 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
       if (!boundInput) throw new Error("PRESENTATION_EXECUTION_ARTIFACT_MISMATCH");
       if (["desktop", "mobile", "reduced-motion"].includes(rule) && execution.kind !== "browser") throw new Error("PRESENTATION_BROWSER_REQUIRED");
       if (rule === "detect" && execution.kind !== "command") throw new Error("PRESENTATION_DETECTOR_REQUIRED");
+      if (rule === "detect" && execution.kind === "command") {
+        const binary = IMPECCABLE_ROOT + "scripts/bin/windows-x64/impeccable.exe";
+        const versionFile = IMPECCABLE_ROOT + "scripts/VERSION";
+        await pinnedInput(root, execution, binary); await pinnedInput(root, execution, versionFile);
+        const version = (await readEvidenceBytes(root, versionFile)).toString("utf8").trim();
+        const scannedFile = execution.argv[3];
+        if (version !== "0.1.5" || execution.toolVersion !== version || path.resolve(root, execution.executable) !== path.resolve(root, binary) || path.resolve(execution.cwd) !== path.resolve(root) || execution.argv.length !== 4 || execution.argv.slice(0, 3).join(" ") !== "detect --json --no-config" || !scannedFile || !execution.inputRefs.some((ref) => ref.path === scannedFile && rendering.files.some((item) => item.path === ref.path && item.sha256 === ref.sha256))) throw new Error("PRESENTATION_DETECTOR_COMMAND_MISMATCH");
+        // The pinned engine emits an array; [] is the unambiguous clean result.
+        z.array(z.unknown()).length(0).parse(JSON.parse(execution.stdout));
+      }
+      if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
+        if (execution.kind !== "opencode" || execution.pass !== `design:${rule}` || proseProjectionDigest(execution.input) !== proseProjectionDigest(artifactProseProjection(binding.format, artifact))) throw new Error("PRESENTATION_JUDGMENT_REQUIRED");
+        assertPacket(execution.packetId, binding, "VALIDATING");
+        const reference = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : rule === "context" ? IMPECCABLE_ROOT + "SKILL.md" : IMPECCABLE_ROOT + `reference/${rule}.md`;
+        await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md"]);
+        z.object({ rule: z.literal(rule), artifactFingerprint: z.literal(fingerprintEditorialArtifact(artifact)), routes: z.array(z.string()), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), notes: nonempty }).strict().refine((judgment) => JSON.stringify(judgment.routes) === JSON.stringify(target.renderedRoutes), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH").parse(JSON.parse(execution.output.designReview ?? "null"));
+      }
       if (execution.kind === "browser") {
         if (JSON.stringify(execution.routes) !== JSON.stringify(target.renderedRoutes)) throw new Error("PRESENTATION_ROUTES_MISMATCH");
         if ((rule === "mobile" && execution.viewport.width > 767) || (rule === "desktop" && execution.viewport.width < 1024) || (rule === "reduced-motion" && !execution.viewport.reducedMotion)) throw new Error("PRESENTATION_VIEWPORT_MISMATCH");

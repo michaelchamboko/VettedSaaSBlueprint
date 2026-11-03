@@ -38,7 +38,7 @@ async function main() {
     const editorialEvidenceRef = await storeEvidence(process.cwd(), manifest.importId, evidence);
     const checkerExecutionRef = await storeEvidence(process.cwd(), manifest.importId, {
       schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: EDITORIAL_REVISION,
-      ...afterCheck, cwd: process.cwd(), inputRefs: [await evidenceReference(process.cwd(), afterFile)], outputRefs: [],
+      ...afterCheck, cwd: process.cwd(), inputRefs: [await evidenceReference(process.cwd(), afterFile), await evidenceReference(process.cwd(), ".agents/skills/eleanor-editorial/tools/deslop.py")], outputRefs: [],
     });
     const companion = editorialExecutionSchema.parse({ ...manifest, editorialEvidenceRef, checkerExecutionRef });
     executionRef = await storeEvidence(process.cwd(), manifest.importId, companion);

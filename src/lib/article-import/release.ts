@@ -345,10 +345,6 @@ export async function assessImportRelease(input: {
   commitMessage?: string;
 }): Promise<ReleaseAssessment> {
   const reasons: string[] = [];
-  if (input.execute) {
-    const workflow = await evaluateWorkflowEvidence(input.record, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: input.artifactPath });
-    if (!workflow.ok) return { status: "REPAIRING", reasons: workflow.diagnostics };
-  }
   const disallowed = validateReleasePaths(input.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true);
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
   if (input.execute && input.record.contentApproval) {
@@ -382,6 +378,13 @@ export async function assessImportRelease(input: {
   if (input.execute && reasons.length) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: reasons.join("; ") });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons };
+  }
+  if (input.execute) {
+    const workflow = await evaluateWorkflowEvidence(input.record, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: input.artifactPath });
+    if (!workflow.ok) {
+      await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: workflow.diagnostics.join("; ") });
+      return { status: "REPAIRING", reasons: workflow.diagnostics };
+    }
   }
   try {
     const preflight = await input.operations.preflight();
