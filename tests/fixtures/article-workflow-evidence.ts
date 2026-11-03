@@ -1,7 +1,7 @@
 /** Synthetic adapter fixtures only. Never use these producers from the production CLI. */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { artifactProseProjection, contentAssessmentReviewInput, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, contentAssessmentReviewInput, designReviewInput, editorialJudgmentReviewInput, editorialPassReviewInput, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
 import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION, workflowRequirements } from "../../src/lib/article-import/workflow-requirements";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../../src/lib/editorial/refinement";
@@ -30,7 +30,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const packet = (stage: string) => sha256(`${record.importId}:${record.sourceFingerprint}:${stage}:${stage === "TRANSFORMING" ? "field-repair" : "targeted-repair"}`);
   const beforeRef = await save(input.before), afterRef = await evidenceReference(root, input.artifactPath);
   async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>) {
-    const projection = assessmentInput ?? artifactProseProjection(input.format, before), result = reviewOutput ?? artifactProseProjection(input.format, after);
+    const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);
     const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : "REFINING");
     const instructions = (pass.startsWith("design:") ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
     return save(extractOpenCodeExecution({ info: { id: "fixture-session" }, messages: [
@@ -47,8 +47,8 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const passes = [];
   for (const [index, name] of passNames.entries()) {
     const initial = index === 0 ? input.before : input.after, initialRef = index === 0 ? beforeRef : afterRef;
-    const judgment = { pass: name, coveredPaths: paths, verdict: "pass", findings: [], semanticNotes: "Synthetic scoped judgment for adapter regression tests.", meaningPreserved: true, protectedFieldsPreserved: true };
-    const judgmentExecution = await model(`${name}-judgment`, input.after, input.after, afterRef, afterRef, "writer", { judgment: JSON.stringify(judgment) });
+    const judgment = { pass: name, beforeFingerprint: fingerprintEditorialArtifact(initial), afterFingerprint: fingerprintEditorialArtifact(input.after), coveredPaths: paths, verdict: "pass", findings: [], semanticNotes: "Synthetic scoped judgment for adapter regression tests.", meaningPreserved: true, protectedFieldsPreserved: true };
+    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, "writer", { judgment: JSON.stringify(judgment) }, editorialJudgmentReviewInput(initial, input.after));
     passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, index === 3 ? "cleanser" : "writer"), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
   }
   const checkerExecutionRef = await save({ schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: EDITORIAL_REVISION, startedAt: now, completedAt: now, inputRefs: [afterRef, pinRef(checkerFile)], outputRefs: [], executable: "python", argv: [checkerFile, "--text", editorialProse(format[input.format], input.after)], cwd: root, stdout: "score 5/5 CLEAN", stderr: "", exitCode: 0 });
@@ -64,12 +64,14 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
     await writeFile(path.join(root, file), bytes, { flag: "wx" }).catch((error: NodeJS.ErrnoException) => { if (error.code !== "EEXIST") throw error; });
   }
   const renderInputsRef = await captureRenderingInputs(root, record.importId);
-  const detectorInputs = requiredDetectorInputs(renderingInputsSchema.parse(await readEvidence(root, renderInputsRef)), target);
+  const rendering = renderingInputsSchema.parse(await readEvidence(root, renderInputsRef));
+  const detectorInputs = requiredDetectorInputs(rendering, target);
+  const designInput = await designReviewInput(root, input.format, input.after, renderInputsRef);
   const ruleResults = [];
   for (const rule of rules) {
     if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
-      const review = { rule, artifactFingerprint: fingerprintEditorialArtifact(input.after), routes: target.renderedRoutes, verdict: "pass", findings: [], notes: `Synthetic scoped ${rule} review.` };
-      ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await model(`design:${rule}`, input.after, input.after, afterRef, afterRef, "writer", { designReview: JSON.stringify(review) })] });
+      const review = { rule, artifactFingerprint: fingerprintEditorialArtifact(input.after), routes: target.renderedRoutes, renderInputsRef, renderingDigest: rendering.digest, verdict: "pass", findings: [], notes: `Synthetic scoped ${rule} review.` };
+      ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await model(`design:${rule}`, input.after, input.after, afterRef, afterRef, "writer", { designReview: JSON.stringify(review) }, designInput)] });
       continue;
     }
     if (rule === "detect") {

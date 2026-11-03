@@ -1,10 +1,10 @@
 import { z } from "zod";
 import path from "node:path";
-import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
+import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialEvidenceSchema, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
 import { importArtifactTarget, validateImportArtifact } from "./format-validation";
 import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, type WorkflowStage } from "./workflow-requirements";
 import { evidenceRefSchema, frozenFileSchema, withEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
-import { requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
+import { renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 export { evidenceRefSchema, evidenceReference, readEvidence, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
@@ -74,6 +74,26 @@ export async function contentAssessmentReviewInput(root: string, artifact: unkno
   }
   return { artifact: JSON.stringify(artifact), research: JSON.stringify(research), researchRef: JSON.stringify(evidenceRefSchema.parse(researchRef)), sourceSnapshots: JSON.stringify(sourceSnapshots) };
 }
+export function editorialPassReviewInput(before: unknown): Record<string, string> {
+  return { beforeArtifact: JSON.stringify(before) };
+}
+export function editorialJudgmentReviewInput(before: unknown, after: unknown): Record<string, string> {
+  return { beforeArtifact: JSON.stringify(before), afterArtifact: JSON.stringify(after) };
+}
+async function designInputFromManifest(root: string, artifact: unknown, renderInputsRef: EvidenceRef, rendering: z.infer<typeof renderingInputsSchema>, target: ReturnType<typeof importArtifactTarget>): Promise<Record<string, string>> {
+  const rendererSources = [];
+  for (const ref of requiredDetectorInputs(rendering, target)) {
+    const bytes = await readEvidenceBytes(root, ref.path);
+    if (sha256(bytes) !== ref.sha256) throw new Error("PRESENTATION_RENDER_INPUT_CHANGED");
+    rendererSources.push({ ref, text: bytes.toString("utf8") });
+  }
+  return { artifact: JSON.stringify(artifact), renderInputsRef: JSON.stringify(renderInputsRef), renderingManifest: JSON.stringify(rendering), renderedRoutes: JSON.stringify(target.renderedRoutes), rendererSources: JSON.stringify(rendererSources) };
+}
+/** Bind design judgments to the exact render context shown in the actual exchange. */
+export async function designReviewInput(root: string, format: string, artifact: unknown, renderInputsRef: EvidenceRef): Promise<Record<string, string>> {
+  const rendering = await validateRenderingInputs(root, renderInputsRef, { historical: isEvidenceSnapshotActive() });
+  return designInputFromManifest(root, artifact, renderInputsRef, rendering, importArtifactTarget(formatSchema.parse(format), artifact));
+}
 async function artifactFor(root: string, binding: EvidenceBinding): Promise<unknown> {
   if (!binding.artifactPath) throw new Error("EVIDENCE_ARTIFACT_REQUIRED");
   const value: unknown = JSON.parse((await readEvidenceBytes(root, binding.artifactPath)).toString("utf8"));
@@ -132,27 +152,29 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   assertBinding(value, binding);
   const artifact = await artifactFor(root, binding), format = editorialFormats[value.format];
   if (value.format !== binding.format || value.schemaRevision !== revisions[value.format]) throw new Error("EDITORIAL_FORMAT_MISMATCH");
-  if (!canReuseEditorialEvidence(await readEvidence(root, value.editorialEvidenceRef), format, artifact)) throw new Error("EDITORIAL_RECEIPT_MISMATCH");
+  const receipt = editorialEvidenceSchema.parse(await readEvidence(root, value.editorialEvidenceRef));
+  if (!canReuseEditorialEvidence(receipt, format, artifact)) throw new Error("EDITORIAL_RECEIPT_MISMATCH");
   const paths = editorialProsePaths(format, artifact);
   if (JSON.stringify(paths) !== JSON.stringify(value.eligibleProsePaths)) throw new Error("EDITORIAL_PROSE_COVERAGE");
   let previous: string | undefined; let writerFamily: string | undefined;
   for (const [index, pass] of value.passes.entries()) {
     if (pass.name !== passes[index] || (previous && previous !== pass.inputRef.sha256)) throw new Error("EDITORIAL_PASS_ORDER");
     const before = await readEvidence(root, pass.inputRef), after = await readEvidence(root, pass.outputRef);
+    if (index === 0 && receipt.beforeFingerprint !== fingerprintEditorialArtifact(before)) throw new Error("EDITORIAL_INITIAL_ARTIFACT_MISMATCH");
     compareEditorialArtifacts(format, before, after);
     const execution = await validateExecutionEvidence(root, pass.executionRef);
-    if (execution.kind !== "opencode" || execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(artifactProseProjection(value.format, before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
+    if (execution.kind !== "opencode" || execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(editorialPassReviewInput(before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
     assertPacket(execution.packetId, binding, "REFINING");
     await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(pass.name === "rivalFamilyCleanse" ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
     if (index === 0) writerFamily = execution.family;
     if (index < 3 && execution.family !== writerFamily) throw new Error("EDITORIAL_WRITER_FAMILY_MISMATCH");
     if (index === 3 && execution.family === writerFamily) throw new Error("EDITORIAL_CLEANSE_FAMILY_MISMATCH");
     for (const instruction of pass.instructionRefs) await verifyEvidenceRef(root, instruction);
-    const judgment = z.object({ pass: z.literal(pass.name), coveredPaths: z.array(nonempty), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), semanticNotes: nonempty, meaningPreserved: z.literal(true), protectedFieldsPreserved: z.literal(true), executionRef: evidenceRefSchema }).strict().parse(await readEvidence(root, pass.judgmentRef));
+    const judgment = z.object({ pass: z.literal(pass.name), beforeFingerprint: z.literal(fingerprintEditorialArtifact(before)), afterFingerprint: z.literal(fingerprintEditorialArtifact(after)), coveredPaths: z.array(nonempty), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), semanticNotes: nonempty, meaningPreserved: z.literal(true), protectedFieldsPreserved: z.literal(true), executionRef: evidenceRefSchema }).strict().parse(await readEvidence(root, pass.judgmentRef));
     if (JSON.stringify(judgment.coveredPaths) !== JSON.stringify(paths)) throw new Error("EDITORIAL_JUDGMENT_COVERAGE");
     const judgmentExecution = await validateExecutionEvidence(root, judgment.executionRef);
     const judgmentText = { ...judgment, executionRef: undefined };
-    if (judgmentExecution.kind !== "opencode" || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(artifactProseProjection(value.format, after)) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
+    if (judgmentExecution.kind !== "opencode" || judgmentExecution.pass !== `${pass.name}-judgment` || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(editorialJudgmentReviewInput(before, after)) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
     assertPacket(judgmentExecution.packetId, binding, "REFINING");
     await pinnedInstructions(root, judgmentExecution, requiredEditorialInstructions);
     previous = pass.outputRef.sha256;
@@ -215,6 +237,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   const artifact = await artifactFor(root, binding);
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
   const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
+  const designInput = await designInputFromManifest(root, artifact, value.renderInputsRef, rendering, target);
   const detectorInputs = requiredDetectorInputs(rendering, target);
   const detectedFiles = new Set<string>();
   if (fingerprintEditorialArtifact(await readEvidence(root, value.artifactRef)) !== fingerprintEditorialArtifact(artifact)) throw new Error("PRESENTATION_ARTIFACT_MISMATCH");
@@ -248,11 +271,11 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         detectedFiles.add(scannedFile);
       }
       if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
-        if (execution.kind !== "opencode" || execution.pass !== `design:${rule}` || proseProjectionDigest(execution.input) !== proseProjectionDigest(artifactProseProjection(binding.format, artifact))) throw new Error("PRESENTATION_JUDGMENT_REQUIRED");
+        if (execution.kind !== "opencode" || execution.pass !== `design:${rule}` || proseProjectionDigest(execution.input) !== proseProjectionDigest(designInput)) throw new Error("PRESENTATION_JUDGMENT_REQUIRED");
         assertPacket(execution.packetId, binding, "VALIDATING");
         const reference = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : rule === "context" ? IMPECCABLE_ROOT + "SKILL.md" : IMPECCABLE_ROOT + `reference/${rule}.md`;
         await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md"]);
-        z.object({ rule: z.literal(rule), artifactFingerprint: z.literal(fingerprintEditorialArtifact(artifact)), routes: z.array(z.string()), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), notes: nonempty }).strict().refine((judgment) => JSON.stringify(judgment.routes) === JSON.stringify(target.renderedRoutes), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH").parse(JSON.parse(execution.output.designReview ?? "null"));
+        z.object({ rule: z.literal(rule), artifactFingerprint: z.literal(fingerprintEditorialArtifact(artifact)), routes: z.array(z.string()), renderInputsRef: z.object({ path: z.literal(value.renderInputsRef.path), sha256: z.literal(value.renderInputsRef.sha256) }).strict(), renderingDigest: z.literal(rendering.digest), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), notes: nonempty }).strict().refine((judgment) => JSON.stringify(judgment.routes) === JSON.stringify(target.renderedRoutes), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH").parse(JSON.parse(execution.output.designReview ?? "null"));
       }
       if (execution.kind === "browser") {
         if (JSON.stringify(execution.routes) !== JSON.stringify(target.renderedRoutes)) throw new Error("PRESENTATION_ROUTES_MISMATCH");

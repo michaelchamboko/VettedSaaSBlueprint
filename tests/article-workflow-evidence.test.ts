@@ -13,6 +13,14 @@ import { captureCommandExecution, evidenceReference, executionEvidenceSchema, ex
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
+function recaptureStoredExchange(value: unknown, inputRefs: Array<{ path: string; sha256: string }>, outputRefs: Array<{ path: string; sha256: string }>) {
+  const execution = executionEvidenceSchema.parse(value);
+  if (execution.kind !== "opencode") throw new Error("Expected a captured model exchange");
+  return extractOpenCodeExecution({ info: { id: execution.sessionId }, messages: [
+    { info: { id: execution.userMessageId, role: "user", sessionID: execution.sessionId }, parts: [{ type: "text", text: JSON.stringify({ packetId: execution.packetId, pass: execution.pass, prose: execution.input, digest: execution.inputDigest, instructions: execution.instructions }) }] },
+    { info: { id: execution.assistantMessageId, role: "assistant", sessionID: execution.sessionId, parentID: execution.userMessageId, providerID: execution.providerId, modelID: execution.modelId, time: { created: Date.parse(execution.startedAt), completed: Date.parse(execution.completedAt) }, finish: "stop" }, parts: [{ type: "text", text: JSON.stringify(execution.output) }] },
+  ] }, { version: execution.toolVersion, sessionId: execution.sessionId, userMessageId: execution.userMessageId, assistantMessageId: execution.assistantMessageId, packetId: execution.packetId, pass: execution.pass, input: execution.input, output: execution.output, instructions: execution.instructions, families: { [`${execution.providerId}/${execution.modelId}`]: execution.family }, inputRefs, outputRefs });
+}
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "workflow-proof-"));
   const before = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://example.test/example", url_slug: "example" } };
@@ -99,6 +107,60 @@ test("rebinding a research receipt cannot retain the old captured assessment", a
     assert.ok(execution.input.research.includes("Fixed synthetic input"));
     assert.ok(execution.input.sourceSnapshots.includes("Synthetic source supports this scoped fixture claim."));
     await validateContentAssessment(root, record.evidenceRefs!.assessment!, record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("a recaptured old design exchange cannot approve a new rendering manifest", async () => {
+  const { root, record } = await fixture();
+  try {
+    const prior = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const priorExecution = await readEvidence(root, prior.ruleResults.find((rule) => rule.ruleId === "critique")!.evidenceRefs[0]);
+    const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs!.editorial!));
+    const before = await readEvidence(root, editorial.passes[0].inputRef);
+    const after = JSON.parse(await readFile(path.join(root, record.artifactPath!), "utf8"));
+    await writeFile(path.join(root, "src/styles/fixture-renderer.css"), "body { color: black; background: white; padding: 12px; }\n");
+    const fresh = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath: record.artifactPath!, before, after, editorialEvidencePath: "editorial.json" });
+    const current = workflowEvidenceSchema.parse(await readEvidence(root, fresh.presentation));
+    assert.notEqual(current.renderInputsRef.sha256, prior.renderInputsRef.sha256);
+    const critique = current.ruleResults.find((rule) => rule.ruleId === "critique")!;
+    const currentExecution = executionEvidenceSchema.parse(await readEvidence(root, critique.evidenceRefs[0]));
+    // The old exported messages are unchanged; only caller-selected refs now target the fresh rendering.
+    critique.evidenceRefs = [await storeEvidence(root, id, recaptureStoredExchange(priorExecution, currentExecution.inputRefs, currentExecution.outputRefs))];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, current), record), /PRESENTATION_JUDGMENT_REQUIRED/);
+    await validatePresentationEvidence(root, fresh.presentation, record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("protected metadata rebinding cannot retain prior editorial authoring or fidelity exchanges", async () => {
+  const { root, record } = await fixture();
+  try {
+    const prior = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs!.editorial!));
+    const before = await readEvidence(root, prior.passes[0].inputRef) as { metadata: Record<string, string> };
+    const after = JSON.parse(await readFile(path.join(root, record.artifactPath!), "utf8")) as { metadata: Record<string, string> };
+    before.metadata.title_tag = "New protected search title"; after.metadata.title_tag = "New protected search title";
+    await writeFile(path.join(root, record.artifactPath!), JSON.stringify(after));
+    await writeFile(path.join(root, "editorial.json"), JSON.stringify(createEditorialEvidence("landing", before, after, fullRewriteNotes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
+    const fresh = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath: record.artifactPath!, before, after, editorialEvidencePath: "editorial.json" });
+    const current = editorialExecutionSchema.parse(await readEvidence(root, fresh.editorial));
+    const freshExecution = executionEvidenceSchema.parse(await readEvidence(root, current.passes[0].executionRef));
+    const oldExecution = await readEvidence(root, prior.passes[0].executionRef);
+    current.passes[0].executionRef = await storeEvidence(root, id, recaptureStoredExchange(oldExecution, freshExecution.inputRefs, freshExecution.outputRefs));
+    await assert.rejects(validateEditorialExecution(root, await storeEvidence(root, id, current), record), /EDITORIAL_EXECUTION_MISMATCH/);
+    const fidelity = editorialExecutionSchema.parse(await readEvidence(root, fresh.editorial));
+    const oldJudgment = await readEvidence(root, prior.passes[4].judgmentRef) as { executionRef: { path: string; sha256: string } };
+    const newJudgment = await readEvidence(root, fidelity.passes[4].judgmentRef) as { executionRef: { path: string; sha256: string } };
+    const freshJudgmentExecution = executionEvidenceSchema.parse(await readEvidence(root, newJudgment.executionRef));
+    const reexported = recaptureStoredExchange(await readEvidence(root, oldJudgment.executionRef), freshJudgmentExecution.inputRefs, freshJudgmentExecution.outputRefs);
+    fidelity.passes[4].judgmentRef = await storeEvidence(root, id, { ...newJudgment, executionRef: await storeEvidence(root, id, reexported) });
+    await assert.rejects(validateEditorialExecution(root, await storeEvidence(root, id, fidelity), record), /EDITORIAL_JUDGMENT_EXECUTION_MISMATCH/);
+    await validateEditorialExecution(root, fresh.editorial, record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("editorial receipt initial fingerprint must identify the actual first pass artifact", async () => {
+  const { root, record } = await fixture();
+  try {
+    const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs!.editorial!));
+    const receipt = await readEvidence(root, editorial.editorialEvidenceRef) as Record<string, unknown>;
+    editorial.editorialEvidenceRef = await storeEvidence(root, id, { ...receipt, beforeFingerprint: "f".repeat(64) });
+    await assert.rejects(validateEditorialExecution(root, await storeEvidence(root, id, editorial), record), /EDITORIAL_INITIAL_ARTIFACT_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test("echo-like success output cannot replace the pinned checker, detector or scoped design review", async () => {
