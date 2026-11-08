@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { boundedSplitRevealOffset } from "./split-reveal-offset";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,8 +22,12 @@ function applyReferenceComposedMotion(root: HTMLElement, variant: LandingPageMot
   }
 
   if (variant === "split_reveal") {
-    if (heroCopy) gsap.from(heroCopy, { x: -36, opacity: 0, duration: 0.72, ease: "power3.out" });
-    if (heroMedia) gsap.from(heroMedia, { x: 36, opacity: 0, duration: 0.72, ease: "power3.out" });
+    const copyGutter = heroCopy ? heroCopy.getBoundingClientRect().left : 36;
+    const mediaGutter = heroMedia ? document.documentElement.clientWidth - heroMedia.getBoundingClientRect().right : 36;
+    const copyOffset = boundedSplitRevealOffset(copyGutter);
+    const mediaOffset = boundedSplitRevealOffset(mediaGutter);
+    if (heroCopy) gsap.from(heroCopy, { x: -copyOffset, opacity: 0, duration: 0.72, ease: "power3.out" });
+    if (heroMedia) gsap.from(heroMedia, { x: mediaOffset, opacity: 0, duration: 0.72, ease: "power3.out" });
     sections.forEach((section) => gsap.from(section, { y: 28, opacity: 0, duration: 0.6, ease: "power3.out", scrollTrigger: { trigger: section, start: "top 84%", once: true } }));
     return;
   }

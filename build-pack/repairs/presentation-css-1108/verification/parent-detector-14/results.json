@@ -1,0 +1,260 @@
+{
+  "cwd": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108",
+  "executable": ".agents/skills/impeccable/scripts/bin/windows-x64/impeccable.exe",
+  "binarySha256": "477e544fc8880a5e82e427490cb9a5f5adab480c0e02966d33fd50772b531c71",
+  "version": "0.1.5",
+  "results": [
+    {
+      "target": "src/app/globals.css",
+      "inputSha256": "f09a3fdd98e477a980a878dd47a4a3502f44386b125f16de640eb26db56a6c2d",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/app/globals.css"
+      ],
+      "startedUtc": "2026-11-08T06:45:10.4732414Z",
+      "endedUtc": "2026-11-08T06:45:10.6531490Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\1.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\1.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/app/gr-premium-styles.css",
+      "inputSha256": "e084e93c5e0cc639185b4f3d3c8958e00dbad13b0ae50ad0c2681ba6698f721c",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/app/gr-premium-styles.css"
+      ],
+      "startedUtc": "2026-11-08T06:45:10.6723191Z",
+      "endedUtc": "2026-11-08T06:45:10.7788098Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\2.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\2.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/app/landing-page-builders/[slug]/page.tsx",
+      "inputSha256": "dd9ad6a8043f5243a2145a7ee3ad3e9fe088a4c0a1278dcc23ba38d54d50a63e",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/app/landing-page-builders/[slug]/page.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:10.7858743Z",
+      "endedUtc": "2026-11-08T06:45:10.8723755Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\3.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\3.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/app/layout.tsx",
+      "inputSha256": "1ec478b1733f09ff492abf80ecbb2a5a5bfc4bb903cffbcca8816062ee1c34c7",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/app/layout.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:10.8816302Z",
+      "endedUtc": "2026-11-08T06:45:10.9720840Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\4.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\4.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/app/studio-styles.css",
+      "inputSha256": "b2320dd66233b241f2cbc18c017b3232358daefbc6df34930f776399f4d7e52d",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/app/studio-styles.css"
+      ],
+      "startedUtc": "2026-11-08T06:45:10.9783151Z",
+      "endedUtc": "2026-11-08T06:45:11.0720177Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\5.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\5.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/AffiliateDisclosure.tsx",
+      "inputSha256": "14b3d79132cf5d6d153f217c1ceb338592c2ca590524f5402477fc47514ef56b",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/AffiliateDisclosure.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.0795425Z",
+      "endedUtc": "2026-11-08T06:45:11.1586389Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\6.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\6.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/DirectReviewPage.tsx",
+      "inputSha256": "45ef72de9d26cc25492ee68ac30c5ba184c8e6fbb05e0cd07f5136c7ff17a57b",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/DirectReviewPage.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.1666693Z",
+      "endedUtc": "2026-11-08T06:45:11.2596625Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\7.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\7.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/EditorialReviewPage.tsx",
+      "inputSha256": "921b73abd731f36b3188ebf30d0cc5f8264186d38245dcf1fe4b9e9b528ddcca",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/EditorialReviewPage.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.2683348Z",
+      "endedUtc": "2026-11-08T06:45:11.3542214Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\8.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\8.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/EditorialV2PreviewPage.tsx",
+      "inputSha256": "e1d8290fff7993a31a31e68882da37af312bc38201c1cefdb1b7c33eb68a3780",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/EditorialV2PreviewPage.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.3617886Z",
+      "endedUtc": "2026-11-08T06:45:11.4461641Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\9.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\9.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/LandingPageMotion.tsx",
+      "inputSha256": "c49b037afee4a21adb081023b549f74c1495789f7b7e6aa7a31d03cab30ed5b3",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/LandingPageMotion.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.4526185Z",
+      "endedUtc": "2026-11-08T06:45:11.5344542Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\10.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\10.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/PublicTracking.tsx",
+      "inputSha256": "19bb6422cc49673548c623e4eb07e0e995aa65f4dfd89a9059c71a37313bb2f1",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/PublicTracking.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.5419687Z",
+      "endedUtc": "2026-11-08T06:45:11.6164133Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\11.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\11.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/ReferenceComposedReviewPage.tsx",
+      "inputSha256": "3460d1965f9ba9e048c52ceff44e24ae3a7ac8f3ef54cd9bc491fdc3f17f238b",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/ReferenceComposedReviewPage.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.6236580Z",
+      "endedUtc": "2026-11-08T06:45:11.7130300Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\12.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\12.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/StudioPage.tsx",
+      "inputSha256": "9204f9048e0ab92ec1b5c16be698c29984e13709f3233743121346dba047abb6",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/StudioPage.tsx"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.7209775Z",
+      "endedUtc": "2026-11-08T06:45:11.8152566Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\13.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\13.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    },
+    {
+      "target": "src/components/landing/split-reveal-offset.ts",
+      "inputSha256": "be43c1d6506ce9a8e4035f60a348e56a89dc1d53928415a978a6e763dfefff50",
+      "argv": [
+        "detect",
+        "--json",
+        "--no-config",
+        "src/components/landing/split-reveal-offset.ts"
+      ],
+      "startedUtc": "2026-11-08T06:45:11.8226972Z",
+      "endedUtc": "2026-11-08T06:45:11.9089727Z",
+      "exitCode": 0,
+      "stdoutPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\14.stdout.log",
+      "stderrPath": "build-pack\\repairs\\presentation-css-1108\\verification\\parent-detector-14\\14.stderr.log",
+      "stdoutSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "stdout": "[]",
+      "stderr": null
+    }
+  ]
+}

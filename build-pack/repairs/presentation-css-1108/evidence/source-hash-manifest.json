@@ -1,0 +1,18 @@
+{
+  "baseCommit": "bcfda97",
+  "finalBuildId": "wfAfF_vSiWRPri8N0XcP2",
+  "detector": "impeccable 0.1.5",
+  "detectorExit": 0,
+  "detectorFindings": 0,
+  "ownedFiles": {
+    "src/app/globals.css": "f09a3fdd98e477a980a878dd47a4a3502f44386b125f16de640eb26db56a6c2d",
+    "src/app/gr-premium-styles.css": "e084e93c5e0cc639185b4f3d3c8958e00dbad13b0ae50ad0c2681ba6698f721c",
+    "src/components/landing/LandingPageMotion.tsx": "c49b037afee4a21adb081023b549f74c1495789f7b7e6aa7a31d03cab30ed5b3",
+    "src/components/landing/split-reveal-offset.ts": "be43c1d6506ce9a8e4035f60a348e56a89dc1d53928415a978a6e763dfefff50",
+    "tests/split-reveal-offset.test.ts": "23f29003d97df310ca3decc966f091e0e166c64e1175e069c0439119c4715fc4"
+  },
+  "baseFiles": {
+    "src/app/globals.css": "2ff872ab199fad875c4e433f917288f606bfcd25b10ee9829d1d63ed04b8817e",
+    "src/app/gr-premium-styles.css": "88657607c3dbd8ea0c55a4789ad96a512fcf04f26f3eb232f54049a0b3c2b3fb"
+  }
+}

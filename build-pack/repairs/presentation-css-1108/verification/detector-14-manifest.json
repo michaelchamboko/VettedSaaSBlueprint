@@ -1,0 +1,26 @@
+{
+  "command": ".agents/skills/impeccable/scripts/impeccable.cmd detect --no-config --json <14 targets>",
+  "argv": [
+    "detect",
+    "--no-config",
+    "--json",
+    "src/app/globals.css",
+    "src/app/gr-premium-styles.css",
+    "src/app/landing-page-builders/[slug]/page.tsx",
+    "src/app/layout.tsx",
+    "src/app/studio-styles.css",
+    "src/components/landing/AffiliateDisclosure.tsx",
+    "src/components/landing/DirectReviewPage.tsx",
+    "src/components/landing/EditorialReviewPage.tsx",
+    "src/components/landing/EditorialV2PreviewPage.tsx",
+    "src/components/landing/LandingPageMotion.tsx",
+    "src/components/landing/PublicTracking.tsx",
+    "src/components/landing/ReferenceComposedReviewPage.tsx",
+    "src/components/landing/StudioPage.tsx",
+    "src/components/landing/split-reveal-offset.ts"
+  ],
+  "exitCode": 0,
+  "stdout": "[]",
+  "findingCount": 0,
+  "detectorVersion": "0.1.5"
+}
