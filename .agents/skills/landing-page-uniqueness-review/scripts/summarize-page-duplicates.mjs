@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { hasFlaggablePatternMatch } from "../../../../scripts/scanner-negation.mjs";
 
 const SCORE_KEYS = [
   "evidence_score",
@@ -595,7 +596,7 @@ function collectArtifactIssues(rows) {
         });
       }
       for (const { reason_code, pattern } of RISKY_OVERCLAIM_PATTERNS) {
-        if (pattern.test(value)) {
+        if (hasFlaggablePatternMatch(pattern, value)) {
           issues.push({
             field,
             reason_code,

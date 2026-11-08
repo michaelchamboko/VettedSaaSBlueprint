@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-compliance-risks",
+  "input_mode": "draft",
+  "status": "fail",
+  "publish_readiness": "blocked",
+  "target_dir": "C:\\Users\\micha\\AppData\\Local\\Temp\\ev-case3",
+  "target": null,
+  "report_only": false,
+  "scanned_count": 1,
+  "reason_codes": [
+    "inflated_or_copied_scores",
+    "unsupported_sensitive_claim"
+  ],
+  "issue_arrays": {
+    "disclosure_issues": [],
+    "claim_issues": [
+      {
+        "file": "page.json",
+        "input_path": "faq.0.answer",
+        "category": "claim_issues",
+        "severity": "blocker",
+        "reason_code": "unsupported_sensitive_claim",
+        "message": "faq.0.answer contains pricing_offer claim language requiring claim-level evidence.",
+        "required_fix": "Remove the offer/pricing claim or attach current claim-level evidence, destination match, program permission, and independent release authorization.",
+        "evidence": {
+          "value": "A visual editor alone cannot guarantee consistent rendering, but we guarantee results for every customer.",
+          "matched_pattern": "(?:\\$|USD|\\/mo\\b|per month|annual|lifetime|% off|discount|coupon|deal|free trial|refund|money[-\\s]?back|guarantee|guaranteed|cancel(?:lation)?)"
+        }
+      }
+    ],
+    "evidence_issues": [
+      {
+        "file": "page.json",
+        "input_path": "quality_scores.compliance_score",
+        "category": "evidence_issues",
+        "severity": "warning",
+        "reason_code": "inflated_or_copied_scores",
+        "message": "High compliance score cannot prove program rules, link state, destination review, or release authorization.",
+        "required_fix": "Resolve external compliance/profile/program/link/destination records; do not rely on generated scores.",
+        "evidence": {
+          "value": 96
+        }
+      }
+    ],
+    "partnerstack_issues": [],
+    "destination_issues": [],
+    "artifact_qa_issues": [],
+    "renderer_static_issues": []
+  },
+  "duplicate_like_risk_groups": [],
+  "files": [
+    {
+      "file": "page.json",
+      "status": "fail",
+      "reason_codes": [
+        "inflated_or_copied_scores",
+        "unsupported_sensitive_claim"
+      ],
+      "blocker_count": 1,
+      "finding_count": 2
+    }
+  ],
+  "summary": {
+    "disclosure_issue_count": 0,
+    "claim_issue_count": 1,
+    "evidence_issue_count": 1,
+    "partnerstack_issue_count": 0,
+    "destination_issue_count": 0,
+    "artifact_qa_issue_count": 0,
+    "renderer_static_issue_count": 0,
+    "duplicate_like_group_count": 0,
+    "blocker_count": 1,
+    "finding_count": 2
+  }
+}
+
