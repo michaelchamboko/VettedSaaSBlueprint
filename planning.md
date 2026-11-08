@@ -135,3 +135,9 @@ Repository changes still require the isolate, build, prove, and ship workflow in
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
 
 Scope: repair demonstrably false positive in three specialist scanners for clearly negated guarantee wording. Owned files: scripts/scanner-negation.mjs (shared helper), the three scanner scripts, tests/scanner-negated-guarantee.test.ts, build-pack/repairs/scanner-negation-1108/* evidence, planning/execution-state registration. No source strategy amendments, no new automation programme, no article execution in this worktree. Evidence: build-pack/repairs/scanner-negation-1108/.
+
+### Presentation CSS repair (PRESENTATION-CSS-1108) (registered 2026-11-08)
+
+Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
+
+Scope: repair demonstrated CSS presentation-gate failures and the related mobile split-reveal entrance overflow. Owned changes: src/app/globals.css, src/app/gr-premium-styles.css, src/components/landing/LandingPageMotion.tsx, src/components/landing/split-reveal-offset.ts, and tests/split-reveal-offset.test.ts. Corrections replace thick side-tab borders with 1px boundaries, replace Arial/Inter declarations with installed faces, replace gradient text with solid color, and bound horizontal split-reveal travel to available viewport gutter. Evidence and registration only; no source strategy amendments, no new automation programme, no article execution in this worktree. Evidence: build-pack/repairs/presentation-css-1108/.

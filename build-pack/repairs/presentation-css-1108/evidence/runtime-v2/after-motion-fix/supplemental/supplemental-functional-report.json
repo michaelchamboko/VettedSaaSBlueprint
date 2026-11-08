@@ -1,0 +1,614 @@
+{
+  "baseUrl": "http://127.0.0.1:3024",
+  "sourceCssSha256": "f09a3fdd98e477a980a878dd47a4a3502f44386b125f16de640eb26db56a6c2d",
+  "buildId": "0iWXpE_CLt9Qkp9844jKs",
+  "startedUtc": "2026-11-08T06:22:06.733Z",
+  "entries": [
+    {
+      "route": "/decision-hub",
+      "context": "desktop-normal",
+      "device": "desktop-1440x900",
+      "startedUtc": "2026-11-08T06:22:07.169Z",
+      "httpStatus": 200,
+      "h1Actual": "How should a five-person team choose software without a technical administrator?",
+      "h1Expected": "How should a five-person team choose software without a technical administrator?",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "faq": {
+        "present": false,
+        "expanded": false,
+        "openAfterClick": null,
+        "keyboardActivated": false,
+        "visibleFocus": null
+      },
+      "motion": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 15,
+        "sampleTransitionDurations": [
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s, 0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s"
+        ]
+      },
+      "keyboardFocusFirst": {
+        "tag": "A",
+        "id": null,
+        "className": "skip-link",
+        "outlineWidth": "3px",
+        "outline": "rgb(168, 84, 54) solid 3px",
+        "boxShadow": "none"
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\decision-hub-desktop-normal.png",
+      "screenshotSha256": "96f4da4ae515c48ced39c76ad31b9d82c23599a9203b5a41274468218e221b86",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:09.938Z"
+    },
+    {
+      "route": "/decision-hub",
+      "context": "desktop-reduced",
+      "device": "desktop-1440x900",
+      "startedUtc": "2026-11-08T06:22:10.410Z",
+      "httpStatus": 200,
+      "h1Actual": "How should a five-person team choose software without a technical administrator?",
+      "h1Expected": "How should a five-person team choose software without a technical administrator?",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "faq": {
+        "present": false,
+        "expanded": false,
+        "openAfterClick": null,
+        "keyboardActivated": false,
+        "visibleFocus": null
+      },
+      "motion": {
+        "reducedMotionMedia": true,
+        "elementsWithAnimationOrTransition": 211,
+        "sampleTransitionDurations": [
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s"
+        ]
+      },
+      "keyboardFocusFirst": {
+        "tag": "A",
+        "id": null,
+        "className": "skip-link",
+        "outlineWidth": "3px",
+        "outline": "rgb(168, 84, 54) solid 3px",
+        "boxShadow": "none"
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\decision-hub-desktop-reduced.png",
+      "screenshotSha256": "f71891a2216f5711b137105e4e1658253def1a453be74ab55dbc120d5e04c086",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:13.133Z"
+    },
+    {
+      "route": "/decision-hub",
+      "context": "mobile-device",
+      "device": "Pixel 5",
+      "emulation": {
+        "isMobile": true,
+        "hasTouch": true,
+        "deviceScaleFactor": 2.75,
+        "viewport": {
+          "width": 393,
+          "height": 727
+        }
+      },
+      "startedUtc": "2026-11-08T06:22:13.539Z",
+      "httpStatus": 200,
+      "h1Actual": "How should a five-person team choose software without a technical administrator?",
+      "h1Expected": "How should a five-person team choose software without a technical administrator?",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "faq": {
+        "present": false,
+        "expanded": false,
+        "openAfterClick": null,
+        "keyboardActivated": false,
+        "visibleFocus": null
+      },
+      "motion": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 15,
+        "sampleTransitionDurations": [
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s, 0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s"
+        ]
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\decision-hub-mobile-Pixel5.png",
+      "screenshotSha256": "5cddcd4aaca4d1c438ce06afb9c27e903bf2b20c13e4a719df9b51278c074cd1",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:16.863Z"
+    },
+    {
+      "route": "/blog/production-ready-ai-voice-cloning-checklist",
+      "context": "desktop-normal",
+      "device": "desktop-1440x900",
+      "startedUtc": "2026-11-08T06:22:17.039Z",
+      "httpStatus": 200,
+      "h1Actual": "A Production Test for AI Voice Cloning",
+      "h1Expected": "A Production Test for AI Voice Cloning",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "faq": {
+        "present": true,
+        "expanded": true,
+        "openAfterClick": true,
+        "keyboardActivated": true,
+        "visibleFocus": {
+          "tag": "SUMMARY",
+          "outlineWidth": "1px",
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "boxShadow": "none"
+        }
+      },
+      "motion": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 16,
+        "sampleTransitionDurations": [
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s, 0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s"
+        ]
+      },
+      "keyboardFocusFirst": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outlineWidth": "1px",
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "boxShadow": "none"
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\blog_production-ready-ai-voice-cloning-checklist-desktop-normal.png",
+      "screenshotSha256": "eff77733ce2f766c9f37cfe9cf9d0b051297fd8353fd7c61524493233f2cb462",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:20.355Z"
+    },
+    {
+      "route": "/blog/production-ready-ai-voice-cloning-checklist",
+      "context": "desktop-reduced",
+      "device": "desktop-1440x900",
+      "startedUtc": "2026-11-08T06:22:20.480Z",
+      "httpStatus": 200,
+      "h1Actual": "A Production Test for AI Voice Cloning",
+      "h1Expected": "A Production Test for AI Voice Cloning",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "faq": {
+        "present": true,
+        "expanded": true,
+        "openAfterClick": true,
+        "keyboardActivated": true,
+        "visibleFocus": {
+          "tag": "SUMMARY",
+          "outlineWidth": "3px",
+          "outline": "rgb(29, 33, 29) auto 3px",
+          "boxShadow": "none"
+        }
+      },
+      "motion": {
+        "reducedMotionMedia": true,
+        "elementsWithAnimationOrTransition": 202,
+        "sampleTransitionDurations": [
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s"
+        ]
+      },
+      "keyboardFocusFirst": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outlineWidth": "1px",
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "boxShadow": "none"
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\blog_production-ready-ai-voice-cloning-checklist-desktop-reduced.png",
+      "screenshotSha256": "eff77733ce2f766c9f37cfe9cf9d0b051297fd8353fd7c61524493233f2cb462",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:23.639Z"
+    },
+    {
+      "route": "/blog/production-ready-ai-voice-cloning-checklist",
+      "context": "mobile-device",
+      "device": "Pixel 5",
+      "emulation": {
+        "isMobile": true,
+        "hasTouch": true,
+        "deviceScaleFactor": 2.75,
+        "viewport": {
+          "width": 393,
+          "height": 727
+        }
+      },
+      "startedUtc": "2026-11-08T06:22:23.805Z",
+      "httpStatus": 200,
+      "h1Actual": "A Production Test for AI Voice Cloning",
+      "h1Expected": "A Production Test for AI Voice Cloning",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "faq": {
+        "present": true,
+        "expanded": true,
+        "openAfterClick": true,
+        "keyboardActivated": false,
+        "visibleFocus": null
+      },
+      "motion": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 16,
+        "sampleTransitionDurations": [
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s, 0.2s",
+          "0.2s",
+          "0.2s",
+          "0.2s"
+        ]
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\blog_production-ready-ai-voice-cloning-checklist-mobile-Pixel5.png",
+      "screenshotSha256": "7572ac46b33a37af5e6bf23e44598e712efc5d245fa636469f0d32925994b43e",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:30.877Z"
+    },
+    {
+      "route": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "context": "desktop-normal",
+      "device": "desktop-1440x900",
+      "startedUtc": "2026-11-08T06:22:30.996Z",
+      "httpStatus": 200,
+      "h1Actual": "Decide if ElevenLabs fits your voiceover workflow",
+      "h1Expected": "Decide if ElevenLabs fits your voiceover workflow",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "faq": {
+        "present": true,
+        "expanded": true,
+        "openAfterClick": true,
+        "keyboardActivated": true,
+        "visibleFocus": {
+          "tag": "SUMMARY",
+          "outlineWidth": "1px",
+          "outline": "rgb(16, 16, 16) auto 1px",
+          "boxShadow": "none"
+        }
+      },
+      "motion": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 0,
+        "sampleTransitionDurations": []
+      },
+      "keyboardFocusFirst": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outlineWidth": "1px",
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "boxShadow": "none"
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\landing-page-builders_elevenlabs-ai-voice-generator-desktop-normal.png",
+      "screenshotSha256": "e6b4dee262fcfdc170d67df5b25fd3845c08c021eb4a1a1249ca507088a794f2",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:33.437Z"
+    },
+    {
+      "route": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "context": "desktop-reduced",
+      "device": "desktop-1440x900",
+      "startedUtc": "2026-11-08T06:22:33.558Z",
+      "httpStatus": 200,
+      "h1Actual": "Decide if ElevenLabs fits your voiceover workflow",
+      "h1Expected": "Decide if ElevenLabs fits your voiceover workflow",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440
+      },
+      "faq": {
+        "present": true,
+        "expanded": true,
+        "openAfterClick": true,
+        "keyboardActivated": true,
+        "visibleFocus": {
+          "tag": "SUMMARY",
+          "outlineWidth": "3px",
+          "outline": "rgb(29, 33, 29) auto 3px",
+          "boxShadow": "none"
+        }
+      },
+      "motion": {
+        "reducedMotionMedia": true,
+        "elementsWithAnimationOrTransition": 199,
+        "sampleTransitionDurations": [
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s",
+          "1e-05s"
+        ]
+      },
+      "keyboardFocusFirst": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outlineWidth": "1px",
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "boxShadow": "none"
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\landing-page-builders_elevenlabs-ai-voice-generator-desktop-reduced.png",
+      "screenshotSha256": "58def46582c668f65bf2e2413e37444e77481ef823e255957cee91372160faa5",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:36.609Z"
+    },
+    {
+      "route": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "context": "mobile-device",
+      "device": "Pixel 5",
+      "emulation": {
+        "isMobile": true,
+        "hasTouch": true,
+        "deviceScaleFactor": 2.75,
+        "viewport": {
+          "width": 393,
+          "height": 727
+        }
+      },
+      "startedUtc": "2026-11-08T06:22:36.803Z",
+      "httpStatus": 200,
+      "h1Actual": "Decide if ElevenLabs fits your voiceover workflow",
+      "h1Expected": "Decide if ElevenLabs fits your voiceover workflow",
+      "h1Match": true,
+      "nextErrorOverlay": {
+        "overlayCount": 0,
+        "hasErrorText": false
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "overflowAfterScroll": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "overflowAfterFaq": {
+        "hasHorizontalOverflow": false,
+        "documentScrollWidth": 393,
+        "documentClientWidth": 393
+      },
+      "faq": {
+        "present": true,
+        "expanded": true,
+        "openAfterClick": true,
+        "keyboardActivated": false,
+        "visibleFocus": null
+      },
+      "motion": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 0,
+        "sampleTransitionDurations": []
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-motion-fix\\supplemental\\landing-page-builders_elevenlabs-ai-voice-generator-mobile-Pixel5.png",
+      "screenshotSha256": "0253ec207b58a44ff7fe395a45640762cb82508834c49a75b4faf51fffc74ea1",
+      "error": null,
+      "endedUtc": "2026-11-08T06:22:41.641Z"
+    }
+  ],
+  "hardError": false,
+  "endedUtc": "2026-11-08T06:22:41.742Z"
+}

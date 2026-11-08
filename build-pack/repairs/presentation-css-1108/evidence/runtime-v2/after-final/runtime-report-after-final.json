@@ -1,0 +1,480 @@
+{
+  "phase": "after-final",
+  "baseUrl": "http://127.0.0.1:3025",
+  "sourceCssSha256": "f09a3fdd98e477a980a878dd47a4a3502f44386b125f16de640eb26db56a6c2d",
+  "buildId": "wfAfF_vSiWRPri8N0XcP2",
+  "startedUtc": "2026-11-08T06:35:13.793Z",
+  "entries": [
+    {
+      "route": "/decision-hub",
+      "viewport": "desktop",
+      "width": 1440,
+      "height": 900,
+      "reducedMotion": false,
+      "startedUtc": "2026-11-08T06:35:13.793Z",
+      "httpStatus": 200,
+      "h1": "How should a five-person team choose software without a technical administrator?",
+      "title": "How should a five-person team choose software without a technical administrator? | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": false,
+      "keyboardFocus": {
+        "tag": "A",
+        "id": null,
+        "className": "skip-link",
+        "outline": "rgb(168, 84, 54) solid 3px",
+        "outlineWidth": "3px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 15
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\decision-hub-desktop.png",
+      "screenshotSha256": "96f4da4ae515c48ced39c76ad31b9d82c23599a9203b5a41274468218e221b86",
+      "endedUtc": "2026-11-08T06:35:16.816Z",
+      "error": null
+    },
+    {
+      "route": "/blog/production-ready-ai-voice-cloning-checklist",
+      "viewport": "desktop",
+      "width": 1440,
+      "height": 900,
+      "reducedMotion": false,
+      "startedUtc": "2026-11-08T06:35:16.834Z",
+      "httpStatus": 200,
+      "h1": "A Production Test for AI Voice Cloning",
+      "title": "A Production Test for AI Voice Cloning | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": true,
+      "keyboardFocus": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "outlineWidth": "1px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 16
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\blog_production-ready-ai-voice-cloning-checklist-desktop.png",
+      "screenshotSha256": "eff77733ce2f766c9f37cfe9cf9d0b051297fd8353fd7c61524493233f2cb462",
+      "endedUtc": "2026-11-08T06:35:24.515Z",
+      "error": null
+    },
+    {
+      "route": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "viewport": "desktop",
+      "width": 1440,
+      "height": 900,
+      "reducedMotion": false,
+      "startedUtc": "2026-11-08T06:35:24.526Z",
+      "httpStatus": 200,
+      "h1": "Decide if ElevenLabs fits your voiceover workflow",
+      "title": "ElevenLabs AI Voice Generator: A Practical Fit Check | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": true,
+      "keyboardFocus": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "outlineWidth": "1px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 0
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\landing-page-builders_elevenlabs-ai-voice-generator-desktop.png",
+      "screenshotSha256": "d5500222fbef1166466be67b17b30f581364a93208ddbf64b9da834a23e4ac98",
+      "endedUtc": "2026-11-08T06:35:29.324Z",
+      "error": null
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "mobile",
+      "width": 390,
+      "height": 844,
+      "reducedMotion": false,
+      "startedUtc": "2026-11-08T06:35:29.332Z",
+      "httpStatus": 200,
+      "h1": "How should a five-person team choose software without a technical administrator?",
+      "title": "How should a five-person team choose software without a technical administrator? | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": false,
+      "keyboardFocus": {
+        "tag": "A",
+        "id": null,
+        "className": "skip-link",
+        "outline": "rgb(168, 84, 54) solid 3px",
+        "outlineWidth": "3px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 15
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\decision-hub-mobile.png",
+      "screenshotSha256": "f95a8100e5860ca49bc7a7b74f92a9023acbffa4d70cd46edbb50d2187b1175e",
+      "endedUtc": "2026-11-08T06:35:31.841Z",
+      "error": null
+    },
+    {
+      "route": "/blog/production-ready-ai-voice-cloning-checklist",
+      "viewport": "mobile",
+      "width": 390,
+      "height": 844,
+      "reducedMotion": false,
+      "startedUtc": "2026-11-08T06:35:31.900Z",
+      "httpStatus": 200,
+      "h1": "A Production Test for AI Voice Cloning",
+      "title": "A Production Test for AI Voice Cloning | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": true,
+      "keyboardFocus": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "outlineWidth": "1px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 16
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\blog_production-ready-ai-voice-cloning-checklist-mobile.png",
+      "screenshotSha256": "2dc9af953bec841d30811d799690dd83617bad99964b4ff1cbcec4690a6b4822",
+      "endedUtc": "2026-11-08T06:35:37.744Z",
+      "error": null
+    },
+    {
+      "route": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "viewport": "mobile",
+      "width": 390,
+      "height": 844,
+      "reducedMotion": false,
+      "startedUtc": "2026-11-08T06:35:37.760Z",
+      "httpStatus": 200,
+      "h1": "Decide if ElevenLabs fits your voiceover workflow",
+      "title": "ElevenLabs AI Voice Generator: A Practical Fit Check | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 390,
+        "documentClientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": true,
+      "keyboardFocus": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "outlineWidth": "1px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": false,
+        "elementsWithAnimationOrTransition": 0
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\landing-page-builders_elevenlabs-ai-voice-generator-mobile.png",
+      "screenshotSha256": "ed4491af4b8893d77baeb88ad1b4afeb89e6e973b4ce9fbd99241af3decd4879",
+      "endedUtc": "2026-11-08T06:35:47.471Z",
+      "error": null
+    },
+    {
+      "route": "/decision-hub",
+      "viewport": "desktop-reduced-motion",
+      "width": 1440,
+      "height": 900,
+      "reducedMotion": true,
+      "startedUtc": "2026-11-08T06:35:47.500Z",
+      "httpStatus": 200,
+      "h1": "How should a five-person team choose software without a technical administrator?",
+      "title": "How should a five-person team choose software without a technical administrator? | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": false,
+      "keyboardFocus": {
+        "tag": "A",
+        "id": null,
+        "className": "skip-link",
+        "outline": "rgb(168, 84, 54) solid 3px",
+        "outlineWidth": "3px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": true,
+        "elementsWithAnimationOrTransition": 211
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\decision-hub-desktop-reduced-motion.png",
+      "screenshotSha256": "f71891a2216f5711b137105e4e1658253def1a453be74ab55dbc120d5e04c086",
+      "endedUtc": "2026-11-08T06:35:50.543Z",
+      "error": null
+    },
+    {
+      "route": "/blog/production-ready-ai-voice-cloning-checklist",
+      "viewport": "desktop-reduced-motion",
+      "width": 1440,
+      "height": 900,
+      "reducedMotion": true,
+      "startedUtc": "2026-11-08T06:35:50.571Z",
+      "httpStatus": 200,
+      "h1": "A Production Test for AI Voice Cloning",
+      "title": "A Production Test for AI Voice Cloning | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": true,
+      "keyboardFocus": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "outlineWidth": "1px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": true,
+        "elementsWithAnimationOrTransition": 203
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\blog_production-ready-ai-voice-cloning-checklist-desktop-reduced-motion.png",
+      "screenshotSha256": "eff77733ce2f766c9f37cfe9cf9d0b051297fd8353fd7c61524493233f2cb462",
+      "endedUtc": "2026-11-08T06:35:54.559Z",
+      "error": null
+    },
+    {
+      "route": "/landing-page-builders/elevenlabs-ai-voice-generator",
+      "viewport": "desktop-reduced-motion",
+      "width": 1440,
+      "height": 900,
+      "reducedMotion": true,
+      "startedUtc": "2026-11-08T06:35:54.607Z",
+      "httpStatus": 200,
+      "h1": "Decide if ElevenLabs fits your voiceover workflow",
+      "title": "ElevenLabs AI Voice Generator: A Practical Fit Check | VettedSaaSBlueprint",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "overflowInitial": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterScroll": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "overflowAfterFaq": {
+        "documentScrollWidth": 1440,
+        "documentClientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "faqExpanded": true,
+      "keyboardFocus": {
+        "tag": "SUMMARY",
+        "id": null,
+        "className": null,
+        "outline": "rgb(16, 16, 16) auto 1px",
+        "outlineWidth": "1px",
+        "boxShadow": "none"
+      },
+      "motionObservation": {
+        "reducedMotionMedia": true,
+        "elementsWithAnimationOrTransition": 199
+      },
+      "screenshot": "D:\\Backup 4 November 2026\\Antigravity Applications Created\\Vetted SaaS B - Content Strategy and Growth Strategy\\.worktrees\\presentation-gates-1108\\build-pack\\repairs\\presentation-css-1108\\evidence\\runtime-v2\\after-final\\landing-page-builders_elevenlabs-ai-voice-generator-desktop-reduced-motion.png",
+      "screenshotSha256": "58def46582c668f65bf2e2413e37444e77481ef823e255957cee91372160faa5",
+      "endedUtc": "2026-11-08T06:35:57.970Z",
+      "error": null
+    }
+  ],
+  "fatalError": null,
+  "endedUtc": "2026-11-08T06:36:06.877Z",
+  "hardError": false
+}

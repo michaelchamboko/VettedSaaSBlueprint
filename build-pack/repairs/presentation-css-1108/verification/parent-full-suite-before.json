@@ -1,0 +1,26 @@
+{
+  "startedUtc": "2026-11-08T06:34:16.8583824Z",
+  "commit": "bcfda97e6f103acf0fa6a3fdf54fef2f2e4e82f9",
+  "sources": [
+    {
+      "path": "src/app/globals.css",
+      "sha256": "f09a3fdd98e477a980a878dd47a4a3502f44386b125f16de640eb26db56a6c2d"
+    },
+    {
+      "path": "src/app/gr-premium-styles.css",
+      "sha256": "e084e93c5e0cc639185b4f3d3c8958e00dbad13b0ae50ad0c2681ba6698f721c"
+    },
+    {
+      "path": "src/components/landing/LandingPageMotion.tsx",
+      "sha256": "c49b037afee4a21adb081023b549f74c1495789f7b7e6aa7a31d03cab30ed5b3"
+    },
+    {
+      "path": "src/components/landing/split-reveal-offset.ts",
+      "sha256": "be43c1d6506ce9a8e4035f60a348e56a89dc1d53928415a978a6e763dfefff50"
+    },
+    {
+      "path": "tests/split-reveal-offset.test.ts",
+      "sha256": "23f29003d97df310ca3decc966f091e0e166c64e1175e069c0439119c4715fc4"
+    }
+  ]
+}
