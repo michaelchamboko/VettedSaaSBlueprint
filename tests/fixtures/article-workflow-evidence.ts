@@ -9,7 +9,7 @@ import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDIT
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs } from "../../src/lib/article-import/rendering-inputs";
 
-const families = { "fixture/writer": "fixture-writer-family", "fixture/cleanser": "fixture-cleanser-family" };
+const families = { "opencode-go/beam-free": "reflection-beam", "fixture/cleanser": "fixture-cleanser-family" };
 const now = "2026-11-03T00:00:00.000Z";
 type RecordIdentity = { importId: string; sourceFingerprint: string; researchGeneration?: number };
 export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string }) {
@@ -30,27 +30,27 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const save = (value: unknown) => storeEvidence(root, record.importId, value);
   const packet = (stage: string) => importPacketId(record, stage, stage === "TRANSFORMING" ? "field-repair" : "targeted-repair");
   const beforeRef = await save(input.before), afterRef = await evidenceReference(root, input.artifactPath);
-  async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>) {
+  async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>, sessionId = "fixture-session") {
     const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);
     const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : "REFINING");
     const instructions = (pass.startsWith("design:") ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
-    return save(extractOpenCodeExecution({ info: { id: "fixture-session" }, messages: [
-      { info: { id: "fixture-user", role: "user", sessionID: "fixture-session" }, parts: [{ type: "text", text: JSON.stringify({ packetId, pass, prose: projection, digest: proseProjectionDigest(projection), instructions }) }] },
-      { info: { id: "fixture-assistant", role: "assistant", sessionID: "fixture-session", parentID: "fixture-user", providerID: "fixture", modelID: modelId, time: { created: 1793664000000, completed: 1793664001000 }, finish: "stop" }, parts: [{ type: "reasoning", text: "Must never be retained." }, { type: "text", text: JSON.stringify(result) }] },
-    ] }, { version: "1.19.4", sessionId: "fixture-session", userMessageId: "fixture-user", assistantMessageId: "fixture-assistant", packetId, pass, input: projection, output: result, families, instructions, inputRefs: [inputRef, ...(pass === "content-assessment" ? [research] : []), ...(pass.startsWith("design:") && renderInputsRef ? [renderInputsRef] : [])], outputRefs: [outputRef] }));
+    return save(extractOpenCodeExecution({ info: { id: sessionId }, messages: [
+      { info: { id: "fixture-user", role: "user", sessionID: sessionId }, parts: [{ type: "text", text: JSON.stringify({ packetId, pass, prose: projection, digest: proseProjectionDigest(projection), instructions }) }] },
+      { info: { id: "fixture-assistant", role: "assistant", sessionID: sessionId, parentID: "fixture-user", providerID: "opencode-go", modelID: "beam-free", time: { created: 1793664000000, completed: 1793664001000 }, finish: "stop" }, parts: [{ type: "reasoning", text: "Must never be retained." }, { type: "text", text: JSON.stringify(result) }] },
+    ] }, { version: "1.19.4", sessionId, userMessageId: "fixture-user", assistantMessageId: "fixture-assistant", packetId, pass, input: projection, output: result, families, instructions, inputRefs: [inputRef, ...(pass === "content-assessment" ? [research] : []), ...(pass.startsWith("design:") && renderInputsRef ? [renderInputsRef] : [])], outputRefs: [outputRef] }));
   }
   const researchSnapshot = await save({ source: "Synthetic source supports this scoped fixture claim." });
   const research = await save({ ...common, schemaVersion: "ResearchEvidenceV2", sources: [{ id: "source", url: "https://example.test/source", retrievedAt: now, snapshotRef: researchSnapshot }], claims: [{ id: "claim", text: "Synthetic source supports this scoped fixture claim.", sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: "Synthetic source supports this scoped fixture claim." }], limitations: ["Synthetic fixture; no real research."] }], freshness: "Fixed synthetic input for deterministic tests." });
   const format = { "direct-review": "landing", blog: "blog", visibility: "visibility", "decision-set": "decision" } as const;
   const schemaRevision = { "direct-review": "PageBlueprintV1", blog: "BlogPostV1", visibility: "VisibilityPageV1", "decision-set": "DecisionSetV2" }[input.format];
   const paths = editorialProsePaths(format[input.format], input.after);
-  const passNames = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview"];
+  const passNames = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "beamReview", "finalFidelityReview"];
   const passes = [];
   for (const [index, name] of passNames.entries()) {
     const initial = index === 0 ? input.before : input.after, initialRef = index === 0 ? beforeRef : afterRef;
     const judgment = { pass: name, beforeFingerprint: fingerprintEditorialArtifact(initial), afterFingerprint: fingerprintEditorialArtifact(input.after), coveredPaths: paths, verdict: "pass", findings: [], semanticNotes: "Synthetic scoped judgment for adapter regression tests.", meaningPreserved: true, protectedFieldsPreserved: true };
     const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, "writer", { judgment: JSON.stringify(judgment) }, editorialJudgmentReviewInput(initial, input.after));
-    passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, index === 3 ? "cleanser" : "writer"), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
+    passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, "writer", undefined, undefined, index === 3 ? "fixture-review-session" : "fixture-session"), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
   }
   const checkerExecutionRef = await save({ schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: EDITORIAL_REVISION, startedAt: now, completedAt: now, inputRefs: [afterRef, pinRef(checkerFile)], outputRefs: [], executable: "python", argv: [checkerFile, "--text", editorialProse(format[input.format], input.after)], cwd: root, stdout: "score 5/5 CLEAN", stderr: "", exitCode: 0 });
   const editorial = await save({ ...common, schemaVersion: "EditorialExecutionV1", format: input.format, editorialEvidenceRef: await evidenceReference(root, input.editorialEvidencePath), schemaRevision, eligibleProsePaths: paths, passes, checkerExecutionRef });

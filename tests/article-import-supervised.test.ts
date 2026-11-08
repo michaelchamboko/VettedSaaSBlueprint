@@ -142,7 +142,7 @@ test("heartbeat consumes durable work after interruption and releases only after
     assert.equal((await current()).stage, "REFINING");
     const refinement = await submit({ stage: "REFINING", artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath, editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path });
     assert.match(refinement.packet.instructions, /eleanor-editorial/i);
-    assert.match(refinement.packet.instructions, /different.family/i);
+    assert.match(refinement.packet.instructions, /Beam review/i);
     assert.match(refinement.packet.instructions, /5\/5 CLEAN/i);
     await heartbeat();
     assert.equal((await current()).stage, "VALIDATING");

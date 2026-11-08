@@ -12,8 +12,8 @@ const samplePageBlueprint = { ...baseBlueprint, metadata: { ...baseBlueprint.met
 export const fullRewriteNotes = {
   semanticNotes: "Reviewed the complete rewritten prose; meaning, qualification and protected fields are preserved.",
   exceptions: [], meaningPreserved: true, arrayOrderPreserved: true, rewriteMode: "full_article",
-  writerModelFamily: "writer-family", cleanseModelFamily: "reviewer-family",
-  passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, rivalFamilyCleanse: true, finalFidelityReview: true },
+  writerModelFamily: "reflection-beam", cleanseModelFamily: "reflection-beam",
+  passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, beamReview: true, finalFidelityReview: true },
 } as const;
 
 export const validPageDesignReceipt = {

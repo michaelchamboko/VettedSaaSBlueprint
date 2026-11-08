@@ -51,6 +51,12 @@ Classification: explicit product-owner directive.
 
 Combine the remaining dependency security repairs from PR #45 with mandatory research recovery in the existing article-to-page workflow. Missing or invalid research must require actual research and revalidation. Return downstream work to RESEARCHING and invalidate dependent approvals before release starts; preserve existing release attempts for verified integrity recovery. Preserve valid evidence reuse, source snapshots, retry/diagnosis rules, model identities, independent review and release gates. Add focused regression tests and explicit supervisor instructions. This authorizes the combined PR, merge and deployment after required checks and current-head review, followed by cleanup of obsolete clean merged worktrees. Preserve dirty or unmerged worktrees. Provide a continuation instruction for the existing automation after deployment; do not run real article imports or create schedules during implementation.
 
+### Beam policy and OpenCode 2.2.6 support, 2026-11-08
+
+Classification: explicit product-owner directive (BEAM-POLICY-001).
+
+Owner directs use of only `opencode-go/beam-free` for the build and a truthful separate Beam review pass in a distinct OpenCode session/exchange with exact model identity, replacing the different-model-family cleanse. OpenCode 2.2.6 is the supported runtime after capturing a harmless real Beam export. Preserve legacy historical evidence interpretation; new policy is explicit/versioned through the `beamReview` pass name and same-family attestation. No model fallback, no real article imports, no merge/deploy in this cell. Packet `BEAM-POLICY-001` is registered in `build-pack/execution-state.json`.
+
 ## Binding scope
 
 ### Verified automation model configuration, 2026-11-03

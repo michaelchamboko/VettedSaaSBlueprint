@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 import { assertPrimaryArticleCheckout, inspectArticlePreflight } from "../src/lib/article-import/preflight";
 
-test("preflight is read-only, checks pinned bytes and requires two known model families", async () => {
+test("preflight is read-only, checks pinned bytes and requires the exact Beam model family", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-preflight-"));
   const files = [];
   for (const skill of ["impeccable", "design-taste-frontend", "eleanor-editorial"]) {
@@ -25,8 +25,10 @@ test("preflight is read-only, checks pinned bytes and requires two known model f
   assert.deepEqual(await readdir(root, { recursive: true }), before);
   assert.equal(await readFile(manifestPath, "utf8"), JSON.stringify(manifest));
   await writeFile(manifestPath, JSON.stringify({ ...manifest, modelFamilies: { "fixture/a": "a", "fixture/b": "b" } }));
+  assert.equal((await inspectArticlePreflight(root, probe)).diagnostics.some(d => d.code === "MODEL_FAMILIES_UNCONFIGURED"), true);
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, modelFamilies: { "opencode-go/beam-free": "reflection-beam" } }));
   assert.equal((await inspectArticlePreflight(root, probe)).ok, true);
-  await writeFile(manifestPath, JSON.stringify({ ...manifest, openCodeVersion: "2.2.5", modelFamilies: { "fixture/a": "a", "fixture/b": "b" } }));
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, openCodeVersion: "2.2.5", modelFamilies: { "opencode-go/beam-free": "reflection-beam" } }));
   assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.2.5" : "Python 3.13.0")).ok, true);
   assert.equal((await inspectArticlePreflight(root, probe)).ok, false);
   assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.2.6" : "Python 3.13.0")).ok, false);

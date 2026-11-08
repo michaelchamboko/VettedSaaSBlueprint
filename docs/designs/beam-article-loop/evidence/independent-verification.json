@@ -1,0 +1,79 @@
+{
+  "scope": "BEAM-POLICY-001 prerequisite repair; not article publication",
+  "workerModel": "opencode-go/beam-free",
+  "workerSession": "ses_e47bbb5b4ffe6zrmrAu7B5jlIM",
+  "verifier": "Codex parent",
+  "verifiedAt": "2026-11-08T00:16:04.2943808Z",
+  "baseCommit": "0dfc2ec542dfddc1993bc4fb8f67c99fb64793df",
+  "gates": [
+    {
+      "command": "npm run verify:agent-workflow",
+      "exitCode": 0,
+      "retainedLocalLog": ".mece/parent-final-verify-agent-workflow.log",
+      "sha256": "2c33aa6e5755a4ca15cad8258a714b42d94e011e9f597315d5a601c4a6bd73a3"
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0,
+      "retainedLocalLog": ".mece/parent-final-lint.log",
+      "sha256": "a074420451f68b3b8ada535e93f1acd70c765d0b49458c4a2d1795fe1ac9f3da"
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "retainedLocalLog": ".mece/parent-final-typecheck.log",
+      "sha256": "0f53c1bf0fcf8de967ab2a9e1e5ff72f034c294e4519f2e499a1e0ad4935570d"
+    },
+    {
+      "command": "npm run test",
+      "exitCode": 0,
+      "retainedLocalLog": ".mece/parent-final-test.log",
+      "sha256": "57d65b0a26c7a66d806ecb281f793f16826e76684943bf6dc4493e03bb75ad9d"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "retainedLocalLog": ".mece/parent-final-build.log",
+      "sha256": "8c7ce0900349332d26d52d4c1c2fff5ce8dc9300df46479439881784292a0e6d"
+    },
+    {
+      "command": "npm run validate:public-site",
+      "exitCode": 0,
+      "retainedLocalLog": ".mece/parent-final-validate-public-site.log",
+      "sha256": "dcf4bddaec2818b737e3af0f3bc8c7d3224a71af2e778dbd503e46cca16faa40"
+    }
+  ],
+  "tests": {
+    "skipped": 3,
+    "total": 479,
+    "failed": 0,
+    "passed": 476
+  },
+  "beforeAfter": [
+    {
+      "after": "Rejected by strict empty-files schema",
+      "evidence": "parent attachment probe",
+      "before": "Accepted",
+      "case": "Unbound user attachment"
+    },
+    {
+      "after": "Same probe rejected with EDITORIAL_RECEIPT_WRITER_FAMILY_MISMATCH",
+      "evidence": ".mece/parent-receipt-family-probe-after.log",
+      "before": "Receipt claimed false-family while execution reflection-beam; accepted",
+      "case": "False receipt family"
+    },
+    {
+      "after": "14 HEAD blob checkout-filter hashes match manifest, normalized diffs absent",
+      "before": "14 file hashes differed in fresh checkout",
+      "case": "Pinned checkout bytes"
+    }
+  ],
+  "articlePreflight": {
+    "diagnostics": [],
+    "ok": true
+  },
+  "limitations": [
+    "Actual article workflow and Vercel publication not completed",
+    "Local Vercel CLI sign-in still required"
+  ]
+}

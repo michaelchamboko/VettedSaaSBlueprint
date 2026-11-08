@@ -141,11 +141,12 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const envelope = z.object({
     info: z.object({ id: z.string(), model, outcome: z.literal("succeeded"), parentID: z.never().optional(), fork: z.never().optional(), revert: z.never().optional() }).passthrough(),
     messages: z.tuple([
-      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time }).strict(),
+      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time, files: z.array(z.unknown()).max(0).optional() }).strict(),
       z.object({ id: z.string(), type: z.literal("assistant"), model,
         time: z.object({ created: z.number().nonnegative(), streamed: z.number().nonnegative(), completed: z.number().nonnegative() }).strict(),
         finish: z.literal("stop"), rawFinish: z.literal("stop").optional(), agent: z.string().optional(),
         cost: z.number().optional(), tokens: z.record(z.string(), z.unknown()).optional(),
+        snapshot: z.unknown().optional(),
         content: z.array(z.union([
           z.object({ type: z.literal("text"), text: z.string() }).strict(),
           z.object({ type: z.literal("reasoning"), text: z.string(), native: z.record(z.string(), z.unknown()).optional(), time: z.object({ created: z.number(), completed: z.number() }).strict().optional() }).strict(),
@@ -166,7 +167,7 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
 /** Extract only the selected text exchange; reasoning, tools and unrelated messages never survive. */
 export function extractOpenCodeExecution(raw: unknown, selected: ExportSelection): ExecutionEvidence {
   if (!openCodeVersionSchema.safeParse(selected.version).success) throw new Error("EVIDENCE_UNSUPPORTED");
-  if (selected.version === "2.2.5") raw = dedicatedV2Exchange(raw, selected);
+  if (selected.version === "2.2.5" || selected.version === "2.2.6") raw = dedicatedV2Exchange(raw, selected);
   const envelope = z.object({ info: z.object({ id: z.string() }).passthrough(), messages: z.array(z.object({ info: z.record(z.string(), z.unknown()), parts: z.array(z.record(z.string(), z.unknown())) }).passthrough()) }).passthrough().parse(raw);
   if (envelope.info.id !== selected.sessionId) throw new Error("EXECUTION_SESSION_MISMATCH");
   const users = envelope.messages.filter((m) => m.info.id === selected.userMessageId);
@@ -204,7 +205,7 @@ export async function validateExecutionEvidence(root: string, ref: EvidenceRef):
   if (result.kind === "opencode") {
     const capabilities = await readModelCapabilities(root);
     if (result.toolVersion !== capabilities.openCodeVersion || capabilities.modelFamilies[`${result.providerId}/${result.modelId}`] !== result.family) throw new Error("CAPABILITY_UNAVAILABLE");
-    for (const instruction of result.instructions) {
+    if ((result.pass === "beamReview" || result.pass === "beamReview-judgment") && (result.providerId !== "opencode-go" || result.modelId !== "beam-free")) throw new Error("CAPABILITY_UNAVAILABLE");    for (const instruction of result.instructions) {
       if (sha256(instruction.text) !== instruction.sha256) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
       await verifyEvidenceRef(root, { path: instruction.path, sha256: instruction.sha256 });
     }

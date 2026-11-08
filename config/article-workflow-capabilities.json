@@ -1,9 +1,8 @@
 {
   "schemaVersion": "ArticleWorkflowCapabilitiesV1",
-  "openCodeVersion": "2.2.5",
+  "openCodeVersion": "2.2.6",
   "modelFamilies": {
-    "opencode-go/beam-free": "reflection-beam",
-    "nvidia/minimaxai/minimax-m3.1-flash": "minimax"
+    "opencode-go/beam-free": "reflection-beam"
   },
   "files": [
     {
@@ -252,7 +251,7 @@
     },
     {
       "path": ".agents/skills/eleanor-editorial/SKILL.md",
-      "sha256": "022b549abbe5e02ac959704b0c0ff018a8a9b7e248664c42c5b217cdf88077f3"
+      "sha256": "dbbecfc9fb6acc11f0ea21bae53472849d0625831780847bf18c19c021329fac"
     },
     {
       "path": ".agents/skills/eleanor-editorial/tools/deslop.py",

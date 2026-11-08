@@ -1,0 +1,41 @@
+{
+  "info": {
+    "id": "ses_e47ba0cedffeLLf3HWbT4ReGyp",
+    "projectID": "ee6ed0637ed85408d57bce4bf97dc818bfc1f2cd",
+    "model": { "id": "beam-free", "providerID": "opencode-go", "variant": "default" },
+    "cost": 0,
+    "tokens": { "input": 10931, "output": 9, "reasoning": 22, "cache": { "read": 1600, "write": 0 } },
+    "outcome": "succeeded",
+    "time": { "created": 1794092954873, "updated": 1794092957464, "idle": 1794092957475 },
+    "title": "Exact OK response",
+    "location": { "directory": "D:\\\\Backup 4 November 2026\\\\Antigravity Applications Created\\\\Vetted SaaS B - Content Strategy and Growth Strategy\\\\.worktrees\\\\beam-loop-1108" }
+  },
+  "messages": [
+    {
+      "id": "msg_1b845f574001XQ86b7mn9VMWuA",
+      "time": { "created": 1794092956012 },
+      "text": "Reply with exactly: OK",
+      "files": [],
+      "type": "user"
+    },
+    {
+      "id": "msg_1b845f98c001vJ4AyT2ygJ8HRu",
+      "time": { "created": 1794092956054, "streamed": 1794092956960, "completed": 1794092957464 },
+      "type": "assistant",
+      "agent": "build",
+      "model": { "id": "beam-free", "providerID": "opencode-go", "variant": "default" },
+      "content": [ { "type": "text", "text": "OK" } ],
+      "snapshot": { "start": "0ab3ce1827cd0ef2592ec9e679565c69ee0efa91", "end": "0ab3ce1827cd0ef2592ec9e679565c69ee0efa91", "files": [] },
+      "finish": "stop",
+      "rawFinish": "stop",
+      "cost": 0,
+      "tokens": { "input": 10490, "output": 2, "reasoning": 22, "cache": { "read": 1600, "write": 0 } }
+    },
+    {
+      "id": "msg_1b845ff230015B7VH7Ns6uNXn0",
+      "time": { "created": 1794092957475 },
+      "type": "idle",
+      "outcome": "succeeded"
+    }
+  ]
+}

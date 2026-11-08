@@ -49,7 +49,8 @@ export async function inspectArticlePreflight(root: string, checkTool: Capabilit
   catch (error) { diagnostics.push({ code: "CAPABILITY_UNAVAILABLE", detail: String(error) }); }
   try { if (!(await checkTool("python", ["--version"])).startsWith("Python 3.")) throw new Error("Python 3 required"); }
   catch (error) { diagnostics.push({ code: "CAPABILITY_UNAVAILABLE", detail: String(error) }); }
-  if (new Set(Object.values(manifest.modelFamilies)).size < 2) diagnostics.push({ code: "MODEL_FAMILIES_UNCONFIGURED", detail: "Configure verified exact provider/model identities from at least two families before editorial execution." });
+  if (new Set(Object.values(manifest.modelFamilies)).size < 1) diagnostics.push({ code: "MODEL_FAMILIES_UNCONFIGURED", detail: "Configure at least one verified exact provider/model identity before editorial execution." });
+  if (typeof manifest.modelFamilies["opencode-go/beam-free"] !== "string" || manifest.modelFamilies["opencode-go/beam-free"].trim().length === 0) diagnostics.push({ code: "MODEL_FAMILIES_UNCONFIGURED", detail: "Configure the exact opencode-go/beam-free Beam model family before editorial execution." });
   return { ok: diagnostics.length === 0, diagnostics, requirement: "Explicit manual/API trigger in primary checkout; no scheduling or automatic restoration." };
 }
 

@@ -141,10 +141,16 @@ const rewritePassesSchema = z.object({
   purposeAndStructure: z.literal(true),
   meaningAndEvidence: z.literal(true),
   wordingAndRhythm: z.literal(true),
-  rivalFamilyCleanse: z.literal(true),
+  rivalFamilyCleanse: z.literal(true).optional(),
+  beamReview: z.literal(true).optional(),
   finalFidelityReview: z.literal(true),
-}).strict();
-
+}).strict().superRefine((passes, context) => {
+  const rival = passes.rivalFamilyCleanse === true;
+  const beam = passes.beamReview === true;
+  if (rival === beam) {
+    context.addIssue({ code: "custom", path: ["rivalFamilyCleanse"], message: "Exactly one of rivalFamilyCleanse or beamReview must be true." });
+  }
+});
 const notesSchema = z.object({
   semanticNotes: z.string().trim().min(20),
   exceptions: z.array(z.string().trim().min(10)),
@@ -155,7 +161,12 @@ const notesSchema = z.object({
   cleanseModelFamily: z.string().trim().min(1),
   passes: rewritePassesSchema,
 }).strict().superRefine((notes, context) => {
-  if (notes.writerModelFamily.toLocaleLowerCase() === notes.cleanseModelFamily.toLocaleLowerCase()) {
+  const usesBeamReview = notes.passes.beamReview === true;
+  if (usesBeamReview) {
+    if (notes.writerModelFamily.toLocaleLowerCase() !== notes.cleanseModelFamily.toLocaleLowerCase()) {
+      context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "Beam review must use the same model family as the writer; a distinct OpenCode session establishes independence." });
+    }
+  } else if (notes.writerModelFamily.toLocaleLowerCase() === notes.cleanseModelFamily.toLocaleLowerCase()) {
     context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "The cleanse must use a different model family from the writer." });
   }
 });
@@ -183,7 +194,12 @@ export const editorialEvidenceSchema = z.object({
   cleanseModelFamily: z.string().trim().min(1),
   passes: rewritePassesSchema,
 }).strict().superRefine((evidence, context) => {
-  if (evidence.writerModelFamily.toLocaleLowerCase() === evidence.cleanseModelFamily.toLocaleLowerCase()) {
+  const usesBeamReview = evidence.passes.beamReview === true;
+  if (usesBeamReview) {
+    if (evidence.writerModelFamily.toLocaleLowerCase() !== evidence.cleanseModelFamily.toLocaleLowerCase()) {
+      context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "Beam review must use the same model family as the writer; a distinct OpenCode session establishes independence." });
+    }
+  } else if (evidence.writerModelFamily.toLocaleLowerCase() === evidence.cleanseModelFamily.toLocaleLowerCase()) {
     context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "The cleanse must use a different model family from the writer." });
   }
   if (evidence.eligibleProsePaths.length !== evidence.changedPaths.length ||

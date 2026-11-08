@@ -17,11 +17,11 @@ const expectedSkills = ["new-feature", "code-structure", "evidence-driven-testin
 if (JSON.stringify(manifest.requiredSkills) !== JSON.stringify(expectedSkills)) fail("required skill list drifted");
 const expectedFiles = {
   ".agents/skills/before-and-after/LICENSE": "6dd71e6a950f1d85ea07643f8075578e5411815577ce61578b969ac6edcee04f",
-  ".agents/skills/before-and-after/scripts/adapters/0x0st.sh": "08541f18c7253cbba5c919a0eab54f8a63eae9e30e71a296783866702a262a09",
-  ".agents/skills/before-and-after/scripts/adapters/blob.sh": "10f915c96ef52a6ebe9c18b849328b872b7be0a62d823b099f40466055eef8ca",
-  ".agents/skills/before-and-after/scripts/adapters/gist.sh": "25565e137dc1071beb3959037fe816a68cad7ae335aca68832c277382a50cce9",
-  ".agents/skills/before-and-after/scripts/capture.sh": "a5df8a62e28e9c78df64c63bb2b6c3a8c9a3fbe7d6b99c2990d27f1b9ed052fb",
-  ".agents/skills/before-and-after/scripts/upload-and-copy.sh": "b24c807e70ddd9590827aad41cc3b67a37aa8380280edc53b2987d32578a658f",
+  ".agents/skills/before-and-after/scripts/adapters/0x0st.sh": "41f7332528c8bed5aef244a852343e4ad74dba29438044e2a3cf0aaa00729a2b",
+  ".agents/skills/before-and-after/scripts/adapters/blob.sh": "2f1eb23d5ceefb12a997d68ccdb04ffa0deff77f31187cf3af5442caf91eb815",
+  ".agents/skills/before-and-after/scripts/adapters/gist.sh": "3b595606b308c625adbd16b95e72fd1999a1c2d42ad8e00fc7270bc5600bc374",
+  ".agents/skills/before-and-after/scripts/capture.sh": "d13c99cf25adfb6f761b8f8b994e3298a893a783e027d042bad724b01949cbf7",
+  ".agents/skills/before-and-after/scripts/upload-and-copy.sh": "e23be6b5b3ac2c6635f9cf702326382ac81b797e56687e3d473090567423e472",
   ".agents/skills/before-and-after/SKILL.md": "8b3ce992ccf3153a9de5a83712968725946b3cd71a2a13a119bb60295713d8ad",
   ".agents/skills/code-review/SKILL.md": "6cf7c43896aa01ae33ed0c8a81080063bc7d5d1eab66e2a7263ce0fa16de39be",
   ".agents/skills/code-structure/SKILL.md": "2f0ed408b525c65d422699490a159584fd977d0cfca5b15a5c9a47cf07b95f71",
