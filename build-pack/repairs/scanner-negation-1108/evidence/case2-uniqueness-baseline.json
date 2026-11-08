@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-page-duplicates",
+  "input_mode": "draft",
+  "target_dir": "C:\\Users\\micha\\AppData\\Local\\Temp\\ev-case2",
+  "target": null,
+  "status": "fail",
+  "report_only": false,
+  "scanned_count": 1,
+  "thresholds": {
+    "short_field_token_similarity": 0.8,
+    "composite_visible_page_similarity": 0.72,
+    "score_delta_max": 5
+  },
+  "duplicate_groups": [],
+  "near_duplicate_groups": [],
+  "composite_fingerprint_groups": [],
+  "semantic_pattern_groups": [],
+  "score_signature_groups": [],
+  "score_delta_groups": [],
+  "artifact_qa_issues": [
+    {
+      "field": "faq.0.answer",
+      "reason_code": "unsupported_sensitive_claim",
+      "file": "page.json",
+      "message": "faq.0.answer contains claim language that requires claim-level evidence (\\b(discount|free trial|guarantee|guaranteed|refund|pricing|security|privacy|compliance)\\b)"
+    }
+  ],
+  "summary": {
+    "duplicate_group_count": 0,
+    "near_duplicate_group_count": 0,
+    "composite_fingerprint_group_count": 0,
+    "semantic_pattern_group_count": 0,
+    "score_signature_group_count": 0,
+    "score_delta_group_count": 0,
+    "artifact_issue_count": 1,
+    "finding_count": 1
+  }
+}
+

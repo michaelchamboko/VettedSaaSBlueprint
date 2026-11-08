@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { hasFlaggablePatternMatch } from "../../../../scripts/scanner-negation.mjs";
 
 const SCORE_KEYS = [
   "evidence_score",
@@ -599,6 +600,8 @@ function isNegatedSocialProofSafetyStatement(value) {
   return guard.test(value) && socialProof.test(value);
 }
 
+
+
 function scanDisclosure(row, arrays) {
   const page = row.data;
   if (!hasAffiliateCta(page)) return;
@@ -867,7 +870,7 @@ function scanClaims(row, arrays) {
     }
 
     for (const risk of RISK_PATTERNS) {
-      if (!risk.pattern.test(value)) continue;
+      if (!hasFlaggablePatternMatch(risk.pattern, value)) continue;
       if (risk.risk_type === "pricing_offer" && isNeutralPricingCaveat(value)) continue;
       if (risk.risk_type === "social_proof" && isNegatedSocialProofSafetyStatement(value)) continue;
       addIssue(arrays, createIssue({

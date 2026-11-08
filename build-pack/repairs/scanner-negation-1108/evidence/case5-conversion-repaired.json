@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-conversion-copy-risks",
+  "input_mode": "draft",
+  "status": "fail",
+  "report_only": false,
+  "target_dir": "C:\\Users\\micha\\AppData\\Local\\Temp\\ev-case5",
+  "target": null,
+  "scanned_count": 1,
+  "summary": {
+    "issue_count": 1,
+    "duplicate_group_count": 0,
+    "high_severity_issue_count": 1,
+    "finding_count": 1
+  },
+  "duplicate_groups": [],
+  "issues": [
+    {
+      "file": "page.json",
+      "reason_code": "unsupported_hype_or_pressure",
+      "severity": "high",
+      "field_path": "faq.0.answer",
+      "message": "Visible copy contains language that requires prior evidence, review-basis, or compliance support (\\b(best|top|#1|leading|ultimate|must[-\\s]?have|guaranteed|guarantee|proven)\\b)."
+    }
+  ]
+}
+

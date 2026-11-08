@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "tool": "summarize-conversion-copy-risks",
+  "input_mode": "draft",
+  "status": "pass",
+  "report_only": false,
+  "target_dir": "C:\\Users\\micha\\AppData\\Local\\Temp\\ev-case1",
+  "target": null,
+  "scanned_count": 1,
+  "summary": {
+    "issue_count": 0,
+    "duplicate_group_count": 0,
+    "high_severity_issue_count": 0,
+    "finding_count": 0
+  },
+  "duplicate_groups": [],
+  "issues": []
+}
+

@@ -1,0 +1,3 @@
+npm notice run verify:agent-workflow
+npm notice run node scripts/verify-agent-workflow.mjs
+Agent workflow contract passed: pinned upstream, vendored hashes, AGENTS markers, and npm wiring are intact.

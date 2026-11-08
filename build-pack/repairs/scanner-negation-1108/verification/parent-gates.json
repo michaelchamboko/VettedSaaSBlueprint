@@ -1,0 +1,64 @@
+{
+  "kind": "parent-independent-verification",
+  "node": "24.22.2",
+  "modelImplementation": "opencode-go/beam-free",
+  "testCounts": {
+    "total": 517,
+    "failed": 0,
+    "skipped": 3,
+    "passed": 514
+  },
+  "skipReason": "Three Windows symlink privilege tests skipped by their existing guards.",
+  "environment": "Native execution outside sandbox; local byte-copied installed dependencies; explicit installed Playwright browser path.",
+  "baselineCommit": "53fada61a29ce555ea41b540c40fc9e4a32a33e8",
+  "gates": [
+    {
+      "gate": "test",
+      "startedAt": "2026-11-08T06:37:35.5071923+02:00",
+      "finishedAt": "2026-11-08T06:47:47.5469391+02:00",
+      "exitCode": 0,
+      "log": "test.log",
+      "sha256": "555bb559ff5431e60b2575e17494831b013ca5b3d21fcb1adcf9c7325c33b0bd"
+    },
+    {
+      "gate": "build",
+      "startedAt": "2026-11-08T06:50:51.4324134+02:00",
+      "finishedAt": "2026-11-08T06:53:02.9893414+02:00",
+      "exitCode": 0,
+      "log": "build.log",
+      "sha256": "77c549d3a9e7864be5e0be4c0982a9dde89d7f2b2a448c8f8b25ef0c7e8fcb38"
+    },
+    {
+      "gate": "validate:public-site",
+      "startedAt": "2026-11-08T06:53:03.0687657+02:00",
+      "finishedAt": "2026-11-08T06:53:08.7149945+02:00",
+      "exitCode": 0,
+      "log": "validate-public-site.log",
+      "sha256": "dcf4bddaec2818b737e3af0f3bc8c7d3224a71af2e778dbd503e46cca16faa40"
+    },
+    {
+      "gate": "verify:agent-workflow",
+      "startedAt": "2026-11-08T06:53:08.7223031+02:00",
+      "finishedAt": "2026-11-08T06:53:09.5258208+02:00",
+      "exitCode": 0,
+      "log": "verify-agent-workflow.log",
+      "sha256": "2c33aa6e5755a4ca15cad8258a714b42d94e011e9f597315d5a601c4a6bd73a3"
+    },
+    {
+      "gate": "lint",
+      "startedAt": "2026-11-08T06:53:09.5297612+02:00",
+      "finishedAt": "2026-11-08T06:54:49.7218564+02:00",
+      "exitCode": 0,
+      "log": "lint.log",
+      "sha256": "04ee3aa9c635eba99e87d08046d590d0026328590241a579f3df57cad004947a"
+    },
+    {
+      "gate": "typecheck",
+      "startedAt": "2026-11-08T06:54:49.7283358+02:00",
+      "finishedAt": "2026-11-08T06:55:06.065203+02:00",
+      "exitCode": 0,
+      "log": "typecheck.log",
+      "sha256": "0f53c1bf0fcf8de967ab2a9e1e5ff72f034c294e4519f2e499a1e0ad4935570d"
+    }
+  ]
+}

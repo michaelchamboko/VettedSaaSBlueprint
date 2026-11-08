@@ -127,3 +127,11 @@ Phase One has no pending acceptance item. Its completed packets are retained onl
 ## Release rule
 
 Repository changes still require the isolate, build, prove, and ship workflow in `AGENTS.md`. When the exact reviewed head passes every required gate, merge and deploy the reviewed change. A production deploy must use the merged commit and record independent verification evidence.
+
+## Registered implementation scopes (continued)
+
+### Scanner negation repair (SCANNER-NEGATION-1108) (registered 2026-11-08)
+
+Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
+
+Scope: repair demonstrably false positive in three specialist scanners for clearly negated guarantee wording. Owned files: scripts/scanner-negation.mjs (shared helper), the three scanner scripts, tests/scanner-negated-guarantee.test.ts, build-pack/repairs/scanner-negation-1108/* evidence, planning/execution-state registration. No source strategy amendments, no new automation programme, no article execution in this worktree. Evidence: build-pack/repairs/scanner-negation-1108/.

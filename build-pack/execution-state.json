@@ -1251,21 +1251,200 @@
       "status": "in_progress",
       "dependencies": [],
       "risk": "high",
-      "risk_assessment": { "blast_radius": 1, "reversibility": 1, "authority": 1, "sensitive_data": 0, "external_impact": 0 },
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
       "source_changes": true,
-      "requirement_ids": ["OWNER-2026-11-08-BEAM-POLICY"],
-      "context_files": ["planning.md", "AGENTS.md", "src/lib/editorial/refinement.ts", "src/lib/article-import/opencode-runtime.ts"],
+      "requirement_ids": [
+        "OWNER-2026-11-08-BEAM-POLICY"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "src/lib/editorial/refinement.ts",
+        "src/lib/article-import/opencode-runtime.ts"
+      ],
       "validation": [
-        { "name": "workflow contract", "tier": "task", "kind": "command", "location": "local", "argv": ["npm", "run", "verify:agent-workflow"], "timeout_seconds": 900 },
-        { "name": "tests", "tier": "full", "kind": "command", "location": "local", "argv": ["npm", "test"], "timeout_seconds": 1800 }
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "tests",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "test"
+          ],
+          "timeout_seconds": 1800
+        }
       ],
       "evidence": [],
       "evidence_refs": [],
-      "model_route": { "worker": "configured", "verifier": "independent" },
-      "context_packet": { "retrieval": "targeted" },
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
       "operation_phase": "implementing",
-      "publication": { "enabled": false },
-      "extensions": { "authority": "Explicit owner directive in planning.md; synthetic tests only, no real imports or publication" }
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit owner directive in planning.md; synthetic tests only, no real imports or publication"
+      }
+    },
+    {
+      "id": "SCANNER-NEGATION-1108",
+      "title": "Repair demonstrated negated-guarantee scanner false positive",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-08-SCANNER-NEGATION"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "scripts/scanner-negation.mjs",
+        ".agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs",
+        ".agents/skills/conversion-copy-review/scripts/summarize-conversion-copy-risks.mjs",
+        ".agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplicates.mjs",
+        "tests/scanner-negated-guarantee.test.ts",
+        "build-pack/repairs/scanner-negation-1108/NOTE.md"
+      ],
+      "validation": [
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "lint",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "lint"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "typecheck",
+          "tier": "affected",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "focused tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--test",
+            "--import",
+            "tsx",
+            "tests/scanner-negated-guarantee.test.ts"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "full tests",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "test"
+          ],
+          "timeout_seconds": 1800
+        },
+        {
+          "name": "build",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "timeout_seconds": 1800
+        },
+        {
+          "name": "public site validation",
+          "tier": "full",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "validate:public-site"
+          ],
+          "timeout_seconds": 1800
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/scanner-negation-1108/NOTE.md",
+        "build-pack/repairs/scanner-negation-1108/evidence/SUMMARY.md"
+      ],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive in task; narrow corrective maintenance, no article execution or publication",
+        "baseline_commit": "53fada61a29ce555ea41b540c40fc9e4a32a33e8",
+        "shared_helper": "scripts/scanner-negation.mjs"
+      }
     }
   ],
   "extensions": {

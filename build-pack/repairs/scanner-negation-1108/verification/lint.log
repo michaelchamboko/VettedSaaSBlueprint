@@ -1,0 +1,45 @@
+npm notice run lint
+npm notice run eslint .
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\app\api\admin\optimization-recommendations\route.ts
+  2:10  warning  'auditAdminAction' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\app\getresponse-studio\page.tsx
+  37:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\app\studio\[slug]\page.tsx
+  42:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\components\landing\DirectReviewPage.tsx
+  69:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  95:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\components\landing\EditorialReviewPage.tsx
+  10:3   warning  'mode' is assigned a value but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  66:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\components\landing\ReferenceComposedReviewPage.tsx
+  125:31  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\components\landing\StudioPage.tsx
+  166:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\lib\auth\session.ts
+  16:10  warning  'decodeUtf8' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\lib\design-references\contracts.ts
+  108:25  warning  '_ignored' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  157:22  warning  '_ignoredId' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  157:47  warning  '_ignoredFingerprint' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\src\lib\landing-automation\repository.ts
+  553:11  warning  'record' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\tests\fixtures\article-workflow-evidence.ts
+  33:118  warning  'modelId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\scanner-negation-1108\tests\task-3-ingestion.test.ts
+  50:7  warning  'captures' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 16 problems (0 errors, 16 warnings)
+

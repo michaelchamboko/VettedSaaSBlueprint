@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { hasFlaggablePatternMatch } from "../../../../scripts/scanner-negation.mjs";
 
 const CANONICAL_REASON_CODES = new Set([
   "missing_required_context",
@@ -296,7 +297,7 @@ function textIssueChecks(row) {
   if (GENERIC_CTA_LABELS.includes(normalizeText(ctaLabel))) {
     issues.push(issue(row.file, "cta_intent_mismatch", "hero.primary_cta_label", "CTA label is too generic to predict the destination action."));
   }
-  if (SENSITIVE_CTA_PATTERNS.some((pattern) => pattern.test(ctaLabel))) {
+  if (SENSITIVE_CTA_PATTERNS.some((pattern) => hasFlaggablePatternMatch(pattern, ctaLabel))) {
     issues.push(issue(
       row.file,
       "cta_destination_mismatch",
@@ -386,7 +387,7 @@ function textIssueChecks(row) {
       ));
     }
 
-    const overclaim = OVERCLAIM_PATTERNS.find(({ pattern }) => pattern.test(value));
+    const overclaim = OVERCLAIM_PATTERNS.find(({ pattern }) => hasFlaggablePatternMatch(pattern, value));
     if (overclaim) {
       issues.push(issue(
         row.file,
