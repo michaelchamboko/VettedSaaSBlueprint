@@ -31,6 +31,23 @@ Status: fixed.
 Evidence: workflow-evidence.ts.
 Fix: priorSessions set includes all rewrite pass sessions; reused review session rejected.
 
+## BEAM-ISSUE-009 — Executable Bash scripts forced CRLF
+Status: fixed (attrs + pins).
+Evidence: Greptile P1; parent normalized 5 .sh files to LF.
+Fix: .gitattributes changed those 5 paths to eol=lf; verify-agent-workflow.mjs expected hashes updated to LF values; build-faster workflow test passes verifier. Exact pin deltas in .mece/bash-pin-deltas.json (parent applies lock).
+Fix verification: verify:agent-workflow PASS.
+
+## BEAM-ISSUE-010 — 2.2.6 nonempty files array not tested
+Status: fixed.
+Evidence: Greptile P2.
+Fix: added explicit real-shaped nonempty files negative and absent/empty valid tests in tests/opencode-v2-evidence.test.ts.
+
+## BEAM-ISSUE-008 — Current transitions accepted legacy rival-family passes
+Status: fixed.
+Evidence: parent P1 review (workflow-evidence.ts positional expectedNames).
+Fix: validateEditorialExecution now requires `beamReview` unless a frozen historical snapshot is active; legacy rival-family evidence validates only under `withEvidenceSnapshot`. Current transitions, duplicate reuse and new approvals require Beam.
+Fix verification: parent receipt-family probe legacy case preserved; current false-family case rejects.
+
 ## BEAM-ISSUE-007 — Missing sanitized 2.2.6 fixture
 Status: fixed.
 Evidence: harmless capture session ses_e47ba0cedffeLLf3HWbT4ReGyp; sanitized fixture tests/fixtures/opencode-2.2.6-beam-export.json retains the selected exchange without reasoning.
@@ -45,3 +62,7 @@ Codex maintains this section as the orchestrator; OpenCode authored implementati
 - Model/family conflation: instructions said opencode-go/beam-free was a family value. OpenCode corrected family to reflection-beam and required a review session distinct from all three rewrites. Codex inspected all capability pins and updated only Eleanor's exact changed hash to dbbecfc9fb6acc11f0ea21bae53472849d0625831780847bf18c19c021329fac.
 - Environment recovery: restored the primary repository history and exact dependencies, prepared an isolated worktree with real local dependencies, and installed Chromium. The original import record, source bytes and lockfile remain hash-identical to the preserved baseline.
 - Release authentication remains unresolved: two Vercel device logins ended without confirmed sign-in. No article has been published by this run. Final acceptance requires the actual primary-checkout workflow, reviewed release and retained production verification.
+
+- PR60 review follow-up: Codex identified current approvals accepting legacy rival-family evidence; Greptile identified CRLF Bash checkout rules and absent nonempty-files regression coverage. Beam corrected the runtime branch, current/historical fixtures, five LF rules with matching pins, and export tests. Historical statements above describe earlier verification, not acceptance of this follow-up.
+- Parent inspection found two omitted acceptance items in the first follow-up report: the 2.2.6 tests were still nested and checkout-attribute regression coverage was absent. Same-session Beam corrections made the tests top-level and added actual-byte, hash, and effective Git attribute checks. OpenCode remains the implementation author; parent review identified and routed these omissions.
+- The previous all-CRLF checkout verification was insufficient for executable Bash portability. Five Bash paths now use LF, while nine other pinned files retain CRLF. Only newline representation and its corresponding digests changed; upstream script content and provenance remain unchanged.

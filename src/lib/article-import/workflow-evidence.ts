@@ -151,6 +151,7 @@ export async function validateContentAssessment(root: string, ref: EvidenceRef, 
   return value;
 }
 export async function validateEditorialExecution(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
+  const historical = isEvidenceSnapshotActive();
   const value = editorialExecutionSchema.parse(await readEvidence(root, ref));
   assertBinding(value, binding);
   const artifact = await artifactFor(root, binding), format = editorialFormats[value.format];
@@ -162,7 +163,7 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   let previous: string | undefined; let writerFamily: string | undefined; let reviewFamily: string | undefined;
   const priorSessions = new Set<string>();
   for (const [index, pass] of value.passes.entries()) {
-    const expectedNames = index === 3 ? ["rivalFamilyCleanse", "beamReview"] : [passes[index]];
+    const expectedNames = index === 3 ? (historical ? ["rivalFamilyCleanse", "beamReview"] : ["beamReview"]) : [passes[index]];
     if (!expectedNames.includes(pass.name) || (previous && previous !== pass.inputRef.sha256)) throw new Error("EDITORIAL_PASS_ORDER");
     const before = await readEvidence(root, pass.inputRef), after = await readEvidence(root, pass.outputRef);
     if (index === 0 && receipt.beforeFingerprint !== fingerprintEditorialArtifact(before)) throw new Error("EDITORIAL_INITIAL_ARTIFACT_MISMATCH");

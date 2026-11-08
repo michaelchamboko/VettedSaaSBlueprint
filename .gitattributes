@@ -8,13 +8,13 @@
 /docs/document-intelligence/*.json text eol=lf
 /docs/document-intelligence/*.md text eol=lf
 /build-pack/*.json text eol=lf
-# Preserve vendored Build Faster skill bytes (CRLF) for pinned manifest files.
+# Preserve vendored Build Faster skill bytes: 9 files CRLF, 5 Bash scripts LF.
 .agents/skills/before-and-after/LICENSE text eol=crlf
-.agents/skills/before-and-after/scripts/adapters/0x0st.sh text eol=crlf
-.agents/skills/before-and-after/scripts/adapters/blob.sh text eol=crlf
-.agents/skills/before-and-after/scripts/adapters/gist.sh text eol=crlf
-.agents/skills/before-and-after/scripts/capture.sh text eol=crlf
-.agents/skills/before-and-after/scripts/upload-and-copy.sh text eol=crlf
+.agents/skills/before-and-after/scripts/adapters/0x0st.sh text eol=lf
+.agents/skills/before-and-after/scripts/adapters/blob.sh text eol=lf
+.agents/skills/before-and-after/scripts/adapters/gist.sh text eol=lf
+.agents/skills/before-and-after/scripts/capture.sh text eol=lf
+.agents/skills/before-and-after/scripts/upload-and-copy.sh text eol=lf
 .agents/skills/before-and-after/SKILL.md text eol=crlf
 .agents/skills/code-review/SKILL.md text eol=crlf
 .agents/skills/code-structure/SKILL.md text eol=crlf

@@ -9,7 +9,7 @@ import { rewriteAllProse } from "./fixtures/article-content-approval";
 import { createEditorialEvidence } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { readEvidence, storeEvidence, validateEditorialExecution } from "../src/lib/article-import/workflow-evidence";
-import { executionEvidenceSchema, proseProjectionDigest } from "../src/lib/article-import/execution-evidence";
+import { executionEvidenceSchema, proseProjectionDigest, freezeEvidenceGraph, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
 import { sha256 } from "../src/lib/article-import/execution-evidence";
 
 const id = "article-00000000-0000-4000-8000-000000000099";
@@ -101,7 +101,7 @@ test("Beam review policy validates a distinct same-family review and rejects mix
     mixed2.passes[3].executionRef = await storeEvidence(root, id, { ...executionEvidenceSchema.parse(await readEvidence(root, newExec)), family: "reviewer-family", providerId: "fixture", modelId: "cleanser", pass: "rivalFamilyCleanse", sessionId: "reviewer-session" });
     mixed2.editorialEvidenceRef = await (await import("../src/lib/article-import/workflow-evidence")).evidenceReference(root, "editorial4.json");
     const mixed2Ref = await storeEvidence(root, id, mixed2);
-    await assert.rejects(validateEditorialExecution(root, mixed2Ref, record), /PASS_POLICY_MISMATCH|MISMATCH|CAPABILITY_UNAVAILABLE/);
+    await assert.rejects(validateEditorialExecution(root, mixed2Ref, record), /PASS_ORDER|PASS_POLICY|MISMATCH|CAPABILITY_UNAVAILABLE/);
 
     // Negative: false receipt family mismatch (receipt claims false-family, execution is reflection-beam) -> reject.
     const falseFamilyNotes = { ...beamNotes, writerModelFamily: "false-family", cleanseModelFamily: "false-family" };
@@ -122,12 +122,34 @@ test("legacy rival-family evidence remains valid under its own policy", async ()
     const after = rewriteAllProse("landing", before);
     const artifactPath = "artifact.json", editorialEvidencePath = "editorial.json";
     await (await import("node:fs/promises")).writeFile(path.join(root, artifactPath), JSON.stringify(after));
-    const { fullRewriteNotes } = await import("./fixtures/article-content-approval");
-    await (await import("node:fs/promises")).writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, fullRewriteNotes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
+    const rivalNotes = { semanticNotes: "Reviewed the complete rewritten prose; meaning, qualification and protected fields are preserved.", exceptions: [], meaningPreserved: true, arrayOrderPreserved: true, rewriteMode: "full_article", writerModelFamily: "fixture-writer-family", cleanseModelFamily: "fixture-cleanser-family", passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, rivalFamilyCleanse: true, finalFidelityReview: true } } as const;
+    await (await import("node:fs/promises")).writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, rivalNotes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
     const record = { importId: id, sourceFingerprint: sha256("source"), researchGeneration: 0, stage: "RELEASING" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, artifactPath, format: "direct-review" as const };
     const fixture = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before, after, editorialEvidencePath });
-    await validateEditorialExecution(root, fixture.editorial, record);
+    // Convert the fixture's fourth pass to a true legacy rival-family pass.
+    const editorial = await readEvidence(root, fixture.editorial) as { passes: Array<{ name: string; executionRef: { path: string; sha256: string }; judgmentRef: { path: string; sha256: string } }>; editorialEvidenceRef: { path: string; sha256: string } };
+    const converted = structuredClone(editorial);
+    converted.passes[3].name = "rivalFamilyCleanse";
+    const exec = (await import("../src/lib/article-import/execution-evidence")).executionEvidenceSchema.parse(await readEvidence(root, converted.passes[3].executionRef));
+    if (exec.kind === "opencode") {
+      converted.passes[3].executionRef = await storeEvidence(root, id, { ...exec, family: "fixture-cleanser-family", providerId: "fixture", modelId: "cleanser", pass: "rivalFamilyCleanse", sessionId: "fixture-legacy-review-session" });
+    }
+    const j0 = await readEvidence(root, converted.passes[3].judgmentRef) as Record<string, unknown>;
+    j0.pass = "rivalFamilyCleanse";
+    const oldJe = (await import("../src/lib/article-import/execution-evidence")).executionEvidenceSchema.parse(await readEvidence(root, (j0.executionRef as { path: string; sha256: string })));
+    if (oldJe.kind === "opencode") {
+      const judgmentTextForExec = { ...j0, executionRef: undefined };
+      const judgmentProj = { judgment: JSON.stringify(judgmentTextForExec) };
+      const newJe = await storeEvidence(root, id, { ...oldJe, pass: "rivalFamilyCleanse-judgment", output: judgmentProj, outputDigest: (await import("../src/lib/article-import/execution-evidence")).proseProjectionDigest(judgmentProj) });
+      j0.executionRef = newJe;
+    }
+    converted.passes[3].judgmentRef = await storeEvidence(root, id, j0);
+    const legacyRef = await storeEvidence(root, id, converted);
+    const frozen = await freezeEvidenceGraph(root, id, [legacyRef]);
+    await withEvidenceSnapshot(frozen, () => validateEditorialExecution(root, legacyRef, record));
     assert.ok(true);
+    // Without frozen historical context, legacy rival-family evidence is not a current approval.
+    await assert.rejects(validateEditorialExecution(root, legacyRef, record), /PASS_ORDER|PASS_POLICY|CAPABILITY_UNAVAILABLE/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

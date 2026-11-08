@@ -60,8 +60,10 @@ test("runtime resolves explicit executable and only exact supported version outp
   for (const version of ["2.2.5-preview", "prefix 2.2.5", "opencode v1.19.4", "opencode v2.2.7", "3.0.0"]) assert.throws(() => normalizeOpenCodeVersion(version));
   assert.deepEqual(openCodeExportArgs("2.2.5", "session"), ["session", "export", "session"]);
   assert.deepEqual(openCodeExportArgs("2.2.6", "session"), ["session", "export", "session"]);
+  assert.deepEqual(openCodeExportArgs("1.19.4", "session"), ["export", "session"]);
+});
 
-test("2.2.6 real export shape is accepted and reasoning is excluded", () => {
+test("2.2.6 synthetic export shape is accepted and reasoning is excluded", () => {
   const input = { artifact: "complete synthetic artifact" }, output = { judgment: "synthetic judgment" };
   const selected = { version: "2.2.6", sessionId: "ses_real", userMessageId: "msg_user", assistantMessageId: "msg_assistant", packetId: "a".repeat(64), pass: "review", input, output, families: { "opencode-go/beam-free": "reflection-beam" } };
   const raw = { info: { id: "ses_real", model: { providerID: "opencode-go", id: "beam-free", variant: "default" }, outcome: "succeeded", projectID: "p", cost: 0, tokens: { input: 1, output: 1, reasoning: 1, cache: { read: 0, write: 0 } }, time: { created: 1, updated: 2, idle: 3 } }, messages: [
@@ -75,5 +77,28 @@ test("2.2.6 real export shape is accepted and reasoning is excluded", () => {
   assert.equal(result.modelId, "beam-free");
   assert.equal(JSON.stringify(result).includes("private reasoning"), false);
 });
-  assert.deepEqual(openCodeExportArgs("1.19.4", "session"), ["export", "session"]);
+
+test("2.2.6 real-shaped nonempty files array is rejected", () => {
+  const input = { artifact: "complete synthetic artifact" }, output = { judgment: "synthetic judgment" };
+  const selected = { version: "2.2.6", sessionId: "ses_real", userMessageId: "msg_user", assistantMessageId: "msg_assistant", packetId: "a".repeat(64), pass: "review", input, output, families: { "opencode-go/beam-free": "reflection-beam" } };
+  const raw = { info: { id: "ses_real", model: { providerID: "opencode-go", id: "beam-free", variant: "default" }, outcome: "succeeded" }, messages: [
+    { id: "msg_user", type: "user", text: JSON.stringify({ packetId: selected.packetId, pass: selected.pass, prose: input, digest: proseProjectionDigest(input), instructions: [] }), files: [{ path: "hidden.txt", content: "unbound input" }], time: { created: 1 } },
+    { id: "msg_assistant", type: "assistant", model: { providerID: "opencode-go", id: "beam-free", variant: "default" }, time: { created: 2, streamed: 3, completed: 4 }, finish: "stop", content: [{ type: "text", text: JSON.stringify(output) }] },
+    { id: "msg_idle", type: "idle", outcome: "succeeded", time: { created: 5 } },
+  ] };
+  assert.throws(() => extractOpenCodeExecution(raw, selected));
+});
+
+test("2.2.6 absent or empty files array remains valid", () => {
+  const input = { artifact: "complete synthetic artifact" }, output = { judgment: "synthetic judgment" };
+  const selected = { version: "2.2.6", sessionId: "ses_real2", userMessageId: "msg_user2", assistantMessageId: "msg_assistant2", packetId: "b".repeat(64), pass: "review", input, output, families: { "opencode-go/beam-free": "reflection-beam" } };
+  for (const files of [undefined, []]) {
+    const raw = { info: { id: "ses_real2", model: { providerID: "opencode-go", id: "beam-free", variant: "default" }, outcome: "succeeded" }, messages: [
+      { id: "msg_user2", type: "user", text: JSON.stringify({ packetId: selected.packetId, pass: selected.pass, prose: input, digest: proseProjectionDigest(input), instructions: [] }), ...(files === undefined ? {} : { files }), time: { created: 1 } },
+      { id: "msg_assistant2", type: "assistant", model: { providerID: "opencode-go", id: "beam-free", variant: "default" }, time: { created: 2, streamed: 3, completed: 4 }, finish: "stop", content: [{ type: "text", text: JSON.stringify(output) }] },
+      { id: "msg_idle2", type: "idle", outcome: "succeeded", time: { created: 5 } },
+    ] };
+    const result = extractOpenCodeExecution(raw, selected);
+    assert.equal(result.toolVersion, "2.2.6");
+  }
 });
