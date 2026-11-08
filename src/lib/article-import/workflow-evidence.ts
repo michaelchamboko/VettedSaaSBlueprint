@@ -17,7 +17,7 @@ export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal
 export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("WorkflowEvidenceV1"), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
 export const researchEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("ResearchEvidenceV2"), sources: z.array(z.object({ id: nonempty, url: z.string().url(), retrievedAt: z.string().datetime({ offset: true }), snapshotRef: evidenceRefSchema }).strict()).min(1), claims: z.array(z.object({ id: nonempty, text: nonempty, sourceIds: z.array(nonempty).min(1), excerptLocations: z.array(z.object({ sourceId: nonempty, quote: nonempty }).strict()).min(1), limitations: z.array(nonempty), price: z.object({ amount: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/), period: nonempty, plan: nonempty, restrictions: z.array(nonempty) }).strict().optional() }).strict()).min(1), freshness: nonempty }).strict();
 export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
-const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview"] as const;
+const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview"] as const;
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
 export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
@@ -159,19 +159,33 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   if (!canReuseEditorialEvidence(receipt, format, artifact)) throw new Error("EDITORIAL_RECEIPT_MISMATCH");
   const paths = editorialProsePaths(format, artifact);
   if (JSON.stringify(paths) !== JSON.stringify(value.eligibleProsePaths)) throw new Error("EDITORIAL_PROSE_COVERAGE");
-  let previous: string | undefined; let writerFamily: string | undefined;
+  let previous: string | undefined; let writerFamily: string | undefined; let reviewFamily: string | undefined;
+  const priorSessions = new Set<string>();
   for (const [index, pass] of value.passes.entries()) {
-    if (pass.name !== passes[index] || (previous && previous !== pass.inputRef.sha256)) throw new Error("EDITORIAL_PASS_ORDER");
+    const expectedNames = index === 3 ? ["rivalFamilyCleanse", "beamReview"] : [passes[index]];
+    if (!expectedNames.includes(pass.name) || (previous && previous !== pass.inputRef.sha256)) throw new Error("EDITORIAL_PASS_ORDER");
     const before = await readEvidence(root, pass.inputRef), after = await readEvidence(root, pass.outputRef);
     if (index === 0 && receipt.beforeFingerprint !== fingerprintEditorialArtifact(before)) throw new Error("EDITORIAL_INITIAL_ARTIFACT_MISMATCH");
     compareEditorialArtifacts(format, before, after);
     const execution = await validateExecutionEvidence(root, pass.executionRef);
     if (execution.kind !== "opencode" || execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(editorialPassReviewInput(before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
     assertPacket(execution.packetId, binding, "REFINING");
-    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(pass.name === "rivalFamilyCleanse" ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
-    if (index === 0) writerFamily = execution.family;
+    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...((pass.name === "rivalFamilyCleanse" || pass.name === "beamReview") ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
+    if (index === 0) { writerFamily = execution.family; }
+    if (index === 3) reviewFamily = execution.family;
+    if (index < 3) priorSessions.add(execution.sessionId);
     if (index < 3 && execution.family !== writerFamily) throw new Error("EDITORIAL_WRITER_FAMILY_MISMATCH");
-    if (index === 3 && execution.family === writerFamily) throw new Error("EDITORIAL_CLEANSE_FAMILY_MISMATCH");
+    if (index === 3 && pass.name === "rivalFamilyCleanse" && execution.family === writerFamily) throw new Error("EDITORIAL_CLEANSE_FAMILY_MISMATCH");
+    if (index === 3 && pass.name === "beamReview") {
+      if (execution.family !== writerFamily) throw new Error("EDITORIAL_BEAM_REVIEW_FAMILY_MISMATCH");
+      if (priorSessions.has(execution.sessionId)) throw new Error("EDITORIAL_BEAM_REVIEW_SESSION_REUSED");
+      const receiptUsesBeam = receipt.passes.beamReview === true;
+      if (receiptUsesBeam !== true) throw new Error("EDITORIAL_PASS_POLICY_MISMATCH");
+    }
+    if (index === 3 && pass.name === "rivalFamilyCleanse") {
+      const receiptUsesBeam = receipt.passes.beamReview === true;
+      if (receiptUsesBeam !== false) throw new Error("EDITORIAL_PASS_POLICY_MISMATCH");
+    }
     for (const instruction of pass.instructionRefs) await verifyEvidenceRef(root, instruction);
     const judgment = z.object({ pass: z.literal(pass.name), beforeFingerprint: z.literal(fingerprintEditorialArtifact(before)), afterFingerprint: z.literal(fingerprintEditorialArtifact(after)), coveredPaths: z.array(nonempty), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), semanticNotes: nonempty, meaningPreserved: z.literal(true), protectedFieldsPreserved: z.literal(true), executionRef: evidenceRefSchema }).strict().parse(await readEvidence(root, pass.judgmentRef));
     if (JSON.stringify(judgment.coveredPaths) !== JSON.stringify(paths)) throw new Error("EDITORIAL_JUDGMENT_COVERAGE");
@@ -188,6 +202,10 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   const checkerScript = ELEANOR_ROOT + "tools/deslop.py";
   if (!/^python(?:3(?:\.\d+)?)?(?:\.exe)?$/i.test(checker.executable.replaceAll("\\", "/").split("/").at(-1) ?? "") || checker.toolVersion !== EDITORIAL_REVISION || path.resolve(checker.cwd) !== path.resolve(root) || JSON.stringify(checker.argv) !== JSON.stringify([checkerScript, "--text", editorialProse(format, artifact)])) throw new Error("EDITORIAL_CHECKER_COMMAND_MISMATCH");
   await pinnedInput(root, checker, checkerScript);
+  if (value.passes[3]?.name === "beamReview") {
+    if (writerFamily && receipt.writerModelFamily.toLocaleLowerCase() !== writerFamily.toLocaleLowerCase()) throw new Error("EDITORIAL_RECEIPT_WRITER_FAMILY_MISMATCH");
+    if (reviewFamily && receipt.cleanseModelFamily.toLocaleLowerCase() !== reviewFamily.toLocaleLowerCase()) throw new Error("EDITORIAL_RECEIPT_CLEANSE_FAMILY_MISMATCH");
+  }
   return value;
 }
 
