@@ -1,0 +1,171 @@
+npm notice run build
+npm notice run next build
+▲ Next.js 16.4.5 (Turbopack)
+✓ Running next.config.ts took 30ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+⚠ The Edge Runtime is deprecated. You can use the "nodejs" runtime instead. Learn more: https://nextjs.org/docs/messages/edge-runtime-deprecated
+  Creating an optimized production build ...
+✓ Compiled successfully in 755ms
+  Running TypeScript ...
+  Finished TypeScript in 2.2s ...
+  Collecting page data using 7 workers ...
+⚠ Using edge runtime on a page currently disables static generation for that page
+  Generating static pages using 7 workers (0/139) ...
+  Generating static pages using 7 workers (34/139) 
+  Generating static pages using 7 workers (69/139) 
+  Generating static pages using 7 workers (104/139) 
+✓ Generating static pages using 7 workers (139/139) in 1464ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /accessibility
+├ ○ /admin/affiliate-links
+├ ○ /admin/approvals
+├ ○ /admin/daily-metrics
+├ ○ /admin/jobs
+├ ○ /admin/login
+├ ○ /admin/offer-folders
+├ ○ /admin/optimization-recommendations
+├ ○ /admin/pages
+├ ○ /admin/products
+├ ○ /admin/program-resources
+├ ○ /admin/purchase-destination-reviews
+├ ○ /admin/research-ledger
+├ ○ /affiliate-disclosure
+├ ○ /affiliate-link-unavailable
+├ ƒ /ai-voice-generators
+├ ƒ /ai-voice-generators/elevenlabs-alternatives
+├ ƒ /api/admin/affiliate-links
+├ ƒ /api/admin/affiliate-links/[id]
+├ ƒ /api/admin/compliance-profiles
+├ ƒ /api/admin/daily-metrics
+├ ƒ /api/admin/evidence-claims
+├ ƒ /api/admin/generation-jobs
+├ ƒ /api/admin/manual-review-tasks/[id]/resolve
+├ ƒ /api/admin/offer-folders
+├ ƒ /api/admin/optimization-recommendations
+├ ƒ /api/admin/optimization-recommendations/[id]/approve
+├ ƒ /api/admin/optimization-recommendations/[id]/reject
+├ ƒ /api/admin/pages
+├ ƒ /api/admin/pages/[id]
+├ ƒ /api/admin/products
+├ ƒ /api/admin/program-resources
+├ ƒ /api/admin/program-rules
+├ ƒ /api/admin/purchase-destination-reviews
+├ ƒ /api/admin/research-sources
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/deployment
+├ ƒ /api/events/affiliate-click
+├ ƒ /api/events/cta-click
+├ ƒ /api/events/faq-expand
+├ ƒ /api/events/link-error
+├ ƒ /api/events/page-view
+├ ƒ /api/hermes/jobs/[id]/complete
+├ ƒ /api/hermes/jobs/[id]/fail
+├ ƒ /api/hermes/jobs/[id]/heartbeat
+├ ƒ /api/hermes/landing-artifacts
+├ ƒ /api/hermes/revalidate-page
+├ ○ /blog
+├   /blog/[slug]
+│ ├ ● /blog/production-ready-ai-voice-cloning-checklist
+│ ├ ● /blog/email-automation-workflow-fit
+│ ├ ● /blog/ecommerce-segmentation-data-audit
+│ └ ● [+7 more paths]
+├ ○ /blog/feed.xml
+├ ƒ /comparisons/elevenlabs-vs-murf
+├ ƒ /comparisons/moosend-vs-mailchimp
+├ ○ /contact
+├ ○ /decision-hub
+├   /decision-hub/[setSlug]
+│ ├ ● /decision-hub/governed-ai-client-work-preparation
+│ └ ● /decision-hub/team-shared-account-access-control
+├ ○ /decision-hub/video-localization
+├ ○ /editorial-policy
+├ ƒ /email-marketing-software
+├ ƒ /email-marketing-software/moosend-alternatives
+├ ○ /getresponse-studio
+├ ƒ /guides/ai-voice-generators-for-youtube
+├ ƒ /guides/first-email-automation-workflow
+├ ƒ /guides/how-to-evaluate-ai-voice-quality
+├ ○ /icon.svg
+├ ƒ /ingest/events
+├   /landing-page-builders/[slug]
+│ ├ ● /landing-page-builders/how-can-content-creators-and-brands-stream-live-multi-camera-video
+│ ├ ● /landing-page-builders/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring
+│ ├ ● /landing-page-builders/how-can-you-organize-multiple-web-apps-into-dedicated-desktop-workspaces
+│ └ ● [+3 more paths]
+├ ○ /landing-page-builders/adcreative-agency-portfolio-v5
+├ ○ /landing-page-builders/adcreative-ai-generation-v1
+├ ○ /landing-page-builders/adcreative-copy-generation-v4
+├ ○ /landing-page-builders/adcreative-creative-analytics-v2
+├ ○ /landing-page-builders/adcreative-product-photography-v3
+├ ○ /landing-page-builders/carepatron-clinical-notes-v2
+├ ○ /landing-page-builders/carepatron-multi-location-v4
+├ ○ /landing-page-builders/carepatron-patient-portal-v3
+├ ○ /landing-page-builders/carepatron-practice-management-v1
+├ ○ /landing-page-builders/carepatron-telehealth-v5
+├ ○ /landing-page-builders/datahawk-agency-portfolio-v5
+├ ○ /landing-page-builders/datahawk-amazon-analytics-v1
+├ ○ /landing-page-builders/datahawk-competitor-tracking-v4
+├ ○ /landing-page-builders/datahawk-profit-analytics-v2
+├ ○ /landing-page-builders/datahawk-review-intelligence-v3
+├ ○ /landing-page-builders/elevenlabs-ai-dubbing-v3
+├ ○ /landing-page-builders/elevenlabs-ai-voice-generator-v1
+├ ○ /landing-page-builders/elevenlabs-audiobook-projects-v2
+├ ○ /landing-page-builders/elevenlabs-conversational-ai-v4
+├ ○ /landing-page-builders/elevenlabs-developer-api-v5
+├ ○ /landing-page-builders/snowfire-agency-portfolio-v5
+├ ○ /landing-page-builders/snowfire-design-system-v1
+├ ○ /landing-page-builders/snowfire-developer-sync-v3
+├ ○ /landing-page-builders/snowfire-ecommerce-pdp-v4
+├ ○ /landing-page-builders/snowfire-marketing-velocity-v2
+├   /landing-page-previews/[slug]
+│ ├ ● /landing-page-previews/elevenlabs-ai-voice-generator
+│ ├ ● /landing-page-previews/getresponse-marketing-automation
+│ ├ ● /landing-page-previews/how-can-agencies-consolidate-cross-channel-ppc-data-and-lead-scoring
+│ └ ● [+2 more paths]
+├ ○ /llms.txt
+├ ƒ /opengraph-image
+├ ○ /paia
+├ ○ /privacy
+├ ƒ /r/affiliate
+├ ○ /robots.txt
+├ ○ /scenarios
+├   /scenarios/[setSlug]
+│ ├ ● /scenarios/governed-ai-client-work-preparation
+│ └ ● /scenarios/team-shared-account-access-control
+├ ○ /scenarios/video-localization
+├ ƒ /sitemap.xml
+├ ○ /solution-hub
+├   /solution-hub/[setSlug]
+│ ├ ● /solution-hub/governed-ai-client-work-preparation
+│ └ ● /solution-hub/team-shared-account-access-control
+├ ○ /solution-hub/video-localization
+├   /studio/[slug]
+│ ├ ● /studio/carepatron-signal
+│ ├ ● /studio/carepatron-flow
+│ ├ ● /studio/carepatron-proof
+│ └ ● [+22 more paths]
+├ ○ /terms
+├ ƒ /tools/email-marketing-cost-calculator
+└   /trends/[slug]
+  ├ ● /trends/ai-agents
+  ├ ● /trends/saas-pricing
+  └ ● /trends/ai-native-vs-bolt-on
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

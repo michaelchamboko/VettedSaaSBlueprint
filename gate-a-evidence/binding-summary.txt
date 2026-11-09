@@ -31,3 +31,13 @@ Shared .git/.git/worktrees/.../gitdir restored to original Windows paths (see gi
 Linux git uses --git-dir/--work-tree; no shared pointer mutation.
 npm upgraded 11.19.1 -> 12.0.2 via corepack; lockfile hash unchanged.
 node_modules replaced in unsynced harness only (npm ci); synced repo node_modules untouched (Windows win32-x64).
+
+=== Tested harness vs frozen candidate provenance ===
+harness root: /tmp/opencode/vetted-linux
+candidate root: /home/michael/.../.worktrees/candidate-contract-1108
+tracked files compared: 1882
+identical: 1872
+drift: 0
+missing in harness: 10 (all are gate-a-evidence/* files created after the harness copy; not part of tested source)
+package-lock.json: identical (59a6061dacd1bcecb60e82e1f90c5c3f57eec3758526080bf38b1f70b2a6986c)
+Conclusion: npm12 test results (521 pass) apply to the exact frozen candidate source. No rerun required.

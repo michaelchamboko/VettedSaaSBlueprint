@@ -1,0 +1,3 @@
+npm notice run validate:public-site
+npm notice run tsx scripts/validate-public-site.ts
+Public site release configuration is valid.
