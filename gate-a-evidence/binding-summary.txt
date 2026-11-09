@@ -1,0 +1,33 @@
+=== Verification root ===
+worktree: /home/michael/Antigravity Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/candidate-contract-1108
+git HEAD: 3ce5ee520593462c4a43fa8dcbe0a1978166353e
+branch: codex/candidate-contract-1108
+
+=== Source binding manifest (continuation-suite-source-bindings.json) ===
+OK build-pack/execution-state.json 2e158d93909efd144009523fa3e110e28d555962a84404773c33b2e256eafdf0
+OK planning.md 535ab525b37d1922458738afbd25eb2b17a52b57fc4ad996bcf750ba1db53a00
+OK scripts/verify-landing-deployment.ts b64b8f4f045f349a9c1dad4bb0d0b3cc8e88b49ccff90a43e2c8340c4729e8fb
+OK src/app/landing-page-previews/[slug]/page.tsx b7e458aead028e3159f80c30c0b3e80dd7364c31d31ebfe8f3dee74a0a29473e
+OK src/lib/article-import/local-release-adapter.ts 0373f7a615bc3e091665cf72134f0722ba3eb5741c617321de9593ff6a06ad95
+OK src/lib/article-import/release.ts 25615344e820205968ec38d55513818d29f354eeed66be955f32b30d142f7452
+OK src/lib/article-import/rendering-inputs.ts a9a069ab381acbe663172f15e92c1bd11e55642268bc314c3c3dd9d044494023
+OK src/lib/article-import/verification-evidence.ts 99444e84d1fb6fc178080d0104d4e338f6a55d0a7f95e48367ce7bd141fd2496
+OK src/lib/article-import/workflow-evidence.ts 02dced3834675ce6254cac52a79aa7411179e2a2b204ee768014100e5cc53f32
+OK tests/article-candidate-verification.test.ts dffef2a900ae187f8cb7d10f6c9587ddf697ebe897a574f829474d5509643424
+OK tests/article-import-release.test.ts ea69e537289ae27d1b1a79e0d540592e0d8891c0122fdecab03109cc3721e5cd
+OK tests/article-production-evidence.test.ts 4bce485076442033f7355f5bae0aa3ccb8a934b7c8af349301f67fd0e14c264d
+OK tests/article-workflow-evidence.test.ts e9e964337ae671b8c0771982aba9c0877a86779c40b5beded75ae0067cdedb46
+OK tests/fixtures/article-production-evidence.ts c907f27b4ec1c22740a9866efa5616cf33e78660f900efbbfc0481d4251ebb2c
+OK tests/fixtures/article-workflow-evidence.ts 6abe2b363263f7d6f2dc8108b231e1e6f29873cf92cac5bdfcea9bef75e60c18
+OK src/lib/article-import/candidate-route.ts 6fd46edb10c4003a18b43d0c6557f3c631bb1f36314b37078fda267144dd9826
+total=16 bad=0
+
+=== Lockfile ===
+package-lock.json sha256: 59a6061dacd1bcecb60e82e1f90c5c3f57eec3758526080bf38b1f70b2a6986c
+node_modules install: npm ci (exit 0), lockfile unchanged
+
+=== Drift findings ===
+Shared .git/.git/worktrees/.../gitdir restored to original Windows paths (see git-portability.txt).
+Linux git uses --git-dir/--work-tree; no shared pointer mutation.
+npm upgraded 11.19.1 -> 12.0.2 via corepack; lockfile hash unchanged.
+node_modules replaced in unsynced harness only (npm ci); synced repo node_modules untouched (Windows win32-x64).
