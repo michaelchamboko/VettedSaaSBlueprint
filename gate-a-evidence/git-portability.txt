@@ -7,3 +7,11 @@ e6b486eae5de4fd71a3b056936139b54684e7db2
 === Linux git status ===
 ?? gate-a-evidence/
 (empty above = clean)
+
+=== CORRECTION (run 6) ===
+The receipt above may retain run4's incorrect self-referential pointer text.
+Actual current pointers (verified this run):
+  worktree .git -> gitdir: D:/.../.git/worktrees/candidate-contract-1108 (metadata dir, distinct)
+  metadata gitdir -> D:/.../.worktrees/.../.git (worktree .git, distinct)
+These are non-self-referential and Windows-compatible.
+See SYNC-DIAGNOSIS.txt for full sync/delivery assessment.
