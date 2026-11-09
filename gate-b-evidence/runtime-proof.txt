@@ -1,0 +1,19 @@
+=== Runtime proof: preview route (candidate, noindex) ===
+URL: http://127.0.0.1:3000/landing-page-previews/how-can-growing-brands-automate-on-brand-email-marketing-journeys
+Server: next start (production build, /tmp/opencode/vetted-linux/.next)
+Viewports tested: desktop (1440x900), mobile (390x844), reduced-motion (1440x900, prefers-reduced-motion: reduce)
+
+Desktop:   title present, artifact-fingerprint meta = d82d0c711b9c8c78a4da436c25e6f10b0d1a9a39b278b397e5b83d5c62361bad, robots = noindex, nofollow, console/page errors = none
+Mobile:    same as desktop (fingerprint present, noindex, no errors)
+Reduced-motion: screenshot captured; no motion added/changed by this candidate (existing page behavior preserved)
+
+Screenshots: desktop.png, mobile.png, reduced-motion.png
+
+Before (base f3576b7): preview page had NO artifact-fingerprint meta tag in <head>.
+After (candidate): preview page HAS artifact-fingerprint meta tag; body/rendering identical; robots remains noindex,nofollow; no console errors.
+
+Design Read: "Reading this as: metadata-only change to the noindex preview route for direct-review candidate verification; no visual delta, preserving existing noindex preview identity."
+Dials (per D04 §6.2, Decision Scenario): variance 6-8, motion 5-7, density 4-6.
+Impeccable context: ran (NO_PRODUCT_MD, SCOPED_EXISTING_ALLOWED — narrow refinement permitted).
+Impeccable detect: ran, returned [] (no anti-patterns).
+Impeccable critique/audit: NOT supported by installed binary (v0.1.5 engine). Manual review: no visual change, no hierarchy/spacing/typography/a11y/responsive/perf regression introduced (metadata-only diff).
