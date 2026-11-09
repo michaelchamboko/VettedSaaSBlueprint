@@ -492,8 +492,8 @@ test("local adapter maps verifier evidence and rejects verifier failures", async
   const { target } = await readImportArtifactTarget(".", "direct-review", artifactPath);
   await mkdir(path.dirname(path.join(root, artifactPath)), { recursive: true });
   await writeFile(path.join(root, artifactPath), await readFile(artifactPath));
-  const snapshot = { httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true, browserErrors: [] };
-  const evidence = { target, verificationMode: "production", expected_commit: "a".repeat(40), origin: "https://vettedsaasblueprint.online", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", robots_ok: true, sitemap_ok: true, pages: [{ path: target.renderedRoutes[0], desktop: snapshot, mobile: snapshot }] };
+  const snapshot = { httpOk: true, disclosureOk: true, exactCtaCount: 1, allCtasExact: true, ctasFitViewport: true, allRevealSectionsVisible: true, horizontalPageScrollPossible: false, robots: "index, follow", errorOverlay: false, browserErrors: [] };
+  const evidence = { target, verificationMode: "production", expected_commit: "a".repeat(40), origin: "https://vettedsaasblueprint.online", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", robots_ok: true, sitemap_ok: true, pages: [{ path: target.renderedRoutes[0], desktop: snapshot, mobile: snapshot, reduced_motion: snapshot }] };
   const identity = { id: "dpl", gitCommitSha: "a".repeat(40), target: "production", readyState: "READY" };
   const runner: ReleaseCommandRunner = async (command) => ({ stdout: JSON.stringify(command === "vercel" ? identity : evidence), stderr: "" });
   const options = { runner, fetchJson: async () => ({ commitSha: "a".repeat(40), environment: "production" }), sourceFingerprint: "d".repeat(64), importId: "article-00000000-0000-0000-0000-000000000001", format: "direct-review" as const, artifactPath, slug: target.slug };

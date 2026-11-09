@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import { importArtifactTarget } from "./format-validation";
+import { candidatePreviewPath } from "./candidate-route";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
 const targetSchema = z.object({ format: z.enum(["direct-review", "blog", "visibility", "decision-set"]), slug: z.string().min(1), artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/), renderedRoutes: z.array(z.string().startsWith("/")).min(1) }).strict();
@@ -110,8 +111,37 @@ export function assertVerifierResult(target: ReturnType<typeof importArtifactTar
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
     const snapshot = z.object({ httpOk: z.literal(true), disclosureOk: z.literal(true), allCtasExact: z.literal(true), allRevealSectionsVisible: z.literal(true), browserErrors: z.array(z.string()).length(0) }).passthrough();
-    const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
-    if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
+    const mode = typeof (result as { verificationMode?: unknown }).verificationMode === "string" ? (result as { verificationMode: string }).verificationMode : "production";
+    const previewPath = candidatePreviewPath(target.slug);
+    if (mode === "candidate") {
+      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true;
+      if (isLegacy) {
+        const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
+        if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
+      } else {
+        if ((result as { robots_ok?: unknown }).robots_ok === true || (result as { sitemap_ok?: unknown }).sitemap_ok === true) throw new Error("CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS");
+        const parsed = z.object({ status: z.literal("pass"), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot, reduced_motion: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
+        const paths = parsed.pages.map((page) => page.path);
+        if (paths.length !== 1 || paths[0] !== previewPath) throw new Error("VERIFIER_ROUTES_MISMATCH");
+        for (const page of parsed.pages) {
+          for (const shot of [page.desktop, page.mobile, page.reduced_motion]) {
+            if (typeof shot.exactCtaCount !== "number" || shot.exactCtaCount < 1) throw new Error("VERIFIER_CTA_MISMATCH");
+            if (shot.allCtasExact !== true) throw new Error("VERIFIER_CTA_MISMATCH");
+            if (shot.ctasFitViewport !== true) throw new Error("VERIFIER_CTA_MISMATCH");
+            if (shot.allRevealSectionsVisible !== true) throw new Error("VERIFIER_REVEAL_MISMATCH");
+            if (shot.horizontalPageScrollPossible !== false) throw new Error("VERIFIER_OVERFLOW_MISMATCH");
+            if (shot.errorOverlay !== false) throw new Error("VERIFIER_RUNTIME_MISMATCH");
+            if (!Array.isArray(shot.browserErrors) || shot.browserErrors.length !== 0) throw new Error("VERIFIER_RUNTIME_MISMATCH");
+            if (!/\bnoindex\b/i.test(String(shot.robots ?? ""))) throw new Error("VERIFIER_ROBOTS_MISMATCH");
+          }
+        }
+      }
+    } else if (mode === "production") {
+      const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot, reduced_motion: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
+      if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
+    } else {
+      throw new Error("VERIFICATION_MODE_INVALID");
+    }
   } else if (target.format === "decision-set") {
     z.object({ passed: z.literal(true), browser_errors_ok: z.literal(true), robots_ok: z.literal(true), sitemap_ok: z.literal(true), checks: z.array(z.object({ passed: z.literal(true) }).passthrough()).min(1), screenshots: z.array(z.object({ route: z.string(), mode: z.string() }).passthrough()).min(2) }).passthrough().parse(result);
     const shots = result.screenshots as Array<{ route: string; mode: string }>;

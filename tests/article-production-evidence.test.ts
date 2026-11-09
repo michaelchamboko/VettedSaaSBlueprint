@@ -10,10 +10,10 @@ const deployment = { deploymentId: "dpl_fixture", canonicalUrl: `${origin}/fixtu
 const importId = "article-00000000-0000-0000-0000-000000000001";
 function fixture(format: VerificationTarget["format"]) {
   const target = { format, slug: "fixture", artifactFingerprint: "b".repeat(64), renderedRoutes: ["/fixture"] };
-  const browser = { httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true, browserErrors: [] };
+  const browser = { httpOk: true, disclosureOk: true, exactCtaCount: 1, allCtasExact: true, ctasFitViewport: true, allRevealSectionsVisible: true, horizontalPageScrollPossible: false, robots: "index, follow", errorOverlay: false, browserErrors: [] };
   const common = { verificationMode: "production", origin, canonicalOrigin: origin, expected_commit: deployment.commitSha, target };
   const result = format === "direct-review"
-    ? { ...common, status: "pass", robots_ok: true, sitemap_ok: true, pages: [{ path: "/fixture", desktop: browser, mobile: browser }] }
+    ? { ...common, status: "pass", robots_ok: true, sitemap_ok: true, pages: [{ path: "/fixture", desktop: browser, mobile: browser, reduced_motion: browser }] }
     : format === "decision-set"
       ? { ...common, passed: true, browser_errors_ok: true, robots_ok: true, sitemap_ok: true, checks: [{ passed: true }], screenshots: [{ route: "/fixture", mode: "desktop" }, { route: "/fixture", mode: "mobile" }] }
       : { ...common, ok: true, verifiedRoutes: ["/fixture"], viewportChecks: 2 };

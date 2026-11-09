@@ -349,8 +349,23 @@ export async function assessImportRelease(input: {
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
   if (input.execute && input.record.contentApproval) {
     try {
-      if (input.artifactPath?.replaceAll("\\", "/") !== input.record.contentApproval.artifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
-      const { target, artifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.record.contentApproval.artifactPath, input.slug);
+      const sourceArtifactPath = input.record.contentApproval.artifactPath;
+      const { target, artifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, sourceArtifactPath, input.slug);
+      const normalizedInputArtifact = input.artifactPath?.replaceAll("\\", "/");
+      const normalizedSourceArtifact = sourceArtifactPath.replaceAll("\\", "/");
+      const publicationArtifactPath = input.record.format === "direct-review"
+        ? `src/generated/landing-pages/${target.slug}.json`
+        : normalizedSourceArtifact;
+      if (normalizedInputArtifact !== undefined && normalizedInputArtifact !== normalizedSourceArtifact && normalizedInputArtifact !== publicationArtifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
+      if (input.record.format === "direct-review") {
+        let projectionArtifact: unknown;
+        try {
+          projectionArtifact = (await readImportArtifactTarget(input.repositoryRoot, input.record.format, publicationArtifactPath, target.slug)).artifact;
+        } catch {
+          throw new Error("PUBLIC_PROJECTION_MISSING");
+        }
+        if (JSON.stringify(projectionArtifact) !== JSON.stringify(artifact)) throw new Error("PUBLIC_PROJECTION_MISMATCH");
+      }
       input.slug = target.slug;
       assertArtifactCommercialSafety(input.record, input.record.format, artifact);
       await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
@@ -360,7 +375,11 @@ export async function assessImportRelease(input: {
     if (!input.slug) reasons.push("DIRECT_REVIEW_SLUG_REQUIRED");
     const expected = input.slug ? `src/generated/landing-pages/${input.slug}.json` : undefined;
     const normalizedArtifact = input.artifactPath?.replaceAll("\\", "/");
-    if (!expected || normalizedArtifact !== expected || normalizedArtifact.startsWith("/") || normalizedArtifact.split("/").includes("..")) reasons.push("DIRECT_REVIEW_ARTIFACT_MISMATCH");
+    const approvedSource = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/");
+    const isPublicProjectionPath = !!normalizedArtifact && normalizedArtifact.startsWith("src/generated/landing-pages/");
+    const artifactAllowed = !!normalizedArtifact && (normalizedArtifact === expected || (approvedSource !== undefined && normalizedArtifact === approvedSource && !isPublicProjectionPath));
+    const publicPathMismatch = isPublicProjectionPath && normalizedArtifact !== expected;
+    if (!expected || publicPathMismatch || !artifactAllowed || normalizedArtifact?.startsWith("/") || normalizedArtifact?.split("/").includes("..")) reasons.push("DIRECT_REVIEW_ARTIFACT_MISMATCH");
     if (expected && !input.changedFiles.map((file) => file.replaceAll("\\", "/")).includes(expected)) reasons.push("DIRECT_REVIEW_ARTIFACT_NOT_CHANGED");
   }
   // Every publishable format ships its approved artifact plus its publication authority files.
@@ -394,7 +413,8 @@ export async function assessImportRelease(input: {
       return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
     }
 
-  const validationCommands = validationCommandsForFormat(input.record.format, input.artifactPath);
+  const validationArtifactPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : input.artifactPath;
+  const validationCommands = validationCommandsForFormat(input.record.format, validationArtifactPath);
   const approved = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
   if (!approved.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
   if (!validationCommands) {
@@ -505,16 +525,25 @@ export async function assessImportRelease(input: {
     // Publication authorities can also move between review and merge; rebind them to
     // the approved artifact on the merged checkout before anything deploys.
     try {
-      await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, input.record.contentApproval?.artifactPath ?? input.artifactPath);
+      const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
+      await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout authority binding failed: ${message}` });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
     }
-    const mergedApproval = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
+    const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
+    if (input.record.contentApproval) {
+      const { artifact: mergedArtifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, mergedPublicationPath!, input.slug);
+      if (fingerprintEditorialArtifact(mergedArtifact) !== input.record.contentApproval.artifactFingerprint) {
+        const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: "Merged checkout public projection fingerprint mismatch." });
+        return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: ["PUBLIC_PROJECTION_MISMATCH"] };
+      }
+    }
+    const mergedApproval = input.record;
     if (!mergedApproval.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
     requireImportPresentationBinding(mergedApproval);
-    const mergedWorkflow = await evaluateWorkflowEvidence(mergedApproval, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: input.artifactPath });
+    const mergedWorkflow = await evaluateWorkflowEvidence(mergedApproval, { root: input.repositoryRoot, throughStage: "RELEASING", artifactPath: mergedPublicationPath });
     if (!mergedWorkflow.ok) {
       await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout workflow evidence invalid: ${mergedWorkflow.diagnostics.join("; ")}` });
       return { status: "REPAIRING", reasons: mergedWorkflow.diagnostics };
@@ -540,7 +569,8 @@ export async function assessImportRelease(input: {
       else {
         productionVerifierRef = checks.productionVerifierRef;
         if (!productionVerifierRef) throw new Error("PRODUCTION_EVIDENCE_REQUIRED");
-        const { target } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, input.artifactPath!, input.slug);
+        const verifyPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.artifactPath ?? input.record.contentApproval?.artifactPath);
+        const { target } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, verifyPublicationPath!, input.slug);
         await readProductionVerifierEvidence(input.repositoryRoot, productionVerifierRef, { importId: input.record.importId, sourceFingerprint: input.record.sourceFingerprint, target, deployment });
         const { productionVerifierRef: retainedRef, ...verifiedChecks } = checks;
         void retainedRef;

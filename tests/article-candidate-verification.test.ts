@@ -16,7 +16,7 @@ test("candidate owner verification generates real local receipt before any deplo
   const server = createServer((request, response) => {
     if (request.url === "/api/deployment") { deploymentRequests += 1; response.writeHead(503); response.end(); return; }
     response.setHeader("Content-Type", request.url === "/sitemap.xml" ? "application/xml" : request.url === "/robots.txt" ? "text/plain" : "text/html");
-    response.end(request.url === "/robots.txt" ? "User-agent: *\nAllow: /" : request.url === "/sitemap.xml" ? `<urlset><url><loc>${canonicalOrigin}${target.renderedRoutes[0]}</loc></url></urlset>` : `<html><head><meta name="robots" content="index,follow"></head><body><p>Affiliate disclosure: We may earn a commission.</p><a data-link-id="fixture" href="${release.exact_affiliate_url}">Check the product</a></body></html>`);
+    response.end(request.url === "/robots.txt" ? "User-agent: *\nAllow: /" : request.url === "/sitemap.xml" ? `<urlset><url><loc>${canonicalOrigin}${target.renderedRoutes[0]}</loc></url></urlset>` : `<html><head><meta name="robots" content="noindex,nofollow"></head><body><p>Affiliate disclosure: We may earn a commission.</p><a data-link-id="fixture" href="${release.exact_affiliate_url}">Check the product</a></body></html>`);
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();

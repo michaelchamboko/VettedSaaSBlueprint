@@ -5,6 +5,7 @@ import { DirectReviewPage } from "@/components/landing/DirectReviewPage";
 import { EditorialV2PreviewPage } from "@/components/landing/EditorialV2PreviewPage";
 import { getCodexBatchPreview, listCodexBatchPreviewSlugs } from "@/lib/generated/codex-batch-previews";
 import { getEditorialV2Preview, listEditorialV2PreviewSlugs } from "@/lib/generated/editorial-v2-previews";
+import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
 
 export const dynamic = "force-static";
 
@@ -21,6 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: batchPreview.blueprint.metadata.title_tag,
       description: batchPreview.blueprint.metadata.meta_description,
       robots: { index: false, follow: false },
+      other: { "artifact-fingerprint": fingerprintEditorialArtifact(batchPreview.blueprint) },
     };
   }
   const preview = getEditorialV2Preview(slug);
@@ -30,6 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: preview.title_tag,
     description: preview.meta_description,
     robots: { index: false, follow: false },
+    other: { "artifact-fingerprint": fingerprintEditorialArtifact(preview as unknown) },
   };
 }
 

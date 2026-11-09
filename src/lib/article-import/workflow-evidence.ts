@@ -6,6 +6,7 @@ import { importArtifactTarget, validateImportArtifact } from "./format-validatio
 import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, type WorkflowStage } from "./workflow-requirements";
 import { evidenceRefSchema, frozenFileSchema, withEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
 import { renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
+import { candidatePreviewPath } from "./candidate-route";
 export { evidenceRefSchema, evidenceReference, readEvidence, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
@@ -297,10 +298,12 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         assertPacket(execution.packetId, binding, "VALIDATING");
         const reference = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : rule === "context" ? IMPECCABLE_ROOT + "SKILL.md" : IMPECCABLE_ROOT + `reference/${rule}.md`;
         await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md"]);
-        z.object({ rule: z.literal(rule), artifactFingerprint: z.literal(fingerprintEditorialArtifact(artifact)), routes: z.array(z.string()), renderInputsRef: z.object({ path: z.literal(value.renderInputsRef.path), sha256: z.literal(value.renderInputsRef.sha256) }).strict(), renderingDigest: z.literal(rendering.digest), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), notes: nonempty }).strict().refine((judgment) => JSON.stringify(judgment.routes) === JSON.stringify(target.renderedRoutes), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH").parse(JSON.parse(execution.output.designReview ?? "null"));
+        const allowedJudgmentRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
+z.object({ rule: z.literal(rule), artifactFingerprint: z.literal(fingerprintEditorialArtifact(artifact)), routes: z.array(z.string()), renderInputsRef: z.object({ path: z.literal(value.renderInputsRef.path), sha256: z.literal(value.renderInputsRef.sha256) }).strict(), renderingDigest: z.literal(rendering.digest), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), notes: nonempty }).strict().refine((judgment) => allowedJudgmentRoutes.includes(JSON.stringify(judgment.routes)), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH").parse(JSON.parse(execution.output.designReview ?? "null"));
       }
       if (execution.kind === "browser") {
-        if (JSON.stringify(execution.routes) !== JSON.stringify(target.renderedRoutes)) throw new Error("PRESENTATION_ROUTES_MISMATCH");
+        const allowedBrowserRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
+        if (!allowedBrowserRoutes.includes(JSON.stringify(execution.routes))) throw new Error("PRESENTATION_ROUTES_MISMATCH");
         if ((rule === "mobile" && execution.viewport.width > 767) || (rule === "desktop" && execution.viewport.width < 1024) || (rule === "reduced-motion" && !execution.viewport.reducedMotion)) throw new Error("PRESENTATION_VIEWPORT_MISMATCH");
       }
     }
