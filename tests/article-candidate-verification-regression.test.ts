@@ -166,7 +166,7 @@ test("candidate verifier rejects replayed historical allowlist pair in unrelated
     };
     // trusted identity is the unrelated artifact's (not the allowlisted pair)
     const trusted = { importId: "article-99999999-8888-4777-aaaa-bbbbbbbbbbbb", sourceFingerprint: "c".repeat(64) };
-    assert.throws(() => assertVerifierResult(target, result, trusted, root), /CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS/);
+    assert.throws(() => assertVerifierResult(target, result, root, trusted), /CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -194,7 +194,7 @@ test("candidate verifier accepts genuinely historical receipt via authenticated 
         },
       ],
     };
-    assert.doesNotThrow(() => assertVerifierResult(target, result, { importId, sourceFingerprint }, root));
+    assert.doesNotThrow(() => assertVerifierResult(target, result, root, { importId, sourceFingerprint }));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
