@@ -3,7 +3,8 @@ Route: /landing-page-previews/how-can-growing-brands-automate-on-brand-email-mar
 Server: next start (production build) on port 3000
 Viewports: desktop (1440x900), mobile (390x844), reduced-motion (1440x900, prefers-reduced-motion: reduce)
 
---- BEFORE (base f3576b7, measured via separate build) ---
+--- BEFORE (controlled comparison: candidate harness with base preview route, measured) ---
+Note: This is NOT a full base f3576b7 checkout. Only src/app/landing-page-previews/[slug]/page.tsx was reverted to the base version; all other files remained at candidate state. The measured meta change (absent->present) is valid; do not mislabel as full base checkout.
 Desktop:   title="Campaign Monitor: Check Brand Control and Email Journey Fit | VettedSaaSBlueprint", artifact-fingerprint meta = null (ABSENT), robots = "noindex, nofollow", console/page errors = none
 Mobile:    same (fingerprint null, noindex, no errors)
 Reduced-motion: screenshot captured
