@@ -109,21 +109,33 @@ export function requireVerificationMode(value: unknown, expected: "candidate" | 
   if (expected === "candidate" && ("deployment" in result || "expected_commit" in result)) throw new Error("CANDIDATE_CANNOT_CLAIM_DEPLOYMENT");
 }
 
-export function hasAuthenticatedHistoricalContext(value: unknown, root: string = process.cwd()): boolean {
+type TrustedHistoricalIdentity = { importId: string; sourceFingerprint: string };
+
+export function hasAuthenticatedHistoricalContext(
+  value: unknown,
+  trustedOrRoot?: TrustedHistoricalIdentity | string,
+  root: string = process.cwd(),
+): boolean {
   // Historical context is NEVER decided from markers inside the caller-controlled
-  // verifier result. It is authenticated against an allowlist of historical
-  // receipt identities recorded in repository state, which the caller cannot
-  // fabricate from inside the verifier JSON.
-  if (!value || typeof value !== "object") return false;
-  const record = value as Record<string, unknown>;
-  const importId = typeof record.importId === "string" ? record.importId : (typeof record.import_id === "string" ? record.import_id : "");
-  if (!/^article-[0-9a-f-]{36}$/.test(importId)) return false;
-  const sourceFingerprint = typeof record.sourceFingerprint === "string" ? record.sourceFingerprint : (typeof record.source_fingerprint === "string" ? record.source_fingerprint : "");
-  if (!/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+  // verifier result. The identity is supplied by the trusted validation pipeline
+  // (the import record), never read from the result JSON.
+  let trusted: TrustedHistoricalIdentity | undefined;
+  let resolvedRoot = root;
+  if (typeof trustedOrRoot === "string") {
+    resolvedRoot = trustedOrRoot;
+    trusted = undefined;
+  } else if (trustedOrRoot && typeof trustedOrRoot === "object") {
+    trusted = trustedOrRoot as TrustedHistoricalIdentity;
+  }
+  if (!trusted) return false;
+  const importId = trusted.importId;
+  if (typeof importId !== "string" || !/^article-[0-9a-f-]{36}$/.test(importId)) return false;
+  const sourceFingerprint = trusted.sourceFingerprint;
+  if (typeof sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
 
   let allowlist: unknown;
   try {
-    allowlist = JSON.parse(readFileSync(path.join(root, ".automation", "historical-candidate-receipts.json"), "utf8"));
+    allowlist = JSON.parse(readFileSync(path.join(resolvedRoot, ".automation", "historical-candidate-receipts.json"), "utf8"));
   } catch {
     return false;
   }
@@ -145,14 +157,19 @@ export function observedArtifactFingerprint(value: unknown): string {
   return "";
 }
 
-export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown, root: string = process.cwd()): void {
+export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown, third?: string | { importId: string; sourceFingerprint: string }, fourth?: string | { importId: string; sourceFingerprint: string }): void {
+  const args = [third, fourth].filter((x) => x !== undefined);
+  const rootArg = args.find((x) => typeof x === "string") as string | undefined;
+  const trustedArg = args.find((x) => typeof x === "object") as { importId: string; sourceFingerprint: string } | undefined;
+  const root = rootArg ?? process.cwd();
+  const trusted = trustedArg;
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
     const snapshot = z.object({ httpOk: z.literal(true), disclosureOk: z.literal(true), allCtasExact: z.literal(true), allRevealSectionsVisible: z.literal(true), browserErrors: z.array(z.string()).length(0) }).passthrough();
     const mode = typeof (result as { verificationMode?: unknown }).verificationMode === "string" ? (result as { verificationMode: string }).verificationMode : "production";
     const previewPath = candidatePreviewPath(target.slug);
     if (mode === "candidate") {
-      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true && hasAuthenticatedHistoricalContext(result, root);
+      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true && hasAuthenticatedHistoricalContext(result, trusted, root);
       if (isLegacy) {
         const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
         if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
@@ -203,7 +220,7 @@ export async function writeImportVerifierEvidence(file: string | undefined, targ
   await writeFile(absolute, JSON.stringify(evidenceSchema.parse({ schemaVersion: "ImportVerifierEvidenceV1", target, result }), null, 2));
 }
 
-export async function readImportVerifierEvidence(root: string, file: string, expected: { format: string; artifactFingerprint: string; renderedRoutes: string[] }) {
+export async function readImportVerifierEvidence(root: string, file: string, expected: { format: string; artifactFingerprint: string; renderedRoutes: string[]; importId?: string; sourceFingerprint?: string }) {
   const repository = await realpath(root);
   const absolute = await realpath(path.resolve(repository, file));
   const relative = path.relative(repository, absolute);
@@ -212,6 +229,7 @@ export async function readImportVerifierEvidence(root: string, file: string, exp
   const evidence = evidenceSchema.parse(JSON.parse(bytes.toString("utf8")));
   requireVerificationMode(evidence.result, "candidate");
   if (evidence.target.format !== expected.format || evidence.target.artifactFingerprint !== expected.artifactFingerprint || JSON.stringify(evidence.target.renderedRoutes) !== JSON.stringify(expected.renderedRoutes)) throw new Error("VERIFIER_TARGET_MISMATCH");
-  assertVerifierResult(evidence.target, evidence.result, root);
+  const trusted = expected.importId && expected.sourceFingerprint ? { importId: expected.importId, sourceFingerprint: expected.sourceFingerprint } : undefined;
+  assertVerifierResult(evidence.target, evidence.result, trusted, root);
   return { path: relative.replaceAll("\\", "/"), sha256: createHash("sha256").update(bytes).digest("hex") };
 }

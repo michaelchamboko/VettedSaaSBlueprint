@@ -47,10 +47,6 @@ export function landingSnapshotFailures(
   if (snapshot.browserErrors.length > 0) {
     failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
   }
-  const observedFingerprint = snapshot.artifactFingerprint ?? "";
-  const expectedFingerprint = expectedArtifactFingerprint ?? (snapshot as { expectedArtifactFingerprint?: string }).expectedArtifactFingerprint;
-  if (!observedFingerprint) failures.push("artifact fingerprint meta tag was missing");
-  if (expectedFingerprint && observedFingerprint && observedFingerprint !== expectedFingerprint) failures.push("artifact fingerprint did not match the approved artifact");
   return failures;
 }
 

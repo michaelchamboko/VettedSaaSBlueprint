@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdir, rm, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { assertVerifierResult } from "../src/lib/article-import/verification-evidence";
@@ -98,7 +100,7 @@ test("candidate verifier rejects production checks without authenticated histori
     // broken signals mirrored from reviewer reproduction
     pages: [
       {
-        path: "/landing-page-previews/fixture",
+        path: target.renderedRoutes[0],
         desktop: {
           httpOk: true,
           disclosureOk: true,
@@ -129,20 +131,59 @@ test("candidate verifier rejects production checks without authenticated histori
   assert.throws(() => assertVerifierResult(target, result), /CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS/);
 });
 
-test("candidate verifier accepts genuinely historical receipt via authenticated binding", () => {
+test("candidate verifier rejects replayed historical allowlist pair in unrelated artifact", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "hist-"));
   const importId = "article-11111111-2222-4333-8444-555555555555";
   const sourceFingerprint = "b".repeat(64);
-  const dir = path.join(process.cwd(), ".automation");
-  mkdir(dir, { recursive: true }, () => {});
-  writeFileSync(path.join(dir, "historical-candidate-receipts.json"), JSON.stringify([{ importId, sourceFingerprint }]));
+  await mkdir(path.join(root, ".automation"), { recursive: true });
+  writeFileSync(path.join(root, ".automation", "historical-candidate-receipts.json"), JSON.stringify([{ importId, sourceFingerprint }]));
   try {
     const result = {
       verificationMode: "candidate",
       origin: "http://127.0.0.1:3000",
       canonicalOrigin: "https://example.com",
       status: "pass",
+      // replayed identity from allowlist; must be ignored
       importId,
       sourceFingerprint,
+      robots_ok: true,
+      sitemap_ok: true,
+      pages: [
+        {
+          path: target.renderedRoutes[0],
+          desktop: {
+            httpOk: true, disclosureOk: true, exactCtaCount: 1, allCtasExact: true,
+            ctasFitViewport: true, allRevealSectionsVisible: true, horizontalPageScrollPossible: true,
+            errorOverlay: true, browserErrors: [], robots: "index,follow",
+          },
+          mobile: {
+            httpOk: true, disclosureOk: true, exactCtaCount: 1, allCtasExact: true,
+            ctasFitViewport: true, allRevealSectionsVisible: true, horizontalPageScrollPossible: true,
+            errorOverlay: true, browserErrors: [], robots: "index,follow",
+          },
+        },
+      ],
+    };
+    // trusted identity is the unrelated artifact's (not the allowlisted pair)
+    const trusted = { importId: "article-99999999-8888-4777-aaaa-bbbbbbbbbbbb", sourceFingerprint: "c".repeat(64) };
+    assert.throws(() => assertVerifierResult(target, result, trusted, root), /CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("candidate verifier accepts genuinely historical receipt via authenticated binding", async () => {
+  const importId = "article-11111111-2222-4333-8444-555555555555";
+  const sourceFingerprint = "b".repeat(64);
+  const root = await mkdtemp(path.join(tmpdir(), "hist-"));
+  await mkdir(path.join(root, ".automation"), { recursive: true });
+  writeFileSync(path.join(root, ".automation", "historical-candidate-receipts.json"), JSON.stringify([{ importId, sourceFingerprint }]));
+  try {
+    const result = {
+      verificationMode: "candidate",
+      origin: "http://127.0.0.1:3000",
+      canonicalOrigin: "https://example.com",
+      status: "pass",
       robots_ok: true,
       sitemap_ok: true,
       pages: [
@@ -153,8 +194,8 @@ test("candidate verifier accepts genuinely historical receipt via authenticated 
         },
       ],
     };
-    assert.doesNotThrow(() => assertVerifierResult(target, result));
+    assert.doesNotThrow(() => assertVerifierResult(target, result, { importId, sourceFingerprint }, root));
   } finally {
-    rm(path.join(dir, "historical-candidate-receipts.json"), { force: true }, () => {});
+    await rm(root, { recursive: true, force: true });
   }
 });
