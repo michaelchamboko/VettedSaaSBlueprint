@@ -1,8 +1,10 @@
 import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import { importArtifactTarget } from "./format-validation";
+import { WORKFLOW_REVISION } from "./workflow-requirements";
 import { candidatePreviewPath } from "./candidate-route";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
@@ -107,29 +109,29 @@ export function requireVerificationMode(value: unknown, expected: "candidate" | 
   if (expected === "candidate" && ("deployment" in result || "expected_commit" in result)) throw new Error("CANDIDATE_CANNOT_CLAIM_DEPLOYMENT");
 }
 
-export function hasAuthenticatedHistoricalContext(value: unknown): boolean {
+export function hasAuthenticatedHistoricalContext(value: unknown, root: string = process.cwd()): boolean {
+  // Historical context is NEVER decided from markers inside the caller-controlled
+  // verifier result. It is authenticated against an allowlist of historical
+  // receipt identities recorded in repository state, which the caller cannot
+  // fabricate from inside the verifier JSON.
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  const markers = [
-    "historical",
-    "historicalContext",
-    "authenticatedHistoricalContext",
-    "historicalCompatibility",
-    "historicalReceipt",
-    "legacyCandidate",
-    "legacy",
-    "requirementRevision",
-    "requirement_revision",
-    "importId",
-    "import_id",
-    "sourceFingerprint",
-    "source_fingerprint",
-  ];
-  return markers.some((key) => {
-    const candidate = record[key];
-    if (typeof candidate === "boolean") return candidate === true;
-    if (typeof candidate === "string") return candidate.trim().length > 0;
-    return candidate !== undefined && candidate !== null;
+  const importId = typeof record.importId === "string" ? record.importId : (typeof record.import_id === "string" ? record.import_id : "");
+  if (!/^article-[0-9a-f-]{36}$/.test(importId)) return false;
+  const sourceFingerprint = typeof record.sourceFingerprint === "string" ? record.sourceFingerprint : (typeof record.source_fingerprint === "string" ? record.source_fingerprint : "");
+  if (!/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+
+  let allowlist: unknown;
+  try {
+    allowlist = JSON.parse(readFileSync(path.join(root, ".automation", "historical-candidate-receipts.json"), "utf8"));
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(allowlist)) return false;
+  return allowlist.some((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const e = entry as Record<string, unknown>;
+    return e.importId === importId && e.sourceFingerprint === sourceFingerprint;
   });
 }
 
@@ -143,14 +145,14 @@ export function observedArtifactFingerprint(value: unknown): string {
   return "";
 }
 
-export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown): void {
+export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown, root: string = process.cwd()): void {
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
     const snapshot = z.object({ httpOk: z.literal(true), disclosureOk: z.literal(true), allCtasExact: z.literal(true), allRevealSectionsVisible: z.literal(true), browserErrors: z.array(z.string()).length(0) }).passthrough();
     const mode = typeof (result as { verificationMode?: unknown }).verificationMode === "string" ? (result as { verificationMode: string }).verificationMode : "production";
     const previewPath = candidatePreviewPath(target.slug);
     if (mode === "candidate") {
-      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true && hasAuthenticatedHistoricalContext(result);
+      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true && hasAuthenticatedHistoricalContext(result, root);
       if (isLegacy) {
         const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
         if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
@@ -210,6 +212,6 @@ export async function readImportVerifierEvidence(root: string, file: string, exp
   const evidence = evidenceSchema.parse(JSON.parse(bytes.toString("utf8")));
   requireVerificationMode(evidence.result, "candidate");
   if (evidence.target.format !== expected.format || evidence.target.artifactFingerprint !== expected.artifactFingerprint || JSON.stringify(evidence.target.renderedRoutes) !== JSON.stringify(expected.renderedRoutes)) throw new Error("VERIFIER_TARGET_MISMATCH");
-  assertVerifierResult(evidence.target, evidence.result);
+  assertVerifierResult(evidence.target, evidence.result, root);
   return { path: relative.replaceAll("\\", "/"), sha256: createHash("sha256").update(bytes).digest("hex") };
 }

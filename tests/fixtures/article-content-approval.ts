@@ -68,8 +68,14 @@ export async function presentFixture(root: string, record: ExternalArticleImport
   const evidencePath = "build-pack/article-import/verifier.json";
   const approvedArtifact = JSON.parse(await readFile(path.join(root, record.contentApproval.artifactPath), "utf8"));
   const snapshot = { httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true, browserErrors: [] };
+  await mkdir(path.join(root, ".automation"), { recursive: true });
+  let allowlist: Array<{ importId: string; sourceFingerprint: string }> = [];
+  try { allowlist = JSON.parse(await readFile(path.join(root, ".automation", "historical-candidate-receipts.json"), "utf8")); } catch { allowlist = []; }
+  if (!Array.isArray(allowlist)) allowlist = [];
+  if (!allowlist.some((e) => e.importId === record.importId && e.sourceFingerprint === record.sourceFingerprint)) allowlist.push({ importId: record.importId, sourceFingerprint: record.sourceFingerprint });
+  await writeFile(path.join(root, ".automation", "historical-candidate-receipts.json"), JSON.stringify(allowlist));
   await mkdir(path.dirname(path.join(root, evidencePath)), { recursive: true });
-  await writeFile(path.join(root, evidencePath), JSON.stringify({ schemaVersion: "ImportVerifierEvidenceV1", target: importArtifactTarget("direct-review", approvedArtifact), result: { verificationMode: "candidate", origin: "http://127.0.0.1:3000", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", robots_ok: true, sitemap_ok: true, historical: true, pages: [{ path: "/imported-guide", desktop: snapshot, mobile: snapshot }] } }));
+  await writeFile(path.join(root, evidencePath), JSON.stringify({ schemaVersion: "ImportVerifierEvidenceV1", target: importArtifactTarget("direct-review", approvedArtifact), result: { verificationMode: "candidate", origin: "http://127.0.0.1:3000", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", importId: record.importId, sourceFingerprint: record.sourceFingerprint, robots_ok: true, sitemap_ok: true, pages: [{ path: "/imported-guide", desktop: snapshot, mobile: snapshot }] } }));
   return recordImportPresentation(root, record, {
     validationGate: "fixture:rendered-layout",
     validationReceipt: {
