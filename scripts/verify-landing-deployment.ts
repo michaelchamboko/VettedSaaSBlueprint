@@ -4,6 +4,7 @@ import path from "node:path";
 import { chromium, type Browser, type Page, type ViewportSize } from "playwright";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
 import { observeProductionCommit, verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
+import { candidatePreviewPath, candidatePreviewRobotsOk } from "../src/lib/article-import/candidate-route";
 import { pageBlueprintSchema } from "../src/lib/schemas/contracts";
 
 type LandingTarget = {
@@ -23,10 +24,12 @@ export type LandingBrowserSnapshot = {
   robots: string;
   errorOverlay: boolean;
   browserErrors: string[];
+  artifactFingerprint?: string;
 };
 
 export function landingSnapshotFailures(
   snapshot: LandingBrowserSnapshot,
+  expectedArtifactFingerprint?: string,
 ): string[] {
   const failures: string[] = [];
   if (!snapshot.httpOk) failures.push("route did not return HTTP success");
@@ -44,6 +47,33 @@ export function landingSnapshotFailures(
   if (snapshot.browserErrors.length > 0) {
     failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
   }
+  return failures;
+}
+
+export function candidateSnapshotFailures(
+  snapshot: LandingBrowserSnapshot,
+  expectedArtifactFingerprint?: string,
+): string[] {
+  const failures: string[] = [];
+  if (!snapshot.httpOk) failures.push("route did not return HTTP success");
+  if (!snapshot.disclosureOk) failures.push("affiliate disclosure was not visible");
+  if (snapshot.exactCtaCount < 1 || !snapshot.allCtasExact) {
+    failures.push("affiliate CTAs did not all preserve the exact supplied URL");
+  }
+  if (!snapshot.ctasFitViewport) failures.push("an affiliate CTA exceeded the viewport");
+  if (!snapshot.allRevealSectionsVisible) failures.push("a landing section remained hidden");
+  if (snapshot.horizontalPageScrollPossible) failures.push("the page allowed horizontal scrolling");
+  if (!candidatePreviewRobotsOk(snapshot.robots)) {
+    failures.push("candidate preview metadata was not noindex");
+  }
+  if (snapshot.errorOverlay) failures.push("a framework error overlay was visible");
+  if (snapshot.browserErrors.length > 0) {
+    failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
+  }
+  const observedFingerprint = snapshot.artifactFingerprint ?? "";
+  const expectedFingerprint = expectedArtifactFingerprint ?? (snapshot as { expectedArtifactFingerprint?: string }).expectedArtifactFingerprint;
+  if (!observedFingerprint) failures.push("artifact fingerprint meta tag was missing");
+  if (expectedFingerprint && observedFingerprint && observedFingerprint !== expectedFingerprint) failures.push("artifact fingerprint did not match the approved artifact");
   return failures;
 }
 
@@ -114,6 +144,22 @@ async function loadAgentReleaseTargets(slugFilter?: string): Promise<LandingTarg
     );
   }
   return targets;
+}
+
+async function loadCandidateTarget(slug: string | undefined, exactUrl: string | undefined): Promise<LandingTarget[]> {
+  if (!slug) throw new Error("Candidate verification requires a slug.");
+  if (!/^[a-z0-9][a-z0-9-]*$/i.test(slug) || slug.includes("..") || slug.includes("/")) throw new Error("CANDIDATE_SLUG_INVALID");
+  let resolvedExactUrl = exactUrl;
+  if (!resolvedExactUrl) {
+    try {
+      const published = await loadAgentReleaseTargets(slug);
+      resolvedExactUrl = published[0]?.exactUrl;
+    } catch {
+      // No published receipt is expected for a genuine candidate.
+    }
+  }
+  if (!resolvedExactUrl) throw new Error("CANDIDATE_EXACT_AFFILIATE_URL_REQUIRED");
+  return [{ slug, path: candidatePreviewPath(slug), exactUrl: resolvedExactUrl }];
 }
 
 async function fetchText(url: string): Promise<string> {
@@ -263,6 +309,10 @@ async function verifyViewport(
             document
               .querySelector<HTMLMetaElement>("meta[name='robots']")
               ?.getAttribute("content") ?? "",
+          artifactFingerprint:
+            document
+              .querySelector<HTMLMetaElement>("meta[name='artifact-fingerprint']")
+              ?.getAttribute("content") ?? "",
           errorOverlay: Boolean(
             document.querySelector(
               "[data-nextjs-dialog], .vite-error-overlay, #webpack-dev-server-client-overlay",
@@ -299,6 +349,8 @@ export async function verifyLandingDeployment({
   origin,
   expectedCommit,
   slug,
+  exactUrl,
+  artifactFingerprint,
   attempts = 20,
   retryMs = 15_000,
   screenshotDir,
@@ -308,6 +360,8 @@ export async function verifyLandingDeployment({
   origin: string;
   expectedCommit?: string;
   slug?: string;
+  exactUrl?: string;
+  artifactFingerprint?: string;
   attempts?: number;
   retryMs?: number;
   screenshotDir?: string;
@@ -320,7 +374,9 @@ export async function verifyLandingDeployment({
     throw new Error("Production verification requires a full 40-character Git SHA.");
   }
 
-  const targets = await loadAgentReleaseTargets(slug);
+  const targets = mode === "candidate"
+    ? await loadCandidateTarget(slug, exactUrl)
+    : await loadAgentReleaseTargets(slug);
   const deployment = mode === "production" ? await waitForCommit(
     context.origin,
     expectedCommit!,
@@ -339,7 +395,7 @@ export async function verifyLandingDeployment({
   try {
     const pages = [];
     for (const target of targets) {
-      if (!sitemap.includes(`${canonicalOrigin}${target.path}`)) {
+      if (mode === "production" && !sitemap.includes(`${canonicalOrigin}${target.path}`)) {
         throw new Error(`Production sitemap is missing ${target.path}.`);
       }
       const desktop = await verifyViewport(
@@ -366,14 +422,15 @@ export async function verifyLandingDeployment({
         "reduce",
         screenshotDir,
       );
+      const snapshotFailures = mode === "candidate" ? candidateSnapshotFailures : landingSnapshotFailures;
       const failures = [
-        ...landingSnapshotFailures(desktop).map(
+        ...snapshotFailures(desktop, artifactFingerprint).map(
           (failure) => `desktop: ${failure}`,
         ),
-        ...landingSnapshotFailures(mobile).map(
+        ...snapshotFailures(mobile, artifactFingerprint).map(
           (failure) => `mobile: ${failure}`,
         ),
-        ...landingSnapshotFailures(reducedMotion).map(
+        ...snapshotFailures(reducedMotion, artifactFingerprint).map(
           (failure) => `reduced-motion: ${failure}`,
         ),
       ];
@@ -397,8 +454,8 @@ export async function verifyLandingDeployment({
       status: "pass",
       ...context,
       ...(mode === "production" ? { expected_commit: expectedCommit!, deployment: deployment! } : {}),
-      robots_ok: true,
-      sitemap_ok: true,
+      robots_ok: mode !== "candidate",
+      sitemap_ok: mode !== "candidate",
       pages,
       verified_at: new Date().toISOString(),
     } as const;
@@ -419,6 +476,7 @@ async function main() {
     );
   }
   const artifactPath = argumentValue(args, "--artifact");
+  const exactUrl = argumentValue(args, "--exact-url") ?? argumentValue(args, "--exact-affiliate-url");
   const approved = artifactPath ? await readImportArtifactTarget(process.cwd(), "direct-review", artifactPath, argumentValue(args, "--slug")) : undefined;
   if (approved) {
     const published = JSON.parse(await readFile(path.join(process.cwd(), "src/generated/landing-pages", `${approved.target.slug}.json`), "utf8"));
@@ -428,13 +486,20 @@ async function main() {
     origin,
     expectedCommit,
     mode,
+    exactUrl,
+    artifactFingerprint: approved?.target.artifactFingerprint,
     canonicalOrigin: argumentValue(args, "--canonical-origin"),
     slug: approved?.target.slug ?? argumentValue(args, "--slug"),
     attempts: Number(argumentValue(args, "--attempts") ?? 20),
     retryMs: Number(argumentValue(args, "--retry-ms") ?? 15_000),
     screenshotDir: argumentValue(args, "--screenshot-dir"),
   });
-  if (approved && JSON.stringify(result.pages.map((page) => page.path)) !== JSON.stringify(approved.target.renderedRoutes)) throw new Error("LANDING_PUBLISHED_ROUTE_MISMATCH");
+  if (approved) {
+    const expectedRoutes = mode === "candidate"
+      ? [candidatePreviewPath(approved.target.slug)]
+      : approved.target.renderedRoutes;
+    if (JSON.stringify(result.pages.map((page) => page.path)) !== JSON.stringify(expectedRoutes)) throw new Error("LANDING_PUBLISHED_ROUTE_MISMATCH");
+  }
   await writeImportVerifierEvidence(argumentValue(args, "--receipt"), approved?.target, result);
   process.stdout.write(`${JSON.stringify({ ...result, target: approved?.target }, null, 2)}\n`);
 }

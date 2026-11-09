@@ -17,6 +17,7 @@ const passingSnapshot: LandingBrowserSnapshot = {
   robots: "index, follow",
   errorOverlay: false,
   browserErrors: [],
+  artifactFingerprint: "a".repeat(64),
 };
 
 test("live snapshot passes only with the exact CTA and complete browser evidence", () => {

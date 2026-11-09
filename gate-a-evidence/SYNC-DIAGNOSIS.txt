@@ -1,0 +1,48 @@
+=== Syncthing sync diagnostic (read-only) ===
+timestamp: 2026-11-09T07:45:51Z
+
+folder: abf37-aadyv (label 'Antigravity Created', path ~/Antigravity Created)
+folder type: sendreceive
+fsWatcher: enabled (delay 10s), rescan 3600s
+watchError: failed to setup inotify handler (inotify limits) — rescan-based only
+
+--- Linux-side DB status ---
+state: idle
+needFiles: 0
+needBytes: 0
+inSyncFiles: 439168
+globalFiles: 439168
+errors: 0 pullErrors: 0
+
+--- Peer completion (Windows device NGU7YE3-Z5C5CRT-C55YCMQ-CQ4AEFR-UZJFHJ4-MRA5QJB-D5BF4C5-QUUZBAB) ---
+completion: 100
+needItems: 0
+needBytes: 0
+remoteState: valid
+
+--- Peer connection ---
+connected: True
+paused: False
+
+--- Linux .git pointer (current) ---
+gitdir: D:/Backup 4 November 2026/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.git/worktrees/candidate-contract-1108
+--- Linux metadata gitdir (current) ---
+D:/Backup 4 November 2026/Antigravity Applications Created/Vetted SaaS B - Content Strategy and Growth Strategy/.worktrees/candidate-contract-1108/.git
+
+--- Stale receipt correction ---
+git-portability.txt previously recorded run4's incorrect self-referential pointer and was not updated in run5.
+This SYNC-DIAGNOSIS.txt supersedes that stale receipt.
+Actual current pointers are correct (distinct, Windows-compatible) as shown above.
+
+--- Delivery assessment ---
+Linux Syncthing reports peer completion 100% / needItems 0 for Windows device.
+HOWEVER, Windows parent direct read reports stale .git pointer and missing gate-a-evidence.
+CONTRADICTION: Linux API claims full delivery, but peer filesystem read contradicts.
+Possible causes: Windows Syncthing paused/stale, ignore rules on Windows side, or parent reading cached/stale view.
+Linux cannot independently verify Windows-side receipt.
+Therefore: Syncthing delivery is UNVERIFIED. Do not treat as delivered.
+
+--- Supported durable route ---
+Git commit 47c687326a8ebf6f15038eaebf714a035bcefcf6 contains gate-a-evidence/*.txt (raw outputs).
+Accessible via git fetch from remote (requires Windows credentials) or local .git sync (unverified).
+No credentials transferred. No sync config changed.

@@ -59,7 +59,8 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const assessment = await save({ ...common, schemaVersion: "ContentAssessmentV1", ...assessed, reviewerExecutionRef: await model("content-assessment", input.after, input.after, afterRef, afterRef, "writer", { assessment: JSON.stringify(assessed) }, reviewInput) });
   const rules = ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
   const target = importArtifactTarget(input.format, input.after);
-  for (const file of [detectorCoreFiles[input.format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/fixture-renderer.css", "package-lock.json"]) {
+  const detectorFiles = input.format === "direct-review" ? [detectorCoreFiles[input.format], "src/app/landing-page-previews/[slug]/page.tsx"] : [detectorCoreFiles[input.format]];
+  for (const file of [...detectorFiles, "src/app/layout.tsx", "src/app/globals.css", "src/styles/fixture-renderer.css", "package-lock.json"]) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     const bytes = file.endsWith(".css") ? "body { color: black; background: white; }\n" : file.endsWith(".tsx") ? "export default function Fixture() { return <main>Fixture</main>; }\n" : "{}";
     await writeFile(path.join(root, file), bytes, { flag: "wx" }).catch((error: NodeJS.ErrnoException) => { if (error.code !== "EEXIST") throw error; });

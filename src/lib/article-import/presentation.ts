@@ -17,7 +17,7 @@ export async function createImportPresentation(root: string, record: ExternalArt
   const renderedRoutes = validateImportArtifact(record.format, artifact);
   const validation = importPresentationValidationSchema.parse(input.validationReceipt);
   if (validation.format !== record.format || validation.artifactFingerprint !== approval.artifactFingerprint || JSON.stringify(validation.renderedRoutes) !== JSON.stringify(renderedRoutes)) throw new Error("PRESENTATION_VALIDATION_MISMATCH");
-  const evidenceFiles = await Promise.all(validation.evidencePaths.map((file) => readImportVerifierEvidence(root, file, validation)));
+  const evidenceFiles = await Promise.all(validation.evidencePaths.map((file) => readImportVerifierEvidence(root, file, { ...validation, importId: record.importId, sourceFingerprint: record.sourceFingerprint })));
   return importPresentationReceiptSchema.parse({
     schemaVersion: "ImportPresentationReceiptV1", format: record.format, artifactFingerprint: approval.artifactFingerprint,
     artifactPath: approval.artifactPath, validationGate: input.validationGate,
@@ -31,7 +31,7 @@ export async function verifyImportPresentationEvidence(root: string, record: Ext
   if (!workflow.ok) throw new Error(workflow.diagnostics.join("; "));
   requireImportPresentationBinding(record);
   const presentation = record.presentation!;
-  const current = await Promise.all(presentation.validation.evidencePaths.map((file) => readImportVerifierEvidence(root, file, presentation)));
+  const current = await Promise.all(presentation.validation.evidencePaths.map((file) => readImportVerifierEvidence(root, file, { ...presentation.validation, importId: record.importId, sourceFingerprint: record.sourceFingerprint })));
   if (JSON.stringify(current) !== JSON.stringify(presentation.evidenceFiles)) throw new Error("PRESENTATION_EVIDENCE_CHANGED");
 }
 
@@ -42,7 +42,7 @@ export async function presentationInputFromVerifier(root: string, record: Extern
   await validatePresentationEvidence(root, record.evidenceRefs.presentation, { ...record, artifactPath: approval.artifactPath });
   const artifact = JSON.parse(await readFile(path.resolve(root, approval.artifactPath), "utf8"));
   const renderedRoutes = validateImportArtifact(record.format, artifact);
-  await readImportVerifierEvidence(root, evidencePath, { format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes });
+  await readImportVerifierEvidence(root, evidencePath, { format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes, importId: record.importId, sourceFingerprint: record.sourceFingerprint });
   return { validationGate: `${record.format}:candidate-owner-verifier`, validationReceipt: {
     schemaVersion: "ImportPresentationValidationV1", format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes,
     checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true },

@@ -1,8 +1,11 @@
 import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import { importArtifactTarget } from "./format-validation";
+import { WORKFLOW_REVISION } from "./workflow-requirements";
+import { candidatePreviewPath } from "./candidate-route";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
 const targetSchema = z.object({ format: z.enum(["direct-review", "blog", "visibility", "decision-set"]), slug: z.string().min(1), artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/), renderedRoutes: z.array(z.string().startsWith("/")).min(1) }).strict();
@@ -106,12 +109,95 @@ export function requireVerificationMode(value: unknown, expected: "candidate" | 
   if (expected === "candidate" && ("deployment" in result || "expected_commit" in result)) throw new Error("CANDIDATE_CANNOT_CLAIM_DEPLOYMENT");
 }
 
-export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown): void {
+type TrustedHistoricalIdentity = { importId: string; sourceFingerprint: string };
+
+export function hasAuthenticatedHistoricalContext(
+  value: unknown,
+  trustedOrRoot?: TrustedHistoricalIdentity | string,
+  root: string = process.cwd(),
+): boolean {
+  // Historical context is NEVER decided from markers inside the caller-controlled
+  // verifier result. The identity is supplied by the trusted validation pipeline
+  // (the import record), never read from the result JSON.
+  let trusted: TrustedHistoricalIdentity | undefined;
+  let resolvedRoot = root;
+  if (typeof trustedOrRoot === "string") {
+    resolvedRoot = trustedOrRoot;
+    trusted = undefined;
+  } else if (trustedOrRoot && typeof trustedOrRoot === "object") {
+    trusted = trustedOrRoot as TrustedHistoricalIdentity;
+  }
+  if (!trusted) return false;
+  const importId = trusted.importId;
+  if (typeof importId !== "string" || !/^article-[0-9a-f-]{36}$/.test(importId)) return false;
+  const sourceFingerprint = trusted.sourceFingerprint;
+  if (typeof sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+
+  let allowlist: unknown;
+  try {
+    allowlist = JSON.parse(readFileSync(path.join(resolvedRoot, ".automation", "historical-candidate-receipts.json"), "utf8"));
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(allowlist)) return false;
+  return allowlist.some((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const e = entry as Record<string, unknown>;
+    return e.importId === importId && e.sourceFingerprint === sourceFingerprint;
+  });
+}
+
+export function observedArtifactFingerprint(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+  const record = value as Record<string, unknown>;
+  for (const key of ["artifactFingerprint", "artifact_fingerprint", "fingerprint", "artifactFingerprintMeta"]) {
+    const candidate = record[key];
+    if (typeof candidate === "string") return candidate;
+  }
+  return "";
+}
+
+export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown, third?: string | { importId: string; sourceFingerprint: string }, fourth?: string | { importId: string; sourceFingerprint: string }): void {
+  const args = [third, fourth].filter((x) => x !== undefined);
+  const rootArg = args.find((x) => typeof x === "string") as string | undefined;
+  const trustedArg = args.find((x) => typeof x === "object") as { importId: string; sourceFingerprint: string } | undefined;
+  const root = rootArg ?? process.cwd();
+  const trusted = trustedArg;
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
     const snapshot = z.object({ httpOk: z.literal(true), disclosureOk: z.literal(true), allCtasExact: z.literal(true), allRevealSectionsVisible: z.literal(true), browserErrors: z.array(z.string()).length(0) }).passthrough();
-    const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
-    if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
+    const mode = typeof (result as { verificationMode?: unknown }).verificationMode === "string" ? (result as { verificationMode: string }).verificationMode : "production";
+    const previewPath = candidatePreviewPath(target.slug);
+    if (mode === "candidate") {
+      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true && hasAuthenticatedHistoricalContext(result, trusted, root);
+      if (isLegacy) {
+        const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
+        if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
+      } else {
+        if ((result as { robots_ok?: unknown }).robots_ok === true || (result as { sitemap_ok?: unknown }).sitemap_ok === true) throw new Error("CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS");
+        const parsed = z.object({ status: z.literal("pass"), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot, reduced_motion: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
+        const paths = parsed.pages.map((page) => page.path);
+        if (paths.length !== 1 || paths[0] !== previewPath) throw new Error("VERIFIER_ROUTES_MISMATCH");
+        for (const page of parsed.pages) {
+          for (const shot of [page.desktop, page.mobile, page.reduced_motion]) {
+            if (typeof shot.exactCtaCount !== "number" || shot.exactCtaCount < 1) throw new Error("VERIFIER_CTA_MISMATCH");
+            if (shot.allCtasExact !== true) throw new Error("VERIFIER_CTA_MISMATCH");
+            if (shot.ctasFitViewport !== true) throw new Error("VERIFIER_CTA_MISMATCH");
+            if (shot.allRevealSectionsVisible !== true) throw new Error("VERIFIER_REVEAL_MISMATCH");
+            if (shot.horizontalPageScrollPossible !== false) throw new Error("VERIFIER_OVERFLOW_MISMATCH");
+            if (shot.errorOverlay !== false) throw new Error("VERIFIER_RUNTIME_MISMATCH");
+            if (!Array.isArray(shot.browserErrors) || shot.browserErrors.length !== 0) throw new Error("VERIFIER_RUNTIME_MISMATCH");
+            if (!/\bnoindex\b/i.test(String(shot.robots ?? ""))) throw new Error("VERIFIER_ROBOTS_MISMATCH");
+            if (observedArtifactFingerprint(shot) === "" || observedArtifactFingerprint(shot) !== target.artifactFingerprint) throw new Error("VERIFIER_ARTIFACT_FINGERPRINT_MISMATCH");
+          }
+        }
+      }
+    } else if (mode === "production") {
+      const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot, reduced_motion: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
+      if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
+    } else {
+      throw new Error("VERIFICATION_MODE_INVALID");
+    }
   } else if (target.format === "decision-set") {
     z.object({ passed: z.literal(true), browser_errors_ok: z.literal(true), robots_ok: z.literal(true), sitemap_ok: z.literal(true), checks: z.array(z.object({ passed: z.literal(true) }).passthrough()).min(1), screenshots: z.array(z.object({ route: z.string(), mode: z.string() }).passthrough()).min(2) }).passthrough().parse(result);
     const shots = result.screenshots as Array<{ route: string; mode: string }>;
@@ -134,7 +220,7 @@ export async function writeImportVerifierEvidence(file: string | undefined, targ
   await writeFile(absolute, JSON.stringify(evidenceSchema.parse({ schemaVersion: "ImportVerifierEvidenceV1", target, result }), null, 2));
 }
 
-export async function readImportVerifierEvidence(root: string, file: string, expected: { format: string; artifactFingerprint: string; renderedRoutes: string[] }) {
+export async function readImportVerifierEvidence(root: string, file: string, expected: { format: string; artifactFingerprint: string; renderedRoutes: string[]; importId?: string; sourceFingerprint?: string }) {
   const repository = await realpath(root);
   const absolute = await realpath(path.resolve(repository, file));
   const relative = path.relative(repository, absolute);
@@ -143,6 +229,7 @@ export async function readImportVerifierEvidence(root: string, file: string, exp
   const evidence = evidenceSchema.parse(JSON.parse(bytes.toString("utf8")));
   requireVerificationMode(evidence.result, "candidate");
   if (evidence.target.format !== expected.format || evidence.target.artifactFingerprint !== expected.artifactFingerprint || JSON.stringify(evidence.target.renderedRoutes) !== JSON.stringify(expected.renderedRoutes)) throw new Error("VERIFIER_TARGET_MISMATCH");
-  assertVerifierResult(evidence.target, evidence.result);
+  const trusted = expected.importId && expected.sourceFingerprint ? { importId: expected.importId, sourceFingerprint: expected.sourceFingerprint } : undefined;
+  assertVerifierResult(evidence.target, evidence.result, trusted, root);
   return { path: relative.replaceAll("\\", "/"), sha256: createHash("sha256").update(bytes).digest("hex") };
 }

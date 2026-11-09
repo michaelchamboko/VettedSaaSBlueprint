@@ -52,6 +52,7 @@ export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsS
   const core = detectorCoreFiles[target.format as keyof typeof detectorCoreFiles];
   if (!core || !target.renderedRoutes.length || target.renderedRoutes.some((route) => !route.startsWith("/") || route.split("/").includes(".."))) throw new Error("DETECTOR_TARGET_UNSUPPORTED");
   const required = [core, "src/app/layout.tsx", "src/app/globals.css"];
+  if (target.format === "direct-review") required.push("src/app/landing-page-previews/[slug]/page.tsx");
   for (const file of required) if (!manifest.files.some((ref) => ref.path === file)) throw new Error(`DETECTOR_CORE_INPUT_MISSING:${file}`);
   const subtree = core.slice(0, core.lastIndexOf("/") + 1);
   return manifest.files.filter((ref) => {

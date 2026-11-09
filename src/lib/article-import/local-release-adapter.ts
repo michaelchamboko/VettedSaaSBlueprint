@@ -46,6 +46,34 @@ async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot
   return { clean, changedFiles, headSha, originMainSha, fastForwardable };
 }
 
+async function resolveReleaseArtifactPath(repositoryRoot: string, format: ImportFormat, artifactPath: string | undefined, slug: string | undefined): Promise<string> {
+  if (format !== "direct-review") {
+    if (!artifactPath) throw new Error("ARTIFACT_PATH_REQUIRED");
+    return artifactPath;
+  }
+  const normalized = artifactPath?.replaceAll("\\\\", "/");
+  const publicationPath = slug ? `src/generated/landing-pages/${slug}.json` : undefined;
+  const candidates = [normalized, publicationPath].filter((value): value is string => Boolean(value));
+  for (const candidate of candidates) {
+    try {
+      await readFile(path.resolve(repositoryRoot, candidate));
+      // Prefer a present public projection over a private source path.
+      if (candidate === publicationPath) return candidate;
+      if (candidate && !candidate.includes(".automation") && !candidate.startsWith("/")) {
+        // If a private source path is present, still prefer the public projection when it exists.
+        if (publicationPath) {
+          try { await readFile(path.resolve(repositoryRoot, publicationPath)); return publicationPath; } catch { /* use candidate */ }
+        }
+        return candidate;
+      }
+    } catch {
+      // Try next candidate.
+    }
+  }
+  if (publicationPath) return publicationPath;
+  throw new Error("ARTIFACT_PATH_REQUIRED");
+}
+
 export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string; importId?: string; sourceFingerprint?: string }): ReleaseOperations {
   const runner = options.runner ?? defaultRunner(repositoryRoot);
   const defaultFetchJson: ReleaseJsonFetcher = async (url) => {
@@ -166,15 +194,15 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
       const inspected = await verifiedDeployment(url);
       if (inspected.commitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
-      if (!options.artifactPath) throw new Error("ARTIFACT_PATH_REQUIRED");
-      const { target } = await readImportArtifactTarget(repositoryRoot, options.format, options.artifactPath, options.slug);
+      const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
+      const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
       return { deploymentId: inspected.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: inspected.commitSha };
     },
     async verifyProduction(deployment): Promise<FullProductionChecks> {
-      if (!options.artifactPath) throw new Error("ARTIFACT_PATH_REQUIRED");
       if (!options.importId) throw new Error("PRODUCTION_IMPORT_ID_REQUIRED");
       if (!options.sourceFingerprint) throw new Error("PRODUCTION_SOURCE_FINGERPRINT_REQUIRED");
-      const { target } = await readImportArtifactTarget(repositoryRoot, options.format, options.artifactPath, options.slug);
+      const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
+      const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
       if (deployment.canonicalUrl !== new URL(target.renderedRoutes[0], origin).href) throw new Error("DEPLOYMENT_CANONICAL_MISMATCH");
       const deploymentBefore = await verifiedDeployment(origin);
       if (deploymentBefore.id !== deployment.deploymentId || deploymentBefore.commitSha !== deployment.commitSha) throw new Error("PRODUCTION_DEPLOYMENT_MISMATCH");
@@ -193,7 +221,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (options.format !== "direct-review") {
         const script = { blog: "scripts/verify-blog-deployment.ts", visibility: "scripts/verify-visibility-deployment.ts", "decision-set": "scripts/verify-decision-set-deployment.ts" }[options.format as "blog" | "visibility" | "decision-set"];
         if (!script) throw new Error(`MISSING_FORMAT_VERIFIER:${options.format}`);
-        const captured = await capture("npx", ["tsx", script, "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath]);
+        const captured = await capture("npx", ["tsx", script, "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", resolvedArtifactPath]);
         const result = captured.result as { target?: unknown; ok?: boolean; passed?: boolean; browser_errors_ok?: boolean; routes?: number; viewportChecks?: number; checks?: Array<{ passed: boolean }>; screenshots?: Array<{ mode: string }>; robots_ok?: boolean; sitemap_ok?: boolean };
         if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
         requireVerificationMode(result, "production");
@@ -205,7 +233,7 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
         // These formats prohibit affiliate destinations; their owner checks apply.
         return { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: options.format === "decision-set" ? result.browser_errors_ok === true : true, productionVerifierRef: captured.productionVerifierRef };
       }
-      const captured = await capture("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", options.artifactPath]);
+      const captured = await capture("npm", ["run", "--silent", "landing:verify:deployment", "--", "--origin", origin, "--expected-sha", deployment.commitSha, "--slug", target.slug, "--artifact", resolvedArtifactPath]);
       const result = captured.result as { target?: unknown; status?: string; robots_ok?: boolean; sitemap_ok?: boolean; pages?: Array<{ desktop?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] }; mobile?: { httpOk?: boolean; disclosureOk?: boolean; allCtasExact?: boolean; allRevealSectionsVisible?: boolean; browserErrors?: string[] } }> };
       if (JSON.stringify(result.target) !== JSON.stringify(target)) throw new Error("VERIFIER_TARGET_MISMATCH");
       requireVerificationMode(result, "production");

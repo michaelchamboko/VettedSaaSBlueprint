@@ -1,0 +1,46 @@
+=== Impeccable critique + audit (Gate B, run 8) ===
+Target: src/app/landing-page-previews/[slug]/page.tsx
+Changed surface: generateMetadata() only (3 lines: import + two `other: { "artifact-fingerprint": ... }` additions).
+Method: DEGRADED (single-context; no sub-agent spawn per parent no-duplicate-worker instruction).
+Binary: impeccable v0.1.5 engine (supports detect only; critique/audit are skill playbooks applied as text analysis).
+
+--- Design Read (design-taste-frontend) ---
+"Reading this as: metadata-only change to the noindex preview route for direct-review candidate verification; no visual delta, preserving existing noindex preview identity."
+Dials (D04 §6.2, Decision Scenario): variance 6-8, motion 5-7, density 4-6.
+
+--- Impeccable context ---
+Ran: NO_PRODUCT_MD; SCOPED_EXISTING_ALLOWED (narrow refinement permitted without blocking). No DESIGN.md; incumbent visual system is authority.
+
+--- Assessment A (design review, text-based) ---
+Design specificity: high (inherited DirectReviewPage/EditorialV2PreviewPage identity unchanged).
+Hierarchy/IA/copy/typography/color: unchanged by this diff (no component or style edit).
+Cognitive load: unchanged.
+Emotional journey: unchanged.
+Nielsen heuristics: N/A for visual change (no surface change). Scores not applicable to a metadata-only diff.
+Strengths: change is surgical (metadata only); no visual regression risk by construction.
+Priority issues: none introduced. Existing preview route behavior preserved (noindex, force-static).
+Persona red flags: none.
+
+--- Assessment B (detector + browser evidence) ---
+impeccable detect --json: ran, returned [] (no anti-patterns).
+Browser visualization: not run via impeccable live-server (no visual overlay injected). Instead, Playwright rendered the route (see runtime-proof.txt).
+
+--- Audit (code-level, text-based) ---
+1. Accessibility: no change (no DOM/ARIA/heading/alt-text edit). Preview route already noindex.
+2. Performance: negligible (one meta tag in <head>); no layout thrash, no new assets.
+3. Theming: no change (no color/token edit).
+4. Responsive: no change (no breakpoint/layout edit).
+5. Implementation Integrity: coherent — change is a single-purpose metadata addition for candidate verification binding; consistent with existing preview route pattern (robots noindex already present).
+
+Audit scores: N/A for a metadata-only diff (no dimension changed). No P0/P1/P2/P3 issues introduced.
+
+--- Before/after ---
+Before (base f3576b7): preview page <head> had NO artifact-fingerprint meta tag. (STATIC SOURCE INFERENCE from 3-line diff; no baseline was rendered in this run.)
+After (candidate): preview page <head> HAS artifact-fingerprint meta tag. Body rendering measured (Playwright, desktop+mobile): no console/page errors, robots noindex,nofollow, fingerprint present.
+Reduced-motion: screenshot captured (prefers-reduced-motion: reduce). No motion added/changed by this diff; behavior unchanged by construction (NOT measured; screenshot only).
+
+--- Capability blocker (honest) ---
+This model does not support image input. Screenshots exist on disk (desktop.png, mobile.png, reduced-motion.png) but cannot be visually inspected by this agent. Visual inspection must be performed by the supervisor (Windows) or a vision-capable agent. No visual findings are fabricated.
+
+--- Design-taste-frontend ---
+Design Read stated (see runtime-proof.txt / prior reports). Dials per D04 §6.2 (Decision Scenario): variance 6-8, motion 5-7, density 4-6. No visual change; identity preserved.

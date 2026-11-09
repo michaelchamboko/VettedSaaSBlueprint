@@ -8,7 +8,7 @@ export async function productionFixture(root: string, importId: string, target: 
   const snapshot = { httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true, browserErrors: [] };
   const common = { target, verificationMode: "production", origin, canonicalOrigin: origin, expected_commit: deployment.commitSha };
   const result = target.format === "direct-review"
-    ? { ...common, status: "pass", robots_ok: true, sitemap_ok: true, pages: target.renderedRoutes.map((route) => ({ path: route, desktop: snapshot, mobile: snapshot })) }
+    ? { ...common, status: "pass", robots_ok: true, sitemap_ok: true, pages: target.renderedRoutes.map((route) => ({ path: route, desktop: snapshot, mobile: snapshot, reduced_motion: snapshot })) }
     : target.format === "decision-set"
       ? { ...common, passed: true, browser_errors_ok: true, robots_ok: true, sitemap_ok: true, checks: [{ passed: true }], screenshots: target.renderedRoutes.flatMap((route) => [{ route, mode: "desktop" }, { route, mode: "mobile" }]) }
       : { ...common, ok: true, routes: target.renderedRoutes.length, verifiedRoutes: target.renderedRoutes, viewportChecks: target.renderedRoutes.length * 2 };

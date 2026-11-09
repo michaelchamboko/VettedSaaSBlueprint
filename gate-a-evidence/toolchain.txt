@@ -1,0 +1,5 @@
+node: v24.22.1
+npm: 12.0.2
+corepack: 0.36.0
+lockfile sha256: 59a6061dacd1bcecb60e82e1f90c5c3f57eec3758526080bf38b1f70b2a6986c
+packageManager: npm@12.0.2

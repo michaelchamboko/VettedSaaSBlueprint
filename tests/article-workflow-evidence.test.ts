@@ -208,11 +208,15 @@ test("authentic detector command shape cannot substitute an unrelated inventory 
 });
 test("detector scope requires each format core, shared shell and matching dynamic route files", () => {
   for (const format of Object.keys(detectorCoreFiles) as Array<keyof typeof detectorCoreFiles>) {
-    const paths = [...new Set([detectorCoreFiles[format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/shared.css", "src/components/public/Header.tsx", "src/app/(public)/[slug]/page.tsx", "src/app/(public)/[slug]/page.module.css", "src/app/unrelated/page.tsx", "package-lock.json"])].sort();
+    const basePaths = [detectorCoreFiles[format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/shared.css", "src/components/public/Header.tsx", "src/app/(public)/[slug]/page.tsx", "src/app/(public)/[slug]/page.module.css", "src/app/unrelated/page.tsx", "package-lock.json"];
+    if (format === "direct-review") basePaths.push("src/app/landing-page-previews/[slug]/page.tsx");
+    const paths = [...new Set(basePaths)].sort();
     const files = paths.map((file) => ({ path: file, sha256: "a".repeat(64) }));
     const manifest = renderingInputsSchema.parse({ schemaVersion: "RenderingInputsV1", inventoryVersion: 1, files, digest: sha256(JSON.stringify(files)) });
     const scope = requiredDetectorInputs(manifest, { format, renderedRoutes: ["/article"] }).map((ref) => ref.path);
-    for (const expected of [detectorCoreFiles[format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/shared.css", "src/app/(public)/[slug]/page.tsx", "src/app/(public)/[slug]/page.module.css"]) assert.ok(scope.includes(expected), `${format}: ${expected}`);
+    const expectedFiles = [detectorCoreFiles[format], "src/app/layout.tsx", "src/app/globals.css", "src/styles/shared.css", "src/app/(public)/[slug]/page.tsx", "src/app/(public)/[slug]/page.module.css"];
+    if (format === "direct-review") expectedFiles.push("src/app/landing-page-previews/[slug]/page.tsx");
+    for (const expected of expectedFiles) assert.ok(scope.includes(expected), `${format}: ${expected}`);
     assert.equal(scope.includes("src/components/public/Header.tsx"), format !== "direct-review");
     assert.equal(scope.includes("package-lock.json"), false); assert.equal(scope.includes("src/app/unrelated/page.tsx"), false);
     assert.throws(() => requiredDetectorInputs({ ...manifest, files: files.filter((ref) => ref.path !== detectorCoreFiles[format]) }, { format, renderedRoutes: ["/article"] }), /CORE_INPUT_MISSING/);

@@ -1,0 +1,39 @@
+=== Runtime proof: preview route (before/after, measured) ===
+Route: /landing-page-previews/how-can-growing-brands-automate-on-brand-email-marketing-journeys
+Server: next start (production build) on port 3000
+Viewports: desktop (1440x900), mobile (390x844), reduced-motion (1440x900, prefers-reduced-motion: reduce)
+
+--- BEFORE (controlled comparison: candidate harness with base preview route, measured) ---
+Note: This is NOT a full base f3576b7 checkout. Only src/app/landing-page-previews/[slug]/page.tsx was reverted to the base version; all other files remained at candidate state. The measured meta change (absent->present) is valid; do not mislabel as full base checkout.
+Desktop:   title="Campaign Monitor: Check Brand Control and Email Journey Fit | VettedSaaSBlueprint", artifact-fingerprint meta = null (ABSENT), robots = "noindex, nofollow", console/page errors = none
+Mobile:    same (fingerprint null, noindex, no errors)
+Reduced-motion: screenshot captured
+Screenshots: before-desktop.png, before-mobile.png, before-reduced-motion.png
+
+--- AFTER (candidate 13d00fa..., measured) ---
+Desktop:   title="Campaign Monitor: Check Brand Control and Email Journey Fit | VettedSaaSBlueprint", artifact-fingerprint meta = "d82d0c711b9c8c78a4da436c25e6f10b0d1a9a39b278b397e5b83d5c62361bad" (PRESENT), robots = "noindex, nofollow", console/page errors = none
+Mobile:    same (fingerprint present, noindex, no errors)
+Reduced-motion: screenshot captured
+Screenshots: after-desktop.png, after-mobile.png, after-reduced-motion.png (also desktop.png, mobile.png, reduced-motion.png)
+
+--- DELTA (measured) ---
+- artifact-fingerprint meta tag: absent -> present (the only change)
+- title: identical
+- robots: identical (noindex, nofollow)
+- console/page errors: none in both
+- Body: identical by construction (diff is 3 lines in generateMetadata only; DirectReviewPage/EditorialV2PreviewPage unchanged) — NOT independently measured; inferred from diff.
+
+--- Reduced-motion assertion ---
+No motion was added, removed, or altered by this diff. The preview route delegates to DirectReviewPage/EditorialV2PreviewPage (unchanged). Reduced-motion behavior is therefore unchanged by construction. Screenshot captured under prefers-reduced-motion: reduce for visual record. NOT measured (no motion assertion beyond screenshot).
+
+--- Design Read (design-taste-frontend) ---
+"Reading this as: metadata-only change to the noindex preview route for direct-review candidate verification; no visual delta, preserving existing noindex preview identity."
+Dials (D04 §6.2, Decision Scenario): variance 6-8, motion 5-7, density 4-6.
+
+--- Impeccable ---
+Context: ran (NO_PRODUCT_MD; SCOPED_EXISTING_ALLOWED).
+Detect: ran -> [] (no anti-patterns).
+Critique/audit: playbooks applied as text analysis (binary unsupported). See critique-audit.txt.
+
+--- Capability blocker (honest) ---
+This model does not support image input. Screenshots exist on disk but cannot be visually inspected by this agent. Visual inspection must be performed by supervisor (Windows) or a vision-capable agent. No visual findings fabricated.
