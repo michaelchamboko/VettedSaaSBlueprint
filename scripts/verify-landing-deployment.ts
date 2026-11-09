@@ -24,10 +24,12 @@ export type LandingBrowserSnapshot = {
   robots: string;
   errorOverlay: boolean;
   browserErrors: string[];
+  artifactFingerprint?: string;
 };
 
 export function landingSnapshotFailures(
   snapshot: LandingBrowserSnapshot,
+  expectedArtifactFingerprint?: string,
 ): string[] {
   const failures: string[] = [];
   if (!snapshot.httpOk) failures.push("route did not return HTTP success");
@@ -45,11 +47,16 @@ export function landingSnapshotFailures(
   if (snapshot.browserErrors.length > 0) {
     failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
   }
+  const observedFingerprint = snapshot.artifactFingerprint ?? "";
+  const expectedFingerprint = expectedArtifactFingerprint ?? (snapshot as { expectedArtifactFingerprint?: string }).expectedArtifactFingerprint;
+  if (!observedFingerprint) failures.push("artifact fingerprint meta tag was missing");
+  if (expectedFingerprint && observedFingerprint && observedFingerprint !== expectedFingerprint) failures.push("artifact fingerprint did not match the approved artifact");
   return failures;
 }
 
 export function candidateSnapshotFailures(
   snapshot: LandingBrowserSnapshot,
+  expectedArtifactFingerprint?: string,
 ): string[] {
   const failures: string[] = [];
   if (!snapshot.httpOk) failures.push("route did not return HTTP success");
@@ -67,6 +74,10 @@ export function candidateSnapshotFailures(
   if (snapshot.browserErrors.length > 0) {
     failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
   }
+  const observedFingerprint = snapshot.artifactFingerprint ?? "";
+  const expectedFingerprint = expectedArtifactFingerprint ?? (snapshot as { expectedArtifactFingerprint?: string }).expectedArtifactFingerprint;
+  if (!observedFingerprint) failures.push("artifact fingerprint meta tag was missing");
+  if (expectedFingerprint && observedFingerprint && observedFingerprint !== expectedFingerprint) failures.push("artifact fingerprint did not match the approved artifact");
   return failures;
 }
 
@@ -302,6 +313,10 @@ async function verifyViewport(
             document
               .querySelector<HTMLMetaElement>("meta[name='robots']")
               ?.getAttribute("content") ?? "",
+          artifactFingerprint:
+            document
+              .querySelector<HTMLMetaElement>("meta[name='artifact-fingerprint']")
+              ?.getAttribute("content") ?? "",
           errorOverlay: Boolean(
             document.querySelector(
               "[data-nextjs-dialog], .vite-error-overlay, #webpack-dev-server-client-overlay",
@@ -339,6 +354,7 @@ export async function verifyLandingDeployment({
   expectedCommit,
   slug,
   exactUrl,
+  artifactFingerprint,
   attempts = 20,
   retryMs = 15_000,
   screenshotDir,
@@ -349,6 +365,7 @@ export async function verifyLandingDeployment({
   expectedCommit?: string;
   slug?: string;
   exactUrl?: string;
+  artifactFingerprint?: string;
   attempts?: number;
   retryMs?: number;
   screenshotDir?: string;
@@ -411,13 +428,13 @@ export async function verifyLandingDeployment({
       );
       const snapshotFailures = mode === "candidate" ? candidateSnapshotFailures : landingSnapshotFailures;
       const failures = [
-        ...snapshotFailures(desktop).map(
+        ...snapshotFailures(desktop, artifactFingerprint).map(
           (failure) => `desktop: ${failure}`,
         ),
-        ...snapshotFailures(mobile).map(
+        ...snapshotFailures(mobile, artifactFingerprint).map(
           (failure) => `mobile: ${failure}`,
         ),
-        ...snapshotFailures(reducedMotion).map(
+        ...snapshotFailures(reducedMotion, artifactFingerprint).map(
           (failure) => `reduced-motion: ${failure}`,
         ),
       ];
@@ -474,6 +491,7 @@ async function main() {
     expectedCommit,
     mode,
     exactUrl,
+    artifactFingerprint: approved?.target.artifactFingerprint,
     canonicalOrigin: argumentValue(args, "--canonical-origin"),
     slug: approved?.target.slug ?? argumentValue(args, "--slug"),
     attempts: Number(argumentValue(args, "--attempts") ?? 20),

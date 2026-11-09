@@ -107,6 +107,42 @@ export function requireVerificationMode(value: unknown, expected: "candidate" | 
   if (expected === "candidate" && ("deployment" in result || "expected_commit" in result)) throw new Error("CANDIDATE_CANNOT_CLAIM_DEPLOYMENT");
 }
 
+export function hasAuthenticatedHistoricalContext(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  const markers = [
+    "historical",
+    "historicalContext",
+    "authenticatedHistoricalContext",
+    "historicalCompatibility",
+    "historicalReceipt",
+    "legacyCandidate",
+    "legacy",
+    "requirementRevision",
+    "requirement_revision",
+    "importId",
+    "import_id",
+    "sourceFingerprint",
+    "source_fingerprint",
+  ];
+  return markers.some((key) => {
+    const candidate = record[key];
+    if (typeof candidate === "boolean") return candidate === true;
+    if (typeof candidate === "string") return candidate.trim().length > 0;
+    return candidate !== undefined && candidate !== null;
+  });
+}
+
+export function observedArtifactFingerprint(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+  const record = value as Record<string, unknown>;
+  for (const key of ["artifactFingerprint", "artifact_fingerprint", "fingerprint", "artifactFingerprintMeta"]) {
+    const candidate = record[key];
+    if (typeof candidate === "string") return candidate;
+  }
+  return "";
+}
+
 export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown): void {
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
@@ -114,7 +150,7 @@ export function assertVerifierResult(target: ReturnType<typeof importArtifactTar
     const mode = typeof (result as { verificationMode?: unknown }).verificationMode === "string" ? (result as { verificationMode: string }).verificationMode : "production";
     const previewPath = candidatePreviewPath(target.slug);
     if (mode === "candidate") {
-      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true;
+      const isLegacy = (result as { robots_ok?: unknown }).robots_ok === true && (result as { sitemap_ok?: unknown }).sitemap_ok === true && hasAuthenticatedHistoricalContext(result);
       if (isLegacy) {
         const parsed = z.object({ status: z.literal("pass"), robots_ok: z.literal(true), sitemap_ok: z.literal(true), pages: z.array(z.object({ path: z.string(), desktop: snapshot, mobile: snapshot }).passthrough()).min(1) }).passthrough().parse(result);
         if (JSON.stringify(parsed.pages.map((page) => page.path)) !== JSON.stringify(target.renderedRoutes)) throw new Error("VERIFIER_ROUTES_MISMATCH");
@@ -133,6 +169,7 @@ export function assertVerifierResult(target: ReturnType<typeof importArtifactTar
             if (shot.errorOverlay !== false) throw new Error("VERIFIER_RUNTIME_MISMATCH");
             if (!Array.isArray(shot.browserErrors) || shot.browserErrors.length !== 0) throw new Error("VERIFIER_RUNTIME_MISMATCH");
             if (!/\bnoindex\b/i.test(String(shot.robots ?? ""))) throw new Error("VERIFIER_ROBOTS_MISMATCH");
+            if (observedArtifactFingerprint(shot) === "" || observedArtifactFingerprint(shot) !== target.artifactFingerprint) throw new Error("VERIFIER_ARTIFACT_FINGERPRINT_MISMATCH");
           }
         }
       }

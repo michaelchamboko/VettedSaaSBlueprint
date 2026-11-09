@@ -69,7 +69,7 @@ export async function presentFixture(root: string, record: ExternalArticleImport
   const approvedArtifact = JSON.parse(await readFile(path.join(root, record.contentApproval.artifactPath), "utf8"));
   const snapshot = { httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true, browserErrors: [] };
   await mkdir(path.dirname(path.join(root, evidencePath)), { recursive: true });
-  await writeFile(path.join(root, evidencePath), JSON.stringify({ schemaVersion: "ImportVerifierEvidenceV1", target: importArtifactTarget("direct-review", approvedArtifact), result: { verificationMode: "candidate", origin: "http://127.0.0.1:3000", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", robots_ok: true, sitemap_ok: true, pages: [{ path: "/imported-guide", desktop: snapshot, mobile: snapshot }] } }));
+  await writeFile(path.join(root, evidencePath), JSON.stringify({ schemaVersion: "ImportVerifierEvidenceV1", target: importArtifactTarget("direct-review", approvedArtifact), result: { verificationMode: "candidate", origin: "http://127.0.0.1:3000", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", robots_ok: true, sitemap_ok: true, historical: true, pages: [{ path: "/imported-guide", desktop: snapshot, mobile: snapshot }] } }));
   return recordImportPresentation(root, record, {
     validationGate: "fixture:rendered-layout",
     validationReceipt: {
