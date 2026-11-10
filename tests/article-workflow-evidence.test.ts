@@ -6,6 +6,7 @@ import os from "node:os";
 import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
+import { recaptureStoredExchange } from "./fixtures/capture-replay";
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { artifactProseProjection, contentAssessmentSchema, createDesignReviewSchema, editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
@@ -13,14 +14,6 @@ import { captureCommandExecution, evidenceReference, executionEvidenceSchema, ex
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
-function recaptureStoredExchange(value: unknown, inputRefs: Array<{ path: string; sha256: string }>, outputRefs: Array<{ path: string; sha256: string }>) {
-  const execution = executionEvidenceSchema.parse(value);
-  if (execution.kind !== "opencode") throw new Error("Expected a captured model exchange");
-  return extractOpenCodeExecution({ info: { id: execution.sessionId }, messages: [
-    { info: { id: execution.userMessageId, role: "user", sessionID: execution.sessionId }, parts: [{ type: "text", text: JSON.stringify({ packetId: execution.packetId, pass: execution.pass, prose: execution.input, digest: execution.inputDigest, instructions: execution.instructions }) }] },
-    { info: { id: execution.assistantMessageId, role: "assistant", sessionID: execution.sessionId, parentID: execution.userMessageId, providerID: execution.providerId, modelID: execution.modelId, time: { created: Date.parse(execution.startedAt), completed: Date.parse(execution.completedAt) }, finish: "stop" }, parts: [{ type: "text", text: JSON.stringify(execution.output) }] },
-  ] }, { version: execution.toolVersion, sessionId: execution.sessionId, userMessageId: execution.userMessageId, assistantMessageId: execution.assistantMessageId, packetId: execution.packetId, pass: execution.pass, input: execution.input, output: execution.output, instructions: execution.instructions, families: { [`${execution.providerId}/${execution.modelId}`]: execution.family }, inputRefs, outputRefs });
-}
 async function fixture(researchGeneration = 0) {
   const root = await mkdtemp(path.join(os.tmpdir(), "workflow-proof-"));
   const before = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://example.test/example", url_slug: "example" } };
@@ -83,13 +76,13 @@ test("rebinding assessment envelopes cannot reuse a prose-only review after meta
       const current = await evidenceReference(root, record.artifactPath!);
       // Retarget only untrusted envelope refs/fingerprints; the captured model input stays unchanged.
       const rebind = (refs: typeof execution.inputRefs) => refs.map((ref) => ref.path === current.path ? current : ref);
-      const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: rebind(execution.inputRefs), outputRefs: rebind(execution.outputRefs) });
+      const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: rebind(execution.inputRefs), outputRefs: rebind(execution.outputRefs), replay: { export: execution.replay!.export, inputRefs: rebind(execution.replay!.inputRefs), outputRefs: rebind(execution.replay!.outputRefs) } });
       const rebound = await storeEvidence(root, id, { ...approved, artifactFingerprint: fingerprintEditorialArtifact(artifact), reviewerExecutionRef });
       await assert.rejects(validateContentAssessment(root, rebound, record), /ASSESSMENT_EXECUTION_MISMATCH/, field);
     }
     await writeFile(path.join(root, record.artifactPath!), bytes);
     const legacyInput = artifactProseProjection(record.format, JSON.parse(bytes));
-    const legacyExecution = await storeEvidence(root, id, { ...execution, input: legacyInput, inputDigest: proseProjectionDigest(legacyInput) });
+    const legacyExecution = await storeEvidence(root, id, recaptureStoredExchange({ ...execution, input: legacyInput, inputDigest: proseProjectionDigest(legacyInput), output: execution.output, outputDigest: proseProjectionDigest(execution.output) }, execution.replay!.inputRefs, execution.replay!.outputRefs));
     await assert.rejects(validateContentAssessment(root, await storeEvidence(root, id, { ...approved, reviewerExecutionRef: legacyExecution }), record), /ASSESSMENT_EXECUTION_MISMATCH/);
     await validateContentAssessment(root, record.evidenceRefs!.assessment!, record);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -102,7 +95,7 @@ test("rebinding a research receipt cannot retain the old captured assessment", a
     if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
     const research = await readEvidence(root, approved.researchRef) as Record<string, unknown>;
     const researchRef = await storeEvidence(root, id, { ...research, freshness: "Changed evidence qualification absent from the captured assessment." });
-    const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: execution.inputRefs.map((ref) => ref.sha256 === approved.researchRef.sha256 ? researchRef : ref) });
+    const reviewerExecutionRef = await storeEvidence(root, id, { ...execution, inputRefs: execution.inputRefs.map((ref) => ref.sha256 === approved.researchRef.sha256 ? researchRef : ref), replay: { export: execution.replay!.export, inputRefs: execution.replay!.inputRefs.map((ref) => ref.sha256 === approved.researchRef.sha256 ? researchRef : ref), outputRefs: execution.replay!.outputRefs } });
     await assert.rejects(validateContentAssessment(root, await storeEvidence(root, id, { ...approved, researchRef, reviewerExecutionRef }), { ...record, evidenceRefs: { ...record.evidenceRefs, research: researchRef } }), /ASSESSMENT_EXECUTION_MISMATCH/);
     assert.ok(execution.input.research.includes("Fixed synthetic input"));
     assert.ok(execution.input.sourceSnapshots.includes("Synthetic source supports this scoped fixture claim."));
@@ -309,7 +302,7 @@ test("design review fail blocks advancement", async () => {
     const review = JSON.parse(execution.output.designReview ?? "null");
     const negative = { ...review, verdict: "fail", findings: [{ description: "Synthetic design failure.", disposition: "unresolved" }] };
     const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
-    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) })];
+    rule.evidenceRefs = [await storeEvidence(root, id, recaptureStoredExchange({ ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs))];
     await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -324,7 +317,7 @@ test("design review insufficient-evidence blocks advancement", async () => {
     const review = JSON.parse(execution.output.designReview ?? "null");
     const negative = { ...review, verdict: "insufficient-evidence", findings: [{ description: "Missing runtime observation.", disposition: "unresolved" }] };
     const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
-    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) })];
+    rule.evidenceRefs = [await storeEvidence(root, id, recaptureStoredExchange({ ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs))];
     await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -339,7 +332,7 @@ test("design review pass with unresolved findings blocks advancement", async () 
     const review = JSON.parse(execution.output.designReview ?? "null");
     const mixed = { ...review, verdict: "pass", findings: [{ description: "Unresolved issue.", disposition: "unresolved" }] };
     const mixedOutput = { ...execution.output, designReview: JSON.stringify(mixed) };
-    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: mixedOutput, outputDigest: proseProjectionDigest(mixedOutput) })];
+    rule.evidenceRefs = [await storeEvidence(root, id, recaptureStoredExchange({ ...execution, output: mixedOutput, outputDigest: proseProjectionDigest(mixedOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs))];
     await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

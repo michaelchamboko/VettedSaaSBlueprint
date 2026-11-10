@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
-import { captureCommandExecution, captureOpenCodeExecution, evidenceRefSchema, storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { captureCommandExecution, captureOpenCodeExecution, evidenceRefSchema, storeEvidence, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 import { assertPrimaryArticleCheckout } from "../src/lib/article-import/preflight";
 
 const text = z.string().min(1);
@@ -23,7 +23,9 @@ async function main() {
   const execution = kind === "opencode"
     ? await captureOpenCodeExecution(root, selectionSchema.parse(input))
     : await captureCommandExecution(root, commandSchema.parse(input));
-  process.stdout.write(`${JSON.stringify(await storeEvidence(root, importId, execution))}\n`);
+  const ref = await storeEvidence(root, importId, execution);
+  await validateExecutionEvidence(root, ref);
+  process.stdout.write(`${JSON.stringify(ref)}\n`);
 }
 
 main().catch((error: unknown) => {

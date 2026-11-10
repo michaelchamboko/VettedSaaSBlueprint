@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
 import {
   advanceImport, createArticleImport, loadImport, parseExternalArticle, prepareTransformation,
-  recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease,
+  recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, saveImport, verifyImportRelease,
 } from "../src/lib/article-import/engine";
 import { executeImportCommand, parseImportCommand } from "../scripts/import-article";
 import { writeJsonAtomically } from "../src/lib/article-import/engine";
@@ -15,7 +15,10 @@ import { createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { readEvidence } from "../src/lib/article-import/workflow-evidence";
+import { readEvidence, storeEvidence, evaluateWorkflowEvidence, freezeEvidenceGraph } from "../src/lib/article-import/workflow-evidence";
+import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEvidence, extractOpenCodeExecution, proseProjectionDigest } from "../src/lib/article-import/execution-evidence";
+import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { createHash } from "node:crypto";
 
 async function releaseFixture(root: string, recovered = false) {
   await writeFile(path.join(root, "approved-urls.md"), allowlist);
@@ -263,5 +266,162 @@ test("atomic replacement retries transient filesystem locks", async () => {
     });
     assert.equal(attempts, 3);
     assert.deepEqual(JSON.parse(await readFile(file, "utf8")), { version: 2 });
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+async function snapshotFileInventory(root: string): Promise<Array<[string, string]>> {
+  const entries: Array<[string, string]> = [];
+  async function walk(directory: string): Promise<void> {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else {
+        const bytes = await readFile(full);
+        entries.push([path.relative(root, full).replaceAll("\\", "/"), createHash("sha256").update(bytes).digest("hex")]);
+      }
+    }
+  }
+  await walk(root);
+  return entries.sort(([a], [b]) => a.localeCompare(b));
+}
+
+async function stripReplayFromEvidence(root: string, importId: string, value: unknown): Promise<{ value: unknown; changed: boolean }> {
+  if (Array.isArray(value)) {
+    let changed = false;
+    const out = [];
+    for (const item of value) {
+      const result = await stripReplayFromEvidence(root, importId, item);
+      if (result.changed) changed = true;
+      out.push(result.value);
+    }
+    return { value: out, changed };
+  }
+  if (value && typeof value === "object") {
+    const object = value as Record<string, unknown>;
+    if (typeof object.path === "string" && typeof object.sha256 === "string" && Object.keys(object).length === 2) {
+      try {
+        const evidence = await readEvidence(root, object as { path: string; sha256: string });
+        if (evidence && typeof evidence === "object" && !Array.isArray(evidence)) {
+          const record = evidence as Record<string, unknown>;
+          if (record.schemaVersion === "ExecutionEvidenceV1" && record.kind === "opencode" && record.replay) {
+            const { replay: _replay, ...rest } = record;
+            void _replay;
+            const newRef = await storeEvidence(root, importId, rest);
+            return { value: newRef, changed: true };
+          }
+        }
+        const rewritten = await stripReplayFromEvidence(root, importId, evidence);
+        if (rewritten.changed) {
+          const newRef = await storeEvidence(root, importId, rewritten.value);
+          return { value: newRef, changed: true };
+        }
+        return { value, changed: false };
+      } catch {
+        return { value, changed: false };
+      }
+    }
+    let changed = false;
+    const out: Record<string, unknown> = {};
+    for (const [key, child] of Object.entries(object)) {
+      const result = await stripReplayFromEvidence(root, importId, child);
+      if (result.changed) changed = true;
+      out[key] = result.value;
+    }
+    return { value: out, changed };
+  }
+  return { value, changed: false };
+}
+
+async function buildPreReplayTerminal(root: string, record: Awaited<ReturnType<typeof verifyImportRelease>>) {
+  const terminal = await readEvidence(root, record.terminalRef) as Record<string, unknown>;
+  const withoutFrozen = { ...terminal, frozenFiles: [] };
+  const stripped = await stripReplayFromEvidence(root, record.importId, withoutFrozen);
+  const newTerminal = stripped.value as Record<string, unknown>;
+  const sourceRef = newTerminal.sourceRef;
+  const artifactRef = newTerminal.artifactRef;
+  const mergeEvidenceRef = newTerminal.mergeEvidenceRef;
+  const evidenceRefs = (newTerminal.evidenceRefs ?? {}) as Record<string, unknown>;
+  const refList = [sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(evidenceRefs)].filter(Boolean);
+  const frozenFiles = await freezeEvidenceGraph(root, record.importId, refList as Parameters<typeof freezeEvidenceGraph>[2]);
+  newTerminal.frozenFiles = frozenFiles;
+  const finalTerminalRef = await storeEvidence(root, record.importId, newTerminal);
+  const updatedRecord = { ...record, terminalRef: finalTerminalRef, evidenceRefs: newTerminal.evidenceRefs as typeof record.evidenceRefs, stage: "LIVE" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION };
+  await saveImport(root, updatedRecord);
+  return { record: updatedRecord, terminal: newTerminal, finalTerminalRef };
+}
+
+test("frozen pre-replay terminal record inspects COMPLETE and tolerates changed source bytes", async () => {
+  const root = await testRoot("article-import-pre-replay-");
+  try {
+    const record = await verifyImportRelease(root, await releaseFixture(root));
+    const { record: preReplayRecord } = await buildPreReplayTerminal(root, record);
+    const beforeInspection = await snapshotFileInventory(root);
+    const inspected = await inspectImportCompletion(root, preReplayRecord.importId);
+    const afterInspection = await snapshotFileInventory(root);
+    assert.deepEqual(afterInspection, beforeInspection);
+    assert.equal(inspected.status, "COMPLETE");
+    await writeFile(path.resolve(root, preReplayRecord.contentApproval!.artifactPath), "{}");
+    assert.equal((await inspectImportCompletion(root, preReplayRecord.importId)).status, "COMPLETE");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("missing-replay evidence rejects current-transition and duplicate-reuse", async () => {
+  const root = await testRoot("article-import-pre-replay-modes-");
+  try {
+    const record = await verifyImportRelease(root, await releaseFixture(root));
+    const { record: preReplayRecord } = await buildPreReplayTerminal(root, record);
+    const current = await evaluateWorkflowEvidence(preReplayRecord, { root, throughStage: "LIVE", artifactPath: preReplayRecord.contentApproval?.artifactPath }, "current-transition");
+    assert.equal(current.ok, false);
+    assert.match(current.diagnostics.join("; "), /EXECUTION_REPLAY_MISSING/);
+    const duplicate = await evaluateWorkflowEvidence(preReplayRecord, { root, throughStage: "LIVE", artifactPath: preReplayRecord.contentApproval?.artifactPath }, "duplicate-reuse");
+    assert.equal(duplicate.ok, false);
+    assert.match(duplicate.diagnostics.join("; "), /EXECUTION_REPLAY_MISSING/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("missing-replay evidence rejects under generic withEvidenceSnapshot", async () => {
+  const root = await testRoot("article-import-pre-replay-generic-");
+  try {
+    const record = await verifyImportRelease(root, await releaseFixture(root));
+    const { terminal } = await buildPreReplayTerminal(root, record);
+    const assessmentRef = terminal.evidenceRefs.assessment;
+    const assessment = await readEvidence(root, assessmentRef) as Record<string, unknown>;
+    const execRef = assessment.reviewerExecutionRef as { path: string; sha256: string };
+    await assert.rejects(withEvidenceSnapshot(terminal.frozenFiles, () => validateExecutionEvidence(root, execRef)), /EXECUTION_REPLAY_MISSING/);
+    await assert.rejects(validateExecutionEvidence(root, execRef), /EXECUTION_REPLAY_MISSING/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("corrupted historical reference or hash rejects terminal inspection", async () => {
+  const root = await testRoot("article-import-pre-replay-corrupt-");
+  try {
+    const record = await verifyImportRelease(root, await releaseFixture(root));
+    const { record: preReplayRecord, terminal } = await buildPreReplayTerminal(root, record);
+    const corruptedTerminal = structuredClone(terminal);
+    if (corruptedTerminal.frozenFiles.length > 0) corruptedTerminal.frozenFiles[0].sha256 = "0".repeat(64);
+    const corruptedRef = await storeEvidence(root, preReplayRecord.importId, corruptedTerminal);
+    const corruptedRecord = { ...preReplayRecord, terminalRef: corruptedRef };
+    await saveImport(root, corruptedRecord);
+    assert.equal((await inspectImportCompletion(root, corruptedRecord.importId)).status, "REPAIR");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("present but invalid replay rejects even in terminal context", async () => {
+  const root = await testRoot("article-import-invalid-replay-");
+  try {
+    await mkdir(path.join(root, "config"), { recursive: true });
+    await writeFile(path.join(root, "config/article-workflow-capabilities.json"), JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "1.19.4", modelFamilies: { "provider/model": "family" } }));
+    const input = { artifact: "complete synthetic artifact" };
+    const output = { judgment: "synthetic judgment" };
+    const packetId = "a".repeat(64);
+    const execution = extractOpenCodeExecution({ info: { id: "session" }, messages: [
+      { info: { id: "user", role: "user", sessionID: "session" }, parts: [{ type: "text", text: JSON.stringify({ packetId, pass: "review", prose: input, digest: proseProjectionDigest(input), instructions: [] }) }] },
+      { info: { id: "answer", role: "assistant", sessionID: "session", parentID: "user", providerID: "provider", modelID: "model", time: { created: 1, completed: 2 }, finish: "stop" }, parts: [{ type: "text", text: JSON.stringify(output) }] },
+    ] }, { version: "1.19.4", sessionId: "session", userMessageId: "user", assistantMessageId: "answer", packetId, pass: "review", input, output, families: { "provider/model": "family" } });
+    const tampered = { ...execution, output: { judgment: "tampered" }, outputDigest: proseProjectionDigest({ judgment: "tampered" }) };
+    const ref = await storeEvidence(root, "article-00000000-0000-4000-8000-000000000001", tampered);
+    const frozen = await freezeEvidenceGraph(root, "article-00000000-0000-4000-8000-000000000001", [ref]);
+    await assert.rejects(withTerminalEvidenceSnapshot(frozen, () => validateExecutionEvidence(root, ref)), /EXECUTION_REPLAY|PROSE_MISMATCH|MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

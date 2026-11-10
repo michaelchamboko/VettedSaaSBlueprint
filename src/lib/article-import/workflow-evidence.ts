@@ -4,7 +4,7 @@ import path from "node:path";
 import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialEvidenceSchema, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
 import { importArtifactTarget, validateImportArtifact } from "./format-validation";
 import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, type WorkflowStage } from "./workflow-requirements";
-import { evidenceRefSchema, frozenFileSchema, withEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
+import { evidenceRefSchema, frozenFileSchema, withTerminalEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
 import { renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { candidatePreviewPath } from "./candidate-route";
 export { evidenceRefSchema, evidenceReference, readEvidence, storeEvidence } from "./execution-evidence";
@@ -340,6 +340,6 @@ export async function validateTerminalEvidence(root: string, ref: EvidenceRef, b
   }
   if (value.mergeCommitSha !== value.deployment.commitSha) throw new Error("TERMINAL_COMMIT_MISMATCH");
   z.object({ reviewedCommitSha: z.literal(value.reviewedCommitSha), mergeCommitSha: z.literal(value.mergeCommitSha), pullRequestUrl: z.string().url(), evidenceUrl: z.string().url() }).strict().parse(await readEvidence(root, value.mergeEvidenceRef));
-  const result = await withEvidenceSnapshot(value.frozenFiles, () => evaluateWorkflowEvidence({ ...value, workflowVersion: 2, stage: "LIVE", artifactPath: value.artifactRef.path, release: value.deployment }, { root, throughStage: "LIVE", artifactPath: value.artifactRef.path }));
+  const result = await withTerminalEvidenceSnapshot(value.frozenFiles, () => evaluateWorkflowEvidence({ ...value, workflowVersion: 2, stage: "LIVE", artifactPath: value.artifactRef.path, release: value.deployment }, { root, throughStage: "LIVE", artifactPath: value.artifactRef.path }));
   if (!result.ok) throw new Error(result.diagnostics.join("; "));
 }
