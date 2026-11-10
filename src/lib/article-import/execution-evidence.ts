@@ -16,6 +16,8 @@ export const frozenFileSchema = z.object({ path: z.string().min(1), sha256: hash
 export type FrozenFile = z.infer<typeof frozenFileSchema>;
 const snapshotReads = new AsyncLocalStorage<ReadonlyMap<string, FrozenFile>>();
 export const isEvidenceSnapshotActive = (): boolean => snapshotReads.getStore() !== undefined;
+const terminalSnapshotReads = new AsyncLocalStorage<boolean>();
+const isTerminalEvidenceSnapshotActive = (): boolean => terminalSnapshotReads.getStore() === true;
 const normalized = (value: string) => value.replaceAll("\\", "/");
 
 export function withEvidenceSnapshot<T>(files: FrozenFile[], work: () => Promise<T>): Promise<T> {
@@ -26,6 +28,10 @@ export function withEvidenceSnapshot<T>(files: FrozenFile[], work: () => Promise
     map.set(normalized(item.path), item);
   }
   return snapshotReads.run(map, work);
+}
+/** Historical terminal inspection context: snapshot is active AND missing replay may be tolerated. Nonrecursive; fail-closed after callback. */
+export function withTerminalEvidenceSnapshot<T>(files: FrozenFile[], work: () => Promise<T>): Promise<T> {
+  return withEvidenceSnapshot(files, () => terminalSnapshotReads.run(true, work));
 }
 
 export async function readEvidenceBytes(root: string, file: string): Promise<Buffer> {
@@ -249,32 +255,35 @@ export async function validateExecutionEvidence(root: string, ref: EvidenceRef):
       if (sha256(instruction.text) !== instruction.sha256) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
       await verifyEvidenceRef(root, { path: instruction.path, sha256: instruction.sha256 });
     }
-    if (!result.replay) throw new Error("EXECUTION_REPLAY_MISSING");
-    const replay = result.replay;
-    // verify replay refs
-    for (const item of [...replay.inputRefs, ...replay.outputRefs]) await verifyEvidenceRef(root, item);
-    const selected = {
-      version: result.toolVersion,
-      sessionId: result.sessionId,
-      userMessageId: result.userMessageId,
-      assistantMessageId: result.assistantMessageId,
-      packetId: result.packetId,
-      pass: result.pass,
-      input: result.input,
-      output: result.output,
-      families: capabilities.modelFamilies,
-      inputRefs: replay.inputRefs,
-      outputRefs: replay.outputRefs,
-      instructions: result.instructions,
-    };
-    let replayed: ExecutionEvidence;
-    try {
-      replayed = extractOpenCodeExecutionCore(replay.export, selected);
-    } catch (error) {
-      throw error instanceof Error ? error : new Error("EXECUTION_REPLAY_FAILED");
+    if (!result.replay) {
+      if (!isTerminalEvidenceSnapshotActive()) throw new Error("EXECUTION_REPLAY_MISSING");
+    } else {
+      const replay = result.replay;
+      // verify replay refs
+      for (const item of [...replay.inputRefs, ...replay.outputRefs]) await verifyEvidenceRef(root, item);
+      const selected = {
+        version: result.toolVersion,
+        sessionId: result.sessionId,
+        userMessageId: result.userMessageId,
+        assistantMessageId: result.assistantMessageId,
+        packetId: result.packetId,
+        pass: result.pass,
+        input: result.input,
+        output: result.output,
+        families: capabilities.modelFamilies,
+        inputRefs: replay.inputRefs,
+        outputRefs: replay.outputRefs,
+        instructions: result.instructions,
+      };
+      let replayed: ExecutionEvidence;
+      try {
+        replayed = extractOpenCodeExecutionCore(replay.export, selected);
+      } catch (error) {
+        throw error instanceof Error ? error : new Error("EXECUTION_REPLAY_FAILED");
+      }
+      const { replay: _ignoredReplay, ...withoutReplay } = result; void _ignoredReplay;
+      if (JSON.stringify(replayed) !== JSON.stringify(withoutReplay)) throw new Error("EXECUTION_REPLAY_MISMATCH");
     }
-    const { replay: _ignoredReplay, ...withoutReplay } = result; void _ignoredReplay;
-    if (JSON.stringify(replayed) !== JSON.stringify(withoutReplay)) throw new Error("EXECUTION_REPLAY_MISMATCH");
   }
   return result;
 }

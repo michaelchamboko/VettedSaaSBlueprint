@@ -93,4 +93,4 @@ OpenCode capture evidence must include one strict `replay` object containing `ex
 
 Send the JSON envelope as the user message text itself. A prose wrapper or `<file>` attachment is not valid capture transport. Validation uses the same extractor as capture and blocks missing, malformed or divergent replay evidence.
 
-Historical records remain readable, but require genuine recapture before they can satisfy a handoff. Never invent provenance or backfill replay from a record's claimed input and output. Local replay establishes reproducibility and integrity; it is not a provider signature.
+Historical records remain readable, but require genuine recapture before they can satisfy a new handoff. Read-only inspection of frozen terminal evidence preserves the original checks for captures made before replay was retained. This exception does not apply to active transitions, duplicate reuse or generic snapshots, and never excuses invalid replay that is present. Never invent provenance or backfill replay from a record's claimed input and output. Local replay establishes reproducibility and integrity; it is not a provider signature.
