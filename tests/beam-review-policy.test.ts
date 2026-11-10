@@ -10,6 +10,7 @@ import { createEditorialEvidence } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { readEvidence, storeEvidence, validateEditorialExecution } from "../src/lib/article-import/workflow-evidence";
 import { executionEvidenceSchema, proseProjectionDigest, freezeEvidenceGraph, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
+import { recaptureStoredExchange } from "./fixtures/capture-replay";
 import { sha256 } from "../src/lib/article-import/execution-evidence";
 
 const id = "article-00000000-0000-4000-8000-000000000099";
@@ -46,7 +47,8 @@ test("Beam review policy validates a distinct same-family review and rejects mix
     if (oldJe.kind === "opencode") {
       const judgmentTextForExec = { ...j0, executionRef: undefined };
     const judgmentProj = { judgment: JSON.stringify(judgmentTextForExec) };
-    const newJe = await storeEvidence(root, id, { ...oldJe, pass: "beamReview-judgment", family: "reflection-beam", providerId: "opencode-go", modelId: "beam-free", output: judgmentProj, outputDigest: proseProjectionDigest(judgmentProj) });
+    const mutated = { ...oldJe, pass: "beamReview-judgment", family: "reflection-beam", providerId: "opencode-go", modelId: "beam-free", output: judgmentProj, outputDigest: proseProjectionDigest(judgmentProj) };
+    const newJe = await storeEvidence(root, id, recaptureStoredExchange(mutated, oldJe.replay!.inputRefs, oldJe.replay!.outputRefs));
       j0.executionRef = newJe;
     }
     converted.passes[3].judgmentRef = await storeEvidence(root, id, j0);
@@ -57,9 +59,11 @@ test("Beam review policy validates a distinct same-family review and rejects mix
       if (i === 3) continue;
       const e = executionEvidenceSchema.parse(await readEvidence(root, converted.passes[i].executionRef));
       if (e.kind !== "opencode") continue;
-      converted.passes[i].executionRef = await storeEvidence(root, id, { ...e, family: "reflection-beam", providerId: "opencode-go", modelId: "beam-free", sessionId: `writer-session-${i}` });
+      const mutatedWriter = { ...e, family: "reflection-beam", providerId: "opencode-go", modelId: "beam-free", sessionId: `writer-session-${i}` };
+      converted.passes[i].executionRef = await storeEvidence(root, id, recaptureStoredExchange(mutatedWriter, e.replay!.inputRefs, e.replay!.outputRefs));
     }
-    const newExec = await storeEvidence(root, id, { ...exec, family: "reflection-beam", providerId: "opencode-go", modelId: "beam-free", pass: "beamReview", sessionId: "beam-review-session", userMessageId: exec.userMessageId, assistantMessageId: exec.assistantMessageId });
+    const mutatedBeam = { ...exec, family: "reflection-beam", providerId: "opencode-go", modelId: "beam-free", pass: "beamReview", sessionId: "beam-review-session", userMessageId: exec.userMessageId, assistantMessageId: exec.assistantMessageId };
+    const newExec = await storeEvidence(root, id, recaptureStoredExchange(mutatedBeam, exec.replay!.inputRefs, exec.replay!.outputRefs));
     converted.passes[3].executionRef = newExec;
     await storeEvidence(root, id, converted);
     // receipt already uses beamReview notes; but fixture receipt uses rivalFamilyCleanse notes -> mismatch. Rebuild receipt.
@@ -73,14 +77,18 @@ test("Beam review policy validates a distinct same-family review and rejects mix
     // Negative: reused session from each of the three rewrite passes -> reject.
     for (let i = 0; i < 3; i++) {
       const reused = structuredClone(converted);
-      reused.passes[3].executionRef = await storeEvidence(root, id, { ...executionEvidenceSchema.parse(await readEvidence(root, newExec)), sessionId: `writer-session-${i}` });
+      const reusedExec = executionEvidenceSchema.parse(await readEvidence(root, newExec));
+      const reusedMutated = { ...reusedExec, sessionId: `writer-session-${i}` };
+      reused.passes[3].executionRef = await storeEvidence(root, id, recaptureStoredExchange(reusedMutated, reusedExec.replay!.inputRefs, reusedExec.replay!.outputRefs));
       const reusedRef = await storeEvidence(root, id, reused);
       await assert.rejects(validateEditorialExecution(root, reusedRef, record), /SESSION_REUSED|REUSED/);
     }
 
     // Negative: wrong model (registered same-family alias, not exact Beam) -> reject.
     const wrong = structuredClone(converted);
-    wrong.passes[3].executionRef = await storeEvidence(root, id, { ...executionEvidenceSchema.parse(await readEvidence(root, newExec)), providerId: "opencode-go", modelId: "beam-alt", family: "reflection-beam" });
+    const wrongExec = executionEvidenceSchema.parse(await readEvidence(root, newExec));
+    const wrongMutated = { ...wrongExec, providerId: "opencode-go", modelId: "beam-alt", family: "reflection-beam" };
+    wrong.passes[3].executionRef = await storeEvidence(root, id, recaptureStoredExchange(wrongMutated, wrongExec.replay!.inputRefs, wrongExec.replay!.outputRefs));
     const wrongRef = await storeEvidence(root, id, wrong);
     await assert.rejects(validateEditorialExecution(root, wrongRef, record), /CAPABILITY_UNAVAILABLE/);
 
@@ -98,7 +106,9 @@ test("Beam review policy validates a distinct same-family review and rejects mix
     const mixed2 = structuredClone(converted);
     mixed2.passes[3].name = "rivalFamilyCleanse";
     // make family different for legacy
-    mixed2.passes[3].executionRef = await storeEvidence(root, id, { ...executionEvidenceSchema.parse(await readEvidence(root, newExec)), family: "reviewer-family", providerId: "fixture", modelId: "cleanser", pass: "rivalFamilyCleanse", sessionId: "reviewer-session" });
+    const mixed2Exec = executionEvidenceSchema.parse(await readEvidence(root, newExec));
+    const mixed2Mutated = { ...mixed2Exec, family: "reviewer-family", providerId: "fixture", modelId: "cleanser", pass: "rivalFamilyCleanse", sessionId: "reviewer-session" };
+    mixed2.passes[3].executionRef = await storeEvidence(root, id, recaptureStoredExchange(mixed2Mutated, mixed2Exec.replay!.inputRefs, mixed2Exec.replay!.outputRefs));
     mixed2.editorialEvidenceRef = await (await import("../src/lib/article-import/workflow-evidence")).evidenceReference(root, "editorial4.json");
     const mixed2Ref = await storeEvidence(root, id, mixed2);
     await assert.rejects(validateEditorialExecution(root, mixed2Ref, record), /PASS_ORDER|PASS_POLICY|MISMATCH|CAPABILITY_UNAVAILABLE/);
@@ -132,7 +142,8 @@ test("legacy rival-family evidence remains valid under its own policy", async ()
     converted.passes[3].name = "rivalFamilyCleanse";
     const exec = (await import("../src/lib/article-import/execution-evidence")).executionEvidenceSchema.parse(await readEvidence(root, converted.passes[3].executionRef));
     if (exec.kind === "opencode") {
-      converted.passes[3].executionRef = await storeEvidence(root, id, { ...exec, family: "fixture-cleanser-family", providerId: "fixture", modelId: "cleanser", pass: "rivalFamilyCleanse", sessionId: "fixture-legacy-review-session" });
+      const legacyMutated = { ...exec, family: "fixture-cleanser-family", providerId: "fixture", modelId: "cleanser", pass: "rivalFamilyCleanse", sessionId: "fixture-legacy-review-session" };
+      converted.passes[3].executionRef = await storeEvidence(root, id, recaptureStoredExchange(legacyMutated, exec.replay!.inputRefs, exec.replay!.outputRefs));
     }
     const j0 = await readEvidence(root, converted.passes[3].judgmentRef) as Record<string, unknown>;
     j0.pass = "rivalFamilyCleanse";
@@ -140,7 +151,8 @@ test("legacy rival-family evidence remains valid under its own policy", async ()
     if (oldJe.kind === "opencode") {
       const judgmentTextForExec = { ...j0, executionRef: undefined };
       const judgmentProj = { judgment: JSON.stringify(judgmentTextForExec) };
-      const newJe = await storeEvidence(root, id, { ...oldJe, pass: "rivalFamilyCleanse-judgment", output: judgmentProj, outputDigest: (await import("../src/lib/article-import/execution-evidence")).proseProjectionDigest(judgmentProj) });
+      const legacyJudgmentMutated = { ...oldJe, pass: "rivalFamilyCleanse-judgment", output: judgmentProj, outputDigest: (await import("../src/lib/article-import/execution-evidence")).proseProjectionDigest(judgmentProj) };
+      const newJe = await storeEvidence(root, id, recaptureStoredExchange(legacyJudgmentMutated, oldJe.replay!.inputRefs, oldJe.replay!.outputRefs));
       j0.executionRef = newJe;
     }
     converted.passes[3].judgmentRef = await storeEvidence(root, id, j0);

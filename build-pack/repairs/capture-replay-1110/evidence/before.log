@@ -1,0 +1,25 @@
+✖ missing replay blocks validation (88.6545ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1446.1397
+
+✖ failing tests:
+
+test at tests\capture-replay-1110.test.ts:2:1480
+✖ missing replay blocks validation (88.6545ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (D:\Backup 4 November 2026\Antigravity Applications Created\Vetted SaaS B - Content Strategy and Growth Strategy\.worktrees\capture-replay-1110\tests\capture-replay-1110.test.ts:29:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /EXECUTION_REPLAY_MISSING/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

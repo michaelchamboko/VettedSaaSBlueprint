@@ -126,7 +126,7 @@ const capturedInstructionSchema = evidenceRefSchema.extend({ text: z.string() })
 export const executionEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({ ...base, kind: z.literal("command"), executable: z.string().min(1), argv: z.array(z.string()), cwd: z.string().min(1), stdout: z.string(), stderr: z.string(), exitCode: z.number().int() }).strict(),
   z.object({ ...base, kind: z.literal("browser"), target: z.string().url(), routes: z.array(z.string().startsWith("/")).min(1), viewport: z.object({ width: z.number().int().positive(), height: z.number().int().positive(), reducedMotion: z.boolean() }).strict(), checks: z.record(z.string(), z.boolean()), screenshots: z.array(evidenceRefSchema).min(1) }).strict(),
-  z.object({ ...base, kind: z.literal("opencode"), toolVersion: openCodeVersionSchema, sessionId: z.string().min(1), userMessageId: z.string().min(1), assistantMessageId: z.string().min(1), providerId: z.string().min(1), modelId: z.string().min(1), family: z.string().min(1), packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection, inputDigest: hashSchema, outputDigest: hashSchema, instructions: z.array(capturedInstructionSchema) }).strict(),
+  z.object({ ...base, kind: z.literal("opencode"), toolVersion: openCodeVersionSchema, sessionId: z.string().min(1), userMessageId: z.string().min(1), assistantMessageId: z.string().min(1), providerId: z.string().min(1), modelId: z.string().min(1), family: z.string().min(1), packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection, inputDigest: hashSchema, outputDigest: hashSchema, instructions: z.array(capturedInstructionSchema), replay: z.object({ export: z.unknown(), inputRefs: z.array(evidenceRefSchema), outputRefs: z.array(evidenceRefSchema) }).strict().optional() }).strict(),
 ]);
 export type ExecutionEvidence = z.infer<typeof executionEvidenceSchema>;
 export const proseProjectionDigest = (value: Record<string, string>): string => sha256(JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))));
@@ -164,8 +164,38 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
     { info: { id: assistant.id, role: "assistant", sessionID: envelope.info.id, providerID: assistant.model.providerID, modelID: assistant.model.id, time: assistant.time, finish: assistant.finish }, parts: assistant.content },
   ] };
 }
-/** Extract only the selected text exchange; reasoning, tools and unrelated messages never survive. */
-export function extractOpenCodeExecution(raw: unknown, selected: ExportSelection): ExecutionEvidence {
+/** Build a minimal selected source export for v2 (identity/timing/linkage/completion only, no reasoning/unrelated). */
+function minimalV2Export(raw: unknown): unknown {
+  const object = z.record(z.string(), z.unknown()).parse(raw);
+  const payload = "data" in object ? z.object({ data: z.unknown() }).strict().parse(object).data : object;
+  const info = z.record(z.string(), z.unknown()).parse((payload as { info?: unknown }).info);
+  const msgSource = z.array(z.record(z.string(), z.unknown())).parse((payload as { messages?: unknown }).messages);
+  const [rawUser, rawAssistant, rawIdle] = msgSource as [Record<string, unknown>, Record<string, unknown>, Record<string, unknown>];
+  const minimalInfo = { id: info.id, model: info.model, outcome: info.outcome };
+  const minimalUser = { id: rawUser.id, type: rawUser.type, text: rawUser.text, time: rawUser.time, ...(Array.isArray(rawUser.files) ? { files: rawUser.files } : {}) };
+  const rawContent = Array.isArray(rawAssistant.content) ? rawAssistant.content as Array<Record<string, unknown>> : [];
+  const minimalAssistant = { id: rawAssistant.id, type: rawAssistant.type, model: rawAssistant.model, time: rawAssistant.time, finish: rawAssistant.finish, ...(rawAssistant.rawFinish !== undefined ? { rawFinish: rawAssistant.rawFinish } : {}), content: rawContent.filter((item) => item.type !== "reasoning").map((item) => ({ type: item.type, text: item.text })) };
+  const minimalIdle = { id: rawIdle.id, type: rawIdle.type, outcome: rawIdle.outcome, time: rawIdle.time };
+  return { info: minimalInfo, messages: [minimalUser, minimalAssistant, minimalIdle] };
+}
+/** Build a minimal selected source export for v1 (selected info + text parts only). */
+function minimalV1Export(raw: unknown, selected: ExportSelection): unknown {
+  const envelope = z.object({ info: z.object({ id: z.string() }).passthrough(), messages: z.array(z.object({ info: z.record(z.string(), z.unknown()), parts: z.array(z.record(z.string(), z.unknown())) }).passthrough()) }).passthrough().parse(raw);
+  const user = envelope.messages.find((m) => m.info.id === selected.userMessageId)!;
+  const assistant = envelope.messages.find((m) => m.info.id === selected.assistantMessageId)!;
+  const textParts = (parts: Array<Record<string, unknown>>) => parts.filter((part) => part.type === "text").map((part) => ({ type: "text", text: part.text }));
+  const userTime = user.info.time as { created?: number } | undefined;
+  const assistantTime = assistant.info.time as { created?: number; completed?: number } | undefined;
+  return {
+    info: { id: envelope.info.id },
+    messages: [
+      { info: { id: String(user.info.id), role: String(user.info.role), sessionID: String(user.info.sessionID), ...(userTime ? { time: { created: Number(userTime.created ?? 0) } } : {}) }, parts: textParts(user.parts) },
+      { info: { id: String(assistant.info.id), role: String(assistant.info.role), sessionID: String(assistant.info.sessionID), parentID: assistant.info.parentID, providerID: assistant.info.providerID, modelID: assistant.info.modelID, time: { created: Number(assistantTime?.created ?? 0), completed: Number(assistantTime?.completed ?? 0) }, finish: assistant.info.finish }, parts: textParts(assistant.parts) },
+    ],
+  };
+}
+/** Core extraction without replay; public wrapper adds replay. */
+function extractOpenCodeExecutionCore(raw: unknown, selected: ExportSelection): ExecutionEvidence {
   if (!openCodeVersionSchema.safeParse(selected.version).success) throw new Error("EVIDENCE_UNSUPPORTED");
   if (selected.version === "2.2.5" || selected.version === "2.2.6") raw = dedicatedV2Exchange(raw, selected);
   const envelope = z.object({ info: z.object({ id: z.string() }).passthrough(), messages: z.array(z.object({ info: z.record(z.string(), z.unknown()), parts: z.array(z.record(z.string(), z.unknown())) }).passthrough()) }).passthrough().parse(raw);
@@ -194,6 +224,16 @@ export function extractOpenCodeExecution(raw: unknown, selected: ExportSelection
   if (!family) throw new Error("CAPABILITY_UNAVAILABLE");
   return executionEvidenceSchema.parse({ schemaVersion: "ExecutionEvidenceV1", kind: "opencode", toolVersion: selected.version, startedAt: new Date(time.created).toISOString(), completedAt: new Date(time.completed).toISOString(), inputRefs: [...(selected.inputRefs ?? []), ...instruction.instructions.map(({ path, sha256 }) => ({ path, sha256 }))], outputRefs: selected.outputRefs ?? [], sessionId: selected.sessionId, userMessageId: selected.userMessageId, assistantMessageId: selected.assistantMessageId, providerId, modelId, family, packetId: selected.packetId, pass: selected.pass, input, output, inputDigest: proseProjectionDigest(input), outputDigest: proseProjectionDigest(output), instructions: instruction.instructions });
 }
+/** Extract only the selected text exchange; reasoning, tools and unrelated messages never survive. Adds replay. */
+export function extractOpenCodeExecution(raw: unknown, selected: ExportSelection): ExecutionEvidence {
+  if (!openCodeVersionSchema.safeParse(selected.version).success) throw new Error("EVIDENCE_UNSUPPORTED");
+  const isV2 = selected.version === "2.2.5" || selected.version === "2.2.6";
+  // Validate the full source export before projection (v2 dedicated exchange).
+  const evidence = extractOpenCodeExecutionCore(raw, selected);
+  const minimalExport = isV2 ? minimalV2Export(raw) : minimalV1Export(raw, selected);
+  const replay = { export: minimalExport, inputRefs: [...(selected.inputRefs ?? [])], outputRefs: [...(selected.outputRefs ?? [])] };
+  return executionEvidenceSchema.parse({ ...evidence, replay });
+}
 
 export async function validateExecutionEvidence(root: string, ref: EvidenceRef): Promise<ExecutionEvidence> {
   const result = executionEvidenceSchema.parse(await readEvidence(root, ref));
@@ -209,6 +249,32 @@ export async function validateExecutionEvidence(root: string, ref: EvidenceRef):
       if (sha256(instruction.text) !== instruction.sha256) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
       await verifyEvidenceRef(root, { path: instruction.path, sha256: instruction.sha256 });
     }
+    if (!result.replay) throw new Error("EXECUTION_REPLAY_MISSING");
+    const replay = result.replay;
+    // verify replay refs
+    for (const item of [...replay.inputRefs, ...replay.outputRefs]) await verifyEvidenceRef(root, item);
+    const selected = {
+      version: result.toolVersion,
+      sessionId: result.sessionId,
+      userMessageId: result.userMessageId,
+      assistantMessageId: result.assistantMessageId,
+      packetId: result.packetId,
+      pass: result.pass,
+      input: result.input,
+      output: result.output,
+      families: capabilities.modelFamilies,
+      inputRefs: replay.inputRefs,
+      outputRefs: replay.outputRefs,
+      instructions: result.instructions,
+    };
+    let replayed: ExecutionEvidence;
+    try {
+      replayed = extractOpenCodeExecutionCore(replay.export, selected);
+    } catch (error) {
+      throw error instanceof Error ? error : new Error("EXECUTION_REPLAY_FAILED");
+    }
+    const { replay: _ignoredReplay, ...withoutReplay } = result; void _ignoredReplay;
+    if (JSON.stringify(replayed) !== JSON.stringify(withoutReplay)) throw new Error("EXECUTION_REPLAY_MISMATCH");
   }
   return result;
 }

@@ -5,6 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { advanceImport, createArticleImport, ensureImportContentApproval, loadImport, recordImportFailure, resumeImport } from "../src/lib/article-import/engine";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { recaptureStoredExchange } from "./fixtures/capture-replay";
+import type { ExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 
 async function setup() {
   const root = await mkdtemp(path.join(os.tmpdir(), "content-approval-"));
@@ -125,7 +127,7 @@ test("advanceImport rejects fail design review through evaluateWorkflowEvidence 
     const review = JSON.parse(execution.output.designReview ?? "null");
     const negative = { ...review, verdict: "fail", findings: [{ description: "Synthetic design failure.", disposition: "unresolved" }] };
     const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
-    const newExecution = await storeEvidence(root, presented.importId, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) });
+    const newExecution = await storeEvidence(root, presented.importId, recaptureStoredExchange({ ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs));
     rule.evidenceRefs = [newExecution];
     const newPresentation = await storeEvidence(root, presented.importId, presentation);
     const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
@@ -159,7 +161,7 @@ test("advanceImport rejects insufficient-evidence design review through evaluate
     const review = JSON.parse(execution.output.designReview ?? "null");
     const negative = { ...review, verdict: "insufficient-evidence", findings: [{ description: "Missing runtime observation.", disposition: "unresolved" }] };
     const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
-    const newExecution = await storeEvidence(root, presented.importId, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) });
+    const newExecution = await storeEvidence(root, presented.importId, recaptureStoredExchange({ ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs));
     rule.evidenceRefs = [newExecution];
     const newPresentation = await storeEvidence(root, presented.importId, presentation);
     const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
@@ -193,7 +195,7 @@ test("advanceImport rejects pass design review with unresolved findings through 
     const review = JSON.parse(execution.output.designReview ?? "null");
     const mixed = { ...review, verdict: "pass", findings: [{ description: "Unresolved issue.", disposition: "unresolved" }] };
     const mixedOutput = { ...execution.output, designReview: JSON.stringify(mixed) };
-    const newExecution = await storeEvidence(root, presented.importId, { ...execution, output: mixedOutput, outputDigest: proseProjectionDigest(mixedOutput) });
+    const newExecution = await storeEvidence(root, presented.importId, recaptureStoredExchange({ ...execution, output: mixedOutput, outputDigest: proseProjectionDigest(mixedOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs));
     rule.evidenceRefs = [newExecution];
     const newPresentation = await storeEvidence(root, presented.importId, presentation);
     const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
@@ -211,3 +213,78 @@ test("advanceImport rejects pass design review with unresolved findings through 
     assert.equal(mutatedRecord.stage, "VALIDATING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+type SyntheticExecution = Extract<ExecutionEvidence, { kind: "opencode" }>;
+for (const scenario of [
+  {
+    name: "missing replay",
+    diagnostic: /EXECUTION_REPLAY_MISSING/,
+    mutate: (execution: SyntheticExecution): SyntheticExecution => {
+      const { replay: _replay, ...rest } = execution;
+      void _replay;
+      return rest as SyntheticExecution;
+    },
+  },
+  {
+    name: "source wrapper",
+    diagnostic: /SyntaxError|Unexpected token/,
+    mutate: (execution: SyntheticExecution): SyntheticExecution => {
+      const replayExport = execution.replay!.export as { messages: Array<{ parts: Array<{ text: string; [key: string]: unknown }>; [key: string]: unknown }>; [key: string]: unknown };
+      const originalText = replayExport.messages[0].parts[0].text;
+      const wrappedText = `Do not use any tools. Answer using the attached envelope. <file name="envelope.json">` + originalText + `</file>`;
+      const messages = replayExport.messages.map((message, index) =>
+        index === 0 ? { ...message, parts: [{ ...message.parts[0], text: wrappedText }] } : message,
+      );
+      return {
+        ...execution,
+        replay: {
+          ...execution.replay!,
+          export: { ...replayExport, messages },
+        },
+      } as SyntheticExecution;
+    },
+  },
+  {
+    name: "tampered answer",
+    diagnostic: /EXECUTION_PROSE_MISMATCH/,
+    mutate: (execution: SyntheticExecution): SyntheticExecution => execution,
+  },
+]) {
+  test(`capture rejection integration: ${scenario.name}`, async () => {
+    const { root, record } = await setup();
+    try {
+      const approved = await approveFixture(root, record);
+      const validating = await advanceImport(root, approved, "Approved content");
+      const presented = await presentFixture(root, validating);
+      const { readEvidence, storeEvidence, workflowEvidenceSchema, evaluateWorkflowEvidence } = await import("../src/lib/article-import/workflow-evidence");
+      const { executionEvidenceSchema, proseProjectionDigest } = await import("../src/lib/article-import/execution-evidence");
+      const presentation = workflowEvidenceSchema.parse(await readEvidence(root, presented.evidenceRefs!.presentation!));
+      const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+      const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+      if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+      let mutatedExecution: SyntheticExecution = execution;
+      if (scenario.name === "tampered answer") {
+        const tamperedOutput = { ...execution.output, designReview: JSON.stringify({ ...JSON.parse(execution.output.designReview ?? "null"), verdict: "fail" }) };
+        mutatedExecution = { ...execution, output: tamperedOutput, outputDigest: proseProjectionDigest(tamperedOutput) };
+      } else {
+        mutatedExecution = scenario.mutate(execution);
+      }
+      const newExecution = await storeEvidence(root, presented.importId, mutatedExecution);
+      rule.evidenceRefs = [newExecution];
+      const newPresentation = await storeEvidence(root, presented.importId, presentation);
+      const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
+      const evalResult = await evaluateWorkflowEvidence(mutatedRecord, { root, throughStage: "RELEASING" });
+      assert.equal(evalResult.ok, false);
+      assert.match(evalResult.diagnostics.join(";"), scenario.diagnostic as RegExp);
+      const statePath = path.join(root, ".automation", "article-imports", `${record.importId}.json`);
+      const beforeBytes = await readFile(statePath);
+      const beforeInventory = await reviewOutcomeFileList(root);
+      await assert.rejects(advanceImport(root, mutatedRecord, "Ready to release"), /WORKFLOW_EVIDENCE_INVALID/);
+      const afterBytes = await readFile(statePath);
+      assert.equal(afterBytes.toString(), beforeBytes.toString());
+      const afterInventory = await reviewOutcomeFileList(root);
+      assert.deepEqual(afterInventory, beforeInventory);
+      assert.equal(mutatedRecord.stage, "VALIDATING");
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+}
