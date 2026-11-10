@@ -71,6 +71,8 @@ Do not resubmit unchanged failing input. Diagnose the failure and repair the rel
 
 Missing work alone does not justify a durable blocker or selecting the next entry. Record a blocker only for a demonstrated obstacle, with its cause, attempted recovery, and exact requirement for resumption. Genuine article-specific blockers follow the existing continuation policy; shared capability, model-access, integrity, or release failures stop the run. A pending external dependency is a persisted wait, not an article blocker: release the import lease, poll at the recorded deadline, and resume the same immutable snapshot. Use explicit intake retry only after resolving the article blocker's cause, then resume the same immutable snapshot. Processing completion does not establish publication.
 
+Design reviews in `VALIDATING` must use `.agents/skills/external-article-import/references/design-judgment.md` as the tracked instruction. It supersedes any historical ad hoc prompt that forced `pass`. They must report `pass`, `fail`, or `insufficient-evidence`; retain unresolved findings; and report unsupported capabilities or missing runtime observations honestly. A source-only review, clean detector, or checklist does not prove runtime behavior. A negative or unresolved design review is valid evidence but does not advance the import; only all-resolved `pass` permits advancement. Never force `pass` or delete findings.
+
 Stage result fields (in `work`):
 
 | Stage | Required fields |

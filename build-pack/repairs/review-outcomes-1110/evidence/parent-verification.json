@@ -1,0 +1,61 @@
+{
+  "gates": [
+    {
+      "gate": "verify:agent-workflow",
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:08:25.1870079Z",
+      "completedAt": "2026-11-10T07:08:28.7772183Z"
+    },
+    {
+      "gate": "lint",
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:08:28.8770248Z",
+      "completedAt": "2026-11-10T07:09:31.3552091Z"
+    },
+    {
+      "gate": "typecheck",
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:09:31.3618448Z",
+      "completedAt": "2026-11-10T07:09:40.4289445Z"
+    },
+    {
+      "gate": "test",
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:09:40.4342246Z",
+      "completedAt": "2026-11-10T07:20:34.1176351Z"
+    },
+    {
+      "gate": "validate:public-site",
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:20:34.1376526Z",
+      "completedAt": "2026-11-10T07:20:35.9334259Z"
+    },
+    {
+      "gate": "build",
+      "exitCode": 0,
+      "startedAt": "2026-11-10T07:20:35.9360428Z",
+      "completedAt": "2026-11-10T07:22:18.2407299Z"
+    }
+  ],
+  "tests": {
+    "passed": 533,
+    "failed": 0,
+    "skipped": 3
+  },
+  "pausedArticle": {
+    "protectedFilesChecked": 654,
+    "changed": [],
+    "stage": "VALIDATING",
+    "resumed": false
+  },
+  "sourceBindings": {
+    ".agents/skills/external-article-import/SKILL.md": "6aac6e7c361b34b6f4e09e91b03982c1257b5fafc3984ca7e6b55969f2a0b05b",
+    "build-pack/execution-state.json": "ebc9929e41e2e91e2bfe385b050ccba7794f9282678073121ea8542f91fe61f7",
+    "planning.md": "a9cf12642dc5475baec65f27372b07c425935dde625ee99391d28cfda6aff929",
+    "src/lib/article-import/workflow-evidence.ts": "78d2b582c0b0ef3e4af0119188f426aad676bc19053cec461d43bfcd6d196473",
+    "src/lib/article-import/workflow-requirements.ts": "3190f343bcdc4d44d68afd7b4ebab3bd238d9cafb47dd73ee0c9666e0b139b90",
+    "tests/article-content-approval.test.ts": "3aa22b8cad02ad1a0f3d178809a3ea7fc6a25738d3383efe83eb74244c5df64c",
+    "tests/article-workflow-evidence.test.ts": "f0f7e2b0cce778cc8ccea2b8df0f74f9d298b2b480b21e269f17ba4db504c324",
+    ".agents/skills/external-article-import/references/design-judgment.md": "5de2ae80e0bef13fef11573da9f440819b308acec44acf6964d47c3066578f97"
+  }
+}
