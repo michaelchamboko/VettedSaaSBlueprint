@@ -8,7 +8,7 @@ import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
-import { artifactProseProjection, contentAssessmentSchema, editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, contentAssessmentSchema, createDesignReviewSchema, editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution, evidenceReference, executionEvidenceSchema, extractOpenCodeExecution, freezeEvidenceGraph, proseProjectionDigest, sha256, validateExecutionEvidence, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
@@ -297,4 +297,76 @@ test("recovered evidence accepts current generation and rejects prior generation
     const replacement = await storeEvidence(root, id, { ...research, freshness: "Replacement research requires a new assessment." });
     await assert.rejects(validateContentAssessment(root, record.evidenceRefs!.assessment!, { ...record, evidenceRefs: { ...record.evidenceRefs, research: replacement } }), /ASSESSMENT_RESEARCH_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("design review fail blocks advancement", async () => {
+  const { root, record } = await fixture();
+  try {
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const negative = { ...review, verdict: "fail", findings: [{ description: "Synthetic design failure.", disposition: "unresolved" }] };
+    const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
+    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) })];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("design review insufficient-evidence blocks advancement", async () => {
+  const { root, record } = await fixture();
+  try {
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const negative = { ...review, verdict: "insufficient-evidence", findings: [{ description: "Missing runtime observation.", disposition: "unresolved" }] };
+    const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
+    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) })];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("design review pass with unresolved findings blocks advancement", async () => {
+  const { root, record } = await fixture();
+  try {
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const mixed = { ...review, verdict: "pass", findings: [{ description: "Unresolved issue.", disposition: "unresolved" }] };
+    const mixedOutput = { ...execution.output, designReview: JSON.stringify(mixed) };
+    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: mixedOutput, outputDigest: proseProjectionDigest(mixedOutput) })];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record), /PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("design review malformed verdict is rejected", async () => {
+  const { root, record } = await fixture();
+  try {
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, record.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const malformed = { ...review, verdict: "maybe" };
+    const malformedOutput = { ...execution.output, designReview: JSON.stringify(malformed) };
+    rule.evidenceRefs = [await storeEvidence(root, id, { ...execution, output: malformedOutput, outputDigest: proseProjectionDigest(malformedOutput) })];
+    await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, presentation), record));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("design review schema accepts truthful negative verdicts and rejects malformed verdicts", () => {
+  const schema = createDesignReviewSchema({ rule: "context", artifactFingerprint: "a".repeat(64), renderInputsRef: { path: "render.json", sha256: "b".repeat(64) }, renderingDigest: "c".repeat(64), allowedRoutes: [JSON.stringify(["/article"])] });
+  const base = { rule: "context", artifactFingerprint: "a".repeat(64), routes: ["/article"], renderInputsRef: { path: "render.json", sha256: "b".repeat(64) }, renderingDigest: "c".repeat(64), notes: "Synthetic scoped review." };
+  const fail = schema.parse({ ...base, verdict: "fail", findings: [{ description: "Synthetic design failure.", disposition: "unresolved" }] });
+  assert.equal(fail.verdict, "fail");
+  const insufficient = schema.parse({ ...base, verdict: "insufficient-evidence", findings: [{ description: "Missing runtime observation.", disposition: "unresolved" }] });
+  assert.equal(insufficient.verdict, "insufficient-evidence");
+  const pass = schema.parse({ ...base, verdict: "pass", findings: [{ description: "All resolved.", disposition: "resolved" }] });
+  assert.equal(pass.verdict, "pass");
+  assert.throws(() => schema.parse({ ...base, verdict: "maybe", findings: [] }));
 });

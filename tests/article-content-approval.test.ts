@@ -82,3 +82,132 @@ test("invalid legacy receipts remain diagnostic and reads never silently migrate
     assert.equal((await loadImport(root, record.importId)).presentation, undefined);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+async function reviewOutcomeFileList(root: string): Promise<string[]> {
+  const { readdir } = await import("node:fs/promises");
+  const path = await import("node:path");
+  const out = [];
+  async function walk(dir) {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else out.push(path.relative(root, full));
+    }
+  }
+  await walk(root);
+  return out.sort();
+}
+
+test("positive presented fixture evaluates through releasing", async () => {
+  const { root, record } = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const validating = await advanceImport(root, approved, "Approved content");
+    const presented = await presentFixture(root, validating);
+    const { evaluateWorkflowEvidence } = await import("../src/lib/article-import/workflow-evidence");
+    const result = await evaluateWorkflowEvidence(presented, { root, throughStage: "RELEASING" });
+    assert.deepEqual(result.diagnostics, []);
+    assert.equal(result.ok, true);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("advanceImport rejects fail design review through evaluateWorkflowEvidence and leaves state unchanged", async () => {
+  const { root, record } = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const validating = await advanceImport(root, approved, "Approved content");
+    const presented = await presentFixture(root, validating);
+    const { readEvidence, storeEvidence, workflowEvidenceSchema, evaluateWorkflowEvidence } = await import("../src/lib/article-import/workflow-evidence");
+    const { executionEvidenceSchema, proseProjectionDigest } = await import("../src/lib/article-import/execution-evidence");
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, presented.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const negative = { ...review, verdict: "fail", findings: [{ description: "Synthetic design failure.", disposition: "unresolved" }] };
+    const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
+    const newExecution = await storeEvidence(root, presented.importId, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) });
+    rule.evidenceRefs = [newExecution];
+    const newPresentation = await storeEvidence(root, presented.importId, presentation);
+    const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
+    const evalResult = await evaluateWorkflowEvidence(mutatedRecord, { root, throughStage: "RELEASING" });
+    assert.equal(evalResult.ok, false);
+    assert.match(evalResult.diagnostics.join(";"), /PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS/);
+    const statePath = path.join(root, ".automation", "article-imports", `${record.importId}.json`);
+    const beforeBytes = await readFile(statePath);
+    const beforeInventory = await reviewOutcomeFileList(root);
+    await assert.rejects(advanceImport(root, mutatedRecord, "Ready to release"), /WORKFLOW_EVIDENCE_INVALID/);
+    const afterBytes = await readFile(statePath);
+    assert.equal(afterBytes.toString(), beforeBytes.toString());
+    const afterInventory = await reviewOutcomeFileList(root);
+    assert.deepEqual(afterInventory, beforeInventory);
+    assert.equal(mutatedRecord.stage, "VALIDATING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("advanceImport rejects insufficient-evidence design review through evaluateWorkflowEvidence and leaves state unchanged", async () => {
+  const { root, record } = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const validating = await advanceImport(root, approved, "Approved content");
+    const presented = await presentFixture(root, validating);
+    const { readEvidence, storeEvidence, workflowEvidenceSchema, evaluateWorkflowEvidence } = await import("../src/lib/article-import/workflow-evidence");
+    const { executionEvidenceSchema, proseProjectionDigest } = await import("../src/lib/article-import/execution-evidence");
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, presented.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const negative = { ...review, verdict: "insufficient-evidence", findings: [{ description: "Missing runtime observation.", disposition: "unresolved" }] };
+    const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
+    const newExecution = await storeEvidence(root, presented.importId, { ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) });
+    rule.evidenceRefs = [newExecution];
+    const newPresentation = await storeEvidence(root, presented.importId, presentation);
+    const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
+    const evalResult = await evaluateWorkflowEvidence(mutatedRecord, { root, throughStage: "RELEASING" });
+    assert.equal(evalResult.ok, false);
+    assert.match(evalResult.diagnostics.join(";"), /PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS/);
+    const statePath = path.join(root, ".automation", "article-imports", `${record.importId}.json`);
+    const beforeBytes = await readFile(statePath);
+    const beforeInventory = await reviewOutcomeFileList(root);
+    await assert.rejects(advanceImport(root, mutatedRecord, "Ready to release"), /WORKFLOW_EVIDENCE_INVALID/);
+    const afterBytes = await readFile(statePath);
+    assert.equal(afterBytes.toString(), beforeBytes.toString());
+    const afterInventory = await reviewOutcomeFileList(root);
+    assert.deepEqual(afterInventory, beforeInventory);
+    assert.equal(mutatedRecord.stage, "VALIDATING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("advanceImport rejects pass design review with unresolved findings through evaluateWorkflowEvidence and leaves state unchanged", async () => {
+  const { root, record } = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const validating = await advanceImport(root, approved, "Approved content");
+    const presented = await presentFixture(root, validating);
+    const { readEvidence, storeEvidence, workflowEvidenceSchema, evaluateWorkflowEvidence } = await import("../src/lib/article-import/workflow-evidence");
+    const { executionEvidenceSchema, proseProjectionDigest } = await import("../src/lib/article-import/execution-evidence");
+    const presentation = workflowEvidenceSchema.parse(await readEvidence(root, presented.evidenceRefs!.presentation!));
+    const rule = presentation.ruleResults.find((item) => item.ruleId === "context")!;
+    const execution = executionEvidenceSchema.parse(await readEvidence(root, rule.evidenceRefs[0]));
+    if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+    const review = JSON.parse(execution.output.designReview ?? "null");
+    const mixed = { ...review, verdict: "pass", findings: [{ description: "Unresolved issue.", disposition: "unresolved" }] };
+    const mixedOutput = { ...execution.output, designReview: JSON.stringify(mixed) };
+    const newExecution = await storeEvidence(root, presented.importId, { ...execution, output: mixedOutput, outputDigest: proseProjectionDigest(mixedOutput) });
+    rule.evidenceRefs = [newExecution];
+    const newPresentation = await storeEvidence(root, presented.importId, presentation);
+    const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };
+    const evalResult = await evaluateWorkflowEvidence(mutatedRecord, { root, throughStage: "RELEASING" });
+    assert.equal(evalResult.ok, false);
+    assert.match(evalResult.diagnostics.join(";"), /PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING/);
+    const statePath = path.join(root, ".automation", "article-imports", `${record.importId}.json`);
+    const beforeBytes = await readFile(statePath);
+    const beforeInventory = await reviewOutcomeFileList(root);
+    await assert.rejects(advanceImport(root, mutatedRecord, "Ready to release"), /WORKFLOW_EVIDENCE_INVALID/);
+    const afterBytes = await readFile(statePath);
+    assert.equal(afterBytes.toString(), beforeBytes.toString());
+    const afterInventory = await reviewOutcomeFileList(root);
+    assert.deepEqual(afterInventory, beforeInventory);
+    assert.equal(mutatedRecord.stage, "VALIDATING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

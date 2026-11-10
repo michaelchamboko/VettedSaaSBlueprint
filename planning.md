@@ -147,3 +147,9 @@ Scope: repair demonstrated CSS presentation-gate failures and the related mobile
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
 
 Scope: repair contradictory candidate direct-review verification predicates and private-source release path handling. Owned files: scripts/verify-landing-deployment.ts; src/lib/article-import/{verification-evidence,presentation,workflow-evidence,rendering-inputs,format-validation,release,local-release-adapter,candidate-route}.ts; relevant tests; planning.md/build-pack/execution-state.json; build-pack/repairs/candidate-contract-1108/. No source strategy amendments, no new automation programme, no article execution in this worktree. Evidence: build-pack/repairs/candidate-contract-1108/.
+
+### Review outcomes repair (REVIEW-OUTCOMES-1110) (registered 2026-11-10)
+
+Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
+
+Scope: fix forced-pass review instructions so reviewers may fail or report insufficient evidence; parse truthful negative reviews as valid but block advancement; pass with unresolved findings blocks. Owned files: src/lib/article-import/workflow-evidence.ts, workflow-requirements.ts, one narrow review contract/helper if justified; tests/article-workflow-evidence.test.ts and relevant lifecycle integration tests/fixture only as needed; .agents/skills/external-article-import/SKILL.md and a focused reference file; planning.md, build-pack/execution-state.json; build-pack/repairs/review-outcomes-1110/ evidence; .mece/cells/REVIEW-OUTCOMES-1110/ report/scripts. No UI edits. Synthetic tests only; real article run remains paused; no article start/resume/capture/review or modifications of primary checkout, article artifacts, .automation data, historical receipts or source documents. Evidence: build-pack/repairs/review-outcomes-1110/.

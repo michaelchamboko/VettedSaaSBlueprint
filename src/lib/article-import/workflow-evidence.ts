@@ -12,6 +12,18 @@ export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
 
 const nonempty = z.string().trim().min(1);
+export function createDesignReviewSchema(input: { rule: string; artifactFingerprint: string; renderInputsRef: { path: string; sha256: string }; renderingDigest: string; allowedRoutes: string[] }) {
+  return z.object({
+    rule: z.literal(input.rule),
+    artifactFingerprint: z.literal(input.artifactFingerprint),
+    routes: z.array(z.string()),
+    renderInputsRef: z.object({ path: z.literal(input.renderInputsRef.path), sha256: z.literal(input.renderInputsRef.sha256) }).strict(),
+    renderingDigest: z.literal(input.renderingDigest),
+    verdict: z.enum(["pass", "fail", "insufficient-evidence"]),
+    findings: z.array(z.object({ description: nonempty, disposition: z.enum(["resolved", "unresolved"]) }).strict()),
+    notes: nonempty,
+  }).strict().refine((judgment) => input.allowedRoutes.includes(JSON.stringify(judgment.routes)), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH");
+}
 const common = { id: nonempty, createdAt: z.string().datetime({ offset: true }), importId: z.string().regex(/^article-[0-9a-f-]{36}$/), sourceFingerprint: hashSchema, requirementRevision: z.literal(WORKFLOW_REVISION) };
 const formatSchema = z.enum(CONTENT_FORMATS);
 export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal(WORKFLOW_REVISION), status: z.enum(["pass", "fail", "not-applicable", "recommendation-not-adopted"]), rationale: nonempty, evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict();
@@ -299,7 +311,9 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         const reference = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : rule === "context" ? IMPECCABLE_ROOT + "SKILL.md" : IMPECCABLE_ROOT + `reference/${rule}.md`;
         await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md"]);
         const allowedJudgmentRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
-z.object({ rule: z.literal(rule), artifactFingerprint: z.literal(fingerprintEditorialArtifact(artifact)), routes: z.array(z.string()), renderInputsRef: z.object({ path: z.literal(value.renderInputsRef.path), sha256: z.literal(value.renderInputsRef.sha256) }).strict(), renderingDigest: z.literal(rendering.digest), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), notes: nonempty }).strict().refine((judgment) => allowedJudgmentRoutes.includes(JSON.stringify(judgment.routes)), "PRESENTATION_JUDGMENT_ROUTES_MISMATCH").parse(JSON.parse(execution.output.designReview ?? "null"));
+const designReview = createDesignReviewSchema({ rule, artifactFingerprint: fingerprintEditorialArtifact(artifact), renderInputsRef: value.renderInputsRef, renderingDigest: rendering.digest, allowedRoutes: allowedJudgmentRoutes }).parse(JSON.parse(execution.output.designReview ?? "null"));
+if (designReview.verdict !== "pass") throw new Error("PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS");
+if (designReview.findings.some((finding) => finding.disposition !== "resolved")) throw new Error("PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING");
       }
       if (execution.kind === "browser") {
         const allowedBrowserRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
