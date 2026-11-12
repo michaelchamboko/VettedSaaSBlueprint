@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -195,6 +196,45 @@ test("candidate verifier accepts genuinely historical receipt via authenticated 
       ],
     };
     assert.doesNotThrow(() => assertVerifierResult(target, result, root, { importId, sourceFingerprint }));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+test("candidate verifier rejects constructed legacy receipt whose served artifact fingerprint does not match approved record", async () => {
+  const importId = "article-22222222-3333-4444-9555-666666666666";
+  const sourceFingerprint = "d".repeat(64);
+  const approvedArtifactFingerprint = target.artifactFingerprint;
+  const root = await mkdtemp(path.join(tmpdir(), "hist-"));
+  await mkdir(path.join(root, ".automation"), { recursive: true });
+  const baseResult = {
+    verificationMode: "candidate",
+    origin: "http://127.0.0.1:3000",
+    canonicalOrigin: "https://example.com",
+    status: "pass",
+    robots_ok: true,
+    sitemap_ok: true,
+    pages: [
+      {
+        path: target.renderedRoutes[0],
+        desktop: {
+          httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true,
+          browserErrors: [], artifactFingerprint: approvedArtifactFingerprint,
+        },
+        mobile: {
+          httpOk: true, disclosureOk: true, allCtasExact: true, allRevealSectionsVisible: true,
+          browserErrors: [], artifactFingerprint: approvedArtifactFingerprint,
+        },
+      },
+    ],
+  };
+  const receiptDigest = createHash("sha256").update(JSON.stringify(baseResult)).digest("hex");
+  writeFileSync(path.join(root, ".automation", "historical-candidate-receipts.json"), JSON.stringify([{ importId, sourceFingerprint, artifactFingerprint: approvedArtifactFingerprint, receiptDigest }]));
+  try {
+    assert.doesNotThrow(() => assertVerifierResult(target, baseResult, root, { importId, sourceFingerprint }));
+    const wrong = JSON.parse(JSON.stringify(baseResult));
+    wrong.pages[0].desktop.artifactFingerprint = "b".repeat(64);
+    wrong.pages[0].mobile.artifactFingerprint = "b".repeat(64);
+    assert.throws(() => assertVerifierResult(target, wrong, root, { importId, sourceFingerprint }), /CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

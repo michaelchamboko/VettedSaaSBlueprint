@@ -111,6 +111,57 @@ export function requireVerificationMode(value: unknown, expected: "candidate" | 
 
 type TrustedHistoricalIdentity = { importId: string; sourceFingerprint: string };
 
+const APPROVED_ARTIFACT_FINGERPRINT_FIELDS = [
+  "artifactFingerprint",
+  "approvedArtifactFingerprint",
+  "artifact_fingerprint",
+  "approved_artifact_fingerprint",
+  "servedArtifactFingerprint",
+  "approvedFingerprint",
+  "fingerprint",
+];
+
+const APPROVED_RECEIPT_DIGEST_FIELDS = [
+  "receiptDigest",
+  "receiptSha256",
+  "receiptDigestSha256",
+  "receipt_digest",
+  "approvedReceiptDigest",
+  "receiptHash",
+  "receipt_sha256",
+  "sha256",
+  "digest",
+];
+
+function pickField(entry: Record<string, unknown>, fields: string[]): string | undefined {
+  for (const field of fields) {
+    const value = entry[field];
+    if (typeof value === "string" && value.length > 0) return value;
+  }
+  return undefined;
+}
+
+function collectServedArtifactFingerprints(value: unknown): string[] {
+  const result: string[] = [];
+  if (!value || typeof value !== "object") return result;
+  const record = value as Record<string, unknown>;
+  const topLevel = observedArtifactFingerprint(record);
+  if (topLevel) result.push(topLevel);
+  const pages = Array.isArray(record.pages) ? record.pages : [];
+  for (const page of pages) {
+    if (!page || typeof page !== "object") continue;
+    const pageRecord = page as Record<string, unknown>;
+    for (const key of ["desktop", "mobile", "reduced_motion"]) {
+      const shot = pageRecord[key];
+      if (shot && typeof shot === "object") {
+        const fingerprint = observedArtifactFingerprint(shot);
+        if (fingerprint) result.push(fingerprint);
+      }
+    }
+  }
+  return result;
+}
+
 export function hasAuthenticatedHistoricalContext(
   value: unknown,
   trustedOrRoot?: TrustedHistoricalIdentity | string,
@@ -140,10 +191,30 @@ export function hasAuthenticatedHistoricalContext(
     return false;
   }
   if (!Array.isArray(allowlist)) return false;
+  const submittedDigest = createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  const submittedSortedDigest = createHash("sha256").update(JSON.stringify(value, Object.keys(value as object).sort())).digest("hex");
+  const servedFingerprints = collectServedArtifactFingerprints(value);
   return allowlist.some((entry) => {
     if (!entry || typeof entry !== "object") return false;
     const e = entry as Record<string, unknown>;
-    return e.importId === importId && e.sourceFingerprint === sourceFingerprint;
+    if (e.importId !== importId || e.sourceFingerprint !== sourceFingerprint) return false;
+
+    const approvedArtifactFingerprint = pickField(e, APPROVED_ARTIFACT_FINGERPRINT_FIELDS);
+    if (approvedArtifactFingerprint) {
+      // Bind to the approved artifact fingerprint: every served fingerprint in the
+      // receipt must equal the approved value, and at least one must be present.
+      if (servedFingerprints.length === 0) return false;
+      if (servedFingerprints.some((fingerprint) => fingerprint !== approvedArtifactFingerprint)) return false;
+      if (!/^[a-f0-9]{64}$/.test(approvedArtifactFingerprint)) return false;
+    }
+
+    const approvedReceiptDigest = pickField(e, APPROVED_RECEIPT_DIGEST_FIELDS);
+    if (approvedReceiptDigest) {
+      // Bind to the immutable digest of the previously-approved receipt.
+      if (approvedReceiptDigest !== submittedDigest && approvedReceiptDigest !== submittedSortedDigest) return false;
+    }
+
+    return true;
   });
 }
 
