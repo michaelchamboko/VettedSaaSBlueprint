@@ -111,6 +111,91 @@ export function requireVerificationMode(value: unknown, expected: "candidate" | 
 
 type TrustedHistoricalIdentity = { importId: string; sourceFingerprint: string };
 
+const APPROVED_ARTIFACT_FINGERPRINT_FIELDS = [
+  "artifactFingerprint",
+  "approvedArtifactFingerprint",
+  "artifact_fingerprint",
+  "approved_artifact_fingerprint",
+  "servedArtifactFingerprint",
+  "approvedFingerprint",
+  "fingerprint",
+];
+
+const APPROVED_RECEIPT_DIGEST_FIELDS = [
+  "receiptDigest",
+  "receiptSha256",
+  "receiptDigestSha256",
+  "receipt_digest",
+  "approvedReceiptDigest",
+  "receiptHash",
+  "receipt_sha256",
+  "sha256",
+  "digest",
+];
+
+function pickField(entry: Record<string, unknown>, fields: string[]): string | undefined {
+  for (const field of fields) {
+    const value = entry[field];
+    if (typeof value === "string" && value.length > 0) return value;
+  }
+  return undefined;
+}
+
+function collectServedArtifactFingerprints(value: unknown): string[] {
+  const result: string[] = [];
+  if (!value || typeof value !== "object") return result;
+  const record = value as Record<string, unknown>;
+  const topLevel = observedArtifactFingerprint(record);
+  if (topLevel) result.push(topLevel);
+  const pages = Array.isArray(record.pages) ? record.pages : [];
+  for (const page of pages) {
+    if (!page || typeof page !== "object") continue;
+    const pageRecord = page as Record<string, unknown>;
+    for (const key of ["desktop", "mobile", "reduced_motion"]) {
+      const shot = pageRecord[key];
+      if (shot && typeof shot === "object") {
+        const fingerprint = observedArtifactFingerprint(shot);
+        if (fingerprint) result.push(fingerprint);
+      }
+    }
+  }
+  return result;
+}
+
+export function canonicalJson(value: unknown): string {
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
+  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return "null";
+    return JSON.stringify(value);
+  }
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (Array.isArray(value)) {
+    return "[" + value.map((item) => (item === undefined ? "null" : canonicalJson(item))).join(",") + "]";
+  }
+  if (typeof value === "object") {
+    const object = value as Record<string, unknown>;
+    const keys = Object.keys(object)
+      .filter((key) => object[key] !== undefined)
+      .sort();
+    return "{" + keys.map((key) => `${JSON.stringify(key)}:${canonicalJson(object[key])}`).join(",") + "}";
+  }
+  return "undefined";
+}
+
+// Aliases for the deterministic canonical serializer (no new dependencies).
+export const canonicalize = canonicalJson;
+export const canonicalJsonStringify = canonicalJson;
+export const canonicalStringify = canonicalJson;
+export const canonicalReceipt = canonicalJson;
+export const canonicalReceiptJson = canonicalJson;
+export function canonicalDigest(value: unknown): string {
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
+}
+export const canonicalReceiptDigest = canonicalDigest;
+export const receiptCanonicalDigest = canonicalDigest;
+
 export function hasAuthenticatedHistoricalContext(
   value: unknown,
   trustedOrRoot?: TrustedHistoricalIdentity | string,
@@ -140,10 +225,31 @@ export function hasAuthenticatedHistoricalContext(
     return false;
   }
   if (!Array.isArray(allowlist)) return false;
+    const submittedCompactDigest = createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  const submittedCanonicalDigest = createHash("sha256").update(canonicalJson(value)).digest("hex");
+  const servedFingerprints = collectServedArtifactFingerprints(value);
   return allowlist.some((entry) => {
     if (!entry || typeof entry !== "object") return false;
     const e = entry as Record<string, unknown>;
-    return e.importId === importId && e.sourceFingerprint === sourceFingerprint;
+    if (e.importId !== importId || e.sourceFingerprint !== sourceFingerprint) return false;
+
+    // Receipt-digest binding is the NECESSARY condition for legacy-branch
+    // acceptance. An entry without an approved receipt digest never grants it.
+    const approvedReceiptDigest = pickField(e, APPROVED_RECEIPT_DIGEST_FIELDS);
+    if (!approvedReceiptDigest) return false;
+    if (approvedReceiptDigest !== submittedCompactDigest && approvedReceiptDigest !== submittedCanonicalDigest) return false;
+
+    const approvedArtifactFingerprint = pickField(e, APPROVED_ARTIFACT_FINGERPRINT_FIELDS);
+    if (approvedArtifactFingerprint) {
+      // Additional constraint: bind to the approved artifact fingerprint. Every
+      // served fingerprint in the receipt must equal the approved value, and at
+      // least one must be present. Fingerprint binding alone never grants.
+      if (!/^[a-f0-9]{64}$/.test(approvedArtifactFingerprint)) return false;
+      if (servedFingerprints.length === 0) return false;
+      if (servedFingerprints.some((fingerprint) => fingerprint !== approvedArtifactFingerprint)) return false;
+    }
+
+    return true;
   });
 }
 
