@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { z } from "zod";
 import { pageBlueprintSchema } from "@/lib/schemas/contracts";
+import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
+import { parseApprovedUrls } from "@/lib/affiliate/approved-urls";
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 /**
@@ -64,70 +67,141 @@ export function validateApprovedArticlePreview(
     return { ok: false, error: "IMPORT_UNREADABLE" };
   }
 
-  // 5. Stage check (must be VALIDATING or later)
-  const stage = record.stage;
-  const validStages = ["VALIDATING", "RELEASING", "VERIFYING", "LIVE"];
-  if (typeof stage !== "string" || !validStages.includes(stage)) {
+  // 5. Stage check (must be exactly VALIDATING)
+  if (record.stage !== "VALIDATING") {
     return { ok: false, error: "INVALID_STAGE" };
   }
 
-  // 6. Content approval check
+  // 6. Source fingerprint check
+  if (typeof record.sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(record.sourceFingerprint)) {
+    return { ok: false, error: "INVALID_SOURCE_FINGERPRINT" };
+  }
+
+  // 7. Content approval check
   const contentApproval = record.contentApproval as Record<string, unknown> | undefined;
   if (!contentApproval || typeof contentApproval !== "object") {
     return { ok: false, error: "NO_CONTENT_APPROVAL" };
   }
   const artifactPath = contentApproval.artifactPath;
   const artifactFingerprint = contentApproval.artifactFingerprint;
-  if (typeof artifactPath !== "string" || typeof artifactFingerprint !== "string") {
+  const caSourceFingerprint = contentApproval.sourceFingerprint;
+  if (typeof artifactPath !== "string" || typeof artifactFingerprint !== "string" || typeof caSourceFingerprint !== "string") {
     return { ok: false, error: "INVALID_CONTENT_APPROVAL" };
   }
+  if (caSourceFingerprint !== record.sourceFingerprint) {
+    return { ok: false, error: "CONTENT_APPROVAL_SOURCE_MISMATCH" };
+  }
 
-  // 7. Work packet check
+  // 8. Work packet check
   const continuation = record.continuation as Record<string, unknown> | undefined;
   const workPath = continuation?.workPath;
   if (typeof workPath !== "string") {
     return { ok: false, error: "NO_WORK_PACKET" };
   }
+
+  // 9. Canonical path containment for work packet
+  const workDir = path.resolve(repositoryRoot, ".automation", "article-imports", "work", importId);
+  let canonicalWorkDir: string;
+  try {
+    canonicalWorkDir = realpathSync(workDir);
+  } catch {
+    return { ok: false, error: "WORK_DIR_MISSING" };
+  }
   const fullWorkPath = path.resolve(repositoryRoot, workPath);
-  if (!existsSync(fullWorkPath)) {
+  let canonicalWorkPath: string;
+  try {
+    canonicalWorkPath = realpathSync(fullWorkPath);
+  } catch {
     return { ok: false, error: "WORK_PACKET_MISSING" };
   }
-
-  // 8. Verify artifact path matches approved public projection
-  // The contentApproval artifactPath points to the private approved artifact;
-  // the public projection is at src/generated/landing-pages/<slug>.json
-  const publicProjectionPath = path.resolve(repositoryRoot, "src", "generated", "landing-pages", `${slug}.json`);
-  if (!existsSync(publicProjectionPath)) {
-    return { ok: false, error: "PUBLIC_PROJECTION_MISSING" };
+  const workRelative = path.relative(canonicalWorkDir, canonicalWorkPath);
+  if (workRelative.startsWith("..") || path.isAbsolute(workRelative)) {
+    return { ok: false, error: "WORK_PACKET_PATH_ESCAPE" };
   }
 
-  // 9. SHA256 check: public projection must match contentApproval fingerprint
-  const projectionBytes = readFileSync(publicProjectionPath);
-  const projectionHash = createHash("sha256").update(projectionBytes).digest("hex");
-  if (projectionHash !== artifactFingerprint) {
+  // 10. Parse work packet
+  let workPacket: Record<string, unknown>;
+  try {
+    workPacket = JSON.parse(readFileSync(canonicalWorkPath, "utf8"));
+  } catch {
+    return { ok: false, error: "WORK_PACKET_UNREADABLE" };
+  }
+  if (workPacket.schemaVersion !== "ImportSupervisedWorkV1") {
+    return { ok: false, error: "INVALID_WORK_PACKET_SCHEMA" };
+  }
+  if (workPacket.importId !== importId) {
+    return { ok: false, error: "WORK_PACKET_IMPORT_MISMATCH" };
+  }
+  if (workPacket.sourceFingerprint !== record.sourceFingerprint) {
+    return { ok: false, error: "WORK_PACKET_SOURCE_MISMATCH" };
+  }
+  if (workPacket.stage !== "VALIDATING") {
+    return { ok: false, error: "WORK_PACKET_STAGE_MISMATCH" };
+  }
+  const wpContentApproval = workPacket.contentApproval as Record<string, unknown> | undefined;
+  if (!wpContentApproval || wpContentApproval.artifactFingerprint !== artifactFingerprint) {
+    return { ok: false, error: "WORK_PACKET_CONTENT_APPROVAL_MISMATCH" };
+  }
+
+  // 11. Canonical path containment for private artifact
+  const fullArtifactPath = path.resolve(repositoryRoot, artifactPath);
+  let canonicalArtifactPath: string;
+  try {
+    canonicalArtifactPath = realpathSync(fullArtifactPath);
+  } catch {
+    return { ok: false, error: "ARTIFACT_NOT_FOUND" };
+  }
+  const artifactRelative = path.relative(canonicalWorkDir, canonicalArtifactPath);
+  if (artifactRelative.startsWith("..") || path.isAbsolute(artifactRelative)) {
+    return { ok: false, error: "ARTIFACT_PATH_ESCAPE" };
+  }
+
+  // 12. Read and parse the private approved artifact
+  let artifactValue: unknown;
+  try {
+    artifactValue = JSON.parse(readFileSync(canonicalArtifactPath, "utf8"));
+  } catch {
+    return { ok: false, error: "ARTIFACT_UNREADABLE" };
+  }
+
+  // 13. Semantic fingerprint check (fingerprintEditorialArtifact, not raw SHA256)
+  const semanticFingerprint = fingerprintEditorialArtifact(artifactValue);
+  if (semanticFingerprint !== artifactFingerprint) {
     return { ok: false, error: "ARTIFACT_FINGERPRINT_MISMATCH" };
   }
 
-  // 10. PageBlueprintV1 schema validation
+  // 14. PageBlueprintV1 schema validation
   let blueprint: PageBlueprint;
   try {
-    blueprint = pageBlueprintSchema.parse(JSON.parse(projectionBytes.toString("utf8")));
+    blueprint = pageBlueprintSchema.parse(artifactValue);
   } catch {
     return { ok: false, error: "INVALID_BLUEPRINT_SCHEMA" };
   }
 
-  // 11. Slug must match blueprint metadata
+  // 15. Slug must match blueprint metadata
   if (blueprint.metadata.url_slug !== slug) {
     return { ok: false, error: "SLUG_MISMATCH" };
   }
 
-  // 12. Affiliate URL from transformation (if available)
+  // 16. Affiliate URL verification through approved-urls.md
   const transformation = record.transformation as Record<string, unknown> | undefined;
-  const affiliateUrl = (transformation?.resolvedAffiliateUrl as string) || undefined;
+  const resolvedUrl = transformation?.resolvedAffiliateUrl;
+  if (typeof resolvedUrl !== "string") {
+    return { ok: false, error: "NO_RESOLVED_AFFILIATE_URL" };
+  }
+  const allowlistPath = path.resolve(repositoryRoot, "approved-urls.md");
+  if (!existsSync(allowlistPath)) {
+    return { ok: false, error: "APPROVED_URLS_MISSING" };
+  }
+  const allowlist = parseApprovedUrls(readFileSync(allowlistPath, "utf8"));
+  const urlAllowed = allowlist.entries.some((e) => e.exactUrl === resolvedUrl);
+  if (!urlAllowed) {
+    return { ok: false, error: "UNAPPROVED_AFFILIATE_URL" };
+  }
 
   return {
     ok: true,
     blueprint,
-    affiliateUrlOverride: affiliateUrl,
+    affiliateUrlOverride: resolvedUrl,
   };
 }
