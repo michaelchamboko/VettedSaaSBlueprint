@@ -26,7 +26,7 @@ export default async function DevApprovedArticlePreview({
 
   if (!importId) notFound();
 
-  const result = validateApprovedArticlePreview(slug, importId, process.cwd());
+  const result = await validateApprovedArticlePreview(slug, importId, process.cwd());
 
   if (!result.ok || !result.blueprint) notFound();
 
