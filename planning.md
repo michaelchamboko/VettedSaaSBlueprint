@@ -159,3 +159,11 @@ Scope: fix forced-pass review instructions so reviewers may fail or report insuf
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
 
 Scope: retain exact selected message text and original identity, linkage and completion metadata in captured OpenCode evidence; require replay through the same extractor when validating a handoff. Owned files: src/lib/article-import/execution-evidence.ts, src/lib/article-import/workflow-evidence.ts, scripts/capture-article-execution.ts; tests/capture-replay-1110.test.ts, tests/opencode-v2-evidence.test.ts, tests/article-workflow-evidence.test.ts, tests/article-content-approval.test.ts, tests/beam-review-policy.test.ts, tests/article-import.test.ts and their synthetic fixture helpers; .agents/skills/external-article-import/SKILL.md; planning.md, build-pack/execution-state.json; build-pack/repairs/capture-replay-1110/ evidence; .mece cell reports. No UI or source-strategy changes. Synthetic tests only; real article run remains paused. Evidence: build-pack/repairs/capture-replay-1110/.
+
+### Dev-only approved-article preview (ARTICLE-PREVIEW-001) (registered 2026-11-17)
+
+Classification: explicit user directive (2026-11-17). Dev-only renderer; no article execution or publication.
+
+Scope: implement a dev-only preview route that renders a frozen approved artifact through the existing ReferenceComposedReviewPage, reusing current style system. The route validates import ID, work packet, contentApproval path and SHA256, PageBlueprintV1 schema, and valid slug; rejects traversal, mismatches, wrong stage, missing evidence. Never exposes source/research/work packet fields, never writes article/receipt/import/result state, no caching, returns 404 in production. No arbitrary file-path/URL input, no public production publication API, no new automation stage/scheduler. Preserve exact article bytes and approval. Owned files: src/lib/article-import/approved-article-preview.ts; src/app/dev/approved-article-preview/[slug]/page.tsx; tests/approved-article-preview.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no private real article data in PR. Evidence: .automation/article-imports/work/article-ea8e4b04-.../presentation-evidence/.
+
+Source strategy documents remain unchanged. No source strategy amendments.

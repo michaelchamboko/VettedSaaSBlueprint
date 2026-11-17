@@ -39,6 +39,11 @@ Complete the next action in the receipt in order:
 
 Use `npm run import:article -- --check-completion <import-id>` to inspect one named run. `--resume` is a mutating execution command, not inspection. Continuation never scans or advances other pending imports. A transient dependency failure is `WAITING_EXTERNAL`; a submission with no safe publishable topic is `QUARANTINED`.
 
+
+### Dev-only approved-article preview (ARTICLE-PREVIEW-001)
+
+A dev-only route renders a frozen approved artifact through `ReferenceComposedReviewPage` for presentation review. It is available only when `NODE_ENV=development` and requires `?importId=<article-id>`. It validates import ID, work packet, contentApproval path/SHA256, PageBlueprintV1 schema, and valid slug; rejects traversal, mismatches, wrong stage, and missing evidence. It never exposes source/research/work-packet fields, never writes state, and returns 404 in production. It is not a publication API and does not advance the import.
+
 ### Supervised heartbeat execution
 
 The Codex heartbeat is the supervising agent. The CLI executes local gates; it does not call a separate model service. During each existing heartbeat window:
