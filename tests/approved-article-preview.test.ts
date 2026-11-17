@@ -151,16 +151,20 @@ describe("validateApprovedArticlePreview", () => {
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const bp = makeBlueprint(VALID_SLUG);
-    const fx = await makeFixture(root, { blueprint: bp, fingerprint: "0".repeat(64) });
-    // override contentApproval fingerprint to wrong value
+    const wrongFp = "0".repeat(64);
+    const fx = await makeFixture(root, { blueprint: bp });
+    // tamper both record and work-packet semantic fingerprints to the same wrong value
     const importPath = join(root, ".automation", "article-imports", `${fx.importId}.json`);
     const record = JSON.parse(await (await import("node:fs/promises")).readFile(importPath, "utf8"));
-    record.contentApproval.artifactFingerprint = "0".repeat(64);
+    record.contentApproval.artifactFingerprint = wrongFp;
     await (await import("node:fs/promises")).writeFile(importPath, JSON.stringify(record));
+    const wp = join(root, ".automation", "article-imports", "work", fx.importId, "work.json");
+    const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
+    wpData.contentApproval.artifactFingerprint = wrongFp;
+    await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
     const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
-    // May fail at work-packet or fingerprint level depending on tamper target
-    assert.ok(r.error === "ARTIFACT_FINGERPRINT_MISMATCH" || r.error === "WORK_PACKET_CONTENT_APPROVAL_MISMATCH", `got ${r.error}`);
+    assert.equal(r.error, "ARTIFACT_FINGERPRINT_MISMATCH");
     await rm(root, { recursive: true, force: true });
   });
 
@@ -183,6 +187,31 @@ describe("validateApprovedArticlePreview", () => {
     const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "INVALID_STAGE");
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("rejects bad schema (invalid blueprint, valid fingerprint)", async () => {
+    origNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+    const root = await mkdtemp(join(tmpdir(), "preview-"));
+    const invalidBytes = '{"not_a_blueprint": true}';
+    const invalidFp = fingerprintEditorialArtifact(JSON.parse(invalidBytes));
+    const bp = makeBlueprint(VALID_SLUG);
+    const fx = await makeFixture(root, { blueprint: bp });
+    // override approved artifact with invalid JSON, bind same semantic fingerprint
+    const workDir = join(root, ".automation", "article-imports", "work", fx.importId);
+    await (await import("node:fs/promises")).writeFile(join(workDir, "approved.json"), invalidBytes);
+    const importPath = join(root, ".automation", "article-imports", `${fx.importId}.json`);
+    const record = JSON.parse(await (await import("node:fs/promises")).readFile(importPath, "utf8"));
+    record.contentApproval.artifactFingerprint = invalidFp;
+    await (await import("node:fs/promises")).writeFile(importPath, JSON.stringify(record));
+    const wp = join(root, ".automation", "article-imports", "work", fx.importId, "work.json");
+    const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
+    wpData.contentApproval.artifactFingerprint = invalidFp;
+    await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
+    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    assert.equal(r.ok, false);
+    assert.equal(r.error, "INVALID_BLUEPRINT_SCHEMA");
     await rm(root, { recursive: true, force: true });
   });
 
