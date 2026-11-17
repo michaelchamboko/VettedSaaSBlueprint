@@ -2,6 +2,7 @@ import { describe, it, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { validateApprovedArticlePreview, isValidSlug, isDevEnvironment } from "../src/lib/article-import/approved-article-preview";
@@ -10,9 +11,15 @@ const VALID_SLUG = "test-approved-article";
 const VALID_IMPORT_ID = "article-12345678-1234-4234-8234-123456789abc";
 const SOURCE_FP = "a".repeat(64);
 
+function loadApprovedPresentation() {
+  const a = JSON.parse(readFileSync("src/generated/landing-pages/how-can-growing-brands-automate-on-brand-email-marketing-journeys.json", "utf8"));
+  return a.presentation;
+}
+
 function makeBlueprint(slug: string, overrides: Record<string, unknown> = {}) {
   return {
-    metadata: { product_id: "12345678-1234-4234-8234-123456789abc", page_type: "direct_review", target_keyword: "test", search_intent: "test", category_slug: "test", url_slug: slug, title_tag: "t", meta_description: "d", design_profile: "legacy" },
+    metadata: { product_id: "12345678-1234-4234-8234-123456789abc", page_type: "direct_review", target_keyword: "test", search_intent: "test", category_slug: "test", url_slug: slug, title_tag: "t", meta_description: "d", design_profile: "reference_composed_v1" },
+    presentation: loadApprovedPresentation(),
     affiliate_disclosure: { short_disclosure: "s", full_disclosure: "f", placement: "above_first_cta" },
     hero: { headline: "h", subheadline: "sh", primary_cta_label: "cta", primary_cta_link_id: "12345678-1234-4234-8234-123456789abc", answer_snippet: "a" },
     problem_solution: { problem: "p", agitation: "a", solution: "s" },
@@ -51,7 +58,12 @@ async function makeFixture(root: string, opts: {
     sourceFingerprint: SOURCE_FP,
     stage: "VALIDATING",
     idempotencyKey: "k".repeat(64),
-    contentApproval: { artifactFingerprint: fingerprint },
+    record: {
+      importId,
+      sourceFingerprint: SOURCE_FP,
+      stage: "VALIDATING",
+      contentApproval: { artifactPath: `.automation/article-imports/work/${importId}/approved.json`, artifactFingerprint: fingerprint, sourceFingerprint: SOURCE_FP },
+    },
   });
   if (workPacket) {
     await writeFile(join(root, workPath), JSON.stringify(workPacket));
@@ -159,7 +171,7 @@ describe("validateApprovedArticlePreview", () => {
     await (await import("node:fs/promises")).writeFile(importPath, JSON.stringify(record));
     const wp = join(root, ".automation", "article-imports", "work", fx.importId, "work.json");
     const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
-    wpData.contentApproval.artifactFingerprint = wrongFp;
+    wpData.record.contentApproval.artifactFingerprint = wrongFp;
     await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
     const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
@@ -193,11 +205,11 @@ describe("validateApprovedArticlePreview", () => {
     origNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
-    const invalidBytes = '{"not_a_blueprint": true}';
-    const invalidFp = fingerprintEditorialArtifact(JSON.parse(invalidBytes));
     const bp = makeBlueprint(VALID_SLUG);
     const fx = await makeFixture(root, { blueprint: bp });
-    // override approved artifact with invalid JSON, bind same semantic fingerprint
+    // tamper approved artifact to invalid schema, recompute fingerprint, bind it
+    const invalidBytes = '{"not_a_blueprint": true}';
+    const invalidFp = fingerprintEditorialArtifact(JSON.parse(invalidBytes));
     const workDir = join(root, ".automation", "article-imports", "work", fx.importId);
     await (await import("node:fs/promises")).writeFile(join(workDir, "approved.json"), invalidBytes);
     const importPath = join(root, ".automation", "article-imports", `${fx.importId}.json`);
@@ -206,7 +218,7 @@ describe("validateApprovedArticlePreview", () => {
     await (await import("node:fs/promises")).writeFile(importPath, JSON.stringify(record));
     const wp = join(root, ".automation", "article-imports", "work", fx.importId, "work.json");
     const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
-    wpData.contentApproval.artifactFingerprint = invalidFp;
+    wpData.record.contentApproval.artifactFingerprint = invalidFp;
     await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
     const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
@@ -269,7 +281,7 @@ describe("validateApprovedArticlePreview", () => {
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const bp = makeBlueprint(VALID_SLUG);
     const fp = fingerprintEditorialArtifact(bp);
-    const fx = await makeFixture(root, { workPacket: { schemaVersion: "ImportSupervisedWorkV1", importId: VALID_IMPORT_ID, sourceFingerprint: SOURCE_FP, stage: "RESEARCHING", idempotencyKey: "k".repeat(64), contentApproval: { artifactFingerprint: fp } }, blueprint: bp });
+    const fx = await makeFixture(root, { workPacket: { schemaVersion: "ImportSupervisedWorkV1", importId: VALID_IMPORT_ID, sourceFingerprint: SOURCE_FP, stage: "RESEARCHING", idempotencyKey: "k".repeat(64), record: { importId: VALID_IMPORT_ID, sourceFingerprint: SOURCE_FP, stage: "RESEARCHING", contentApproval: { artifactPath: `.automation/article-imports/work/${VALID_IMPORT_ID}/approved.json`, artifactFingerprint: fp, sourceFingerprint: SOURCE_FP } } }, blueprint: bp });
     const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "WORK_PACKET_STAGE_MISMATCH");
@@ -312,9 +324,13 @@ describe("validateApprovedArticlePreview", () => {
     const record = JSON.parse(await (await import("node:fs/promises")).readFile(importPath, "utf8"));
     record.contentApproval.artifactPath = "../../etc/passwd";
     await (await import("node:fs/promises")).writeFile(importPath, JSON.stringify(record));
+    const wp = join(root, ".automation", "article-imports", "work", fx.importId, "work.json");
+    const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
+    wpData.record.contentApproval.artifactPath = "../../etc/passwd";
+    await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
     const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
-    assert.ok(r.error === "ARTIFACT_NOT_FOUND" || r.error === "ARTIFACT_PATH_ESCAPE", `got ${r.error}`);
+    assert.ok(r.error === "ARTIFACT_NOT_FOUND" || r.error === "ARTIFACT_PATH_ESCAPE" || r.error === "WORK_PACKET_ARTIFACT_PATH_MISMATCH", `got ${r.error}`);
     await rm(root, { recursive: true, force: true });
   });
 });

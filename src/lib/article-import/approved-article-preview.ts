@@ -99,14 +99,8 @@ export function validateApprovedArticlePreview(
     return { ok: false, error: "NO_WORK_PACKET" };
   }
 
-  // 9. Canonical path containment for work packet
-  const workDir = path.resolve(repositoryRoot, ".automation", "article-imports", "work", importId);
-  let canonicalWorkDir: string;
-  try {
-    canonicalWorkDir = realpathSync(workDir);
-  } catch {
-    return { ok: false, error: "WORK_DIR_MISSING" };
-  }
+  // 9. Canonical path containment for work packet (repo root level)
+  const canonicalRoot = realpathSync(repositoryRoot);
   const fullWorkPath = path.resolve(repositoryRoot, workPath);
   let canonicalWorkPath: string;
   try {
@@ -114,7 +108,7 @@ export function validateApprovedArticlePreview(
   } catch {
     return { ok: false, error: "WORK_PACKET_MISSING" };
   }
-  const workRelative = path.relative(canonicalWorkDir, canonicalWorkPath);
+  const workRelative = path.relative(canonicalRoot, canonicalWorkPath);
   if (workRelative.startsWith("..") || path.isAbsolute(workRelative)) {
     return { ok: false, error: "WORK_PACKET_PATH_ESCAPE" };
   }
@@ -129,6 +123,7 @@ export function validateApprovedArticlePreview(
   if (workPacket.schemaVersion !== "ImportSupervisedWorkV1") {
     return { ok: false, error: "INVALID_WORK_PACKET_SCHEMA" };
   }
+  // Cross-check top-level work packet fields
   if (workPacket.importId !== importId) {
     return { ok: false, error: "WORK_PACKET_IMPORT_MISMATCH" };
   }
@@ -138,12 +133,29 @@ export function validateApprovedArticlePreview(
   if (workPacket.stage !== "VALIDATING") {
     return { ok: false, error: "WORK_PACKET_STAGE_MISMATCH" };
   }
-  const wpContentApproval = workPacket.contentApproval as Record<string, unknown> | undefined;
+  // Cross-check record embedded in work packet
+  const wpRecord = workPacket.record as Record<string, unknown> | undefined;
+  if (!wpRecord || typeof wpRecord !== "object") {
+    return { ok: false, error: "WORK_PACKET_RECORD_MISSING" };
+  }
+  if (wpRecord.importId !== importId) {
+    return { ok: false, error: "WORK_PACKET_RECORD_IMPORT_MISMATCH" };
+  }
+  if (wpRecord.sourceFingerprint !== record.sourceFingerprint) {
+    return { ok: false, error: "WORK_PACKET_RECORD_SOURCE_MISMATCH" };
+  }
+  if (wpRecord.stage !== "VALIDATING") {
+    return { ok: false, error: "WORK_PACKET_RECORD_STAGE_MISMATCH" };
+  }
+  const wpContentApproval = wpRecord.contentApproval as Record<string, unknown> | undefined;
   if (!wpContentApproval || wpContentApproval.artifactFingerprint !== artifactFingerprint) {
     return { ok: false, error: "WORK_PACKET_CONTENT_APPROVAL_MISMATCH" };
   }
+  if (wpContentApproval.artifactPath !== artifactPath) {
+    return { ok: false, error: "WORK_PACKET_ARTIFACT_PATH_MISMATCH" };
+  }
 
-  // 11. Canonical path containment for private artifact
+  // 11. Canonical path containment for private artifact (repo root level)
   const fullArtifactPath = path.resolve(repositoryRoot, artifactPath);
   let canonicalArtifactPath: string;
   try {
@@ -151,7 +163,7 @@ export function validateApprovedArticlePreview(
   } catch {
     return { ok: false, error: "ARTIFACT_NOT_FOUND" };
   }
-  const artifactRelative = path.relative(canonicalWorkDir, canonicalArtifactPath);
+  const artifactRelative = path.relative(canonicalRoot, canonicalArtifactPath);
   if (artifactRelative.startsWith("..") || path.isAbsolute(artifactRelative)) {
     return { ok: false, error: "ARTIFACT_PATH_ESCAPE" };
   }
@@ -178,12 +190,20 @@ export function validateApprovedArticlePreview(
     return { ok: false, error: "INVALID_BLUEPRINT_SCHEMA" };
   }
 
-  // 15. Slug must match blueprint metadata
+  // 15. Renderer prerequisites: presentation recipe and answer snippet
+  if (!blueprint.presentation) {
+    return { ok: false, error: "MISSING_PRESENTATION_RECIPE" };
+  }
+  if (!blueprint.hero.answer_snippet?.trim()) {
+    return { ok: false, error: "MISSING_ANSWER_SNIPPET" };
+  }
+
+  // 16. Slug must match blueprint metadata
   if (blueprint.metadata.url_slug !== slug) {
     return { ok: false, error: "SLUG_MISMATCH" };
   }
 
-  // 16. Affiliate URL verification through approved-urls.md
+  // 17. Affiliate URL verification through approved-urls.md
   const transformation = record.transformation as Record<string, unknown> | undefined;
   const resolvedUrl = transformation?.resolvedAffiliateUrl;
   if (typeof resolvedUrl !== "string") {
