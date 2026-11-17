@@ -1,10 +1,9 @@
-import { createHash } from "node:crypto";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
-import { z } from "zod";
 import { pageBlueprintSchema } from "@/lib/schemas/contracts";
 import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
 import { parseApprovedUrls } from "@/lib/affiliate/approved-urls";
+import { contentApprovalMatches } from "@/lib/article-import/content-approval";
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 /**
@@ -35,11 +34,11 @@ export interface PreviewValidationResult {
  * Validate all inputs and return the approved blueprint, or null if any check fails.
  * No side effects: no file writes, no state mutations, no caching.
  */
-export function validateApprovedArticlePreview(
+export async function validateApprovedArticlePreview(
   slug: string,
   importId: string,
   repositoryRoot: string,
-): PreviewValidationResult {
+): Promise<PreviewValidationResult> {
   // 1. Dev-only guard
   if (!isDevEnvironment()) {
     return { ok: false, error: "NOT_FOUND" };
@@ -217,6 +216,12 @@ export function validateApprovedArticlePreview(
   const urlAllowed = allowlist.entries.some((e) => e.exactUrl === resolvedUrl);
   if (!urlAllowed) {
     return { ok: false, error: "UNAPPROVED_AFFILIATE_URL" };
+  }
+
+  // 18. Read-only content approval/evidence validation
+  const approvalValid = await contentApprovalMatches(repositoryRoot, contentApproval, "direct-review", record.sourceFingerprint as string, artifactPath as string);
+  if (!approvalValid) {
+    return { ok: false, error: "CONTENT_APPROVAL_EVIDENCE_INVALID" };
   }
 
   return {

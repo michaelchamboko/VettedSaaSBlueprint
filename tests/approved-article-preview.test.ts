@@ -2,7 +2,6 @@ import { describe, it, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { validateApprovedArticlePreview, isValidSlug, isDevEnvironment } from "../src/lib/article-import/approved-article-preview";
@@ -11,15 +10,10 @@ const VALID_SLUG = "test-approved-article";
 const VALID_IMPORT_ID = "article-12345678-1234-4234-8234-123456789abc";
 const SOURCE_FP = "a".repeat(64);
 
-function loadApprovedPresentation() {
-  const a = JSON.parse(readFileSync("src/generated/landing-pages/how-can-growing-brands-automate-on-brand-email-marketing-journeys.json", "utf8"));
-  return a.presentation;
-}
-
 function makeBlueprint(slug: string, overrides: Record<string, unknown> = {}) {
   return {
-    metadata: { product_id: "12345678-1234-4234-8234-123456789abc", page_type: "direct_review", target_keyword: "test", search_intent: "test", category_slug: "test", url_slug: slug, title_tag: "t", meta_description: "d", design_profile: "reference_composed_v1" },
-    presentation: loadApprovedPresentation(),
+    metadata: { product_id: "12345678-1234-4234-8234-123456789abc", page_type: "direct_review", target_keyword: "test", search_intent: "test", category_slug: "test", url_slug: slug, title_tag: "t", meta_description: "d", canonical_url: "https://vettedsaasblueprint.online/landing-page-builders/test-approved-article", design_profile: "reference_composed_v1" },
+    presentation: {"hero":"media_first_offset","typography":"dm_serif_instrument_sans","section_order":["problem_solution","benefits","proof_blocks","how_it_works","limitations","objection_handling","faq","closing_cta"],"section_variants":{"problem_solution":"closing_manifesto","benefits":"alternating_story","proof_blocks":"decision_matrix","how_it_works":"split_editorial","limitations":"proof_strip","objection_handling":"process_timeline","faq":"objection_accordion","closing_cta":"numbered_ledger"},"cta":"inline_decision","motion":"split_reveal","mobile":"copy_first","design_dials":{"design_variance":7,"motion_intensity":6,"visual_density":4},"reference_ids":["lp-ref-0002","lp-ref-0029"],"recipe_id":"recipe-af7e9c8af1c28ec6","fingerprint":"af7e9c8af1c28ec607e2b99703ed7db69c74059aa77542ba2ef4275b3e1ce3d3"},
     affiliate_disclosure: { short_disclosure: "s", full_disclosure: "f", placement: "above_first_cta" },
     hero: { headline: "h", subheadline: "sh", primary_cta_label: "cta", primary_cta_link_id: "12345678-1234-4234-8234-123456789abc", answer_snippet: "a" },
     problem_solution: { problem: "p", agitation: "a", solution: "s" },
@@ -37,6 +31,7 @@ async function makeFixture(root: string, opts: {
   slug?: string;
   importId?: string;
   blueprint?: unknown;
+  artifactContent?: string;
   workPacket?: Record<string, unknown> | null;
   contentApproval?: Record<string, unknown> | null;
   approvedUrls?: string;
@@ -44,10 +39,9 @@ async function makeFixture(root: string, opts: {
   const slug = opts.slug ?? VALID_SLUG;
   const importId = opts.importId ?? VALID_IMPORT_ID;
   const bp = opts.blueprint ?? makeBlueprint(slug);
-  const artifactContent = JSON.stringify(bp);
-  const fingerprint = fingerprintEditorialArtifact(bp);
+  const artifactContent = opts.artifactContent ?? JSON.stringify(bp);
+  const fingerprint = fingerprintEditorialArtifact(JSON.parse(artifactContent));
 
-  // Write import record
   const workDir = join(root, ".automation", "article-imports", "work", importId);
   await mkdir(workDir, { recursive: true });
 
@@ -62,7 +56,13 @@ async function makeFixture(root: string, opts: {
       importId,
       sourceFingerprint: SOURCE_FP,
       stage: "VALIDATING",
-      contentApproval: { artifactPath: `.automation/article-imports/work/${importId}/approved.json`, artifactFingerprint: fingerprint, sourceFingerprint: SOURCE_FP },
+      contentApproval: {
+        artifactPath: `.automation/article-imports/work/${importId}/approved.json`,
+        artifactFingerprint: fingerprint,
+        sourceFingerprint: SOURCE_FP,
+        editorialEvidencePath: `.automation/article-imports/work/${importId}/editorial-evidence.json`,
+        formatQualityPath: `.automation/article-imports/work/${importId}/quality-receipt.json`,
+      },
     },
   });
   if (workPacket) {
@@ -70,9 +70,18 @@ async function makeFixture(root: string, opts: {
   }
 
   const contentApproval = opts.contentApproval === null ? undefined : (opts.contentApproval ?? {
+    schemaVersion: "ImportContentApprovalV1",
     artifactPath: `.automation/article-imports/work/${importId}/approved.json`,
+    format: "direct-review",
+    schemaRevision: "PageBlueprintV1",
     artifactFingerprint: fingerprint,
     sourceFingerprint: SOURCE_FP,
+    editorialRevision: "slopmonster-full-rewrite-v2:8bf609edfaeed844f1d03bb6b69f80dc21728c8b",
+    editorialEvidencePath: `.automation/article-imports/work/${importId}/editorial-evidence.json`,
+    editorialEvidenceFingerprint: "0".repeat(64),
+    formatQualityPath: `.automation/article-imports/work/${importId}/quality-receipt.json`,
+    formatQualityFingerprint: "0".repeat(64),
+    approvedAt: new Date().toISOString(),
   });
 
   const importRecord: Record<string, unknown> = {
@@ -89,12 +98,73 @@ async function makeFixture(root: string, opts: {
   await writeFile(join(importDir, `${importId}.json`), JSON.stringify(importRecord));
 
   // Write approved private artifact
-  await writeFile(join(workDir, "approved.json"), JSON.stringify(bp));
+  await writeFile(join(workDir, "approved.json"), artifactContent);
 
   // Write public projection (same content by default)
   const pubDir = join(root, "src", "generated", "landing-pages");
   await mkdir(pubDir, { recursive: true });
   await writeFile(join(pubDir, `${slug}.json`), artifactContent);
+
+  // Write editorial evidence (valid V2, matching artifact prose paths)
+  const { editorialProsePaths } = await import("../src/lib/editorial/refinement");
+  let eligiblePaths: string[] = [];
+  try { eligiblePaths = editorialProsePaths("landing", JSON.parse(artifactContent)); } catch { eligiblePaths = []; }
+  const editorialEvidence = {
+    schemaVersion: "EditorialEvidenceV2",
+    format: "landing",
+    revision: "slopmonster-full-rewrite-v2:8bf609edfaeed844f1d03bb6b69f80dc21728c8b",
+    beforeFingerprint: "0".repeat(64),
+    afterFingerprint: fingerprint,
+    eligibleProsePaths: eligiblePaths.length > 0 ? eligiblePaths : ["hero.headline"],
+    changedPaths: eligiblePaths.length > 0 ? eligiblePaths : ["hero.headline"],
+    checker: { before: "before", after: "score 5/5 CLEAN" },
+    semanticNotes: "This is a test editorial evidence with sufficient length for validation.",
+    exceptions: ["No exceptions for this test fixture."],
+    meaningPreserved: true,
+    arrayOrderPreserved: true,
+    rewriteMode: "full_article",
+    writerModelFamily: "beam",
+    cleanseModelFamily: "other",
+    passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, rivalFamilyCleanse: true, finalFidelityReview: true },
+  };
+  await writeFile(join(workDir, "editorial-evidence.json"), JSON.stringify(editorialEvidence));
+
+  // Write format quality receipt
+  const qualityReceipt = {
+    format: "direct-review",
+    artifactFingerprint: fingerprint,
+    passed: true,
+    gate: "landing:quality:candidate",
+  };
+  await writeFile(join(workDir, "quality-receipt.json"), JSON.stringify(qualityReceipt));
+
+  // Compute fingerprints of evidence files
+  const { fingerprintEditorialArtifact: fpa } = await import("../src/lib/editorial/refinement");
+  const editorialBytes = await (await import("node:fs/promises")).readFile(join(workDir, "editorial-evidence.json"), "utf8");
+  const editorialFp = fpa(JSON.parse(editorialBytes));
+  const qualityBytes = await (await import("node:fs/promises")).readFile(join(workDir, "quality-receipt.json"), "utf8");
+  const qualityFp = fpa(JSON.parse(qualityBytes));
+
+  // Update contentApproval with evidence paths and fingerprints
+  const record2 = JSON.parse(await (await import("node:fs/promises")).readFile(join(importDir, `${importId}.json`), "utf8"));
+  if (record2.contentApproval) {
+    record2.contentApproval.editorialEvidencePath = `.automation/article-imports/work/${importId}/editorial-evidence.json`;
+    record2.contentApproval.formatQualityPath = `.automation/article-imports/work/${importId}/quality-receipt.json`;
+    record2.contentApproval.editorialEvidenceFingerprint = editorialFp;
+    record2.contentApproval.formatQualityFingerprint = qualityFp;
+    await (await import("node:fs/promises")).writeFile(join(importDir, `${importId}.json`), JSON.stringify(record2));
+  }
+
+  // Update work packet contentApproval similarly
+  const wp2 = join(root, ".automation", "article-imports", "work", importId, "work.json");
+  const wpData2 = JSON.parse(await (await import("node:fs/promises")).readFile(wp2, "utf8"));
+  if (wpData2.record?.contentApproval) {
+    wpData2.record.contentApproval.editorialEvidencePath = `.automation/article-imports/work/${importId}/editorial-evidence.json`;
+    wpData2.record.contentApproval.formatQualityPath = `.automation/article-imports/work/${importId}/quality-receipt.json`;
+    wpData2.record.contentApproval.editorialEvidenceFingerprint = editorialFp;
+    wpData2.record.contentApproval.formatQualityFingerprint = qualityFp;
+    await (await import("node:fs/promises")).writeFile(wp2, JSON.stringify(wpData2));
+  }
 
   // Write approved-urls.md
   const urls = opts.approvedUrls ?? "- https://start.switcherstudio.com/anme6fqvgdx9\n";
@@ -140,7 +210,7 @@ describe("validateApprovedArticlePreview", () => {
     origNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = "production";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
-    const r = validateApprovedArticlePreview("test", VALID_IMPORT_ID, root);
+    const r = await validateApprovedArticlePreview("test", VALID_IMPORT_ID, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "NOT_FOUND");
     await rm(root, { recursive: true, force: true });
@@ -151,7 +221,7 @@ describe("validateApprovedArticlePreview", () => {
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const fx = await makeFixture(root);
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, true, `expected ok but got ${r.error}`);
     assert.ok(r.blueprint);
     await rm(root, { recursive: true, force: true });
@@ -173,7 +243,7 @@ describe("validateApprovedArticlePreview", () => {
     const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
     wpData.record.contentApproval.artifactFingerprint = wrongFp;
     await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "ARTIFACT_FINGERPRINT_MISMATCH");
     await rm(root, { recursive: true, force: true });
@@ -184,7 +254,7 @@ describe("validateApprovedArticlePreview", () => {
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const fx = await makeFixture(root);
-    const r = validateApprovedArticlePreview("../etc", fx.importId, root);
+    const r = await validateApprovedArticlePreview("../etc", fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "INVALID_SLUG");
     await rm(root, { recursive: true, force: true });
@@ -195,7 +265,7 @@ describe("validateApprovedArticlePreview", () => {
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const fx = await makeFixture(root, { stage: "RESEARCHING" });
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "INVALID_STAGE");
     await rm(root, { recursive: true, force: true });
@@ -220,7 +290,7 @@ describe("validateApprovedArticlePreview", () => {
     const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
     wpData.record.contentApproval.artifactFingerprint = invalidFp;
     await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "INVALID_BLUEPRINT_SCHEMA");
     await rm(root, { recursive: true, force: true });
@@ -230,7 +300,7 @@ describe("validateApprovedArticlePreview", () => {
     origNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
-    const r = validateApprovedArticlePreview("test-slug", "article-00000000-0000-4000-8000-000000000000", root);
+    const r = await validateApprovedArticlePreview("test-slug", "article-00000000-0000-4000-8000-000000000000", root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "IMPORT_NOT_FOUND");
     await rm(root, { recursive: true, force: true });
@@ -241,7 +311,7 @@ describe("validateApprovedArticlePreview", () => {
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const fx = await makeFixture(root, { contentApproval: null });
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "NO_CONTENT_APPROVAL");
     await rm(root, { recursive: true, force: true });
@@ -253,7 +323,7 @@ describe("validateApprovedArticlePreview", () => {
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const bp = makeBlueprint("different-slug");
     const fx = await makeFixture(root, { blueprint: bp, slug: VALID_SLUG });
-    const r = validateApprovedArticlePreview(VALID_SLUG, fx.importId, root);
+    const r = await validateApprovedArticlePreview(VALID_SLUG, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "SLUG_MISMATCH");
     await rm(root, { recursive: true, force: true });
@@ -269,7 +339,7 @@ describe("validateApprovedArticlePreview", () => {
     const data = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
     data.importId = "article-00000000-0000-4000-8000-000000000000";
     await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(data));
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "WORK_PACKET_IMPORT_MISMATCH");
     await rm(root, { recursive: true, force: true });
@@ -282,7 +352,7 @@ describe("validateApprovedArticlePreview", () => {
     const bp = makeBlueprint(VALID_SLUG);
     const fp = fingerprintEditorialArtifact(bp);
     const fx = await makeFixture(root, { workPacket: { schemaVersion: "ImportSupervisedWorkV1", importId: VALID_IMPORT_ID, sourceFingerprint: SOURCE_FP, stage: "RESEARCHING", idempotencyKey: "k".repeat(64), record: { importId: VALID_IMPORT_ID, sourceFingerprint: SOURCE_FP, stage: "RESEARCHING", contentApproval: { artifactPath: `.automation/article-imports/work/${VALID_IMPORT_ID}/approved.json`, artifactFingerprint: fp, sourceFingerprint: SOURCE_FP } } }, blueprint: bp });
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "WORK_PACKET_STAGE_MISMATCH");
     await rm(root, { recursive: true, force: true });
@@ -293,7 +363,7 @@ describe("validateApprovedArticlePreview", () => {
     process.env.NODE_ENV = "development";
     const root = await mkdtemp(join(tmpdir(), "preview-"));
     const fx = await makeFixture(root, { approvedUrls: "- https://example.com/other\n" });
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.equal(r.error, "UNAPPROVED_AFFILIATE_URL");
     await rm(root, { recursive: true, force: true });
@@ -307,7 +377,7 @@ describe("validateApprovedArticlePreview", () => {
     // Modify public projection to differ
     const pubPath = join(root, "src", "generated", "landing-pages", `${fx.slug}.json`);
     await writeFile(pubPath, JSON.stringify({ tampered: true }));
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     // Should still succeed because it reads the private approved artifact, not the public projection
     assert.equal(r.ok, true, `expected ok but got ${r.error}`);
     assert.ok(r.blueprint);
@@ -328,7 +398,7 @@ describe("validateApprovedArticlePreview", () => {
     const wpData = JSON.parse(await (await import("node:fs/promises")).readFile(wp, "utf8"));
     wpData.record.contentApproval.artifactPath = "../../etc/passwd";
     await (await import("node:fs/promises")).writeFile(wp, JSON.stringify(wpData));
-    const r = validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.ok(r.error === "ARTIFACT_NOT_FOUND" || r.error === "ARTIFACT_PATH_ESCAPE" || r.error === "WORK_PACKET_ARTIFACT_PATH_MISMATCH", `got ${r.error}`);
     await rm(root, { recursive: true, force: true });
