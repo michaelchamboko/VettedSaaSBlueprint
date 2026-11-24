@@ -180,7 +180,7 @@ Owner directive. Implement ORCH-02 in the existing TypeScript controller. Use di
 
 | Command | Checkout and capabilities | Ownership and acceptance |
 | --- | --- | --- |
-| Source start, intake start/resume, import resume | Primary checkout and execution preflight | Bind source allocation, intake changes and import transitions to their respective leases. Resume reports contention. |
+| Source start, intake start/resume, import resume, import and intake dispatch (command and callable paths) | Primary checkout and execution preflight | Bind source allocation, intake changes and import transitions to their respective leases. Resume reports contention. |
 | Record presentation | Primary checkout and execution preflight | Load under the import lease. Only VALIDATING accepts bound receipts. Race against resume in both orders and verify one accepted transition. Late submission preserves a pending journal, rollback target and terminal proof. |
 | Execute release or record exact-head review | Primary checkout and execution preflight on the release command | Hold the import lease across journal updates and external operations. A stale or competing writer cannot issue another effect. |
 | Upgrade evidence/intake, reconcile, retry, submit diagnosis, recover lease | Primary checkout and operation-specific evidence | Check ownership at each affected record. Explicit recovery requires verified owner exit. |

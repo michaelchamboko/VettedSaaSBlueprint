@@ -58,8 +58,8 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "check-completion") return inspectImportCompletion(root, command.importId);
   if (command.kind === "intake") return createIntakeRun(root, command.directory);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
-  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor });
-  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor });
+  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor });
+  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor });
   if (command.kind === "intake-retry") {
     const run = await loadIntakeRun(root, command.runId);
     if (!command.importId) throw new Error("INTAKE_RETRY_IMPORT_REQUIRED");
@@ -79,7 +79,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     let run = await claimNextIntakeEntry(root, command.runId);
     const entry = nextIntakeEntry(run);
     if (!entry) return run;
-      if (!entry.capturedPath) return setIntakeBlocker(root, run, { scope: "shared", code: "CAPTURE_MISSING", message: `No immutable source copy was captured for ${entry.relativePath}.` });
+      if (!entry.capturedPath || !entry.sourceFingerprint) return setIntakeBlocker(root, run, { scope: "shared", code: "CAPTURE_MISSING", message: `No immutable source copy was captured for ${entry.relativePath}.` });
     if (entry.status === "PROCESSING" && entry.importId) {
       const imported = await executeImportCommand(root, { kind: "resume", importId: entry.importId }, executor, dispatchOptions, probe) as ExternalArticleImportV1;
       if (imported.stage === "LIVE" || imported.stage === "QUARANTINED") {
@@ -93,7 +93,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
       }
       return { ...run, activeEntry: entry.relativePath, nextEntry: { ...entry, status: "PROCESSING", importId: entry.importId }, importState: imported };
     }
-    const imported = await createArticleImport(root, entry.capturedPath);
+    const imported = await createArticleImport(root, entry.capturedPath, undefined, entry.sourceFingerprint);
     run = await markIntakeEntry(root, run, entry.relativePath, imported.stage === "QUARANTINED" ? "QUARANTINED" : "PROCESSING", { importId: imported.importId });
     return { ...run, nextEntry: { ...entry, importId: imported.importId, status: run.entries.find((item) => item.relativePath === entry.relativePath)?.status } };
   }

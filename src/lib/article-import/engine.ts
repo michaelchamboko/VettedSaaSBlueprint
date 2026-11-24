@@ -215,7 +215,11 @@ export async function saveImport(repositoryRoot: string, record: ExternalArticle
       if (error.code !== "ENOENT") throw error;
       return undefined;
     });
-    if (prior !== undefined && JSON.parse(prior).stateRevision !== record.stateRevision) throw new Error("STALE_IMPORT_RECORD");
+    if (prior !== undefined) {
+      const stored = JSON.parse(prior);
+      if (stored.stateRevision !== record.stateRevision) throw new Error("STALE_IMPORT_RECORD");
+      if (record.stateRevision && JSON.stringify(stored) === JSON.stringify({ ...parsed, stateRevision: record.stateRevision })) return file;
+    }
     await writeJsonAtomically(file, parsed, async (from, to) => {
       await context.lease.assertOwned();
       await rename(from, to);

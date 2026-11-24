@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import assert from "node:assert/strict";
-import { access, mkdtemp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -313,6 +313,9 @@ test("a bounded intake reports its unfinished entry and rejects changed capture 
     const entry = run.entries[0];
     await writeFile(path.resolve(root, entry.capturedPath!), "modified capture");
     await assert.rejects(dispatchIntakeRun(root, run.runId, { maxSteps: 1 }), /INTAKE_SOURCE_MISMATCH/);
+    await assert.rejects(executeImportCommand(root, { kind: "intake-resume", runId: run.runId }), /INTAKE_SOURCE_MISMATCH/);
+    const state = await readdir(path.join(root, ".automation/article-imports"), { recursive: true });
+    assert.deepEqual(state.filter(file => /(^|[/\\])article-[a-f0-9-]+\.json$|source-index/.test(file)), []);
     const next = await createIntakeRun(root);
     const dispatched = await executeImportCommand(root, { kind: "dispatch-intake", runId: next.runId }, undefined, { maxSteps: 1 }) as IntakeRun & { dispatchOutcome: string };
     assert.equal(dispatched.dispatchOutcome, "STEP_LIMIT");
@@ -374,5 +377,19 @@ test("controller death before blocker persistence replays the failed exit once",
     const resumed = await dispatchArticleImport(root, importId, { workerModel: "fixture/model", workerExecutable: path.join(root, "must-not-run") });
     assert.ok(resumed.continuation?.kind === "blocked");
     assert.match(resumed.continuation.cause, /worker exited with code 17.*\[worker /);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("dispatch stops after one unchanged executor result", async () => {
+  const root = await rootWithArticle();
+  try {
+    const initial = await createArticleImport(root, "Article Intake/a.md");
+    let calls = 0;
+    const result = await executeImportCommand(root, { kind: "dispatch", importId: initial.importId }, async ({ record }) => {
+      calls++;
+      return record;
+    }, { maxSteps: 3 }) as ExternalArticleImportV1;
+    assert.equal(calls, 1);
+    assert.equal(result.stateRevision, initial.stateRevision);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
