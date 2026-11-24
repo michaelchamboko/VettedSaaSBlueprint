@@ -210,6 +210,24 @@ export async function auditDesignReferenceRegistry(input: {
   const waves: z.infer<typeof waveSchema>[] = [];
   let aggregateCaptureBytes = 0;
 
+  const buildSummary = () => DesignReferenceAuditRunV1.parse({
+    schema_version: "DesignReferenceAuditRunV1",
+    run_id: runId,
+    started_at: startedAt,
+    completed_at: now().toISOString(),
+    batch_size: batchSize,
+    concurrency,
+    total_sources: registry.sources.length,
+    processed_sources: registry.sources.filter((source) => source.audit.status !== "pending").length,
+    active_count: registry.sources.filter((source) => source.audit.status === "active").length,
+    unavailable_count: registry.sources.filter((source) => source.audit.status === "unavailable").length,
+    pending_count: registry.sources.filter((source) => source.audit.status === "pending").length,
+    aggregate_capture_bytes: aggregateCaptureBytes,
+    category_coverage: [...new Set(registry.sources.filter((source) => source.audit.status === "active").map((source) => source.primary_product_category))].sort(),
+    catalogue_sha256: null,
+    waves,
+  });
+
   try {
     for (let offset = 0; offset < pending.length; offset += batchSize) {
       const waveNumber = Math.floor(offset / batchSize) + 1;
@@ -247,45 +265,13 @@ export async function auditDesignReferenceRegistry(input: {
         unavailable_ids: waveSources.filter((source) => byId.get(source.id)?.status === "unavailable").map((source) => source.id),
         status: "committed",
       });
-      const interim = DesignReferenceAuditRunV1.parse({
-        schema_version: "DesignReferenceAuditRunV1",
-        run_id: runId,
-        started_at: startedAt,
-        completed_at: now().toISOString(),
-        batch_size: batchSize,
-        concurrency,
-        total_sources: registry.sources.length,
-        processed_sources: registry.sources.filter((source) => source.audit.status !== "pending").length,
-        active_count: registry.sources.filter((source) => source.audit.status === "active").length,
-        unavailable_count: registry.sources.filter((source) => source.audit.status === "unavailable").length,
-        pending_count: registry.sources.filter((source) => source.audit.status === "pending").length,
-        aggregate_capture_bytes: aggregateCaptureBytes,
-        category_coverage: [...new Set(registry.sources.filter((source) => source.audit.status === "active").map((source) => source.primary_product_category))].sort(),
-        catalogue_sha256: null,
-        waves,
-      });
+      const interim = buildSummary();
       await input.persist_progress?.({ registry, summary: interim });
     }
   } finally {
     await input.adapter.close?.();
   }
 
-  const summary = DesignReferenceAuditRunV1.parse({
-    schema_version: "DesignReferenceAuditRunV1",
-    run_id: runId,
-    started_at: startedAt,
-    completed_at: now().toISOString(),
-    batch_size: batchSize,
-    concurrency,
-    total_sources: registry.sources.length,
-    processed_sources: registry.sources.filter((source) => source.audit.status !== "pending").length,
-    active_count: registry.sources.filter((source) => source.audit.status === "active").length,
-    unavailable_count: registry.sources.filter((source) => source.audit.status === "unavailable").length,
-    pending_count: registry.sources.filter((source) => source.audit.status === "pending").length,
-    aggregate_capture_bytes: aggregateCaptureBytes,
-    category_coverage: [...new Set(registry.sources.filter((source) => source.audit.status === "active").map((source) => source.primary_product_category))].sort(),
-    catalogue_sha256: null,
-    waves,
-  });
+  const summary = buildSummary();
   return { registry, summary };
 }

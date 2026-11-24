@@ -200,6 +200,12 @@ Classification: user directive (narrow corrective maintenance enabling existing 
 
 Scope: keep the strict intake parser with requested ID equality and V2 safe-integer revision check while removing duplicated post-parse checks; remove the redundant release-checks loop; remove the pre-lease folder-resume scan while retaining terminal-proof and multiple-active validation under the intake lease; reuse already validated research evidence only within the same evaluation. Owned files: src/lib/article-import/{intake,engine,workflow-evidence}.ts; scripts/import-article.ts; tests/transition-checks-1124.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/transition-checks-1124/verification.md.
 
+### Tracked code deduplication (DEDUPE-TRACKED-1124) (registered 2026-11-24)
+
+Owner directive: use the 207-file Fallow report to remove tracked-code duplicate blocks while retaining one shared implementation, preserve historical `build-pack/` evidence, and exclude `scripts/verify-runtime-contract.mjs` because PR #44 owns that file. Execution is agent-agnostic and does not require Beam or another model-specific workflow.
+
+Scope: behavior-preserving helper and component extraction across the report's verified tracked-code findings; no source-strategy amendment, article execution, or historical receipt mutation. Acceptance requires zero remaining Fallow clone groups after filtering the two explicit exclusions, repository checks, production build and public-site validation, desktop/mobile inspection of changed UI surfaces, and local runtime route verification. Evidence: `build-pack/repairs/dedupe-tracked-1124/verification.md`.
+
 ### GitHub-first code intelligence (CODE-INTELLIGENCE-1124), 24 November 2026
 
 Classification: explicit owner directive. Replace the superseded CodeGraph setup with pinned codebase-memory-mcp as the sole code graph, publish validated persistent artifacts through GitHub PRs, and support Codex and OpenCode. The owner also directs retirement of Neon's code graph functions while preserving document-authority evidence and history. PR #75 was closed at the owner's direction.

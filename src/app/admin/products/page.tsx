@@ -1,3 +1,5 @@
+import { AdminFormPage } from "@/components/admin/AdminFormPage";
+
 const fields = [
   { name: "name", label: "Product name", type: "text" },
   { name: "slug", label: "Slug", type: "text" },
@@ -10,15 +12,16 @@ const fields = [
 
 export default function ProductsPage() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
-      <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold">Product Vault</h1>
-        <p className="mt-3 text-sm text-slate-300">
-          Capture the product record, audience, pricing, affiliate references, and review posture before anything reaches publishing.
-        </p>
-      </header>
-
-      <section className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+    <AdminFormPage
+      title="Product Vault"
+      description="Capture the product record, audience, pricing, affiliate references, and review posture before anything reaches publishing."
+      asideTitle="Vault rules"
+      asideItems={[
+        "Products stay in draft until compliance profiles and affiliate links are valid.",
+        "Every create action generates a manual review task for compliance profile review.",
+        "All product fields should remain owner-controlled and auditable.",
+      ]}
+    >
         <form className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6" method="post" action="/api/admin/products">
           <div className="grid gap-4 md:grid-cols-2">
             {fields.map((field) => (
@@ -71,13 +74,6 @@ export default function ProductsPage() {
           </button>
         </form>
 
-        <aside className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-300">
-          <h2 className="text-lg font-medium text-white">Vault rules</h2>
-          <p>Products stay in draft until compliance profiles and affiliate links are valid.</p>
-          <p>Every create action generates a manual review task for compliance profile review.</p>
-          <p>All product fields should remain owner-controlled and auditable.</p>
-        </aside>
-      </section>
-    </main>
+    </AdminFormPage>
   );
 }

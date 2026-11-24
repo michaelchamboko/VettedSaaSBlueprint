@@ -4,6 +4,7 @@ import { assessImportRelease, recordImportCodeReview, type ReleaseOperations } f
 import { readFile } from "node:fs/promises";
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 import { assertPrimaryArticleCheckout, assertArticleCapabilities } from "../src/lib/article-import/preflight";
+import { runCliMain } from "./lib/run-cli-main";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -66,7 +67,4 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+runCliMain(main);

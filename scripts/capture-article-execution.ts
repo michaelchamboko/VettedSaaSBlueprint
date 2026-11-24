@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { captureCommandExecution, captureOpenCodeExecution, evidenceRefSchema, storeEvidence, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 import { assertPrimaryArticleCheckout } from "../src/lib/article-import/preflight";
+import { runCliMain } from "./lib/run-cli-main";
 
 const text = z.string().min(1);
 const selectionSchema = z.object({
@@ -28,7 +29,4 @@ async function main() {
   process.stdout.write(`${JSON.stringify(ref)}\n`);
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+runCliMain(main);

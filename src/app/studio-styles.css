@@ -1,3 +1,5 @@
+@import "./premium-shared.css";
+
 /* Studio Page Artistic Styles - Shared across all artistic landing pages */
 
 .studio-page {
@@ -53,14 +55,6 @@
 
 /* Navigation */
 .studio-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(10, 15, 26, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--studio-border);
   padding: 16px 24px;
   display: flex;
@@ -105,17 +99,6 @@
   margin: 0 auto;
   width: 100%;
   isolation: isolate;
-}
-
-.studio-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(34, 211, 238, 0.08), transparent),
-    radial-gradient(ellipse 60% 80% at 100% 100%, rgba(34, 211, 238, 0.05), transparent);
-  pointer-events: none;
-  z-index: -1;
 }
 
 .studio-copy {

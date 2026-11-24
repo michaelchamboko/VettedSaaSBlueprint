@@ -11,6 +11,54 @@
  */
 (function () {
   'use strict';
+  function elementBaseRecord(el) {
+    return {
+      ref: documentRefForElement(el),
+      tagName: el.tagName ? el.tagName.toLowerCase() : null,
+      id: el.id || null,
+      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf('impeccable-') !== 0) : [],
+    };
+  }
+  function positionTooltipAbove(anchor, tip) {
+    const r = anchor.getBoundingClientRect();
+    const tipW = tip.offsetWidth;
+    const tipH = tip.offsetHeight;
+    const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
+    const top = Math.max(8, r.top - tipH - 8);
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function beginGeneratingCapture(elForCapture, basePayload, snapshot, captureRect, { trackScroll = false } = {}) {
+    showBar('generating');
+    if (trackScroll) startScrollTracking();
+    saveSession();
+    writeScrollY(window.scrollY);
+    if (variantObserver) variantObserver.disconnect();
+    variantObserver = startVariantObserver(currentSessionId);
+    startScrollLock(currentSessionId, window.scrollY, pickedAnchorViewportTop);
+    captureAndEmit(elForCapture, basePayload, snapshot, captureRect);
+  }
+  function applyControlsLockedStyle(input, controlsLocked) {
+    if (controlsLocked) {
+      input.placeholder = 'apply is running...';
+      input.style.cursor = 'not-allowed';
+      input.style.opacity = '0.58';
+    }
+  }
+  function createConfigureCountControl(controlsLocked) {
+    const count = buildConfigureCountControl({
+      controlsLocked,
+      onClick: (e) => {
+        e.stopPropagation();
+        if (controlsLocked) { showManualApplyBusyToast(); return; }
+        count.textContent = '\u00D7' + cycleSelectedCount();
+        if (count.matches(':hover')) {
+          showConfigureBarTooltip(count, variantCountTooltipText(selectedCount));
+        }
+      },
+    });
+    return count;
+  }
   if (typeof window === 'undefined') return;
 
   // Guard against double-init. Bun's HTML loader may process the <script> tag
@@ -1159,9 +1207,7 @@
     Object.assign(barEl.style, { top: top + 'px', left: left + 'px' });
   }
 
-  function showBar(mode) {
-    barHideSeq += 1;
-    if (mode === 'cycling' && !ensureCyclingRenderable('show-bar')) return;
+  function renderBarContent(mode, { dismissRecoveryToast = false, includeTerminalStates = false } = {}) {
     barEl.innerHTML = '';
     if (mode === 'configure') {
       barEl.appendChild(configureKind === 'insert' ? buildInsertConfigureRow() : buildConfigureRow());
@@ -1170,10 +1216,22 @@
     } else {
       restorePickerBarChrome();
       if (mode === 'generating') {
-        if (recoveryWaitingForAnchor) dismissToast();
+        if (dismissRecoveryToast && recoveryWaitingForAnchor) dismissToast();
         barEl.appendChild(buildGeneratingRow());
       } else if (mode === 'cycling') barEl.appendChild(buildCyclingRow());
+      else if (includeTerminalStates && mode === 'saving') barEl.appendChild(buildSavingRow());
+      else if (includeTerminalStates && mode === 'confirmed') {
+        barEl.appendChild(buildConfirmedRow());
+        barEl.style.background = 'oklch(95% 0.05 145)';
+        barEl.style.border = '1px solid oklch(75% 0.12 145 / 0.4)';
+      }
     }
+  }
+
+  function showBar(mode) {
+    barHideSeq += 1;
+    if (mode === 'cycling' && !ensureCyclingRenderable('show-bar')) return;
+    renderBarContent(mode, { dismissRecoveryToast: true });
     barEl.style.display = 'block';
     positionBar();
     requestAnimationFrame(() => {
@@ -1202,22 +1260,7 @@
   function updateBarContent(mode) {
     if (!barEl || barEl.style.display === 'none') return;
     if (mode === 'cycling' && !ensureCyclingRenderable('update-bar')) return;
-    barEl.innerHTML = '';
-    if (mode === 'configure') {
-      barEl.appendChild(configureKind === 'insert' ? buildInsertConfigureRow() : buildConfigureRow());
-      if (configureKind === 'insert') syncInsertCreateButton();
-      applyConfigureBarChrome();
-    } else {
-      restorePickerBarChrome();
-      if (mode === 'generating') barEl.appendChild(buildGeneratingRow());
-      else if (mode === 'cycling') barEl.appendChild(buildCyclingRow());
-      else if (mode === 'saving') barEl.appendChild(buildSavingRow());
-      else if (mode === 'confirmed') {
-        barEl.appendChild(buildConfirmedRow());
-        barEl.style.background = 'oklch(95% 0.05 145)';
-        barEl.style.border = '1px solid oklch(75% 0.12 145 / 0.4)';
-      }
-    }
+    renderBarContent(mode, { includeTerminalStates: true });
     syncPageChatFocus('update-bar-content');
   }
 
@@ -1430,13 +1473,7 @@
     tip.style.transition = 'none';
     tip.style.display = 'block';
     tip.style.opacity = '1';
-    const r = anchor.getBoundingClientRect();
-    const tipW = tip.offsetWidth;
-    const tipH = tip.offsetHeight;
-    const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
-    const top = Math.max(8, r.top - tipH - 8);
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
+    positionTooltipAbove(anchor, tip);
   }
 
   function hideConfigureBarTooltip() {
@@ -2324,13 +2361,7 @@
     const tip = ensureInsertCreateTooltip();
     tip.textContent = message;
     tip.style.display = 'block';
-    const r = anchor.getBoundingClientRect();
-    const tipW = tip.offsetWidth;
-    const tipH = tip.offsetHeight;
-    const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
-    const top = Math.max(8, r.top - tipH - 8);
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
+    positionTooltipAbove(anchor, tip);
   }
 
   function hideInsertCreateTooltip() {
@@ -2401,11 +2432,7 @@
     input.setAttribute('aria-label', 'Describe the change');
     Object.assign(input.style, configureInputFieldStyle());
     input.disabled = controlsLocked;
-    if (controlsLocked) {
-      input.placeholder = 'apply is running...';
-      input.style.cursor = 'not-allowed';
-      input.style.opacity = '0.58';
-    }
+    applyControlsLockedStyle(input, controlsLocked);
 
     const action = buildConfigureActionControl({
       controlsLocked,
@@ -2416,17 +2443,7 @@
       },
     });
 
-    const count = buildConfigureCountControl({
-      controlsLocked,
-      onClick: (e) => {
-        e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
-        count.textContent = '\u00D7' + cycleSelectedCount();
-        if (count.matches(':hover')) {
-          showConfigureBarTooltip(count, variantCountTooltipText(selectedCount));
-        }
-      },
-    });
+    const count = createConfigureCountControl(controlsLocked);
 
     inputShell.appendChild(buildSelectionPill({ el: selectedElement, controlsLocked }));
     inputShell.appendChild(input);
@@ -2491,26 +2508,12 @@
     input.setAttribute('aria-label', 'Describe the new element');
     Object.assign(input.style, configureInputFieldStyle());
     input.disabled = controlsLocked;
-    if (controlsLocked) {
-      input.placeholder = 'apply is running...';
-      input.style.cursor = 'not-allowed';
-      input.style.opacity = '0.58';
-    }
+    applyControlsLockedStyle(input, controlsLocked);
 
-    const count = buildConfigureCountControl({
-      controlsLocked,
-      onClick: (e) => {
-        e.stopPropagation();
-        if (controlsLocked) { showManualApplyBusyToast(); return; }
-        count.textContent = '\u00D7' + cycleSelectedCount();
-        if (count.matches(':hover')) {
-          showConfigureBarTooltip(count, variantCountTooltipText(selectedCount));
-        }
-      },
-    });
+    const count = createConfigureCountControl(controlsLocked);
 
-    inputShell.appendChild(buildSelectionPill({ el: selectedElement, controlsLocked }));
-    inputShell.appendChild(input);
+    inputShell.append(buildSelectionPill({ el: selectedElement, controlsLocked }));
+    inputShell.append(input);
 
     ensureConfigureInputStyle();
 
@@ -3691,10 +3694,7 @@
   function copyEditLeafContext(el, originalText, newText) {
     if (!el) return null;
     return {
-      ref: documentRefForElement(el),
-      tagName: el.tagName ? el.tagName.toLowerCase() : null,
-      id: el.id || null,
-      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf('impeccable-') !== 0) : [],
+      ...elementBaseRecord(el),
       originalText,
       newText,
       textContent: (el.textContent || '').slice(0, 500),
@@ -3725,10 +3725,7 @@
   function copyEditContainerContext(el) {
     if (!el) return null;
     return {
-      ref: documentRefForElement(el),
-      tagName: el.tagName ? el.tagName.toLowerCase() : null,
-      id: el.id || null,
-      classes: el.classList ? [...el.classList].filter((cls) => cls.indexOf('impeccable-') !== 0) : [],
+      ...elementBaseRecord(el),
       textContent: (el.textContent || '').slice(0, 1000),
       outerHTML: sanitizedContextOuterHTML(el, 10000) || null,
     };
@@ -3740,6 +3737,14 @@
       if (String(text || '').includes(ch)) out.push(ch);
     }
     return out;
+  }
+
+  async function readSuccessfulJson(response) {
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.error || ('HTTP ' + response.status));
+    }
+    return response.json();
   }
 
   async function applyEditing() {
@@ -3796,11 +3801,7 @@
           ops,
         }),
       });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || ('HTTP ' + res.status));
-      }
-      const stashResult = await res.json();
+      const stashResult = await readSuccessfulJson(res);
       updatePendingCounter(stashResult.pendingCount || 0);
       maybeShowFirstSaveToast();
       disableInlineEdit();
@@ -4123,11 +4124,7 @@
         'http://localhost:' + PORT + '/manual-edit-commit?token=' + encodeURIComponent(TOKEN) + '&pageUrl=' + encodeURIComponent(location.pathname) + '&async=1',
         { method: 'POST', keepalive: true },
       );
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || ('HTTP ' + res.status));
-      }
-      const result = await res.json();
+      const result = await readSuccessfulJson(res);
       if (res.status === 202 || result.status === 'started') {
         waitForSseCompletion = true;
         return;
@@ -6124,7 +6121,7 @@
   // currentSessionId, and reset to PICKING, which orphaned a session the server
   // still had in its journal and made every recovery path unreachable. The DOM
   // teardown and observer cleanup are still right; the state wipe never was.
-  function abortSvelteComponentInjection(sessionId, details) {
+  function cleanupSvelteComponentSession(sessionId, action) {
     try {
       if (svelteComponentSession?.sessionId === sessionId) {
         teardownSvelteComponentSession(true);
@@ -6133,8 +6130,12 @@
         if (orphan) orphan.remove();
       }
     } catch (err) {
-      console.warn('[impeccable] Svelte component abort cleanup failed:', err);
+      console.warn('[impeccable] Svelte component ' + action + ' cleanup failed:', err);
     }
+  }
+
+  function abortSvelteComponentInjection(sessionId, details) {
+    cleanupSvelteComponentSession(sessionId, 'abort');
     hideShaderOverlay();
     if (pendingSvelteComponentRetryObserver) { pendingSvelteComponentRetryObserver.disconnect(); pendingSvelteComponentRetryObserver = null; }
     if (pendingVariantAnchorRetryObserver) { pendingVariantAnchorRetryObserver.disconnect(); pendingVariantAnchorRetryObserver = null; }
@@ -6159,16 +6160,7 @@
   // with nothing to cycle. There is no variant to retry and no URL to report,
   // so the session really is over.
   function resetSvelteComponentSession(sessionId, message) {
-    try {
-      if (svelteComponentSession?.sessionId === sessionId) {
-        teardownSvelteComponentSession(true);
-      } else {
-        const orphan = document.querySelector('[data-impeccable-variants="' + sessionId + '"]');
-        if (orphan) orphan.remove();
-      }
-    } catch (err) {
-      console.warn('[impeccable] Svelte component reset cleanup failed:', err);
-    }
+    cleanupSvelteComponentSession(sessionId, 'reset');
     hideShaderOverlay();
     if (variantObserver) { variantObserver.disconnect(); variantObserver = null; }
     if (pendingSvelteComponentRetryObserver) { pendingSvelteComponentRetryObserver.disconnect(); pendingSvelteComponentRetryObserver = null; }
@@ -7492,6 +7484,17 @@
     showHighlight(target);
   }
 
+  function configureHoveredElement() {
+    selectedElement = hoveredElement;
+    beginNewLiveConfiguration();
+    showHighlight(selectedElement);
+    clearAnnotations();
+    showAnnotOverlay(selectedElement);
+    showBar('configure');
+    renderEditBadge(hasTextRows(selectedElement) ? 'idle' : 'hidden');
+    startScrollTracking();
+  }
+
   function handleClick(e) {
     if (pendingApplyInFlight && !pendingDockEl?.contains(e.target)) {
       if (pickerEl?.style.display !== 'none') hideActionPicker();
@@ -7555,14 +7558,7 @@
     if (!hoveredElement || !pickable(hoveredElement)) return;
     e.preventDefault();
     e.stopPropagation();
-    selectedElement = hoveredElement;
-    beginNewLiveConfiguration();
-    showHighlight(selectedElement);
-    clearAnnotations();
-    showAnnotOverlay(selectedElement);
-    showBar('configure');
-    renderEditBadge(hasTextRows(selectedElement) ? 'idle' : 'hidden');
-    startScrollTracking();
+    configureHoveredElement();
     maybePrefetchPage();
     maybeWarnConditionalAncestor(selectedElement);
   }
@@ -7732,14 +7728,7 @@
         while (next && !pickable(next)) next = next.nextElementSibling;
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        selectedElement = hoveredElement;
-        beginNewLiveConfiguration();
-        showHighlight(selectedElement);
-        clearAnnotations();
-        showAnnotOverlay(selectedElement);
-        showBar('configure');
-        renderEditBadge(hasTextRows(selectedElement) ? 'idle' : 'hidden');
-        startScrollTracking();
+        configureHoveredElement();
         return;
       }
       if (next) {
@@ -7769,6 +7758,31 @@
     }
   }
 
+  function applyGenerationAnnotations(basePayload, snapshot) {
+    if (snapshot.comments.length > 0) basePayload.comments = snapshot.comments;
+    if (snapshot.strokes.length > 0) basePayload.strokes = snapshot.strokes;
+    hideAnnotOverlay();
+    clearAnnotations();
+    setLiveState('GENERATING');
+  }
+
+  function resetSessionState() {
+    clearMountErrorCard();
+    lastReportedMountFailure = null;
+    pendingAcceptedSession = null;
+    // A new session supersedes any accept still awaiting its result; a late
+    // failure toast for the previous session would only mislead here.
+    awaitingAcceptResult = null;
+    currentSessionId = id8();
+    expectedVariants = selectedCount;
+    arrivedVariants = 0;
+    visibleVariant = 0;
+    generationPhase = 'queued';
+    parameterGenerationState = 'pending';
+    parameterReadyAnnouncedSession = null;
+    resetSessionFileMeta();
+  }
+
   function handleGo() {
     if (pendingApplyInFlight) { showManualApplyBusyToast(); return; }
     if (!selectedElement || state !== 'CONFIGURING') return;
@@ -7784,20 +7798,7 @@
 
     // A new cycle publishes new modules, so the previous cycle's mount failure
     // is about files that no longer matter.
-    clearMountErrorCard();
-    lastReportedMountFailure = null;
-    pendingAcceptedSession = null;
-    // A new session supersedes any accept still awaiting its result; a late
-    // failure toast for the previous session would only mislead here.
-    awaitingAcceptResult = null;
-    currentSessionId = id8();
-    expectedVariants = selectedCount;
-    arrivedVariants = 0;
-    visibleVariant = 0;
-    generationPhase = 'queued';
-    parameterGenerationState = 'pending';
-    parameterReadyAnnouncedSession = null;
-    resetSessionFileMeta();
+    resetSessionState();
 
     // Flip to GENERATING immediately so the bar morphs without waiting on
     // capture + upload. The event is emitted from captureAndEmit() once the
@@ -7819,27 +7820,14 @@
       pageUrl: location.pathname,
       element: extractContext(elForCapture),
     };
-    if (snapshot.comments.length > 0) basePayload.comments = snapshot.comments;
-    if (snapshot.strokes.length > 0) basePayload.strokes = snapshot.strokes;
-
     // Hide the interactive overlay so it doesn't linger during generation.
-    hideAnnotOverlay();
-    clearAnnotations();
-
-    setLiveState('GENERATING');
+    applyGenerationAnnotations(basePayload, snapshot);
     // Disable the Edit badge: starting a manual text edit mid-generation would
     // conflict with the variant wrap that's about to land in the same DOM
     // region. Only swap if the badge was visible - picked elements with no
     // text rows have it hidden already.
     if (editBadgeEl && editBadgeEl.style.display !== 'none') renderEditBadge('idle-disabled');
-    showBar('generating');
-    saveSession();
-    writeScrollY(window.scrollY);
-    if (variantObserver) variantObserver.disconnect();
-    variantObserver = startVariantObserver(currentSessionId);
-    startScrollLock(currentSessionId, window.scrollY, pickedAnchorViewportTop);
-
-    captureAndEmit(elForCapture, basePayload, snapshot, captureRect);
+    beginGeneratingCapture(elForCapture, basePayload, snapshot, captureRect);
   }
 
   function cancelInsertConfigure() {
@@ -7869,20 +7857,7 @@
     stopVoice({ suppressSubmit: true });
     // A new cycle publishes new modules, so the previous cycle's mount failure
     // is about files that no longer matter.
-    clearMountErrorCard();
-    lastReportedMountFailure = null;
-    pendingAcceptedSession = null;
-    // A new session supersedes any accept still awaiting its result; a late
-    // failure toast for the previous session would only mislead here.
-    awaitingAcceptResult = null;
-    currentSessionId = id8();
-    expectedVariants = selectedCount;
-    arrivedVariants = 0;
-    visibleVariant = 0;
-    generationPhase = 'queued';
-    parameterGenerationState = 'pending';
-    parameterReadyAnnouncedSession = null;
-    resetSessionFileMeta();
+    resetSessionState();
     selectedElement = placeholderElement;
     insertPlaceholderSnapshot = buildInsertPlaceholderSnapshotFromDom(insertAnchorElement, placeholderElement);
 
@@ -7905,21 +7880,8 @@
       },
       freeformPrompt: prompt || undefined,
     };
-    if (snapshot.comments.length > 0) basePayload.comments = snapshot.comments;
-    if (snapshot.strokes.length > 0) basePayload.strokes = snapshot.strokes;
-
-    hideAnnotOverlay();
-    clearAnnotations();
-
-    setLiveState('GENERATING');
-    showBar('generating');
-    startScrollTracking();
-    saveSession();
-    writeScrollY(window.scrollY);
-    if (variantObserver) variantObserver.disconnect();
-    variantObserver = startVariantObserver(currentSessionId);
-    startScrollLock(currentSessionId, window.scrollY, pickedAnchorViewportTop);
-    captureAndEmit(elForCapture, basePayload, snapshot, captureRect);
+    applyGenerationAnnotations(basePayload, snapshot);
+    beginGeneratingCapture(elForCapture, basePayload, snapshot, captureRect, { trackScroll: true });
   }
 
   //
@@ -8210,8 +8172,8 @@
       const sx = (er.left - ar.left) * S, sy = (er.top - ar.top) * S;
       const sw = er.width * S, sh = er.height * S;
       const crop = document.createElement('canvas');
-      crop.width = Math.max(1, Math.round(sw));
       crop.height = Math.max(1, Math.round(sh));
+      crop.width = Math.max(1, Math.round(sw));
       const cctx = crop.getContext('2d', { willReadFrequently: true });
       cctx.drawImage(ancestorCanvas, sx, sy, sw, sh, 0, 0, crop.width, crop.height);
       // Ground = backdrop sampled around the element, falling back to the crop
@@ -11043,13 +11005,7 @@ void main() {
     tip.style.transition = 'none';
     tip.style.display = 'block';
     tip.style.opacity = '1';
-    const r = anchor.getBoundingClientRect();
-    const tipW = tip.offsetWidth;
-    const tipH = tip.offsetHeight;
-    const left = Math.max(8, Math.min(window.innerWidth - tipW - 8, r.left + r.width / 2 - tipW / 2));
-    const top = Math.max(8, r.top - tipH - 8);
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
+    positionTooltipAbove(anchor, tip);
   }
 
   function hideAgentPollTooltip() {

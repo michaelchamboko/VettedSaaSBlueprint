@@ -90,27 +90,30 @@ export function compareEditorialArtifacts(format: string, before: unknown, after
   return changed;
 }
 
+function walkEditorial(format: string, value: unknown, onString: (entry: string, path: string[]) => void): void {
+  const visit = (entry: unknown, path: string[]) => {
+    if (typeof entry === "string") {
+      if (allowed(format, path)) onString(entry, path);
+    } else if (Array.isArray(entry)) {
+      entry.forEach((item, index) => visit(item, [...path, String(index)]));
+    } else if (entry && typeof entry === "object") {
+      Object.entries(entry).forEach(([key, item]) => visit(item, [...path, key]));
+    }
+  };
+  visit(value, []);
+}
+
 export function editorialProse(format: string, value: unknown): string {
   getFormat(format).schema.parse(value);
   const prose: string[] = [];
-  const visit = (entry: unknown, path: string[]) => {
-    if (typeof entry === "string" && allowed(format, path)) prose.push(entry);
-    else if (Array.isArray(entry)) entry.forEach((item, index) => visit(item, [...path, String(index)]));
-    else if (entry && typeof entry === "object") Object.entries(entry).forEach(([key, item]) => visit(item, [...path, key]));
-  };
-  visit(value, []);
+  walkEditorial(format, value, (entry) => prose.push(entry));
   return prose.join("\n\n");
 }
 
 export function editorialProsePaths(format: string, value: unknown): string[] {
   getFormat(format).schema.parse(value);
   const paths: string[] = [];
-  const visit = (entry: unknown, path: string[]) => {
-    if (typeof entry === "string" && allowed(format, path)) paths.push(path.join("."));
-    else if (Array.isArray(entry)) entry.forEach((item, index) => visit(item, [...path, String(index)]));
-    else if (entry && typeof entry === "object") Object.entries(entry).forEach(([key, item]) => visit(item, [...path, key]));
-  };
-  visit(value, []);
+  walkEditorial(format, value, (_entry, path) => paths.push(path.join(".")));
   return paths;
 }
 
@@ -151,7 +154,7 @@ const rewritePassesSchema = z.object({
     context.addIssue({ code: "custom", path: ["rivalFamilyCleanse"], message: "Exactly one of rivalFamilyCleanse or beamReview must be true." });
   }
 });
-const notesSchema = z.object({
+const editorialSharedFields = {
   semanticNotes: z.string().trim().min(20),
   exceptions: z.array(z.string().trim().min(10)),
   meaningPreserved: z.literal(true),
@@ -160,7 +163,9 @@ const notesSchema = z.object({
   writerModelFamily: z.string().trim().min(1),
   cleanseModelFamily: z.string().trim().min(1),
   passes: rewritePassesSchema,
-}).strict().superRefine((notes, context) => {
+};
+
+const notesSchema = z.object(editorialSharedFields).strict().superRefine((notes, context) => {
   const usesBeamReview = notes.passes.beamReview === true;
   if (usesBeamReview) {
     if (notes.writerModelFamily.toLocaleLowerCase() !== notes.cleanseModelFamily.toLocaleLowerCase()) {
@@ -185,14 +190,7 @@ export const editorialEvidenceSchema = z.object({
   eligibleProsePaths: z.array(z.string().min(1)).min(1),
   changedPaths: z.array(z.string().min(1)).min(1),
   checker: checkerSchema,
-  semanticNotes: z.string().trim().min(20),
-  exceptions: z.array(z.string().trim().min(10)),
-  meaningPreserved: z.literal(true),
-  arrayOrderPreserved: z.literal(true),
-  rewriteMode: z.literal("full_article"),
-  writerModelFamily: z.string().trim().min(1),
-  cleanseModelFamily: z.string().trim().min(1),
-  passes: rewritePassesSchema,
+  ...editorialSharedFields,
 }).strict().superRefine((evidence, context) => {
   const usesBeamReview = evidence.passes.beamReview === true;
   if (usesBeamReview) {

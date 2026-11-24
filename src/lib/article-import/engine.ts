@@ -788,14 +788,11 @@ export async function upgradeImportEvidence(root: string, importId: string): Pro
 }
 
 export async function submitImportDiagnosis(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
-  const lease = await claimImportLease(root, importId);
-  if (!lease) throw new Error("IMPORT_BUSY");
-  try { return await activeLease.run({ lease, importId, root: await realpath(root) }, async () => {
-    const record = await loadImport(root, importId); assertCurrentImport(record);
+  return withImportLease(root, importId, async (record) => {
     const diagnosis = diagnosisSchema.parse(input);
     if (diagnosis.consumedAt || diagnosis.importId !== importId || diagnosis.sourceFingerprint !== record.sourceFingerprint || diagnosis.stage !== record.stage || record.continuation?.kind !== "repair" || diagnosis.failedSubmissionDigest !== record.continuation.submittedFingerprint || diagnosis.replacementSubmissionDigest !== await canonicalSubmissionFingerprint(record, root)) throw new Error("DIAGNOSIS_BINDING_MISMATCH");
     for (const ref of [...diagnosis.attemptedRecoveryRefs, ...diagnosis.remedyEvidenceRefs]) await readEvidence(root, ref);
     const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), diagnosis] };
     await saveImport(root, updated); return updated;
-  }); } finally { await lease.release(); }
+  });
 }
