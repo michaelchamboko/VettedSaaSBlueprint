@@ -77,16 +77,17 @@ export function inspectGraph(dir: string, allowed: Set<string>) {
     if (Object.values(db.prepare("PRAGMA integrity_check").get() ?? {})[0] !== "ok") throw new Error("SQLite integrity check failed");
     if (db.prepare("PRAGMA foreign_key_check").all().length) throw new Error("Broken graph references");
     const projects = db.prepare("SELECT name, root_path FROM projects").all();
-    if (projects.length !== 1 || projects[0].name !== PROJECT) throw new Error("Unexpected project in graph");
-    const nodes = Number(db.prepare("SELECT count(*) AS n FROM nodes").get()?.n);
-    const edges = Number(db.prepare("SELECT count(*) AS n FROM edges").get()?.n);
+    const project = projects.find(p => p.name === PROJECT);
+    if (!project || projects.some(p => p.name !== PROJECT && p.name !== `${PROJECT}::missed`)) throw new Error("Unexpected project in graph");
+    const nodes = Number(db.prepare("SELECT count(*) AS n FROM nodes WHERE project = ?").get(PROJECT)?.n);
+    const edges = Number(db.prepare("SELECT count(*) AS n FROM edges WHERE project = ?").get(PROJECT)?.n);
     if (!(nodes > 0 && edges > 0) || nodes !== metadata.nodes || edges !== metadata.edges) throw new Error("Graph count mismatch");
     const files = db.prepare("SELECT rel_path FROM file_hashes").all().map(row => String(row.rel_path));
     for (const rel of files) {
       if (rel.startsWith(".codebase-memory/.semantic-input/")) continue;
       if (!allowed.has(rel) || excluded(rel)) throw new Error(`Unexpected indexed file: ${rel}`);
     }
-    return { nodes, edges, indexedFiles: files.filter(f => !f.startsWith(".codebase-memory/")).length, compressedBytes: compressed.length, originalBytes: bytes.length, exportRoot: String(projects[0].root_path), metadata };
+    return { nodes, edges, indexedFiles: files.filter(f => !f.startsWith(".codebase-memory/")).length, compressedBytes: compressed.length, originalBytes: bytes.length, exportRoot: String(project.root_path), metadata };
   } finally { db.close(); rmSync(scratch, { recursive: true }); }
 }
 export function validate(root: string, dir = path.join(root, ".codebase-memory")) {
@@ -103,3 +104,4 @@ export function validate(root: string, dir = path.join(root, ".codebase-memory")
   if (graph.metadata.commit !== manifest.commit) throw new Error("Native artifact/source commit mismatch");
   return { ...graph, sourceSha: manifest.commit, sourceDigest: manifest.digest, current: sourceManifest(root).digest === manifest.digest };
 }
+

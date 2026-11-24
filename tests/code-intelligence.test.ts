@@ -20,9 +20,9 @@ function fixture() {
   const dir = path.join(root, ".codebase-memory"); mkdirSync(dir);
   const dbPath = path.join(root, "test.db");
   const db = new DatabaseSync(dbPath);
-  db.exec("CREATE TABLE projects(name TEXT, root_path TEXT); CREATE TABLE nodes(id INTEGER PRIMARY KEY); CREATE TABLE edges(id INTEGER PRIMARY KEY); CREATE TABLE file_hashes(rel_path TEXT);");
+  db.exec("CREATE TABLE projects(name TEXT, root_path TEXT); CREATE TABLE nodes(id INTEGER PRIMARY KEY, project TEXT); CREATE TABLE edges(id INTEGER PRIMARY KEY, project TEXT); CREATE TABLE file_hashes(rel_path TEXT);");
   db.prepare("INSERT INTO projects VALUES (?,?)").run(PROJECT, root);
-  db.exec("INSERT INTO nodes VALUES (1); INSERT INTO edges VALUES (1); INSERT INTO file_hashes VALUES ('password.ts');"); db.close();
+  db.exec("INSERT INTO nodes VALUES (1, 'VettedSaaSBlueprint'); INSERT INTO edges VALUES (1, 'VettedSaaSBlueprint'); INSERT INTO file_hashes VALUES ('password.ts');"); db.close();
   const bytes = readFileSync(dbPath); const compressed = zstdCompressSync(bytes);
   writeFileSync(path.join(dir, "graph.db.zst"), compressed);
   writeJson(path.join(dir, "artifact.json"), { schema_version: 2, project: PROJECT, commit: source.commit, nodes: 1, edges: 1, original_size: bytes.length, compressed_size: compressed.length });
@@ -66,3 +66,4 @@ test("credential content is rejected without excluding legitimate password modul
     assert.throws(() => assertNoSecret(Buffer.from("-----BEGIN " + "PRIVATE KEY-----"), "config.ts"), /Potential credential/);
   } finally { f.cleanup(); }
 });
+
