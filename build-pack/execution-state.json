@@ -1932,6 +1932,56 @@
       "extensions": {
         "authority": "Explicit user directive; narrow corrective maintenance, no article execution or publication"
       }
+    },
+    {
+      "id": "ORCH-02-MUTATION-OWNERSHIP",
+      "title": "Safe concurrent changes to article imports (mutation ownership)",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 2,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "ORCH-02"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "tests/article-mutation-ownership.test.ts"
+      ],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "validation": [
+        {
+          "name": "targeted tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "test"
+          ],
+          "timeout_seconds": 3600
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "operation_phase": "implementing",
+      "publication": { "enabled": false },
+      "extensions": {
+        "authority": "Owner directive, 2026-11-24. See Article mutation ownership (ORCH-02) in planning.md."
+      }
     }
   ],
   "extensions": {

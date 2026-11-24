@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import assert from "node:assert/strict";
-import { access, mkdtemp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { executeImportCommand } from "../scripts/import-article";
+import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { createArticleImport, recoverWorkflowLease } from "../src/lib/article-import/engine";
 import { claimNextIntakeEntry, createIntakeRun } from "../src/lib/article-import/intake";
 import { defaultWorkerRunner, extractJsonObject, type WorkerRunner } from "../src/lib/article-import/worker-runner";
@@ -256,7 +256,7 @@ test("recovering a killed dispatcher waits for its worker and reuses its exit re
     const args = [worker, ready, finish, jsonlResult(packet, evidencePath)];
     const controller = spawn(process.execPath, ["--import", "tsx", "-e", `
       const { defaultWorkerRunner } = require("./src/lib/article-import/worker-runner.ts");
-      const { executeImportCommand } = require("./scripts/import-article.ts");
+      const { executeFixtureCommand: executeImportCommand } = require("./tests/fixtures/article-command.ts");
       const [root, importId, args] = process.argv.slice(1);
       executeImportCommand(root, { kind: "dispatch", importId }, undefined, { maxSteps: 1, workerModel: "mock/model",
         workerTimeoutMs: 30000, workerRunner: input => defaultWorkerRunner({ ...input, executable: process.execPath, args: JSON.parse(args) }) })
@@ -313,6 +313,9 @@ test("a bounded intake reports its unfinished entry and rejects changed capture 
     const entry = run.entries[0];
     await writeFile(path.resolve(root, entry.capturedPath!), "modified capture");
     await assert.rejects(dispatchIntakeRun(root, run.runId, { maxSteps: 1 }), /INTAKE_SOURCE_MISMATCH/);
+    await assert.rejects(executeImportCommand(root, { kind: "intake-resume", runId: run.runId }), /INTAKE_SOURCE_MISMATCH/);
+    const state = await readdir(path.join(root, ".automation/article-imports"), { recursive: true });
+    assert.deepEqual(state.filter(file => /(^|[/\\])article-[a-f0-9-]+\.json$|source-index/.test(file)), []);
     const next = await createIntakeRun(root);
     const dispatched = await executeImportCommand(root, { kind: "dispatch-intake", runId: next.runId }, undefined, { maxSteps: 1 }) as IntakeRun & { dispatchOutcome: string };
     assert.equal(dispatched.dispatchOutcome, "STEP_LIMIT");
@@ -364,7 +367,7 @@ test("controller death before blocker persistence replays the failed exit once",
         return rename(from, to);
       };
       const { defaultWorkerRunner } = require("./src/lib/article-import/worker-runner");
-      const { executeImportCommand } = require("./scripts/import-article");
+      const { executeFixtureCommand: executeImportCommand } = require("./tests/fixtures/article-command.ts");
       executeImportCommand(root, {kind:"dispatch", importId}, undefined, {
         workerModel: "fixture/model", workerRunner: input => defaultWorkerRunner({...input,
           executable: process.execPath, args:["-e", "process.exit(17)"] }) }).catch(() => process.exit(1));`;
@@ -374,5 +377,24 @@ test("controller death before blocker persistence replays the failed exit once",
     const resumed = await dispatchArticleImport(root, importId, { workerModel: "fixture/model", workerExecutable: path.join(root, "must-not-run") });
     assert.ok(resumed.continuation?.kind === "blocked");
     assert.match(resumed.continuation.cause, /worker exited with code 17.*\[worker /);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("dispatch stops after one unchanged executor result", async () => {
+  const root = await rootWithArticle();
+  try {
+    const initial = await createArticleImport(root, "Article Intake/a.md");
+    for (const revision of [initial.stateRevision, undefined]) {
+      const existing = { ...initial, stateRevision: revision };
+      await writeJsonAtomically(path.join(root, ".automation/article-imports", initial.importId + ".json"), existing);
+      let calls = 0;
+      const result = await executeImportCommand(root, { kind: "dispatch", importId: initial.importId }, async ({ record }) => {
+        calls++;
+        return record;
+      }, { maxSteps: 3 }) as ExternalArticleImportV1;
+      assert.equal(calls, 1);
+      assert.equal(result.stateRevision, revision);
+      assert.ok(!("dispatchOutcome" in result));
+    }
   } finally { await rm(root, { recursive: true, force: true }); }
 });

@@ -3,14 +3,14 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { executeImportCommand } from "../scripts/import-article";
+import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { createIntakeRun, type IntakeRun } from "../src/lib/article-import/intake";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import type { ReleaseOperations } from "../src/lib/article-import/release";
-import { prepareApprovalFixture, presentFixture } from "./fixtures/article-content-approval";
+import { prepareApprovalFixture, preparePresentationFixture } from "./fixtures/article-content-approval";
 import { storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { productionFixture } from "./fixtures/article-production-evidence";
@@ -150,9 +150,9 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
           break;
         }
         case "VALIDATING": {
-          const presented = await presentFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
-          await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
-          work = { stage: packet.stage, validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.evidenceRefs!.presentation!.path };
+          const presented = await preparePresentationFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
+          await writeJsonAtomically(path.join(root, validationReceiptPath), presented.input.validationReceipt);
+          work = { stage: packet.stage, validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.record.evidenceRefs!.presentation!.path };
           break;
         }
         case "RELEASING":

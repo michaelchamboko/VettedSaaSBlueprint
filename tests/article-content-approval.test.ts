@@ -58,9 +58,20 @@ test("presentation repair preserves approval, but source identity and artifact s
     const resumed = await resumeImport(root, repair);
     assert.equal(resumed.stage, "VALIDATING");
     assert.deepEqual(resumed.contentApproval, approved.contentApproval);
-    assert.equal((await ensureImportContentApproval(root, { ...resumed, sourceFingerprint: "a".repeat(64) })).stage, "REFINING");
+    // The first invalidation writes a new revision. The prior snapshot must be rejected.
+    const invalidated = await ensureImportContentApproval(root, { ...resumed, sourceFingerprint: "a".repeat(64) });
+    assert.equal(invalidated.stage, "REFINING");
+    await assert.rejects(ensureImportContentApproval(root, resumed, "replacement.json"), /STALE_IMPORT_RECORD/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("an artifact substitution requires fresh content approval", async () => {
+  const { root, record } = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const validating = await advanceImport(root, approved, "Approved content");
     await writeFile(path.join(root, "replacement.json"), await readFile(path.join(root, approved.contentApproval!.artifactPath)));
-    assert.equal((await ensureImportContentApproval(root, resumed, "replacement.json")).stage, "REFINING");
+    assert.equal((await ensureImportContentApproval(root, validating, "replacement.json")).stage, "REFINING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -92,6 +103,8 @@ async function reviewOutcomeFileList(root: string): Promise<string[]> {
   async function walk(dir) {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
+      // Writer acquisition and release append lease generations even for rejected mutations.
+      if (full === path.join(root, ".automation/article-imports/leases")) continue;
       if (entry.isDirectory()) await walk(full);
       else out.push(path.relative(root, full));
     }

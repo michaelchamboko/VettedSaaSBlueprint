@@ -5,9 +5,10 @@ import test from "node:test";
 
 import {
   advanceImport, createArticleImport, loadImport, parseExternalArticle, prepareTransformation,
-  recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, saveImport, verifyImportRelease,
+  recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease,
 } from "../src/lib/article-import/engine";
-import { executeImportCommand, parseImportCommand } from "../scripts/import-article";
+import { parseImportCommand } from "../scripts/import-article";
+import { persistFixture, executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { writeJsonAtomically } from "../src/lib/article-import/engine";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
@@ -347,7 +348,7 @@ async function buildPreReplayTerminal(root: string, record: Awaited<ReturnType<t
   newTerminal.frozenFiles = frozenFiles;
   const finalTerminalRef = await storeEvidence(root, record.importId, newTerminal);
   const updatedRecord = { ...record, terminalRef: finalTerminalRef, evidenceRefs: newTerminal.evidenceRefs as typeof record.evidenceRefs, stage: "LIVE" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION };
-  await saveImport(root, updatedRecord);
+  await persistFixture(root, updatedRecord);
   return { record: updatedRecord, terminal: newTerminal, finalTerminalRef };
 }
 
@@ -402,7 +403,7 @@ test("corrupted historical reference or hash rejects terminal inspection", async
     if (corruptedTerminal.frozenFiles.length > 0) corruptedTerminal.frozenFiles[0].sha256 = "0".repeat(64);
     const corruptedRef = await storeEvidence(root, preReplayRecord.importId, corruptedTerminal);
     const corruptedRecord = { ...preReplayRecord, terminalRef: corruptedRef };
-    await saveImport(root, corruptedRecord);
+    await persistFixture(root, corruptedRecord);
     assert.equal((await inspectImportCompletion(root, corruptedRecord.importId)).status, "REPAIR");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
