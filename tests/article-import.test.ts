@@ -5,7 +5,7 @@ import test from "node:test";
 
 import {
   advanceImport, createArticleImport, loadImport, parseExternalArticle, prepareTransformation,
-  recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease, withImportLease,
+  recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease,
 } from "../src/lib/article-import/engine";
 import { parseImportCommand } from "../scripts/import-article";
 import { persistFixture, executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";

@@ -59,6 +59,7 @@ async function mutateRun(root: string, runId: string, change: (run: IntakeRun) =
     const current = await loadIntakeRun(root, runId);
     if (current.schemaVersion !== "ArticleIntakeRunV2") throw new Error("LEGACY_UPGRADE_REQUIRED");
     const updated = await change(current);
+    if (updated === current) return current;
     await lease.assertOwned();
     updated.revision = (current.revision ?? 0) + 1;
     await saveRun(root, updated, lease); return updated;
@@ -136,7 +137,10 @@ export async function markIntakeEntry(root: string, run: IntakeRun, relativePath
 }
 
 export async function setIntakeBlocker(root: string, run: IntakeRun, blocker: IntakeEntry["blocker"] & { scope: "shared" }): Promise<IntakeRun> {
-  return mutateRun(root, run.runId, (current) => ({ ...current, blocker, outcome: "OPEN" }));
+  return mutateRun(root, run.runId, current => {
+    if (run.revision !== current.revision || !run.activeEntry || current.activeEntry !== run.activeEntry) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
+    return { ...current, blocker, outcome: "OPEN" };
+  });
 }
 
 export async function clearIntakeBlocker(root: string, run: IntakeRun, relativePath: string): Promise<IntakeRun> {
@@ -153,8 +157,10 @@ export async function clearIntakeBlocker(root: string, run: IntakeRun, relativeP
   });
 }
 
-export async function clearSharedIntakeBlocker(root: string, run: IntakeRun): Promise<IntakeRun> {
+export async function clearSharedIntakeBlocker(root: string, run: IntakeRun, relativePath: string, importId: string): Promise<IntakeRun> {
   return mutateRun(root, run.runId, (current) => {
+    const entry = current.entries.find(item => item.relativePath === relativePath);
+    if (current.activeEntry !== relativePath || entry?.importId !== importId) throw new Error("INTAKE_BLOCKER_IMPORT_MISMATCH");
     if (!current.blocker && run.blocker) return current;
     if (!current.blocker) throw new Error("INTAKE_SHARED_BLOCKER_REQUIRED");
     if (run.revision !== current.revision) throw new Error("INTAKE_RECONCILIATION_CONFLICT");

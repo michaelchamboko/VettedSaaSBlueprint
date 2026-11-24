@@ -1,4 +1,4 @@
-import { persistFixture, prepareCommandCheckout } from "./fixtures/article-command";
+import { fixtureProbe, persistFixture, prepareCommandCheckout } from "./fixtures/article-command";
 import { recordArticlePresentation } from "../scripts/record-article-presentation";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -7,8 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { claimImportLease, advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
-import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { executePendingImport, claimImportLease, advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
+import { assessImportRelease as assessRelease, recordImportCodeReview as recordReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
 import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-set-deployment";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import { importPresentationValidationSchema, type ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
@@ -49,6 +49,16 @@ test("presentation validation fails closed without complete Impeccable evidence"
   assert.throws(() => importPresentationValidationSchema.parse(base));
   assert.throws(() => importPresentationValidationSchema.parse({ ...base, pageDesign: { scope: "new_or_materially_changed_public_page", authority: { mode: "reused" }, impeccable: { context: true, shape: true, critique: true, audit: true, detect: true, polish: false }, specialists: { emilDesignEngineering: "not_applicable", mobileNative: "not_applicable", appleDesign: "not_applicable", pickUiLibrary: "not_applicable", askSonner: "not_applicable" }, notes: "Incomplete proof." } }));
 });
+
+async function assessImportRelease(input: Parameters<typeof assessRelease>[0]) {
+  if (input.execute) await prepareCommandCheckout(input.repositoryRoot);
+  return assessRelease(input, fixtureProbe(input.repositoryRoot));
+}
+
+async function recordImportCodeReview(...args: [string, ExternalArticleImportV1, unknown, Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">]) {
+  await prepareCommandCheckout(args[0]);
+  return recordReview(...args, fixtureProbe(args[0]));
+}
 
 async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
@@ -993,7 +1003,7 @@ test("release rebinds the affiliate receipt on the merged checkout before deploy
       repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example",
       operations: operations(root, {
         // After the reviewed head merged, another commit changed the receipt to a
-        // different globally allowlisted URL — the merged checkout must not deploy it.
+        // different globally allowlisted URL â€” the merged checkout must not deploy it.
         checkoutMergedCommit: async () => { await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://trymoo.moosend.com/michaelmedium" })); },
         deploy: async (commitSha) => { deployments += 1; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
       }),
@@ -1078,7 +1088,7 @@ test("merged checkout rebinds blog publication authority before deploying", asyn
         inspectGit: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
         refreshMain: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
         // After review, a concurrent main change replaced the authority entry with
-        // different content under the approved slug — the merged checkout must not deploy it.
+        // different content under the approved slug â€” the merged checkout must not deploy it.
         checkoutMergedCommit: async () => {
           const posts = JSON.parse(await readFile(postsPath, "utf8")) as Array<Record<string, unknown>>;
           await writeFile(postsPath, JSON.stringify(posts.map((entry) => entry.slug === post.slug ? { ...entry, cyclePosition: post.cyclePosition === 1 ? 2 : 1 } : entry)));
@@ -1247,13 +1257,16 @@ test("late presentation preserves pending release, LIVE and quarantine records w
     await prepareCommandCheckout(root);
     const base = await releasingRecord(root);
     const record = await persistFixture(root, { ...base, pendingRelease: {
-      ...base.pendingRelease!, rollbackDeploymentId: "dpl-previous", rollbackCommitSha: "b".repeat(40),
+      ...base.pendingRelease!, operations: { review: { reviewedHeadSha: base.pendingRelease!.reviewedCommitSha, evidenceUrl: base.pendingRelease!.codeReview!.evidenceUrl } }, rollbackDeploymentId: "dpl-previous", rollbackCommitSha: "b".repeat(40),
     } });
-    const probe = async (tool: string) => tool === "opencode" ? "1.19.4" : "Python 3.13.0";
+    const probe = fixtureProbe(root);
     async function rejectLate(id: string, stage: ExternalArticleImportV1["stage"]) {
       const state = await loadImport(root, id);
       assert.equal(state.stage, stage);
-      if (stage === "RELEASING") assert.equal(state.pendingRelease?.rollbackDeploymentId, "dpl-previous");
+      if (stage === "RELEASING") {
+        assert.equal(state.pendingRelease?.rollbackDeploymentId, "dpl-previous");
+        assert.ok(state.pendingRelease?.operations?.review);
+      }
       else assert.ok(state.terminalRef);
       const files = [
         `.automation/article-imports/${id}.json`,
@@ -1266,8 +1279,18 @@ test("late presentation preserves pending release, LIVE and quarantine records w
       assert.deepEqual(await snapshot(), before);
     }
     await rejectLate(record.importId, "RELEASING");
-    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: record.contentApproval!.artifactPath, slug: "example", operations: operations(root) });
+    const rawSource = path.join(root, ".automation/article-imports", record.importId + ".source.md");
+    await rm(rawSource);
+    await mkdir(rawSource);
+    let rollbacks = 0;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: record.contentApproval!.artifactPath, slug: "example", operations: operations(root, { rollback: async () => { rollbacks++; return { ok: true, summary: "unexpected rollback" }; } }) });
     assert.equal(result.status, "LIVE", result.reasons.join(", "));
+    assert.equal(rollbacks, 0);
+    assert.ok(result.reasons.some(reason => reason.includes("unlink")));
+    assert.equal((await loadImport(root, record.importId)).sourceDeletedAt, undefined);
+    await rm(rawSource, { recursive: true });
+    const recovered = await executePendingImport(root, record.importId, async () => { throw Error("unexpected executor"); });
+    assert.ok(recovered.sourceDeletedAt);
     await rejectLate(record.importId, "LIVE");
     await writeFile(path.join(root, "empty.md"), "");
     const empty = await createArticleImport(root, "empty.md");
@@ -1293,5 +1316,22 @@ test("dry-run preflight exception stays read-only while release execution is bus
       assert.deepEqual(await readFile(stateFile), before);
       await lease.assertOwned();
     } finally { await lease.release(); }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct execution services enforce checkout and capabilities before reading review or release state", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "orch02-service-preflight-"));
+  try {
+    await writeFile(path.join(root, "article.md"), source);
+    const record = await createArticleImport(root, "article.md");
+    const ops = operations(root);
+    const before = await loadImport(root, record.importId);
+    const release = () => assessRelease({ repositoryRoot: root, record, changedFiles: [], execute: true, operations: ops }, fixtureProbe(root));
+    const review = () => recordReview(root, record, {}, ops, fixtureProbe(root));
+    for (const call of [release, review]) await assert.rejects(call, /PRIMARY_CHECKOUT_REQUIRED/);
+    await prepareCommandCheckout(root);
+    await writeFile(path.join(root, ".agents/skills/impeccable/SKILL.md"), "invalid");
+    for (const call of [release, review]) await assert.rejects(call, /CAPABILITY_UNAVAILABLE/);
+    assert.deepEqual(await loadImport(root, record.importId), before);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

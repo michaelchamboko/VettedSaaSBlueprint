@@ -1,7 +1,7 @@
 import { createArticleImport, executePendingImport, upgradeImportEvidence, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { readFile } from "node:fs/promises";
-import { assertPrimaryArticleCheckout, assertArticleCapabilities, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
+import { assertPrimaryArticleCheckout, withArticleExecution, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
 import { WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, stageInstructions } from "../src/lib/article-import/workflow-requirements";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
@@ -33,10 +33,13 @@ export function parseImportCommand(argv: string[]): ImportCommand {
 }
 
 export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, probe?: CapabilityProbe): Promise<unknown> {
-  const readOnly = ["describe-workflow", "preflight", "check-intake", "check-completion", "intake-status"].includes(command.kind);
-  if (!readOnly) await assertPrimaryArticleCheckout(root);
-  if (["source", "resume", "intake", "intake-resume"].includes(command.kind)) await assertArticleCapabilities(root, probe);
+  const dispatch = () => dispatchImportCommand(root, command, executor, probe);
+  if (["source", "resume", "intake", "intake-resume"].includes(command.kind)) return withArticleExecution(root, dispatch, probe);
+  if (!["describe-workflow", "preflight", "check-intake", "check-completion", "intake-status"].includes(command.kind)) await assertPrimaryArticleCheckout(root);
+  return dispatch();
+}
 
+async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, probe?: CapabilityProbe): Promise<unknown> {
   if (command.kind === "recover-lease") return recoverWorkflowLease(root, command.leaseKind, command.key);
   if (command.kind === "describe-workflow") return { requirementRevision: WORKFLOW_REVISION, sequence: WORKFLOW_SEQUENCE, requirements: workflowRequirements, instructions: stageInstructions };
   if (command.kind === "preflight") return inspectArticlePreflight(root, probe);
@@ -57,10 +60,11 @@ export async function executeImportCommand(root: string, command: ImportCommand,
     if (!command.importId) throw new Error("INTAKE_RETRY_IMPORT_REQUIRED");
     const entry = run.entries.find((item) => item.importId === command.importId);
     if (!entry) throw new Error("INTAKE_IMPORT_NOT_FOUND");
+    if (run.blocker && run.activeEntry !== entry.relativePath) throw new Error("INTAKE_BLOCKER_IMPORT_MISMATCH");
     if (!command.recovery) throw new Error("INTAKE_RECOVERY_EVIDENCE_REQUIRED");
     await clearImportBlocker(root, command.importId, await evidenceReference(root, command.recovery));
     // Import lease is released before intake mutation; the snapshot is reloaded by the mutator.
-    if (run.blocker) return clearSharedIntakeBlocker(root, run);
+    if (run.blocker) return clearSharedIntakeBlocker(root, run, entry.relativePath, command.importId);
     const updated = await clearIntakeBlocker(root, run, entry.relativePath);
     return { ...updated, nextEntry: updated.entries.find((item) => item.relativePath === entry.relativePath) };
   }

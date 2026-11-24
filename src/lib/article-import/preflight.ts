@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile, realpath, stat } from "node:fs/promises";
@@ -57,4 +58,15 @@ export async function inspectArticlePreflight(root: string, checkTool: Capabilit
 export async function assertArticleCapabilities(root: string, probe?: CapabilityProbe): Promise<void> {
   const result = await inspectArticlePreflight(root, probe);
   if (!result.ok) throw new Error(`CAPABILITY_UNAVAILABLE: ${JSON.stringify(result.diagnostics)}`);
+}
+
+const executionCheckout = new AsyncLocalStorage<string>();
+
+/** Nested controller operations may reuse only the preflight for this checkout. */
+export async function withArticleExecution<T>(root: string, action: () => Promise<T>, probe?: CapabilityProbe): Promise<T> {
+  const checkout = await realpath(root);
+  if (executionCheckout.getStore() === checkout) return action();
+  await assertPrimaryArticleCheckout(checkout);
+  await assertArticleCapabilities(checkout, probe);
+  return executionCheckout.run(checkout, action);
 }

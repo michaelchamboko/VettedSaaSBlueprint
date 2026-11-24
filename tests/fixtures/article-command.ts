@@ -35,8 +35,15 @@ export async function prepareCommandCheckout(root: string) {
   await writeFile(manifest, JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "2.2.6", modelFamilies: { "opencode-go/beam-free": "beam" }, files }));
 }
 
+export function fixtureProbe(root: string) {
+  return async (tool: string) => {
+    if (tool === "python") return "Python 3.13.0";
+    const manifest = JSON.parse(await readFile(path.join(root, "config/article-workflow-capabilities.json"), "utf8"));
+    return manifest.openCodeVersion as string;
+  };
+}
+
 export async function executeFixtureCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor) {
   await prepareCommandCheckout(root);
-  const { openCodeVersion } = JSON.parse(await readFile(path.join(root, "config/article-workflow-capabilities.json"), "utf8"));
-  return executeImportCommand(root, command, executor, async tool => tool === "opencode" ? openCodeVersion : "Python 3.13.0");
+  return executeImportCommand(root, command, executor, fixtureProbe(root));
 }

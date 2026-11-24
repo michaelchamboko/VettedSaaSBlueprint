@@ -1,3 +1,4 @@
+import { withArticleExecution, type CapabilityProbe } from "./preflight";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -14,8 +15,8 @@ import { importCodeReviewSchema } from "./contracts";
 import { readProductionVerifierEvidence, type VerifierEvidenceRef } from "./verification-evidence";
 import { evaluateWorkflowEvidence } from "./workflow-evidence";
 
-export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">): Promise<ExternalArticleImportV1> {
-  return withRecordLease(repositoryRoot, record, async (currentRecord) => {
+export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">, probe?: CapabilityProbe): Promise<ExternalArticleImportV1> {
+  return withArticleExecution(repositoryRoot, () => withRecordLease(repositoryRoot, record, async (currentRecord) => {
     const codeReview = importCodeReviewSchema.parse(receipt);
     const pending = currentRecord.pendingRelease;
     if (!pending?.pullRequestUrl || codeReview.pullRequestUrl !== pending.pullRequestUrl || codeReview.reviewedCommitSha !== pending.reviewedCommitSha) throw new Error("CODE_REVIEW_BINDING_MISMATCH");
@@ -25,7 +26,7 @@ export async function recordImportCodeReview(repositoryRoot: string, record: Ext
     const updated = { ...currentRecord, pendingRelease: { ...pending, codeReview, operations: { ...pending.operations, review: { reviewedHeadSha: codeReview.reviewedCommitSha, evidenceUrl: codeReview.evidenceUrl } } }, updatedAt: new Date().toISOString() };
     await saveImport(repositoryRoot, updated);
     return updated;
-  });
+  }), probe);
 }
 
 export type FullProductionChecks = {
@@ -611,6 +612,9 @@ async function assessImportReleaseImpl(input: {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     input.record = await loadImport(input.repositoryRoot, input.record.importId);
+    if (input.record.stage === "LIVE" && input.record.terminalRef && input.record.release) {
+      return { status: "LIVE", reasons: [message], previousDeploymentId: previous.deploymentId, deploymentId: input.record.release.deploymentId, canonicalUrl: input.record.release.canonicalUrl };
+    }
     if (!deploymentStarted) {
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: [message] };
@@ -634,11 +638,11 @@ async function assessImportReleaseImpl(input: {
   }
 }
 
-export async function assessImportRelease(input: Parameters<typeof assessImportReleaseImpl>[0]) {
+export async function assessImportRelease(input: Parameters<typeof assessImportReleaseImpl>[0], probe?: CapabilityProbe) {
   if (input.execute) {
-    return withRecordLease(input.repositoryRoot, input.record, async (current) => {
-      return assessImportReleaseImpl({ ...input, record: current });
-    });
+    return withArticleExecution(input.repositoryRoot, () => withRecordLease(input.repositoryRoot, input.record, current =>
+      assessImportReleaseImpl({ ...input, record: current })
+    ), probe);
   }
   return assessImportReleaseImpl(input);
 }

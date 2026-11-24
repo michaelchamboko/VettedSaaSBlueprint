@@ -362,7 +362,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       assertCurrentImport(current);
       if (["LIVE", "QUARANTINED"].includes(current.stage)) {
         if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
-        return current;
+        return current.sourceDeletedAt ? current : deleteRawSource(repositoryRoot, importId, current, now());
       }
       if (current.continuation?.kind === "blocked") return current;
       if (current.continuation?.kind !== "wait" && !(current.continuation?.kind === "repair" && current.continuation.diagnosisRequired)) current = await ensureImportResearch(repositoryRoot, current);
