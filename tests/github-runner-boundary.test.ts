@@ -14,12 +14,15 @@ const activeInstructions = [
   "docs/landing-workflow/README.md",
 ];
 
-test("release path has no tracked GitHub Actions workflow", () => {
+test("only the owner-authorized code graph workflow exists; release stays agent-owned", () => {
   const workflowFiles = existsSync(workflowDirectory)
     ? readdirSync(workflowDirectory).filter((entry) => /\.(?:ya?ml)$/i.test(entry))
     : [];
 
-  assert.deepEqual(workflowFiles, []);
+  assert.deepEqual(workflowFiles, ["code-graph.yml"]);
+  const workflow = readFileSync(path.join(workflowDirectory, "code-graph.yml"), "utf8");
+  assert.match(workflow, /scripts\/code-intelligence\/build\.ts/);
+  assert.doesNotMatch(workflow, /import:article|import-article|vercel\s+(?:deploy|promote)|gh pr merge/);
 });
 
 test("active release instructions do not require runners, bot publication, or workflow artifacts", () => {

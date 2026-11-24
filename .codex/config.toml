@@ -1,4 +1,0 @@
-[mcp_servers.codebase-memory]
-command = "node"
-args = ["scripts/code-intelligence/serve.ts"]
-startup_timeout_sec = 120

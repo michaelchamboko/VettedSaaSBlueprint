@@ -18,7 +18,8 @@ for (const stage of stages) {
   if (stage.owner !== "Supervised agent") errors.push(`${stage.id} owner is ${stage.owner}.`);
 }
 if (existsSync(workflowDirectory)) {
-  const workflowFiles = readdirSync(workflowDirectory).filter((entry) => /\.(?:ya?ml)$/i.test(entry));
+  // CODE-INTELLIGENCE-1124 authorizes graph maintenance only, not article/release runners.
+  const workflowFiles = readdirSync(workflowDirectory).filter((entry) => /\.(?:ya?ml)$/i.test(entry) && entry !== "code-graph.yml");
   if (workflowFiles.length > 0) {
     errors.push(`${workflowDirectory} must not contain hosted-runner workflows: ${workflowFiles.join(", ")}.`);
   }
