@@ -1322,6 +1322,7 @@ test("dry-run preflight exception stays read-only while release execution is bus
 test("direct execution services enforce checkout and capabilities before reading review or release state", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "orch02-service-preflight-"));
   try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
     await writeFile(path.join(root, "article.md"), source);
     const record = await createArticleImport(root, "article.md");
     const ops = operations(root);
