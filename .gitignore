@@ -24,3 +24,11 @@ node_modules.incomplete-recovery/
 .hermes/
 .artifacts/
 .mece/
+
+# Local code intelligence state; compressed shared exports are tracked.
+.codegraph/
+.cache/
+.codebase-memory/*.db
+.codebase-memory/*.db-*
+.codebase-memory/*.lock
+.codebase-memory/cache/

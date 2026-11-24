@@ -1,0 +1,33 @@
+# Shareable graphs index source, not local tools, runtime records or credentials.
+.git/
+.codegraph/
+.codebase-memory/
+.artifacts/
+.cache/
+.worktrees/
+.scratch/
+.mece/
+.opencode/
+.automation/
+.globalsetup-backups/
+node_modules/
+.next/
+.vercel/
+Article Intake/
+build-pack/runtime/
+build-pack/editorial/
+gate-a-evidence/
+gate-b-evidence/
+.env*
+credentials
+credentials.*
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+*.tsbuildinfo

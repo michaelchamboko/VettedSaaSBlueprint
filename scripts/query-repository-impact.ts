@@ -1,5 +1,6 @@
+import { assertDocumentSeed } from "../src/lib/repository-intelligence/graph";
 import { Pool } from "pg";
-import { NeonRepositoryIntelligence } from "../src/lib/repository-intelligence/neon";
+import { NeonDocumentIntelligence } from "../src/lib/repository-intelligence/neon";
 
 function option(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -12,11 +13,12 @@ async function main(): Promise<void> {
   const depth = Number(option("--depth") ?? "2");
   if (!nodeId || !snapshotKey) throw new Error("--node and --snapshot are required.");
   if (!Number.isInteger(depth) || depth < 0 || depth > 8) throw new Error("--depth must be an integer from 0 to 8.");
+  assertDocumentSeed(nodeId);
   const connectionString = process.env.DATABASE_URL?.trim() || process.env.REPOSITORY_INTELLIGENCE_DATABASE_URL?.trim();
   if (!connectionString) throw new Error("DATABASE_URL or REPOSITORY_INTELLIGENCE_DATABASE_URL is required.");
   const pool = new Pool({ connectionString, max: 1, ssl: { rejectUnauthorized: true } });
   try {
-    const rows = await new NeonRepositoryIntelligence(pool).impact(snapshotKey, nodeId, depth);
+    const rows = await new NeonDocumentIntelligence(pool).documentImpact(snapshotKey, nodeId, depth);
     process.stdout.write(JSON.stringify({ snapshotKey, nodeId, depth, results: rows }, null, 2) + "\n");
   } finally {
     await pool.end();

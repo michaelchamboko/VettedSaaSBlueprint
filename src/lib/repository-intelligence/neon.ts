@@ -1,12 +1,15 @@
 import { Pool } from "pg";
-import type { IntelligenceSnapshot } from "./graph";
+import { assertDocumentSeed, DOCUMENT_NODE_KINDS, type DocumentIntelligenceSnapshot } from "./graph";
 
 const SCHEMA = "repository_intelligence_v1";
 
-export class NeonRepositoryIntelligence {
+export class NeonDocumentIntelligence {
   constructor(private readonly pool: Pool) {}
 
-  async replaceSnapshot(snapshot: IntelligenceSnapshot): Promise<void> {
+  async replaceSnapshot(snapshot: DocumentIntelligenceSnapshot): Promise<void> {
+    if (snapshot.nodes.some((node) => !DOCUMENT_NODE_KINDS.some((kind) => kind === node.kind)) || snapshot.edges.some((edge) => edge.kind === "imports")) {
+      throw new Error("Only document intelligence snapshots may be written to Neon.");
+    }
     const client = await this.pool.connect();
     try {
       await client.query("begin");
@@ -43,10 +46,29 @@ export class NeonRepositoryIntelligence {
     }
   }
 
-  async impact(snapshotKey: string, nodeId: string, depth: number): Promise<Array<Record<string, unknown>>> {
+  async documentImpact(snapshotKey: string, nodeId: string, depth: number): Promise<Array<Record<string, unknown>>> {
+    assertDocumentSeed(nodeId);
+    if (!Number.isInteger(depth) || depth < 0 || depth > 8) throw new Error("Depth must be an integer from 0 to 8.");
     const result = await this.pool.query(
-      `select * from ${SCHEMA}.impact($1, $2, $3)`,
-      [snapshotKey, nodeId, depth],
+      `with recursive semantic_nodes as (
+         select * from ${SCHEMA}.nodes where snapshot_key = $1 and node_kind = any($4::text[])
+       ), semantic_edges as (
+         select edge.* from ${SCHEMA}.edges edge
+         join semantic_nodes source on source.node_id = edge.from_node_id
+         join semantic_nodes target on target.node_id = edge.to_node_id
+         where edge.snapshot_key = $1 and edge.edge_kind <> 'imports'
+       ), walk(node_id, depth) as (
+         select node_id, 0 from semantic_nodes where node_id = $2
+         union
+         select case when edge.from_node_id = walk.node_id then edge.to_node_id else edge.from_node_id end, walk.depth + 1
+         from walk join semantic_edges edge on edge.from_node_id = walk.node_id or edge.to_node_id = walk.node_id
+         where walk.depth < $3
+       )
+       select node.node_id, node.node_kind, node.path, node.label, min(walk.depth)::integer as depth
+       from walk join semantic_nodes node on node.node_id = walk.node_id
+       group by node.node_id, node.node_kind, node.path, node.label
+       order by min(walk.depth), node.node_id`,
+      [snapshotKey, nodeId, depth, [...DOCUMENT_NODE_KINDS]],
     );
     return result.rows;
   }

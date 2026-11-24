@@ -23,6 +23,20 @@
       "run",
       "intelligence:sync:apply"
     ],
-    "timeout_seconds": 900
+    "timeout_seconds": 900,
+    "purpose": "document-authority-only"
+  },
+  "code_graph": {
+    "provider": "codebase-memory-mcp",
+    "version": "0.12.1",
+    "status_argv": [
+      "node",
+      "scripts/code-intelligence/validate.ts"
+    ],
+    "sync_argv": [
+      "node",
+      "scripts/code-intelligence/update-local.ts"
+    ],
+    "publication": "reviewed-github-artifact-only"
   }
 }

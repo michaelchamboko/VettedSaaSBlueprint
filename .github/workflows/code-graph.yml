@@ -1,0 +1,119 @@
+name: Refresh code graph
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.codebase-memory/**'
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: code-graph-update
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out committed main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Report graph freshness after source pushes
+        if: github.event_name == 'push'
+        run: node scripts/code-intelligence/status.ts
+      - name: Check published and pending graph freshness
+        if: github.event_name != 'push'
+        id: graph_status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch=codex/code-graph-update
+          gh auth setup-git
+          remote_ref=$(git ls-remote --heads origin "refs/heads/$branch")
+          if [[ -n "$remote_ref" ]]; then
+            git fetch origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            node scripts/code-intelligence/status.ts --pending-ref "origin/$branch"
+          else
+            node scripts/code-intelligence/status.ts
+          fi
+      - name: Install verified graph tool
+        if: github.event_name != 'push' && steps.graph_status.outputs.should_build == 'true'
+        run: |
+          node scripts/code-intelligence/install.ts
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Build from committed sources
+        if: github.event_name != 'push' && steps.graph_status.outputs.should_build == 'true'
+        run: node scripts/code-intelligence/build.ts
+      - name: Validate graph before publication
+        if: github.event_name != 'push' && steps.graph_status.outputs.should_build == 'true'
+        run: node scripts/code-intelligence/validate.ts --current
+      - name: Commit and push validated graph
+        if: github.event_name != 'push' && steps.graph_status.outputs.should_build == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch=codex/code-graph-update
+          base=$(git rev-parse HEAD)
+          git add -- .codebase-memory/graph.db.zst .codebase-memory/artifact.json .codebase-memory/.gitattributes .codebase-memory/provenance.json
+          if git diff --cached --quiet; then
+            echo 'Graph inputs are unchanged; no update required.'
+            exit 0
+          fi
+          # Build/validate completed before changing any remote ref.
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          gh auth setup-git
+          remote_ref=$(git ls-remote --heads origin "refs/heads/$branch")
+          parents=(-p "$base")
+          if [[ -n "$remote_ref" ]]; then
+            git fetch origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            previous=$(git rev-parse "refs/remotes/origin/$branch")
+            if [[ "$previous" != "$base" ]]; then
+              # Preserve prior automation commits without force pushing.
+              parents=(-p "$previous" -p "$base")
+            fi
+          fi
+          tree=$(git write-tree)
+          commit=$(printf 'chore: refresh persistent code graph\n' | git commit-tree "$tree" "${parents[@]}")
+          git push origin "$commit:refs/heads/$branch"
+      - name: Ensure validated graph has an update PR
+        if: github.event_name != 'push' && (steps.graph_status.outputs.should_build == 'true' || steps.graph_status.outputs.pending_current == 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch=codex/code-graph-update
+          base=$(git rev-parse HEAD)
+          gh auth setup-git
+          git fetch origin "refs/heads/$branch:refs/remotes/origin/$branch"
+          source_sha=$(git show "origin/$branch:.codebase-memory/provenance.json" | jq -er '.sourceSha')
+          pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "$branch" --state open --json number --jq '.[0].number // empty')
+          body="$RUNNER_TEMP/code-graph-pr.md"
+          printf '%s\n' 'Refresh the persistent code graph from committed main sources.' '' 'Validation: the graph passed artifact validation and its source digest matches the checked main sources.' '' "Artifact source commit: $source_sha" "Checked main commit: $base" '' 'Only generated .codebase-memory artifacts are included. This workflow does not approve or merge the PR.' > "$body"
+          if [[ -z "$pr" ]]; then
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" --title 'chore: refresh persistent code graph' --body-file "$body"
+          else
+            gh pr edit "$pr" --repo "$GITHUB_REPOSITORY" --body-file "$body"
+          fi

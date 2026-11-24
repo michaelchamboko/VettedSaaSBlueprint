@@ -39,9 +39,9 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 
 - Owner directive for supervised authoring: after evidence-backed drafting and before candidate validation, complete the mandatory full-article workflow in `.agents/skills/eleanor-editorial/SKILL.md`. This covers DecisionSetV2, direct-review landing blueprints, VisibilityPageV1 and individual BlogPostV1 records. Rewrite every editable prose field through all three SlopMonster passes, require a separate Beam review pass in a distinct OpenCode session/exchange with exact `opencode-go/beam-free` identity (no model fallback), run the final fidelity review, and require a 5/5 CLEAN result. Save `EditorialEvidenceV2` under `build-pack/editorial`; preserve protected fields and semantic meaning; reuse it only for an unchanged artifact fingerprint and revision. A partial cleanup or missing pass cannot proceed. Legacy rival-family evidence remains historically valid but does not satisfy the new Beam-review policy. This does not authorise schedules, automated publication, or a change to source strategy.
 
-- `docs/document-intelligence/` remains the reviewable semantic source layer. Neon schema `repository_intelligence_v1` stores versioned semantic and code relationships for query and impact analysis; it is evidence, not product authority.
+- `docs/document-intelligence/` remains the reviewable semantic source layer. Neon schema `repository_intelligence_v1` stores document, section, claim, directive and finding relationships for semantic queries and impact analysis; it is evidence, not product authority.
 - Produce a deterministic snapshot with `npm run intelligence:sync`. Apply it only with an explicit database connection through `npm run intelligence:sync:apply`, then query bounded impact with `npm run intelligence:impact -- --snapshot <sha256> --node <id> --depth <0-8>`.
-- Application code, workflows, tests, deployment configuration, source sections, claims, directives, and relationships are members of the same snapshot. Each snapshot binds its Git commit, source-manifest digest, graph digest, node count, and edge count.
+- Document snapshots bind their Git commit, source-manifest digest, graph digest, node count and edge count. Code relationships belong only to codebase-memory-mcp. Historical mixed Neon snapshots remain retained, but active queries exclude code and import relationships.
 - Source strategy documents remain unchanged unless the product owner separately approves an amendment.
 - Existing external VettedSaaSBlueprint code and deployments are migration context, not implementation authority.
 - Do not create or retain an authoritative `CLAUDE.md`.
@@ -50,7 +50,7 @@ This repository is the local Spec Kit, implementation, and deployment workspace 
 
 1. Select the smallest dependency-ready BuildRunner packet embedded in `planning.md` and materialised in `build-pack/execution-state.json`; `planning.md` is the only planning authority.
 2. Read the slice's exact source sections and stable identifiers before implementation.
-3. Before impact-sensitive work, build the snapshot from the selected checkout and confirm its commit and digests. Use direct source inspection, `rg`, TypeScript imports, route inventories, and affected-test checks alongside the database result. Commercial activation remains fail-closed until licence rights are recorded.
+3. Before impact-sensitive code work, follow Code Intelligence below. For source-authority changes, build the document snapshot from the selected checkout and confirm its commit and digests. Use direct source inspection, `rg`, TypeScript imports, route inventories, and affected-test checks alongside graph results. Commercial activation remains fail-closed until licence rights are recorded.
 4. Implement the slice with its automated checks and production-facing acceptance criteria.
 5. Deploy Phase One and later release slices to Vercel through the repository deployment configuration.
 6. Verify the deployed URLs independently of worker self-reporting and record the deployment receipt.
@@ -74,7 +74,7 @@ Run this workflow when source documents or their derived intelligence change:
 4. Record cross-document relationships and unresolved findings in the explicit relationship map.
 5. Run `scripts/verify-document-intelligence.ps1`, then the stable-UID impact command before proposing a later document amendment. Commit-delta detection remains unavailable while the baseline commit is deferred.
 
-When these records or repository relationships change, verify the SQL migration, rebuild the deterministic snapshot, inspect its counts and digests, and validate one known semantic path plus one known code-import path on an isolated Neon branch before applying the migration or snapshot to the production database branch. Never treat a database row as stronger authority than its cited source section.
+When semantic records or their relationships change, verify the SQL migration, rebuild the deterministic document snapshot, inspect its counts and digests, and validate a known semantic path on an isolated Neon branch before applying the migration or snapshot to production. Verify code paths through codebase-memory-mcp and source inspection; Neon code-import traversal is retired. Never treat a database row as stronger authority than its cited source section.
 
 ## Article handoff continuation
 
@@ -98,3 +98,14 @@ Missing work alone does not justify a durable blocker or skipping an article. Re
 
 - Before planning or drafting affiliate copy, read `docs/document-intelligence/DOMAIN_QUERY_EVIDENCE.md` sections **External Hormozi-skills review**, **Affiliate-safe Hormozi output map**, and **Affiliate-safe Hormozi invocation chain**.
 - Invoke only the mapped individual skill at its declared lifecycle stage. Treat every output as a proposal and apply the pricing, evidence, independence, disclosure, page-contract, and QA boundaries recorded there.
+
+## Code Intelligence
+
+Owner directive, 24 November 2026: codebase-memory-mcp is the sole code graph. GitHub's reviewed `.codebase-memory/` artifact is the shared baseline. Graph evidence does not replace source strategy authority. Neon retains document-authority evidence only.
+
+1. Before substantial code investigation, run `index_status` and `check_index_coverage` with the relevant paths or scopes. Check the published source SHA and local changes. Missing or stale coverage requires source inspection, never an assumption that a dependency is absent.
+2. Query `get_architecture`, `search_graph` and `trace_path` before broad exploration. Use `detect_changes` for impact before changing shared functions, interfaces or workflows. Use `query_graph` for bounded relationship queries and `get_code_snippet` for targeted inspection. Verify important connections in actual source.
+3. Load the shared baseline with `node scripts/code-intelligence/load.ts`. After implementation and checks, run `node scripts/code-intelligence/update-local.ts`. Keep automatic synchronization enabled. Local updates may rewrite exports; do not publish those changes automatically.
+4. When MCP is unavailable, use `codebase-memory-mcp cli --json <tool>`, for example `codebase-memory-mcp cli --json trace_path --project VettedSaaSBlueprint --function-name handlePublicEventPost --direction inbound --format json`. Setup and coverage examples are in `docs/code-intelligence.md`. Codex and OpenCode start the installed binary from user-managed configuration; never add a checkout-owned automatic launcher.
+
+The owner authorizes only the code-graph maintenance workflow in `.github/workflows/code-graph.yml`: default-branch changes, nightly source-change checks and manual dispatch, with reviewed update PRs. This does not reactivate article or retired multi-stage automation. Keep databases, caches, locks and diagnostics local; commit only the compressed graph, its metadata/provenance, attributes and portable setup. Never create an authoritative CLAUDE.md.
