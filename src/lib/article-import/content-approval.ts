@@ -34,32 +34,94 @@ async function readCanonicalJson(root: string, file: string) {
   return { path: relative.replaceAll("\\", "/"), value: JSON.parse(await readFile(absolute, "utf8")) };
 }
 
-export async function createContentApproval(root: string, input: ApprovalFiles & { format: string; sourceFingerprint: string }): Promise<ContentApproval> {
-  if (!Object.hasOwn(formats, input.format)) throw new Error("A supported content format is required.");
-  const format = input.format as ContentApproval["format"];
-  const [artifact, editorial, quality] = await Promise.all([
-    readCanonicalJson(root, input.artifactPath), readCanonicalJson(root, input.editorialEvidencePath), readCanonicalJson(root, input.formatQualityPath),
-  ]);
-  if (!canReuseEditorialEvidence(editorial.value, formats[format], artifact.value)) {
+export type ApprovedArtifactSnapshot =
+  | { ok: true; path: string; artifact: unknown; matches: (approval: unknown, format: string, sourceFingerprint: string) => Promise<boolean> }
+  | { ok: false; error: "ARTIFACT_NOT_FOUND" | "ARTIFACT_PATH_ESCAPE" | "ARTIFACT_UNREADABLE" };
+
+export async function loadApprovedArtifact(root: string, artifactPath: string): Promise<ApprovedArtifactSnapshot> {
+  let canonicalRoot: string;
+  try {
+    canonicalRoot = await realpath(root);
+  } catch {
+    return { ok: false, error: "ARTIFACT_NOT_FOUND" };
+  }
+  const full = path.resolve(root, artifactPath);
+  let canonical: string;
+  try {
+    canonical = await realpath(full);
+  } catch {
+    return { ok: false, error: "ARTIFACT_NOT_FOUND" };
+  }
+  const relative = path.relative(canonicalRoot, canonical);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return { ok: false, error: "ARTIFACT_PATH_ESCAPE" };
+  }
+  let artifact: unknown;
+  try {
+    artifact = JSON.parse(await readFile(canonical, "utf8"));
+  } catch {
+    return { ok: false, error: "ARTIFACT_UNREADABLE" };
+  }
+  const relPath = relative.replaceAll("\\", "/");
+  const matches = async (approval: unknown, format: string, sourceFingerprint: string): Promise<boolean> => {
+    const parsed = contentApprovalSchema.safeParse(approval);
+    if (!parsed.success || parsed.data.format !== format || parsed.data.sourceFingerprint !== sourceFingerprint) return false;
+    const expected = parsed.data;
+    try {
+      const current = await createApprovalForSnapshot(root, { path: relPath, artifact }, format, sourceFingerprint, expected.editorialEvidencePath, expected.formatQualityPath);
+      return Object.entries(expected).every(([key, value]) => key === "approvedAt" || current[key as keyof ContentApproval] === value);
+    } catch {
+      return false;
+    }
+  };
+  return { ok: true, path: relPath, artifact, matches };
+}
+
+async function createApprovalForSnapshot(
+  root: string,
+  loaded: { path: string; artifact: unknown },
+  formatInput: string,
+  sourceFingerprint: string,
+  editorialEvidencePath: string,
+  formatQualityPath: string,
+): Promise<ContentApproval> {
+  if (!Object.hasOwn(formats, formatInput)) throw new Error("A supported content format is required.");
+  const format = formatInput as ContentApproval["format"];
+  const artifact = loaded.artifact;
+  const editorial = await readCanonicalJson(root, editorialEvidencePath);
+  const quality = await readCanonicalJson(root, formatQualityPath);
+  if (!canReuseEditorialEvidence(editorial.value, formats[format], artifact)) {
     throw new Error("Full-article SlopMonster evidence does not approve the current artifact.");
   }
-  const artifactFingerprint = fingerprintEditorialArtifact(artifact.value);
-  validateImportArtifact(format, artifact.value);
+  const artifactFingerprint = fingerprintEditorialArtifact(artifact);
+  validateImportArtifact(format, artifact);
   z.object({ format: z.literal(format), artifactFingerprint: z.literal(artifactFingerprint), passed: z.literal(true), gate: z.literal(importFormatQualityGates[format]) }).passthrough().parse(quality.value);
   return contentApprovalSchema.parse({
-    schemaVersion: "ImportContentApprovalV1", artifactPath: artifact.path, format, schemaRevision: revisions[format],
-    artifactFingerprint, sourceFingerprint: input.sourceFingerprint, editorialRevision: EDITORIAL_REVISION,
+    schemaVersion: "ImportContentApprovalV1", artifactPath: loaded.path, format, schemaRevision: revisions[format],
+    artifactFingerprint, sourceFingerprint, editorialRevision: EDITORIAL_REVISION,
     editorialEvidencePath: editorial.path, editorialEvidenceFingerprint: fingerprintEditorialArtifact(editorial.value),
     formatQualityPath: quality.path, formatQualityFingerprint: fingerprintEditorialArtifact(quality.value), approvedAt: new Date().toISOString(),
   });
 }
 
-export async function contentApprovalMatches(root: string, approval: unknown, format: string, sourceFingerprint: string, artifactPath?: string): Promise<boolean> {
+export async function createContentApproval(root: string, input: ApprovalFiles & { format: string; sourceFingerprint: string }): Promise<ContentApproval> {
+  const loaded = await loadApprovedArtifact(root, input.artifactPath);
+  if (!loaded.ok) throw new Error(loaded.error);
+  return createApprovalForSnapshot(root, loaded, input.format, input.sourceFingerprint, input.editorialEvidencePath, input.formatQualityPath);
+}
+
+export async function resolveContentApproval(root: string, approval: unknown, format: string, sourceFingerprint: string, artifactPath?: string): Promise<{ ok: true; artifact: unknown } | { ok: false }> {
   const parsed = contentApprovalSchema.safeParse(approval);
-  if (!parsed.success || parsed.data.format !== format || parsed.data.sourceFingerprint !== sourceFingerprint) return false;
-  try {
-    const expected = parsed.data;
-    const current = await createContentApproval(root, { ...expected, artifactPath: artifactPath ?? expected.artifactPath });
-    return Object.entries(expected).every(([key, value]) => key === "approvedAt" || current[key as keyof ContentApproval] === value);
-  } catch { return false; }
+  if (!parsed.success || parsed.data.format !== format || parsed.data.sourceFingerprint !== sourceFingerprint) return { ok: false };
+  const loadPath = artifactPath ?? parsed.data.artifactPath;
+  const loaded = await loadApprovedArtifact(root, loadPath);
+  if (!loaded.ok) return { ok: false };
+  const valid = await loaded.matches(approval, format, sourceFingerprint);
+  if (!valid) return { ok: false };
+  return { ok: true, artifact: loaded.artifact };
+}
+
+export async function contentApprovalMatches(root: string, approval: unknown, format: string, sourceFingerprint: string, artifactPath?: string): Promise<boolean> {
+  const resolved = await resolveContentApproval(root, approval, format, sourceFingerprint, artifactPath);
+  return resolved.ok;
 }

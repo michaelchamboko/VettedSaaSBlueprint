@@ -1,7 +1,5 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { importPresentationReceiptSchema, importPresentationValidationSchema, pageDesignValidationSchema, type ExternalArticleImportV1 } from "./contracts";
-import { contentApprovalMatches } from "./content-approval";
+import { resolveContentApproval } from "./content-approval";
 import { validateImportArtifact } from "./format-validation";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
 import { readImportVerifierEvidence } from "./verification-evidence";
@@ -12,8 +10,10 @@ export async function createImportPresentation(root: string, record: ExternalArt
   const workflow = await evaluateWorkflowEvidence(record, { root, throughStage: "RELEASING" });
   if (!workflow.ok) throw new Error(workflow.diagnostics.join("; "));
   const approval = record.contentApproval;
-  if (!approval || !await contentApprovalMatches(root, approval, record.format, record.sourceFingerprint)) throw new Error("CONTENT_APPROVAL_INVALID");
-  const artifact = JSON.parse(await readFile(path.resolve(root, approval.artifactPath), "utf8"));
+  if (!approval) throw new Error("CONTENT_APPROVAL_INVALID");
+  const resolved = await resolveContentApproval(root, approval, record.format, record.sourceFingerprint);
+  if (!resolved.ok) throw new Error("CONTENT_APPROVAL_INVALID");
+  const artifact = resolved.artifact;
   const renderedRoutes = validateImportArtifact(record.format, artifact);
   const validation = importPresentationValidationSchema.parse(input.validationReceipt);
   if (validation.format !== record.format || validation.artifactFingerprint !== approval.artifactFingerprint || JSON.stringify(validation.renderedRoutes) !== JSON.stringify(renderedRoutes)) throw new Error("PRESENTATION_VALIDATION_MISMATCH");
@@ -40,7 +40,9 @@ export async function presentationInputFromVerifier(root: string, record: Extern
   if (!approval) throw new Error("CONTENT_APPROVAL_INVALID");
   if (!record.evidenceRefs?.presentation) throw new Error("WORKFLOW_EVIDENCE_REQUIRED:presentation");
   await validatePresentationEvidence(root, record.evidenceRefs.presentation, { ...record, artifactPath: approval.artifactPath });
-  const artifact = JSON.parse(await readFile(path.resolve(root, approval.artifactPath), "utf8"));
+  const resolved = await resolveContentApproval(root, approval, record.format, record.sourceFingerprint);
+  if (!resolved.ok) throw new Error("CONTENT_APPROVAL_INVALID");
+  const artifact = resolved.artifact;
   const renderedRoutes = validateImportArtifact(record.format, artifact);
   await readImportVerifierEvidence(root, evidencePath, { format: record.format, artifactFingerprint: approval.artifactFingerprint, renderedRoutes, importId: record.importId, sourceFingerprint: record.sourceFingerprint });
   return { validationGate: `${record.format}:candidate-owner-verifier`, validationReceipt: {
