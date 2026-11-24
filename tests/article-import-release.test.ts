@@ -769,8 +769,6 @@ test("release requires a clean current-head review before automatic merge", asyn
     const receipt = prepared.pendingRelease!.codeReview!;
     await assert.rejects(() => recordImportCodeReview(root, record, { ...receipt, pullRequestUrl: "https://github.com/example/repository/pull/2" }, operations(root)), /BINDING_MISMATCH/);
     await assert.rejects(() => recordImportCodeReview(root, record, receipt, operations(root, { inspectPullRequest: async () => ({ merged: false, headRefOid: "e".repeat(40) }) })), /HEAD_CHANGED/);
-    const reviewed = await recordImportCodeReview(root, record, receipt, operations(root));
-    assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
     let merged = false;
     const waiting = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root, {
       inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }),
@@ -778,7 +776,9 @@ test("release requires a clean current-head review before automatic merge", asyn
     }) });
     assert.equal(waiting.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
     assert.equal(merged, false);
-    const base = { repositoryRoot: root, record: reviewed, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
+    const reviewed = await recordImportCodeReview(root, await loadImport(root, record.importId), receipt, operations(root));
+    assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
+    const base = { repositoryRoot: root, record: await resumeImport(root, reviewed), changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
     const live = await assessImportRelease({ ...base, operations: operations(root, { inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }) }) });
     assert.equal(live.status, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
