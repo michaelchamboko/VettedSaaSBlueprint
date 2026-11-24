@@ -256,7 +256,7 @@ export async function canonicalSubmissionFingerprint(record: ExternalArticleImpo
   const files = new Set<string>();
   const addFile = (file: string) => files.add(path.relative(path.resolve(root), path.resolve(root, file)).replaceAll("\\", "/"));
   // Explicit supervised-result/approval dependencies; never infer files from arbitrary article path keys.
-  const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "evidencePath", "codeReviewPath", "workPath", "resultPath"]);
+  const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "evidencePath", "codeReviewPath", "workPath", "resultPath", "proposalPath"]);
   function collect(value: unknown): void {
     if (!value || typeof value !== "object") return;
     const ref = evidenceRefSchema.safeParse(value);
@@ -324,8 +324,9 @@ export async function clearImportBlocker(root: string, importId: string, recover
   });
 }
 
-export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor): Promise<ExternalArticleImportV1> {
+export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean }): Promise<ExternalArticleImportV1> {
   const lease = await claimImportLease(repositoryRoot, importId);
+  if (!lease && options?.rejectBusy) throw new Error("IMPORT_LEASE_BUSY");
   if (!lease) return loadImport(repositoryRoot, importId);
   try {
     return await activeLease.run(lease, async () => {
@@ -351,7 +352,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       }
       if (current.continuation?.kind === "wait") {
         const currentTime = Date.now();
-        if (currentTime >= Date.parse(current.continuation.timeoutAt)) return recordImportFailure(repositoryRoot, current, { strategy: "release", classification: "transient", message: "External dependency wait timed out; shared capability must be restored." });
+        if (currentTime >= Date.parse(current.continuation.timeoutAt)) return recordImportFailure(repositoryRoot, current, { strategy: "release", classification: "transient", message: "CAPABILITY_UNAVAILABLE: External dependency wait timed out; shared capability must be restored." });
         if (currentTime < Date.parse(current.continuation.nextCheckAt)) return current;
       }
       if (current.unusableReason) return quarantineUnusableImport(repositoryRoot, current);
@@ -369,13 +370,14 @@ export async function executePendingImport(repositoryRoot: string, importId: str
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);
         const code = (error as NodeJS.ErrnoException).code;
-        if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
+        if (message === "PUBLICATION_CATALOGUE_BUSY" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
           return recordImportFailure(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, classification: "transient", message });
         }
         return recordImportRepair(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, message });
       }
       if (result.importId !== importId || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("Stage executor changed import identity.");
       await lease.assertOwned();
+      if (options?.rejectBusy && ["LIVE", "QUARANTINED"].includes(result.stage) && !(await evaluateWorkflowEvidence(result, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
       await saveImport(repositoryRoot, result);
       return result;
     });
@@ -415,11 +417,12 @@ async function listAllImports(repositoryRoot: string): Promise<ExternalArticleIm
   return records.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export async function createArticleImport(repositoryRoot: string, sourceFile: string, allowlistFile = "approved-urls.md"): Promise<ExternalArticleImportV1> {
+export async function createArticleImport(repositoryRoot: string, sourceFile: string, allowlistFile = "approved-urls.md", expectedFingerprint?: string): Promise<ExternalArticleImportV1> {
   const absoluteSource = path.resolve(repositoryRoot, sourceFile);
   const raw = await readFile(absoluteSource);
   const parsed = parseExternalArticle(raw.toString("utf8"));
   const sourceFingerprint = fingerprint(raw);
+  if (expectedFingerprint !== undefined && sourceFingerprint !== expectedFingerprint) throw new Error("INTAKE_SOURCE_MISMATCH");
   const claim = await claimWorkflowLease(repositoryRoot, "source", sourceFingerprint);
   if (!claim) throw new Error("SOURCE_CLAIM_BUSY");
   try {
@@ -676,8 +679,8 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
   const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
   const capabilityBlock = input.classification === "transient" && /credentials missing|git unavailable|model[ _]access|editorial[ _]tool|integrity|vercel timeout|CAPABILITY_UNAVAILABLE|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED/i.test(input.message);
   const previousWait = record.continuation?.kind === "wait" ? record.continuation : undefined;
-  const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, cause: input.message, attemptedRecovery: "Retried the bound operation once and preserved the import state.", resumptionRequirement: "Restore the shared capability, then resume this same import." } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
-  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
+  const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: "Restore the shared capability, then resume this same import." } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
+  const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: capabilityBlock ? "Restore the shared capability and provide verified recovery evidence." : stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
   await saveImport(repositoryRoot, updated);
   if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
   return updated;

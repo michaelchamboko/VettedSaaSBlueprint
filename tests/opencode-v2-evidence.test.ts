@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { extractOpenCodeExecution, proseProjectionDigest } from "../src/lib/article-import/execution-evidence";
+import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../src/lib/article-import/execution-evidence";
 import { normalizeOpenCodeVersion, openCodeExecutable, openCodeExportArgs } from "../src/lib/article-import/opencode-runtime";
 
 const input = { artifact: "complete synthetic artifact" }, output = { judgment: "synthetic judgment" };
@@ -101,4 +101,21 @@ test("2.2.6 absent or empty files array remains valid", () => {
     const result = extractOpenCodeExecution(raw, selected);
     assert.equal(result.toolVersion, "2.2.6");
   }
+});
+
+test("visual review binds the ordered native PNG attachments while legacy text exchanges stay strict", () => {
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1WsAAAAASUVORK5CYII=", "base64");
+  const digest = sha256(png);
+  const image = {path: "proof/" + digest + ".png", sha256:digest};
+  const visual = {...selected,version:"2.2.6",pass:"design:critique",imageRefs:[image],inputRefs:[image]};
+  const raw = fixture();
+  const user = raw.messages[0];
+  user.text = JSON.stringify({packetId:visual.packetId,pass:visual.pass,prose:input,digest:proseProjectionDigest(input),instructions:[]});
+  Object.assign(user,{files:[{name:digest + ".png",mime:"image/png",source:{type:"inline"},data:png.toString("base64")}]});
+  const receipt = extractOpenCodeExecution(raw,visual);
+  assert.equal(receipt.kind,"opencode");
+  if (receipt.kind === "opencode") assert.deepEqual(receipt.imageRefs,[image]);
+  assert.throws(() => extractOpenCodeExecution(raw,{...visual,imageRefs:[]}),/IMAGE_BINDING/);
+  assert.throws(() => extractOpenCodeExecution(raw,{...visual,imageRefs:[{...image,sha256:"0".repeat(64)}]}),/IMAGE_BINDING/);
+  assert.throws(() => extractOpenCodeExecution(raw,{...visual,pass:"content-assessment"}),/IMAGE_BINDING/);
 });

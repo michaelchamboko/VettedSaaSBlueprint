@@ -24,7 +24,7 @@ async function main() {
     return response.text();
   }));
   if (/^Disallow:\s*\/\s*$/im.test(robots) || !sitemap.includes(`${canonicalOrigin}${route}`)) throw new Error("Visibility discovery checks failed.");
-  const output = path.resolve(".automation/receipts/visibility-production");
+  const output = path.resolve(argument("--screenshot-dir") ?? ".automation/receipts/visibility-production");
   await mkdir(output, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   const viewportResults = [];
