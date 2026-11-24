@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { access, mkdtemp, readFile, realpath, rm, writeFile, unlink } from "node:fs/promises";
 import { readImportArtifactTarget } from "./format-validation";
 import { publicationAuthorityPaths } from "./release";
-import { applyPublicationProposals } from "./worker-publication";
+import { publicationProposals, retainPublicationScope } from "./worker-publication";
 import { writeJsonAtomically } from "./engine";
 import type { ExternalArticleImportV1 } from "./contracts";
 import { tmpdir } from "node:os";
@@ -38,12 +38,11 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   const writable = directories.map(dir => dir + "/*");
   const record = packet.record as ExternalArticleImportV1;
   const authority = packet.stage === "REFINING" ? publicationAuthorityPaths(record.format) : [];
-  let publicationRoute: string | undefined;
   if (packet.stage === "REFINING" && record.artifactPath && record.format !== "agent_review_required") {
     const { target } = await readImportArtifactTarget(root, record.format, record.artifactPath);
     const slug = target.slug;
     if (!slug.split("/").every(segment => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(segment)) || (record.format !== "visibility" && slug.includes("/"))) throw new Error("WORKER_PUBLICATION_SLUG_INVALID");
-    publicationRoute = record.format === "visibility" ? target.renderedRoutes[0] : slug;
+    if (authority.length) await retainPublicationScope(root, importId, key, record.format, record.format === "visibility" ? target.renderedRoutes[0] : slug);
     if (record.format === "direct-review") writable.push(`src/generated/landing-pages/${slug}.json`, `src/generated/landing-pages/releases/${slug}/release-receipt.json`);
     if (record.format === "decision-set") writable.push(`src/content/decision-journeys/sets/${slug}.json`);
     if (record.format === "visibility") writable.push(`src/generated/visibility-pages/${slug}.json`, `src/generated/visibility-pages/${slug}.evidence.json`);
@@ -65,12 +64,11 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   ];
   const definition = { mode: "primary", description: "Work on the attached article packet", permissions };
   await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition } }), { flag: "wx" });
-  const proposalDirectory = directories[0] + "/publication";
-  const proposalInstructions = authority.map(file => `For ${file}, place a one-article catalogue document in ${proposalDirectory}/${path.posix.basename(file)}. The controller merges the matching entry.`).join(" ");
+  const proposalInstructions = (packet.stage === "REFINING" ? publicationProposals(importId, key, record.format) : [])
+    .map(({ file, proposalPath }) => `For ${file}, place a one-article catalogue document in ${proposalPath}. The controller merges the matching entry.`).join(" ");
   const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} Follow resultSchema and use genuine evidence. Return only the bound result.`;
   return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
     "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? 300000,
-    authority, publicationRoute, proposalDirectory,
     checkpoint: path.resolve(root, workPath + ".launch"),
     ownershipFile: workerOwnershipFile(root, importId, leaseToken) };
 }
@@ -213,7 +211,6 @@ export async function invokeWorker(
     throw new Error(`${error instanceof Error ? error.message : String(error)} [worker ${owner}]`);
   }
   await assertLease();
-  if (invocation.publicationRoute) await applyPublicationProposals(root, record.format, invocation.publicationRoute, invocation.proposalDirectory, assertLease);
   await writeJsonAtomically(absoluteResultPath, parsed);
   await acknowledgeInvocation(invocation.checkpoint);
 }

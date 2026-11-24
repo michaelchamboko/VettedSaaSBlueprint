@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { executeImportCommand } from "../scripts/import-article";
 import { createIntakeRun, type IntakeRun } from "../src/lib/article-import/intake";
+import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
@@ -75,7 +76,9 @@ test("executor output failures remain repair work at the productive stage", asyn
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-for (const failRollback of [false, true]) test(failRollback ? "dispatch preserves the rollback target and blocks when recovery fails" : "dispatch resumes saved research and reaches verified LIVE only after review and owner merge", async (t) => {
+for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair and contention"]) test("dispatch handles " + scenario, async (t) => {
+  const failRollback = scenario === "failed rollback";
+  const repairCatalogue = scenario === "catalogue repair and contention";
   t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const parent = path.join(process.cwd(), ".scratch");
   await mkdir(parent, { recursive: true });
@@ -125,6 +128,7 @@ for (const failRollback of [false, true]) test(failRollback ? "dispatch preserve
     const calls: string[] = [];
     const validationReceiptPath = "build-pack/article-import/presentation.json";
     let releaseResultPath = "";
+    let proposalFile = "";
     const workerRunner: WorkerRunner = async ({ args }) => {
       const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
       calls.push(packet.stage);
@@ -138,8 +142,8 @@ for (const failRollback of [false, true]) test(failRollback ? "dispatch preserve
           assert.match(packet.instructions, /Beam review/i);
           assert.match(packet.instructions, /5\/5 CLEAN/i);
           const fingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath), "utf8")).replace(/\r\n/g, "\n")).digest("hex");
-          const proposal = path.join(root, "build-pack/article-import", importId, packet.idempotencyKey, "publication/index.json");
-          await writeJsonAtomically(proposal, { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
+          proposalFile = path.join(root, packet.publicationProposals[0].proposalPath);
+          await writeJsonAtomically(proposalFile, { pages: [{ slug: repairCatalogue ? "wrong" : "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
           await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: fingerprint } } });
           work = { stage: packet.stage, artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath,
             editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path };
@@ -176,6 +180,34 @@ for (const failRollback of [false, true]) test(failRollback ? "dispatch preserve
       await writeJsonAtomically(path.join(root, releaseResultPath), { ...release, work: { ...release.work, codeReviewPath } });
     };
     const heartbeat = () => executeImportCommand(root, { kind: "dispatch", importId }, executor, { workerModel: "fixture/model", workerRunner, sleep });
+    if (repairCatalogue) {
+      await heartbeat();
+      const repaired = await current();
+      assert.equal(repaired.continuation?.kind, "repair");
+      assert.match(repaired.stageReceipts.at(-1)!.message, /PUBLICATION_PROPOSAL_TARGET_MISMATCH/);
+      await assert.rejects(heartbeat(), /UNCHANGED_SUBMISSION/);
+      const proposal = JSON.parse(await readFile(proposalFile, "utf8"));
+      proposal.pages[0].slug = "example";
+      await writeJsonAtomically(proposalFile, proposal);
+      const holder = await claimWorkflowLease(root, "publication", "direct-review");
+      assert.ok(holder);
+      const oneStep = () => executeImportCommand(root, { kind: "dispatch", importId }, executor, { maxSteps: 1,
+        workerRunner: async () => { throw new Error("Corrected proposal must reuse the saved worker result"); } });
+      try {
+        await oneStep();
+        const waiting = (await current()).continuation;
+        assert.ok(waiting?.kind === "wait");
+        assert.equal(waiting.dependency, "PUBLICATION_CATALOGUE_BUSY");
+        t.mock.timers.setTime(Date.parse(waiting.nextCheckAt));
+      } finally { await holder.release(); }
+      await oneStep();
+      assert.equal((await current()).stage, "VALIDATING", (await current()).nextAction);
+      assert.deepEqual(calls, ["TRANSFORMING", "REFINING"]);
+      const catalogue = JSON.parse(await readFile(path.join(root, authorityPath), "utf8"));
+      assert.deepEqual(catalogue.pages[0], existing);
+      assert.equal(catalogue.pages[1].slug, "example");
+      return;
+    }
     if (failRollback) await heartbeat();
     else {
       const intake = await createIntakeRun(root);
