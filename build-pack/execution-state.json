@@ -2160,6 +2160,65 @@
       "extensions": {
         "authority": "Explicit owner directive; graph maintenance only, no article execution or source strategy amendments"
       }
+    },
+    {
+      "id": "HOMEPAGE-MOTION-1124",
+      "title": "Approved post-hero guide index, localization track and report covers",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 1,
+        "external_impact": 1
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "OWNER-2026-11-25-HOMEPAGE-MOTION"
+      ],
+      "context_files": [
+        "planning.md",
+        "src/app/page.tsx",
+        "src/components/public/HomepageMotion.tsx"
+      ],
+      "validation": [
+        {
+          "name": "Public site validation",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "validate:public-site"
+          ],
+          "timeout_seconds": 300
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/homepage-motion/verification.md"
+      ],
+      "model_route": {
+        "worker": "codex-owner-authorized",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": true,
+        "destinations": [
+          "github-pr",
+          "vercel"
+        ]
+      },
+      "extensions": {
+        "authority": "Owner-approved homepage presentation and motion only"
+      }
     }
   ],
   "extensions": {
