@@ -1,0 +1,211 @@
+import { spawn } from "node:child_process";
+import { access, mkdtemp, readFile, realpath, rm, writeFile, unlink } from "node:fs/promises";
+import { readImportArtifactTarget } from "./format-validation";
+import { publicationAuthorityPaths } from "./release";
+import { writeJsonAtomically } from "./engine";
+import type { ExternalArticleImportV1 } from "./contracts";
+import { tmpdir } from "node:os";
+import { workerOwnershipFile, writeWorkerMarker } from "./workflow-lease";
+import path from "node:path";
+
+export type WorkerProcessResult = {
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  timedOut: boolean;
+};
+
+export type WorkerRunner = (input: {
+  executable: string;
+  args: string[];
+  cwd: string;
+  timeoutMs: number;
+  ownershipFile: string;
+  checkpoint: string;
+}) => Promise<WorkerProcessResult>;
+
+export async function prepareWorkerInvocation(root: string, workPath: string, packet: Record<string, unknown>,
+  config: { executable: string; model: string; agent?: string; timeoutMs?: number }, leaseToken: string) {
+  const importId = String(packet.importId);
+  const key = String(packet.idempotencyKey);
+  if (!/^article-[a-f0-9-]{36}$/.test(importId) || !/^[a-f0-9]{64}$/.test(key)) throw new Error("WORKER_PACKET_INVALID");
+  const canonical = (await realpath(root)).replaceAll("\\", "/");
+  if (/[?*]/.test(canonical)) throw new Error("WORKER_ROOT_UNSUPPORTED");
+  if (config.timeoutMs !== undefined && (!Number.isSafeInteger(config.timeoutMs) || config.timeoutMs < 1 || config.timeoutMs > 2147483647)) throw new Error("INVALID_WORKER_TIMEOUT");
+  const agent = config.agent || "article-worker";
+  const directories = [`build-pack/article-import/${importId}/${key}`, `build-pack/editorial/${importId}/${key}`];
+  const writable = directories.map(dir => dir + "/*");
+  const record = packet.record as ExternalArticleImportV1;
+  if (packet.stage === "REFINING" && record.artifactPath && record.format !== "agent_review_required") {
+    const { target } = await readImportArtifactTarget(root, record.format, record.artifactPath);
+    const slug = target.slug;
+    if (!slug.split("/").every(segment => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(segment)) || (record.format !== "visibility" && slug.includes("/"))) throw new Error("WORKER_PUBLICATION_SLUG_INVALID");
+    writable.push(...publicationAuthorityPaths(record.format));
+    if (record.format === "direct-review") writable.push(`src/generated/landing-pages/${slug}.json`, `src/generated/landing-pages/releases/${slug}/release-receipt.json`);
+    if (record.format === "decision-set") writable.push(`src/content/decision-journeys/sets/${slug}.json`);
+    if (record.format === "visibility") writable.push(`src/generated/visibility-pages/${slug}.json`, `src/generated/visibility-pages/${slug}.evidence.json`);
+  }
+  const references = [record?.artifactPath, ...Object.values(record?.evidenceRefs ?? {}).map(ref => ref?.path)];
+  const readable = references.filter((file): file is string => !!file && /^[a-zA-Z0-9._/-]+$/.test(file) &&
+    !file.split("/").includes("..") && ["build-pack/article-import/", "build-pack/editorial/", "src/generated/", "src/content/"].some(prefix => file.startsWith(prefix)));
+  const cwd = await mkdtemp(path.join(tmpdir(), "article-worker-"));
+  const allow = (action: string, resource: string) => ({ action, resource, effect: "allow" });
+  const permissions = [
+    { action: "*", resource: "*", effect: "deny" },
+    allow("external_directory", canonical + "/*"),
+    ...[String(packet.sourcePath), workPath, ...readable, ...writable, `build-pack/article-import/${importId}/*`, `build-pack/editorial/${importId}/*`,
+      `.automation/article-imports/evidence/${importId}/*`, ".agents/skills/*", "docs/document-intelligence/*"]
+      .map(file => allow("read", canonical + "/" + file)),
+    ...writable.map(file => allow("edit", canonical + "/" + file)),
+    allow("webfetch", "*"), allow("websearch", "*"),
+  ];
+  const definition = { mode: "primary", description: "Work on the attached article packet", permissions };
+  await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition } }), { flag: "wx" });
+  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. Follow resultSchema and use genuine evidence. Return only the bound result.`;
+  return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
+    "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? 300000,
+    checkpoint: path.resolve(root, workPath + ".launch"),
+    ownershipFile: workerOwnershipFile(root, importId, leaseToken) };
+}
+
+export const defaultWorkerRunner: WorkerRunner = async (input) => {
+  if (await fileExists(input.checkpoint)) {
+    const prior = await readFile(input.checkpoint, "utf8");
+    if (!/^[a-f0-9-]{36}\.worker$/.test(prior)) throw new Error("STATE_INTEGRITY: invalid worker checkpoint");
+    const receipt = path.join(path.dirname(input.ownershipFile), prior + ".out");
+    if (!await fileExists(receipt)) throw new Error("STATE_INTEGRITY: interrupted worker has no verified completion; reconcile its scoped artifacts before retry");
+    return JSON.parse(await readFile(receipt, "utf8")) as WorkerProcessResult;
+  }
+  writeWorkerMarker(input.ownershipFile, "host-v1");
+  const host = spawn(process.execPath, [path.join(__dirname, "worker-host.mjs")], {
+    detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"],
+  });
+  await new Promise<void>((resolve, reject) => {
+    const deadline = setTimeout(() => { host.unref(); host.channel?.unref(); reject(new Error("STATE_INTEGRITY: worker termination unverified")); }, Math.min(input.timeoutMs + 15000, 2147483647));
+    host.once("error", error => { clearTimeout(deadline); reject(error); });
+    host.once("exit", code => {
+      clearTimeout(deadline);
+      if (code === 0) resolve(); else reject(new Error("STATE_INTEGRITY: worker host exited without confirmed completion"));
+    });
+    host.once("spawn", () => {
+      try {
+        writeWorkerMarker(input.ownershipFile + ".host", String(host.pid));
+        writeWorkerMarker(input.checkpoint, path.basename(input.ownershipFile));
+        host.send(input);
+      } catch (error) { host.disconnect(); reject(error); }
+    });
+  });
+  return JSON.parse(await readFile(input.ownershipFile + ".out", "utf8")) as WorkerProcessResult;
+};
+
+export async function acknowledgeInvocation(checkpoint: string) {
+  await unlink(checkpoint).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+}
+
+export async function fileExists(file: string): Promise<boolean> {
+  try {
+    await access(file);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return false;
+  }
+}
+
+/** Read only the final assistant step. Tool turns may contain earlier text. */
+export function extractJsonObject(text: string): unknown {
+  let session: string | undefined;
+  let collected = "";
+  let finished = false;
+  let started = false;
+  for (const line of text.trim().split(/\r?\n/)) {
+    const event = JSON.parse(line);
+    if (!event || typeof event.type !== "string" || typeof event.sessionID !== "string" ||
+        (session && session !== event.sessionID) || event.type === "error" || finished) throw new Error("WORKER_INVALID_JSON");
+    session = event.sessionID;
+    if (event.type === "step_start") { collected = ""; started = true; }
+    if (!started) throw new Error("WORKER_INVALID_JSON");
+    if (event.type === "text") {
+      if (typeof event.part?.text !== "string") throw new Error("WORKER_INVALID_JSON");
+      collected += event.part.text;
+    }
+    if (event.type === "step_finish") {
+      finished = ["stop", "end_turn", "completed"].includes(event.part?.reason);
+      started = false;
+    }
+  }
+  if (!finished) throw new Error("WORKER_INVALID_JSON");
+  return JSON.parse(collected);
+}
+
+export type WorkerAdapterConfig = {
+  executable?: string;
+  model?: string;
+  agent?: string;
+  timeoutMs?: number;
+};
+
+export type WorkerOptions = {
+  workerRunner?: WorkerRunner;
+  workerTimeoutMs?: number;
+  workerAgent?: string;
+  workerExecutable?: string;
+  workerModel?: string;
+  worker?: WorkerAdapterConfig;
+};
+function workerConfig(options?: WorkerOptions): Required<Pick<WorkerAdapterConfig, "executable" | "model">> & WorkerAdapterConfig {
+  const fromWorker = options?.worker ?? {};
+  return {
+    executable: options?.workerExecutable ?? fromWorker.executable ?? process.env.OPENCODE_EXECUTABLE ?? "opencode",
+    model: options?.workerModel ?? fromWorker.model ?? process.env.OPENCODE_MODEL ?? "",
+    agent: options?.workerAgent ?? fromWorker.agent ?? process.env.OPENCODE_AGENT ?? "article-worker",
+    timeoutMs: options?.workerTimeoutMs ?? fromWorker.timeoutMs,
+  };
+}
+
+export async function invokeWorker(
+  root: string,
+  workPath: string,
+  resultPath: string,
+  packet: Record<string, unknown>,
+  leaseToken: string,
+  assertLease: () => Promise<void>,
+  options?: WorkerOptions,
+): Promise<void> {
+  const absoluteResultPath = path.resolve(root, resultPath);
+  if (await fileExists(absoluteResultPath)) return;
+  const config = workerConfig(options);
+  if (!config.model.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
+  const runner = options?.workerRunner ?? defaultWorkerRunner;
+  const invocation = await prepareWorkerInvocation(root, workPath, packet, config, leaseToken);
+  await assertLease();
+  const processResult = await runner(invocation);
+  await rm(invocation.cwd, { recursive: true, force: true });
+  if (processResult.timedOut || processResult.exitCode !== 0) await acknowledgeInvocation(invocation.checkpoint);
+  if (processResult.timedOut) throw new Error("CAPABILITY_UNAVAILABLE: worker invocation timed out");
+  if (processResult.exitCode !== 0) throw new Error(`CAPABILITY_UNAVAILABLE: worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
+  let parsed;
+  try { parsed = decodeBoundWorkerResult(processResult.stdout, packet); }
+  catch (error) {
+    await acknowledgeInvocation(invocation.checkpoint);
+    throw error;
+  }
+  await assertLease();
+  await writeJsonAtomically(absoluteResultPath, parsed);
+  await acknowledgeInvocation(invocation.checkpoint);
+}
+
+function decodeBoundWorkerResult(stdout: string, packet: Record<string, unknown>): unknown {
+  let parsed: unknown;
+  try {
+    parsed = extractJsonObject(stdout);
+  } catch {
+    throw new Error("INVALID_STAGE_RESULT: worker did not return valid JSON");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("INVALID_STAGE_RESULT: worker result is not an object");
+  const result = parsed as { idempotencyKey?: string; sourceFingerprint?: string; work?: { stage?: string } };
+  if (result.idempotencyKey !== packet.idempotencyKey) throw new Error("INVALID_STAGE_RESULT: worker idempotency key mismatch");
+  if (result.sourceFingerprint !== packet.sourceFingerprint) throw new Error("INVALID_STAGE_RESULT: worker source fingerprint mismatch");
+  if (result.work?.stage !== packet.stage) throw new Error("INVALID_STAGE_RESULT: worker stage mismatch");
+  return parsed;
+}

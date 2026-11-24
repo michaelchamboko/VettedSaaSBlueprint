@@ -210,7 +210,7 @@ function safeCatalogueReceiptPath(directory: string, relativePath: string): stri
  * Binds an approved direct-review release to the manifest-selected receipt. The public CTA URL
  * served from production is the receipt's exact_affiliate_url, not anything in the blueprint
  * (PageBlueprint carries no affiliate_links), so the receipt must name the record's resolved
- * affiliate URL — otherwise an allowlisted URL B could ship for an import resolved to URL A.
+ * affiliate URL â€” otherwise an allowlisted URL B could ship for an import resolved to URL A.
  * The manifest artifact and the receipt page fingerprint must also match the approved
  * `<slug>.json` blueprint on disk: otherwise an authority-file change could deploy unapproved
  * content under the approved slug while the URL binding alone still passes.
@@ -228,7 +228,7 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
   const matches = (manifest.pages ?? []).filter((page) => page.slug === slug);
   if (matches.length === 0) throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
   // The loader serves the LAST same-slug entry (pages.set overwrites), so allow exactly one
-  // match — otherwise a later duplicate could swap in unapproved content under the slug.
+  // match â€” otherwise a later duplicate could swap in unapproved content under the slug.
   if (matches.length > 1) throw new Error("RELEASE_MANIFEST_DUPLICATE_SLUG");
   const entry = matches[0];
   if (typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
@@ -330,6 +330,17 @@ function parseProductionChecks(value: unknown): FullProductionChecks | undefined
 
 function productiveStage(record: ExternalArticleImportV1): ImportStage {
   return record.stage === "RELEASING" ? record.stage : record.resumeStage ?? "RELEASING";
+}
+
+function failedRollback(previousId: string) {
+  const cause = "Production verification failed and rollback did not verify.";
+  const resumptionRequirement = `Verify restoration of ${previousId} and submit recovery evidence before resuming release.`;
+  return {
+    blockerScope: "shared" as const,
+    continuation: { kind: "blocked" as const, scope: "shared" as const, cause,
+      attemptedRecovery: `Attempted rollback to ${previousId}. Its restoration could not be verified.`, resumptionRequirement },
+    nextAction: resumptionRequirement,
+  };
 }
 
 export async function assessImportRelease(input: {
@@ -592,7 +603,7 @@ export async function assessImportRelease(input: {
         restored = false;
       }
       const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
-      const rolledBack = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `New deployment failed verification (${verificationFailure}); previous deployment restored.` : `New deployment failed verification (${verificationFailure}); rollback did not verify.` }] };
+      const rolledBack = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), ...(restored ? { nextAction: "Repair the failed release layer and retry once." } : failedRollback(previous.deploymentId)), stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `New deployment failed verification (${verificationFailure}); previous deployment restored.` : `New deployment failed verification (${verificationFailure}); rollback did not verify.` }] };
       await saveImport(input.repositoryRoot, rolledBack);
       if (!restored) return { status: "WAITING_EXTERNAL", reasons: ["ROLLBACK_VERIFICATION_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
       if (input.operations.fixForward && await input.operations.fixForward(1)) return { status: "ROLLED_BACK", reasons: ["FIX_FORWARD_REQUIRED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
@@ -616,7 +627,7 @@ export async function assessImportRelease(input: {
       restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
     } catch { restored = false; }
     const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
-    const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
+    const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), ...(restored ? { nextAction: "Repair the failed release layer and retry once." } : failedRollback(previous.deploymentId)), stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
     await saveImport(input.repositoryRoot, updated);
     return { status: recoveryStage, reasons: [message, ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])], previousDeploymentId: previous.deploymentId };
   }

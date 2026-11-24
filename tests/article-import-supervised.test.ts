@@ -4,6 +4,8 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { executeImportCommand } from "../scripts/import-article";
+import { createIntakeRun, type IntakeRun } from "../src/lib/article-import/intake";
+import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import type { ReleaseOperations } from "../src/lib/article-import/release";
@@ -73,7 +75,7 @@ test("executor output failures remain repair work at the productive stage", asyn
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("heartbeat consumes durable work after interruption and releases only after review and owner merge", async (t) => {
+for (const failRollback of [false, true]) test(failRollback ? "dispatch preserves the rollback target and blocks when recovery fails" : "dispatch resumes saved research and reaches verified LIVE only after review and owner merge", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const parent = path.join(process.cwd(), ".scratch");
   await mkdir(parent, { recursive: true });
@@ -99,83 +101,106 @@ test("heartbeat consumes durable work after interruption and releases only after
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
     deploy: async (commitSha) => { deployments++; return { deploymentId: "dpl-current", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
-    verifyProduction: async (deployment) => productionFixture(root, importId, importArtifactTarget("direct-review", JSON.parse(await readFile(path.join(root, artifactPath), "utf8"))), deployment, (await loadImport(root, importId)).sourceFingerprint),
+    verifyProduction: async (deployment) => { if (failRollback) throw new Error("synthetic production verification failure"); return productionFixture(root, importId, importArtifactTarget("direct-review", JSON.parse(await readFile(path.join(root, artifactPath), "utf8"))), deployment, (await loadImport(root, importId)).sourceFingerprint); },
     rollback: async () => ({ ok: true, summary: "Mocked rollback." }),
-    verifyRollback: async () => true,
+    verifyRollback: async () => !failRollback,
   };
   try {
     await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
-    await writeFile(path.join(root, "article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
-    const created = await createArticleImport(root, "article.md");
+    await mkdir(path.join(root, "Article Intake"));
+    await writeFile(path.join(root, "Article Intake/article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
+    const created = await createArticleImport(root, "Article Intake/article.md");
     importId = created.importId;
     const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" });
-    // Each invocation constructs a fresh executor, as a later heartbeat process would.
-    const heartbeat = () => executeImportCommand(root, { kind: "resume", importId: created.importId }, createSupervisedImportExecutor(root, operations));
-    const current = () => loadImport(root, created.importId);
-    const reachNextCheck = async () => {
-      const waiting = await current();
-      assert.ok(waiting.continuation?.kind === "wait");
-      t.mock.timers.setTime(Date.parse(waiting.continuation.nextCheckAt));
-    };
-    const submit = async (work: Record<string, unknown>) => {
-      await heartbeat();
-      const record = await current();
-      const workPath = record.nextAction.match(/execute (.*?)\.work\.json/)?.[1];
-      assert.ok(workPath, record.nextAction);
-      const packet = JSON.parse(await readFile(path.join(root, `${workPath}.work.json`), "utf8"));
-      assert.equal(packet.stage, work.stage);
-      const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Completed mocked agent work with retained evidence.", work };
-      await writeJsonAtomically(path.join(root, packet.resultPath), result);
-      return { packet, result };
-    };
-    await heartbeat();
-    assert.equal((await current()).stage, "RESEARCHING");
-    const research = await submit({ stage: "RESEARCHING", evidencePath: prepared.evidenceRefs.research.path });
-    // The process stopped after producing evidence; the next invocation consumes it.
-    assert.equal((await current()).stage, "RESEARCHING");
-    await heartbeat();
-    assert.equal((await current()).stage, "TRANSFORMING");
-    // Approved direct-review releases bind to the manifest-selected receipt URL and artefact fingerprint.
-    await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
-    await submit({ stage: "TRANSFORMING", artifactPath, format: "direct-review", assessmentPath: prepared.evidenceRefs.assessment.path });
-    await heartbeat();
-    assert.equal((await current()).stage, "REFINING");
-    const refinement = await submit({ stage: "REFINING", artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath, editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path });
-    assert.match(refinement.packet.instructions, /eleanor-editorial/i);
-    assert.match(refinement.packet.instructions, /Beam review/i);
-    assert.match(refinement.packet.instructions, /5\/5 CLEAN/i);
-    await heartbeat();
-    assert.equal((await current()).stage, "VALIDATING");
+    const executor = createSupervisedImportExecutor(root, operations);
+    const current = () => loadImport(root, importId);
+    await executeImportCommand(root, { kind: "resume", importId }, executor);
+    await executeImportCommand(root, { kind: "resume", importId }, executor);
+    const research = (await current()).continuation;
+    assert.ok(research?.kind === "work");
+    await writeJsonAtomically(path.join(root, research.resultPath), { idempotencyKey: research.idempotencyKey,
+      sourceFingerprint: research.sourceFingerprint, summary: "Retained research", work: { stage: "RESEARCHING", evidencePath: prepared.evidenceRefs.research.path } });
+    const calls: string[] = [];
     const validationReceiptPath = "build-pack/article-import/presentation.json";
-    // Publication inputs exist before presentation captures rendering dependencies.
-    const artifactFingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath))).toString("utf8").replace(/\r\n/g, "\n")).digest("hex");
-    await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: artifactFingerprint } } });
-    const presented = await presentFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
-    await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
-    await submit({ stage: "VALIDATING", validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.evidenceRefs!.presentation!.path });
-    await heartbeat();
-    assert.equal((await current()).stage, "RELEASING");
-    const release = await submit({ stage: "RELEASING", artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" });
-    await heartbeat();
-    assert.equal((await current()).stage, "WAITING_EXTERNAL");
-    assert.equal(deployments, 0);
-    const codeReviewPath = ".automation/article-imports/reviews/review.json";
-    await writeJsonAtomically(path.join(root, codeReviewPath), { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: commit, pullRequestUrl: pr, evidenceUrl: `${pr}#issuecomment-review`, reviewedAt: new Date().toISOString() });
-    await writeJsonAtomically(path.join(root, release.packet.resultPath), { ...release.result, work: { ...release.result.work, codeReviewPath } });
-    await reachNextCheck();
-    await heartbeat();
-    assert.equal((await current()).stage, "WAITING_EXTERNAL");
-    assert.equal(deployments, 0);
-    merged = true;
-    await heartbeat();
-    assert.equal((await current()).stage, "WAITING_EXTERNAL");
-    assert.equal(deployments, 0);
-    await reachNextCheck();
-    await heartbeat();
+    let releaseResultPath = "";
+    const workerRunner: WorkerRunner = async ({ args }) => {
+      const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
+      calls.push(packet.stage);
+      let work;
+      switch (packet.stage) {
+        case "TRANSFORMING":
+          work = { stage: packet.stage, artifactPath, format: "direct-review", assessmentPath: prepared.evidenceRefs.assessment.path };
+          break;
+        case "REFINING": {
+          assert.match(packet.instructions, /eleanor-editorial/i);
+          assert.match(packet.instructions, /Beam review/i);
+          assert.match(packet.instructions, /5\/5 CLEAN/i);
+          const fingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath), "utf8")).replace(/\r\n/g, "\n")).digest("hex");
+          await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
+          await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: fingerprint } } });
+          work = { stage: packet.stage, artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath,
+            editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path };
+          break;
+        }
+        case "VALIDATING": {
+          const presented = await presentFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
+          await writeJsonAtomically(path.join(root, validationReceiptPath), presented.presentation!.validation);
+          work = { stage: packet.stage, validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.evidenceRefs!.presentation!.path };
+          break;
+        }
+        case "RELEASING":
+          releaseResultPath = packet.resultPath;
+          work = { stage: packet.stage, artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" };
+          break;
+        default: throw new Error("Unexpected worker stage " + packet.stage);
+      }
+      const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Completed synthetic stage", work };
+      const events = (await readFile("tests/fixtures/opencode-jsonl-fixture.jsonl", "utf8")).trim().split(/\r?\n/).map(line => JSON.parse(line));
+      events.find(event => event.type === "text").part.text = JSON.stringify(result);
+      return { stdout: events.map(event => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };
+    };
+    let waits = 0;
+    const sleep = async (delay: number) => {
+      assert.equal(deployments, 0);
+      assert.ok(delay > 0);
+      assert.ok(++waits <= 2, "unexpected additional release wait");
+      t.mock.timers.setTime(Date.now() + delay);
+      if (waits === 2) { merged = true; return; }
+      const codeReviewPath = ".automation/article-imports/reviews/review.json";
+      await writeJsonAtomically(path.join(root, codeReviewPath), { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true,
+        reviewedCommitSha: commit, pullRequestUrl: pr, evidenceUrl: pr + "#issuecomment-review", reviewedAt: new Date().toISOString() });
+      const release = JSON.parse(await readFile(path.join(root, releaseResultPath), "utf8"));
+      await writeJsonAtomically(path.join(root, releaseResultPath), { ...release, work: { ...release.work, codeReviewPath } });
+    };
+    const heartbeat = () => executeImportCommand(root, { kind: "dispatch", importId }, executor, { workerModel: "fixture/model", workerRunner, sleep });
+    if (failRollback) await heartbeat();
+    else {
+      const intake = await createIntakeRun(root);
+      const completed = await executeImportCommand(root, { kind: "dispatch-intake", runId: intake.runId }, executor,
+        { workerModel: "fixture/model", workerRunner, sleep }) as IntakeRun;
+      assert.equal(completed.outcome, "ALL_PUBLISHED", (await current()).nextAction);
+      assert.equal(completed.entries[0].importId, importId);
+    }
+    assert.deepEqual(calls, ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING"]);
+    assert.equal(waits, 2);
+    if (failRollback) {
+      const failed = await current();
+      assert.equal(failed.stage, "WAITING_EXTERNAL");
+      assert.ok(failed.continuation?.kind === "blocked");
+      assert.match(failed.continuation.resumptionRequirement, /dpl-previous/);
+      assert.equal(failed.pendingRelease?.operations?.deployment?.deploymentId, "dpl-current");
+      assert.equal(failed.terminalRef, undefined);
+      await heartbeat();
+      assert.equal(deployments, 1);
+      return;
+    }
     assert.equal((await current()).stage, "LIVE");
     await heartbeat();
     assert.equal(commits, 1);
     assert.equal(deployments, 1);
-    assert.ok(await readFile(path.join(root, research.packet.resultPath), "utf8"));
+    assert.ok(await readFile(path.join(root, research.resultPath), "utf8"));
+    const terminal = await current();
+    await rm(path.join(root, terminal.terminalRef!.path));
+    await assert.rejects(heartbeat(), /TERMINAL_PROOF_INVALID/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
