@@ -173,3 +173,9 @@ Source strategy documents remain unchanged. No source strategy amendments.
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
 
 Scope: make content approval yield the parsed artifact for presentation and dev preview without a second artifact-file read; split pure historical-receipt allowlist decision from filesystem read; use named historical context in internal call graph while preserving legacy positional call orders. Owned files: src/lib/article-import/{content-approval,presentation,approved-article-preview,verification-evidence}.ts; optional adjacent pure historical receipt matcher; tests/approved-article-preview.test.ts, tests/article-content-approval.test.ts, tests/article-candidate-verification-regression.test.ts. Synthetic tests only; no private real article data in PR. Evidence: build-pack/repairs/approval-receipts-1124/verification.md.
+
+### Validation slim corrections (VALIDATION-SLIM-1124) (registered 2026-11-24)
+
+Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
+
+Scope: remove the loop requiring viewport words in page design notes while retaining required notes and unavailable-check rejection; use a single read of each research snapshot at the content-assessment review input builder and research validator through shared readVerifiedEvidenceBytes; preserve browser checks, affiliate verification, and editorial passes. Owned files: src/lib/article-import/{contracts,execution-evidence,workflow-evidence}.ts; tests/validation-slim-corrections.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/validation-slim-1124/verification.md.
