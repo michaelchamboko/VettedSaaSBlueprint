@@ -1,4 +1,5 @@
 import { createArticleImport, executePendingImport, upgradeImportEvidence, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
+import { dispatchArticleImport, dispatchIntakeRun, type DispatchOptions } from "../src/lib/article-import/dispatch";
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { readFile } from "node:fs/promises";
 import { assertPrimaryArticleCheckout, withArticleExecution, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
@@ -8,10 +9,10 @@ import { createSupervisedImportExecutor } from "../src/lib/article-import/superv
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
 
-export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string };
+export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
 
 export function parseImportCommand(argv: string[]): ImportCommand {
-  if (argv[0] === "--recover-lease" && ["source", "intake", "import"].includes(argv[1]) && argv[2] === "--key" && argv[3]) return { kind: "recover-lease", leaseKind: argv[1] as "source" | "intake" | "import", key: argv[3] };
+  if (argv[0] === "--recover-lease" && ["source", "intake", "import", "publication"].includes(argv[1]) && argv[2] === "--key" && argv[3]) return { kind: "recover-lease", leaseKind: argv[1] as "source" | "intake" | "import" | "publication", key: argv[3] };
   if (argv[0] === "--describe-workflow") return { kind: "describe-workflow" };
   if (argv[0] === "--preflight") return { kind: "preflight" };
   if (argv[0] === "--upgrade-evidence" && argv[1]) return { kind: "upgrade-evidence", importId: argv[1] };
@@ -29,17 +30,19 @@ export function parseImportCommand(argv: string[]): ImportCommand {
   if (argv[0] === "--intake-resume" && argv[1]) return { kind: "intake-resume", runId: argv[1] };
   if (argv[0] === "--intake-status" && argv[1]) return { kind: "intake-status", runId: argv[1] };
   if (argv[0] === "--intake-retry" && argv[1]) return { kind: "intake-retry", runId: argv[1], importId: argv[2], ...(argv[3] === "--recovery" && argv[4] ? { recovery: argv[4] } : {}) };
+  if (argv[0] === "--dispatch" && argv[1]) return { kind: "dispatch", importId: argv[1] };
+  if (argv[0] === "--dispatch-intake" && argv[1]) return { kind: "dispatch-intake", runId: argv[1] };
   throw new Error("Use --source <file> or --resume <import-id>.");
 }
 
-export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, probe?: CapabilityProbe): Promise<unknown> {
-  const dispatch = () => dispatchImportCommand(root, command, executor, probe);
-  if (["source", "resume", "intake", "intake-resume"].includes(command.kind)) return withArticleExecution(root, dispatch, probe);
+export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
+  const dispatch = () => dispatchImportCommand(root, command, executor, dispatchOptions, probe);
+  if (["source", "resume", "intake", "intake-resume", "dispatch", "dispatch-intake"].includes(command.kind)) return withArticleExecution(root, dispatch, probe);
   if (!["describe-workflow", "preflight", "check-intake", "check-completion", "intake-status"].includes(command.kind)) await assertPrimaryArticleCheckout(root);
   return dispatch();
 }
 
-async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, probe?: CapabilityProbe): Promise<unknown> {
+async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
   if (command.kind === "recover-lease") return recoverWorkflowLease(root, command.leaseKind, command.key);
   if (command.kind === "describe-workflow") return { requirementRevision: WORKFLOW_REVISION, sequence: WORKFLOW_SEQUENCE, requirements: workflowRequirements, instructions: stageInstructions };
   if (command.kind === "preflight") return inspectArticlePreflight(root, probe);
@@ -55,6 +58,8 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "check-completion") return inspectImportCompletion(root, command.importId);
   if (command.kind === "intake") return createIntakeRun(root, command.directory);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
+  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor });
+  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor });
   if (command.kind === "intake-retry") {
     const run = await loadIntakeRun(root, command.runId);
     if (!command.importId) throw new Error("INTAKE_RETRY_IMPORT_REQUIRED");
@@ -76,7 +81,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     if (!entry) return run;
       if (!entry.capturedPath) return setIntakeBlocker(root, run, { scope: "shared", code: "CAPTURE_MISSING", message: `No immutable source copy was captured for ${entry.relativePath}.` });
     if (entry.status === "PROCESSING" && entry.importId) {
-      const imported = await executeImportCommand(root, { kind: "resume", importId: entry.importId }, executor, probe) as ExternalArticleImportV1;
+      const imported = await executeImportCommand(root, { kind: "resume", importId: entry.importId }, executor, dispatchOptions, probe) as ExternalArticleImportV1;
       if (imported.stage === "LIVE" || imported.stage === "QUARANTINED") {
         const terminal = await markIntakeEntry(root, run, entry.relativePath, imported.stage);
         return { ...terminal, importState: imported };
@@ -92,7 +97,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     run = await markIntakeEntry(root, run, entry.relativePath, imported.stage === "QUARANTINED" ? "QUARANTINED" : "PROCESSING", { importId: imported.importId });
     return { ...run, nextEntry: { ...entry, importId: imported.importId, status: run.entries.find((item) => item.relativePath === entry.relativePath)?.status } };
   }
-  if (command.kind === "resume") return executePendingImport(root, command.importId, execute, "reject");
+  if (command.kind === "resume") return executePendingImport(root, command.importId, execute, { rejectBusy: true });
   throw new Error("An explicit import ID is required to resume an article import.");
 }
 
@@ -100,6 +105,14 @@ async function main(): Promise<void> {
   const command = parseImportCommand(process.argv.slice(2));
   const result = await executeImportCommand(process.cwd(), command);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  if (command.kind === "dispatch") {
+    const record = result as ExternalArticleImportV1;
+    process.exitCode = record.continuation?.kind === "blocked" ? 20 : ["LIVE", "QUARANTINED"].includes(record.stage) ? 0 : 10;
+  }
+  if (command.kind === "dispatch-intake") {
+    const run = result as Awaited<ReturnType<typeof dispatchIntakeRun>>;
+    process.exitCode = run.blocker ? 20 : run.outcome === "OPEN" ? 10 : 0;
+  }
   if (command.kind === "check-completion") process.exitCode = ({ COMPLETE: 0, WORK: 10, REPAIR: 10, WAIT: 10, BLOCKED: 20 } as Record<string, number>)[(result as { status: string }).status] ?? 30;
 }
 

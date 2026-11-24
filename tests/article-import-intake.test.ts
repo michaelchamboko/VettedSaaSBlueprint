@@ -34,7 +34,7 @@ test("missing editorial capability is a shared folder stop", async () => {
     assert.equal((await claimNextIntakeEntry(root, created.runId)).revision, claimed.revision);
     const blocked = await setIntakeBlocker(root, claimed, { scope: "shared", code: "EDITORIAL_CAPABILITY", stage: "REFINING", message: "Missing cleanse capability." });
     assert.equal(nextIntakeEntry(blocked), undefined);
-    await assert.rejects(setIntakeBlocker(root, claimed, blocked.blocker!), /INTAKE_RECONCILIATION_CONFLICT/);
+    await assert.rejects(setIntakeBlocker(root, claimed, blocked.blocker!), /INTAKE_REVISION_CONFLICT/);
     await assert.rejects(clearSharedIntakeBlocker(root, blocked, blocked.entries[1].relativePath, "other"), /INTAKE_BLOCKER_IMPORT_MISMATCH/);
   } finally {
     await rm(root, { recursive: true, force: true });

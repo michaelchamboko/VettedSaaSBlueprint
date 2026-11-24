@@ -3,7 +3,7 @@ import path from "node:path";
 import { pageBlueprintSchema } from "@/lib/schemas/contracts";
 import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
 import { parseApprovedUrls } from "@/lib/affiliate/approved-urls";
-import { contentApprovalMatches } from "@/lib/article-import/content-approval";
+import { loadApprovedArtifact } from "@/lib/article-import/content-approval";
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 /**
@@ -38,6 +38,7 @@ export async function validateApprovedArticlePreview(
   slug: string,
   importId: string,
   repositoryRoot: string,
+  renderer: "reference" | "direct-review" = "reference",
 ): Promise<PreviewValidationResult> {
   // 1. Dev-only guard
   if (!isDevEnvironment()) {
@@ -154,26 +155,12 @@ export async function validateApprovedArticlePreview(
     return { ok: false, error: "WORK_PACKET_ARTIFACT_PATH_MISMATCH" };
   }
 
-  // 11. Canonical path containment for private artifact (repo root level)
-  const fullArtifactPath = path.resolve(repositoryRoot, artifactPath);
-  let canonicalArtifactPath: string;
-  try {
-    canonicalArtifactPath = realpathSync(fullArtifactPath);
-  } catch {
-    return { ok: false, error: "ARTIFACT_NOT_FOUND" };
+  // 11-12. Load the private approved artifact once through the approval-owned loader.
+  const loaded = await loadApprovedArtifact(repositoryRoot, artifactPath as string);
+  if (!loaded.ok) {
+    return { ok: false, error: loaded.error };
   }
-  const artifactRelative = path.relative(canonicalRoot, canonicalArtifactPath);
-  if (artifactRelative.startsWith("..") || path.isAbsolute(artifactRelative)) {
-    return { ok: false, error: "ARTIFACT_PATH_ESCAPE" };
-  }
-
-  // 12. Read and parse the private approved artifact
-  let artifactValue: unknown;
-  try {
-    artifactValue = JSON.parse(readFileSync(canonicalArtifactPath, "utf8"));
-  } catch {
-    return { ok: false, error: "ARTIFACT_UNREADABLE" };
-  }
+  const artifactValue = loaded.artifact;
 
   // 13. Semantic fingerprint check (fingerprintEditorialArtifact, not raw SHA256)
   const semanticFingerprint = fingerprintEditorialArtifact(artifactValue);
@@ -190,10 +177,10 @@ export async function validateApprovedArticlePreview(
   }
 
   // 15. Renderer prerequisites: presentation recipe and answer snippet
-  if (!blueprint.presentation) {
+  if (renderer === "reference" && !blueprint.presentation) {
     return { ok: false, error: "MISSING_PRESENTATION_RECIPE" };
   }
-  if (!blueprint.hero.answer_snippet?.trim()) {
+  if (renderer === "reference" && !blueprint.hero.answer_snippet?.trim()) {
     return { ok: false, error: "MISSING_ANSWER_SNIPPET" };
   }
 
@@ -218,8 +205,8 @@ export async function validateApprovedArticlePreview(
     return { ok: false, error: "UNAPPROVED_AFFILIATE_URL" };
   }
 
-  // 18. Read-only content approval/evidence validation
-  const approvalValid = await contentApprovalMatches(repositoryRoot, contentApproval, "direct-review", record.sourceFingerprint as string, artifactPath as string);
+  // 18. Read-only content approval/evidence validation using the already loaded artifact
+  const approvalValid = await loaded.matches(contentApproval, "direct-review", record.sourceFingerprint as string);
   if (!approvalValid) {
     return { ok: false, error: "CONTENT_APPROVAL_EVIDENCE_INVALID" };
   }

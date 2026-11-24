@@ -43,7 +43,7 @@ export function fixtureProbe(root: string) {
   };
 }
 
-export async function executeFixtureCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor) {
+export async function executeFixtureCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, options?: Parameters<typeof executeImportCommand>[3]) {
   await prepareCommandCheckout(root);
-  return executeImportCommand(root, command, executor, fixtureProbe(root));
+  return executeImportCommand(root, command, executor, options, fixtureProbe(root));
 }

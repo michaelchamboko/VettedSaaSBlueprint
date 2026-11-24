@@ -61,6 +61,7 @@ async function mutateRun(root: string, runId: string, change: (run: IntakeRun) =
     const updated = await change(current);
     if (updated === current) return current;
     await lease.assertOwned();
+    if (updated === current) return current;
     updated.revision = (current.revision ?? 0) + 1;
     await saveRun(root, updated, lease); return updated;
   } finally { await lease.release(); }
@@ -137,8 +138,9 @@ export async function markIntakeEntry(root: string, run: IntakeRun, relativePath
 }
 
 export async function setIntakeBlocker(root: string, run: IntakeRun, blocker: IntakeEntry["blocker"] & { scope: "shared" }): Promise<IntakeRun> {
-  return mutateRun(root, run.runId, current => {
-    if (run.revision !== current.revision || !run.activeEntry || current.activeEntry !== run.activeEntry) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
+  return mutateRun(root, run.runId, (current) => {
+    if (current.revision !== run.revision) throw new Error("INTAKE_REVISION_CONFLICT");
+    if (!run.activeEntry || current.activeEntry !== run.activeEntry) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
     return { ...current, blocker, outcome: "OPEN" };
   });
 }
@@ -170,6 +172,7 @@ export async function clearSharedIntakeBlocker(root: string, run: IntakeRun, rel
 
 export async function claimNextIntakeEntry(root: string, runId: string): Promise<IntakeRun> {
   return mutateRun(root, runId, async (run) => {
+    if (run.entries.filter((entry) => entry.status === "PROCESSING").length > 1) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
     for (const entry of run.entries) if (["LIVE", "QUARANTINED"].includes(entry.status) && !await terminalProof(root, entry)) throw new Error(`INTAKE_TERMINAL_PROOF_INVALID:${entry.relativePath}`);
     const entry = nextIntakeEntry(run);
     if (!entry) return run;

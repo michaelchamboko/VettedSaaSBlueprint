@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { advanceImport, createArticleImport, ensureImportContentApproval, loadImport, recordImportFailure, resumeImport } from "../src/lib/article-import/engine";
+import { verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
 import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
 import { recaptureStoredExchange } from "./fixtures/capture-replay";
 import type { ExecutionEvidence } from "../src/lib/article-import/execution-evidence";
@@ -301,3 +302,21 @@ for (const scenario of [
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 }
+
+
+test("an accepted V1 presentation survives a visual-policy upgrade without accepting a substituted receipt", async () => {
+  const {root, record} = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const presented = await presentFixture(root, await advanceImport(root,approved,"Approved content"));
+    const releasing = await advanceImport(root,presented,"Presented");
+    const file = path.join(root,"config/article-workflow-capabilities.json");
+    const policy = JSON.parse(await readFile(file,"utf8"));
+    await writeFile(file,JSON.stringify({...policy,designEvidenceVersion:2}));
+    await verifyImportPresentationEvidence(root,releasing);
+    const ref = releasing.evidenceRefs!.presentation!;
+    const {readEvidence,storeEvidence} = await import("../src/lib/article-import/execution-evidence");
+    const altered = await storeEvidence(root,releasing.importId,{...await readEvidence(root,ref) as object,id:"different-legacy-receipt"});
+    await assert.rejects(verifyImportPresentationEvidence(root,{...releasing,evidenceRefs:{...releasing.evidenceRefs,presentation:altered}}),/PRESENTATION_RUNTIME_EVIDENCE_REQUIRED/);
+  } finally {await rm(root,{recursive:true,force:true});}
+});

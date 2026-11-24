@@ -336,6 +336,17 @@ function productiveStage(record: ExternalArticleImportV1): ImportStage {
   return record.stage === "RELEASING" ? record.stage : record.resumeStage ?? "RELEASING";
 }
 
+function failedRollback(previousId: string) {
+  const cause = "Production verification failed and rollback did not verify.";
+  const resumptionRequirement = `Verify restoration of ${previousId} and submit recovery evidence before resuming release.`;
+  return {
+    blockerScope: "shared" as const,
+    continuation: { kind: "blocked" as const, scope: "shared" as const, cause,
+      attemptedRecovery: `Attempted rollback to ${previousId}. Its restoration could not be verified.`, resumptionRequirement },
+    nextAction: resumptionRequirement,
+  };
+}
+
 async function assessImportReleaseImpl(input: {
   repositoryRoot: string;
   record: ExternalArticleImportV1;
@@ -597,7 +608,7 @@ async function assessImportReleaseImpl(input: {
         restored = false;
       }
       const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
-      const rolledBack = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `New deployment failed verification (${verificationFailure}); previous deployment restored.` : `New deployment failed verification (${verificationFailure}); rollback did not verify.` }] };
+      const rolledBack = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), ...(restored ? { nextAction: "Repair the failed release layer and retry once." } : failedRollback(previous.deploymentId)), stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `New deployment failed verification (${verificationFailure}); previous deployment restored.` : `New deployment failed verification (${verificationFailure}); rollback did not verify.` }] };
       await saveImport(input.repositoryRoot, rolledBack);
       if (!restored) return { status: "WAITING_EXTERNAL", reasons: ["ROLLBACK_VERIFICATION_FAILED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
       if (input.operations.fixForward && await input.operations.fixForward(1)) return { status: "ROLLED_BACK", reasons: ["FIX_FORWARD_REQUIRED"], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId };
@@ -626,7 +637,7 @@ async function assessImportReleaseImpl(input: {
       restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
     } catch { restored = false; }
     const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
-    const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), nextAction: restored ? "Repair the failed release layer and retry once." : "Production recovery failed; heartbeat must retry rollback verification.", stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
+    const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), ...(restored ? { nextAction: "Repair the failed release layer and retry once." } : failedRollback(previous.deploymentId)), stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
     await saveImport(input.repositoryRoot, updated);
     return { status: recoveryStage, reasons: [message, ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])], previousDeploymentId: previous.deploymentId };
   }

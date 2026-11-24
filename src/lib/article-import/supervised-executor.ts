@@ -9,6 +9,7 @@ import { createLocalReleaseOperations } from "./local-release-adapter";
 import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
 import { evidenceReference, validateResearchEvidence } from "./workflow-evidence";
 import { instructionsForStage, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
+import { applyPublicationProposals, publicationProposals } from "./worker-publication";
 import { captureRenderingInputs, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 
 const file = z.string().min(1);
@@ -61,6 +62,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
       idempotencyKey: context.idempotencyKey, sourcePath: `.automation/article-imports/${record.importId}.source.md`,
       record, resultSchema: z.toJSONSchema(resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
+      ...(stage === "REFINING" && { publicationProposals: publicationProposals(record.importId, context.idempotencyKey, record.format) }),
       instructions: instructionsForStage(stage), resultPath,
       resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,
@@ -92,6 +94,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       case "REFINING":
         record = { ...record, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath), editorial: await evidenceReference(root, work.editorialExecutionPath) } };
         record = await approveImportContent(root, record, work);
+        await applyPublicationProposals(root, record, context.idempotencyKey, context.assertLease);
         return advanceImport(root, record, result.summary);
       case "VALIDATING":
         record = { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: await evidenceReference(root, work.presentationEvidencePath) } };

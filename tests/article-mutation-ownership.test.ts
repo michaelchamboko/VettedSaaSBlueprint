@@ -105,17 +105,18 @@ test("all callable mutations require a primary checkout before touching state", 
     const id = "absent";
     const commands: ImportCommand[] = [
       { kind: "source", source: id }, { kind: "resume", importId: id }, { kind: "intake" },
-      { kind: "intake-resume", runId: id }, { kind: "intake-retry", runId: id },
+      { kind: "intake-resume", runId: id }, { kind: "dispatch", importId: id }, { kind: "dispatch-intake", runId: id },
+      { kind: "intake-retry", runId: id },
       { kind: "upgrade-evidence", importId: id }, { kind: "upgrade-intake", runId: id },
       { kind: "reconcile-intake-entry", runId: id, entry: id }, { kind: "submit-diagnosis", importId: id, file: id },
-      ...(["source", "intake", "import"] as const).map(leaseKind => ({ kind: "recover-lease" as const, leaseKind, key: id })),
+      ...(["source", "intake", "import", "publication"] as const).map(leaseKind => ({ kind: "recover-lease" as const, leaseKind, key: id })),
     ];
     for (const command of commands) await assert.rejects(executeImportCommand(root, command), /PRIMARY_CHECKOUT_REQUIRED/, command.kind);
     assert.deepEqual(await readdir(root), []);
     await prepareCommandCheckout(root);
     const unavailable = async () => { throw Error("synthetic unavailable tool"); };
-    for (const command of commands.slice(0, 4)) {
-      await assert.rejects(executeImportCommand(root, command, undefined, unavailable), /CAPABILITY_UNAVAILABLE/, command.kind);
+    for (const command of commands.slice(0, 6)) {
+      await assert.rejects(executeImportCommand(root, command, undefined, undefined, unavailable), /CAPABILITY_UNAVAILABLE/, command.kind);
     }
     await assert.rejects(recordArticlePresentation(root, id, "unused", "unused", unavailable), /CAPABILITY_UNAVAILABLE/);
     assert.ok(!(await readdir(root)).includes(".automation"));
@@ -175,7 +176,7 @@ test("inspection can read a busy import and intake without changing their record
         const before = await snapshot();
         const commands: ImportCommand[] = [{ kind: "describe-workflow" }, { kind: "preflight" }, { kind: "check-intake", runId: run.runId }, { kind: "intake-status", runId: run.runId }, { kind: "check-completion", importId: quarantined.importId }];
         for (const command of commands) {
-          const result = await executeImportCommand(root, command, undefined, async tool => tool === "opencode" ? "2.2.6" : "Python 3.13.0");
+          const result = await executeImportCommand(root, command, undefined, undefined, async tool => tool === "opencode" ? "2.2.6" : "Python 3.13.0");
           assert.ok(result, command.kind);
         }
         assert.deepEqual(await snapshot(), before);

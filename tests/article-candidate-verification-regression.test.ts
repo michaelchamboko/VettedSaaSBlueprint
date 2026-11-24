@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { assertVerifierResult, hasAuthenticatedHistoricalContext, canonicalJson } from "../src/lib/article-import/verification-evidence";
+import { assertVerifierResult, canonicalJson } from "../src/lib/article-import/verification-evidence";
 
 const target = {
   format: "direct-review" as const,
@@ -263,8 +263,11 @@ test("historical binding accepts digest-only entry with correct compact digest",
   };
   const receiptDigest = createHash("sha256").update(JSON.stringify(result)).digest("hex");
   writeFileSync(path.join(root, ".automation", "historical-candidate-receipts.json"), JSON.stringify([{ importId, sourceFingerprint, receiptDigest }]));
+  const trusted = { importId, sourceFingerprint };
   try {
-    assert.doesNotThrow(() => assertVerifierResult(target, result, root, { importId, sourceFingerprint }));
+    assert.doesNotThrow(() => assertVerifierResult(target, result, root, trusted));
+    assert.doesNotThrow(() => assertVerifierResult(target, result, trusted, root));
+    assert.throws(() => assertVerifierResult(target, result, { root, trusted } as never), /CANDIDATE_CANNOT_CLAIM_PRODUCTION_CHECKS/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import { importArtifactTarget } from "./format-validation";
-import { WORKFLOW_REVISION } from "./workflow-requirements";
 import { candidatePreviewPath } from "./candidate-route";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
@@ -196,6 +195,40 @@ export function canonicalDigest(value: unknown): string {
 export const canonicalReceiptDigest = canonicalDigest;
 export const receiptCanonicalDigest = canonicalDigest;
 
+function matchHistoricalCandidateReceipt(
+  allowlist: unknown,
+  trusted: TrustedHistoricalIdentity | undefined,
+  value: unknown,
+): boolean {
+  if (!trusted) return false;
+  const importId = trusted.importId;
+  if (typeof importId !== "string" || !/^article-[0-9a-f-]{36}$/.test(importId)) return false;
+  const sourceFingerprint = trusted.sourceFingerprint;
+  if (typeof sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+  if (!Array.isArray(allowlist)) return false;
+  const submittedCompactDigest = createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  const submittedCanonicalDigest = createHash("sha256").update(canonicalJson(value)).digest("hex");
+  const servedFingerprints = collectServedArtifactFingerprints(value);
+  return allowlist.some((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const e = entry as Record<string, unknown>;
+    if (e.importId !== importId || e.sourceFingerprint !== sourceFingerprint) return false;
+
+    const approvedReceiptDigest = pickField(e, APPROVED_RECEIPT_DIGEST_FIELDS);
+    if (!approvedReceiptDigest) return false;
+    if (approvedReceiptDigest !== submittedCompactDigest && approvedReceiptDigest !== submittedCanonicalDigest) return false;
+
+    const approvedArtifactFingerprint = pickField(e, APPROVED_ARTIFACT_FINGERPRINT_FIELDS);
+    if (approvedArtifactFingerprint) {
+      if (!/^[a-f0-9]{64}$/.test(approvedArtifactFingerprint)) return false;
+      if (servedFingerprints.length === 0) return false;
+      if (servedFingerprints.some((fingerprint) => fingerprint !== approvedArtifactFingerprint)) return false;
+    }
+
+    return true;
+  });
+}
+
 export function hasAuthenticatedHistoricalContext(
   value: unknown,
   trustedOrRoot?: TrustedHistoricalIdentity | string,
@@ -224,33 +257,7 @@ export function hasAuthenticatedHistoricalContext(
   } catch {
     return false;
   }
-  if (!Array.isArray(allowlist)) return false;
-    const submittedCompactDigest = createHash("sha256").update(JSON.stringify(value)).digest("hex");
-  const submittedCanonicalDigest = createHash("sha256").update(canonicalJson(value)).digest("hex");
-  const servedFingerprints = collectServedArtifactFingerprints(value);
-  return allowlist.some((entry) => {
-    if (!entry || typeof entry !== "object") return false;
-    const e = entry as Record<string, unknown>;
-    if (e.importId !== importId || e.sourceFingerprint !== sourceFingerprint) return false;
-
-    // Receipt-digest binding is the NECESSARY condition for legacy-branch
-    // acceptance. An entry without an approved receipt digest never grants it.
-    const approvedReceiptDigest = pickField(e, APPROVED_RECEIPT_DIGEST_FIELDS);
-    if (!approvedReceiptDigest) return false;
-    if (approvedReceiptDigest !== submittedCompactDigest && approvedReceiptDigest !== submittedCanonicalDigest) return false;
-
-    const approvedArtifactFingerprint = pickField(e, APPROVED_ARTIFACT_FINGERPRINT_FIELDS);
-    if (approvedArtifactFingerprint) {
-      // Additional constraint: bind to the approved artifact fingerprint. Every
-      // served fingerprint in the receipt must equal the approved value, and at
-      // least one must be present. Fingerprint binding alone never grants.
-      if (!/^[a-f0-9]{64}$/.test(approvedArtifactFingerprint)) return false;
-      if (servedFingerprints.length === 0) return false;
-      if (servedFingerprints.some((fingerprint) => fingerprint !== approvedArtifactFingerprint)) return false;
-    }
-
-    return true;
-  });
+  return matchHistoricalCandidateReceipt(allowlist, trusted, value);
 }
 
 export function observedArtifactFingerprint(value: unknown): string {
@@ -263,12 +270,9 @@ export function observedArtifactFingerprint(value: unknown): string {
   return "";
 }
 
-export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown, third?: string | { importId: string; sourceFingerprint: string }, fourth?: string | { importId: string; sourceFingerprint: string }): void {
-  const args = [third, fourth].filter((x) => x !== undefined);
-  const rootArg = args.find((x) => typeof x === "string") as string | undefined;
-  const trustedArg = args.find((x) => typeof x === "object") as { importId: string; sourceFingerprint: string } | undefined;
-  const root = rootArg ?? process.cwd();
-  const trusted = trustedArg;
+function verifyVerifierResult(context: { root: string; trusted?: { importId: string; sourceFingerprint: string } }, target: ReturnType<typeof importArtifactTarget>, value: unknown): void {
+  const root = context.root ?? process.cwd();
+  const trusted = context.trusted;
   const result = z.record(z.string(), z.unknown()).parse(value);
   if (target.format === "direct-review") {
     const snapshot = z.object({ httpOk: z.literal(true), disclosureOk: z.literal(true), allCtasExact: z.literal(true), allRevealSectionsVisible: z.literal(true), browserErrors: z.array(z.string()).length(0) }).passthrough();
@@ -314,6 +318,13 @@ export function assertVerifierResult(target: ReturnType<typeof importArtifactTar
   }
 }
 
+export function assertVerifierResult(target: ReturnType<typeof importArtifactTarget>, value: unknown, third?: string | TrustedHistoricalIdentity, fourth?: string | TrustedHistoricalIdentity): void {
+  const args = [third, fourth].filter((x) => x !== undefined);
+  const root = (args.find((x) => typeof x === "string") as string | undefined) ?? process.cwd();
+  const trusted = args.find((x) => typeof x === "object") as TrustedHistoricalIdentity | undefined;
+  verifyVerifierResult({ root, trusted }, target, value);
+}
+
 export async function writeImportVerifierEvidence(file: string | undefined, target: ReturnType<typeof importArtifactTarget> | undefined, result: unknown) {
   if (!file) return;
   if (!target) throw new Error("VERIFIER_ARTIFACT_REQUIRED");
@@ -336,6 +347,6 @@ export async function readImportVerifierEvidence(root: string, file: string, exp
   requireVerificationMode(evidence.result, "candidate");
   if (evidence.target.format !== expected.format || evidence.target.artifactFingerprint !== expected.artifactFingerprint || JSON.stringify(evidence.target.renderedRoutes) !== JSON.stringify(expected.renderedRoutes)) throw new Error("VERIFIER_TARGET_MISMATCH");
   const trusted = expected.importId && expected.sourceFingerprint ? { importId: expected.importId, sourceFingerprint: expected.sourceFingerprint } : undefined;
-  assertVerifierResult(evidence.target, evidence.result, trusted, root);
+  verifyVerifierResult({ root, trusted }, evidence.target, evidence.result);
   return { path: relative.replaceAll("\\", "/"), sha256: createHash("sha256").update(bytes).digest("hex") };
 }
