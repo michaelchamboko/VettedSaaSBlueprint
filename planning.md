@@ -167,3 +167,16 @@ Classification: explicit user directive (2026-11-17). Dev-only renderer; no arti
 Scope: implement a dev-only preview route that renders a frozen approved artifact through the existing ReferenceComposedReviewPage, reusing current style system. The route validates import ID, work packet, contentApproval path and SHA256, PageBlueprintV1 schema, and valid slug; rejects traversal, mismatches, wrong stage, missing evidence. Never exposes source/research/work packet fields, never writes article/receipt/import/result state, no caching, returns 404 in production. No arbitrary file-path/URL input, no public production publication API, no new automation stage/scheduler. Preserve exact article bytes and approval. Owned files: src/lib/article-import/approved-article-preview.ts; src/app/dev/approved-article-preview/[slug]/page.tsx; tests/approved-article-preview.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no private real article data in PR. Evidence: .automation/article-imports/work/article-ea8e4b04-.../presentation-evidence/.
 
 Source strategy documents remain unchanged. No source strategy amendments.
+### Article mutation ownership (ORCH-02), 24 November 2026
+
+Owner directive. Implement ORCH-02 in the existing TypeScript controller. Use disposable articles for acceptance. The materialized packet is `ORCH-02-MUTATION-OWNERSHIP`.
+
+| Command | Checkout and capabilities | Ownership and acceptance |
+| --- | --- | --- |
+| Source start, intake start/resume, import resume | Primary checkout and execution preflight | Bind source allocation, intake changes and import transitions to their respective leases. Resume reports contention. |
+| Record presentation | Primary checkout and execution preflight | Load under the import lease. Only VALIDATING accepts bound receipts. Race against resume in both orders and verify one accepted transition. Late submission preserves a pending journal, rollback target and terminal proof. |
+| Execute release or record exact-head review | Primary checkout and execution preflight on the release command | Hold the import lease across journal updates and external operations. A stale or competing writer cannot issue another effect. |
+| Upgrade evidence/intake, reconcile, retry, submit diagnosis, recover lease | Primary checkout and operation-specific evidence | Check ownership at each affected record. Explicit recovery requires verified owner exit. |
+| Describe workflow, preflight report, intake check/status, completion and release dry-run | Inspection | Read busy or historical records without writing, claiming ownership or initiating external release actions. |
+
+The verification covers the command and callable paths, including stale submissions, failed preflight, nested ownership and restart. For V2-06, exercise missing publication membership and declared-file mismatch independently, then run the required suites on the same revision.

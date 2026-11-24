@@ -176,6 +176,7 @@ export const externalArticleImportSchema = z.object({
   continuation: importContinuationSchema.optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
+  stateRevision: z.string().uuid().optional(),
   sourceDeletedAt: z.string().datetime({ offset: true }).optional(),
   title: z.string().min(1),
   primaryQuestion: z.string().min(1),

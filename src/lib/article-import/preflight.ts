@@ -54,7 +54,7 @@ export async function inspectArticlePreflight(root: string, checkTool: Capabilit
   return { ok: diagnostics.length === 0, diagnostics, requirement: "Explicit manual/API trigger in primary checkout; no scheduling or automatic restoration." };
 }
 
-export async function assertArticleCapabilities(root: string): Promise<void> {
-  const result = await inspectArticlePreflight(root);
+export async function assertArticleCapabilities(root: string, probe?: CapabilityProbe): Promise<void> {
+  const result = await inspectArticlePreflight(root, probe);
   if (!result.ok) throw new Error(`CAPABILITY_UNAVAILABLE: ${JSON.stringify(result.diagnostics)}`);
 }

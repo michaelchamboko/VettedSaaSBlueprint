@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { executeImportCommand } from "../scripts/import-article";
+import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import type { ReleaseOperations } from "../src/lib/article-import/release";

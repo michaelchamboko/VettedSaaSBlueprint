@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
 import { loadImport, writeJsonAtomically } from "./engine";
-import { claimWorkflowLease } from "./workflow-lease";
+import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 import { evaluateWorkflowEvidence } from "./workflow-evidence";
 
 const INTAKE_ROOT = ".automation/article-imports/intake";
@@ -38,8 +38,11 @@ export type IntakeRun = {
 
 function runPath(root: string, runId: string): string { return path.join(root, INTAKE_ROOT, runId, "run.json"); }
 
-async function saveRun(root: string, run: IntakeRun): Promise<void> {
-  await writeJsonAtomically(runPath(root, run.runId), run);
+async function saveRun(root: string, run: IntakeRun, lease: WorkflowLease): Promise<void> {
+  await writeJsonAtomically(runPath(root, run.runId), run, async (from, to) => {
+    await lease.assertOwned();
+    await rename(from, to);
+  });
 }
 
 export async function loadIntakeRun(root: string, runId: string): Promise<IntakeRun> {
@@ -58,7 +61,7 @@ async function mutateRun(root: string, runId: string, change: (run: IntakeRun) =
     const updated = await change(current);
     await lease.assertOwned();
     updated.revision = (current.revision ?? 0) + 1;
-    await saveRun(root, updated); return updated;
+    await saveRun(root, updated, lease); return updated;
   } finally { await lease.release(); }
 }
 
@@ -95,7 +98,9 @@ export async function createIntakeRun(root: string, sourceDirectory = "Article I
     entries.push({ relativePath, sourceFingerprint, capturedPath, status: "PENDING" });
   }
   const run: IntakeRun = { schemaVersion: "ArticleIntakeRunV2", revision: 0, history: [], runId, createdAt: new Date().toISOString(), sourceDirectory: path.relative(root, absolute).replaceAll("\\", "/"), entries, outcome: "OPEN" };
-  await saveRun(root, run);
+  const lease = await claimWorkflowLease(root, "intake", runId);
+  if (!lease) throw new Error("INTAKE_BUSY");
+  try { await saveRun(root, run, lease); } finally { await lease.release(); }
   return run;
 }
 
@@ -136,22 +141,24 @@ export async function setIntakeBlocker(root: string, run: IntakeRun, blocker: In
 
 export async function clearIntakeBlocker(root: string, run: IntakeRun, relativePath: string): Promise<IntakeRun> {
   return mutateRun(root, run.runId, (current) => {
-  run = current;
-  const entry = run.entries.find((item) => item.relativePath === relativePath);
-  if (!entry?.blocker || entry.blocker.scope !== "article") throw new Error("INTAKE_ARTICLE_BLOCKER_REQUIRED");
-  if (run.entries.some((item) => item.relativePath !== relativePath && item.status === "PROCESSING")) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
-  const entries = run.entries.map((item) => item.relativePath === relativePath ? { ...item, status: "PROCESSING" as const, blocker: undefined } : item);
-  const updated = { ...run, entries, activeEntry: relativePath, outcome: "OPEN" as const };
-  return updated;
+    const entry = current.entries.find(item => item.relativePath === relativePath);
+    const expected = run.entries.find(item => item.relativePath === relativePath);
+    if (!entry || !expected || expected.importId !== entry.importId) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
+    if (!entry.blocker && entry.status === "PROCESSING") return current;
+    if (entry.blocker?.scope !== "article") throw new Error("INTAKE_ARTICLE_BLOCKER_REQUIRED");
+    if (run.revision !== current.revision) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
+    if (current.entries.some(item => item.relativePath !== relativePath && item.status === "PROCESSING")) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
+    const entries = current.entries.map(item => item.relativePath === relativePath ? { ...item, status: "PROCESSING" as const, blocker: undefined } : item);
+    return { ...current, entries, activeEntry: relativePath, outcome: "OPEN" };
   });
 }
 
 export async function clearSharedIntakeBlocker(root: string, run: IntakeRun): Promise<IntakeRun> {
   return mutateRun(root, run.runId, (current) => {
-  run = current;
-  if (!run.blocker) throw new Error("INTAKE_SHARED_BLOCKER_REQUIRED");
-  const updated = { ...run, blocker: undefined, outcome: "OPEN" as const };
-  return updated;
+    if (!current.blocker && run.blocker) return current;
+    if (!current.blocker) throw new Error("INTAKE_SHARED_BLOCKER_REQUIRED");
+    if (run.revision !== current.revision) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
+    return { ...current, blocker: undefined, outcome: "OPEN" };
   });
 }
 
@@ -179,7 +186,7 @@ export async function upgradeIntakeRun(root: string, runId: string): Promise<Int
     }
     await writeFile(`${runPath(root, runId)}.v1.archive`, await readFile(runPath(root, runId)), { flag: "wx" }).catch((e: NodeJS.ErrnoException) => { if (e.code !== "EEXIST") throw e; });
     const updated: IntakeRun = { ...run, schemaVersion: "ArticleIntakeRunV2", revision: 0, history: [] };
-    await lease.assertOwned(); await saveRun(root, updated); return updated;
+    await lease.assertOwned(); await saveRun(root, updated, lease); return updated;
   } finally { await lease.release(); }
 }
 

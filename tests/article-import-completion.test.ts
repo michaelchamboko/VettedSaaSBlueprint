@@ -1,9 +1,10 @@
+import { persistFixture } from "./fixtures/article-command";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { advanceImport, createArticleImport, recordImportFailure, saveImport } from "../src/lib/article-import/engine";
+import { advanceImport, createArticleImport, recordImportFailure } from "../src/lib/article-import/engine";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch"); await mkdir(parent, { recursive: true });
@@ -33,7 +34,7 @@ test("transient failure records a persisted wait and repair failure records a ch
   const repair = await recordImportFailure(root, { ...waiting, stage: "RESEARCHING" }, { strategy: "research", classification: "deterministic", message: "Evidence is incomplete." });
   assert.equal(repair.continuation?.kind, "repair");
   assert.ok(repair.continuation?.kind === "repair" && repair.continuation.requiredChange);
-  await saveImport(root, repair);
+  await persistFixture(root, repair);
   const inspection = await inspectImportCompletion(root, repair.importId);
   assert.equal(inspection.status, "REPAIR");
 });

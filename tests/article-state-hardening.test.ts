@@ -1,9 +1,10 @@
+import { persistFixture } from "./fixtures/article-command";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { hostname } from "node:os";
 import test from "node:test";
-import { advanceImport, canonicalSubmissionFingerprint, claimImportLease, clearImportBlocker, createArticleImport, executePendingImport, loadImport, recordImportFailure, recordImportRepair, saveImport, submitImportDiagnosis, upgradeImportEvidence } from "../src/lib/article-import/engine";
+import { advanceImport, canonicalSubmissionFingerprint, claimImportLease, clearImportBlocker, createArticleImport, executePendingImport, loadImport, recordImportFailure, recordImportRepair, submitImportDiagnosis, upgradeImportEvidence } from "../src/lib/article-import/engine";
 import { claimNextIntakeEntry, createIntakeRun, markIntakeEntry, loadIntakeRun, checkIntakeRun, reconcileIntakeEntry, upgradeIntakeRun } from "../src/lib/article-import/intake";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { recoverWorkflowLease } from "../src/lib/article-import/workflow-lease";
@@ -46,7 +47,7 @@ test("missing research cannot advance and a terminal flag is not completion", as
   try {
     const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
     await assert.rejects(advanceImport(root, record, "Pretend researched."), /WORKFLOW_EVIDENCE/);
-    await saveImport(root, { ...record, stage: "LIVE" });
+    await persistFixture(root, { ...record, stage: "LIVE" });
     assert.equal((await inspectImportCompletion(root, record.importId)).status, "REPAIR");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -207,7 +208,7 @@ test("diagnosis permits only the bound changed submission once and preserves tot
     assert.ok(record.continuation?.kind === "repair");
     const failedSubmissionDigest = record.continuation.submittedFingerprint!;
     record = { ...record, transformation: { ...record.transformation!, title: "Verified repair" } };
-    await saveImport(root, record);
+    await persistFixture(root, record);
     const evidence = await storeEvidence(root, record.importId, { observed: "synthetic failing input inspected and replacement validated" });
     const input = { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: record.stage, failedSubmissionDigest, replacementSubmissionDigest: await canonicalSubmissionFingerprint(record, root), failureCode: "FIXTURE_FAILURE", cause: "Incorrect synthetic input", attemptedRecoveryRefs: [evidence], remedyEvidenceRefs: [evidence], createdAt: new Date().toISOString() };
     await assert.rejects(submitImportDiagnosis(root, record.importId, { ...input, failedSubmissionDigest: "0".repeat(64) }), /DIAGNOSIS_BINDING_MISMATCH/);
