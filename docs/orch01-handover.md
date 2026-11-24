@@ -1,6 +1,34 @@
-# ORCH-01 fresh-context handover
+# Article orchestrator handover
 
-Updated 24 November 2026. Testing action COMPLETE; ORCH-01 PARTIALLY IMPLEMENTED, not closed. ORCH-02 untouched.
+## ORCH-01 closeout
+
+**Complete on the isolated branch.** Independent Codex review passed for implementation and tests at `49cf0a711c0ba5aed2ea2d6e9d81946c6778be97`, based on `3fde335921e49d60e5c0264cb0906833aec81ec4`. The completion decision uses local synthetic runs. Review stayed local because the repository runs Vercel checks on pull requests and this handover excludes deployment.
+
+| Verification on the reviewed revision | Result |
+| --- | --- |
+| Workflow contract and typecheck | Passed |
+| Lint | Passed with zero errors and 19 warnings |
+| Repository test suite, Node 24.22.3 and npm 12.0.2 | 601 tests, 598 passed, zero failed, three skipped because Windows symlink privileges were unavailable |
+| Public-site configuration | Passed |
+| Independent current-revision review | Passed after corrections to interrupted failure replay, catalogue writes, proposal repair and catalogue contention |
+
+The real OpenCode 2.2.6 binary ran through the dispatch handler against a loopback model fixture. It wrote the permitted nested research file, received a permission denial on a workflow-state write, and produced a result that the research validator accepted. The import advanced to `TRANSFORMING`. Model selection remains explicit.
+
+The handler tests exercised an interrupted intake claim, saved results with zero worker calls, JSONL rejection, concurrent dispatch, controller death with a live worker, exit-receipt replay, and process-tree termination. One folder dispatch reached `ALL_PUBLISHED` with retained synthetic `LIVE` proof. A separate failed-rollback run retained the previous deployment target and stopped further deployment. Correcting only a catalogue proposal resumed the same packet and preserved an unrelated published entry.
+
+Local evidence in this worktree includes `.mece/orch01-49cf0a7-test.log`, `.mece/native-handler-probe.log` and `.mece/orch01-49cf0a7-review.md`.
+
+## ORCH-02 handover
+
+**Open. Implementation has not started in this worktree.** The original audit defines ORCH-02 under “Mutation entry points have inconsistent locking and preflight.” Its earlier appendix describes a different checkout.
+
+1. After separate authorization, inspect `scripts/record-article-presentation.ts`, `scripts/import-article.ts` and `src/lib/article-import/engine.ts` on the chosen baseline. At the reviewed ORCH-01 revision, standalone presentation loads the import and calls approval helpers before checking that its stage is `VALIDATING`. Compare that path with the existing import lease and checkout preflight.
+2. Run standalone presentation and resume against the same synthetic import. Demonstrate that exactly one writer progresses and the competing writer cannot overwrite its result.
+3. Submit a stale presentation request against a journal-bearing `RELEASING` record and a genuinely verified `LIVE` record. Compare record bytes and retained evidence before and after rejection. Check the other supported mutation commands against the same ownership rule and confirm that read-only inspection leaves state unchanged.
+
+## Incoming ORCH-01 checkpoint (historical)
+
+The following instructions and results describe the incoming 24 November checkpoint.
 
 ## Working location and authority
 
