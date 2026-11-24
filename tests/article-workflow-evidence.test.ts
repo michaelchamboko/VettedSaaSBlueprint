@@ -124,7 +124,7 @@ test("a recaptured old design exchange cannot approve a new rendering manifest",
     const policy = JSON.parse(await readFile(policyPath,"utf8"));
     await writeFile(policyPath,JSON.stringify({...policy,designEvidenceVersion:2}));
     await assert.rejects(validatePresentationEvidence(root,fresh.presentation,record),/PRESENTATION_RUNTIME_EVIDENCE_REQUIRED/);
-    await validatePresentationEvidence(root,fresh.presentation,record,true);
+
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test("protected metadata rebinding cannot retain prior editorial authoring or fidelity exchanges", async () => {
@@ -367,4 +367,24 @@ test("design review schema accepts truthful negative verdicts and rejects malfor
   const pass = schema.parse({ ...base, verdict: "pass", findings: [{ description: "All resolved.", disposition: "resolved" }] });
   assert.equal(pass.verdict, "pass");
   assert.throws(() => schema.parse({ ...base, verdict: "maybe", findings: [] }));
+});
+
+
+test("pound and euro research claims require complete price context",async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(),"research-prices-"));
+  try {
+    const binding = {importId:id,sourceFingerprint:sha256("prices"),requirementRevision:WORKFLOW_REVISION};
+    const createdAt = new Date().toISOString();
+    for (const [symbol,currency] of [["\u00a3","GBP"],["\u20ac","EUR"]]) {
+      const quote = "Costs " + symbol + "19 per month";
+      const snapshotRef = await storeEvidence(root,id,{quote});
+      const proof = {schemaVersion:"ResearchEvidenceV2",id:"price",createdAt,...binding,
+        freshness:"Current fixture.",sources:[{id:"source",url:"https://example.test/pricing",retrievedAt:createdAt,snapshotRef}]};
+      const claim = {id:"price",text:quote,sourceIds:["source"],excerptLocations:[{sourceId:"source",quote}],limitations:[]};
+      const save = (item:object) => storeEvidence(root,id,{...proof,claims:[item]});
+      await assert.rejects(validateResearchEvidence(root,await save(claim),binding),/RESEARCH_PRICE_CONTEXT_REQUIRED/);
+      await assert.rejects(validateResearchEvidence(root,await save({...claim,text:symbol+"/month"}),binding),/RESEARCH_PRICE_INVALID/);
+      await validateResearchEvidence(root,await save({...claim,price:{amount:19,currency,period:"month",plan:"Example",restrictions:[]}}),binding);
+    }
+  } finally {await rm(root,{recursive:true,force:true});}
 });

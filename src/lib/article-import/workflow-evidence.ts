@@ -157,8 +157,8 @@ export async function validateResearchEvidence(root: string, ref: EvidenceRef, b
   for (const claim of value.claims) {
     if (claim.sourceIds.some((id) => !snapshots.has(id))) throw new Error("RESEARCH_SOURCE_MISSING");
     for (const excerpt of claim.excerptLocations) if (!claim.sourceIds.includes(excerpt.sourceId) || !snapshots.get(excerpt.sourceId)?.includes(excerpt.quote)) throw new Error("RESEARCH_EXCERPT_MISMATCH");
-    if (/\b(?:starts? at|costs?|priced? at)\s*\/|(?:\$|Ã‚Â£|Ã¢â€šÂ¬)\s*\//i.test(claim.text)) throw new Error("RESEARCH_PRICE_INVALID");
-    if (/(?:\$|Ã‚Â£|Ã¢â€šÂ¬)\s*\d|\b\d+(?:\.\d+)?\s*(?:USD|GBP|EUR)\b/i.test(claim.text) && !claim.price) throw new Error("RESEARCH_PRICE_CONTEXT_REQUIRED");
+    if (/\b(?:starts? at|costs?|priced? at)\s*\/|(?:\$|\u00a3|\u20ac)\s*\//i.test(claim.text)) throw new Error("RESEARCH_PRICE_INVALID");
+    if (/(?:\$|\u00a3|\u20ac)\s*\d|\b\d+(?:\.\d+)?\s*(?:USD|GBP|EUR)\b/i.test(claim.text) && !claim.price) throw new Error("RESEARCH_PRICE_CONTEXT_REQUIRED");
   }
   return value;
 }
@@ -279,7 +279,7 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
     if (rank >= 3) await need("assessment", "TRANSFORMING", (ref) => validateContentAssessment(context.root, ref, binding));
     if (rank >= 4) await need("editorial", "REFINING", (ref) => validateEditorialExecution(context.root, ref, binding));
     if (rank >= 5) await need("presentation", "VALIDATING", async (ref) => {
-      const presentation = await validatePresentationEvidence(context.root, ref, binding);
+      const presentation = await validatePresentationEvidence(context.root, ref, binding, record.presentation);
       for (const predecessor of [record.evidenceRefs?.assessment, record.evidenceRefs?.editorial]) {
         if (!predecessor || !presentation.predecessorRefs.some((item) => item.sha256 === predecessor.sha256 && item.path === predecessor.path)) throw new Error("PRESENTATION_PREDECESSOR_MISMATCH");
       }
@@ -296,11 +296,21 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
     return { ok: false, diagnostics: [error instanceof Error ? error.message : String(error)], earliestRequiredStage: required, validatedRefs };
   }
 }
-export async function validatePresentationEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding, previouslyAccepted = false) {
+export async function validatePresentationEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding, priorPresentation?: {artifactFingerprint: string}) {
   const value = workflowEvidenceSchema.parse(await readEvidence(root, ref)); assertBinding(value, binding);
-  if (value.schemaVersion === "WorkflowEvidenceV1" && !previouslyAccepted && !isEvidenceSnapshotActive()) {
+  if (value.schemaVersion === "WorkflowEvidenceV1" && !isEvidenceSnapshotActive()) {
     const policy = JSON.parse((await readEvidenceBytes(root,"config/article-workflow-capabilities.json")).toString("utf8"));
-    if (policy.designEvidenceVersion === 2) throw new Error("PRESENTATION_RUNTIME_EVIDENCE_REQUIRED");
+    if (policy.designEvidenceVersion === 2) {
+      if (!priorPresentation) throw new Error("PRESENTATION_RUNTIME_EVIDENCE_REQUIRED");
+      const saved = JSON.parse((await readEvidenceBytes(root, `.automation/article-imports/${value.importId}.json`)).toString("utf8"));
+      const accepted = saved.evidenceRefs?.presentation;
+      if (!saved.presentation || saved.importId !== value.importId || saved.sourceFingerprint !== binding.sourceFingerprint ||
+          saved.presentation.artifactPath !== binding.artifactPath || accepted?.path !== ref.path || accepted?.sha256 !== ref.sha256 ||
+          saved.presentation.artifactFingerprint !== fingerprintEditorialArtifact(await artifactFor(root,binding)) ||
+          fingerprintEditorialArtifact(saved.presentation) !== fingerprintEditorialArtifact(priorPresentation)) {
+        throw new Error("PRESENTATION_RUNTIME_EVIDENCE_REQUIRED");
+      }
+    }
   }
   if (value.stage !== "VALIDATING") throw new Error("PRESENTATION_STAGE_MISMATCH");
   assertPacket(value.packetId, binding, "VALIDATING");
