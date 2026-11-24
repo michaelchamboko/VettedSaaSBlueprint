@@ -1978,7 +1978,9 @@
       "evidence": [],
       "evidence_refs": [],
       "operation_phase": "implementing",
-      "publication": { "enabled": false },
+      "publication": {
+        "enabled": false
+      },
       "extensions": {
         "authority": "Owner directive, 2026-11-24. See Article mutation ownership (ORCH-02) in planning.md."
       }
@@ -2099,6 +2101,64 @@
       },
       "extensions": {
         "authority": "Explicit user directive; narrow corrective maintenance, no article execution or publication"
+      }
+    },
+    {
+      "id": "CODE-INTELLIGENCE-1124",
+      "title": "GitHub-first codebase-memory integration and Neon code-graph retirement",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 1,
+        "external_impact": 1
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "OWNER-2026-11-24-CODE-INTELLIGENCE"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "docs/code-intelligence.md"
+      ],
+      "validation": [
+        {
+          "name": "graph regression tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--test",
+            "tests/code-intelligence.test.ts"
+          ],
+          "timeout_seconds": 300
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "docs/code-intelligence-verification.md"
+      ],
+      "model_route": {
+        "worker": "codex-owner-authorized",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": true,
+        "destinations": [
+          "github-graph-update-pr"
+        ]
+      },
+      "extensions": {
+        "authority": "Explicit owner directive; graph maintenance only, no article execution or source strategy amendments"
       }
     }
   ],

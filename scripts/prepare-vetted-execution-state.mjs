@@ -200,6 +200,7 @@ const main = async () => {
     graph: {
       required: true,
       provider: "neon-postgres",
+        purpose: "document-authority-only",
       schema: "repository_intelligence_v1",
       status_argv: ["npm", "run", "intelligence:sync"],
       sync_argv: ["npm", "run", "intelligence:sync:apply"],

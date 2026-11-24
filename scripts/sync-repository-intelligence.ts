@@ -1,9 +1,9 @@
 import { Pool } from "pg";
-import { buildRepositoryIntelligence } from "../src/lib/repository-intelligence/graph";
-import { NeonRepositoryIntelligence } from "../src/lib/repository-intelligence/neon";
+import { buildDocumentIntelligence } from "../src/lib/repository-intelligence/graph";
+import { NeonDocumentIntelligence } from "../src/lib/repository-intelligence/neon";
 
 async function main(): Promise<void> {
-  const snapshot = buildRepositoryIntelligence(process.cwd());
+  const snapshot = buildDocumentIntelligence(process.cwd());
   const summary = {
     snapshotKey: snapshot.snapshotKey,
     commitSha: snapshot.commitSha,
@@ -20,7 +20,7 @@ async function main(): Promise<void> {
   if (!connectionString) throw new Error("DATABASE_URL_UNPOOLED or REPOSITORY_INTELLIGENCE_DATABASE_URL is required with --apply.");
   const pool = new Pool({ connectionString, max: 1, ssl: { rejectUnauthorized: true } });
   try {
-    await new NeonRepositoryIntelligence(pool).replaceSnapshot(snapshot);
+    await new NeonDocumentIntelligence(pool).replaceSnapshot(snapshot);
     process.stdout.write(JSON.stringify({ status: "applied", ...summary }) + "\n");
   } finally {
     await pool.end();
