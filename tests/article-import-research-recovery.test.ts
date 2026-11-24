@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { executeImportCommand } from "../scripts/import-article";
-import { createArticleImport, loadImport, saveImport, writeJsonAtomically } from "../src/lib/article-import/engine";
+import { persistFixture, executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
+import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { sha256, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 
@@ -60,7 +60,7 @@ test("later stages with missing or corrupted research return to research before 
         const research = await storeEvidence(root, record.importId, evidence);
         if (!missing) await writeFile(path.join(root, snapshotRef.path), "Corrupted source bytes");
         const current = await loadImport(root, record.importId);
-        await saveImport(root, { ...current, stage, resumeStage: "RESEARCHING", evidenceRefs: missing ? {} : { research, assessment: research, editorial: research, presentation: research },
+        await persistFixture(root, { ...current, stage, resumeStage: "RESEARCHING", evidenceRefs: missing ? {} : { research, assessment: research, editorial: research, presentation: research },
           repairStageTotals: { RESEARCHING: 2 },
           continuation: { kind: "repair", stage, failureFingerprint: "a".repeat(64), submittedFingerprint: "b".repeat(64), diagnosisRequired: false, requiredChange: "Old stage repair.", idempotencyKey: "c".repeat(64), sourceFingerprint: record.sourceFingerprint },
         });
@@ -85,7 +85,7 @@ test("research recovery preserves an outstanding diagnosis requirement", async (
   const { root, record } = await fixture();
   try {
     const current = await loadImport(root, record.importId);
-    await saveImport(root, { ...current, stage: "TRANSFORMING", repairStageTotals: { TRANSFORMING: 3 },
+    await persistFixture(root, { ...current, stage: "TRANSFORMING", repairStageTotals: { TRANSFORMING: 3 },
       continuation: { kind: "repair", stage: "TRANSFORMING", failureFingerprint: "a".repeat(64), submittedFingerprint: "b".repeat(64), diagnosisRequired: true, requiredChange: "Diagnose failed transform.", idempotencyKey: "c".repeat(64), sourceFingerprint: record.sourceFingerprint },
     });
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
@@ -108,7 +108,7 @@ test("research failure during an existing release preserves its journal and requ
       rollbackDeploymentId: "known-good", rollbackCommitSha: "b".repeat(40),
       operations: { merge: { reviewedHeadSha: "a".repeat(40), mergeCommitSha: "c".repeat(40) } },
     };
-    await saveImport(root, { ...current, stage: "RELEASING", pendingRelease });
+    await persistFixture(root, { ...current, stage: "RELEASING", pendingRelease });
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const blocked = await loadImport(root, record.importId);
     assert.equal(blocked.stage, "RELEASING");
@@ -134,7 +134,7 @@ test("failed material-claims assessment requires research even when the receipt 
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const current = await loadImport(root, record.importId);
     assert.equal(current.stage, "TRANSFORMING");
-    await saveImport(root, { ...current, stage: "TRANSFORMING",
+    await persistFixture(root, { ...current, stage: "TRANSFORMING",
       stageReceipts: [...current.stageReceipts, { stage: "TRANSFORMING", status: "failed", at: new Date().toISOString(), message: "WORKFLOW_EVIDENCE_INVALID: ASSESSMENT_RULE_FAILED:claims" }],
     });
     await executeImportCommand(root, { kind: "resume", importId: record.importId });

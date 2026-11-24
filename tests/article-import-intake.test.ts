@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { createIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker } from "../src/lib/article-import/intake";
+import { claimNextIntakeEntry, clearSharedIntakeBlocker, createIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker } from "../src/lib/article-import/intake";
 
 test("fixed snapshot resumes PROCESSING before later PENDING entries", async () => {
   await mkdir(path.join(process.cwd(), ".scratch"), { recursive: true });
@@ -30,8 +30,12 @@ test("missing editorial capability is a shared folder stop", async () => {
     await writeFile(path.join(root, "Article Intake", "a.md"), "# A\n\nA captured article.");
     await writeFile(path.join(root, "Article Intake", "b.md"), "# B\n\nB captured article.");
     const created = await createIntakeRun(root);
-    const blocked = await setIntakeBlocker(root, created, { scope: "shared", code: "EDITORIAL_CAPABILITY", stage: "REFINING", message: "Missing cleanse capability." });
+    const claimed = await claimNextIntakeEntry(root, created.runId);
+    assert.equal((await claimNextIntakeEntry(root, created.runId)).revision, claimed.revision);
+    const blocked = await setIntakeBlocker(root, claimed, { scope: "shared", code: "EDITORIAL_CAPABILITY", stage: "REFINING", message: "Missing cleanse capability." });
     assert.equal(nextIntakeEntry(blocked), undefined);
+    await assert.rejects(setIntakeBlocker(root, claimed, blocked.blocker!), /INTAKE_REVISION_CONFLICT/);
+    await assert.rejects(clearSharedIntakeBlocker(root, blocked, blocked.entries[1].relativePath, "other"), /INTAKE_BLOCKER_IMPORT_MISMATCH/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

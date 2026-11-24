@@ -1,3 +1,5 @@
+import { fixtureProbe, persistFixture, prepareCommandCheckout } from "./fixtures/article-command";
+import { recordArticlePresentation } from "../scripts/record-article-presentation";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
@@ -5,8 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
-import { assessImportRelease, recordImportCodeReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { verifyImportRelease, executePendingImport, claimImportLease, advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
+import { assessImportRelease as assessRelease, recordImportCodeReview as recordReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
 import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-set-deployment";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import { importPresentationValidationSchema, type ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
@@ -48,6 +50,16 @@ test("presentation validation fails closed without complete Impeccable evidence"
   assert.throws(() => importPresentationValidationSchema.parse({ ...base, pageDesign: { scope: "new_or_materially_changed_public_page", authority: { mode: "reused" }, impeccable: { context: true, shape: true, critique: true, audit: true, detect: true, polish: false }, specialists: { emilDesignEngineering: "not_applicable", mobileNative: "not_applicable", appleDesign: "not_applicable", pickUiLibrary: "not_applicable", askSonner: "not_applicable" }, notes: "Incomplete proof." } }));
 });
 
+async function assessImportRelease(input: Parameters<typeof assessRelease>[0]) {
+  if (input.execute) await prepareCommandCheckout(input.repositoryRoot);
+  return assessRelease(input, fixtureProbe(input.repositoryRoot));
+}
+
+async function recordImportCodeReview(...args: [string, ExternalArticleImportV1, unknown, Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">]) {
+  await prepareCommandCheckout(args[0]);
+  return recordReview(...args, fixtureProbe(args[0]));
+}
+
 async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), source);
@@ -62,7 +74,7 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   record = await advanceImport(root, record, "editorial complete");
   record = await presentFixture(root, record);
   record = await advanceImport(root, record, "presentation complete");
-  return { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } };
+  return persistFixture(root, { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } });
 }
 
 function operations(root: string, overrides: Partial<ReleaseOperations> = {}): ReleaseOperations {
@@ -152,6 +164,7 @@ async function blogReleasingRecord(root: string): Promise<{ record: ExternalArti
     record = await advanceImport(root, record, "stage complete");
   }
   record = { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } };
+  await persistFixture(root, record);
   return { record, post, artifactPath, changedFiles };
 }
 
@@ -233,7 +246,7 @@ test("rollback verification failure remains fail-closed", async () => {
 test("moving main waits for refresh instead of pushing a stale candidate", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
-    const record = { ...await releasingRecord(root), pendingRelease: undefined };
+    const record = await persistFixture(root, { ...await releasingRecord(root), pendingRelease: undefined });
     let committed = false;
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root, {
       refreshMain: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "b".repeat(40), originMainSha: "b".repeat(40), fastForwardable: true }),
@@ -348,9 +361,9 @@ test("direct-review binds slug, artifact path, and changed file exactly", async 
     const base = { repositoryRoot: root, record, execute: true, operations: operations(root) };
     const mismatch = await assessImportRelease({ ...base, slug: "other", artifactPath: "src/generated/landing-pages/example.json", changedFiles: releaseFiles });
     assert.match(mismatch.reasons.join(" "), /DIRECT_REVIEW_ARTIFACT_MISMATCH/);
-    const missing = await assessImportRelease({ ...base, slug: "example", artifactPath: "src/generated/landing-pages/example.json", changedFiles: ["src/generated/landing-pages/other.json"] });
+    const missing = await assessImportRelease({ ...base, record: await loadImport(root, record.importId), slug: "example", artifactPath: "src/generated/landing-pages/example.json", changedFiles: ["src/generated/landing-pages/other.json"] });
     assert.match(missing.reasons.join(" "), /DIRECT_REVIEW_ARTIFACT_NOT_CHANGED/);
-    const traversal = await assessImportRelease({ ...base, slug: "../example", artifactPath: "../src/generated/landing-pages/example.json", changedFiles: ["../src/generated/landing-pages/example.json"] });
+    const traversal = await assessImportRelease({ ...base, record: await loadImport(root, record.importId), slug: "../example", artifactPath: "../src/generated/landing-pages/example.json", changedFiles: ["../src/generated/landing-pages/example.json"] });
     assert.match(traversal.reasons.join(" "), /DIRECT_REVIEW_ARTIFACT_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -358,7 +371,7 @@ test("direct-review binds slug, artifact path, and changed file exactly", async 
 test("direct-review rejects a declared artifact absent from the inspected worktree", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
-    const record = { ...await releasingRecord(root), pendingRelease: undefined };
+    const record = await persistFixture(root, { ...await releasingRecord(root), pendingRelease: undefined });
     const result = await assessImportRelease({
       repositoryRoot: root,
       record,
@@ -678,7 +691,7 @@ test("presentation binds approved content and the released canonical route", asy
 test("first release creates a PR and waits without deploying or consuming retries", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-pr-"));
   try {
-    const record = { ...await releasingRecord(root), pendingRelease: undefined };
+    const record = await persistFixture(root, { ...await releasingRecord(root), pendingRelease: undefined });
     let deployed = false;
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root, { preparePullRequest: async (reviewedCommitSha) => ({ reviewedCommitSha, url: "https://github.com/example/repository/pull/1", branch: "codex/article-import/" + record.importId }), deploy: async () => { deployed = true; throw new Error("must wait"); } }) });
     assert.equal(result.status, "WAITING_EXTERNAL");
@@ -694,7 +707,7 @@ test("first release creates a PR and waits without deploying or consuming retrie
 test("PR creation failure resumes from the prepared commit without recommitting", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-prepared-"));
   try {
-    const record = { ...await releasingRecord(root), pendingRelease: undefined };
+    const record = await persistFixture(root, { ...await releasingRecord(root), pendingRelease: undefined });
     let commits = 0;
     const base = { repositoryRoot: root, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
     const interrupted = await assessImportRelease({ ...base, record, operations: operations(root, {
@@ -752,12 +765,10 @@ test("release requires a clean current-head review before automatic merge", asyn
   const root = await mkdtemp(path.join(os.tmpdir(), "article-code-review-"));
   try {
     const prepared = await releasingRecord(root);
-    const record = { ...prepared, pendingRelease: { ...prepared.pendingRelease!, codeReview: undefined } };
+    const record = await persistFixture(root, { ...prepared, pendingRelease: { ...prepared.pendingRelease!, codeReview: undefined } });
     const receipt = prepared.pendingRelease!.codeReview!;
     await assert.rejects(() => recordImportCodeReview(root, record, { ...receipt, pullRequestUrl: "https://github.com/example/repository/pull/2" }, operations(root)), /BINDING_MISMATCH/);
     await assert.rejects(() => recordImportCodeReview(root, record, receipt, operations(root, { inspectPullRequest: async () => ({ merged: false, headRefOid: "e".repeat(40) }) })), /HEAD_CHANGED/);
-    const reviewed = await recordImportCodeReview(root, record, receipt, operations(root));
-    assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
     let merged = false;
     const waiting = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root, {
       inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }),
@@ -765,7 +776,9 @@ test("release requires a clean current-head review before automatic merge", asyn
     }) });
     assert.equal(waiting.reasons[0], "CURRENT_HEAD_CODEX_REVIEW_REQUIRED");
     assert.equal(merged, false);
-    const base = { repositoryRoot: root, record: reviewed, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
+    const reviewed = await recordImportCodeReview(root, await loadImport(root, record.importId), receipt, operations(root));
+    assert.deepEqual((await loadImport(root, record.importId)).pendingRelease?.codeReview, receipt);
+    const base = { repositoryRoot: root, record: await resumeImport(root, reviewed), changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example" };
     const live = await assessImportRelease({ ...base, operations: operations(root, { inspectPullRequest: async () => ({ merged: false, headRefOid: "c".repeat(40) }) }) });
     assert.equal(live.status, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -913,7 +926,7 @@ test("release execution fails when the publication authority file is missing fro
 test("release execution fails when the publication authority file is absent from the inspected worktree", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-authority-worktree-"));
   try {
-    const record = { ...await releasingRecord(root), pendingRelease: undefined };
+    const record = await persistFixture(root, { ...await releasingRecord(root), pendingRelease: undefined });
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root, {
       inspectGit: async () => ({ clean: true, changedFiles: ["src/generated/landing-pages/example.json"], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     }) });
@@ -963,7 +976,7 @@ test("release execution fails when a decommercialized input would publish as a d
   const root = await mkdtemp(path.join(os.tmpdir(), "article-decommercialized-release-"));
   try {
     const base = await releasingRecord(root);
-    const record = { ...base, transformation: { ...base.transformation, commercialMode: "decommercialized" as const } };
+    const record = await persistFixture(root, { ...base, transformation: { ...base.transformation, commercialMode: "decommercialized" as const } });
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root) });
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("DECOMMERCIALIZED_INPUT_CANNOT_PUBLISH_DIRECT_REVIEW"));
@@ -974,7 +987,7 @@ test("release execution fails when a mode-none import would publish as a direct 
   const root = await mkdtemp(path.join(os.tmpdir(), "article-mode-none-release-"));
   try {
     const base = await releasingRecord(root);
-    const record = { ...base, transformation: { ...base.transformation, commercialMode: "none" as const, resolvedAffiliateUrl: undefined, submittedAffiliateUrl: undefined } };
+    const record = await persistFixture(root, { ...base, transformation: { ...base.transformation, commercialMode: "none" as const, resolvedAffiliateUrl: undefined, submittedAffiliateUrl: undefined } });
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root) });
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE"));
@@ -990,7 +1003,7 @@ test("release rebinds the affiliate receipt on the merged checkout before deploy
       repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example",
       operations: operations(root, {
         // After the reviewed head merged, another commit changed the receipt to a
-        // different globally allowlisted URL — the merged checkout must not deploy it.
+        // different globally allowlisted URL â€” the merged checkout must not deploy it.
         checkoutMergedCommit: async () => { await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://trymoo.moosend.com/michaelmedium" })); },
         deploy: async (commitSha) => { deployments += 1; return { deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
       }),
@@ -1075,7 +1088,7 @@ test("merged checkout rebinds blog publication authority before deploying", asyn
         inspectGit: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
         refreshMain: async () => ({ clean: true, changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
         // After review, a concurrent main change replaced the authority entry with
-        // different content under the approved slug — the merged checkout must not deploy it.
+        // different content under the approved slug â€” the merged checkout must not deploy it.
         checkoutMergedCommit: async () => {
           const posts = JSON.parse(await readFile(postsPath, "utf8")) as Array<Record<string, unknown>>;
           await writeFile(postsPath, JSON.stringify(posts.map((entry) => entry.slug === post.slug ? { ...entry, cyclePosition: post.cyclePosition === 1 ? 2 : 1 } : entry)));
@@ -1236,5 +1249,105 @@ test("release re-verifies the merged-checkout artefact fingerprint before deploy
     assert.equal(result.status, "REPAIRING");
     assert.ok(result.reasons.includes("RELEASE_RECEIPT_ARTIFACT_FINGERPRINT_MISMATCH"));
     assert.equal(deployments, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("late presentation preserves pending release, LIVE and quarantine records with their proof", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "orch02-journal-"));
+  try {
+    await prepareCommandCheckout(root);
+    const base = await releasingRecord(root);
+    const record = await persistFixture(root, { ...base, pendingRelease: {
+      ...base.pendingRelease!, operations: { review: { reviewedHeadSha: base.pendingRelease!.reviewedCommitSha, evidenceUrl: base.pendingRelease!.codeReview!.evidenceUrl } }, rollbackDeploymentId: "dpl-previous", rollbackCommitSha: "b".repeat(40),
+    } });
+    const probe = fixtureProbe(root);
+    async function rejectLate(id: string, stage: ExternalArticleImportV1["stage"]) {
+      const state = await loadImport(root, id);
+      assert.equal(state.stage, stage);
+      if (stage === "RELEASING") {
+        assert.equal(state.pendingRelease?.rollbackDeploymentId, "dpl-previous");
+        assert.ok(state.pendingRelease?.operations?.review);
+      }
+      else assert.ok(state.terminalRef);
+      const files = [
+        `.automation/article-imports/${id}.json`,
+        ...Object.values(state.evidenceRefs ?? {}).flatMap(ref => ref ? [ref.path] : []),
+        ...(state.terminalRef ? [state.terminalRef.path] : []),
+      ];
+      const snapshot = () => Promise.all(files.map(file => readFile(path.join(root, file))));
+      const before = await snapshot();
+      await assert.rejects(recordArticlePresentation(root, id, "unused.json", "unused.json", probe), /only be recorded during VALIDATING/);
+      assert.deepEqual(await snapshot(), before);
+    }
+    await rejectLate(record.importId, "RELEASING");
+    const rawSource = path.join(root, ".automation/article-imports", record.importId + ".source.md");
+    await rm(rawSource);
+    await mkdir(rawSource);
+    let rollbacks = 0;
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: record.contentApproval!.artifactPath, slug: "example", operations: operations(root, { rollback: async () => { rollbacks++; return { ok: true, summary: "unexpected rollback" }; } }) });
+    assert.equal(result.status, "LIVE", result.reasons.join(", "));
+    assert.equal(rollbacks, 0);
+    assert.ok(result.reasons.some(reason => reason.includes("unlink")));
+    assert.equal((await loadImport(root, record.importId)).sourceDeletedAt, undefined);
+    await rm(rawSource, { recursive: true });
+    const recovered = await executePendingImport(root, record.importId, async () => { throw Error("unexpected executor"); });
+    assert.ok(recovered.sourceDeletedAt);
+    await rejectLate(record.importId, "LIVE");
+    const terminalRecord = path.join(root, ".automation/article-imports", record.importId + ".json");
+    const terminalBytes = await readFile(terminalRecord);
+    let releaseCalls = 0;
+    const replayOps = operations(root, { preflight: async () => { releaseCalls++; throw Error("unexpected replay"); } });
+    await assert.rejects(assessImportRelease({ repositoryRoot: root, record: recovered, changedFiles: [], execute: true, operations: replayOps }), /IMPORT_ALREADY_TERMINAL/);
+    await assert.rejects(recordImportCodeReview(root, recovered, {}, replayOps), /IMPORT_ALREADY_TERMINAL/);
+    assert.equal(releaseCalls, 0);
+    assert.deepEqual(await readFile(terminalRecord), terminalBytes);
+    const verifying = await persistFixture(root, { ...recovered, stage: "VERIFYING", terminalRef: undefined, continuation: undefined, sourceDeletedAt: undefined });
+    await mkdir(rawSource);
+    await assert.rejects(executePendingImport(root, verifying.importId, ({ record }) => verifyImportRelease(root, record)), /unlink/);
+    const verified = await loadImport(root, verifying.importId);
+    assert.equal(verified.stage, "LIVE");
+    assert.equal(verified.continuation?.kind, "complete");
+    assert.ok(verified.terminalRef);
+    await writeFile(path.join(root, "empty.md"), "");
+    const empty = await createArticleImport(root, "empty.md");
+    await rejectLate(empty.importId, "QUARANTINED");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("dry-run preflight exception stays read-only while release execution is busy", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "orch02-inspection-"));
+  try {
+    const record = await releasingRecord(root);
+    const lease = await claimImportLease(root, record.importId);
+    assert.ok(lease);
+    try {
+      const stateFile = path.join(root, ".automation/article-imports", record.importId + ".json");
+      const before = await readFile(stateFile);
+      const adapter = operations(root, { preflight: async () => { throw Error("synthetic outage"); } });
+      const input = { repositoryRoot: root, record, changedFiles: releaseFiles, artifactPath: record.contentApproval!.artifactPath, slug: "example", operations: adapter };
+      await assert.rejects(assessImportRelease({ ...input, execute: true }), /IMPORT_LEASE_BUSY/);
+      const assessment = await assessImportRelease(input);
+      assert.equal(assessment.status, "DRY_RUN");
+      assert.ok(assessment.reasons.includes("synthetic outage"));
+      assert.deepEqual(await readFile(stateFile), before);
+      await lease.assertOwned();
+    } finally { await lease.release(); }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct execution services enforce checkout and capabilities before reading review or release state", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "orch02-service-preflight-"));
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), source);
+    const record = await createArticleImport(root, "article.md");
+    const ops = operations(root);
+    const before = await loadImport(root, record.importId);
+    const release = () => assessRelease({ repositoryRoot: root, record, changedFiles: [], execute: true, operations: ops }, fixtureProbe(root));
+    const review = () => recordReview(root, record, {}, ops, fixtureProbe(root));
+    for (const call of [release, review]) await assert.rejects(call, /PRIMARY_CHECKOUT_REQUIRED/);
+    await prepareCommandCheckout(root);
+    await writeFile(path.join(root, ".agents/skills/impeccable/SKILL.md"), "invalid");
+    for (const call of [release, review]) await assert.rejects(call, /CAPABILITY_UNAVAILABLE/);
+    assert.deepEqual(await loadImport(root, record.importId), before);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

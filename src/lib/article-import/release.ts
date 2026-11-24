@@ -1,8 +1,9 @@
+import { withArticleExecution, type CapabilityProbe } from "./preflight";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { ensureImportContentApproval, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease } from "./engine";
+import { ensureImportContentApproval, loadImport, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease, withRecordLease } from "./engine";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
 import { blogPostSchema, type BlogPost } from "../blog/contracts";
@@ -14,16 +15,19 @@ import { importCodeReviewSchema } from "./contracts";
 import { readProductionVerifierEvidence, type VerifierEvidenceRef } from "./verification-evidence";
 import { evaluateWorkflowEvidence } from "./workflow-evidence";
 
-export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">): Promise<ExternalArticleImportV1> {
-  const codeReview = importCodeReviewSchema.parse(receipt);
-  const pending = record.pendingRelease;
-  if (!pending?.pullRequestUrl || codeReview.pullRequestUrl !== pending.pullRequestUrl || codeReview.reviewedCommitSha !== pending.reviewedCommitSha) throw new Error("CODE_REVIEW_BINDING_MISMATCH");
-  const current = await operations.inspectPullRequest(pending.pullRequestUrl);
-  if (current.headRefOid !== codeReview.reviewedCommitSha) throw new Error("CODE_REVIEW_HEAD_CHANGED");
-  await operations.verifyCodeReview(codeReview.pullRequestUrl, codeReview.evidenceUrl, current.headRefOid);
-  const updated = { ...record, pendingRelease: { ...pending, codeReview, operations: { ...pending.operations, review: { reviewedHeadSha: codeReview.reviewedCommitSha, evidenceUrl: codeReview.evidenceUrl } } }, updatedAt: new Date().toISOString() };
-  await saveImport(repositoryRoot, updated);
-  return updated;
+export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">, probe?: CapabilityProbe): Promise<ExternalArticleImportV1> {
+  return withArticleExecution(repositoryRoot, () => withRecordLease(repositoryRoot, record, async (currentRecord) => {
+    if (currentRecord.stage === "LIVE" || currentRecord.stage === "QUARANTINED") throw new Error("IMPORT_ALREADY_TERMINAL");
+    const codeReview = importCodeReviewSchema.parse(receipt);
+    const pending = currentRecord.pendingRelease;
+    if (!pending?.pullRequestUrl || codeReview.pullRequestUrl !== pending.pullRequestUrl || codeReview.reviewedCommitSha !== pending.reviewedCommitSha) throw new Error("CODE_REVIEW_BINDING_MISMATCH");
+    const pr = await operations.inspectPullRequest(pending.pullRequestUrl);
+    if (pr.headRefOid !== codeReview.reviewedCommitSha) throw new Error("CODE_REVIEW_HEAD_CHANGED");
+    await operations.verifyCodeReview(codeReview.pullRequestUrl, codeReview.evidenceUrl, pr.headRefOid);
+    const updated = { ...currentRecord, pendingRelease: { ...pending, codeReview, operations: { ...pending.operations, review: { reviewedHeadSha: codeReview.reviewedCommitSha, evidenceUrl: codeReview.evidenceUrl } } }, updatedAt: new Date().toISOString() };
+    await saveImport(repositoryRoot, updated);
+    return updated;
+  }), probe);
 }
 
 export type FullProductionChecks = {
@@ -343,7 +347,7 @@ function failedRollback(previousId: string) {
   };
 }
 
-export async function assessImportRelease(input: {
+async function assessImportReleaseImpl(input: {
   repositoryRoot: string;
   record: ExternalArticleImportV1;
   changedFiles: readonly string[];
@@ -420,7 +424,7 @@ export async function assessImportRelease(input: {
     const preflight = await input.operations.preflight();
     if (!preflight.ok) reasons.push(...preflight.reasons);
     if (reasons.length || !input.execute) {
-      if (input.execute) await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: reasons.join("; ") });
+      if (input.execute && reasons.length) await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: reasons.join("; ") });
       return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
     }
 
@@ -597,7 +601,8 @@ export async function assessImportRelease(input: {
         restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
         if (restored) {
           pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, rollback: { deploymentId: previous.deploymentId, restoredCommitSha: previous.commitSha } } };
-          await saveImport(input.repositoryRoot, { ...input.record, pendingRelease });
+          input.record = { ...input.record, pendingRelease };
+          await saveImport(input.repositoryRoot, input.record);
         }
       } catch {
         restored = false;
@@ -612,11 +617,16 @@ export async function assessImportRelease(input: {
     input.record = { ...input.record, evidenceRefs: { ...input.record.evidenceRefs, production: productionVerifierRef } };
     const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, productionVerifierRef, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
     requireImportPresentationBinding(withReceipt);
+    input.record = withReceipt;
     const verified = await verifyImportRelease(input.repositoryRoot, withReceipt);
     if (verified.stage !== "LIVE") throw new Error("TERMINAL_PUBLICATION_UNVERIFIED");
     return { status: "LIVE", reasons: [], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    input.record = await loadImport(input.repositoryRoot, input.record.importId);
+    if (input.record.stage === "LIVE" && input.record.terminalRef && input.record.release) {
+      return { status: "LIVE", reasons: [message], previousDeploymentId: previous.deploymentId, deploymentId: input.record.release.deploymentId, canonicalUrl: input.record.release.canonicalUrl };
+    }
     if (!deploymentStarted) {
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "WAITING_EXTERNAL", reasons: [message] };
@@ -633,9 +643,21 @@ export async function assessImportRelease(input: {
   }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message });
+    if (!input.execute) return { status: "DRY_RUN", reasons: [message] };
+    const latest = await loadImport(input.repositoryRoot, input.record.importId);
+    await recordImportFailure(input.repositoryRoot, latest, { strategy: "release", classification: "transient", message });
     return { status: "WAITING_EXTERNAL", reasons: [message] };
   }
+}
+
+export async function assessImportRelease(input: Parameters<typeof assessImportReleaseImpl>[0], probe?: CapabilityProbe) {
+  if (input.execute) {
+    return withArticleExecution(input.repositoryRoot, () => withRecordLease(input.repositoryRoot, input.record, current => {
+      if (current.stage === "LIVE" || current.stage === "QUARANTINED") throw new Error("IMPORT_ALREADY_TERMINAL");
+      return assessImportReleaseImpl({ ...input, record: current });
+    }), probe);
+  }
+  return assessImportReleaseImpl(input);
 }
 
 export { COMMON_VALIDATION_COMMANDS };

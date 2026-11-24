@@ -1,3 +1,4 @@
+import { withArticleExecution } from "./preflight";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createArticleImport, executePendingImport, loadImport, saveImport, type ImportStageExecutor } from "./engine";
@@ -43,7 +44,11 @@ function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecut
   };
 }
 
-export async function dispatchArticleImport(
+export function dispatchArticleImport(repositoryRoot: string, importId: string, options?: DispatchOptions) {
+  return withArticleExecution(repositoryRoot, () => runImportSteps(repositoryRoot, importId, options));
+}
+
+async function runImportSteps(
   repositoryRoot: string,
   importId: string,
   options?: DispatchOptions,
@@ -76,7 +81,11 @@ function dispatchLimit(options?: DispatchOptions): number {
   return limit;
 }
 
-export async function dispatchIntakeRun(
+export function dispatchIntakeRun(repositoryRoot: string, runId: string, options?: DispatchOptions) {
+  return withArticleExecution(repositoryRoot, () => runIntakeSteps(repositoryRoot, runId, options));
+}
+
+async function runIntakeSteps(
   repositoryRoot: string,
   runId: string,
   options?: DispatchOptions,

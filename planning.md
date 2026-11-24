@@ -174,6 +174,20 @@ Classification: user directive (narrow corrective maintenance enabling existing 
 
 Scope: make content approval yield the parsed artifact for presentation and dev preview without a second artifact-file read; split pure historical-receipt allowlist decision from filesystem read; use named historical context in internal call graph while preserving legacy positional call orders. Owned files: src/lib/article-import/{content-approval,presentation,approved-article-preview,verification-evidence}.ts; optional adjacent pure historical receipt matcher; tests/approved-article-preview.test.ts, tests/article-content-approval.test.ts, tests/article-candidate-verification-regression.test.ts. Synthetic tests only; no private real article data in PR. Evidence: build-pack/repairs/approval-receipts-1124/verification.md.
 
+### Article mutation ownership (ORCH-02), 24 November 2026
+
+Owner directive. Implement ORCH-02 in the existing TypeScript controller. Use disposable articles for acceptance. The materialized packet is `ORCH-02-MUTATION-OWNERSHIP`.
+
+| Command | Checkout and capabilities | Ownership and acceptance |
+| --- | --- | --- |
+| Source start, intake start/resume, import resume, import and intake dispatch (command and callable paths) | Primary checkout and execution preflight | Bind source allocation, intake changes and import transitions to their respective leases. Resume reports contention. |
+| Record presentation | Primary checkout and execution preflight | Load under the import lease. Only VALIDATING accepts bound receipts. Race against resume in both orders and verify one accepted transition. Late submission preserves a pending journal, rollback target and terminal proof. |
+| Execute release or record exact-head review | Primary checkout and execution preflight on the release command | Hold the import lease across journal updates and external operations. A stale or competing writer cannot issue another effect. |
+| Upgrade evidence/intake, reconcile, retry, submit diagnosis, recover lease | Primary checkout and operation-specific evidence | Check ownership at each affected record. Explicit recovery requires verified owner exit. |
+| Describe workflow, preflight report, intake check/status, completion and release dry-run | Inspection | Read busy or historical records without writing, claiming ownership or initiating external release actions. |
+
+The verification covers the command and callable paths, including stale submissions, failed preflight, nested ownership and restart. For V2-06, exercise missing publication membership and declared-file mismatch independently, then run the required suites on the same revision.
+
 ### Validation slim corrections (VALIDATION-SLIM-1124) (registered 2026-11-24)
 
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).

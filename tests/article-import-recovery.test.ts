@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { executeImportCommand } from "../scripts/import-article";
+import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { advanceImport, claimImportLease, createArticleImport, executePendingImport, loadImport, recordImportRepair } from "../src/lib/article-import/engine";
 
 async function fixture() {
