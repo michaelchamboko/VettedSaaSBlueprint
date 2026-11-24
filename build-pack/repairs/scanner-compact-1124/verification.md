@@ -18,14 +18,14 @@ Baseline: 2b1e285dce188acba4cf6b8fbbb32eb64f790353. Node 24.22.3 and npm 12.0.2.
 - All 31 final focused tests passed in an independent parent run. Coverage includes candidate specialist ordering and exact scoped arguments, production flags, malformed JSON, spawn errors, durable reports, missing/stale reports, and fail-closed scope validation.
 - Actual scanner execution produced exactly matching normalized JSON reports before and after: 16 single-candidate reports and 16 production reports. Only duration_ms and started_at were excluded. See parity-summary.json for the digest and counts.
 - The parity probe deliberately stubbed the Stage 2 callback to isolate scanner output. It does not certify release eligibility.
-- A separate actual Stage 2 scanner gate, with core checks delegated using --ci-parallel-core, failed on the same baseline content findings: compliance (21 blockers, 27 findings), uniqueness (2 findings), and conversion copy (2 high-severity findings). This is a release blocker, not a passing gate.
+- A separate actual Stage 2 scanner gate, with core checks delegated using --ci-parallel-core, failed on the same baseline content findings: compliance (21 blockers, 27 findings), uniqueness (2 findings), and conversion copy (2 high-severity findings). This is a failing landing-content gate, preserved by the refactor. It does not certify any article for publication.
 - The candidate runner's existing acceptance of valid report JSON on nonzero exit is preserved and characterized; this refactor does not change that policy.
 
 ## Repository verification and release
 
 The required six-check profile is running independently: verify:agent-workflow, lint, typecheck, full npm test, build, and validate:public-site. Its completed outcome and current-head Codex review must be recorded in the PR before release. Worker-reported typecheck and focused-test success are not a substitute for parent verification.
 
-Merge and deployment remain blocked while required checks or the applicable Stage 2 gate fail. No production content findings have been waived, and no deployment is claimed.
+This task ships scanner infrastructure and does not trigger an article release. Stage 2 is invoked by run-landing-quality.mjs; the code deployment path in vercel.json runs validate:public-site and next build. The six required repository checks and current-head Codex review govern this code change. Existing landing-content findings remain intact and would still block the corresponding content-quality run. No production deployment is claimed here.
 
 ## Local evidence
 
