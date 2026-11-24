@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { access, mkdtemp, readFile, realpath, rm, writeFile, unlink } from "node:fs/promises";
 import { readImportArtifactTarget } from "./format-validation";
+import { researchRecoveryGeneration } from "./packet-binding";
 import { publicationAuthorityPaths } from "./release";
 import { publicationProposals, retainPublicationScope } from "./worker-publication";
 import { writeJsonAtomically } from "./engine";
@@ -63,12 +64,24 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
     allow("webfetch", "*"), allow("websearch", "*"),
   ];
   const definition = { mode: "primary", description: "Work on the attached article packet", permissions };
-  await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition } }), { flag: "wx" });
+  const editorial = packet.stage === "REFINING" && record.format !== "agent_review_required";
+  let mcp;
+  if (editorial || packet.stage === "TRANSFORMING") {
+    for (const operation of (editorial ? ["exchange", "check", "compare", "assess"] : ["assess"])) permissions.push(allow("editorial_" + operation, "*"));
+    const descriptor = path.join(cwd, "editorial-packet.json");
+    await writeFile(descriptor, JSON.stringify({ root: canonical, importId, key, format: record.format,
+      sourceFingerprint: packet.sourceFingerprint, requirementRevision: packet.requirementRevision,
+      executable: config.executable, model: config.model, research: record.evidenceRefs?.research, researchGeneration: researchRecoveryGeneration(record), stage: packet.stage }), { flag: "wx" });
+    mcp = { servers: { editorial: { type: "local", command: [process.execPath,
+      require.resolve("tsx/cli"), path.join(__dirname, "worker-editorial.ts"), descriptor],
+      cwd: canonical, codemode: false, pool: false, timeout: { execution: 180000 } } } };
+  }
+  await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition }, mcp }), { flag: "wx" });
   const proposalInstructions = (packet.stage === "REFINING" ? publicationProposals(importId, key, record.format) : [])
     .map(({ file, proposalPath }) => `For ${file}, place a one-article catalogue document in ${proposalPath}. The controller merges the matching entry.`).join(" ");
-  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} Follow resultSchema and use genuine evidence. Return only the bound result.`;
+  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} ${editorial ? "Use editorial_assess on the final artifact. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory and run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
   return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
-    "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? 300000,
+    "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? (editorial ? 1800000 : 300000),
     checkpoint: path.resolve(root, workPath + ".launch"),
     ownershipFile: workerOwnershipFile(root, importId, leaseToken) };
 }

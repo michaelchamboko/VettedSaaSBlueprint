@@ -2,7 +2,9 @@
 
 ## ORCH-01 closeout
 
-**Complete on the isolated branch.** Independent Codex review passed for implementation and tests at `49cf0a711c0ba5aed2ea2d6e9d81946c6778be97`, based on `3fde335921e49d60e5c0264cb0906833aec81ec4`. The completion decision uses local synthetic runs. Review stayed local because the repository runs Vercel checks on pull requests and this handover excludes deployment.
+**Reopened during release review.** GitHub PR #69 built successfully on Vercel preview. Its independent reviewer found that a fresh refinement worker could not produce the required editorial receipts. Production release is pending proof of the correction.
+
+**Previous local acceptance.** Independent Codex review passed for implementation and tests at `49cf0a711c0ba5aed2ea2d6e9d81946c6778be97`, based on `3fde335921e49d60e5c0264cb0906833aec81ec4`. The completion decision uses local synthetic runs. Review stayed local because the repository runs Vercel checks on pull requests and this handover excludes deployment.
 
 | Verification on the reviewed revision | Result |
 | --- | --- |
