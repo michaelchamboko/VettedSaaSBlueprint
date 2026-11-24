@@ -2,7 +2,11 @@
 
 ## ORCH-01 closeout
 
-**Reopened during release review.** GitHub PR #69 built successfully on Vercel preview. Its independent reviewer found that a fresh refinement worker could not produce the required editorial receipts. Production release is pending proof of the correction.
+The release record for ORCH-01 is [pull request 69](https://github.com/michaelchamboko/VettedSaaSBlueprint/pull/69). Its head reviews, merge and production receipt establish release status. The original preview exposed missing tools for editorial and presentation work. The correction gives the current packet scoped operations and keeps workflow transitions with the controller.
+
+The default dispatch model remains explicitly configured. The registered `assessmentModel` in `config/article-workflow-capabilities.json` selects the reviewer for assessment and design evidence. Set `ARTICLE_CANDIDATE_ORIGIN` to the running local candidate renderer for browser and format verification. Candidate verification requires a loopback origin. The release adapter handles production separately.
+
+The fresh editorial regression replays five passes and five judgments, runs the pinned checker and verifies the revised assessment. An independent native OpenCode 2.2.6 exercise reproduced the ten exchanges and passed the existing receipt validator with a loopback model. A separate synthetic exchange with the pinned Beam model produced a valid rewrite receipt.
 
 **Previous local acceptance.** Independent Codex review passed for implementation and tests at `49cf0a711c0ba5aed2ea2d6e9d81946c6778be97`, based on `3fde335921e49d60e5c0264cb0906833aec81ec4`. The completion decision uses local synthetic runs. Review stayed local because the repository runs Vercel checks on pull requests and this handover excludes deployment.
 

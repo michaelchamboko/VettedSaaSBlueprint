@@ -69,11 +69,11 @@ export async function verifyEvidenceRef(root: string, reference: EvidenceRef): P
 export async function storeEvidence(root: string, importId: string, value: unknown): Promise<EvidenceRef> {
   return storeEvidenceBytes(root, importId, Buffer.from(`${JSON.stringify(value, null, 2)}\n`));
 }
-async function storeEvidenceBytes(root: string, importId: string, bytes: Buffer): Promise<EvidenceRef> {
+export async function storeEvidenceBytes(root: string, importId: string, bytes: Buffer, extension: "png" | "json" = "json"): Promise<EvidenceRef> {
   if (!/^article-[0-9a-f-]{36}$/.test(importId)) throw new Error("EVIDENCE_IMPORT_ID_INVALID");
   if (bytes.length > MAX_EVIDENCE_BYTES) throw new Error("EVIDENCE_FILE_INVALID");
   const digest = sha256(bytes);
-  const relative = `.automation/article-imports/evidence/${importId}/${digest}.json`;
+  const relative = `.automation/article-imports/evidence/${importId}/${digest}.${extension}`;
   await mkdir(path.dirname(path.join(root, relative)), { recursive: true });
   const parent = await realpath(path.dirname(path.join(root, relative)));
   const base = await realpath(root);

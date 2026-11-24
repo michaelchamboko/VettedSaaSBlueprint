@@ -10,6 +10,7 @@ const run = promisify(execFile);
 const manifestSchema = z.object({
   schemaVersion: z.literal("ArticleWorkflowCapabilitiesV1"),
   openCodeVersion: openCodeVersionSchema,
+  assessmentModel: z.string().min(1).optional(),
   modelFamilies: z.record(z.string(), z.string().min(1)),
   files: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1),
 }).strict();

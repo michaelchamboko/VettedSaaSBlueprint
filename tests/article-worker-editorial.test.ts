@@ -75,7 +75,7 @@ test("fresh packet produces five independently replayable editorial passes and c
     before = "after.json";
   }
   assert.equal(exports, 10);
-  const assessed = await editorialOperation({...packet, research, model:"opencode-go/beam-free"},"assess",{artifact:"after.json",format:packet.format},native) as {path:string};
+  const assessed = await editorialOperation({...packet, research},"assess",{artifact:"after.json",format:packet.format},native) as {path:string};
   const saved = JSON.parse(await readFile(path.join(root,assessed.path),"utf8"));
   assert.equal(saved.artifactFingerprint, assessment.artifactFingerprint);
   await writeFile(path.join(base,"notes.json"),JSON.stringify(fullRewriteNotes));

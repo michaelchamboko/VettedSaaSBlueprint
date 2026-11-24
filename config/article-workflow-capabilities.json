@@ -1,6 +1,7 @@
 {
   "schemaVersion": "ArticleWorkflowCapabilitiesV1",
   "openCodeVersion": "2.2.6",
+  "assessmentModel": "opencode-go/beam-free",
   "modelFamilies": {
     "opencode-go/beam-free": "reflection-beam"
   },

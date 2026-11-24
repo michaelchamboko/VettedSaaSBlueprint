@@ -66,11 +66,13 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   const definition = { mode: "primary", description: "Work on the attached article packet", permissions };
   const editorial = packet.stage === "REFINING" && record.format !== "agent_review_required";
   let mcp;
-  if (editorial || packet.stage === "TRANSFORMING") {
-    for (const operation of (editorial ? ["exchange", "check", "compare", "assess"] : ["assess"])) permissions.push(allow("editorial_" + operation, "*"));
+  const validating = packet.stage === "VALIDATING";
+  if (validating || editorial || packet.stage === "TRANSFORMING") {
+    for (const operation of (validating ? ["present"] : editorial ? ["exchange", "check", "compare", "assess"] : ["assess"])) permissions.push(allow("editorial_" + operation, "*"));
     const descriptor = path.join(cwd, "editorial-packet.json");
     await writeFile(descriptor, JSON.stringify({ root: canonical, importId, key, format: record.format,
       sourceFingerprint: packet.sourceFingerprint, requirementRevision: packet.requirementRevision,
+      artifactPath: record.contentApproval?.artifactPath, approvedFingerprint: record.contentApproval?.artifactFingerprint, rendering: (packet.renderingInputs as {reference?: unknown} | undefined)?.reference,
       executable: config.executable, model: config.model, research: record.evidenceRefs?.research, researchGeneration: researchRecoveryGeneration(record), stage: packet.stage }), { flag: "wx" });
     mcp = { servers: { editorial: { type: "local", command: [process.execPath,
       require.resolve("tsx/cli"), path.join(__dirname, "worker-editorial.ts"), descriptor],
@@ -79,9 +81,9 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition }, mcp }), { flag: "wx" });
   const proposalInstructions = (packet.stage === "REFINING" ? publicationProposals(importId, key, record.format) : [])
     .map(({ file, proposalPath }) => `For ${file}, place a one-article catalogue document in ${proposalPath}. The controller merges the matching entry.`).join(" ");
-  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} ${editorial ? "Use editorial_assess on the final artifact. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory and run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
+  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} ${editorial ? "Use editorial_assess on the final artifact. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : validating ? "Use editorial_present for each required design, detector, desktop, mobile and reduced-motion rule, and owner-verifier for the validation receipt. Bind WorkflowEvidenceV1 to the packet rendering reference, approved artifact, editorial and assessment predecessors. Use only actual successful executions." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory and run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
   return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
-    "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? (editorial ? 1800000 : 300000),
+    "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? (editorial || validating ? 1800000 : 300000),
     checkpoint: path.resolve(root, workPath + ".launch"),
     ownershipFile: workerOwnershipFile(root, importId, leaseToken) };
 }

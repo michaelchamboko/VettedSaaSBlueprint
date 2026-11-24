@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { presentationTool, presentationOperation } from "./worker-presentation";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact } from "../editorial/refinement";
 import { contentAssessmentReviewInput, contentAssessmentSchema, validateContentAssessment, validateResearchEvidence, editorialExecutionSchema, editorialPassReviewInput, editorialJudgmentReviewInput } from "./workflow-evidence";
 import { readEvidenceBytes, evidenceRefSchema, evidenceReference, extractOpenCodeExecution, proseProjectionDigest, storeEvidence } from "./execution-evidence";
@@ -12,9 +13,9 @@ import { workflowRequirements } from "./workflow-requirements";
 import { normalizeOpenCodeVersion, openCodeExportArgs } from "./opencode-runtime";
 
 const formats = { blog: "blog", visibility: "visibility", "direct-review": "landing", "decision-set": "decision" } as const;
-const descriptor = z.object({ root: z.string(), importId: z.string().regex(/^article-[a-f0-9-]{36}$/), key: z.string().regex(/^[a-f0-9]{64}$/),
-  format: z.enum(["blog", "visibility", "direct-review", "decision-set", "agent_review_required"]), stage: z.enum(["TRANSFORMING", "REFINING"]), model: z.string(), research: evidenceRefSchema.optional(), researchGeneration: z.number().int().optional(), sourceFingerprint: z.string(), requirementRevision: z.string(), executable: z.string() }).strict();
-type Packet = z.infer<typeof descriptor>;
+export const descriptor = z.object({ root: z.string(), importId: z.string().regex(/^article-[a-f0-9-]{36}$/), key: z.string().regex(/^[a-f0-9]{64}$/),
+  format: z.enum(["blog", "visibility", "direct-review", "decision-set", "agent_review_required"]), stage: z.enum(["TRANSFORMING", "REFINING", "VALIDATING"]), model: z.string(), research: evidenceRefSchema.optional(), researchGeneration: z.number().int().optional(), artifactPath: z.string().optional(), approvedFingerprint: z.string().optional(), rendering: evidenceRefSchema.optional(), sourceFingerprint: z.string(), requirementRevision: z.string(), executable: z.string() }).strict();
+export type Packet = z.infer<typeof descriptor>;
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "beamReview", "finalFidelityReview"] as const;
 const file = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}\.json$/);
 const check = z.object({ artifact: file }).strict();
@@ -22,12 +23,13 @@ const exchange = z.object({ pass: z.enum(passes), before: file, after: file.opti
 const compare = z.object({ before: file, after: file, notes: file, manifest: file }).strict();
 const assess = z.object({ artifact: file, format: z.enum(["blog", "visibility", "direct-review", "decision-set"]) }).strict();
 const descriptions = {
+  present: "Run one validation rule or the format owner verifier on the controller-bound candidate. Returns references for the presentation packet.",
   assess: "Independently assess the complete packet editorial artifact against its bound research and workflow requirements. Returns the validated assessment reference.",
   check: "Run the pinned checker on a packet editorial JSON artifact.",
   exchange: "With before only, run a dedicated pass and return its prose projection and executionRef. With before and after, run a distinct judgment and return its judgmentRef. Returns pinned instructionRefs and artifact refs for the manifest.",
   compare: "Validate before, after, notes and EditorialExecutionV1 manifest and return the receipts. All filenames are in the packet editorial directory.",
 };
-const schemas = { check, exchange, compare, assess };
+const schemas = { check, exchange, compare, assess, present: presentationTool };
 function run(executable: string, args: string[], cwd: string, stdin?: string) {
   return new Promise<string>((resolve, reject) => {
     const child = execFile(executable, args, { cwd, encoding: "utf8", windowsHide: true, timeout: 150000, maxBuffer: 16 * 1024 * 1024,
@@ -77,6 +79,11 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
     return relative.replaceAll("\\", "/");
   };
   const json = async (name: string) => JSON.parse((await readEvidenceBytes(root, await scoped(name))).toString("utf8"));
+  if (packet.stage === "VALIDATING") {
+    if (name !== "present") throw new Error("PRESENTATION_TOOL_REQUIRED");
+    return presentationOperation(packet, presentationTool.parse(args), async (pass, prose, refs, instructions, prompt, model) =>
+      capturedExchange(packet, pass, prose, refs, instructions, prompt, model, invoke));
+  }
   if (name === "assess") {
     const input = assess.parse(args);
     if (!packet.research || (packet.stage === "REFINING" && input.format !== packet.format)) throw new Error("ASSESSMENT_PACKET_BINDING");
@@ -90,7 +97,10 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
       sourceFingerprint:packet.sourceFingerprint,requirementRevision:packet.requirementRevision,researchRef:packet.research};
     const shape = contentAssessmentSchema.omit({id:true, createdAt:true, importId:true, schemaVersion:true, reviewerExecutionRef:true});
     const prompt = "Assess every claim and rule independently. Return only a JSON object with a single string field assessment containing JSON in this order: format, schemaRevision, artifactFingerprint, sourceFingerprint, requirementRevision, researchRef, intent, claimCoverage, ruleResults, findings. Use these identity fields, rules, and output schema: " + JSON.stringify({identity, rules:workflowRequirements, schema:z.toJSONSchema(shape)});
-    const {output, executionRef} = await capturedExchange(packet, "content-assessment", prose, [await evidenceReference(root,artifactPath),packet.research], [], prompt, packet.model, invoke);
+    const capabilities = JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8"));
+    const reviewer = capabilities.assessmentModel ?? packet.model;
+    if (!Object.hasOwn(capabilities.modelFamilies, reviewer)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered assessmentModel");
+    const {output, executionRef} = await capturedExchange(packet, "content-assessment", prose, [await evidenceReference(root,artifactPath),packet.research], [], prompt, reviewer, invoke);
     const assessmentRef = await storeEvidence(root, importId, {...shape.parse(JSON.parse(output.assessment)), schemaVersion:"ContentAssessmentV1", id:crypto.randomUUID(), createdAt:new Date().toISOString(), importId, reviewerExecutionRef: executionRef});
     await validateContentAssessment(root, assessmentRef, binding);
     return assessmentRef;
@@ -159,7 +169,7 @@ async function main() {
     let result, error;
     if (message.method === "initialize") result = { protocolVersion: message.params.protocolVersion, capabilities: { tools: {} }, serverInfo: {name: "editorial", version: "1"} };
     else if (message.method === "ping") result = {};
-    else if (message.method === "tools/list") result = { tools: Object.entries(schemas).filter(([name]) => packet.stage === "REFINING" || name === "assess").map(([name,schema]) => ({name, description: descriptions[name as keyof typeof descriptions], inputSchema: z.toJSONSchema(schema)})) };
+    else if (message.method === "tools/list") result = { tools: Object.entries(schemas).filter(([name]) => packet.stage === "VALIDATING" ? name === "present" : name !== "present" && (packet.stage === "REFINING" || name === "assess")).map(([name,schema]) => ({name, description: descriptions[name as keyof typeof descriptions], inputSchema: z.toJSONSchema(schema)})) };
     else if (message.method === "tools/call") {
       try { result = { content: [{type: "text", text: JSON.stringify(await editorialOperation(packet, message.params.name, message.params.arguments))}] }; }
       catch (cause) { result = { isError: true, content: [{type: "text", text: cause instanceof Error ? cause.message : "EDITORIAL_TOOL_FAILED"}] }; }
