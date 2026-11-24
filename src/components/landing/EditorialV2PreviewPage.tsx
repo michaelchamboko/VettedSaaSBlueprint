@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LegalTrustLinks } from "./LegalTrustLinks";
 
 import type { EditorialV2Preview } from "@/lib/generated/editorial-v2-previews";
 
@@ -128,13 +129,7 @@ export function EditorialV2PreviewPage({ preview }: { preview: EditorialV2Previe
             <p className="landing-editorial-v2__eyebrow">Disclosure</p>
             <p className="landing-editorial-v2__full-disclosure">{preview.full_disclosure}</p>
           </div>
-          <nav className="landing-editorial-v2__footer-links" aria-label="Legal and trust links">
-            <Link href="/affiliate-disclosure">Affiliate disclosure</Link>
-            <Link href="/editorial-policy">Editorial policy</Link>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/contact">Contact</Link>
-          </nav>
+          <LegalTrustLinks className="landing-editorial-v2__footer-links" />
         </footer>
       </div>
     </main>

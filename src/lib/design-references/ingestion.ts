@@ -33,6 +33,18 @@ const defaultFileSystem: CompleteReferenceIngestionFileSystem = {
   unlink,
   rmdir,
 };
+function resolveReferenceFileSystem(fileSystem?: ReferenceIngestionFileSystem): CompleteReferenceIngestionFileSystem {
+  return {
+    lstat: fileSystem?.lstat ?? defaultFileSystem.lstat,
+    realpath: fileSystem?.realpath ?? defaultFileSystem.realpath,
+    mkdir: fileSystem?.mkdir ?? defaultFileSystem.mkdir,
+    writeFile: fileSystem?.writeFile ?? defaultFileSystem.writeFile,
+    readFile: fileSystem?.readFile ?? defaultFileSystem.readFile,
+    unlink: fileSystem?.unlink ?? defaultFileSystem.unlink,
+    rmdir: fileSystem?.rmdir ?? defaultFileSystem.rmdir,
+  };
+}
+
 const digest = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
 
 function inside(root: string, target: string) {
@@ -172,15 +184,7 @@ export async function replaceDesignReference(input: {
   mobileCapture: Buffer;
   fileSystem?: ReferenceIngestionFileSystem;
 }) {
-  const fs: CompleteReferenceIngestionFileSystem = {
-    lstat: input.fileSystem?.lstat ?? defaultFileSystem.lstat,
-    realpath: input.fileSystem?.realpath ?? defaultFileSystem.realpath,
-    mkdir: input.fileSystem?.mkdir ?? defaultFileSystem.mkdir,
-    writeFile: input.fileSystem?.writeFile ?? defaultFileSystem.writeFile,
-    readFile: input.fileSystem?.readFile ?? defaultFileSystem.readFile,
-    unlink: input.fileSystem?.unlink ?? defaultFileSystem.unlink,
-    rmdir: input.fileSystem?.rmdir ?? defaultFileSystem.rmdir,
-  };
+  const fs = resolveReferenceFileSystem(input.fileSystem);
   const catalogueDir = path.resolve(input.catalogueDirectory);
   const resolvedRoot = await fs.realpath(catalogueDir);
   const cataloguePath = path.join(catalogueDir, "catalogue.json");

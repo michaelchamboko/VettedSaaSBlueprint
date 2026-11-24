@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
+import { fetchDiscoveryFiles } from "./lib/fetch-discovery-files";
 import path from "node:path";
 
 import { chromium } from "@playwright/test";
@@ -136,11 +137,7 @@ async function main() {
     if (approved && JSON.stringify(set) !== JSON.stringify(decisionSetV2Schema.parse(approved.artifact))) throw new Error("DECISION_PUBLISHED_ARTIFACT_MISMATCH");
     targets = Object.fromEntries(Object.values(set.pages).map((page) => [page.canonicalPath, page]));
   }
-  const [robots, sitemap] = await Promise.all(["robots.txt", "sitemap.xml"].map(async (file) => {
-    const response = await fetch(`${origin}/${file}`);
-    if (!response.ok) throw new Error(`${file}: HTTP ${response.status}`);
-    return response.text();
-  }));
+  const { robots, sitemap } = await fetchDiscoveryFiles(origin);
   const robotsOk = !/^Disallow:\s*\/\s*$/im.test(robots);
   const sitemapOk = Object.keys(targets).every((route) => sitemap.includes(`${canonicalOrigin}${route}`));
   const output = path.resolve(argument("--screenshot-dir") ?? path.join(".release-evidence", "decision-sets"));

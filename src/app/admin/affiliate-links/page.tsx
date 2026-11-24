@@ -1,14 +1,17 @@
+import { AdminFormPage } from "@/components/admin/AdminFormPage";
+
 export default function AffiliateLinksPage() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
-      <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold">Affiliate Link Vault</h1>
-        <p className="mt-3 text-sm text-slate-300">
-          Store the original approved referral URL separately from the destination URL and preserve the link provenance.
-        </p>
-      </header>
-
-      <section className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+    <AdminFormPage
+      title="Affiliate Link Vault"
+      description="Store the original approved referral URL separately from the destination URL and preserve the link provenance."
+      asideTitle="Vault rules"
+      asideItems={[
+        "Only approved original referral URLs are accepted (PartnerStack, psref, or Flowith).",
+        "Destination URLs stay separate so the source referral remains auditable.",
+        "Changes should create review or audit records for traceability.",
+      ]}
+    >
         <form className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6" method="post" action="/api/admin/affiliate-links">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm block">
@@ -49,13 +52,6 @@ export default function AffiliateLinksPage() {
           </button>
         </form>
 
-          <aside className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-300">
-            <h2 className="text-lg font-medium text-white">Vault rules</h2>
-            <p>Only approved original referral URLs are accepted (PartnerStack, psref, or Flowith).</p>
-            <p>Destination URLs stay separate so the source referral remains auditable.</p>
-            <p>Changes should create review or audit records for traceability.</p>
-          </aside>
-      </section>
-    </main>
+    </AdminFormPage>
   );
 }

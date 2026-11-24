@@ -1,6 +1,6 @@
 import { sql } from "@/lib/db";
 import { auditAdminAction } from "@/lib/auth/audit";
-import { requireOwnerSession } from "@/lib/auth/session";
+import { ownerSessionOrUnauthorized } from "@/lib/auth/owner-session-response";
 import { productSchema } from "@/lib/schemas/contracts";
 
 function parseList(value: FormDataEntryValue | null) {
@@ -15,13 +15,15 @@ function toJsonArray(values: string[]) {
 }
 
 export async function GET(request: Request) {
-  if (!(await requireOwnerSession(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = await ownerSessionOrUnauthorized(request);
+  if (unauthorized) return unauthorized;
   const { rows } = await sql`select * from products order by created_at desc limit 100`;
   return Response.json({ products: rows });
 }
 
 export async function POST(request: Request) {
-  if (!(await requireOwnerSession(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = await ownerSessionOrUnauthorized(request);
+  if (unauthorized) return unauthorized;
   const form = await request.formData();
   const input = productSchema.parse({
     name: String(form.get("name") ?? ""),

@@ -37,6 +37,23 @@ export type PageRunSnapshot = {
 
 export type LandingAutomationRunSnapshot = ReconciliationRunSnapshot | PageRunSnapshot;
 
+export type ReleaseRequestPayload = {
+  authorization:
+    | { mode: "allowlist_unattended"; parentRunId: string }
+    | { mode: "manual_owner"; publicationAuditId: string };
+  wave: "exemplar" | "calibration" | "steady_state" | "manual_exception";
+  waveSequence: number;
+  authoringHeadSha: string;
+  authoringMergeSha: string;
+  authoringArtifactDigest: string;
+  items: Array<{
+    pageRunId: string | null;
+    pageVersionId: string;
+    gateReceiptId: string;
+    blueprintId: string;
+  }>;
+};
+
 export type LandingAutomationRepository = {
   reconcileAllowlist(input: {
     allowlistSourceCommitSha: string;
@@ -70,22 +87,7 @@ export type LandingAutomationRepository = {
     status: "pass" | "blocked" | "fail";
     receipt: Record<string, unknown>;
   }): Promise<{ gateReceiptId: string }>;
-  createReleaseRequest(input: {
-    authorization:
-      | { mode: "allowlist_unattended"; parentRunId: string }
-      | { mode: "manual_owner"; publicationAuditId: string };
-    wave: "exemplar" | "calibration" | "steady_state" | "manual_exception";
-    waveSequence: number;
-    authoringHeadSha: string;
-    authoringMergeSha: string;
-    authoringArtifactDigest: string;
-    items: Array<{
-      pageRunId: string | null;
-      pageVersionId: string;
-      gateReceiptId: string;
-      blueprintId: string;
-    }>;
-  }): Promise<{ releaseRequestId: string; created: boolean }>;
+  createReleaseRequest(input: ReleaseRequestPayload): Promise<{ releaseRequestId: string; created: boolean }>;
   getRunSnapshot(runId: string): Promise<LandingAutomationRunSnapshot | null>;
 };
 
@@ -136,23 +138,7 @@ type GateReceiptRecord = {
   receipt: Record<string, unknown>;
 };
 
-type ReleaseRequestRecord = {
-  releaseRequestId: string;
-  authorization:
-    | { mode: "allowlist_unattended"; parentRunId: string }
-    | { mode: "manual_owner"; publicationAuditId: string };
-  wave: "exemplar" | "calibration" | "steady_state" | "manual_exception";
-  waveSequence: number;
-  authoringHeadSha: string;
-  authoringMergeSha: string;
-  authoringArtifactDigest: string;
-  items: Array<{
-    pageRunId: string | null;
-    pageVersionId: string;
-    gateReceiptId: string;
-    blueprintId: string;
-  }>;
-};
+type ReleaseRequestRecord = { releaseRequestId: string } & ReleaseRequestPayload;
 
 function formatDate(date: Date): string {
   return date.toISOString();
@@ -522,22 +508,7 @@ export function createLandingAutomationRepository(
     return { gateReceiptId };
   };
 
-  const createReleaseRequest = async (input: {
-    authorization:
-      | { mode: "allowlist_unattended"; parentRunId: string }
-      | { mode: "manual_owner"; publicationAuditId: string };
-    wave: "exemplar" | "calibration" | "steady_state" | "manual_exception";
-    waveSequence: number;
-    authoringHeadSha: string;
-    authoringMergeSha: string;
-    authoringArtifactDigest: string;
-    items: Array<{
-      pageRunId: string | null;
-      pageVersionId: string;
-      gateReceiptId: string;
-      blueprintId: string;
-    }>;
-  }) => {
+  const createReleaseRequest = async (input: ReleaseRequestPayload) => {
     const authorizationId =
       input.authorization.mode === "allowlist_unattended"
         ? input.authorization.parentRunId

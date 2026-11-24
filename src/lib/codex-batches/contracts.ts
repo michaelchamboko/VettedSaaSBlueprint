@@ -271,14 +271,36 @@ function isAllowedConversionPassAction(action: string): boolean {
   return action === "pass";
 }
 
-export const codexUniquenessReviewSchema = z.object({
-  schema_version: z.union([z.literal(1), z.string().min(1)]),
+const uniquenessReviewCommonFields = {
   status: z.enum(["pass", "fail"]),
   publish_readiness: z.enum(["blocked", "eligible_for_next_gate"]),
   reason_codes: z.array(z.string()),
   hard_gate_failures: z.array(z.unknown()),
   required_changes: z.array(z.unknown()),
   recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_intent_brief", "merge_into_existing", "noindex_draft", "reject"]),
+};
+
+const complianceReviewCommonFields = {
+  status: z.enum(["pass", "fail"]),
+  publish_readiness: z.enum(["blocked", "eligible_for_conversion_review"]),
+  reason_codes: z.array(z.string()),
+  hard_gate_failures: z.array(z.unknown()),
+  required_changes: z.array(z.unknown()),
+  recommended_action: z.enum(["pass", "revise_copy", "resolve_external_records", "return_to_drafter", "reject", "static_renderer_fix_required"]),
+};
+
+const conversionReviewCommonFields = {
+  status: z.enum(["pass", "fail", "blocked"]),
+  publish_readiness: z.enum(["blocked", "eligible_for_release"]),
+  reason_codes: z.array(z.string()),
+  hard_gate_failures: z.array(z.unknown()),
+  required_rewrites: z.array(z.unknown()),
+  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review"]),
+};
+
+export const codexUniquenessReviewSchema = z.object({
+  schema_version: z.union([z.literal(1), z.string().min(1)]),
+  ...uniquenessReviewCommonFields,
 }).passthrough().superRefine((report, context) => {
   if (report.status === "pass") {
     if (report.publish_readiness !== "eligible_for_next_gate") {
@@ -300,12 +322,7 @@ export const codexUniquenessReviewSchema = z.object({
 
 export const codexComplianceReviewSchema = z.object({
   schema_version: z.union([z.literal(1), z.string().min(1)]),
-  status: z.enum(["pass", "fail"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_conversion_review"]),
-  reason_codes: z.array(z.string()),
-  hard_gate_failures: z.array(z.unknown()),
-  required_changes: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "revise_copy", "resolve_external_records", "return_to_drafter", "reject", "static_renderer_fix_required"]),
+  ...complianceReviewCommonFields,
 }).passthrough().superRefine((report, context) => {
   if (report.status === "pass") {
     if (report.publish_readiness !== "eligible_for_conversion_review") {
@@ -327,12 +344,7 @@ export const codexComplianceReviewSchema = z.object({
 
 export const codexConversionReviewSchema = z.object({
   schema_version: z.union([z.literal(1), z.string().min(1)]),
-  status: z.enum(["pass", "fail", "blocked"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_release"]),
-  reason_codes: z.array(z.string()),
-  hard_gate_failures: z.array(z.unknown()),
-  required_rewrites: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review"]),
+  ...conversionReviewCommonFields,
 }).passthrough().superRefine((report, context) => {
   if (report.status === "pass") {
     if (report.publish_readiness !== "eligible_for_release") {
@@ -378,12 +390,7 @@ export const codexDesignTraceV2Schema = z.object({
 
 export const codexUniquenessReviewV2Schema = z.object({
   schema_version: z.literal("codexUniquenessReviewV2"),
-  status: z.enum(["pass", "fail"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_next_gate"]),
-  reason_codes: z.array(z.string()),
-  hard_gate_failures: z.array(z.unknown()),
-  required_changes: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_intent_brief", "merge_into_existing", "noindex_draft", "reject"]),
+  ...uniquenessReviewCommonFields,
   design_trace: codexDesignTraceV2Schema,
 }).strict().superRefine((report, context) => {
   if (report.status === "pass") {
@@ -396,12 +403,7 @@ export const codexUniquenessReviewV2Schema = z.object({
 
 export const codexComplianceReviewV2Schema = z.object({
   schema_version: z.literal("codexComplianceReviewV2"),
-  status: z.enum(["pass", "fail"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_conversion_review"]),
-  reason_codes: z.array(z.string()),
-  hard_gate_failures: z.array(z.unknown()),
-  required_changes: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "revise_copy", "resolve_external_records", "return_to_drafter", "reject", "static_renderer_fix_required"]),
+  ...complianceReviewCommonFields,
   design_trace: codexDesignTraceV2Schema,
 }).strict().superRefine((report, context) => {
   if (report.status === "pass") {
@@ -414,12 +416,7 @@ export const codexComplianceReviewV2Schema = z.object({
 
 export const codexConversionReviewV2Schema = z.object({
   schema_version: z.literal("codexConversionReviewV2"),
-  status: z.enum(["pass", "fail", "blocked"]),
-  publish_readiness: z.enum(["blocked", "eligible_for_release"]),
-  reason_codes: z.array(z.string()),
-  hard_gate_failures: z.array(z.unknown()),
-  required_rewrites: z.array(z.unknown()),
-  recommended_action: z.enum(["pass", "rewrite_visible_fields", "return_to_drafter", "return_to_intent_brief", "return_to_uniqueness_review", "return_to_compliance_review", "resolve_destination_review"]),
+  ...conversionReviewCommonFields,
   design_trace: codexDesignTraceV2Schema,
 }).strict().superRefine((report, context) => {
   if (report.status === "pass") {
@@ -672,8 +669,7 @@ export const codexBatchPageV2Schema = codexBatchPageSchema.extend({
   gate_statuses: codexBatchPageSchema.shape.gate_statuses.extend({ visual: codexGateStatusSchema }).strict(),
 }).strict();
 
-export const codexLandingBatchV1Schema = z.object({
-  schema_version: z.literal("CodexLandingBatchV1"),
+const landingBatchCommonFields = {
   batch_id: codexUuidSchema,
   product_id: codexUuidSchema,
   batch_type: z.enum(["exemplar", "calibration", "production_candidate"]),
@@ -681,10 +677,15 @@ export const codexLandingBatchV1Schema = z.object({
   created_at: z.string().datetime({ offset: true }),
   product_pack: artifactReferenceSchema,
   progression: z.discriminatedUnion("stage", [exemplarProgressionSchema, calibrationProgressionSchema, productionProgressionSchema]),
-  pages: z.array(codexBatchPageSchema).min(1).max(10),
   quality: artifactReferenceSchema,
   retro: artifactReferenceSchema.extend({ gate_status: codexGateStatusSchema }).strict(),
   timing: artifactReferenceSchema,
+};
+
+export const codexLandingBatchV1Schema = z.object({
+  schema_version: z.literal("CodexLandingBatchV1"),
+  ...landingBatchCommonFields,
+  pages: z.array(codexBatchPageSchema).min(1).max(10),
 }).strict().superRefine((manifest, context) => {
   if (manifest.progression.stage !== manifest.batch_type) {
     context.addIssue({ code: "custom", path: ["progression"], message: "Batch type and progression stage must match." });
@@ -708,17 +709,8 @@ export const codexLandingBatchV1Schema = z.object({
 
 export const codexLandingBatchV2Schema = z.object({
   schema_version: z.literal("CodexLandingBatchV2"),
-  batch_id: codexUuidSchema,
-  product_id: codexUuidSchema,
-  batch_type: z.enum(["exemplar", "calibration", "production_candidate"]),
-  git_commit_sha: gitCommitShaSchema,
-  created_at: z.string().datetime({ offset: true }),
-  product_pack: artifactReferenceSchema,
-  progression: z.discriminatedUnion("stage", [exemplarProgressionSchema, calibrationProgressionSchema, productionProgressionSchema]),
+  ...landingBatchCommonFields,
   pages: z.array(codexBatchPageV2Schema).min(1).max(10),
-  quality: artifactReferenceSchema,
-  retro: artifactReferenceSchema.extend({ gate_status: codexGateStatusSchema }).strict(),
-  timing: artifactReferenceSchema,
 }).strict().superRefine((manifest, context) => {
   if (manifest.progression.stage !== manifest.batch_type) context.addIssue({ code: "custom", path: ["progression"], message: "Batch type and progression stage must match." });
   if (manifest.batch_type === "exemplar" && manifest.pages.length !== 1) context.addIssue({ code: "custom", path: ["pages"], message: "An exemplar batch must contain exactly one candidate." });

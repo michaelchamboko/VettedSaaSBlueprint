@@ -1,16 +1,18 @@
 import { sql } from "@/lib/db";
 import { auditAdminAction } from "@/lib/auth/audit";
-import { requireOwnerSession } from "@/lib/auth/session";
+import { ownerSessionOrUnauthorized } from "@/lib/auth/owner-session-response";
 import { partnerstackProgramResourceSchema } from "@/lib/schemas/contracts";
 
 export async function GET(request: Request) {
-  if (!(await requireOwnerSession(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = await ownerSessionOrUnauthorized(request);
+  if (unauthorized) return unauthorized;
   const { rows } = await sql`select * from partnerstack_program_resources order by created_at desc limit 100`;
   return Response.json({ program_resources: rows });
 }
 
 export async function POST(request: Request) {
-  if (!(await requireOwnerSession(request))) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = await ownerSessionOrUnauthorized(request);
+  if (unauthorized) return unauthorized;
   const form = await request.formData();
   const input = partnerstackProgramResourceSchema.parse({
     offer_folder_id: String(form.get("offer_folder_id") ?? ""),
