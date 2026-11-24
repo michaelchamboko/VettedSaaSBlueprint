@@ -12,7 +12,7 @@ import { createIntakeRun } from "../src/lib/article-import/intake";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import { approveFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
-import { prepareCommandCheckout } from "./fixtures/article-command";
+import { fixtureProbe, prepareCommandCheckout } from "./fixtures/article-command";
 
 test("a callable recovery command rejects a secondary checkout before accessing leases", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "orch02-preflight-"));
@@ -62,6 +62,15 @@ for (const first of ["resume", "presentation"]) {
     const root = await mkdtemp(path.join(os.tmpdir(), "orch02-race-"));
     try {
       const before = await candidate(root);
+      if (first === "presentation") {
+        const receipt = JSON.parse(await readFile(path.join(root, "build-pack/article-import/verifier.json"), "utf8"));
+        receipt.target.artifactFingerprint = "0".repeat(64);
+        await writeFile(path.join(root, "wrong.json"), JSON.stringify(receipt));
+        const state = path.join(root, ".automation/article-imports", before.importId + ".json");
+        const bytes = await readFile(state);
+        await assert.rejects(recordArticlePresentation(root, before.importId, "wrong.json", path.join(root, "page-design.json"), fixtureProbe(root)), /VERIFIER_TARGET_MISMATCH/);
+        assert.deepEqual(await readFile(state), bytes);
+      }
       const winner = runChild(root, before.importId, first, true);
       try {
         await Promise.race([once(winner.child, "message"), winner.done.then(result => { throw Error("holder exited early: " + result.stderr); })]);
@@ -134,6 +143,15 @@ test("nested writers reject stale revisions and a lease for the wrong import or 
     assert.equal(current.nextAction, "New accepted work.");
     assert.equal(current.updatedAt, old.updatedAt);
     assert.notEqual(current.stateRevision, old.stateRevision);
+    await withImportLease(root, one.importId, async owned => {
+      const proposals = ["first sibling", "second sibling"].map(nextAction => ({ ...owned, nextAction }));
+      const writes = await Promise.allSettled(proposals.map(proposal => saveImport(root, proposal)));
+      assert.equal(writes.filter(result => result.status === "fulfilled").length, 1);
+      const rejected = writes.find(result => result.status === "rejected");
+      assert.match(String(rejected?.reason), /IMPORT_WRITE_BUSY|STALE_IMPORT_RECORD/);
+      const winner = writes.findIndex(result => result.status === "fulfilled");
+      assert.equal((await loadImport(root, owned.importId)).nextAction, proposals[winner].nextAction);
+    });
   } finally { await Promise.all([root, other].map(dir => rm(dir, { recursive: true, force: true }))); }
 });
 

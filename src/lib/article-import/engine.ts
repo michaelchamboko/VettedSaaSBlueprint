@@ -16,7 +16,7 @@ import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
 
 const ROOT = ".automation/article-imports";
-type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string };
+type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string; writing?: boolean };
 const activeLease = new AsyncLocalStorage<ActiveImportLease>();
 const INSTRUCTION_LINE = /ignore\s+(all|any|the)\s+(previous|prior)|system\s+prompt|developer\s+message|reveal\s+your\s+instructions|jailbreak/i;
 const RISK_PATTERNS = [
@@ -207,18 +207,24 @@ export async function saveImport(repositoryRoot: string, record: ExternalArticle
   if (context.importId !== parsed.importId) throw new Error("IMPORT_LEASE_MISMATCH");
   const canonicalRoot = await realpath(repositoryRoot);
   if (context.root !== canonicalRoot) throw new Error("IMPORT_LEASE_ROOT_MISMATCH");
-  await context.lease.assertOwned();
-  const prior = await readFile(file, "utf8").catch((error: NodeJS.ErrnoException) => {
-    if (error.code !== "ENOENT") throw error;
-    return undefined;
-  });
-  if (prior !== undefined && JSON.parse(prior).stateRevision !== record.stateRevision) throw new Error("STALE_IMPORT_RECORD");
-  await writeJsonAtomically(file, parsed, async (from, to) => {
+  if (context.writing) throw new Error("IMPORT_WRITE_BUSY");
+  context.writing = true;
+  try {
     await context.lease.assertOwned();
-    await rename(from, to);
-  });
-  record.stateRevision = parsed.stateRevision;
-  return file;
+    const prior = await readFile(file, "utf8").catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+      return undefined;
+    });
+    if (prior !== undefined && JSON.parse(prior).stateRevision !== record.stateRevision) throw new Error("STALE_IMPORT_RECORD");
+    await writeJsonAtomically(file, parsed, async (from, to) => {
+      await context.lease.assertOwned();
+      await rename(from, to);
+    });
+    record.stateRevision = parsed.stateRevision;
+    return file;
+  } finally {
+    context.writing = false;
+  }
 }
 
 export async function loadImport(repositoryRoot: string, importId: string): Promise<ExternalArticleImportV1> {
@@ -397,11 +403,13 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       } catch (error) {
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);
+        const persisted = await loadImport(repositoryRoot, importId);
+        if (persisted.stage === "LIVE" || persisted.stage === "QUARANTINED") throw error;
         const code = (error as NodeJS.ErrnoException).code;
         if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
-          return recordImportFailure(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, classification: "transient", message });
+          return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", message });
         }
-        return recordImportRepair(repositoryRoot, await loadImport(repositoryRoot, importId), { strategy: group, message });
+        return recordImportRepair(repositoryRoot, persisted, { strategy: group, message });
       }
       if (result.importId !== importId || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("Stage executor changed import identity.");
       await lease.assertOwned();

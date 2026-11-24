@@ -1,13 +1,13 @@
-import { persistFixture } from "./fixtures/article-command";
+import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { hostname } from "node:os";
 import test from "node:test";
 import { advanceImport, canonicalSubmissionFingerprint, claimImportLease, clearImportBlocker, createArticleImport, executePendingImport, loadImport, recordImportFailure, recordImportRepair, submitImportDiagnosis, upgradeImportEvidence } from "../src/lib/article-import/engine";
-import { claimNextIntakeEntry, createIntakeRun, markIntakeEntry, loadIntakeRun, checkIntakeRun, reconcileIntakeEntry, upgradeIntakeRun } from "../src/lib/article-import/intake";
+import { setIntakeBlocker, claimNextIntakeEntry, createIntakeRun, markIntakeEntry, loadIntakeRun, checkIntakeRun, reconcileIntakeEntry, upgradeIntakeRun } from "../src/lib/article-import/intake";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { recoverWorkflowLease } from "../src/lib/article-import/workflow-lease";
+import { claimWorkflowLease, recoverWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import { storeEvidence } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution } from "../src/lib/article-import/execution-evidence";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
@@ -235,7 +235,20 @@ test("explicit recovery validates retained execution then clears blocked import 
     const invalid = await storeEvidence(root, record.importId, { ...recovery, cause: "Different problem" });
     await assert.rejects(clearImportBlocker(root, record.importId, invalid), /RECOVERY_EVIDENCE_MISMATCH/);
     const proof = await storeEvidence(root, record.importId, recovery);
-    const restored = await clearImportBlocker(root, record.importId, proof);
+    const run = await createIntakeRun(root);
+    const claimed = await claimNextIntakeEntry(root, run.runId);
+    const bound = await markIntakeEntry(root, claimed, claimed.activeEntry!, "PROCESSING", { importId: record.importId });
+    await setIntakeBlocker(root, bound, { scope: "shared", code: "CREDENTIALS", message: "credentials missing" });
+    const retry = { kind: "intake-retry", runId: run.runId, importId: record.importId, recovery: proof.path } as const;
+    const intakeLease = await claimWorkflowLease(root, "intake", run.runId);
+    assert.ok(intakeLease);
+    try {
+      await assert.rejects(executeFixtureCommand(root, retry), /INTAKE_BUSY/);
+    } finally { await intakeLease.release(); }
+    const restored = await loadImport(root, record.importId);
+    assert.ok((await loadIntakeRun(root, run.runId)).blocker);
+    await executeFixtureCommand(root, retry);
+    assert.equal((await loadIntakeRun(root, run.runId)).blocker, undefined);
     assert.equal(restored.stage, "RESEARCHING"); assert.equal(restored.continuation, undefined);
     assert.deepEqual(restored.strategyAttempts, blocked.strategyAttempts); assert.equal(restored.recoveryRefs?.length, 1);
     const statePath = path.join(root, ".automation/article-imports", `${record.importId}.json`);
