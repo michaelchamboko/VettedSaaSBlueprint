@@ -2100,6 +2100,66 @@
       "extensions": {
         "authority": "Explicit user directive; narrow corrective maintenance, no article execution or publication"
       }
+    },
+    {
+      "id": "SCANNER-COMPACT-1124",
+      "title": "Scanner consolidation: authoritative 16-scanner registry and shared process helper",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "low",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-24-SCANNER-COMPACT"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "scripts/landing-scanner-registry.mjs"
+      ],
+      "validation": [
+        {
+          "name": "focused scanner tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--test",
+            "--import",
+            "tsx",
+            "tests/run-landing-quality.test.ts",
+            "tests/landing-candidate-quality.test.ts",
+            "tests/stage2-pre-review-gate.test.ts",
+            "tests/landing-scanner-process.test.ts"
+          ],
+          "timeout_seconds": 300
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/scanner-compact-1124/verification.md"
+      ],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive; behavior-preserving scanner consolidation, no article execution. Authorized code merge/deploy after required checks and review."
+      }
     }
   ],
   "extensions": {

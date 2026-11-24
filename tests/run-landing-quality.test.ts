@@ -324,3 +324,62 @@ test("landing quality preserves all reports when the shared static context canno
     await rm(reportDir, { recursive: true, force: true });
   }
 });
+
+test("landing quality registry exposes exactly sixteen scanner identities in quality order", async () => {
+  const { landingQualityScanners } = await loadRunner();
+  const { landingScanners } = await import("../scripts/landing-scanner-registry.mjs");
+  const expectedScans = [
+    "route", "structure", "hero", "cta", "seo", "a11y", "links", "forms",
+    "conversion", "responsive", "assets", "publish-readiness", "editorial-v2",
+    "compliance", "uniqueness", "conversion-copy",
+  ];
+  assert.equal(landingScanners.length, 16);
+  assert.equal(landingQualityScanners.length, 16);
+  assert.deepEqual(landingScanners.map((scanner: { scan: string }) => scanner.scan), expectedScans);
+  assert.deepEqual(landingQualityScanners.map((scanner: { scan: string }) => scanner.scan), expectedScans);
+  assert.equal(landingQualityScanners.filter((scanner: { kind: string }) => scanner.kind === "static").length, 13);
+  assert.equal(landingQualityScanners.filter((scanner: { kind: string }) => scanner.kind === "specialist").length, 3);
+});
+
+test("production quality uses production scope arguments for specialists", async () => {
+  const { runLandingQuality } = await loadRunner();
+  const reportDir = await makeReportDir();
+  const calls: Array<{ command: string; args: string[] }> = [];
+  try {
+    await runLandingQuality({
+      mode: "production",
+      reportDir,
+      runSpecialistProcess: async (command: string, args: string[]) => {
+        calls.push({ command, args });
+        return { exitCode: 0, stdout: JSON.stringify({ status: "pass" }), stderr: "" };
+      },
+      runStage2Gate: async () => ({ exitCode: 0, stdout: "Stage 2 gate passed", stderr: "" }),
+    });
+    assert.equal(calls.length, 3);
+    assert.ok(calls.every((call) => call.args.includes("src/generated/landing-pages")));
+    assert.ok(calls.every((call) => call.args.includes("--report-only")));
+    assert.ok(calls.every((call) => !call.args.includes("--draft-input")));
+  } finally {
+    await rm(reportDir, { recursive: true, force: true });
+  }
+});
+
+test("landing quality writes a failure report for malformed scanner JSON", async () => {
+  const { runLandingQuality } = await loadRunner();
+  const reportDir = await makeReportDir();
+  try {
+    const result = await runLandingQuality({
+      mode: "production",
+      reportDir,
+      runScanner: async () => ({ exitCode: 0, stdout: "not-json", stderr: "bad output" }),
+      runStage2Gate: async () => ({ exitCode: 1, stdout: "gate failed", stderr: "" }),
+    });
+    assert.equal(result.scannerFailures.length, 16);
+    const report = JSON.parse(await readFile(path.join(reportDir, "landing-scanner-route.json"), "utf8"));
+    assert.equal(report.status, "fail");
+    assert.equal(report.reason_codes[0], "scanner_did_not_emit_valid_json");
+    assert.match(report.issues[0].message, /valid JSON/i);
+  } finally {
+    await rm(reportDir, { recursive: true, force: true });
+  }
+});

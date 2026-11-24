@@ -429,3 +429,18 @@ test("draft mode rejects self-attested compliance reason codes", async () => {
     await rm(reportDir, { recursive: true, force: true });
   }
 });
+
+test("scanner registry exposes sixteen scanners in Stage 2 numerical order", async () => {
+  const { landingScanners } = await import("../scripts/landing-scanner-registry.mjs");
+  const expected = [
+    "route", "structure", "hero", "cta", "seo", "a11y", "links", "forms",
+    "compliance", "uniqueness", "conversion", "conversion-copy", "assets",
+    "responsive", "publish-readiness", "editorial-v2",
+  ];
+  assert.equal(landingScanners.length, 16);
+  assert.deepEqual(
+    [...landingScanners].sort((a: { order: number }, b: { order: number }) => a.order - b.order).map((scanner: { scan: string }) => scanner.scan),
+    expected,
+  );
+  assert.equal(landingScanners.filter((scanner: { kind: string }) => scanner.kind === "specialist").length, 3);
+});

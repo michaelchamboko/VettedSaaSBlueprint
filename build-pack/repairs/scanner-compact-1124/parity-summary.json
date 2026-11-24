@@ -1,0 +1,16 @@
+{
+  "baselineCommit": "2b1e285dce188acba4cf6b8fbbb32eb64f790353",
+  "candidateReports": 16,
+  "productionReports": 16,
+  "exactNormalizedParity": true,
+  "comparisonDigest": "98c34097602e524f72b5e9dfdf121dff91d5516998b2063c5f1905fb4df2ffe9",
+  "excludedVolatileFields": [
+    "duration_ms",
+    "started_at"
+  ],
+  "stage2StubbedInParityProbe": true,
+  "actualStage2Result": "FAIL: unchanged compliance, uniqueness and conversion-copy content findings",
+  "beforeSourceLines": 1157,
+  "afterSourceLines": 1079,
+  "removedSourceLines": 78
+}

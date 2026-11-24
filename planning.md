@@ -199,3 +199,9 @@ Scope: remove the loop requiring viewport words in page design notes while retai
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
 
 Scope: keep the strict intake parser with requested ID equality and V2 safe-integer revision check while removing duplicated post-parse checks; remove the redundant release-checks loop; remove the pre-lease folder-resume scan while retaining terminal-proof and multiple-active validation under the intake lease; reuse already validated research evidence only within the same evaluation. Owned files: src/lib/article-import/{intake,engine,workflow-evidence}.ts; scripts/import-article.ts; tests/transition-checks-1124.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/transition-checks-1124/verification.md.
+
+### Scanner consolidation (SCANNER-COMPACT-1124) (registered 2026-11-24)
+
+Classification: user directive (behavior-preserving scanner consolidation; not corrective maintenance).
+
+Scope: consolidate the 16 landing scanner definitions into scripts/landing-scanner-registry.mjs and wire scripts/run-landing-quality.mjs, scripts/run-landing-candidate-quality.mjs, and scripts/stage2-pre-review-gate.mjs to it. Extract duplicated async process collection and JSON-object parsing into scripts/landing-scanner-process.mjs. Preserve runner scopes, ordering, public exports, injection hooks, command flags, report filenames/schema, Stage2 freshness/count checks, and failure behavior. Synthetic tests only; no article execution or publication. Source anchors: D07 section32 Editorial Quality Standard D07-S-761a1d533ac1; D05 section26.2 Public Page Requirements D05-S-5151b43d272f. Evidence: build-pack/repairs/scanner-compact-1124/verification.md.

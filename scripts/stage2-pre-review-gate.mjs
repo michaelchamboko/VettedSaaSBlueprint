@@ -8,6 +8,7 @@ import {
   landingStaticScanModes,
   loadLandingStaticContext,
 } from "./scan-landing-static.mjs";
+import { landingScanners } from "./landing-scanner-registry.mjs";
 
 const rawArgs = process.argv.slice(2);
 const args = new Set(rawArgs);
@@ -25,45 +26,16 @@ const maxQualityReportAgeMs = 15 * 60 * 1000;
 const effectiveQualityMode = qualityMode ?? "production";
 let cachedLandingCatalogueCounts = null;
 
-const scannerChecks = [
-  { order: 7, check: "Landing-page route validation", script: "scan:landing:route", scan: "route", type: "static" },
-  { order: 7.1, check: "Landing-page structure validation", script: "scan:landing:structure", scan: "structure", type: "static" },
-  { order: 7.2, check: "Hero section validation", script: "scan:landing:hero", scan: "hero", type: "static" },
-  { order: 7.3, check: "CTA validation", script: "scan:landing:cta", scan: "cta", type: "static" },
-  { order: 8, check: "SEO metadata scanner", script: "scan:landing:seo", scan: "seo", type: "static" },
-  { order: 9, check: "Accessibility scanner", script: "scan:landing:a11y", scan: "a11y", type: "static" },
-  { order: 10, check: "Link scanner", script: "scan:landing:links", scan: "links", type: "static" },
-  { order: 11, check: "Form validation scanner", script: "scan:landing:forms", scan: "forms", type: "static" },
-  {
-    order: 12,
-    check: "Compliance scanner",
-    script: "scan:landing:compliance",
-    scan: "compliance",
-    type: "compliance",
-    nodeArgs: [".agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs", landingPagesDir, "--json"],
-  },
-  {
-    order: 12.5,
-    check: "Uniqueness / duplicate content scanner",
-    script: "scan:landing:uniqueness",
-    scan: "uniqueness",
-    type: "uniqueness",
-    nodeArgs: [".agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplicates.mjs", landingPagesDir, "--json"],
-  },
-  { order: 13, check: "Conversion / analytics instrumentation scanner", script: "scan:landing:conversion", scan: "conversion", type: "static" },
-  {
-    order: 13.5,
-    check: "Conversion-copy scanner",
-    script: "scan:landing:conversion-copy",
-    scan: "conversion-copy",
-    type: "conversion-copy",
-    nodeArgs: [".agents/skills/conversion-copy-review/scripts/summarize-conversion-copy-risks.mjs", landingPagesDir, "--json"],
-  },
-  { order: 13.75, check: "Image / asset validation", script: "scan:landing:assets", scan: "assets", type: "static" },
-  { order: 14, check: "Responsive layout static scanner", script: "scan:landing:responsive", scan: "responsive", type: "static" },
-  { order: 14.5, check: "Publishing-readiness scanner", script: "scan:landing:publish-readiness", scan: "publish-readiness", type: "static" },
-  { order: 14.55, check: "Editorial v2 design-profile scanner", script: "scan:landing:editorial-v2", scan: "editorial-v2", type: "static" },
-];
+const scannerChecks = landingScanners
+  .map((scanner) => ({
+    order: scanner.order,
+    check: scanner.check,
+    script: scanner.script,
+    scan: scanner.scan,
+    type: scanner.kind === "specialist" ? scanner.type : "static",
+    ...(scanner.nodeArgs ? { nodeArgs: scanner.nodeArgs } : {}),
+  }))
+  .sort((left, right) => left.order - right.order);
 
 function valueAfter(flag) {
   const index = rawArgs.indexOf(flag);

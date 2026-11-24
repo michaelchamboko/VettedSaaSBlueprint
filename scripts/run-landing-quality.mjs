@@ -1,59 +1,28 @@
 #!/usr/bin/env node
-import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildLandingStaticReport, loadLandingStaticContext } from "./scan-landing-static.mjs";
+import { landingScanners } from "./landing-scanner-registry.mjs";
+import { parseJsonObject as parseJson, runProcess as commandResult } from "./landing-scanner-process.mjs";
 
 const productionTargetDir = "src/generated/landing-pages";
 
-export const landingQualityScanners = [
-  { scan: "route", script: "scan:landing:route", kind: "static" },
-  { scan: "structure", script: "scan:landing:structure", kind: "static" },
-  { scan: "hero", script: "scan:landing:hero", kind: "static" },
-  { scan: "cta", script: "scan:landing:cta", kind: "static" },
-  { scan: "seo", script: "scan:landing:seo", kind: "static" },
-  { scan: "a11y", script: "scan:landing:a11y", kind: "static" },
-  { scan: "links", script: "scan:landing:links", kind: "static" },
-  { scan: "forms", script: "scan:landing:forms", kind: "static" },
-  { scan: "conversion", script: "scan:landing:conversion", kind: "static" },
-  { scan: "responsive", script: "scan:landing:responsive", kind: "static" },
-  { scan: "assets", script: "scan:landing:assets", kind: "static" },
-  { scan: "publish-readiness", script: "scan:landing:publish-readiness", kind: "static" },
-  { scan: "editorial-v2", script: "scan:landing:editorial-v2", kind: "static" },
-  {
-    scan: "compliance",
-    script: "scan:landing:compliance",
+export const landingQualityScanners = landingScanners.map((scanner) => {
+  if (scanner.kind === "static") {
+    return { scan: scanner.scan, script: scanner.script, kind: "static" };
+  }
+  return {
+    scan: scanner.scan,
+    script: scanner.script,
     kind: "specialist",
-    nodeArgs: [".agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs", "src/generated/landing-pages", "--json", "--report-only"],
-  },
-  {
-    scan: "uniqueness",
-    script: "scan:landing:uniqueness",
-    kind: "specialist",
-    nodeArgs: [".agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplicates.mjs", "src/generated/landing-pages", "--json", "--report-only"],
-  },
-  {
-    scan: "conversion-copy",
-    script: "scan:landing:conversion-copy",
-    kind: "specialist",
-    nodeArgs: [".agents/skills/conversion-copy-review/scripts/summarize-conversion-copy-risks.mjs", "src/generated/landing-pages", "--json", "--report-only"],
-  },
-];
+    nodeArgs: [...scanner.nodeArgs, "--report-only"],
+  };
+});
 
 function ensureMode(mode) {
   if (mode !== "draft" && mode !== "production") {
     throw new Error("Landing quality mode must be draft or production.");
-  }
-}
-
-function parseJson(value) {
-  if (!value?.trim()) return null;
-  try {
-    const parsed = JSON.parse(value);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
   }
 }
 
@@ -78,29 +47,6 @@ function failureReport(scanner, result) {
 
 function writeJson(filePath, value) {
   return writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function commandResult(command, args) {
-  return new Promise((resolveCommand) => {
-    let settled = false;
-    let child;
-    let stdout = "";
-    let stderr = "";
-    const finish = (result) => {
-      if (settled) return;
-      settled = true;
-      resolveCommand(result);
-    };
-    try {
-      child = spawn(command, args, { cwd: process.cwd() });
-      child.stdout?.on("data", (chunk) => { stdout += chunk; });
-      child.stderr?.on("data", (chunk) => { stderr += chunk; });
-      child.once("error", (error) => finish({ exitCode: 1, stdout, stderr: `${stderr}${error.message}` }));
-      child.once("close", (code) => finish({ exitCode: code ?? 1, stdout, stderr }));
-    } catch (error) {
-      finish({ exitCode: 1, stdout, stderr: error instanceof Error ? error.message : String(error) });
-    }
-  });
 }
 
 async function defaultRunScanner(scanner, staticContext, staticContextError, runSpecialistProcess) {

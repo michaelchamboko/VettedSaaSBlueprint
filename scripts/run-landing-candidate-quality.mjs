@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,55 +9,19 @@ import {
   landingStaticScanModes,
   loadLandingStaticContext,
 } from "./scan-landing-static.mjs";
+import { landingScanners } from "./landing-scanner-registry.mjs";
+import { parseJsonObject as parseJson, runProcess } from "./landing-scanner-process.mjs";
 
-const specialistScanners = [
-  {
-    check: "uniqueness",
-    script:
-      ".agents/skills/landing-page-uniqueness-review/scripts/summarize-page-duplicates.mjs",
-  },
-  {
-    check: "compliance",
-    script:
-      ".agents/skills/affiliate-compliance-review/scripts/summarize-compliance-risks.mjs",
-  },
-  {
-    check: "conversion-copy",
-    script:
-      ".agents/skills/conversion-copy-review/scripts/summarize-conversion-copy-risks.mjs",
-  },
-];
-
-function parseJson(value) {
-  try {
-    const parsed = JSON.parse(value);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? parsed
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function runProcess(command, args) {
-  return new Promise((resolveResult) => {
-    let stdout = "";
-    let stderr = "";
-    const child = spawn(command, args, { cwd: process.cwd() });
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk;
-    });
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk;
-    });
-    child.once("error", (error) => {
-      resolveResult({ exitCode: 1, stdout, stderr: error.message });
-    });
-    child.once("close", (code) => {
-      resolveResult({ exitCode: code ?? 1, stdout, stderr });
-    });
-  });
-}
+// Candidate quality runs specialists in this order (distinct from the quality
+// runner and Stage 2). Script paths are sourced from the shared registry.
+const candidateSpecialistOrder = ["uniqueness", "compliance", "conversion-copy"];
+const specialistScanners = candidateSpecialistOrder.map((scan) => {
+  const registered = landingScanners.find((scanner) => scanner.scan === scan);
+  return {
+    check: registered.scan,
+    script: registered.nodeArgs[0],
+  };
+});
 
 function validateArtifactName(artifact) {
   if (
