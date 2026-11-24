@@ -256,7 +256,7 @@ test("recovering a killed dispatcher waits for its worker and reuses its exit re
     const args = [worker, ready, finish, jsonlResult(packet, evidencePath)];
     const controller = spawn(process.execPath, ["--import", "tsx", "-e", `
       const { defaultWorkerRunner } = require("./src/lib/article-import/worker-runner.ts");
-      const { executeImportCommand } = require("./scripts/import-article.ts");
+      const { executeFixtureCommand: executeImportCommand } = require("./tests/fixtures/article-command.ts");
       const [root, importId, args] = process.argv.slice(1);
       executeImportCommand(root, { kind: "dispatch", importId }, undefined, { maxSteps: 1, workerModel: "mock/model",
         workerTimeoutMs: 30000, workerRunner: input => defaultWorkerRunner({ ...input, executable: process.execPath, args: JSON.parse(args) }) })
@@ -367,7 +367,7 @@ test("controller death before blocker persistence replays the failed exit once",
         return rename(from, to);
       };
       const { defaultWorkerRunner } = require("./src/lib/article-import/worker-runner");
-      const { executeImportCommand } = require("./scripts/import-article");
+      const { executeFixtureCommand: executeImportCommand } = require("./tests/fixtures/article-command.ts");
       executeImportCommand(root, {kind:"dispatch", importId}, undefined, {
         workerModel: "fixture/model", workerRunner: input => defaultWorkerRunner({...input,
           executable: process.execPath, args:["-e", "process.exit(17)"] }) }).catch(() => process.exit(1));`;
@@ -384,12 +384,17 @@ test("dispatch stops after one unchanged executor result", async () => {
   const root = await rootWithArticle();
   try {
     const initial = await createArticleImport(root, "Article Intake/a.md");
-    let calls = 0;
-    const result = await executeImportCommand(root, { kind: "dispatch", importId: initial.importId }, async ({ record }) => {
-      calls++;
-      return record;
-    }, { maxSteps: 3 }) as ExternalArticleImportV1;
-    assert.equal(calls, 1);
-    assert.equal(result.stateRevision, initial.stateRevision);
+    for (const revision of [initial.stateRevision, undefined]) {
+      const existing = { ...initial, stateRevision: revision };
+      await writeJsonAtomically(path.join(root, ".automation/article-imports", initial.importId + ".json"), existing);
+      let calls = 0;
+      const result = await executeImportCommand(root, { kind: "dispatch", importId: initial.importId }, async ({ record }) => {
+        calls++;
+        return record;
+      }, { maxSteps: 3 }) as ExternalArticleImportV1;
+      assert.equal(calls, 1);
+      assert.equal(result.stateRevision, revision);
+      assert.ok(!("dispatchOutcome" in result));
+    }
   } finally { await rm(root, { recursive: true, force: true }); }
 });

@@ -64,6 +64,11 @@ export async function approveFixture(root: string, record: ExternalArticleImport
 }
 
 export async function presentFixture(root: string, record: ExternalArticleImportV1) {
+  const prepared = await preparePresentationFixture(root, record);
+  return recordImportPresentation(root, prepared.record, prepared.input);
+}
+
+export async function preparePresentationFixture(root: string, record: ExternalArticleImportV1) {
   record = await refreshPresentationFixture(root, record);
   if (!record.contentApproval) throw new Error("Fixture content approval is required.");
   const evidencePath = "build-pack/article-import/verifier.json";
@@ -72,7 +77,7 @@ export async function presentFixture(root: string, record: ExternalArticleImport
   const shot = { httpOk: true, disclosureOk: true, exactCtaCount: 1, allCtasExact: true, ctasFitViewport: true, allRevealSectionsVisible: true, horizontalPageScrollPossible: false, errorOverlay: false, browserErrors: [], robots: "noindex,nofollow", artifactFingerprint: target.artifactFingerprint };
   await mkdir(path.dirname(path.join(root, evidencePath)), { recursive: true });
   await writeFile(path.join(root, evidencePath), JSON.stringify({ schemaVersion: "ImportVerifierEvidenceV1", target, result: { verificationMode: "candidate", origin: "http://127.0.0.1:3000", canonicalOrigin: "https://vettedsaasblueprint.online", status: "pass", pages: [{ path: candidatePreviewPath(target.slug), desktop: shot, mobile: shot, reduced_motion: shot }] } }));
-  return recordImportPresentation(root, record, {
+  const input: Parameters<typeof recordImportPresentation>[2] = {
     validationGate: "fixture:rendered-layout",
     validationReceipt: {
       schemaVersion: "ImportPresentationValidationV1",
@@ -84,7 +89,8 @@ export async function presentFixture(root: string, record: ExternalArticleImport
       evidencePaths: [evidencePath],
       notes: "Mocked browser evidence for importer state tests.",
     },
-  });
+  };
+  return { record, input };
 }
 
 /** Explicit synthetic re-render after fixture publication inputs have been prepared. */

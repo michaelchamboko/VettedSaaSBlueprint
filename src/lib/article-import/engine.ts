@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { importPacketId, researchRecoveryGeneration } from "./packet-binding";
+import { isDeepStrictEqual } from "node:util";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { mkdir, open, readFile, readdir, realpath, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -218,7 +219,7 @@ export async function saveImport(repositoryRoot: string, record: ExternalArticle
     if (prior !== undefined) {
       const stored = JSON.parse(prior);
       if (stored.stateRevision !== record.stateRevision) throw new Error("STALE_IMPORT_RECORD");
-      if (record.stateRevision && JSON.stringify(stored) === JSON.stringify({ ...parsed, stateRevision: record.stateRevision })) return file;
+      if (isDeepStrictEqual(stored, JSON.parse(JSON.stringify({ ...parsed, stateRevision: record.stateRevision })))) return file;
     }
     await writeJsonAtomically(file, parsed, async (from, to) => {
       await context.lease.assertOwned();
