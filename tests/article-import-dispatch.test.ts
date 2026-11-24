@@ -275,7 +275,7 @@ test("recovering a killed dispatcher waits for its worker and reuses its exit re
       await assert.rejects(dispatchArticleImport(root, importId, { maxSteps: 1 }), /IMPORT_LEASE_BUSY/);
       await writeFile(finish, "finish");
       await until(() => recoverWorkflowLease(root, "import", importId));
-      const resumed = await dispatchArticleImport(root, importId, { maxSteps: 1, workerModel: "mock/model",
+      const resumed = await dispatchArticleImport(root, importId, { maxSteps: 1, workerModel: "",
         workerExecutable: path.join(root, "must-not-run") });
       assert.equal(resumed.stage, "TRANSFORMING", resumed.stageReceipts.at(-1)?.message);
     } finally {
@@ -316,5 +316,62 @@ test("a bounded intake reports its unfinished entry and rejects changed capture 
     const dispatched = await executeImportCommand(root, { kind: "dispatch-intake", runId: next.runId }, undefined, { maxSteps: 1 }) as IntakeRun & { dispatchOutcome: string };
     assert.equal(dispatched.dispatchOutcome, "STEP_LIMIT");
     assert.equal(dispatched.entries[0].status, "PROCESSING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+for (const fault of ["malformed", "wrong-stage", "stale-key", "stale-source"]) {
+  test("dispatcher rejects " + fault + " worker output before saving a result", async () => {
+    const root = await rootWithArticle();
+    try {
+      const { importId } = await createArticleImport(root, "Article Intake/a.md");
+      let resultPath = "";
+      let calls = 0;
+      const workerRunner: WorkerRunner = async ({ args }) => {
+        calls++;
+        const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
+        resultPath = path.join(root, packet.resultPath);
+        if (fault === "wrong-stage") packet.stage = "TRANSFORMING";
+        if (fault === "stale-key") packet.idempotencyKey = "0".repeat(64);
+        if (fault === "stale-source") packet.sourceFingerprint = "0".repeat(64);
+        return { stdout: fault === "malformed" ? "{" : jsonlResult(packet, "unused"), stderr: "", exitCode: 0, timedOut: false };
+      };
+      const result = await dispatchArticleImport(root, importId, { workerModel: "fixture/model", workerRunner });
+      assert.equal(calls, 1);
+      assert.equal(result.stage, "RESEARCHING");
+      assert.equal(result.continuation?.kind, "repair");
+      assert.match(result.stageReceipts.at(-1)!.message, /INVALID_STAGE_RESULT/);
+      await assert.rejects(access(resultPath), { code: "ENOENT" });
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+}
+
+
+test("controller death before blocker persistence replays the failed exit once", async () => {
+  const root = await rootWithArticle();
+  try {
+    const { importId } = await createArticleImport(root, "Article Intake/a.md");
+    const controllerScript = `
+      const fs = require("node:fs/promises");
+      const path = require("node:path");
+      const [root, importId] = process.argv.slice(1);
+      const rename = fs.rename;
+      fs.rename = async (from, to) => {
+        if (path.basename(to) === importId + ".json") {
+          const record = JSON.parse(await fs.readFile(from));
+          if (record.continuation?.kind === "blocked") process.exit(42);
+        }
+        return rename(from, to);
+      };
+      const { defaultWorkerRunner } = require("./src/lib/article-import/worker-runner");
+      const { executeImportCommand } = require("./scripts/import-article");
+      executeImportCommand(root, {kind:"dispatch", importId}, undefined, {
+        workerModel: "fixture/model", workerRunner: input => defaultWorkerRunner({...input,
+          executable: process.execPath, args:["-e", "process.exit(17)"] }) }).catch(() => process.exit(1));`;
+    const controller = spawn(process.execPath, ["--import", "tsx", "-e", controllerScript, root, importId], { windowsHide: true, stdio: "ignore" });
+    assert.equal((await once(controller, "close"))[0], 42);
+    await recoverWorkflowLease(root, "import", importId);
+    const resumed = await dispatchArticleImport(root, importId, { workerModel: "fixture/model", workerExecutable: path.join(root, "must-not-run") });
+    assert.ok(resumed.continuation?.kind === "blocked");
+    assert.match(resumed.continuation.cause, /worker exited with code 17.*\[worker /);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

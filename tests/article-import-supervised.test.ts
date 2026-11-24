@@ -112,6 +112,8 @@ for (const failRollback of [false, true]) test(failRollback ? "dispatch preserve
     const created = await createArticleImport(root, "Article Intake/article.md");
     importId = created.importId;
     const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" });
+    const existing = { slug: "another-review", artifact: "another-review.json", title: "Existing published review" };
+    await writeJsonAtomically(path.join(root, authorityPath), { generated_at: "preserve-me", pages: [existing] });
     const executor = createSupervisedImportExecutor(root, operations);
     const current = () => loadImport(root, importId);
     await executeImportCommand(root, { kind: "resume", importId }, executor);
@@ -136,7 +138,8 @@ for (const failRollback of [false, true]) test(failRollback ? "dispatch preserve
           assert.match(packet.instructions, /Beam review/i);
           assert.match(packet.instructions, /5\/5 CLEAN/i);
           const fingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath), "utf8")).replace(/\r\n/g, "\n")).digest("hex");
-          await writeJsonAtomically(path.join(root, authorityPath), { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
+          const proposal = path.join(root, "build-pack/article-import", importId, packet.idempotencyKey, "publication/index.json");
+          await writeJsonAtomically(proposal, { pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
           await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: fingerprint } } });
           work = { stage: packet.stage, artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath,
             editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path };
@@ -183,6 +186,10 @@ for (const failRollback of [false, true]) test(failRollback ? "dispatch preserve
     }
     assert.deepEqual(calls, ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING"]);
     assert.equal(waits, 2);
+    const published = JSON.parse(await readFile(path.join(root, authorityPath), "utf8"));
+    assert.deepEqual(published.pages[0], existing);
+    assert.equal(published.generated_at, "preserve-me");
+    assert.equal(published.pages.length, 2);
     if (failRollback) {
       const failed = await current();
       assert.equal(failed.stage, "WAITING_EXTERNAL");

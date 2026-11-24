@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { access, mkdtemp, readFile, realpath, rm, writeFile, unlink } from "node:fs/promises";
 import { readImportArtifactTarget } from "./format-validation";
 import { publicationAuthorityPaths } from "./release";
+import { applyPublicationProposals } from "./worker-publication";
 import { writeJsonAtomically } from "./engine";
 import type { ExternalArticleImportV1 } from "./contracts";
 import { tmpdir } from "node:os";
@@ -36,15 +37,18 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   const directories = [`build-pack/article-import/${importId}/${key}`, `build-pack/editorial/${importId}/${key}`];
   const writable = directories.map(dir => dir + "/*");
   const record = packet.record as ExternalArticleImportV1;
+  const authority = packet.stage === "REFINING" ? publicationAuthorityPaths(record.format) : [];
+  let publicationRoute: string | undefined;
   if (packet.stage === "REFINING" && record.artifactPath && record.format !== "agent_review_required") {
     const { target } = await readImportArtifactTarget(root, record.format, record.artifactPath);
     const slug = target.slug;
     if (!slug.split("/").every(segment => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(segment)) || (record.format !== "visibility" && slug.includes("/"))) throw new Error("WORKER_PUBLICATION_SLUG_INVALID");
-    writable.push(...publicationAuthorityPaths(record.format));
+    publicationRoute = record.format === "visibility" ? target.renderedRoutes[0] : slug;
     if (record.format === "direct-review") writable.push(`src/generated/landing-pages/${slug}.json`, `src/generated/landing-pages/releases/${slug}/release-receipt.json`);
     if (record.format === "decision-set") writable.push(`src/content/decision-journeys/sets/${slug}.json`);
     if (record.format === "visibility") writable.push(`src/generated/visibility-pages/${slug}.json`, `src/generated/visibility-pages/${slug}.evidence.json`);
   }
+  if (authority.some(file => writable.includes(file))) throw new Error("WORKER_PUBLICATION_PATH_COLLISION");
   const references = [record?.artifactPath, ...Object.values(record?.evidenceRefs ?? {}).map(ref => ref?.path)];
   const readable = references.filter((file): file is string => !!file && /^[a-zA-Z0-9._/-]+$/.test(file) &&
     !file.split("/").includes("..") && ["build-pack/article-import/", "build-pack/editorial/", "src/generated/", "src/content/"].some(prefix => file.startsWith(prefix)));
@@ -53,7 +57,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   const permissions = [
     { action: "*", resource: "*", effect: "deny" },
     allow("external_directory", canonical + "/*"),
-    ...[String(packet.sourcePath), workPath, ...readable, ...writable, `build-pack/article-import/${importId}/*`, `build-pack/editorial/${importId}/*`,
+    ...[String(packet.sourcePath), workPath, ...readable, ...authority, ...writable, `build-pack/article-import/${importId}/*`, `build-pack/editorial/${importId}/*`,
       `.automation/article-imports/evidence/${importId}/*`, ".agents/skills/*", "docs/document-intelligence/*"]
       .map(file => allow("read", canonical + "/" + file)),
     ...writable.map(file => allow("edit", canonical + "/" + file)),
@@ -61,17 +65,19 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   ];
   const definition = { mode: "primary", description: "Work on the attached article packet", permissions };
   await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition } }), { flag: "wx" });
-  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. Follow resultSchema and use genuine evidence. Return only the bound result.`;
+  const proposalDirectory = directories[0] + "/publication";
+  const proposalInstructions = authority.map(file => `For ${file}, place a one-article catalogue document in ${proposalDirectory}/${path.posix.basename(file)}. The controller merges the matching entry.`).join(" ");
+  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} Follow resultSchema and use genuine evidence. Return only the bound result.`;
   return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
     "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? 300000,
+    authority, publicationRoute, proposalDirectory,
     checkpoint: path.resolve(root, workPath + ".launch"),
     ownershipFile: workerOwnershipFile(root, importId, leaseToken) };
 }
 
 export const defaultWorkerRunner: WorkerRunner = async (input) => {
-  if (await fileExists(input.checkpoint)) {
-    const prior = await readFile(input.checkpoint, "utf8");
-    if (!/^[a-f0-9-]{36}\.worker$/.test(prior)) throw new Error("STATE_INTEGRITY: invalid worker checkpoint");
+  const prior = await launchOwner(input.checkpoint);
+  if (prior) {
     const receipt = path.join(path.dirname(input.ownershipFile), prior + ".out");
     if (!await fileExists(receipt)) throw new Error("STATE_INTEGRITY: interrupted worker has no verified completion; reconcile its scoped artifacts before retry");
     return JSON.parse(await readFile(receipt, "utf8")) as WorkerProcessResult;
@@ -98,7 +104,14 @@ export const defaultWorkerRunner: WorkerRunner = async (input) => {
   return JSON.parse(await readFile(input.ownershipFile + ".out", "utf8")) as WorkerProcessResult;
 };
 
-export async function acknowledgeInvocation(checkpoint: string) {
+async function launchOwner(checkpoint: string): Promise<string | undefined> {
+  if (!await fileExists(checkpoint)) return undefined;
+  const owner = await readFile(checkpoint, "utf8");
+  if (!/^[a-f0-9-]{36}\.worker$/.test(owner)) throw new Error("STATE_INTEGRITY: invalid worker checkpoint");
+  return owner;
+}
+
+async function acknowledgeInvocation(checkpoint: string) {
   await unlink(checkpoint).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
 }
 
@@ -175,22 +188,32 @@ export async function invokeWorker(
   const absoluteResultPath = path.resolve(root, resultPath);
   if (await fileExists(absoluteResultPath)) return;
   const config = workerConfig(options);
-  if (!config.model.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
+  const checkpoint = path.resolve(root, workPath + ".launch");
+  const previous = await launchOwner(checkpoint);
+  const record = packet.record as ExternalArticleImportV1;
+  const handled = previous && record.stageReceipts.some(receipt => receipt.message.endsWith("[worker " + previous + "]"));
+  if ((!previous || handled) && !config.model.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
   const runner = options?.workerRunner ?? defaultWorkerRunner;
   const invocation = await prepareWorkerInvocation(root, workPath, packet, config, leaseToken);
   await assertLease();
+  if (handled) {
+    await acknowledgeInvocation(invocation.checkpoint);
+  }
   const processResult = await runner(invocation);
   await rm(invocation.cwd, { recursive: true, force: true });
-  if (processResult.timedOut || processResult.exitCode !== 0) await acknowledgeInvocation(invocation.checkpoint);
-  if (processResult.timedOut) throw new Error("CAPABILITY_UNAVAILABLE: worker invocation timed out");
-  if (processResult.exitCode !== 0) throw new Error(`CAPABILITY_UNAVAILABLE: worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
   let parsed;
-  try { parsed = decodeBoundWorkerResult(processResult.stdout, packet); }
-  catch (error) {
-    await acknowledgeInvocation(invocation.checkpoint);
-    throw error;
+  try {
+    if (processResult.timedOut) throw new Error("CAPABILITY_UNAVAILABLE: worker invocation timed out");
+    if (processResult.exitCode !== 0) throw new Error(`CAPABILITY_UNAVAILABLE: worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
+    parsed = decodeBoundWorkerResult(processResult.stdout, packet);
+  } catch (error) {
+    // A restart replays the failure until the engine has durably recorded this owner.
+    const owner = await launchOwner(invocation.checkpoint);
+    if (!owner) throw error;
+    throw new Error(`${error instanceof Error ? error.message : String(error)} [worker ${owner}]`);
   }
   await assertLease();
+  if (invocation.publicationRoute) await applyPublicationProposals(root, record.format, invocation.publicationRoute, invocation.proposalDirectory, assertLease);
   await writeJsonAtomically(absoluteResultPath, parsed);
   await acknowledgeInvocation(invocation.checkpoint);
 }

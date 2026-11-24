@@ -9,7 +9,7 @@ type Claim = { generation: number; ownerToken: string; expiresAt: number; machin
 // The identity is retained for auditing; recovery additionally requires ESRCH, never a PID-only live-owner match.
 const processStart = new Date(Date.now() - process.uptime() * 1000).toISOString();
 function directory(root: string, kind: string, key: string) {
-  if (!["source", "intake", "import"].includes(kind) || !/^[a-zA-Z0-9-]{1,100}$/.test(key)) throw new Error("INVALID_LEASE_KEY");
+  if (!["source", "intake", "import", "publication"].includes(kind) || !/^[a-zA-Z0-9-]{1,100}$/.test(key)) throw new Error("INVALID_LEASE_KEY");
   return path.join(root, ".automation/article-imports/leases", kind, key);
 }
 async function latest(dir: string): Promise<Claim | undefined> {
@@ -71,7 +71,7 @@ async function assertWorkerExited(dir: string, token: string) {
     }
   }
 }
-export async function claimWorkflowLease(root: string, kind: "source" | "intake" | "import", key: string, ttlMs = 30 * 60_000): Promise<WorkflowLease | undefined> {
+export async function claimWorkflowLease(root: string, kind: "source" | "intake" | "import" | "publication", key: string, ttlMs = 30 * 60_000): Promise<WorkflowLease | undefined> {
   const dir = directory(root, kind, key);
   const previous = await latest(dir);
   if (previous && !previous.released) return undefined; // Time cannot fence a paused writer.
@@ -88,7 +88,7 @@ export async function claimWorkflowLease(root: string, kind: "source" | "intake"
   } };
 }
 /** Explicit recovery only. Conservative PID reuse handling: any currently live PID remains blocked. */
-export async function recoverWorkflowLease(root: string, kind: "source" | "intake" | "import", key: string): Promise<void> {
+export async function recoverWorkflowLease(root: string, kind: "source" | "intake" | "import" | "publication", key: string): Promise<void> {
   const dir = directory(root, kind, key);
   const previous = await latest(dir);
   if (!previous || previous.released) return;

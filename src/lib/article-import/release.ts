@@ -210,7 +210,7 @@ function safeCatalogueReceiptPath(directory: string, relativePath: string): stri
  * Binds an approved direct-review release to the manifest-selected receipt. The public CTA URL
  * served from production is the receipt's exact_affiliate_url, not anything in the blueprint
  * (PageBlueprint carries no affiliate_links), so the receipt must name the record's resolved
- * affiliate URL â€” otherwise an allowlisted URL B could ship for an import resolved to URL A.
+ * affiliate URL — otherwise an allowlisted URL B could ship for an import resolved to URL A.
  * The manifest artifact and the receipt page fingerprint must also match the approved
  * `<slug>.json` blueprint on disk: otherwise an authority-file change could deploy unapproved
  * content under the approved slug while the URL binding alone still passes.
@@ -228,7 +228,7 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
   const matches = (manifest.pages ?? []).filter((page) => page.slug === slug);
   if (matches.length === 0) throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
   // The loader serves the LAST same-slug entry (pages.set overwrites), so allow exactly one
-  // match â€” otherwise a later duplicate could swap in unapproved content under the slug.
+  // match — otherwise a later duplicate could swap in unapproved content under the slug.
   if (matches.length > 1) throw new Error("RELEASE_MANIFEST_DUPLICATE_SLUG");
   const entry = matches[0];
   if (typeof entry.release_receipt !== "string") throw new Error(`RELEASE_MANIFEST_ENTRY_MISSING:${slug}`);
