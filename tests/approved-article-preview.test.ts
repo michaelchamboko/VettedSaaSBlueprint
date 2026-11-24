@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { validateApprovedArticlePreview, isValidSlug, isDevEnvironment } from "../src/lib/article-import/approved-article-preview";
+import { loadApprovedArtifact } from "../src/lib/article-import/content-approval";
 
 const VALID_SLUG = "test-approved-article";
 const VALID_IMPORT_ID = "article-12345678-1234-4234-8234-123456789abc";
@@ -401,6 +402,27 @@ describe("validateApprovedArticlePreview", () => {
     const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     assert.ok(r.error === "ARTIFACT_NOT_FOUND" || r.error === "ARTIFACT_PATH_ESCAPE" || r.error === "WORK_PACKET_ARTIFACT_PATH_MISMATCH", `got ${r.error}`);
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("approval verifies the loaded snapshot after its file changes", async () => {
+    origNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+    const root = await mkdtemp(join(tmpdir(), "preview-"));
+    const fx = await makeFixture(root);
+    const fs = await import("node:fs/promises");
+    const importPath = join(root, ".automation", "article-imports", `${fx.importId}.json`);
+    const record = JSON.parse(await fs.readFile(importPath, "utf8"));
+    const contentApproval = record.contentApproval;
+    const sourceFingerprint = record.sourceFingerprint as string;
+    const loaded = await loadApprovedArtifact(root, contentApproval.artifactPath);
+    assert.equal(loaded.ok, true);
+    if (!loaded.ok) throw new Error("expected loaded");
+    // mutate underlying artifact bytes after loading
+    await fs.writeFile(join(root, contentApproval.artifactPath), JSON.stringify(null));
+    assert.equal(await loaded.matches(contentApproval, "direct-review", sourceFingerprint), true);
+    const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
+    assert.equal(r.ok, false);
     await rm(root, { recursive: true, force: true });
   });
 });

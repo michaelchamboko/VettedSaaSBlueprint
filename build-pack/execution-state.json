@@ -1878,6 +1878,60 @@
       "extensions": {
         "authority": "Explicit user directive 2026-11-17; dev-only renderer, no article execution or publication"
       }
+    },
+    {
+      "id": "APPROVAL-RECEIPTS-1124",
+      "title": "Make content approval yield parsed artifact and split historical receipt matcher",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-24-APPROVAL-RECEIPTS"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md"
+      ],
+      "validation": [
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/approval-receipts-1124/verification.md"
+      ],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive; narrow corrective maintenance, no article execution or publication"
+      }
     }
   ],
   "extensions": {
