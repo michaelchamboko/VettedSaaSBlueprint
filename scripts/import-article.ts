@@ -74,8 +74,6 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     return { ...updated, nextEntry: updated.entries.find((item) => item.relativePath === entry.relativePath) };
   }
   if (command.kind === "intake-resume") {
-    const check = await checkIntakeRun(root, command.runId);
-    if (!check.ok) throw new Error(`INTAKE_TERMINAL_PROOF_INVALID: ${JSON.stringify(check)}`);
     let run = await claimNextIntakeEntry(root, command.runId);
     const entry = nextIntakeEntry(run);
     if (!entry) return run;
