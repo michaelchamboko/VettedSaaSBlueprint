@@ -4,10 +4,10 @@ import path from "node:path";
 import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialEvidenceSchema, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
 import { importArtifactTarget, validateImportArtifact } from "./format-validation";
 import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, type WorkflowStage } from "./workflow-requirements";
-import { evidenceRefSchema, frozenFileSchema, withTerminalEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
+import { evidenceRefSchema, frozenFileSchema, withTerminalEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, readVerifiedEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
 import { renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { candidatePreviewPath } from "./candidate-route";
-export { evidenceRefSchema, evidenceReference, readEvidence, storeEvidence } from "./execution-evidence";
+export { evidenceRefSchema, evidenceReference, readEvidence, readVerifiedEvidenceBytes, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
 
@@ -83,8 +83,8 @@ export async function contentAssessmentReviewInput(root: string, artifact: unkno
   const research = researchEvidenceSchema.parse(researchEvidence);
   const sourceSnapshots = [];
   for (const source of research.sources) {
-    await verifyEvidenceRef(root, source.snapshotRef);
-    sourceSnapshots.push({ sourceId: source.id, ref: source.snapshotRef, text: (await readEvidenceBytes(root, source.snapshotRef.path)).toString("utf8") });
+    const bytes = await readVerifiedEvidenceBytes(root, source.snapshotRef);
+    sourceSnapshots.push({ sourceId: source.id, ref: source.snapshotRef, text: bytes.toString("utf8") });
   }
   return { artifact: JSON.stringify(artifact), research: JSON.stringify(research), researchRef: JSON.stringify(evidenceRefSchema.parse(researchRef)), sourceSnapshots: JSON.stringify(sourceSnapshots) };
 }
@@ -150,8 +150,8 @@ export async function validateResearchEvidence(root: string, ref: EvidenceRef, b
   assertBinding(value, binding); unique(value.sources.map((x) => x.id)); unique(value.claims.map((x) => x.id));
   const snapshots = new Map<string, string>();
   for (const source of value.sources) {
-    await verifyEvidenceRef(root, source.snapshotRef);
-    snapshots.set(source.id, (await readEvidenceBytes(root, source.snapshotRef.path)).toString("utf8"));
+    const bytes = await readVerifiedEvidenceBytes(root, source.snapshotRef);
+    snapshots.set(source.id, bytes.toString("utf8"));
     if (Date.parse(source.retrievedAt) > Date.parse(value.createdAt)) throw new Error("RESEARCH_RETRIEVAL_TIME_INVALID");
   }
   for (const claim of value.claims) {

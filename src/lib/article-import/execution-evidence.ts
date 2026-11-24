@@ -56,14 +56,17 @@ export async function evidenceReference(root: string, file: string): Promise<Evi
   return { path: path.relative(await realpath(root), await realpath(path.resolve(root, file))).replaceAll("\\", "/"), sha256: sha256(bytes) };
 }
 export async function readEvidence(root: string, reference: EvidenceRef): Promise<unknown> {
+  const bytes = await readVerifiedEvidenceBytes(root, reference);
+  return JSON.parse(bytes.toString("utf8"));
+}
+export async function readVerifiedEvidenceBytes(root: string, reference: EvidenceRef): Promise<Buffer> {
   const ref = evidenceRefSchema.parse(reference);
   const bytes = await readEvidenceBytes(root, ref.path);
   if (sha256(bytes) !== ref.sha256) throw new Error("EVIDENCE_HASH_MISMATCH");
-  return JSON.parse(bytes.toString("utf8"));
+  return bytes;
 }
 export async function verifyEvidenceRef(root: string, reference: EvidenceRef): Promise<void> {
-  const ref = evidenceRefSchema.parse(reference);
-  if (sha256(await readEvidenceBytes(root, ref.path)) !== ref.sha256) throw new Error("EVIDENCE_HASH_MISMATCH");
+  await readVerifiedEvidenceBytes(root, reference);
 }
 /** Only the producer writes; evaluators never create directories or rewrite evidence. */
 export async function storeEvidence(root: string, importId: string, value: unknown): Promise<EvidenceRef> {

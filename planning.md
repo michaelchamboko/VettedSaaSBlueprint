@@ -187,3 +187,9 @@ Owner directive. Implement ORCH-02 in the existing TypeScript controller. Use di
 | Describe workflow, preflight report, intake check/status, completion and release dry-run | Inspection | Read busy or historical records without writing, claiming ownership or initiating external release actions. |
 
 The verification covers the command and callable paths, including stale submissions, failed preflight, nested ownership and restart. For V2-06, exercise missing publication membership and declared-file mismatch independently, then run the required suites on the same revision.
+
+### Validation slim corrections (VALIDATION-SLIM-1124) (registered 2026-11-24)
+
+Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
+
+Scope: remove the loop requiring viewport words in page design notes while retaining required notes and unavailable-check rejection; use a single read of each research snapshot at the content-assessment review input builder and research validator through shared readVerifiedEvidenceBytes; preserve browser checks, affiliate verification, and editorial passes. Owned files: src/lib/article-import/{contracts,execution-evidence,workflow-evidence}.ts; tests/validation-slim-corrections.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/validation-slim-1124/verification.md.
