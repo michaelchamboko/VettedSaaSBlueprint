@@ -404,3 +404,20 @@ describe("validateApprovedArticlePreview", () => {
     await rm(root, { recursive: true, force: true });
   });
 });
+
+
+it("fresh import previews select the development renderer while ordinary preview requests retain their route", async () => {
+  const {candidateRequestPath} = await import("../src/lib/article-import/candidate-route");
+  const {default:config} = await import("../next.config");
+  const id = "article-11223344-abcd-abcd-abcd-0123456789ab";
+  assert.equal(candidateRequestPath("fresh-candidate",id),"/landing-page-previews/fresh-candidate?importId=" + id);
+  assert.equal(candidateRequestPath("prior-candidate"),"/landing-page-previews/prior-candidate");
+  assert.throws(() => candidateRequestPath("fresh-candidate","../other"));
+  const before = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = "development";
+    assert.equal((await config.rewrites!()).beforeFiles[0].has[0].key,"importId");
+    process.env.NODE_ENV = "production";
+    assert.deepEqual((await config.rewrites!()).beforeFiles,[]);
+  } finally { if (before === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = before; }
+});

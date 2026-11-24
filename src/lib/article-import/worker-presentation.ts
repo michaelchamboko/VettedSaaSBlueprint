@@ -5,20 +5,20 @@ import { promisify } from "node:util";
 import { z } from "zod";
 import { chromium } from "playwright";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
-import { candidatePreviewPath } from "./candidate-route";
+import { candidatePreviewPath, candidateRequestPath } from "./candidate-route";
 import { captureCommandExecution, evidenceReference, readEvidenceBytes, storeEvidence, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { readImportArtifactTarget } from "./format-validation";
 import { requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { readImportVerifierEvidence, verificationContext } from "./verification-evidence";
-import { createDesignReviewSchema, designReviewInput } from "./workflow-evidence";
+import { createDesignReviewSchema, designReviewInput, designRuntimeMaterial, designJudgmentInstruction, visualDesignRules, runtimeRefSchema } from "./workflow-evidence";
 import type { Packet } from "./worker-editorial";
 
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
-export const presentationTool = z.object({ rule: z.enum([...designRules, "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"]) }).strict();
+export const presentationTool = z.object({ rule: z.enum([...designRules, "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"]), observations:runtimeRefSchema.optional() }).strict();
 type Exchange = (pass: string, input: Record<string,string>, refs: EvidenceRef[], instructions: (EvidenceRef & {text:string})[],
-  prompt: string, model: string) => Promise<{output: Record<string,string>,executionRef:EvidenceRef}>;
+  prompt: string, model: string, images?: EvidenceRef[]) => Promise<{output: Record<string,string>,executionRef:EvidenceRef}>;
 
-export async function presentationOperation(packet: Packet, {rule}: z.infer<typeof presentationTool>, exchange: Exchange) {
+export async function presentationOperation(packet: Packet, {rule, observations}: z.infer<typeof presentationTool>, exchange: Exchange) {
   if (packet.stage !== "VALIDATING" || !packet.artifactPath || !packet.rendering || !packet.approvedFingerprint ||
       packet.format === "agent_review_required") throw new Error("PRESENTATION_APPROVAL_REQUIRED");
   const {root, importId, rendering: renderInputsRef} = packet;
@@ -50,14 +50,20 @@ export async function presentationOperation(packet: Packet, {rule}: z.infer<type
   if (designRules.some(name => name === rule)) {
     const impeccable = ".agents/skills/impeccable/";
     const instruction = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : impeccable + (rule === "context" ? "SKILL.md" : "reference/" + rule + ".md");
-    const instructions = await Promise.all([instruction,impeccable + "reference/craft-floor.md"].map(async file => ({
+    const instructions = await Promise.all([instruction,impeccable + "reference/craft-floor.md",designJudgmentInstruction].map(async file => ({
       ...await evidenceReference(root,file),text:(await readEvidenceBytes(root,file)).toString("utf8"),
     })));
     const input = await designReviewInput(root,packet.format,artifact,renderInputsRef);
+    const visual = visualDesignRules.has(rule) ? await designRuntimeMaterial(root,importId,artifactRef,renderInputsRef,routes,runtimeRefSchema.parse(observations)) : undefined;
+    if (visual && observations) {
+      input.browserObservations = visual.browserObservations;
+      inputRefs.push(...Object.values(observations),...visual.images);
+    }
     const shape = createDesignReviewSchema({rule,artifactFingerprint:target.artifactFingerprint,renderInputsRef,renderingDigest:rendering.digest,allowedRoutes:[JSON.stringify(routes)]});
     const prompt = "Independently perform the design review. Return a JSON object with one string designReview containing JSON with rule, artifactFingerprint, routes, renderInputsRef, renderingDigest, verdict, findings and notes. Use pass, fail or insufficient-evidence. Each finding has description and disposition. Required identity: " + JSON.stringify({rule,artifactFingerprint:target.artifactFingerprint,routes,renderInputsRef,renderingDigest:rendering.digest});
-    const model = capability.assessmentModel ?? packet.model;
-    const result = await exchange("design:" + rule,input,inputRefs,instructions,prompt,model);
+    const model = visual ? capability.visualReviewModel : capability.assessmentModel ?? packet.model;
+    if (!model || !Object.hasOwn(capability.modelFamilies,model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
+    const result = await exchange("design:" + rule,input,inputRefs,instructions,prompt,model,visual?.images);
     const judgment = shape.parse(JSON.parse(result.output.designReview));
     return {rule,artifactRef,judgment,evidenceRefs:[result.executionRef]};
   }
@@ -73,7 +79,7 @@ export async function presentationOperation(packet: Packet, {rule}: z.infer<type
       const script = "verify-" + (packet.format === "direct-review" ? "landing" : packet.format) + "-deployment.ts";
       await promisify(execFile)(process.execPath,[require.resolve("tsx/cli"),"--tsconfig",path.resolve(__dirname,"../../../tsconfig.json"),
         path.resolve(__dirname,"../../../scripts",script),"--mode","candidate","--origin",origin,"--canonical-origin",canonicalOrigin,
-        "--artifact",packet.artifactPath,"--screenshot-dir",temp,"--attempts","1","--receipt",receipt],{cwd:root,timeout:150000,windowsHide:true,maxBuffer:16*1024*1024});
+        "--artifact",packet.artifactPath,...(packet.format === "direct-review" ? ["--import-id",importId,...(packet.affiliateUrl ? ["--exact-url",packet.affiliateUrl] : [])] : []),"--screenshot-dir",temp,"--attempts","1","--receipt",receipt],{cwd:root,timeout:150000,windowsHide:true,maxBuffer:16*1024*1024});
       const saved = await storeEvidence(root,importId,JSON.parse(await readFile(receipt,"utf8")));
       await readImportVerifierEvidence(root,saved.path,{...target,importId,sourceFingerprint:packet.sourceFingerprint});
       return {rule,artifactRef,verifierRef:saved,renderedRoutes:target.renderedRoutes,artifactFingerprint:target.artifactFingerprint};
@@ -93,7 +99,7 @@ export async function presentationOperation(packet: Packet, {rule}: z.infer<type
     await page.route("**/*", route => route.request().isNavigationRequest() && new URL(route.request().url()).origin !== origin ? route.abort() : route.continue());
     const screenshots = [];
     for (const route of routes) {
-      const expected = new URL(route,origin);
+      const expected = new URL(target.format === "direct-review" ? candidateRequestPath(target.slug, importId) : route,origin);
       const response = await page.goto(expected.href,{waitUntil:"domcontentloaded",timeout:30000});
       if (!response?.ok() || page.url() !== expected.href) throw new Error("PRESENTATION_CANDIDATE_UNAVAILABLE");
       if (target.format === "direct-review" && await page.locator('meta[name="artifact-fingerprint"]').getAttribute("content") !== target.artifactFingerprint) {
@@ -102,7 +108,7 @@ export async function presentationOperation(packet: Packet, {rule}: z.infer<type
       await page.locator("main h1").first().waitFor({state:"visible"});
       const layout = await page.evaluate(() => ({overflow:document.documentElement.scrollWidth > window.innerWidth + 1, reduced:matchMedia("(prefers-reduced-motion: reduce)").matches}));
       if (layout.overflow || layout.reduced !== viewport.reducedMotion || errors.length) throw new Error("PRESENTATION_BROWSER_CHECK_FAILED");
-      screenshots.push(await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:true}),"png"));
+      screenshots.push(await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:false}),"png"));
     }
     if (errors.length) throw new Error("PRESENTATION_BROWSER_CHECK_FAILED");
     const executionRef = await storeEvidence(root,importId,{schemaVersion:"ExecutionEvidenceV1",kind:"browser",toolVersion:browser.version(),startedAt,

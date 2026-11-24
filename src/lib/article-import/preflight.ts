@@ -10,6 +10,8 @@ const run = promisify(execFile);
 const manifestSchema = z.object({
   schemaVersion: z.literal("ArticleWorkflowCapabilitiesV1"),
   openCodeVersion: openCodeVersionSchema,
+  visualReviewModel: z.string().min(1).optional(),
+  designEvidenceVersion: z.literal(2).optional(),
   assessmentModel: z.string().min(1).optional(),
   modelFamilies: z.record(z.string(), z.string().min(1)),
   files: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1),
@@ -50,6 +52,9 @@ export async function inspectArticlePreflight(root: string, checkTool: Capabilit
   catch (error) { diagnostics.push({ code: "CAPABILITY_UNAVAILABLE", detail: String(error) }); }
   try { if (!(await checkTool("python", ["--version"])).startsWith("Python 3.")) throw new Error("Python 3 required"); }
   catch (error) { diagnostics.push({ code: "CAPABILITY_UNAVAILABLE", detail: String(error) }); }
+  if (manifest.designEvidenceVersion === 2 && (!manifest.visualReviewModel || !Object.hasOwn(manifest.modelFamilies, manifest.visualReviewModel))) {
+    diagnostics.push({code:"MODEL_FAMILIES_UNCONFIGURED",detail:"Configure a registered image-capable visualReviewModel for screenshot judgments."});
+  }
   if (new Set(Object.values(manifest.modelFamilies)).size < 1) diagnostics.push({ code: "MODEL_FAMILIES_UNCONFIGURED", detail: "Configure at least one verified exact provider/model identity before editorial execution." });
   if (typeof manifest.modelFamilies["opencode-go/beam-free"] !== "string" || manifest.modelFamilies["opencode-go/beam-free"].trim().length === 0) diagnostics.push({ code: "MODEL_FAMILIES_UNCONFIGURED", detail: "Configure the exact opencode-go/beam-free Beam model family before editorial execution." });
   return { ok: diagnostics.length === 0, diagnostics, requirement: "Explicit manual/API trigger in primary checkout; no scheduling or automatic restoration." };

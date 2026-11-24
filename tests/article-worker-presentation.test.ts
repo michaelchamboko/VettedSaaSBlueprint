@@ -21,7 +21,7 @@ test("validation tools require the approved artifact and retain the render and r
     await mkdir(path.dirname(path.join(root,file)),{recursive:true});
     await writeFile(path.join(root,file),"/* fixture renderer */");
   }
-  for (const file of ["config/article-workflow-capabilities.json",".agents/skills/impeccable/reference/craft-floor.md",".agents/skills/impeccable/reference/critique.md"]) {
+  for (const file of ["config/article-workflow-capabilities.json",".agents/skills/impeccable/reference/craft-floor.md",".agents/skills/impeccable/SKILL.md",".agents/skills/impeccable/reference/critique.md",".agents/skills/external-article-import/references/design-judgment.md"]) {
     await cp(path.resolve(file),path.join(root,file));
   }
   const artifactPath = "fixture.json";
@@ -32,18 +32,19 @@ test("validation tools require the approved artifact and retain the render and r
   const render = await readEvidence(root,rendering) as {digest:string};
   let exchanges = 0;
   const exchange:Parameters<typeof presentationOperation>[2] = async (pass, input, refs, instructions, _prompt, model) => {
-    assert.equal(pass,"design:critique");
+    assert.equal(pass,"design:context");
     assert.equal(model,"opencode-go/beam-free");
     assert.equal(input.artifact,JSON.stringify(artifact));
     assert.deepEqual(refs[1],rendering);
-    assert.equal(instructions.length,2);
+    assert.equal(instructions.length,3);
     exchanges++;
-    return {output:{designReview:JSON.stringify({rule:"critique",artifactFingerprint:packet.approvedFingerprint,routes:[candidatePreviewPath(artifact.metadata.url_slug)],renderInputsRef:rendering,renderingDigest:render.digest,
+    return {output:{designReview:JSON.stringify({rule:"context",artifactFingerprint:packet.approvedFingerprint,routes:[candidatePreviewPath(artifact.metadata.url_slug)],renderInputsRef:rendering,renderingDigest:render.digest,
       verdict:"insufficient-evidence",findings:[],notes:"The fixture has no finished design."})},executionRef:refs[0]};
   };
   await assert.rejects(presentationOperation({...packet,stage:"REFINING"},{rule:"critique"},exchange),/APPROVAL_REQUIRED/);
   await assert.rejects(presentationOperation({...packet,approvedFingerprint:"0".repeat(64)},{rule:"critique"},exchange),/ARTIFACT_MISMATCH/);
-  const scoped = await presentationOperation(packet,{rule:"critique"},exchange);
+  await assert.rejects(presentationOperation(packet,{rule:"critique"},exchange));
+  const scoped = await presentationOperation(packet,{rule:"context"},exchange);
   assert.equal(scoped.judgment?.verdict,"insufficient-evidence");
   assert.equal(exchanges,1);
 });

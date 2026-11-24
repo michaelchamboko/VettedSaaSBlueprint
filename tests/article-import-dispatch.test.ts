@@ -231,7 +231,8 @@ test("recovering a killed dispatcher waits for its worker and reuses its exit re
   const ready = path.join(root, "worker-started");
   const finish = path.join(root, "worker-finish");
   async function until(check: () => Promise<void>) {
-    const until = Date.now() + 20000;
+    // Windows may cold-start Node, tsx and PowerShell under a loaded suite.
+    const until = Date.now() + 90000;
     while (true) {
       try { await check(); return; } catch (error) { if (Date.now() >= until) throw error; }
       await new Promise(resolve => setTimeout(resolve, 50));

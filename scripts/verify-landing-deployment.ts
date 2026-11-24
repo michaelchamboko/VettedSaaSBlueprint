@@ -4,13 +4,14 @@ import path from "node:path";
 import { chromium, type Browser, type Page, type ViewportSize } from "playwright";
 import { readImportArtifactTarget } from "../src/lib/article-import/format-validation";
 import { observeProductionCommit, verificationContext, writeImportVerifierEvidence } from "../src/lib/article-import/verification-evidence";
-import { candidatePreviewPath, candidatePreviewRobotsOk } from "../src/lib/article-import/candidate-route";
+import { candidateRequestPath, candidatePreviewPath, candidatePreviewRobotsOk } from "../src/lib/article-import/candidate-route";
 import { pageBlueprintSchema } from "../src/lib/schemas/contracts";
 
 type LandingTarget = {
   slug: string;
   path: string;
   exactUrl: string;
+  requestPath?: string;
 };
 
 export type LandingBrowserSnapshot = {
@@ -146,7 +147,7 @@ async function loadAgentReleaseTargets(slugFilter?: string): Promise<LandingTarg
   return targets;
 }
 
-async function loadCandidateTarget(slug: string | undefined, exactUrl: string | undefined): Promise<LandingTarget[]> {
+async function loadCandidateTarget(slug: string | undefined, exactUrl: string | undefined, importId?: string): Promise<LandingTarget[]> {
   if (!slug) throw new Error("Candidate verification requires a slug.");
   if (!/^[a-z0-9][a-z0-9-]*$/i.test(slug) || slug.includes("..") || slug.includes("/")) throw new Error("CANDIDATE_SLUG_INVALID");
   let resolvedExactUrl = exactUrl;
@@ -159,7 +160,7 @@ async function loadCandidateTarget(slug: string | undefined, exactUrl: string | 
     }
   }
   if (!resolvedExactUrl) throw new Error("CANDIDATE_EXACT_AFFILIATE_URL_REQUIRED");
-  return [{ slug, path: candidatePreviewPath(slug), exactUrl: resolvedExactUrl }];
+  return [{ slug, path: candidatePreviewPath(slug), requestPath: candidateRequestPath(slug, importId), exactUrl: resolvedExactUrl }];
 }
 
 async function fetchText(url: string): Promise<string> {
@@ -273,7 +274,7 @@ async function verifyViewport(
   });
 
   try {
-    const response = await page.goto(`${origin}${target.path}`, {
+    const response = await page.goto(`${origin}${target.requestPath ?? target.path}`, {
       waitUntil: "networkidle",
       timeout: 45_000,
     });
@@ -351,6 +352,7 @@ export async function verifyLandingDeployment({
   slug,
   exactUrl,
   artifactFingerprint,
+  importId,
   attempts = 20,
   retryMs = 15_000,
   screenshotDir,
@@ -362,6 +364,7 @@ export async function verifyLandingDeployment({
   slug?: string;
   exactUrl?: string;
   artifactFingerprint?: string;
+  importId?: string;
   attempts?: number;
   retryMs?: number;
   screenshotDir?: string;
@@ -375,7 +378,7 @@ export async function verifyLandingDeployment({
   }
 
   const targets = mode === "candidate"
-    ? await loadCandidateTarget(slug, exactUrl)
+    ? await loadCandidateTarget(slug, exactUrl, importId)
     : await loadAgentReleaseTargets(slug);
   const deployment = mode === "production" ? await waitForCommit(
     context.origin,
@@ -487,6 +490,7 @@ async function main() {
     expectedCommit,
     mode,
     exactUrl,
+    importId: mode === "candidate" ? argumentValue(args, "--import-id") : undefined,
     artifactFingerprint: approved?.target.artifactFingerprint,
     canonicalOrigin: argumentValue(args, "--canonical-origin"),
     slug: approved?.target.slug ?? argumentValue(args, "--slug"),

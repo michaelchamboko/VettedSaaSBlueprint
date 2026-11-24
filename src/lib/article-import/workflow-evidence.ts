@@ -27,7 +27,7 @@ export function createDesignReviewSchema(input: { rule: string; artifactFingerpr
 const common = { id: nonempty, createdAt: z.string().datetime({ offset: true }), importId: z.string().regex(/^article-[0-9a-f-]{36}$/), sourceFingerprint: hashSchema, requirementRevision: z.literal(WORKFLOW_REVISION) };
 const formatSchema = z.enum(CONTENT_FORMATS);
 export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal(WORKFLOW_REVISION), status: z.enum(["pass", "fail", "not-applicable", "recommendation-not-adopted"]), rationale: nonempty, evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict();
-export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("WorkflowEvidenceV1"), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
+export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.enum(["WorkflowEvidenceV1","WorkflowEvidenceV2"]), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
 export const researchEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("ResearchEvidenceV2"), sources: z.array(z.object({ id: nonempty, url: z.string().url(), retrievedAt: z.string().datetime({ offset: true }), snapshotRef: evidenceRefSchema }).strict()).min(1), claims: z.array(z.object({ id: nonempty, text: nonempty, sourceIds: z.array(nonempty).min(1), excerptLocations: z.array(z.object({ sourceId: nonempty, quote: nonempty }).strict()).min(1), limitations: z.array(nonempty), price: z.object({ amount: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/), period: nonempty, plan: nonempty, restrictions: z.array(nonempty) }).strict().optional() }).strict()).min(1), freshness: nonempty }).strict();
 export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview"] as const;
@@ -108,6 +108,37 @@ export async function designReviewInput(root: string, format: string, artifact: 
   const rendering = await validateRenderingInputs(root, renderInputsRef, { historical: isEvidenceSnapshotActive() });
   return designInputFromManifest(root, artifact, renderInputsRef, rendering, importArtifactTarget(formatSchema.parse(format), artifact));
 }
+export const designJudgmentInstruction = ".agents/skills/external-article-import/references/design-judgment.md";
+export const runtimeRules = ["desktop", "mobile", "reduced-motion"] as const;
+export const visualDesignRules = new Set(["critique", "audit", "polish"]);
+export const runtimeRefSchema = z.object({desktop:evidenceRefSchema, mobile:evidenceRefSchema, "reduced-motion":evidenceRefSchema}).strict();
+
+/** Reconstruct the exact runtime material seen by a visual reviewer from browser receipts. */
+export async function designRuntimeMaterial(root: string, importId: string, artifactRef: EvidenceRef, renderRef: EvidenceRef,
+  routes: string[], observations: z.infer<typeof runtimeRefSchema>) {
+  const images = new Map<string,EvidenceRef>();
+  const material = [];
+  let origin: string | undefined;
+  for (const rule of runtimeRules) {
+    const ref = observations[rule];
+    const prefix = ".automation/article-imports/evidence/" + importId + "/";
+    if (ref.path !== prefix + ref.sha256 + ".json") throw new Error("PRESENTATION_OBSERVATION_SCOPE");
+    const receipt = await validateExecutionEvidence(root,ref);
+    if (receipt.kind !== "browser" || ![artifactRef,renderRef].every(expected => receipt.inputRefs.some(r => r.path === expected.path && r.sha256 === expected.sha256)) ||
+        JSON.stringify(receipt.routes) !== JSON.stringify(routes) || receipt.screenshots.length !== routes.length || (origin && origin !== receipt.target) ||
+        !["127.0.0.1","localhost","[::1]"].includes(new URL(receipt.target).hostname) ||
+        (rule === "mobile" ? receipt.viewport.width > 767 : receipt.viewport.width < 1024) ||
+        receipt.viewport.reducedMotion !== (rule === "reduced-motion")) throw new Error("PRESENTATION_OBSERVATION_BINDING");
+    origin = receipt.target;
+    for (const image of receipt.screenshots) {
+      if (image.path !== prefix + image.sha256 + ".png") throw new Error("PRESENTATION_OBSERVATION_SCOPE");
+      images.set(image.path,image);
+    }
+    material.push({rule,ref,routes:receipt.routes,viewport:receipt.viewport,checks:receipt.checks,screenshots:receipt.screenshots});
+  }
+  return { browserObservations:JSON.stringify(material), images:[...images.values()] };
+}
+
 async function artifactFor(root: string, binding: EvidenceBinding): Promise<unknown> {
   if (!binding.artifactPath) throw new Error("EVIDENCE_ARTIFACT_REQUIRED");
   const value: unknown = JSON.parse((await readEvidenceBytes(root, binding.artifactPath)).toString("utf8"));
@@ -126,8 +157,8 @@ export async function validateResearchEvidence(root: string, ref: EvidenceRef, b
   for (const claim of value.claims) {
     if (claim.sourceIds.some((id) => !snapshots.has(id))) throw new Error("RESEARCH_SOURCE_MISSING");
     for (const excerpt of claim.excerptLocations) if (!claim.sourceIds.includes(excerpt.sourceId) || !snapshots.get(excerpt.sourceId)?.includes(excerpt.quote)) throw new Error("RESEARCH_EXCERPT_MISMATCH");
-    if (/\b(?:starts? at|costs?|priced? at)\s*\/|(?:\$|£|€)\s*\//i.test(claim.text)) throw new Error("RESEARCH_PRICE_INVALID");
-    if (/(?:\$|£|€)\s*\d|\b\d+(?:\.\d+)?\s*(?:USD|GBP|EUR)\b/i.test(claim.text) && !claim.price) throw new Error("RESEARCH_PRICE_CONTEXT_REQUIRED");
+    if (/\b(?:starts? at|costs?|priced? at)\s*\/|(?:\$|Ã‚Â£|Ã¢â€šÂ¬)\s*\//i.test(claim.text)) throw new Error("RESEARCH_PRICE_INVALID");
+    if (/(?:\$|Ã‚Â£|Ã¢â€šÂ¬)\s*\d|\b\d+(?:\.\d+)?\s*(?:USD|GBP|EUR)\b/i.test(claim.text) && !claim.price) throw new Error("RESEARCH_PRICE_CONTEXT_REQUIRED");
   }
   return value;
 }
@@ -223,7 +254,7 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   return value;
 }
 
-export type WorkflowEvidenceRecord = EvidenceBinding & { stage: string; schemaVersion?: string; workflowVersion?: number; evidenceRefs?: z.infer<typeof evidenceRefsSchema>; terminalRef?: EvidenceRef; contentApproval?: { artifactPath: string }; release?: { commitSha: string; deploymentId: string; canonicalUrl: string }; sourceRef?: EvidenceRef };
+export type WorkflowEvidenceRecord = EvidenceBinding & { stage: string; schemaVersion?: string; workflowVersion?: number; evidenceRefs?: z.infer<typeof evidenceRefsSchema>; terminalRef?: EvidenceRef; presentation?: {artifactFingerprint: string}; contentApproval?: { artifactPath: string }; release?: { commitSha: string; deploymentId: string; canonicalUrl: string }; sourceRef?: EvidenceRef };
 export type WorkflowEvaluation = { ok: boolean; diagnostics: string[]; earliestRequiredStage?: WorkflowStage; validatedRefs: EvidenceRef[] };
 export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, context: { root: string; throughStage?: string; artifactPath?: string }, mode: "historical-terminal" | "current-transition" | "duplicate-reuse" = "current-transition"): Promise<WorkflowEvaluation> {
   const validatedRefs: EvidenceRef[] = [];
@@ -265,14 +296,29 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
     return { ok: false, diagnostics: [error instanceof Error ? error.message : String(error)], earliestRequiredStage: required, validatedRefs };
   }
 }
-export async function validatePresentationEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
+export async function validatePresentationEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding, previouslyAccepted = false) {
   const value = workflowEvidenceSchema.parse(await readEvidence(root, ref)); assertBinding(value, binding);
+  if (value.schemaVersion === "WorkflowEvidenceV1" && !previouslyAccepted && !isEvidenceSnapshotActive()) {
+    const policy = JSON.parse((await readEvidenceBytes(root,"config/article-workflow-capabilities.json")).toString("utf8"));
+    if (policy.designEvidenceVersion === 2) throw new Error("PRESENTATION_RUNTIME_EVIDENCE_REQUIRED");
+  }
   if (value.stage !== "VALIDATING") throw new Error("PRESENTATION_STAGE_MISMATCH");
   assertPacket(value.packetId, binding, "VALIDATING");
   const artifact = await artifactFor(root, binding);
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
   const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
   const designInput = await designInputFromManifest(root, artifact, value.renderInputsRef, rendering, target);
+  const currentDesign = value.schemaVersion === "WorkflowEvidenceV2";
+  const reviewRoutes = target.format === "direct-review" ? [candidatePreviewPath(target.slug)] : target.renderedRoutes;
+  let runtime;
+  if (currentDesign) {
+    const observations = Object.fromEntries(runtimeRules.map(rule => {
+      const refs = value.ruleResults.find(r => r.ruleId === rule)?.evidenceRefs;
+      if (refs?.length !== 1) throw new Error("PRESENTATION_OBSERVATION_REQUIRED");
+      return [rule,refs[0]];
+    }));
+    runtime = await designRuntimeMaterial(root,binding.importId,value.artifactRef,value.renderInputsRef,reviewRoutes,runtimeRefSchema.parse(observations));
+  }
   const detectorInputs = requiredDetectorInputs(rendering, target);
   const detectedFiles = new Set<string>();
   if (fingerprintEditorialArtifact(await readEvidence(root, value.artifactRef)) !== fingerprintEditorialArtifact(artifact)) throw new Error("PRESENTATION_ARTIFACT_MISMATCH");
@@ -306,10 +352,12 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         detectedFiles.add(scannedFile);
       }
       if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
-        if (execution.kind !== "opencode" || execution.pass !== `design:${rule}` || proseProjectionDigest(execution.input) !== proseProjectionDigest(designInput)) throw new Error("PRESENTATION_JUDGMENT_REQUIRED");
+        const visual = runtime && visualDesignRules.has(rule) ? runtime : undefined;
+        const expectedInput = visual ? {...designInput,browserObservations:visual.browserObservations} : designInput;
+        if (execution.kind !== "opencode" || JSON.stringify(execution.imageRefs ?? []) !== JSON.stringify(visual?.images ?? []) || execution.pass !== `design:${rule}` || proseProjectionDigest(execution.input) !== proseProjectionDigest(expectedInput)) throw new Error("PRESENTATION_JUDGMENT_REQUIRED");
         assertPacket(execution.packetId, binding, "VALIDATING");
         const reference = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : rule === "context" ? IMPECCABLE_ROOT + "SKILL.md" : IMPECCABLE_ROOT + `reference/${rule}.md`;
-        await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md"]);
+        await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md", ...(currentDesign ? [designJudgmentInstruction] : [])]);
         const allowedJudgmentRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
 const designReview = createDesignReviewSchema({ rule, artifactFingerprint: fingerprintEditorialArtifact(artifact), renderInputsRef: value.renderInputsRef, renderingDigest: rendering.digest, allowedRoutes: allowedJudgmentRoutes }).parse(JSON.parse(execution.output.designReview ?? "null"));
 if (designReview.verdict !== "pass") throw new Error("PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS");

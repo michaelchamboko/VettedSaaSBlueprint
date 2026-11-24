@@ -38,6 +38,7 @@ export async function validateApprovedArticlePreview(
   slug: string,
   importId: string,
   repositoryRoot: string,
+  renderer: "reference" | "direct-review" = "reference",
 ): Promise<PreviewValidationResult> {
   // 1. Dev-only guard
   if (!isDevEnvironment()) {
@@ -190,10 +191,10 @@ export async function validateApprovedArticlePreview(
   }
 
   // 15. Renderer prerequisites: presentation recipe and answer snippet
-  if (!blueprint.presentation) {
+  if (renderer === "reference" && !blueprint.presentation) {
     return { ok: false, error: "MISSING_PRESENTATION_RECIPE" };
   }
-  if (!blueprint.hero.answer_snippet?.trim()) {
+  if (renderer === "reference" && !blueprint.hero.answer_snippet?.trim()) {
     return { ok: false, error: "MISSING_ANSWER_SNIPPET" };
   }
 

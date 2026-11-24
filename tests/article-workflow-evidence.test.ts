@@ -120,6 +120,11 @@ test("a recaptured old design exchange cannot approve a new rendering manifest",
     critique.evidenceRefs = [await storeEvidence(root, id, recaptureStoredExchange(priorExecution, currentExecution.inputRefs, currentExecution.outputRefs))];
     await assert.rejects(validatePresentationEvidence(root, await storeEvidence(root, id, current), record), /PRESENTATION_JUDGMENT_REQUIRED/);
     await validatePresentationEvidence(root, fresh.presentation, record);
+    const policyPath = path.join(root,"config/article-workflow-capabilities.json");
+    const policy = JSON.parse(await readFile(policyPath,"utf8"));
+    await writeFile(policyPath,JSON.stringify({...policy,designEvidenceVersion:2}));
+    await assert.rejects(validatePresentationEvidence(root,fresh.presentation,record),/PRESENTATION_RUNTIME_EVIDENCE_REQUIRED/);
+    await validatePresentationEvidence(root,fresh.presentation,record,true);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test("protected metadata rebinding cannot retain prior editorial authoring or fidelity exchanges", async () => {

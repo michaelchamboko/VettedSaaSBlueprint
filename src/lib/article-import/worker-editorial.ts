@@ -14,7 +14,7 @@ import { normalizeOpenCodeVersion, openCodeExportArgs } from "./opencode-runtime
 
 const formats = { blog: "blog", visibility: "visibility", "direct-review": "landing", "decision-set": "decision" } as const;
 export const descriptor = z.object({ root: z.string(), importId: z.string().regex(/^article-[a-f0-9-]{36}$/), key: z.string().regex(/^[a-f0-9]{64}$/),
-  format: z.enum(["blog", "visibility", "direct-review", "decision-set", "agent_review_required"]), stage: z.enum(["TRANSFORMING", "REFINING", "VALIDATING"]), model: z.string(), research: evidenceRefSchema.optional(), researchGeneration: z.number().int().optional(), artifactPath: z.string().optional(), approvedFingerprint: z.string().optional(), rendering: evidenceRefSchema.optional(), sourceFingerprint: z.string(), requirementRevision: z.string(), executable: z.string() }).strict();
+  format: z.enum(["blog", "visibility", "direct-review", "decision-set", "agent_review_required"]), stage: z.enum(["TRANSFORMING", "REFINING", "VALIDATING"]), model: z.string(), research: evidenceRefSchema.optional(), researchGeneration: z.number().int().optional(), affiliateUrl: z.string().nullable().optional(), artifactPath: z.string().optional(), approvedFingerprint: z.string().optional(), rendering: evidenceRefSchema.optional(), sourceFingerprint: z.string(), requirementRevision: z.string(), executable: z.string() }).strict();
 export type Packet = z.infer<typeof descriptor>;
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "beamReview", "finalFidelityReview"] as const;
 const file = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}\.json$/);
@@ -44,7 +44,7 @@ function run(executable: string, args: string[], cwd: string, stdin?: string) {
 
 type Reference = z.infer<typeof evidenceRefSchema>;
 async function capturedExchange(packet: Packet, pass: string, prose: Record<string,string>, refs: Reference[],
-  instructions: (Reference & {text:string})[], prompt: string, model: string, invoke: typeof run) {
+  instructions: (Reference & {text:string})[], prompt: string, model: string, invoke: typeof run, imageRefs: Reference[] = []) {
   const {root, key, importId} = packet;
   const capabilities = JSON.parse(await readFile(path.join(root, "config/article-workflow-capabilities.json"), "utf8"));
   const version = normalizeOpenCodeVersion(await invoke(packet.executable, ["--version"], root));
@@ -53,7 +53,7 @@ async function capturedExchange(packet: Packet, pass: string, prose: Record<stri
   try {
     await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ default_agent: "editorial", compaction: { auto: false }, agents: { editorial: { mode: "primary", description: "Dedicated editorial exchange", system: prompt, permissions: [{ action: "*", resource: "*", effect: "deny" }] } } }));
     const envelope = JSON.stringify({packetId: key, pass, prose, digest: proseProjectionDigest(prose), instructions});
-    const stdout = await invoke(packet.executable, ["run", "--standalone", "--model", model, "--format", "json"], cwd, envelope);
+    const stdout = await invoke(packet.executable, ["run", "--standalone", "--model", model, "--format", "json", ...imageRefs.flatMap(ref => ["--file",path.resolve(root,ref.path)])], cwd, envelope);
     const events = stdout.trim().split(/\r?\n/).map(line => JSON.parse(line));
     const session = z.string().regex(/^ses_[a-zA-Z0-9]+$/).parse(events[0]?.sessionID);
     if (!events.every(e => e.sessionID === session) || events.at(-1)?.part?.reason !== "stop") throw new Error("EDITORIAL_EXCHANGE_INCOMPLETE");
@@ -62,7 +62,7 @@ async function capturedExchange(packet: Packet, pass: string, prose: Record<stri
     const [user, assistant] = messages;
     if (messages.length !== 3 || !assistant?.content?.some((p: {type:string}) => p.type === "text")) throw new Error("EDITORIAL_EXCHANGE_INCOMPLETE " + session + " " + messages.map((m: {type:string}) => m.type).join(","));
     const output = z.record(z.string(), z.string()).parse(JSON.parse(assistant.content.find((p: {type: string}) => p.type === "text").text));
-    const execution = extractOpenCodeExecution(raw, {version, sessionId: session, userMessageId: user.id, assistantMessageId: assistant.id, packetId: key, pass, input: prose, output, families: capabilities.modelFamilies, instructions, inputRefs: refs});
+    const execution = extractOpenCodeExecution(raw, {version, sessionId: session, userMessageId: user.id, assistantMessageId: assistant.id, packetId: key, pass, input: prose, output, families: capabilities.modelFamilies, instructions, inputRefs: refs, imageRefs});
     if (execution.kind !== "opencode" || execution.providerId + "/" + execution.modelId !== model) throw new Error("EXECUTION_MODEL_MISMATCH");
     const executionRef = await storeEvidence(root, importId, execution);
     return { output, executionRef };
@@ -81,8 +81,8 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
   const json = async (name: string) => JSON.parse((await readEvidenceBytes(root, await scoped(name))).toString("utf8"));
   if (packet.stage === "VALIDATING") {
     if (name !== "present") throw new Error("PRESENTATION_TOOL_REQUIRED");
-    return presentationOperation(packet, presentationTool.parse(args), async (pass, prose, refs, instructions, prompt, model) =>
-      capturedExchange(packet, pass, prose, refs, instructions, prompt, model, invoke));
+    return presentationOperation(packet, presentationTool.parse(args), async (pass, prose, refs, instructions, prompt, model, images) =>
+      capturedExchange(packet, pass, prose, refs, instructions, prompt, model, invoke, images));
   }
   if (name === "assess") {
     const input = assess.parse(args);

@@ -15,6 +15,13 @@ export function candidatePreviewPath(slug: string): string {
   return `${PREVIEW_PREFIX}/${slug}`;
 }
 
+export function candidateRequestPath(slug: string, importId?: string): string {
+  const pathname = candidatePreviewPath(slug);
+  if (!importId) return pathname;
+  if (!/^article-[0-9a-f-]{36}$/.test(importId)) throw new Error("INVALID_IMPORT_ID");
+  return pathname + "?importId=" + encodeURIComponent(importId);
+}
+
 export function candidateVisitedRoutes(slug: string): string[] {
   return [candidatePreviewPath(slug)];
 }

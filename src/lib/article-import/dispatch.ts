@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { createArticleImport, executePendingImport, loadImport, type ImportStageExecutor } from "./engine";
+import { createArticleImport, executePendingImport, loadImport, saveImport, type ImportStageExecutor } from "./engine";
 import type { ExternalArticleImportV1 } from "./contracts";
 import { createSupervisedImportExecutor } from "./supervised-executor";
 import {
@@ -34,6 +34,9 @@ function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecut
     if (packet.importId !== context.record.importId || packet.stage !== context.stage ||
         packet.idempotencyKey !== context.idempotencyKey || packet.sourceFingerprint !== context.record.sourceFingerprint ||
         packet.resultPath !== resultPath) throw new Error("STATE_INTEGRITY: work packet binding mismatch");
+    // The local candidate renderer independently verifies the persisted work packet.
+    await context.assertLease();
+    await saveImport(root, first);
     await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options);
 
     return baseExecutor({ ...context, record: first });
