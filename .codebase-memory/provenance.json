@@ -1,16 +1,19 @@
 {
   "toolVersion": "0.12.1",
-  "sourceSha": "74de7b71ee284a3ab4cf06e55a14e3b62055c051",
-  "sourceDigest": "be9d606161f6daafdfafa7b4f6e385c487c7ab90ddc6fa1b8d8beeed2b5de14f",
+  "sourceSha": "8c3f9fa2939c441e16db6b54fbe9ba45c43b42f1",
+  "sourceDigest": "ab01df43e9c2b60c0a02b14f5551a12ef405fd6c25df249a3e2e61f7a08bf73c",
   "hashes": {
-    "graph.db.zst": "6ae0a08b95b711019f73889d044dc0e6def51c9503ef5b2f27826ab27ea05915",
-    "artifact.json": "bcb5d6c62d64ffbc4277202800ac663a6a24c5c8ad4a6c8df77519e73c2afc2d",
+    "graph.db.zst": "21a2db8f493cae7949e7823f0628369674afdc943222baeee3842a69bca313f4",
+    "artifact.json": "ed4c481a904f65d8ed99697345c291f9a4645c80e9117f47cc5d8b9e46506e42",
     ".gitattributes": "e9ccd7b5d343bd2ceb7268d460c3215b10511d11988ec76624abfa0cca46bd44"
   },
-  "durationMs": 50107,
-  "indexedFiles": 1341,
+  "durationMs": 18331,
+  "indexedFiles": 1338,
   "excluded": [
     ".codebase-memory/.gitattributes",
+    ".codebase-memory/artifact.json",
+    ".codebase-memory/graph.db.zst",
+    ".codebase-memory/provenance.json",
     ".opencode/goals/state.json",
     "build-pack/editorial/article-ba86ffaf-evidence.json",
     "build-pack/editorial/article-ba86ffaf-quality.json",
@@ -120,10 +123,10 @@
     "project": "VettedSaaSBlueprint",
     "excluded": {
       "dirs": [
-        ".codebase-memory",
         ".git",
-        ".opencode",
+        ".codebase-memory",
         "gate-a-evidence",
+        ".opencode",
         "gate-b-evidence"
       ],
       "count": 6,
@@ -137,19 +140,19 @@
           "reason": "ignored-suffix"
         },
         {
-          "path": "public/generated/affiliate-catalogue-hero.png",
-          "reason": "ignored-suffix"
-        },
-        {
-          "path": "public/generated/getresponse-marketing-automation-workflow-v1.png",
-          "reason": "ignored-suffix"
-        },
-        {
-          "path": "public/generated/getresponse-studio-journey.png",
-          "reason": "ignored-suffix"
-        },
-        {
           "path": "public/blog/images/abandoned-cart-data-hero.webp",
+          "reason": "ignored-suffix"
+        },
+        {
+          "path": "public/blog/images/creative-experiment-evidence.webp",
+          "reason": "ignored-suffix"
+        },
+        {
+          "path": "public/blog/images/marketplace-profit-audit-hero.webp",
+          "reason": "ignored-suffix"
+        },
+        {
+          "path": "public/blog/images/marketplace-profit-lineage.webp",
           "reason": "ignored-suffix"
         }
       ],
@@ -158,7 +161,7 @@
       "note": "Excluded by design (gitignore/.cbmignore/skip-lists); examples only — full list in 'logfile'."
     },
     "skipped_count": 0,
-    "logfile": "C:/Users/micha/.cache/codebase-memory-mcp/logs/VettedSaaSBlueprint-1795553825.log",
+    "logfile": "/home/runner/.cache/codebase-memory-mcp/logs/VettedSaaSBlueprint-1795556227.log",
     "parse_partial_count": 2,
     "parse_partial": {
       "files": [
@@ -176,10 +179,10 @@
       "note": "Indexed, but constructs in these line ranges may be missing (best-effort signal); examples only — full list via index_status or 'logfile'."
     },
     "parse_unusable_count": 0,
-    "nodes": 20588,
-    "edges": 35457,
-    "expected_nodes": 20588,
-    "expected_edges": 35457,
+    "nodes": 20571,
+    "edges": 35427,
+    "expected_nodes": 20571,
+    "expected_edges": 35427,
     "adr_present": false,
     "adr_hint": "Project indexed. Consider creating an Architecture Decision Record: explore the codebase with get_architecture(aspects=['all']), then use manage_adr(mode='update') to persist architectural insights across sessions.",
     "artifact_present": true,
