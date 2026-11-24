@@ -4,7 +4,10 @@
     "servers": {
       "codebase-memory": {
         "type": "local",
-        "command": ["codebase-memory-mcp"],
+        "command": [
+          "node",
+          "scripts/code-intelligence/serve.ts"
+        ],
         "codemode": false
       }
     }

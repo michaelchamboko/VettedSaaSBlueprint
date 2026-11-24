@@ -12,7 +12,7 @@ node scripts/code-intelligence/validate.ts
 node scripts/code-intelligence/load.ts
 ```
 
-The installer verifies the pinned official release archive before extraction, installs to the user's `.local/bin`, and preserves global MCP settings. Windows and Linux x64 are supported by this installer. Add that directory to PATH if your shell cannot find `codebase-memory-mcp`. Restart Codex and OpenCode after installing project MCP configuration. OpenCode 2 uses `mcp.servers`; the project entry exposes native tools directly.
+The installer verifies the pinned official release archive before extraction, installs to the user's `.local/bin`, and preserves global MCP settings. Windows and Linux x64 are supported by this installer. Add that directory to PATH if your shell cannot find `codebase-memory-mcp`. The portable Node launcher resolves the per-user binary without relying on a desktop process's stale PATH. Restart Codex and OpenCode after installing project MCP configuration. OpenCode 2 uses `mcp.servers`; the project entry exposes native tools directly.
 
 The four shared files are `.codebase-memory/graph.db.zst`, `artifact.json`, `.gitattributes` and `provenance.json`. The native export contains the exporter's absolute root path. Import must rebind it to the current checkout; verification records this behavior explicitly. Do not put credentials in tracked source. `.cbmignore` excludes environment files, private keys, runtime records and local tool directories. Native discovery also applies Git ignore rules and skips symlinks. The publisher reads a separate checkout of a committed Git revision, never untracked or dirty working files. It fails on detected credential content or unexpected indexed files.
 
@@ -43,3 +43,4 @@ The GitHub workflow detects main changes. Nightly and manual jobs compare commit
 Failed indexing, validation or PR creation is a failed job, not a successful publication. GitHub's reviewed artifact remains the baseline. Do not resolve binary conflicts by combining databases; regenerate from the selected source commit. Full source SHA, hashes, counts, index duration and exclusions are recorded in provenance. Unsupported and partial parser results are retained in local index-status evidence and must be checked for the intended change.
 
 Upstream references: [pinned release](https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.12.1), [persistent artifacts](https://github.com/DeusData/codebase-memory-mcp/tree/v0.12.1#team-shared-graph-artifact), [OpenCode MCP configuration](https://opencode.ai/docs/mcp-servers/).
+
