@@ -17,6 +17,7 @@ The application is a single-operator content and decision-support system:
 - `scripts` — deterministic validation and deployment commands.
 - `planning.md` — the single planning and execution authority.
 - `docs/document-intelligence` — source inventory and stable source identifiers.
+- [Architecture decision records](docs/adr/README.md) explain choices that would be expensive to reverse.
 
 ## Local verification
 
