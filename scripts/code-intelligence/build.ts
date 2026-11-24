@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { tmpdir } from "node:os";
 import { ARTIFACT_FILES, CBM_VERSION, PROJECT, assertNoSecret, cbm, git, inspectGraph, sha256, sourceManifest, validate, writeJson } from "./common.ts";
 
 export function build(root: string) {
@@ -13,10 +14,10 @@ export function build(root: string) {
   const work = path.join(root, ".artifacts", "code-intelligence");
   mkdirSync(work, { recursive: true });
   const scratch = mkdtempSync(path.join(work, "build-"));
-  const checkout = path.join(scratch, "checkout");
+  const checkout = mkdtempSync(path.join(tmpdir(), "cbm-source-"));
   // A separate Git checkout binds native provenance and excludes all local working bytes.
   execFileSync("git", ["clone", "--quiet", "--no-checkout", "--shared", root, checkout], { stdio: "pipe" });
-  git(checkout, ["-c", "core.autocrlf=false", "checkout", "--quiet", "--detach", manifest.commit]);
+  git(checkout, ["-c", "core.longpaths=true", "-c", "core.autocrlf=false", "checkout", "--quiet", "--detach", manifest.commit]);
   for (const entry of manifest.included) assertNoSecret(readFileSync(path.join(checkout, entry.path)), entry.path);
   // Generated exports are not source changes. No source files are masked here.
   writeFileSync(path.join(checkout, ".git", "info", "exclude"), ".codebase-memory/\n");
@@ -47,4 +48,5 @@ export function build(root: string) {
   return { status: "built", sourceSha: manifest.commit, sourceDigest: manifest.digest, durationMs, nodes: graph.nodes, edges: graph.edges, indexedFiles: graph.indexedFiles, compressedBytes: graph.compressedBytes, evidence: scratch };
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)) console.log(JSON.stringify(build(process.cwd()), null, 2));
+
 
