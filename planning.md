@@ -193,3 +193,9 @@ The verification covers the command and callable paths, including stale submissi
 Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
 
 Scope: remove the loop requiring viewport words in page design notes while retaining required notes and unavailable-check rejection; use a single read of each research snapshot at the content-assessment review input builder and research validator through shared readVerifiedEvidenceBytes; preserve browser checks, affiliate verification, and editorial passes. Owned files: src/lib/article-import/{contracts,execution-evidence,workflow-evidence}.ts; tests/validation-slim-corrections.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/validation-slim-1124/verification.md.
+
+### Transition checks (TRANSITION-CHECKS-1124) (registered 2026-11-24)
+
+Classification: user directive (narrow corrective maintenance enabling existing article quality gate).
+
+Scope: keep the strict intake parser with requested ID equality and V2 safe-integer revision check while removing duplicated post-parse checks; remove the redundant release-checks loop; remove the pre-lease folder-resume scan while retaining terminal-proof and multiple-active validation under the intake lease; reuse already validated research evidence only within the same evaluation. Owned files: src/lib/article-import/{intake,engine,workflow-evidence}.ts; scripts/import-article.ts; tests/transition-checks-1124.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/transition-checks-1124/verification.md.

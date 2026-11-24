@@ -162,14 +162,19 @@ export async function validateResearchEvidence(root: string, ref: EvidenceRef, b
   }
   return value;
 }
-export async function validateContentAssessment(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
+async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, binding: EvidenceBinding, prevalidatedResearch?: { ref: EvidenceRef; value: z.infer<typeof researchEvidenceSchema> }) {
   const value = contentAssessmentSchema.parse(await readEvidence(root, ref));
   assertBinding(value, binding);
   const artifact = await artifactFor(root, binding);
   if (value.format !== binding.format || value.artifactFingerprint !== fingerprintEditorialArtifact(artifact) || value.schemaRevision !== revisions[value.format]) throw new Error("ASSESSMENT_ARTIFACT_MISMATCH");
   const currentResearch = binding.evidenceRefs?.research;
   if (currentResearch && (value.researchRef.path !== currentResearch.path || value.researchRef.sha256 !== currentResearch.sha256)) throw new Error("ASSESSMENT_RESEARCH_MISMATCH");
-  const research = await validateResearchEvidence(root, value.researchRef, binding);
+  let research: z.infer<typeof researchEvidenceSchema>;
+  if (prevalidatedResearch && prevalidatedResearch.ref.path === value.researchRef.path && prevalidatedResearch.ref.sha256 === value.researchRef.sha256) {
+    research = prevalidatedResearch.value;
+  } else {
+    research = await validateResearchEvidence(root, value.researchRef, binding);
+  }
   unique(value.ruleResults.map((x) => x.ruleId));
   if (value.ruleResults.length !== workflowRequirements.length) throw new Error("ASSESSMENT_RULE_MISSING");
   for (const requirement of workflowRequirements) {
@@ -193,6 +198,10 @@ export async function validateContentAssessment(root: string, ref: EvidenceRef, 
   // Final assessments are repeated in REFINING; either authentic stage packet is valid.
   try { assertPacket(execution.packetId, binding, "TRANSFORMING"); } catch { assertPacket(execution.packetId, binding, "REFINING"); }
   return value;
+}
+
+export async function validateContentAssessment(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
+  return validateContentAssessmentImpl(root, ref, binding);
 }
 export async function validateEditorialExecution(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
   const historical = isEvidenceSnapshotActive();
@@ -275,8 +284,13 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
       const ref = record.evidenceRefs?.[key]; if (!ref) throw new Error(`WORKFLOW_EVIDENCE_REQUIRED:${key}`);
       await validate(ref); validatedRefs.push(ref);
     };
-    if (rank >= 2) await need("research", "RESEARCHING", (ref) => validateResearchEvidence(context.root, ref, binding));
-    if (rank >= 3) await need("assessment", "TRANSFORMING", (ref) => validateContentAssessment(context.root, ref, binding));
+    let prevalidatedResearch: { ref: EvidenceRef; value: z.infer<typeof researchEvidenceSchema> } | undefined;
+    if (rank >= 2) await need("research", "RESEARCHING", async (ref) => {
+      const value = await validateResearchEvidence(context.root, ref, binding);
+      prevalidatedResearch = { ref, value };
+      return value;
+    });
+    if (rank >= 3) await need("assessment", "TRANSFORMING", (ref) => validateContentAssessmentImpl(context.root, ref, binding, prevalidatedResearch));
     if (rank >= 4) await need("editorial", "REFINING", (ref) => validateEditorialExecution(context.root, ref, binding));
     if (rank >= 5) await need("presentation", "VALIDATING", async (ref) => {
       const presentation = await validatePresentationEvidence(context.root, ref, binding, record.presentation);

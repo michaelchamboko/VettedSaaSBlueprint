@@ -48,7 +48,7 @@ async function saveRun(root: string, run: IntakeRun, lease: WorkflowLease): Prom
 export async function loadIntakeRun(root: string, runId: string): Promise<IntakeRun> {
   if (!/^intake-[0-9a-f-]{36}$/.test(runId)) throw new Error("INVALID_INTAKE_ID");
   const run = intakeSchema.parse(JSON.parse(await readFile(runPath(root, runId), "utf8"))) as IntakeRun;
-  if (!["ArticleIntakeRunV1", "ArticleIntakeRunV2"].includes(run.schemaVersion) || run.runId !== runId || !Array.isArray(run.entries) || run.entries.some((entry) => !["PENDING", "SKIPPED", "BLOCKED", "PROCESSING", "LIVE", "QUARANTINED"].includes(entry.status) || typeof entry.relativePath !== "string") || run.schemaVersion === "ArticleIntakeRunV2" && !Number.isSafeInteger(run.revision)) throw new Error("INVALID_INTAKE_STATE");
+  if (run.runId !== runId || run.schemaVersion === "ArticleIntakeRunV2" && !Number.isSafeInteger(run.revision)) throw new Error("INVALID_INTAKE_STATE");
   return run;
 }
 
