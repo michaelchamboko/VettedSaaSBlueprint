@@ -46,6 +46,17 @@ export function HomepageMotion() {
             },
           });
 
+          if (conditions.desktop) {
+            root.querySelectorAll(".governed-rows article").forEach((row) => {
+              ScrollTrigger.create({
+                trigger: row,
+                start: "top center",
+                end: "bottom center",
+                toggleClass: "is-reading",
+              });
+            });
+          }
+
           ScrollTrigger.batch("[data-home-motion='review-card']", {
             start: "top 88%",
             once: true,

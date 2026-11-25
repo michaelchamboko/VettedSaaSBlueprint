@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { fetchDiscoveryFiles } from "./lib/fetch-discovery-files";
 import path from "node:path";
 import { chromium } from "playwright";
 import { getPublishedVisibilityPage } from "../src/lib/visibility-pages/catalogue";
@@ -18,11 +19,7 @@ async function main() {
   const record = getPublishedVisibilityPage(route);
   if (!record) throw new Error(`No published visibility target: ${route}`);
   if (approved && JSON.stringify(record.page) !== JSON.stringify(visibilityPageSchema.parse(approved.artifact))) throw new Error("VISIBILITY_PUBLISHED_ARTIFACT_MISMATCH");
-  const [robots, sitemap] = await Promise.all(["robots.txt", "sitemap.xml"].map(async (file) => {
-    const response = await fetch(`${origin}/${file}`);
-    if (!response.ok) throw new Error(`${file}: HTTP ${response.status}`);
-    return response.text();
-  }));
+  const { robots, sitemap } = await fetchDiscoveryFiles(origin);
   if (/^Disallow:\s*\/\s*$/im.test(robots) || !sitemap.includes(`${canonicalOrigin}${route}`)) throw new Error("Visibility discovery checks failed.");
   const output = path.resolve(argument("--screenshot-dir") ?? ".automation/receipts/visibility-production");
   await mkdir(output, { recursive: true });

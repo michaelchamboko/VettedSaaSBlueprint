@@ -28,25 +28,26 @@ export type LandingBrowserSnapshot = {
   artifactFingerprint?: string;
 };
 
+function commonSnapshotFailures(snapshot: LandingBrowserSnapshot): string[] {
+  const failures: string[] = [];
+  if (!snapshot.httpOk) failures.push("route did not return HTTP success");
+  if (!snapshot.disclosureOk) failures.push("affiliate disclosure was not visible");
+  if (snapshot.exactCtaCount < 1 || !snapshot.allCtasExact) failures.push("affiliate CTAs did not all preserve the exact supplied URL");
+  if (!snapshot.ctasFitViewport) failures.push("an affiliate CTA exceeded the viewport");
+  if (!snapshot.allRevealSectionsVisible) failures.push("a landing section remained hidden");
+  if (snapshot.horizontalPageScrollPossible) failures.push("the page allowed horizontal scrolling");
+  if (snapshot.errorOverlay) failures.push("a framework error overlay was visible");
+  if (snapshot.browserErrors.length > 0) failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
+  return failures;
+}
+
 export function landingSnapshotFailures(
   snapshot: LandingBrowserSnapshot,
   expectedArtifactFingerprint?: string,
 ): string[] {
-  const failures: string[] = [];
-  if (!snapshot.httpOk) failures.push("route did not return HTTP success");
-  if (!snapshot.disclosureOk) failures.push("affiliate disclosure was not visible");
-  if (snapshot.exactCtaCount < 1 || !snapshot.allCtasExact) {
-    failures.push("affiliate CTAs did not all preserve the exact supplied URL");
-  }
-  if (!snapshot.ctasFitViewport) failures.push("an affiliate CTA exceeded the viewport");
-  if (!snapshot.allRevealSectionsVisible) failures.push("a landing section remained hidden");
-  if (snapshot.horizontalPageScrollPossible) failures.push("the page allowed horizontal scrolling");
+  const failures = commonSnapshotFailures(snapshot);
   if (!/\bindex\b/i.test(snapshot.robots) || /\bnoindex\b/i.test(snapshot.robots)) {
     failures.push("production metadata did not permit indexing");
-  }
-  if (snapshot.errorOverlay) failures.push("a framework error overlay was visible");
-  if (snapshot.browserErrors.length > 0) {
-    failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
   }
   return failures;
 }
@@ -55,21 +56,9 @@ export function candidateSnapshotFailures(
   snapshot: LandingBrowserSnapshot,
   expectedArtifactFingerprint?: string,
 ): string[] {
-  const failures: string[] = [];
-  if (!snapshot.httpOk) failures.push("route did not return HTTP success");
-  if (!snapshot.disclosureOk) failures.push("affiliate disclosure was not visible");
-  if (snapshot.exactCtaCount < 1 || !snapshot.allCtasExact) {
-    failures.push("affiliate CTAs did not all preserve the exact supplied URL");
-  }
-  if (!snapshot.ctasFitViewport) failures.push("an affiliate CTA exceeded the viewport");
-  if (!snapshot.allRevealSectionsVisible) failures.push("a landing section remained hidden");
-  if (snapshot.horizontalPageScrollPossible) failures.push("the page allowed horizontal scrolling");
+  const failures = commonSnapshotFailures(snapshot);
   if (!candidatePreviewRobotsOk(snapshot.robots)) {
     failures.push("candidate preview metadata was not noindex");
-  }
-  if (snapshot.errorOverlay) failures.push("a framework error overlay was visible");
-  if (snapshot.browserErrors.length > 0) {
-    failures.push(`browser errors were recorded: ${snapshot.browserErrors.join("; ")}`);
   }
   const observedFingerprint = snapshot.artifactFingerprint ?? "";
   const expectedFingerprint = expectedArtifactFingerprint ?? (snapshot as { expectedArtifactFingerprint?: string }).expectedArtifactFingerprint;

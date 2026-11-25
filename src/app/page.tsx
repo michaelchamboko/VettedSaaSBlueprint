@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import "./homepage-sections.css";
 import { HomepageMotion } from "@/components/public/HomepageMotion";
 import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { PublicReviewCard } from "@/components/public/PublicReviewCard";
@@ -23,6 +24,13 @@ const decisionGuides = [
   ["Solution guide", "Use the same criteria to compare approaches conditionally, not to chase a universal winner.", "/solution-hub"],
   ["Worked scenario", "Apply the framework to a five-person team without a technical administrator.", "/scenarios"],
 ] as const;
+
+const localizationLinks = {
+  "Decision Hub": "Check audience fit",
+  "Solution Hub": "Compare dubbing routes",
+  "Decision Scenario": "Plan a one-video pilot",
+} as const;
+const dubbingSource = "https://support.google.com/youtube/answer/15569972?hl=en";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -71,46 +79,67 @@ export default function Home() {
           </div>
         </section>
 
-        {decisionSets.map((set) => (
-          <section className="home-section decision-guide-catalogue" aria-labelledby={`decision-set-${set.slug}`} key={set.slug}>
-            <div className="section-heading" data-home-motion="reveal">
-              <p className="eyebrow">New evidence-led decision set · {set.evidenceState} evidence</p>
-              <h2 id={`decision-set-${set.slug}`}>{set.title}</h2>
-              <p>{set.userProblem}</p>
-            </div>
-            <div className="decision-guide-catalogue__grid">
-              {[["Decision guide", set.pages.decisionHub.canonicalPath], ["Solution guide", set.pages.solutionHub.canonicalPath], ["Worked scenario", set.pages.scenario.canonicalPath]].map(([title, href], index) => (
-                <article key={href} data-home-motion="review-card"><span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><h3>{title}</h3><p>{set.pages[index === 0 ? "decisionHub" : index === 1 ? "solutionHub" : "scenario"].decisionContext}</p><Link href={href}>Open guide <span aria-hidden="true">→</span></Link></article>
-              ))}
-            </div>
-          </section>
-        ))}
+        {decisionSets.map((set) => {
+          const governed = set.slug === "governed-ai-client-work-preparation";
+          const guides = [
+            ["Decision guide", set.pages.decisionHub],
+            ["Solution guide", set.pages.solutionHub],
+            ["Worked scenario", set.pages.scenario],
+          ] as const;
+          return (
+            <section key={set.slug} className={governed ? "home-section governed-index" : "home-section decision-guide-catalogue"} aria-labelledby={`decision-set-${set.slug}`}>
+              <div className={governed ? "governed-intro" : "section-heading"} data-home-motion={governed ? undefined : "reveal"}>
+                <p className="eyebrow">New evidence-led decision set · {set.evidenceState} evidence</p>
+                <h2 id={`decision-set-${set.slug}`}>{set.title}</h2>
+                <p>{set.userProblem}</p>
+              </div>
+              <div className={governed ? "governed-rows" : "decision-guide-catalogue__grid"}>
+                {guides.map(([title, page], index) => (
+                  <article key={page.canonicalPath} data-home-motion={governed ? undefined : "review-card"}>
+                    <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <h3>{title}</h3>
+                    <p>{page.decisionContext}</p>
+                    <Link href={page.canonicalPath}>Open guide <span aria-hidden="true">→</span></Link>
+                  </article>
+                ))}
+              </div>
+            </section>
+          );
+        })}
 
         <section className="home-section" aria-labelledby="latest-guides-title">
-          <div className="section-heading" data-home-motion="reveal">
-            <p className="eyebrow">Latest evidence-led guides</p>
+          <header className="buying-questions">
             <h2 id="latest-guides-title">Questions worth working through.</h2>
-            <p>Use the connected localization journey and current trend reports to frame a better software decision.</p>
-          </div>
-          <div className="studio-category-list">
-            <div className="studio-category" data-home-motion="reveal">
-              <div>
-                <p className="eyebrow">Video localization</p>
-                <h3>One connected journey from question to pilot.</h3>
-                <p>Start with audience fit, compare workable routes, then test the workflow against a real tutorial.</p>
-              </div>
+            <p>Practical buying questions, with context, trade-offs, and next steps.</p>
+          </header>
+          <div className="journal-sections">
+            <article className="dubbing-receipt" aria-labelledby="dubbing-question">
+              <p className="receipt-topic">Video localization</p>
+              <h3 id="dubbing-question">Do we need a dubbing tool?</h3>
+              <p>A small team wants to publish one tutorial in Spanish. Can the tools it already has do the job?</p>
+              <figure>
+                <blockquote cite={dubbingSource}>“You <em>cannot edit</em> automatic dubs.”</blockquote>
+                <figcaption><a href={dubbingSource}><strong>YouTube Help</strong> / Use automatic dubbing</a></figcaption>
+              </figure>
+              <p className="receipt-judgment">If a reviewer needs to change one line, compare a workflow that allows corrections.</p>
               <nav aria-label="Video localization guides">
-                {localizationPages.map((page) => <Link key={page.path} href={page.path}>{page.type}<span aria-hidden="true">↗</span></Link>)}
+                {localizationPages.map((page) => (
+                  <Link href={page.path} key={page.path}>{localizationLinks[page.type]} <span aria-hidden="true">↗</span></Link>
+                ))}
               </nav>
-            </div>
-            <div className="studio-category" data-home-motion="reveal">
+            </article>
+            <div className="report-spread">
               <div>
                 <p className="eyebrow">Trend reports</p>
                 <h3>Context for the next software conversation.</h3>
                 <p>Read the evidence, boundaries, and buyer questions behind the current SaaS shifts.</p>
               </div>
               <nav aria-label="Trend reports">
-                {trendReports.map((report) => <Link key={report.canonicalPath} href={report.canonicalPath}>{report.navLabel}<span aria-hidden="true">↗</span></Link>)}
+                {trendReports.map((report) => (
+                  <Link key={report.canonicalPath} href={report.canonicalPath} className="report-folio">
+                    <span>{report.navLabel} <span aria-hidden="true">↗</span></span>
+                  </Link>
+                ))}
               </nav>
             </div>
           </div>

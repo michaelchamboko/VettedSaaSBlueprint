@@ -1,14 +1,17 @@
+import { AdminFormPage } from "@/components/admin/AdminFormPage";
+
 export default function PurchaseDestinationReviewsPage() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
-      <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold">Purchase Destination Review</h1>
-        <p className="mt-3 text-sm text-slate-300">
-          Review the clicked destination without replacing the original affiliate URL, then capture the continuity cues that will guide the landing page.
-        </p>
-      </header>
-
-      <section className="mt-8 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+    <AdminFormPage
+      title="Purchase Destination Review"
+      description="Review the clicked destination without replacing the original affiliate URL, then capture the continuity cues that will guide the landing page."
+      asideTitle="Review rules"
+      asideItems={[
+        "The original affiliate URL remains the outbound URL and is never replaced by the final redirect target.",
+        "A current destination review or explicit owner override is required before first publication.",
+        "Review data should guide landing-page continuity, CTA wording, and motion/profile choices.",
+      ]}
+    >
         <form className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6" method="post" action="/api/admin/purchase-destination-reviews">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm block md:col-span-2">
@@ -81,13 +84,6 @@ export default function PurchaseDestinationReviewsPage() {
           </button>
         </form>
 
-        <aside className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-6 text-sm text-slate-300">
-          <h2 className="text-lg font-medium text-white">Review rules</h2>
-          <p>The original affiliate URL remains the outbound URL and is never replaced by the final redirect target.</p>
-          <p>A current destination review or explicit owner override is required before first publication.</p>
-          <p>Review data should guide landing-page continuity, CTA wording, and motion/profile choices.</p>
-        </aside>
-      </section>
-    </main>
+    </AdminFormPage>
   );
 }

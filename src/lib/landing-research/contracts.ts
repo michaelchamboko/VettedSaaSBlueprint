@@ -6,7 +6,7 @@ export const AUTOMATION_RESEARCH_CONTRACT_VERSION = "AutomationResearchContractV
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 const httpsUrlSchema = z.string().url().refine((value) => new URL(value).protocol === "https:", "HTTPS URL required.");
 
-export const automationExecutorRequestSchema = z.object({
+const automationExecutorBaseFields = {
   schema_version: z.literal(AUTOMATION_RESEARCH_CONTRACT_VERSION),
   capability: z.enum(["product_identity", "research"]),
   job_id: z.string().uuid(),
@@ -14,6 +14,10 @@ export const automationExecutorRequestSchema = z.object({
   exact_url: httpsUrlSchema,
   url_fingerprint: sha256Schema,
   input_digest: sha256Schema,
+};
+
+export const automationExecutorRequestSchema = z.object({
+  ...automationExecutorBaseFields,
   product_identity: z.record(z.string(), z.unknown()).optional(),
 }).strict();
 
@@ -84,13 +88,7 @@ export const automationResearchEvidenceSchema = z.object({
 }).strict();
 
 export const automationExecutorResponseSchema = z.object({
-  schema_version: z.literal(AUTOMATION_RESEARCH_CONTRACT_VERSION),
-  capability: z.enum(["product_identity", "research"]),
-  job_id: z.string().uuid(),
-  stage_attempt_id: z.string().uuid(),
-  exact_url: httpsUrlSchema,
-  url_fingerprint: sha256Schema,
-  input_digest: sha256Schema,
+  ...automationExecutorBaseFields,
   product_identity: automationProductIdentitySchema.optional(),
   research_evidence: automationResearchEvidenceSchema.optional(),
   snapshots: researchSourceSnapshotBundleSchema.optional(),

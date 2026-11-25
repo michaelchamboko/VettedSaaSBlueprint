@@ -195,16 +195,22 @@ export function canonicalDigest(value: unknown): string {
 export const canonicalReceiptDigest = canonicalDigest;
 export const receiptCanonicalDigest = canonicalDigest;
 
+function isValidTrustedHistoricalIdentity(trusted: TrustedHistoricalIdentity): boolean {
+  const importId = trusted.importId;
+  if (typeof importId !== "string" || !/^article-[0-9a-f-]{36}$/.test(importId)) return false;
+  const sourceFingerprint = trusted.sourceFingerprint;
+  if (typeof sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+  return true;
+}
+
 function matchHistoricalCandidateReceipt(
   allowlist: unknown,
   trusted: TrustedHistoricalIdentity | undefined,
   value: unknown,
 ): boolean {
   if (!trusted) return false;
-  const importId = trusted.importId;
-  if (typeof importId !== "string" || !/^article-[0-9a-f-]{36}$/.test(importId)) return false;
-  const sourceFingerprint = trusted.sourceFingerprint;
-  if (typeof sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+  if (!isValidTrustedHistoricalIdentity(trusted)) return false;
+  const { importId, sourceFingerprint } = trusted;
   if (!Array.isArray(allowlist)) return false;
   const submittedCompactDigest = createHash("sha256").update(JSON.stringify(value)).digest("hex");
   const submittedCanonicalDigest = createHash("sha256").update(canonicalJson(value)).digest("hex");
@@ -246,10 +252,7 @@ export function hasAuthenticatedHistoricalContext(
     trusted = trustedOrRoot as TrustedHistoricalIdentity;
   }
   if (!trusted) return false;
-  const importId = trusted.importId;
-  if (typeof importId !== "string" || !/^article-[0-9a-f-]{36}$/.test(importId)) return false;
-  const sourceFingerprint = trusted.sourceFingerprint;
-  if (typeof sourceFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(sourceFingerprint)) return false;
+  if (!isValidTrustedHistoricalIdentity(trusted)) return false;
 
   let allowlist: unknown;
   try {

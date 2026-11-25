@@ -4,21 +4,9 @@ import path from "node:path";
 
 import { z } from "zod";
 
-import {
-  approvedJourneyCatalogueReferences,
-  journeyCompositionFamilies,
-} from "./presentation-options";
+import { evidenceStateSchema, journeyPageIdentityFields, journeyPresentationSchema, sourceReferenceSchema } from "./shared-schemas";
 
-const evidenceStateSchema = z.enum(["validated", "partial", "insufficient", "conflicting"]);
 const safeSlugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-
-const sourceReferenceSchema = z.object({
-  documentId: z.string().min(1),
-  heading: z.string().min(1),
-  sectionUid: z.string().min(1),
-  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
-  reviewedAt: z.string().date(),
-}).strict();
 
 export function fingerprintDecisionSetSources(sources: z.infer<typeof sourceReferenceSchema>[]): string {
   return createHash("sha256").update(JSON.stringify(sources), "utf8").digest("hex");
@@ -41,21 +29,13 @@ const pageSchema = z.object({
   version: z.literal(2),
   pageType: z.enum(["decision-hub", "solution-hub", "scenario"]),
   canonicalPath: z.string().startsWith("/"),
-  headline: z.string().min(1),
-  decisionContext: z.string().min(1),
-  evidenceState: evidenceStateSchema,
-  sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
-  reviewDate: z.string().date(),
+  ...journeyPageIdentityFields,
   blocks: z.array(blockSchema).min(1),
   motionBrief: z.object({
     majorPatterns: z.array(z.string().min(1)).min(1).max(3),
     reducedMotion: z.string().min(1),
   }).strict(),
-  presentation: z.object({
-    compositionFamily: z.enum(journeyCompositionFamilies),
-    catalogueReferences: z.array(z.enum(approvedJourneyCatalogueReferences)).min(2).max(3),
-    artDirection: z.string().min(1),
-  }).strict(),
+  presentation: journeyPresentationSchema,
   connectedRoutes: z.array(z.string().startsWith("/")).length(2),
 }).strict();
 

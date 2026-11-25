@@ -1,0 +1,82 @@
+.governed-index, .journal-sections {
+  --journal-display: Georgia, "Times New Roman", serif;
+  --vermilion: #a63f20;
+}
+.governed-index { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); align-items: start; gap: clamp(2rem, 5vw, 6rem); }
+.governed-intro h2, .journal-sections h3 { margin: .3em 0; font: 400 clamp(2.8rem, 4.7vw, 5.2rem)/1 var(--journal-display); letter-spacing: -.04em; text-wrap: balance; }
+.governed-intro > p:last-child, .journal-sections > div > div > p:last-child { max-width: 54ch; margin: 1.3em 0; line-height: 1.55; }
+.governed-intro .eyebrow { color: var(--vermilion); font-size: .84rem; letter-spacing: .07em; }
+.governed-rows article { position: relative; display: grid; grid-template-columns: auto 1fr; gap: .55rem 1.25rem; padding: clamp(1.6rem, 3vw, 3.25rem) .5rem; border-top: 1px solid var(--ink); }
+.governed-rows article:last-child { border-bottom: 1px solid var(--ink); }
+.governed-rows article > span, .governed-rows h3 { margin: 0; font: 400 clamp(1.7rem, 3.1vw, 3.4rem)/1.08 var(--journal-display); }
+.governed-rows p, .governed-rows a { grid-column: 2; margin: 0; }
+.governed-rows p { max-width: 52ch; line-height: 1.55; }
+.governed-rows a { width: fit-content; padding-block: .35rem; font-weight: 650; }
+.governed-rows a::after { content: ""; position: absolute; inset: 0; }
+.governed-rows article::before { content: ""; position: absolute; top: -1px; inset-inline: 0; height: 3px; background: var(--vermilion); transform: scaleX(0); transform-origin: left; }
+.governed-rows article:focus-within::before { transform: scaleX(1); }
+.journal-sections .eyebrow { color: inherit; font: 500 clamp(1.1rem, 2vw, 1.7rem)/1.2 var(--journal-display); text-transform: none; letter-spacing: 0; }
+.report-spread { padding-top: clamp(4rem, 8vw, 8rem); }
+.report-spread .eyebrow { padding-bottom: .65rem; border-bottom: 1px solid var(--ink); }
+.report-spread nav { display: grid; padding-top: 1.5rem; isolation: isolate; }
+.report-folio { --folio-color: #d59a79; --tab: 0; display: block; position: relative; padding: 1rem 3%; min-height: clamp(13rem, 30vw, 26rem); background: var(--folio-color) right center / auto 100% no-repeat; background-image: url("/home-folios/network.svg"); box-shadow: 0 -1px 0 #34291922, 0 8px 16px #392a1914; }
+.report-folio:nth-child(2) { --folio-color: #e9dfce; --tab: 1; background-image: url("/home-folios/folds.svg"); }
+.report-folio:nth-child(3) { --folio-color: #a7ac85; --tab: 2; background-image: url("/home-folios/interlock.svg"); }
+.report-folio > span { display: inline-block; position: relative; max-width: 62%; font: 400 clamp(1.65rem, 3vw, 3rem)/1.15 var(--journal-display); letter-spacing: -.035em; background-color: var(--folio-color); }
+.report-folio:focus-visible { z-index: 4; }
+@media (min-width: 801px) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
+  .governed-intro { position: sticky; top: 2rem; }
+  .governed-rows article::before, .governed-rows h3 { transition: transform 240ms ease-out; }
+  .governed-rows:not(:focus-within) .is-reading::before { transform: scaleX(1); }
+  .governed-rows:not(:focus-within) .is-reading > span, .governed-rows article:focus-within > span { color: var(--vermilion); }
+  .governed-rows:not(:focus-within) .is-reading h3, .governed-rows article:focus-within h3 { transform: translateX(8px); }
+  .report-folio { position: sticky; top: calc(1rem + var(--tab) * 5rem); }
+}
+@media (max-width: 800px) {
+  .governed-index { grid-template-columns: 1fr; }
+  .governed-intro h2, .journal-sections h3 { font-size: clamp(2.3rem, 8.4vw, 4rem); }
+  .report-spread nav { gap: .65rem; }
+  .report-folio { min-height: 7.5rem; padding: 1.2rem; background-size: auto 92%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-spread nav { gap: .75rem; }
+  .report-folio { min-height: clamp(7.5rem, 15vw, 12rem); }
+}
+
+
+.buying-questions, .dubbing-receipt { width: min(100%, 54rem); margin-inline: auto; }
+.buying-questions { border-bottom: 1px solid currentColor; padding-bottom: 1.35rem; }
+.buying-questions h2, .dubbing-receipt h3 {
+  margin: 0;
+  font: 600 clamp(1.8rem, 4vw, 3.5rem)/1.08 Georgia, serif;
+  letter-spacing: -.045em;
+}
+.buying-questions p, .dubbing-receipt > p { margin: .65rem 0 0; font-size: clamp(1rem, 2vw, 1.5rem); line-height: 1.4; }
+.dubbing-receipt { padding-top: clamp(1.2rem, 3vw, 2.25rem); }
+.dubbing-receipt .receipt-topic, .dubbing-receipt .receipt-judgment {
+  color: var(--vermilion); font: italic 400 clamp(1.3rem, 2.9vw, 2.1rem)/1.25 Georgia, serif;
+}
+.dubbing-receipt .receipt-topic { margin: 0 0 .8rem; }
+.dubbing-receipt h3 { font-size: clamp(2.1rem, 5vw, 4rem); }
+.dubbing-receipt figure { margin: clamp(1.15rem, 3vw, 2rem) 0 0; }
+.dubbing-receipt blockquote {
+  margin: 0; padding: clamp(2rem, 6vw, 5rem) 6.5%;
+  background: url("/home-folios/dubbing-paper.webp") center / 100% 100% no-repeat;
+  font: 400 clamp(2.5rem, 7.8vw, 6rem)/1.04 Georgia, serif; letter-spacing: -.045em;
+}
+.dubbing-receipt blockquote em { white-space: nowrap; text-decoration: underline var(--vermilion) .05em; text-underline-offset: .12em; }
+.dubbing-receipt figcaption { padding: .85rem 0 1.1rem; border-bottom: 1px solid currentColor; }
+.dubbing-receipt figcaption a, .dubbing-receipt nav a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.dubbing-receipt .receipt-judgment { margin: 1rem 0; }
+.dubbing-receipt nav { display: grid; justify-items: start; }
+.dubbing-receipt nav a { display: inline-flex; align-items: center; gap: .25em; min-height: 44px; font-size: clamp(1rem, 2vw, 1.35rem); }
+@supports (animation-timeline: view()) {
+  @media (min-width: 801px) and (prefers-reduced-motion: no-preference) {
+    .dubbing-receipt blockquote em {
+      text-decoration: none;
+      background: linear-gradient(var(--vermilion), var(--vermilion)) left bottom / 100% .05em no-repeat;
+      animation: receipt-underline linear both; animation-timeline: view(); animation-range: entry 0% cover 40%;
+    }
+    @keyframes receipt-underline { from { background-size: 0% .05em; } to { background-size: 100% .05em; } }
+  }
+}

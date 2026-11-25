@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LegalTrustLinks } from "./LegalTrustLinks";
 
 import type { PageBlueprint } from "@/lib/schemas/contracts";
 import { getRenderableSectionOrder, shouldRenderReferenceSubheadline, type ReferenceComposedSectionKey } from "@/lib/landing/reference-composed";
@@ -135,7 +136,7 @@ export function ReferenceComposedReviewPage({
         {sections.map((sectionKey) => <section key={sectionKey} className="landing-reference-composed__section" data-section-key={sectionKey} data-section-family={presentation.section_variants[sectionKey]} data-motion="reveal"><div className="landing-reference-composed__divider" data-motion="divider" /><div className="landing-reference-composed__section-content"><SectionContent sectionKey={sectionKey} blueprint={blueprint} affiliateUrlOverride={affiliateUrlOverride} /></div></section>)}
         <footer className="landing-reference-composed__footer">
           <p>{blueprint.affiliate_disclosure.full_disclosure}</p>
-          <nav aria-label="Legal and trust links"><Link href="/affiliate-disclosure">Affiliate disclosure</Link><Link href="/editorial-policy">Editorial policy</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/contact">Contact</Link></nav>
+          <LegalTrustLinks />
         </footer>
       </div>
       {blueprint.metadata.motion_profile === "gsap_editorial" ? <LandingPageMotion pageSlug={blueprint.metadata.url_slug} variant={presentation.motion} /> : null}

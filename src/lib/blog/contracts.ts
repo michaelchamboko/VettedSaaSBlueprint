@@ -21,6 +21,13 @@ export const blogSectionSchema = z.object({
   caution: z.string().min(40).optional(),
 });
 
+export const blogImageSchema = z.object({
+  path: z.string().regex(/^\/blog\/images\/[a-z0-9-]+\.(?:webp|avif)$/),
+  alt: z.string().min(20).max(180),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
 export const blogPostSchema = z.object({
   schemaVersion: z.literal("BlogPostV1"),
   slug: slugSchema,
@@ -57,18 +64,8 @@ export const blogPostSchema = z.object({
   sources: z.array(blogSourceSchema).min(3).max(10),
   relatedReviewSlugs: z.array(slugSchema).max(2),
   media: z.object({
-    hero: z.object({
-      path: z.string().regex(/^\/blog\/images\/[a-z0-9-]+\.(?:webp|avif)$/),
-      alt: z.string().min(20).max(180),
-      width: z.number().int().positive(),
-      height: z.number().int().positive(),
-    }),
-    figure: z.object({
-      path: z.string().regex(/^\/blog\/images\/[a-z0-9-]+\.(?:webp|avif)$/),
-      alt: z.string().min(20).max(180),
-      width: z.number().int().positive(),
-      height: z.number().int().positive(),
-    }),
+    hero: blogImageSchema,
+    figure: blogImageSchema,
   }),
 });
 
