@@ -40,7 +40,6 @@ test("sitemap contains the public home and every legal route", () => {
 
 test("homepage links to the canonical localization journey and trend report sources", () => {
   const source = readFileSync("src/app/page.tsx", "utf8");
-  const styles = readFileSync("src/app/homepage-sections.css", "utf8");
   assert.match(source, /import \{ localizationPages \} from .*video-localization/);
   assert.match(source, /import \{ trendReports \} from .*trend-reports/);
   assert.match(source, /localizationPages\.map/);
@@ -51,7 +50,8 @@ test("homepage links to the canonical localization journey and trend report sour
   assert.match(source, /aria-label="Video localization guides"/);
   assert.match(source, /aria-label="Trend reports"/);
   assert.doesNotMatch(source, /latest-guides-title[\s\S]*decision-guide-catalogue__grid/);
-  assert.match(styles, /\.tutorial-journey\.is-scrubbing/);
+  assert.match(source, /<blockquote cite=\{dubbingSource\}/);
+  assert.match(source, /<a href=\{dubbingSource\}/);
 });
 
 test("sitemap includes only review summaries supplied by the audited publication catalogue", () => {

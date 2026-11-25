@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import "./homepage-sections.css";
-import { TutorialFrame } from "@/components/public/TutorialFrame";
 import { HomepageMotion } from "@/components/public/HomepageMotion";
 import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { PublicReviewCard } from "@/components/public/PublicReviewCard";
@@ -26,11 +25,12 @@ const decisionGuides = [
   ["Worked scenario", "Apply the framework to a five-person team without a technical administrator.", "/scenarios"],
 ] as const;
 
-const tutorialSteps = {
-  "Decision Hub": ["Is this tutorial worth translating?", "Check audience fit"],
-  "Solution Hub": ["Which route fits?", "Compare localization routes"],
-  "Decision Scenario": ["Would you publish this version?", "Explore the one-tutorial pilot"],
+const localizationLinks = {
+  "Decision Hub": "Check audience fit",
+  "Solution Hub": "Compare dubbing routes",
+  "Decision Scenario": "Plan a one-video pilot",
 } as const;
+const dubbingSource = "https://support.google.com/youtube/answer/15569972?hl=en";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -108,27 +108,26 @@ export default function Home() {
         })}
 
         <section className="home-section" aria-labelledby="latest-guides-title">
-          <div className="section-heading" data-home-motion="reveal">
-            <p className="eyebrow">Latest evidence-led guides</p>
+          <header className="buying-questions">
             <h2 id="latest-guides-title">Questions worth working through.</h2>
-            <p>Use the connected localization journey and current trend reports to frame a better software decision.</p>
-          </div>
+            <p>Practical buying questions, with context, trade-offs, and next steps.</p>
+          </header>
           <div className="journal-sections">
-            <nav className="tutorial-journey" aria-label="Video localization guides">
-              <div className="tutorial-steps">
-                {localizationPages.map((page, index) => (
-                  <section className="tutorial-step" key={page.path}>
-                    <div>
-                      {index === 0 && <p className="eyebrow">Video localization</p>}
-                      <h3>{tutorialSteps[page.type][0]}</h3>
-                      <Link href={page.path}>{tutorialSteps[page.type][1]} <span aria-hidden="true">↗</span></Link>
-                    </div>
-                    <TutorialFrame stage={index} />
-                  </section>
+            <article className="dubbing-receipt" aria-labelledby="dubbing-question">
+              <p className="receipt-topic">Video localization</p>
+              <h3 id="dubbing-question">Do we need a dubbing tool?</h3>
+              <p>A small team wants to publish one tutorial in Spanish. Can the tools it already has do the job?</p>
+              <figure>
+                <blockquote cite={dubbingSource}>“You <em>cannot edit</em> automatic dubs.”</blockquote>
+                <figcaption><a href={dubbingSource}><strong>YouTube Help</strong> / Use automatic dubbing</a></figcaption>
+              </figure>
+              <p className="receipt-judgment">If a reviewer needs to change one line, compare a workflow that allows corrections.</p>
+              <nav aria-label="Video localization guides">
+                {localizationPages.map((page) => (
+                  <Link href={page.path} key={page.path}>{localizationLinks[page.type]} <span aria-hidden="true">↗</span></Link>
                 ))}
-              </div>
-              <div className="tutorial-sticky" aria-hidden="true"><TutorialFrame stage={0} /></div>
-            </nav>
+              </nav>
+            </article>
             <div className="report-spread">
               <div>
                 <p className="eyebrow">Trend reports</p>

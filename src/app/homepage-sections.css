@@ -43,31 +43,40 @@
   .report-folio { min-height: clamp(7.5rem, 15vw, 12rem); }
 }
 
-.tutorial-journey { border-block: 1px solid currentColor; }
-.tutorial-step { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: clamp(2rem, 4vw, 5rem); align-items: center; padding-block: clamp(2rem, 6vw, 6rem); }
-.tutorial-step h3 { max-width: 13ch; }
-.tutorial-step a { display: inline-block; padding-block: .7rem; color: var(--vermilion); text-decoration: underline; text-underline-offset: .22em; }
-.tutorial-sticky { display: none; }
-.tutorial-frame { min-width: 0; overflow: hidden; background: #232425; }
-.tutorial-frame[data-stage="1"], .tutorial-frame[data-stage="2"] { --translated: 1; }
-.tutorial-frame[data-stage="2"] { --pullback: 1; }
-.tutorial-editor { color: white; transform: scale(calc(1.18 - .18 * var(--pullback, 0))); font: 500 .75rem/1.4 system-ui, sans-serif; }
-.tutorial-toolbar, .tutorial-timeline { height: 2rem; padding-inline: 1rem; display: flex; align-items: center; gap: .75rem; }
-.tutorial-toolbar, .tutorial-timeline { opacity: var(--pullback, 0); }
-.tutorial-timeline i { flex: 1; height: 3px; background: linear-gradient(to right, #ccc 33%, #696969 33%); }
-.tutorial-photo { position: relative; margin-inline: 3%; }
-.tutorial-photo img { width: 100%; height: auto; display: block; }
-.tutorial-crop { position: absolute; inset: 9% 10%; border: 1px solid white; box-shadow: 0 0 0 1px #31313155; background: linear-gradient(90deg, transparent 33%, #ffffff66 33.2%, transparent 33.5%, transparent 66%, #ffffff66 66.2%, transparent 66.5%); }
-.tutorial-caption { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); white-space: nowrap; background: #18181aed; padding: .2em .6em; font-size: clamp(.86rem, 1.45vw, 1.35rem); }
-.tutorial-caption.english { opacity: calc(1 - var(--translated, 0)); }
-.tutorial-caption.spanish { opacity: var(--translated, 0); }
-@media (min-width: 801px) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
-  .tutorial-journey.is-scrubbing { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); align-items: start; gap: clamp(2rem, 4vw, 5rem); }
-  .is-scrubbing .tutorial-step { display: flex; min-height: 78svh; }
-  .is-scrubbing .tutorial-step .tutorial-frame { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); }
-  .is-scrubbing .tutorial-sticky { display: grid; align-items: center; position: sticky; top: 0; height: 100svh; }
-  .tutorial-sticky .tutorial-frame { width: min(100%, 115svh); }
+
+.buying-questions, .dubbing-receipt { width: min(100%, 54rem); margin-inline: auto; }
+.buying-questions { border-bottom: 1px solid currentColor; padding-bottom: 1.35rem; }
+.buying-questions h2, .dubbing-receipt h3 {
+  margin: 0;
+  font: 600 clamp(1.8rem, 4vw, 3.5rem)/1.08 Georgia, serif;
+  letter-spacing: -.045em;
 }
-@media (max-width: 800px) {
-  .tutorial-step { grid-template-columns: 1fr; gap: 1rem; }
+.buying-questions p, .dubbing-receipt > p { margin: .65rem 0 0; font-size: clamp(1rem, 2vw, 1.5rem); line-height: 1.4; }
+.dubbing-receipt { padding-top: clamp(1.2rem, 3vw, 2.25rem); }
+.dubbing-receipt .receipt-topic, .dubbing-receipt .receipt-judgment {
+  color: var(--vermilion); font: italic 400 clamp(1.3rem, 2.9vw, 2.1rem)/1.25 Georgia, serif;
+}
+.dubbing-receipt .receipt-topic { margin: 0 0 .8rem; }
+.dubbing-receipt h3 { font-size: clamp(2.1rem, 5vw, 4rem); }
+.dubbing-receipt figure { margin: clamp(1.15rem, 3vw, 2rem) 0 0; }
+.dubbing-receipt blockquote {
+  margin: 0; padding: clamp(2rem, 6vw, 5rem) 6.5%;
+  background: url("/home-folios/dubbing-paper.webp") center / 100% 100% no-repeat;
+  font: 400 clamp(2.5rem, 7.8vw, 6rem)/1.04 Georgia, serif; letter-spacing: -.045em;
+}
+.dubbing-receipt blockquote em { white-space: nowrap; text-decoration: underline var(--vermilion) .05em; text-underline-offset: .12em; }
+.dubbing-receipt figcaption { padding: .85rem 0 1.1rem; border-bottom: 1px solid currentColor; }
+.dubbing-receipt figcaption a, .dubbing-receipt nav a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.dubbing-receipt .receipt-judgment { margin: 1rem 0; }
+.dubbing-receipt nav { display: grid; justify-items: start; }
+.dubbing-receipt nav a { display: inline-flex; align-items: center; gap: .25em; min-height: 44px; font-size: clamp(1rem, 2vw, 1.35rem); }
+@supports (animation-timeline: view()) {
+  @media (min-width: 801px) and (prefers-reduced-motion: no-preference) {
+    .dubbing-receipt blockquote em {
+      text-decoration: none;
+      background: linear-gradient(var(--vermilion), var(--vermilion)) left bottom / 100% .05em no-repeat;
+      animation: receipt-underline linear both; animation-timeline: view(); animation-range: entry 0% cover 40%;
+    }
+    @keyframes receipt-underline { from { background-size: 0% .05em; } to { background-size: 100% .05em; } }
+  }
 }
