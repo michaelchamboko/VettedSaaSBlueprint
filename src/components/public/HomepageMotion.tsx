@@ -18,6 +18,22 @@ export function HomepageMotion() {
 
     const media = gsap.matchMedia();
     const context = gsap.context(() => {
+      media.add("(min-width: 801px) and (min-height: 560px) and (prefers-reduced-motion: no-preference)", () => {
+        const journey = root.querySelector<HTMLElement>(".tutorial-journey");
+        if (!journey) return;
+        const steps = journey.querySelectorAll(".tutorial-step");
+        const frame = journey.querySelector(".tutorial-sticky");
+        journey.classList.add("is-scrubbing");
+        gsap.to(frame, {
+          "--translated": 1, ease: "none",
+          scrollTrigger: { trigger: steps[1], start: "top 85%", end: "top 42%", scrub: true },
+        });
+        gsap.to(frame, {
+          "--pullback": 1, ease: "none",
+          scrollTrigger: { trigger: steps[2], start: "top 85%", end: "top 42%", scrub: true },
+        });
+        return () => { journey.classList.remove("is-scrubbing"); };
+      });
       media.add(
         {
           motion: "(prefers-reduced-motion: no-preference)",
@@ -45,15 +61,6 @@ export function HomepageMotion() {
               scrub: 0.8,
             },
           });
-
-          const stageTrack = root.querySelector(".localization-spread nav");
-          if (stageTrack) {
-            gsap.fromTo(stageTrack, { "--line-progress": 0 }, {
-              "--line-progress": 1,
-              ease: "none",
-              scrollTrigger: { trigger: stageTrack, start: "top 85%", end: "bottom 45%", scrub: true },
-            });
-          }
 
           if (conditions.desktop) {
             root.querySelectorAll(".governed-rows article").forEach((row) => {

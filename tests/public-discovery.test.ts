@@ -51,7 +51,7 @@ test("homepage links to the canonical localization journey and trend report sour
   assert.match(source, /aria-label="Video localization guides"/);
   assert.match(source, /aria-label="Trend reports"/);
   assert.doesNotMatch(source, /latest-guides-title[\s\S]*decision-guide-catalogue__grid/);
-  assert.match(styles, /@media \(max-width: 800px\)[\s\S]*\.localization-spread nav \{ grid-template-columns: 1fr;/);
+  assert.match(styles, /\.tutorial-journey\.is-scrubbing/);
 });
 
 test("sitemap includes only review summaries supplied by the audited publication catalogue", () => {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import "./homepage-sections.css";
-import { LocalizationDiagram } from "@/components/public/LocalizationDiagram";
+import { TutorialFrame } from "@/components/public/TutorialFrame";
 import { HomepageMotion } from "@/components/public/HomepageMotion";
 import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { PublicReviewCard } from "@/components/public/PublicReviewCard";
@@ -25,6 +25,12 @@ const decisionGuides = [
   ["Solution guide", "Use the same criteria to compare approaches conditionally, not to chase a universal winner.", "/solution-hub"],
   ["Worked scenario", "Apply the framework to a five-person team without a technical administrator.", "/scenarios"],
 ] as const;
+
+const tutorialSteps = {
+  "Decision Hub": ["Is this tutorial worth translating?", "Check audience fit"],
+  "Solution Hub": ["Which route fits?", "Compare localization routes"],
+  "Decision Scenario": ["Would you publish this version?", "Explore the one-tutorial pilot"],
+} as const;
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -108,21 +114,21 @@ export default function Home() {
             <p>Use the connected localization journey and current trend reports to frame a better software decision.</p>
           </div>
           <div className="journal-sections">
-            <div className="localization-spread">
-              <div>
-                <p className="eyebrow">Video localization</p>
-                <h3>One connected journey from question to pilot.</h3>
-                <p>Start with audience fit, compare workable routes, then test the workflow against a real tutorial.</p>
-              </div>
-              <nav aria-label="Video localization guides">
-                {localizationPages.map((page) => (
-                  <Link key={page.path} href={page.path}>
-                    <LocalizationDiagram stage={page.type} />
-                    <span className="stage-title">{page.type} <span aria-hidden="true">↗</span></span>
-                  </Link>
+            <nav className="tutorial-journey" aria-label="Video localization guides">
+              <div className="tutorial-steps">
+                {localizationPages.map((page, index) => (
+                  <section className="tutorial-step" key={page.path}>
+                    <div>
+                      {index === 0 && <p className="eyebrow">Video localization</p>}
+                      <h3>{tutorialSteps[page.type][0]}</h3>
+                      <Link href={page.path}>{tutorialSteps[page.type][1]} <span aria-hidden="true">↗</span></Link>
+                    </div>
+                    <TutorialFrame stage={index} />
+                  </section>
                 ))}
-              </nav>
-            </div>
+              </div>
+              <div className="tutorial-sticky" aria-hidden="true"><TutorialFrame stage={0} /></div>
+            </nav>
             <div className="report-spread">
               <div>
                 <p className="eyebrow">Trend reports</p>

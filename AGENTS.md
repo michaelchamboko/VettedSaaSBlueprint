@@ -109,3 +109,13 @@ Owner directive, 24 November 2026: codebase-memory-mcp is the sole code graph. G
 4. When MCP is unavailable, use `codebase-memory-mcp cli --json <tool>`, for example `codebase-memory-mcp cli --json trace_path --project VettedSaaSBlueprint --function-name handlePublicEventPost --direction inbound --format json`. Setup and coverage examples are in `docs/code-intelligence.md`. Codex and OpenCode start the installed binary from user-managed configuration; never add a checkout-owned automatic launcher.
 
 The owner authorizes only the code-graph maintenance workflow in `.github/workflows/code-graph.yml`: default-branch changes, nightly source-change checks and manual dispatch, with reviewed update PRs. This does not reactivate article or retired multi-stage automation. Keep databases, caches, locks and diagnostics local; commit only the compressed graph, its metadata/provenance, attributes and portable setup. Never create an authoritative CLAUDE.md.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
