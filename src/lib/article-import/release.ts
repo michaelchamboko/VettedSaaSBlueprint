@@ -336,6 +336,23 @@ function productiveStage(record: ExternalArticleImportV1): ImportStage {
   return record.stage === "RELEASING" ? record.stage : record.resumeStage ?? "RELEASING";
 }
 
+export async function assertDirectReviewProjectionBinding(
+  repositoryRoot: string,
+  sourceArtifactPath: string,
+  publicationArtifactPath: string,
+  slug: string,
+  approvedArtifact: unknown,
+): Promise<void> {
+  if (sourceArtifactPath === publicationArtifactPath) return;
+  let projectionArtifact: unknown;
+  try {
+    projectionArtifact = (await readImportArtifactTarget(repositoryRoot, "direct-review", publicationArtifactPath, slug)).artifact;
+  } catch {
+    throw new Error("PUBLIC_PROJECTION_MISSING");
+  }
+  if (JSON.stringify(projectionArtifact) !== JSON.stringify(approvedArtifact)) throw new Error("PUBLIC_PROJECTION_MISMATCH");
+}
+
 function failedRollback(previousId: string) {
   const cause = "Production verification failed and rollback did not verify.";
   const resumptionRequirement = `Verify restoration of ${previousId} and submit recovery evidence before resuming release.`;
@@ -372,15 +389,7 @@ async function assessImportReleaseImpl(input: {
         ? `src/generated/landing-pages/${target.slug}.json`
         : normalizedSourceArtifact;
       if (normalizedInputArtifact !== undefined && normalizedInputArtifact !== normalizedSourceArtifact && normalizedInputArtifact !== publicationArtifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
-      if (input.record.format === "direct-review") {
-        let projectionArtifact: unknown;
-        try {
-          projectionArtifact = (await readImportArtifactTarget(input.repositoryRoot, input.record.format, publicationArtifactPath, target.slug)).artifact;
-        } catch {
-          throw new Error("PUBLIC_PROJECTION_MISSING");
-        }
-        if (JSON.stringify(projectionArtifact) !== JSON.stringify(artifact)) throw new Error("PUBLIC_PROJECTION_MISMATCH");
-      }
+      if (input.record.format === "direct-review") await assertDirectReviewProjectionBinding(input.repositoryRoot, normalizedSourceArtifact, publicationArtifactPath, target.slug, artifact);
       input.slug = target.slug;
       assertArtifactCommercialSafety(input.record, input.record.format, artifact);
       await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
@@ -539,15 +548,14 @@ async function assessImportReleaseImpl(input: {
     }
     // Publication authorities can also move between review and merge; rebind them to
     // the approved artifact on the merged checkout before anything deploys.
+    const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
     try {
-      const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
       await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout authority binding failed: ${message}` });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
     }
-    const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
     if (input.record.contentApproval) {
       const { artifact: mergedArtifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, mergedPublicationPath!, input.slug);
       if (fingerprintEditorialArtifact(mergedArtifact) !== input.record.contentApproval.artifactFingerprint) {

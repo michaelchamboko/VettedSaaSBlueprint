@@ -235,3 +235,9 @@ Acceptance: verified pinned installation; full persistent indexing; source-bound
 ### Homepage post-hero sections (HOMEPAGE-MOTION-1124)
 
 User directive, 25 November 2026. Implement the approved governed-AI guide index, video localization track and illustrated trend report stack. Preserve published copy and destinations. Verify desktop scroll, mobile layout, keyboard access and reduced motion. Codex implementation explicitly authorized.
+
+### Three-action article release handoff (RELEASING-THREE-1126) (registered 2026-11-26)
+
+Classification: explicit user directive (narrow corrective maintenance for the existing supervised RELEASING handoff).
+
+Scope: present RELEASING as exactly three actionable steps—validate the candidate; obtain independent exact-head review and deploy the revalidated merged commit; verify production from retained evidence. Expose the same structured steps in the workflow description and supervised release packet. Skip only the direct-review projection reload when the approved source already is that exact public path; retain distinct draft-to-public comparison. Preserve current content, editorial, presentation, repository, exact-head review, merged-checkout revalidation and rebinding, production-evidence, rollback, persistence and state-transition gates. Candidate checks cannot be reused after commands or checkout changes; merged-checkout checks remain independent. Owned files: `src/lib/article-import/{workflow-requirements,supervised-executor,release}.ts`; `scripts/import-article.ts`; `.agents/skills/external-article-import/SKILL.md`; `tests/{article-import-release,article-import-supervised}.test.ts`; `planning.md`; `build-pack/execution-state.json`; `build-pack/repairs/releasing-three-1126/verification.md`. Verification uses synthetic fixtures only and cannot run, merge, deploy or publish a real article. The code change still follows the repository's required PR, review, merge and deployment workflow.

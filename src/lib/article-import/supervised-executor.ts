@@ -8,7 +8,7 @@ import { importArtifactTarget } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
 import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
 import { evidenceReference, validateResearchEvidenceForRegistry, withTransformingArtifact } from "./workflow-evidence";
-import { instructionsForStage, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
+import { instructionsForStage, releaseSteps, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
 import { applyPublicationProposals, publicationProposals } from "./worker-publication";
 import { captureRenderingInputs, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { researchRegistryDecisionSchema, researchRegistryPlanSchema, researchRegistryWritebackSchema, validateRegistryDecisionAgainstEvidence, validateRegistryDecisionPlan, type ArticleResearchRegistry, type ResearchRegistryDecision, type ResearchRegistryPlan } from "./research-registry";
@@ -155,6 +155,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
       idempotencyKey: context.idempotencyKey, sourcePath: `.automation/article-imports/${record.importId}.source.md`,
       record, resultSchema: z.toJSONSchema(resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
+      ...(stage === "RELEASING" && { releaseSteps }),
       ...(stage === "REFINING" && { publicationProposals: publicationProposals(record.importId, context.idempotencyKey, record.format) }),
       instructions: instructionsForStage(stage), resultPath,
       resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
