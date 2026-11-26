@@ -21,7 +21,7 @@ import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEv
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { createHash } from "node:crypto";
 
-async function releaseFixture(root: string, recovered = false) {
+async function releaseFixture(root: string, recovered = false, beforeReceipt?: (record: Awaited<ReturnType<typeof advanceImport>>) => Promise<void>) {
   await writeFile(path.join(root, "approved-urls.md"), allowlist);
   await writeFile(path.join(root, "article.md"), source);
   let record = await createArticleImport(root, "article.md");
@@ -36,6 +36,7 @@ async function releaseFixture(root: string, recovered = false) {
   const deployment = { commitSha, deploymentId: "dpl_fixture", canonicalUrl: new URL(target.renderedRoutes[0], "https://vettedsaasblueprint.online").href };
   const checks = await productionFixture(root, record.importId, target, deployment, record.sourceFingerprint);
   record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha } } };
+  await beforeReceipt?.(record);
   return recordImportRelease(root, record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, presentationFingerprint: fingerprintEditorialArtifact(record.presentation), verifiedAt: new Date().toISOString(), productionVerifierRef: checks.productionVerifierRef, checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
 }
 
@@ -44,6 +45,10 @@ test("verified synthetic completion freezes proof before deleting disposable sou
   try {
     const record = await verifyImportRelease(root, await releaseFixture(root));
     assert.equal(record.stage, "LIVE"); assert.ok(record.terminalRef); assert.ok(record.sourceRef);
+    const terminal = await readEvidence(root, record.terminalRef) as { evidenceRefs: typeof record.evidenceRefs; frozenFiles: Array<{ path: string; sha256: string }> };
+    assert.ok(record.evidenceRefs?.transformAssessment);
+    assert.deepEqual(terminal.evidenceRefs.transformAssessment, record.evidenceRefs.transformAssessment);
+    assert.ok(terminal.frozenFiles.some((file) => file.path === record.evidenceRefs!.transformAssessment!.path && file.sha256 === record.evidenceRefs!.transformAssessment!.sha256));
     await assert.rejects(readFile(path.join(root, ".automation/article-imports", `${record.importId}.source.md`)));
     assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
     assert.equal(await readFile(path.resolve(root, record.sourceRef!.path), "utf8"), source);
@@ -61,6 +66,36 @@ test("duplicate reuses recovered terminal proof with its retained research gener
     const reused = await createArticleImport(root, "article.md");
     assert.equal(reused.importId, live.importId);
     assert.deepEqual(reused.terminalRef, live.terminalRef);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING resume rejects stale workflow evidence before release handover", async () => {
+  const root = await testRoot("article-import-resume-stale-evidence-");
+  try {
+    const verifying = await releaseFixture(root);
+    const assessmentRef = verifying.evidenceRefs!.assessment!;
+    await writeFile(path.resolve(root, assessmentRef.path), "{}");
+
+    await assert.rejects(resumeImport(root, verifying), /EVIDENCE_HASH_MISMATCH/);
+    const unchanged = await loadImport(root, verifying.importId);
+    assert.equal(unchanged.stage, "VERIFYING");
+    assert.ok(unchanged.presentation);
+    assert.ok(unchanged.release);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct VERIFYING handover preserves structured invalidation for stale prefix evidence", async () => {
+  const root = await testRoot("article-import-verify-stale-evidence-");
+  try {
+    const verifying = await releaseFixture(root, false, async (releasing) => {
+      await writeFile(path.resolve(root, releasing.presentation!.validation.evidencePaths[0]), "{}");
+    });
+
+    const result = await verifyImportRelease(root, verifying);
+
+    assert.equal(result.stage, "VALIDATING");
+    assert.equal(result.presentation, undefined);
+    assert.equal(result.release, undefined);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
