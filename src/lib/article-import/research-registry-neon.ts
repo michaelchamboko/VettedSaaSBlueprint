@@ -2,6 +2,7 @@ import { executeQuery, withTransaction, type TransactionRunner, type Transaction
 import {
   canonicalResearchUrl,
   createResearchRegistryPlan,
+  hasRetainedResearchBytes,
   researchRegistryCandidateSchema,
   researchRegistryLegacyLeadSchema,
   type ArticleResearchRegistry,
@@ -89,7 +90,7 @@ async function verifyReusedCandidates(tx: TransactionSql, input: ResearchRegistr
     const planned = input.plan.candidates.find((candidate) => candidate.claimId === match.claimId && candidate.snapshotId === match.snapshotId && candidate.productContext === match.productContext);
     if (!planned) throw new Error("RESEARCH_REGISTRY_PLAN_STALE");
     const conflicts = await tx`
-      select ce2.claim_id
+      select ce2.claim_id, ss2.passage, ss2.evidence_sha256
       from article_research.claim_evidence ce2
       join article_research.source_snapshots ss2 on ss2.id = ce2.snapshot_id
       where ce2.claim_id = ${planned.claimId}::uuid
@@ -98,9 +99,11 @@ async function verifyReusedCandidates(tx: TransactionSql, input: ResearchRegistr
         and (ce2.verdict in ('PARTIALLY_SUPPORTED', 'CONTRADICTED', 'UNVERIFIED')
           or ss2.access_outcome in ('partial', 'inaccessible', 'conflicting'))
       for update of ce2, ss2`;
-    if (conflicts.rows.length > 0) throw new Error("RESEARCH_REGISTRY_PLAN_STALE");
+    if (conflicts.rows.some((row) => hasRetainedResearchBytes({ passage: nullableText(row.passage), evidenceSha256: text(row.evidence_sha256) }))) {
+      throw new Error("RESEARCH_REGISTRY_PLAN_STALE");
+    }
     const result = await tx`
-      select c.updated_at as claim_updated_at, ss.evidence_sha256,
+      select c.updated_at as claim_updated_at, ss.evidence_sha256, ss.passage, ss.access_outcome,
              ce.verdict, ce.expires_at, ce.updated_at as evidence_updated_at
       from article_research.claim_evidence ce
       join article_research.claims c on c.id = ce.claim_id
@@ -109,7 +112,8 @@ async function verifyReusedCandidates(tx: TransactionSql, input: ResearchRegistr
         and ce.product_context = ${planned.productContext} and ce.expires_at > current_timestamp
       for update of c, ce, ss`;
     const current = result.rows[0];
-    if (!current || current.evidence_sha256 !== planned.evidenceSha256 || current.verdict !== planned.verdict ||
+    if (!current || current.evidence_sha256 !== planned.evidenceSha256 || current.verdict !== "SUPPORTED" || current.access_outcome !== "success" ||
+        !hasRetainedResearchBytes({ passage: nullableText(current.passage), evidenceSha256: text(current.evidence_sha256) }) ||
         Date.parse(text(current.claim_updated_at)) !== Date.parse(planned.claimUpdatedAt) || Date.parse(text(current.evidence_updated_at)) !== Date.parse(planned.evidenceUpdatedAt) ||
         Date.parse(text(current.expires_at)) !== Date.parse(planned.expiresAt)) {
       throw new Error("RESEARCH_REGISTRY_PLAN_STALE");
@@ -119,10 +123,31 @@ async function verifyReusedCandidates(tx: TransactionSql, input: ResearchRegistr
 
 type EvidenceLink = { localClaimId: string; localSourceId: string; claimId: string; snapshotId: string; action: "reused_current" | "researched_gap" };
 
+export function prequalifyAcquiredSourceIds(input: ResearchRegistryCommitInput): Set<string> {
+  const gapClaimIds = new Set(input.decision.claims.filter((claim) => claim.action === "researched_gap").map((claim) => claim.claimId));
+  const mappings = input.writeback?.claims ?? [];
+  if (mappings.some((mapping) => !gapClaimIds.has(mapping.plannedClaimId))) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+  const acquiredSourceIds = new Set<string>();
+  for (const plannedClaimId of gapClaimIds) {
+    const claimMappings = mappings.filter((mapping) => mapping.plannedClaimId === plannedClaimId);
+    if (claimMappings.length !== 1) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+    const evidenceClaims = input.research.evidence.claims.filter((claim) => claim.id === claimMappings[0].evidenceClaimId);
+    if (evidenceClaims.length !== 1) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+    for (const sourceId of evidenceClaims[0].sourceIds) {
+      if (input.research.evidence.sources.filter((source) => source.id === sourceId).length !== 1 ||
+          input.writeback?.sources.filter((source) => source.sourceId === sourceId).length !== 1 ||
+          !input.research.snapshotBytes.has(sourceId)) {
+        throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
+      }
+      acquiredSourceIds.add(sourceId);
+    }
+  }
+  return acquiredSourceIds;
+}
+
 async function writeEvidence(tx: TransactionSql, input: ResearchRegistryCommitInput): Promise<EvidenceLink[]> {
   const snapshotIds = new Map<string, string>();
-  const researchedClaims = input.decision.claims.filter((claim) => claim.action === "researched_gap");
-  const researchedSourceIds = new Set(input.research.evidence.claims.filter((claim) => researchedClaims.some((decision) => decision.claimId === claim.id)).flatMap((claim) => claim.sourceIds));
+  const researchedSourceIds = prequalifyAcquiredSourceIds(input);
   const sourceLocks = input.research.evidence.sources.filter((source) => researchedSourceIds.has(source.id)).map((source) => `source:${canonicalResearchUrl(source.url)}`).sort();
   for (const identity of sourceLocks) await tx`select pg_advisory_xact_lock(hashtextextended(${identity}, 0))`;
   for (const source of input.research.evidence.sources.filter((source) => researchedSourceIds.has(source.id))) {

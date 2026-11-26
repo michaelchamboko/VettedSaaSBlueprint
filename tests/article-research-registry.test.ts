@@ -4,10 +4,10 @@ import path from "node:path";
 import test from "node:test";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
-import { assertResearchRegistryPlanFingerprint, createResearchRegistryPlan, researchRegistryDecisionSchema, researchRegistryPlanSchema, validateRegistryDecisionPlan, type ResearchRegistryCandidate } from "../src/lib/article-import/research-registry";
+import { assertResearchRegistryPlanFingerprint, createResearchRegistryPlan, researchRegistryDecisionSchema, researchRegistryPlanSchema, validateRegistryDecisionPlan, type ResearchRegistryCandidate, type ResearchRegistryCommitInput } from "../src/lib/article-import/research-registry";
 import { createInMemoryResearchRegistry } from "./fixtures/article-research-registry";
 import { prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
-import { researchSearchExpressions } from "../src/lib/article-import/research-registry-neon";
+import { prequalifyAcquiredSourceIds, researchSearchExpressions } from "../src/lib/article-import/research-registry-neon";
 import { evidenceReference, sha256, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { executeFixtureCommand as executeImportCommand, persistFixture } from "./fixtures/article-command";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
@@ -57,6 +57,25 @@ function candidate(overrides: Partial<ResearchRegistryCandidate> = {}): Research
     ...overrides,
   };
 }
+
+test("corrected acquired claims prequalify every source through the writeback mapping", () => {
+  const bytes = Buffer.from("Corrected retained evidence.");
+  const acquired = prequalifyAcquiredSourceIds({
+    decision: { claims: [{ claimId: "planned-claim", action: "researched_gap" }] },
+    writeback: {
+      claims: [{ plannedClaimId: "planned-claim", evidenceClaimId: "corrected-claim" }],
+      sources: [{ sourceId: "corrected-source" }, { sourceId: "corroborating-source" }],
+    },
+    research: {
+      evidence: {
+        claims: [{ id: "corrected-claim", sourceIds: ["corrected-source", "corroborating-source"] }],
+        sources: [{ id: "corrected-source" }, { id: "corroborating-source" }],
+      },
+      snapshotBytes: new Map([["corrected-source", bytes], ["corroborating-source", bytes]]),
+    },
+  } as ResearchRegistryCommitInput);
+  assert.deepEqual([...acquired], ["corrected-source", "corroborating-source"]);
+});
 
 async function submitResearch(input: Awaited<ReturnType<typeof fixture>>, action: "reused_current" | "researched_gap", gapReason?: "stale" | "conflicting" | "missing") {
   const snapshot = await storeEvidence(input.root, input.record.importId, { text: "Acme costs $20 per month." });

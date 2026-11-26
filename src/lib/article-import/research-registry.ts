@@ -163,6 +163,10 @@ export function assertRegistryDecisionBinding(plan: ResearchRegistryPlan, decisi
   }
 }
 
+export function hasRetainedResearchBytes(input: { passage: string | null; evidenceSha256: string }): boolean {
+  return input.passage !== null && sha256(Buffer.from(input.passage, "utf8")) === input.evidenceSha256;
+}
+
 export function validateRegistryDecisionPlan(plan: ResearchRegistryPlan, decision: ResearchRegistryDecision, now: string): void {
   assertResearchRegistryPlanFingerprint(plan);
   assertRegistryDecisionBinding(plan, decision);
@@ -171,10 +175,9 @@ export function validateRegistryDecisionPlan(plan: ResearchRegistryPlan, decisio
     if (ids.has(tracked.claimId)) throw new Error("RESEARCH_REGISTRY_CLAIM_DECISION_DUPLICATE");
     ids.add(tracked.claimId);
     const related = plan.candidates.filter((candidate) => candidate.claimText === tracked.claimText && candidate.productContext === tracked.productContext);
-    const retained = (candidate: ResearchRegistryCandidate) => candidate.passage !== null && sha256(Buffer.from(candidate.passage, "utf8")) === candidate.evidenceSha256;
-    const current = related.filter((candidate) => retained(candidate) && candidate.verdict === "SUPPORTED" && candidate.accessOutcome === "success" && Date.parse(candidate.expiresAt) > Date.parse(now));
-    const conflict = related.filter((candidate) => retained(candidate) && Date.parse(candidate.expiresAt) > Date.parse(now) && (candidate.verdict === "CONTRADICTED" || candidate.verdict === "PARTIALLY_SUPPORTED" || candidate.verdict === "UNVERIFIED" || candidate.accessOutcome === "conflicting" || candidate.accessOutcome === "partial" || candidate.accessOutcome === "inaccessible"));
-    const unprovable = related.filter((candidate) => !retained(candidate));
+    const current = related.filter((candidate) => hasRetainedResearchBytes(candidate) && candidate.verdict === "SUPPORTED" && candidate.accessOutcome === "success" && Date.parse(candidate.expiresAt) > Date.parse(now));
+    const conflict = related.filter((candidate) => hasRetainedResearchBytes(candidate) && Date.parse(candidate.expiresAt) > Date.parse(now) && (candidate.verdict === "CONTRADICTED" || candidate.verdict === "PARTIALLY_SUPPORTED" || candidate.verdict === "UNVERIFIED" || candidate.accessOutcome === "conflicting" || candidate.accessOutcome === "partial" || candidate.accessOutcome === "inaccessible"));
+    const unprovable = related.filter((candidate) => !hasRetainedResearchBytes(candidate));
     if (tracked.action === "reused_current") {
       if (conflict.length > 0) throw new Error("RESEARCH_REGISTRY_REUSE_CONFLICTING");
       for (const match of tracked.registryMatches) {

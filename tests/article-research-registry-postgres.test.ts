@@ -61,9 +61,22 @@ test("isolated PostgreSQL registry reuses across articles and rejects stale repl
     const reused = scopedCandidates[0];
     const secondDecision = { schemaVersion: "ResearchRegistryDecisionV1" as const, importId: secondImport, sourceFingerprint: "5".repeat(64), planFingerprint: secondPlan.planFingerprint, createdAt: new Date().toISOString(), claims: [{ claimId: "price", claimText: reused.claimText, material: true, productContext: reused.productContext, action: "reused_current" as const, registryMatches: [{ claimId: reused.claimId, snapshotId: reused.snapshotId, productContext: reused.productContext }], rationale: "The exact current registry tuple and bytes cover the claim." }] };
     const second: ResearchRegistryCommitInput = { importId: secondImport, sourceFingerprint: "5".repeat(64), idempotencyKey: "6".repeat(64), plan: secondPlan, decision: secondDecision, decisionPath: "synthetic/decision-2.json", decisionSha256: sha256(JSON.stringify(secondDecision)), research: { ...research, evidenceRef: { path: "synthetic/research-2.json", sha256: "7".repeat(64) }, evidencePath: "synthetic/research-2.json", evidenceSha256: "7".repeat(64) } };
+
+    const unverifiableSource = await executeQuery("insert into article_research.sources (canonical_url, source_type, last_checked_at) values ($1, 'official_pricing', current_timestamp) returning id", [`${sourceUrl}/unverifiable`]);
+    const unverifiableSnapshot = await executeQuery("insert into article_research.source_snapshots (source_id, evidence_sha256, retrieved_at, access_outcome, passage, locator) values ($1::uuid, $2, current_timestamp, 'success', null, 'legacy row without retained bytes') returning id", [unverifiableSource.rows[0]?.id, sha256("unverifiable contradiction")]);
+    await executeQuery("insert into article_research.claim_evidence (claim_id, snapshot_id, verdict, confidence, product_context, reasoning, expires_at) values ($1::uuid, $2::uuid, 'CONTRADICTED', 0.9, $3, 'A contradiction without retained bytes cannot be validated.', current_timestamp + interval '30 days')", [reused.claimId, unverifiableSnapshot.rows[0]?.id, reused.productContext]);
+
     assert.equal((await registry.commit(second)).replayed, false);
     const counts = await executeQuery("select (select count(*)::int from article_research.claims where claim_sha256 = $1) as claims, (select count(*)::int from article_research.source_snapshots where evidence_sha256 = $2) as snapshots, (select count(*)::int from article_research.import_evidence_bindings where import_id = any($3::text[])) as bindings", [sha256(claimText), evidenceSha256, [firstImport, secondImport]]);
     assert.deepEqual(counts.rows[0], { claims: 1, snapshots: 1, bindings: 2 });
+
+    const changedBytesImport = `article-${randomUUID()}`;
+    const changedBytesPlan = createResearchRegistryPlan({ importId: changedBytesImport, sourceFingerprint: "a".repeat(64), generatedAt: secondPlan.generatedAt, candidates: secondPlan.candidates, legacyLeads: secondPlan.legacyLeads });
+    const changedBytesDecision = { ...secondDecision, importId: changedBytesImport, sourceFingerprint: "a".repeat(64), planFingerprint: changedBytesPlan.planFingerprint };
+    const changedBytesInput: ResearchRegistryCommitInput = { ...second, importId: changedBytesImport, sourceFingerprint: "a".repeat(64), idempotencyKey: "b".repeat(64), plan: changedBytesPlan, decision: changedBytesDecision, decisionSha256: sha256(JSON.stringify(changedBytesDecision)) };
+    await executeQuery("update article_research.source_snapshots set passage = $1 where id = $2::uuid", ["changed after lookup", reused.snapshotId]);
+    await assert.rejects(registry.commit(changedBytesInput), /RESEARCH_REGISTRY_PLAN_STALE/);
+    await executeQuery("update article_research.source_snapshots set passage = $1 where id = $2::uuid", [bytes.toString("utf8"), reused.snapshotId]);
 
     await executeQuery("update article_research.claim_evidence set expires_at = current_timestamp - interval '1 second' where claim_id = $1::uuid and snapshot_id = $2::uuid", [reused.claimId, reused.snapshotId]);
     const thirdImport = `article-${randomUUID()}`;
