@@ -14,17 +14,39 @@ import { captureCommandExecution, evidenceReference, executionEvidenceSchema, ex
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
-async function fixture(researchGeneration = 0) {
+async function fixture(researchGeneration = 0, options: { structuredEditorial?: boolean; reuseIndependentContext?: boolean } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "workflow-proof-"));
   const before = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://example.test/example", url_slug: "example" } };
   const after = rewriteAllProse("landing", before);
   const artifactPath = "artifact.json", editorialEvidencePath = "editorial.json";
   await writeFile(path.join(root, artifactPath), JSON.stringify(after));
-  await writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, fullRewriteNotes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
+  const notes = options.structuredEditorial ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
+  await writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, notes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
   const record: WorkflowEvidenceRecord = { researchGeneration, importId: id, sourceFingerprint: sha256("source"), format: "direct-review", stage: "RELEASING", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, artifactPath };
-  record.evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before, after, editorialEvidencePath });
+  record.evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before, after, editorialEvidencePath, ...options });
   return { root, record };
 }
+test("structured Refining accepts alternate tools and models but rejects a reused rewrite context", async () => {
+  const passing = await fixture(0, { structuredEditorial: true });
+  try {
+    const editorial = editorialExecutionSchema.parse(await readEvidence(passing.root, passing.record.evidenceRefs!.editorial!));
+    const rewrite = executionEvidenceSchema.parse(await readEvidence(passing.root, editorial.passes[0].executionRef));
+    const review = executionEvidenceSchema.parse(await readEvidence(passing.root, editorial.passes[3].executionRef));
+    assert.equal(rewrite.kind, "structured");
+    assert.equal(review.kind, "structured");
+    if (rewrite.kind !== "structured" || review.kind !== "structured") throw new Error("Expected structured executions");
+    assert.notEqual(rewrite.toolName, review.toolName);
+    assert.notEqual(rewrite.modelId, review.modelId);
+    await validateEditorialExecution(passing.root, passing.record.evidenceRefs!.editorial!, passing.record);
+    await validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, passing.record);
+    assert.equal((await evaluateWorkflowEvidence(passing.record, { root: passing.root, throughStage: "REFINING" })).ok, true);
+  } finally { await rm(passing.root, { recursive: true, force: true }); }
+
+  const blocked = await fixture(0, { structuredEditorial: true, reuseIndependentContext: true });
+  try {
+    await assert.rejects(validateEditorialExecution(blocked.root, blocked.record.evidenceRefs!.editorial!, blocked.record), /EDITORIAL_INDEPENDENT_REVIEW_CONTEXT_REUSED/);
+  } finally { await rm(blocked.root, { recursive: true, force: true }); }
+});
 test("valid synthetic producer chain passes; omitted prerequisites fail closed without writes", async () => {
   const { root, record } = await fixture();
   try {

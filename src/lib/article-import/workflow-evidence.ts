@@ -30,7 +30,7 @@ export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal
 export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.enum(["WorkflowEvidenceV1","WorkflowEvidenceV2"]), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
 export const researchEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("ResearchEvidenceV2"), sources: z.array(z.object({ id: nonempty, url: z.string().url(), retrievedAt: z.string().datetime({ offset: true }), snapshotRef: evidenceRefSchema }).strict()).min(1), claims: z.array(z.object({ id: nonempty, text: nonempty, sourceIds: z.array(nonempty).min(1), excerptLocations: z.array(z.object({ sourceId: nonempty, quote: nonempty }).strict()).min(1), limitations: z.array(nonempty), price: z.object({ amount: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/), period: nonempty, plan: nonempty, restrictions: z.array(nonempty) }).strict().optional() }).strict()).min(1), freshness: nonempty }).strict();
 export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
-const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview"] as const;
+const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview", "independentReview"] as const;
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
 export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
@@ -56,13 +56,21 @@ async function pinnedInput(root: string, execution: ExecutionEvidence, file: str
   return refs[0];
 }
 async function pinnedInstructions(root: string, execution: ExecutionEvidence, required: string[], declared?: EvidenceRef[]): Promise<void> {
-  if (execution.kind !== "opencode") throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
+  if (execution.kind !== "opencode" && execution.kind !== "structured") throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
   const captured = execution.instructions.map(({ path, sha256 }) => ({ path, sha256 }));
   if (declared && (declared.length !== captured.length || declared.some((ref) => !captured.some((item) => item.path === ref.path && item.sha256 === ref.sha256)))) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
   for (const file of required) {
     const pin = await pinnedInput(root, execution, file);
     if (!execution.instructions.some((item) => item.path === pin.path && item.sha256 === pin.sha256 && sha256(item.text) === pin.sha256)) throw new Error(`EXECUTION_INSTRUCTION_REQUIRED:${file}`);
   }
+}
+type ReviewExecution = Extract<ExecutionEvidence, { kind: "opencode" | "structured" }>;
+function reviewExecution(execution: ExecutionEvidence): ReviewExecution {
+  if (execution.kind !== "opencode" && execution.kind !== "structured") throw new Error("EDITORIAL_EXECUTION_MISMATCH");
+  return execution;
+}
+function executionContext(execution: ReviewExecution): string {
+  return execution.kind === "opencode" ? execution.sessionId : execution.contextId;
 }
 function assertPacket(packetId: string, binding: EvidenceBinding, stage: string): void {
   const strategies = stage === "REFINING" || stage === "VALIDATING" ? ["targeted-repair", "fresh-rewrite", "fresh-topic"] : ["field-repair", "reconstruct-schema", "reclassify"];
@@ -192,11 +200,12 @@ async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, bin
   }
   const execution = await validateExecutionEvidence(root, value.reviewerExecutionRef);
   const reviewInput = await contentAssessmentReviewInput(root, artifact, research, value.researchRef);
-  if (execution.kind !== "opencode" || execution.pass !== "content-assessment" || proseProjectionDigest(execution.input) !== proseProjectionDigest(reviewInput) || !execution.inputRefs.some((ref) => ref.path === value.researchRef.path && ref.sha256 === value.researchRef.sha256)) throw new Error("ASSESSMENT_EXECUTION_MISMATCH");
+  const review = reviewExecution(execution);
+  if (review.pass !== "content-assessment" || proseProjectionDigest(review.input) !== proseProjectionDigest(reviewInput) || !review.inputRefs.some((ref) => ref.path === value.researchRef.path && ref.sha256 === value.researchRef.sha256)) throw new Error("ASSESSMENT_EXECUTION_MISMATCH");
   const assessed = { format: value.format, schemaRevision: value.schemaRevision, artifactFingerprint: value.artifactFingerprint, sourceFingerprint: value.sourceFingerprint, requirementRevision: value.requirementRevision, researchRef: value.researchRef, intent: value.intent, claimCoverage: value.claimCoverage, ruleResults: value.ruleResults, findings: value.findings };
-  if (execution.output.assessment !== JSON.stringify(assessed)) throw new Error("ASSESSMENT_JUDGMENT_MISMATCH");
+  if (review.output.assessment !== JSON.stringify(assessed)) throw new Error("ASSESSMENT_JUDGMENT_MISMATCH");
   // Final assessments are repeated in REFINING; either authentic stage packet is valid.
-  try { assertPacket(execution.packetId, binding, "TRANSFORMING"); } catch { assertPacket(execution.packetId, binding, "REFINING"); }
+  try { assertPacket(review.packetId, binding, "TRANSFORMING"); } catch { assertPacket(review.packetId, binding, "REFINING"); }
   return value;
 }
 
@@ -214,25 +223,28 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   const paths = editorialProsePaths(format, artifact);
   if (JSON.stringify(paths) !== JSON.stringify(value.eligibleProsePaths)) throw new Error("EDITORIAL_PROSE_COVERAGE");
   let previous: string | undefined; let writerFamily: string | undefined; let reviewFamily: string | undefined;
-  const priorSessions = new Set<string>();
+  const rewriteContexts = new Set<string>();
+  const legacyRewriteSessions = new Set<string>();
+  const reviewPolicy = value.passes[3]?.name;
   for (const [index, pass] of value.passes.entries()) {
-    const expectedNames = index === 3 ? (historical ? ["rivalFamilyCleanse", "beamReview"] : ["beamReview"]) : [passes[index]];
+    const expectedNames = index === 3 ? (historical ? ["rivalFamilyCleanse", "beamReview", "independentReview"] : ["beamReview", "independentReview"]) : [passes[index]];
     if (!expectedNames.includes(pass.name) || (previous && previous !== pass.inputRef.sha256)) throw new Error("EDITORIAL_PASS_ORDER");
     const before = await readEvidence(root, pass.inputRef), after = await readEvidence(root, pass.outputRef);
     if (index === 0 && receipt.beforeFingerprint !== fingerprintEditorialArtifact(before)) throw new Error("EDITORIAL_INITIAL_ARTIFACT_MISMATCH");
     compareEditorialArtifacts(format, before, after);
-    const execution = await validateExecutionEvidence(root, pass.executionRef);
-    if (execution.kind !== "opencode" || execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(editorialPassReviewInput(before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
+    const execution = reviewExecution(await validateExecutionEvidence(root, pass.executionRef));
+    if (execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(editorialPassReviewInput(before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
     assertPacket(execution.packetId, binding, "REFINING");
-    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...((pass.name === "rivalFamilyCleanse" || pass.name === "beamReview") ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
-    if (index === 0) { writerFamily = execution.family; }
-    if (index === 3) reviewFamily = execution.family;
-    if (index < 3) priorSessions.add(execution.sessionId);
-    if (index < 3 && execution.family !== writerFamily) throw new Error("EDITORIAL_WRITER_FAMILY_MISMATCH");
-    if (index === 3 && pass.name === "rivalFamilyCleanse" && execution.family === writerFamily) throw new Error("EDITORIAL_CLEANSE_FAMILY_MISMATCH");
+    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(["rivalFamilyCleanse", "beamReview", "independentReview"].includes(pass.name) ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
+    const family = execution.kind === "opencode" ? execution.family : undefined;
+    if (index === 0 && reviewPolicy !== "independentReview") writerFamily = family;
+    if (index === 3) reviewFamily = family;
+    if (index < 3 && reviewPolicy !== "independentReview" && (execution.kind !== "opencode" || execution.family !== writerFamily)) throw new Error("EDITORIAL_WRITER_FAMILY_MISMATCH");
+    if (index === 3 && pass.name === "independentReview" && rewriteContexts.has(executionContext(execution))) throw new Error("EDITORIAL_INDEPENDENT_REVIEW_CONTEXT_REUSED");
+    if (index === 3 && pass.name === "rivalFamilyCleanse" && execution.kind === "opencode" && execution.family === writerFamily) throw new Error("EDITORIAL_CLEANSE_FAMILY_MISMATCH");
     if (index === 3 && pass.name === "beamReview") {
-      if (execution.family !== writerFamily) throw new Error("EDITORIAL_BEAM_REVIEW_FAMILY_MISMATCH");
-      if (priorSessions.has(execution.sessionId)) throw new Error("EDITORIAL_BEAM_REVIEW_SESSION_REUSED");
+      if (execution.kind !== "opencode" || execution.family !== writerFamily) throw new Error("EDITORIAL_BEAM_REVIEW_FAMILY_MISMATCH");
+      if (legacyRewriteSessions.has(execution.sessionId)) throw new Error("EDITORIAL_BEAM_REVIEW_SESSION_REUSED");
       const receiptUsesBeam = receipt.passes.beamReview === true;
       if (receiptUsesBeam !== true) throw new Error("EDITORIAL_PASS_POLICY_MISMATCH");
     }
@@ -240,14 +252,21 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
       const receiptUsesBeam = receipt.passes.beamReview === true;
       if (receiptUsesBeam !== false) throw new Error("EDITORIAL_PASS_POLICY_MISMATCH");
     }
+    if (index === 3 && pass.name === "independentReview" && receipt.passes.independentReview !== true) throw new Error("EDITORIAL_PASS_POLICY_MISMATCH");
     for (const instruction of pass.instructionRefs) await verifyEvidenceRef(root, instruction);
     const judgment = z.object({ pass: z.literal(pass.name), beforeFingerprint: z.literal(fingerprintEditorialArtifact(before)), afterFingerprint: z.literal(fingerprintEditorialArtifact(after)), coveredPaths: z.array(nonempty), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), semanticNotes: nonempty, meaningPreserved: z.literal(true), protectedFieldsPreserved: z.literal(true), executionRef: evidenceRefSchema }).strict().parse(await readEvidence(root, pass.judgmentRef));
     if (JSON.stringify(judgment.coveredPaths) !== JSON.stringify(paths)) throw new Error("EDITORIAL_JUDGMENT_COVERAGE");
-    const judgmentExecution = await validateExecutionEvidence(root, judgment.executionRef);
+    const judgmentExecution = reviewExecution(await validateExecutionEvidence(root, judgment.executionRef));
     const judgmentText = { ...judgment, executionRef: undefined };
-    if (judgmentExecution.kind !== "opencode" || judgmentExecution.pass !== `${pass.name}-judgment` || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(editorialJudgmentReviewInput(before, after)) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
+    if (judgmentExecution.pass !== `${pass.name}-judgment` || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(editorialJudgmentReviewInput(before, after)) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
     assertPacket(judgmentExecution.packetId, binding, "REFINING");
     await pinnedInstructions(root, judgmentExecution, requiredEditorialInstructions);
+    if (index === 3 && pass.name === "independentReview" && rewriteContexts.has(executionContext(judgmentExecution))) throw new Error("EDITORIAL_INDEPENDENT_REVIEW_CONTEXT_REUSED");
+    if (index < 3) {
+      rewriteContexts.add(executionContext(execution));
+      rewriteContexts.add(executionContext(judgmentExecution));
+      if (execution.kind === "opencode") legacyRewriteSessions.add(execution.sessionId);
+    }
     previous = pass.outputRef.sha256;
     if (index === 4 && fingerprintEditorialArtifact(after) !== fingerprintEditorialArtifact(artifact)) throw new Error("EDITORIAL_FINAL_ARTIFACT_MISMATCH");
   }
@@ -257,8 +276,8 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   if (!/^python(?:3(?:\.\d+)?)?(?:\.exe)?$/i.test(checker.executable.replaceAll("\\", "/").split("/").at(-1) ?? "") || checker.toolVersion !== EDITORIAL_REVISION || path.resolve(checker.cwd) !== path.resolve(root) || JSON.stringify(checker.argv) !== JSON.stringify([checkerScript, "--text", editorialProse(format, artifact)])) throw new Error("EDITORIAL_CHECKER_COMMAND_MISMATCH");
   await pinnedInput(root, checker, checkerScript);
   if (value.passes[3]?.name === "beamReview") {
-    if (writerFamily && receipt.writerModelFamily.toLocaleLowerCase() !== writerFamily.toLocaleLowerCase()) throw new Error("EDITORIAL_RECEIPT_WRITER_FAMILY_MISMATCH");
-    if (reviewFamily && receipt.cleanseModelFamily.toLocaleLowerCase() !== reviewFamily.toLocaleLowerCase()) throw new Error("EDITORIAL_RECEIPT_CLEANSE_FAMILY_MISMATCH");
+    if (writerFamily && receipt.writerModelFamily?.toLocaleLowerCase() !== writerFamily.toLocaleLowerCase()) throw new Error("EDITORIAL_RECEIPT_WRITER_FAMILY_MISMATCH");
+    if (reviewFamily && receipt.cleanseModelFamily?.toLocaleLowerCase() !== reviewFamily.toLocaleLowerCase()) throw new Error("EDITORIAL_RECEIPT_CLEANSE_FAMILY_MISMATCH");
   }
   return value;
 }
