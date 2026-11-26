@@ -624,7 +624,6 @@ async function assessImportReleaseImpl(input: {
     }
     input.record = { ...input.record, evidenceRefs: { ...input.record.evidenceRefs, production: productionVerifierRef } };
     const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, productionVerifierRef, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
-    requireImportPresentationBinding(withReceipt);
     input.record = withReceipt;
     const verified = await verifyImportRelease(input.repositoryRoot, withReceipt);
     if (verified.stage !== "LIVE") throw new Error("TERMINAL_PUBLICATION_UNVERIFIED");

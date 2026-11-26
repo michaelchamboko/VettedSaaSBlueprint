@@ -8,12 +8,12 @@ import path from "node:path";
 import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, type ApprovalFiles } from "./content-approval";
 import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
-import { createImportPresentation, verifyImportPresentationEvidence } from "./presentation";
+import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
 import { RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
-import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateResearchEvidence } from "./workflow-evidence";
+import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
 
@@ -635,10 +635,18 @@ export async function ensureImportContentApproval(repositoryRoot: string, record
 }
 
 export async function ensureImportPresentation(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  return ensureImportPresentationWith(repositoryRoot, record, () => verifyImportPresentationEvidence(repositoryRoot, record));
+}
+
+async function ensureImportPresentationBinding(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  return ensureImportPresentationWith(repositoryRoot, record, async () => requireImportPresentationBinding(record));
+}
+
+async function ensureImportPresentationWith(repositoryRoot: string, record: ExternalArticleImportV1, verify: () => Promise<void>): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     try {
-      await verifyImportPresentationEvidence(repositoryRoot, record);
+      await verify();
       return record;
     } catch {
       const at = now();
@@ -718,7 +726,7 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
     if (!checked.contentApproval) return checked;
     const release = externalArticleImportSchema.shape.release.unwrap().parse(releaseInput);
     if (!release.productionVerifierRef) throw new Error("PRODUCTION_VERIFIER_EVIDENCE_REQUIRED");
-    const presented = await ensureImportPresentation(repositoryRoot, { ...checked, release });
+    const presented = await ensureImportPresentationBinding(repositoryRoot, { ...checked, release });
     if (!presented.presentation) return presented;
     const at = now();
     const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
@@ -735,8 +743,9 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     const presented = await ensureImportPresentation(repositoryRoot, { ...record, release });
     if (!presented.presentation) return presented;
 
-    const evaluated = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: "LIVE" }, "current-transition");
-    if (!evaluated.ok || !record.sourceRef || !record.contentApproval) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(evaluated.diagnostics)}`);
+    try { await validateProductionWorkflowEvidence(repositoryRoot, record); }
+    catch (error) { throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify([error instanceof Error ? error.message : String(error)])}`); }
+    if (!record.sourceRef || !record.contentApproval) throw new Error("TERMINAL_PROOF_INVALID");
     const at = now();
     const artifact = JSON.parse(await readFile(path.resolve(repositoryRoot, record.contentApproval.artifactPath), "utf8"));
     const artifactRef = await storeEvidence(repositoryRoot, record.importId, artifact);
