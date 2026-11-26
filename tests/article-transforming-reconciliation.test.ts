@@ -185,6 +185,73 @@ test("an active release journal blocks migration until verified recovery and rem
   }
 });
 
+test("a waiting release wrapper uses resumeStage and preserves its rollback journal while blocking migration", async () => {
+  const { root, created, research } = await fixture();
+  try {
+    const pendingRelease = releaseJournal();
+    const oldAssessment = await storeEvidence(root, created.importId, legacyAssessment(created, research));
+    const waiting = await persistFixture(root, {
+      ...created,
+      stage: "WAITING_EXTERNAL",
+      resumeStage: "RELEASING",
+      evidenceRefs: { research, assessment: oldAssessment, editorial: research },
+      pendingRelease,
+      release: {
+        schemaVersion: "ImportReleaseV1",
+        commitSha: "b".repeat(40),
+        deploymentId: "dpl-current",
+        canonicalUrl: "https://example.test/review",
+        verifiedAt: at,
+        checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true },
+      },
+      continuation: { kind: "wait", resumeStage: "RELEASING", dependency: "DEPLOYMENT_PENDING", waitStartedAt: at, lastProgressAt: at, nextCheckAt: "2026-11-26T00:01:00.000Z", timeoutAt: "2026-11-26T01:00:00.000Z" },
+      stageReceipts: [...created.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: "Waiting on the active release." }],
+      nextAction: "Wait for deployment recovery.",
+    });
+
+    const blocked = await ensureImportContentApproval(root, waiting);
+
+    assert.equal(blocked.stage, "WAITING_EXTERNAL");
+    assert.equal(blocked.resumeStage, "RELEASING");
+    assert.equal(blocked.continuation?.kind, "blocked");
+    assert.deepEqual(blocked.pendingRelease, pendingRelease);
+    assert.deepEqual(blocked.release, waiting.release);
+    assert.match(blocked.stageReceipts.at(-1)!.message, /WORKFLOW_REQUIREMENT_MIGRATION_BLOCKED/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a pre-release repair wrapper uses resumeStage and returns to Transforming", async () => {
+  const { root, created, research } = await fixture();
+  try {
+    const oldAssessment = await storeEvidence(root, created.importId, legacyAssessment(created, research));
+    const repairing = await persistFixture(root, {
+      ...created,
+      stage: "REPAIRING",
+      resumeStage: "VALIDATING",
+      evidenceRefs: { research, assessment: oldAssessment, editorial: research },
+      repairStageTotals: { TRANSFORMING: 2, VALIDATING: 1 },
+      strategyAttempts: { "repair:validation": 3 },
+      continuation: { kind: "repair", stage: "VALIDATING", failureFingerprint: "f".repeat(64), diagnosisRequired: false, requiredChange: "Repair the old validation packet." },
+      stageReceipts: [...created.stageReceipts, { stage: "REPAIRING", status: "started", at, message: "Repairing the pre-release packet." }],
+      nextAction: "Repair validation.",
+    });
+
+    const migrated = await ensureImportContentApproval(root, repairing);
+
+    assert.equal(migrated.stage, "TRANSFORMING");
+    assert.equal(migrated.resumeStage, undefined);
+    assert.equal(migrated.continuation, undefined);
+    assert.deepEqual(migrated.evidenceRefs, { research });
+    assert.deepEqual(migrated.repairStageTotals, repairing.repairStageTotals);
+    assert.deepEqual(migrated.strategyAttempts, repairing.strategyAttempts);
+    assert.match(migrated.stageReceipts.at(-1)!.message, /WORKFLOW_REQUIREMENT_MIGRATION/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("an affiliate candidate with no retained assessment follows the ordinary fail-closed approval path", async () => {
   const { root, created, research } = await fixture();
   try {

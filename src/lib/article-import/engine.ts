@@ -530,7 +530,8 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
 const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEARCHING", RESEARCHING: "TRANSFORMING", TRANSFORMING: "REFINING", REFINING: "VALIDATING", VALIDATING: "RELEASING" };
 
 async function reconcileLegacyTransformingRequirements(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
-  if (!["REFINING", "VALIDATING", "RELEASING", "VERIFYING"].includes(record.stage)) return record;
+  const effectiveStage = ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK"].includes(record.stage) ? record.resumeStage : record.stage;
+  if (!effectiveStage || !["REFINING", "VALIDATING", "RELEASING", "VERIFYING"].includes(effectiveStage)) return record;
   const destination = approvedAffiliateUrl(record);
   if (!destination) return record;
 
