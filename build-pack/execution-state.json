@@ -1315,6 +1315,10 @@
             "npx",
             "tsx",
             "--test",
+            "tests/article-workflow-evidence.test.ts",
+            "tests/capture-replay-1110.test.ts",
+            "tests/article-worker-runner.test.ts",
+            "tests/article-workflow-preflight.test.ts",
             "tests/beam-review-policy.test.ts"
           ],
           "timeout_seconds": 900
