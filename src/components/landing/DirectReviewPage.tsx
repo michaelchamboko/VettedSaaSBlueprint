@@ -4,6 +4,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { EditorialReviewPage } from "./EditorialReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
 import { ReferenceComposedReviewPage } from "./ReferenceComposedReviewPage";
+import { ReviewedArticleHero, type ReviewedArticleHeroAsset } from "@/components/public/ReviewedArticleHero";
 
 export type LandingPageRenderMode = "production" | "preview";
 
@@ -11,13 +12,15 @@ export function DirectReviewPage({
   blueprint,
   mode = "production",
   affiliateUrlOverride,
+  reviewedHero,
 }: {
   blueprint: PageBlueprint;
   mode?: LandingPageRenderMode;
   affiliateUrlOverride?: string;
+  reviewedHero?: ReviewedArticleHeroAsset | null;
 }) {
   if (blueprint.metadata.design_profile === "editorial_v2") {
-    return <EditorialReviewPage blueprint={blueprint} affiliateUrlOverride={affiliateUrlOverride} />;
+    return <EditorialReviewPage blueprint={blueprint} affiliateUrlOverride={affiliateUrlOverride} reviewedHero={reviewedHero} />;
   }
   if (blueprint.metadata.design_profile === "reference_composed_v1") {
     return (
@@ -25,6 +28,7 @@ export function DirectReviewPage({
         blueprint={blueprint}
         mode={mode}
         affiliateUrlOverride={affiliateUrlOverride}
+        reviewedHero={reviewedHero}
       />
     );
   }
@@ -64,7 +68,11 @@ export function DirectReviewPage({
             </a>
             {blueprint.hero.risk_reversal ? <p className="text-sm text-slate-400">{blueprint.hero.risk_reversal}</p> : null}
           </div>
-          {approvedHeroVisual ? (
+          {reviewedHero ? (
+            <figure className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/8 shadow-2xl" data-motion="hero-media">
+              <ReviewedArticleHero asset={reviewedHero} />
+            </figure>
+          ) : approvedHeroVisual ? (
             <figure className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/8 shadow-2xl" data-motion="hero-media">
               <img
                 src={approvedHeroVisual.asset_url}

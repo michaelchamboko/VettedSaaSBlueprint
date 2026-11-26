@@ -5,15 +5,18 @@ import type { PageBlueprint } from "@/lib/schemas/contracts";
 
 import type { LandingPageRenderMode } from "./DirectReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
+import { ReviewedArticleHero, type ReviewedArticleHeroAsset } from "@/components/public/ReviewedArticleHero";
 
 export function EditorialReviewPage({
   blueprint,
   mode = "production",
   affiliateUrlOverride,
+  reviewedHero,
 }: {
   blueprint: PageBlueprint;
   mode?: LandingPageRenderMode;
   affiliateUrlOverride?: string;
+  reviewedHero?: ReviewedArticleHeroAsset | null;
 }) {
   const approvedHeroVisual =
     blueprint.hero.visual_asset?.approval_status === "approved" && blueprint.hero.visual_asset.approved_by_owner
@@ -62,7 +65,9 @@ export function EditorialReviewPage({
           </div>
 
           <div className="landing-editorial-v2__hero-media" data-motion="hero-media">
-            {approvedHeroVisual ? (
+            {reviewedHero ? (
+              <figure><ReviewedArticleHero asset={reviewedHero} /></figure>
+            ) : approvedHeroVisual ? (
               <figure>
                 <img src={approvedHeroVisual.asset_url} alt={approvedHeroVisual.alt_text} />
                 <figcaption>{approvedHeroVisual.prompt_summary}</figcaption>

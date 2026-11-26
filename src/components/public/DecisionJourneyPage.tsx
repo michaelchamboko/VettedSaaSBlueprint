@@ -6,6 +6,7 @@ import { PublicPageShell } from "./PublicPageShell";
 import type { DecisionJourneyRecordV1 } from "@/lib/decision-journey/catalogue";
 import type { DecisionJourneyRecordV2 } from "@/lib/decision-journey/sets";
 import { getJourneyPresentation } from "@/lib/decision-journey/presentation";
+import { ReviewedArticleHero, type ReviewedArticleHeroAsset } from "./ReviewedArticleHero";
 
 const routeLabels: Record<string, string> = {
   "/decision-hub": "Decision guide",
@@ -19,7 +20,7 @@ function routeLabel(route: string) {
   return "Worked scenario";
 }
 
-export function DecisionJourneyPage({ record, afterContent }: { record: DecisionJourneyRecordV1 | DecisionJourneyRecordV2; afterContent?: ReactNode }) {
+export function DecisionJourneyPage({ record, afterContent, reviewedHero }: { record: DecisionJourneyRecordV1 | DecisionJourneyRecordV2; afterContent?: ReactNode; reviewedHero?: ReviewedArticleHeroAsset | null }) {
   const presentation = getJourneyPresentation(record);
 
   return (
@@ -46,6 +47,7 @@ export function DecisionJourneyPage({ record, afterContent }: { record: Decision
             </dl>
           </aside>
         </header>
+        {reviewedHero ? <figure className="decision-journey__hero-media"><ReviewedArticleHero asset={reviewedHero} sizes="(max-width: 800px) 100vw, 70rem" /></figure> : null}
 
         <section className="decision-journey__blocks" aria-label="Decision guide content">
           <div className="decision-journey__progress" aria-hidden="true" data-journey-motion="progress" />

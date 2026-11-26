@@ -166,6 +166,52 @@ for (const evidenceField of ["assessmentPath", "editorialExecutionPath", "presen
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 }
+
+test("hero repair digest follows generation evidence and its source provenance bytes", async () => {
+  const root = await fixture();
+  try {
+    const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
+    const workDirectory = path.join(root, ".automation/article-imports/work", record.importId);
+    await mkdir(workDirectory, { recursive: true });
+    const generationPath = "hero-generation.json";
+    const providerPath = "hero-provider-output.json";
+    const originalPath = "hero-original.png";
+    await writeFile(path.join(root, providerPath), JSON.stringify({ approved: false }));
+    await writeFile(path.join(root, originalPath), Buffer.from("synthetic original image bytes"));
+    const generation = (ready: boolean) => ({ ready,
+      originalRef: { path: originalPath, sha256: "a".repeat(64) },
+      generation: { providerOutputRef: { path: providerPath, sha256: "b".repeat(64) } },
+    });
+    await writeFile(path.join(root, generationPath), JSON.stringify(generation(false)));
+    await writeFile(path.join(workDirectory, "synthetic.result.json"), JSON.stringify({
+      work: { stage: record.stage, heroGenerationEvidencePath: generationPath },
+    }));
+    let executions = 0;
+    const executor = async ({ record: current }: { record: typeof record }) => {
+      executions++;
+      const evidence = JSON.parse(await readFile(path.join(root, generationPath), "utf8"));
+      const provider = JSON.parse(await readFile(path.join(root, providerPath), "utf8"));
+      if (!evidence.ready || !provider.approved) throw new Error("Synthetic hero generation evidence failed");
+      return current;
+    };
+    let failed = await executePendingImport(root, record.importId, executor);
+    assert.equal(failed.continuation?.kind, "repair");
+    if (failed.continuation?.kind !== "repair") throw new Error("Missing hero repair continuation");
+    const failedGenerationFingerprint = failed.continuation.submittedFingerprint;
+    await assert.rejects(executePendingImport(root, record.importId, executor), /UNCHANGED_SUBMISSION/);
+    await writeFile(path.join(root, generationPath), JSON.stringify(generation(true)));
+    assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failedGenerationFingerprint);
+    failed = await executePendingImport(root, record.importId, executor);
+    assert.equal(failed.continuation?.kind, "repair");
+    if (failed.continuation?.kind !== "repair") throw new Error("Missing provider repair continuation");
+    const failedProviderFingerprint = failed.continuation.submittedFingerprint;
+    await assert.rejects(executePendingImport(root, record.importId, executor), /UNCHANGED_SUBMISSION/);
+    await writeFile(path.join(root, providerPath), JSON.stringify({ approved: true }));
+    assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failedProviderFingerprint);
+    await executePendingImport(root, record.importId, executor);
+    assert.equal(executions, 3);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 test("explicit legacy upgrade preserves history and terminal mismatch cannot skip", async () => {
   const root = await fixture();
   try {

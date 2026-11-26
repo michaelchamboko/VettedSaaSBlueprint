@@ -6,16 +6,18 @@ import { mkdir, open, readFile, readdir, realpath, rename, unlink, writeFile } f
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
-import { contentApprovalMatches, createContentApproval, type ApprovalFiles } from "./content-approval";
+import { contentApprovalMatches, createContentApproval, formatQualityApprovalMatches, type ApprovalFiles } from "./content-approval";
 import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
-import { createImportPresentation, verifyImportPresentationEvidence } from "./presentation";
+import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
+import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
 import { RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
-import { evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateResearchEvidence } from "./workflow-evidence";
+import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
-import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
+import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
+import { articleHeroBindingSchema } from "./hero-image";
 
 const ROOT = ".automation/article-imports";
 type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string; writing?: boolean };
@@ -275,11 +277,11 @@ function strategyGroup(stage: ImportStage): string {
 }
 
 export async function canonicalSubmissionFingerprint(record: ExternalArticleImportV1, root: string): Promise<string> {
-  const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, artifactPath: record.artifactPath, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
+  const inputs: unknown[] = [{ stage: record.resumeStage ?? record.stage, sourceFingerprint: record.sourceFingerprint, transformation: record.transformation, artifactPath: record.artifactPath, contentApproval: record.contentApproval, heroImage: record.heroImage, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release, evidenceRefs: record.evidenceRefs }];
   const files = new Set<string>();
   const addFile = (file: string) => files.add(path.relative(path.resolve(root), path.resolve(root, file)).replaceAll("\\", "/"));
   // Explicit supervised-result/approval dependencies; never infer files from arbitrary article path keys.
-    const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "evidencePath", "registryDecisionPath", "registryWritebackPath", "codeReviewPath", "workPath", "resultPath", "proposalPath"]);
+    const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "heroGenerationEvidencePath", "evidencePath", "registryDecisionPath", "registryWritebackPath", "codeReviewPath", "workPath", "resultPath", "proposalPath"]);
   function collect(value: unknown): void {
     if (!value || typeof value !== "object") return;
     const ref = evidenceRefSchema.safeParse(value);
@@ -372,6 +374,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       assertCurrentImport(current);
       if (["LIVE", "QUARANTINED"].includes(current.stage)) {
         if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
+        if (!current.sourceDeletedAt) current = await deleteRawSource(repositoryRoot, importId, current, now());
         if (current.stage === "LIVE" && current.improve && !["COMPLETE", "BLOCKED"].includes(current.improve.phase)) {
           if (!options?.improveExecutor) return current;
           if (!current.improve.startedAt) {
@@ -394,7 +397,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
             throw error;
           }
         }
-        return current.sourceDeletedAt ? current : deleteRawSource(repositoryRoot, importId, current, now());
+        return current;
       }
       if (current.continuation?.kind === "blocked") return current;
       if (current.continuation?.kind !== "wait" && !(current.continuation?.kind === "repair" && current.continuation.diagnosisRequired)) current = await ensureImportResearch(repositoryRoot, current);
@@ -452,7 +455,9 @@ export async function executePendingImport(repositoryRoot: string, importId: str
 }
 
 /** Executor output is repair work, not an external outage or an automatic quarantine. */
-export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string }): Promise<ExternalArticleImportV1> {
+export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string; verifiedHeroRejection?: {
+  decisionRef: EvidenceRef; heroEvidenceRef: EvidenceRef; assetRef: EvidenceRef; generationRef: EvidenceRef;
+} }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     const attemptKey = `repair:${input.strategy}:${fingerprint(input.message)}`;
@@ -465,9 +470,22 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
     const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
     const submittedFingerprint = await canonicalSubmissionFingerprint(record, repositoryRoot);
     if (record.continuation?.kind === "repair" && record.continuation.submittedFingerprint === submittedFingerprint) return record;
-    const updated = externalArticleImportSchema.parse({ ...record, repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: (diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
+    const verifiedHeroRejection = input.message === "ARTICLE_HERO_VISUAL_INSPECTION_FAILED" && record.heroImage && record.evidenceRefs?.hero && input.verifiedHeroRejection &&
+      isDeepStrictEqual(input.verifiedHeroRejection.heroEvidenceRef, record.evidenceRefs.hero) &&
+      isDeepStrictEqual(input.verifiedHeroRejection.assetRef, record.heroImage.assetRef) &&
+      isDeepStrictEqual(input.verifiedHeroRejection.generationRef, record.heroImage.generationRef);
+    if (verifiedHeroRejection) await verifyEvidenceRef(repositoryRoot, input.verifiedHeroRejection!.decisionRef);
+    const rejectedHero = verifiedHeroRejection
+      ? { heroImage: record.heroImage, heroEvidence: record.evidenceRefs?.hero, presentationEvidence: record.evidenceRefs?.presentation }
+      : undefined;
+    if (rejectedHero) {
+      attempts["hero-generation"] = (record.strategyAttempts["hero-generation"] ?? 0) + 1;
+    }
+    const updated = externalArticleImportSchema.parse({ ...record,
+      ...(rejectedHero && { heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined }),
+      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
       stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
-      nextAction: (diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`) + researchRecovery,
+      nextAction: rejectedHero ? `The rejected hero remains preserved in the failed receipt (${JSON.stringify(rejectedHero)}). Resume to generate and inspect a fresh image.` : (diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`) + researchRecovery,
     });
     await saveImport(repositoryRoot, updated);
     return updated;
@@ -550,14 +568,91 @@ export async function createArticleImport(repositoryRoot: string, sourceFile: st
 }
 
 const nextStage: Partial<Record<ImportStage, ImportStage>> = { INGESTING: "RESEARCHING", RESEARCHING: "TRANSFORMING", TRANSFORMING: "REFINING", REFINING: "VALIDATING", VALIDATING: "RELEASING" };
+
+async function reconcileLegacyTransformingRequirements(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  const effectiveStage = ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK"].includes(record.stage) ? record.resumeStage : record.stage;
+  if (!effectiveStage || !["REFINING", "VALIDATING", "RELEASING", "VERIFYING"].includes(effectiveStage)) return record;
+  const destination = approvedAffiliateUrl(record);
+  if (!destination) return record;
+
+  const transformAssessment = record.evidenceRefs?.transformAssessment;
+  const retainedAssessmentRef = transformAssessment ?? record.evidenceRefs?.assessment;
+  if (!retainedAssessmentRef) return record;
+  const retained = contentAssessmentSchema.safeParse(await readEvidence(repositoryRoot, retainedAssessmentRef));
+  if (!retained.success) throw new Error("LEGACY_TRANSFORMING_ASSESSMENT_INVALID");
+  const accepted = longFormAffiliateAssessmentSchema.safeParse(retained.data.longFormAffiliate);
+  if (transformAssessment && accepted.success && accepted.data.approvedAffiliateUrl === destination) return record;
+
+  const at = now();
+  if (record.pendingRelease || record.release) {
+    const cause = "STATE_INTEGRITY: legacy Transforming assessment cannot be replaced while a release journal is active";
+    const requirement = "Reconcile the existing release and its rollback target through explicit verified recovery before returning this import to Transforming.";
+    if (record.continuation?.kind === "blocked" && record.continuation.cause === cause && record.continuation.resumptionRequirement === requirement) return record;
+    const blocked = externalArticleImportSchema.parse({
+      ...record,
+      blockerScope: "shared",
+      continuation: {
+        kind: "blocked",
+        scope: "shared",
+        cause,
+        attemptedRecovery: "Detected the pre-rule Transforming receipt and preserved the active release journal without starting new authoring work.",
+        resumptionRequirement: requirement,
+      },
+      updatedAt: at,
+      stageReceipts: [...record.stageReceipts, {
+        stage: record.stage,
+        status: "failed",
+        at,
+        message: "WORKFLOW_REQUIREMENT_MIGRATION_BLOCKED: active release journal and rollback target require explicit verified recovery.",
+      }],
+      nextAction: requirement,
+    });
+    await saveImport(repositoryRoot, blocked);
+    return blocked;
+  }
+  const { research, ...invalidatedEvidenceRefs } = record.evidenceRefs ?? {};
+  const prior = {
+    stage: record.stage,
+    resumeStage: record.resumeStage,
+    continuation: record.continuation,
+    transformAssessment,
+    invalidatedEvidenceRefs,
+    contentApproval: record.contentApproval,
+    presentation: record.presentation,
+    retainedReleaseJournal: { pendingRelease: Boolean(record.pendingRelease), release: Boolean(record.release) },
+  };
+  const updated = externalArticleImportSchema.parse({
+    ...record,
+    stage: "TRANSFORMING",
+    resumeStage: undefined,
+    continuation: undefined,
+    blockerScope: undefined,
+    evidenceRefs: research ? { research } : {},
+    contentApproval: undefined,
+    presentation: undefined,
+    updatedAt: at,
+    stageReceipts: [...record.stageReceipts, {
+      stage: "TRANSFORMING",
+      status: "started",
+      at,
+      message: `WORKFLOW_REQUIREMENT_MIGRATION: accepted long-form affiliate brief is missing; rebuild the Transforming assessment. Preserved prior state: ${JSON.stringify(prior)}`,
+    }],
+    nextAction: "Return to Transforming, retain the approved affiliate destination and research, and record the required five-field buyer brief before refinement.",
+  });
+  await saveImport(repositoryRoot, updated);
+  return updated;
+}
+
 export async function approveImportContent(repositoryRoot: string, record: ExternalArticleImportV1, files: ApprovalFiles): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
+    const reconciled = await reconcileLegacyTransformingRequirements(repositoryRoot, record);
+    if (reconciled !== record || reconciled.continuation?.kind === "blocked") return reconciled;
     const evaluated = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: "VALIDATING", artifactPath: files.artifactPath }, "current-transition");
     if (!evaluated.ok) throw new Error(`WORKFLOW_EVIDENCE_INVALID:${JSON.stringify(evaluated.diagnostics)}`);
     if (record.stage !== "REFINING") throw new Error("Content approval requires REFINING.");
-    const contentApproval = await createContentApproval(repositoryRoot, { ...files, format: record.format, sourceFingerprint: record.sourceFingerprint });
-    const updated = externalArticleImportSchema.parse({ ...record, contentApproval, presentation: undefined, pendingRelease: undefined, release: undefined, updatedAt: now() });
+    const contentApproval = await createContentApproval(repositoryRoot, { ...files, format: record.format, sourceFingerprint: record.sourceFingerprint, approvedAffiliateUrl: record.transformation?.resolvedAffiliateUrl });
+    const updated = externalArticleImportSchema.parse({ ...record, contentApproval, heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined, updatedAt: now() });
     await saveImport(repositoryRoot, updated);
     return updated;
   });
@@ -566,9 +661,11 @@ export async function approveImportContent(repositoryRoot: string, record: Exter
 export async function ensureImportContentApproval(repositoryRoot: string, record: ExternalArticleImportV1, artifactPath?: string): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
-    if (await contentApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint, artifactPath)) return record;
+    const reconciled = await reconcileLegacyTransformingRequirements(repositoryRoot, record);
+    if (reconciled !== record || reconciled.continuation?.kind === "blocked") return reconciled;
+    if (await contentApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint, artifactPath, record.transformation?.resolvedAffiliateUrl)) return record;
     const at = now();
-    const updated = externalArticleImportSchema.parse({ ...record, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined, resumeStage: undefined, stage: "REFINING", updatedAt: at,
+    const updated = externalArticleImportSchema.parse({ ...record, contentApproval: undefined, heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined, resumeStage: undefined, stage: "REFINING", updatedAt: at,
       stageReceipts: [...record.stageReceipts, { stage: "REFINING", status: "failed", at, message: "Content approval is missing or no longer matches the artifact and evidence." }],
       nextAction: "Refine the current artifact and record fresh editorial and format quality approval.",
     });
@@ -578,10 +675,18 @@ export async function ensureImportContentApproval(repositoryRoot: string, record
 }
 
 export async function ensureImportPresentation(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  return ensureImportPresentationWith(repositoryRoot, record, () => verifyImportPresentationEvidence(repositoryRoot, record));
+}
+
+async function ensureImportPresentationBinding(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  return ensureImportPresentationWith(repositoryRoot, record, async () => requireImportPresentationBinding(record));
+}
+
+async function ensureImportPresentationWith(repositoryRoot: string, record: ExternalArticleImportV1, verify: () => Promise<void>): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     try {
-      await verifyImportPresentationEvidence(repositoryRoot, record);
+      await verify();
       return record;
     } catch {
       const at = now();
@@ -615,8 +720,14 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     if (record.unusableReason) return quarantineUnusableImport(repositoryRoot, record);
+    const reconciled = await reconcileLegacyTransformingRequirements(repositoryRoot, record);
+    if (reconciled !== record || reconciled.continuation?.kind === "blocked") return reconciled;
     const stage = nextStage[record.stage];
     if (!stage) throw new Error("Stage " + record.stage + " cannot advance automatically.");
+    if (["VALIDATING", "RELEASING"].includes(stage) && record.contentApproval
+        && !(await formatQualityApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint))) {
+      return ensureImportContentApproval(repositoryRoot, record);
+    }
     const evidence = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: stage }, "current-transition");
     if (!evidence.ok) throw new Error(`WORKFLOW_EVIDENCE_INVALID:${JSON.stringify(evidence.diagnostics)}`);
     if (["VALIDATING", "RELEASING"].includes(stage)) {
@@ -659,7 +770,7 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
     if (!checked.contentApproval) return checked;
     const release = externalArticleImportSchema.shape.release.unwrap().parse(releaseInput);
     if (!release.productionVerifierRef) throw new Error("PRODUCTION_VERIFIER_EVIDENCE_REQUIRED");
-    const presented = await ensureImportPresentation(repositoryRoot, { ...checked, release });
+    const presented = await ensureImportPresentationBinding(repositoryRoot, { ...checked, release });
     if (!presented.presentation) return presented;
     const at = now();
     const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
@@ -676,8 +787,9 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     const presented = await ensureImportPresentation(repositoryRoot, { ...record, release });
     if (!presented.presentation) return presented;
 
-    const evaluated = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: "LIVE" }, "current-transition");
-    if (!evaluated.ok || !record.sourceRef || !record.contentApproval) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(evaluated.diagnostics)}`);
+    try { await validateProductionWorkflowEvidence(repositoryRoot, record); }
+    catch (error) { throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify([error instanceof Error ? error.message : String(error)])}`); }
+    if (!record.sourceRef || !record.contentApproval) throw new Error("TERMINAL_PROOF_INVALID");
     const at = now();
     const artifact = JSON.parse(await readFile(path.resolve(repositoryRoot, record.contentApproval.artifactPath), "utf8"));
     const artifactRef = await storeEvidence(repositoryRoot, record.importId, artifact);
@@ -685,12 +797,14 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha || record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
     const mergeEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { reviewedCommitSha: merge.reviewedHeadSha, mergeCommitSha: merge.mergeCommitSha, pullRequestUrl: record.pendingRelease.pullRequestUrl, evidenceUrl: review.evidenceUrl });
     const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
-    const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, frozenFiles, format: record.format, reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
+    const retainedHero = record.heroImage ?? (record.evidenceRefs?.hero ? articleHeroBindingSchema.parse(await readEvidence(repositoryRoot, record.evidenceRefs.hero)) : undefined);
+    const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, ...(retainedHero && { heroImage: retainedHero }), frozenFiles, format: record.format, commercialMode: record.transformation?.commercialMode ?? "none", ...(record.transformation?.resolvedAffiliateUrl && { approvedAffiliateUrl: record.transformation.resolvedAffiliateUrl }), reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
     const publicationKey = fingerprint(`${record.importId}:${release.commitSha}`);
     const runRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "ImproveRunSnapshotV1", publicationKey, importId: record.importId, sourceFingerprint: record.sourceFingerprint, stageReceipts: record.stageReceipts, repairStageTotals: record.repairStageTotals, strategyAttempts: record.strategyAttempts, pendingRelease: record.pendingRelease, release, terminalRef });
     const improve = { schemaVersion: "ImportImproveV1" as const, publicationKey, boundCommitSha: release.commitSha, runRef, phase: "ASSESSING" as const, attempt: 0, issueKeys: [], resolvedKeys: [], openKeys: [], handoffRefs: [] };
     const updated = externalArticleImportSchema.parse({ ...presented, terminalRef, improve, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
-    if (!(await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
+    const historical = await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal");
+    if (!historical.ok) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(historical.diagnostics)}`);
     await saveImport(repositoryRoot, updated);
     return deleteRawSource(repositoryRoot, updated.importId, updated, at);
   });
@@ -724,7 +838,7 @@ async function ensureImportResearch(repositoryRoot: string, record: ExternalArti
     // Retain the prior references in history; the files themselves are never deleted.
     const prior = { stage: record.stage, evidenceRefs: record.evidenceRefs, contentApproval: record.contentApproval, presentation: record.presentation, pendingRelease: record.pendingRelease, release: record.release };
     const updated = externalArticleImportSchema.parse({ ...record, stage: "RESEARCHING", resumeStage: undefined,
-      evidenceRefs: {}, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined,
+      evidenceRefs: {}, contentApproval: undefined, heroImage: undefined, presentation: undefined, pendingRelease: undefined, release: undefined,
       continuation: undefined, blockerScope: undefined, updatedAt: at,
       stageReceipts: [...record.stageReceipts, { stage: "RESEARCHING", status: "failed", at,
         message: `RESEARCH_RECOVERY_REQUIRED: ${cause}. Invalidated dependent evidence: ${JSON.stringify(prior)}` }],
@@ -740,6 +854,8 @@ export async function resumeImport(repositoryRoot: string, record: ExternalArtic
     assertCurrentImport(record);
     record = await ensureImportResearch(repositoryRoot, record);
     if (record.continuation?.kind === "blocked") return record;
+    const reconciled = await reconcileLegacyTransformingRequirements(repositoryRoot, record);
+    if (reconciled !== record || reconciled.continuation?.kind === "blocked") return reconciled;
     if (["VALIDATING", "RELEASING", "VERIFYING"].includes(record.resumeStage ?? record.stage)) {
       const checked = await ensureImportContentApproval(repositoryRoot, record);
       if (!checked.contentApproval) return checked;
@@ -812,7 +928,7 @@ export async function upgradeImportEvidence(root: string, importId: string): Pro
     }
     const attemptedRepairs = Object.entries(record.strategyAttempts).filter(([key]) => key.startsWith("repair:")).reduce((sum, [, count]) => sum + count, 0);
     if (attemptedRepairs > record.stageReceipts.filter((r) => r.status === "failed").length) throw new Error("REPAIR_HISTORY_INCOMPLETE");
-    const updated = externalArticleImportSchema.parse({ ...record, schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, sourceRef: { path: source, sha256: record.sourceFingerprint }, evidenceRefs: {}, diagnoses: [], repairStageTotals: totals, stage: "RESEARCHING", resumeStage: undefined, continuation: undefined, contentApproval: undefined, presentation: undefined, pendingRelease: undefined, release: undefined, terminalRef: undefined, nextAction: "Legacy evidence archived; complete current research requirements before advancing.", updatedAt: now() });
+    const updated = externalArticleImportSchema.parse({ ...record, schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, sourceRef: { path: source, sha256: record.sourceFingerprint }, evidenceRefs: {}, diagnoses: [], repairStageTotals: totals, stage: "RESEARCHING", resumeStage: undefined, continuation: undefined, contentApproval: undefined, heroImage: undefined, presentation: undefined, pendingRelease: undefined, release: undefined, terminalRef: undefined, nextAction: "Legacy evidence archived; complete current research requirements before advancing.", updatedAt: now() });
     await saveImport(root, updated);
     return updated;
   }); } finally { await lease.release(); }

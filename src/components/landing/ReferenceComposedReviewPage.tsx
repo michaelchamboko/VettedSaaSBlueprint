@@ -6,6 +6,7 @@ import { getRenderableSectionOrder, shouldRenderReferenceSubheadline, type Refer
 
 import type { LandingPageRenderMode } from "./DirectReviewPage";
 import { LandingPageMotion } from "./LandingPageMotion";
+import { ReviewedArticleHero, type ReviewedArticleHeroAsset } from "@/components/public/ReviewedArticleHero";
 
 function affiliateUrl(linkId: string, override?: string) {
   return override ?? "#affiliate-link-unavailable";
@@ -79,10 +80,12 @@ export function ReferenceComposedReviewPage({
   blueprint,
   mode = "production",
   affiliateUrlOverride,
+  reviewedHero,
 }: {
   blueprint: PageBlueprint;
   mode?: LandingPageRenderMode;
   affiliateUrlOverride?: string;
+  reviewedHero?: ReviewedArticleHeroAsset | null;
 }) {
   if (!blueprint.presentation) {
     throw new Error("reference_composed_v1 pages require a presentation recipe.");
@@ -120,17 +123,19 @@ export function ReferenceComposedReviewPage({
             <p className="landing-reference-composed__eyebrow">Buyer decision brief</p>
             <h1>{blueprint.hero.headline}</h1>
             <p className="landing-reference-composed__answer">{answerSnippet}</p>
-            {showSubheadline ? <p className="landing-reference-composed__subheadline">{blueprint.hero.subheadline}</p> : null}
           </div>
           <div className="landing-reference-composed__hero-media" data-motion="hero-media">
-            {visual ? <figure><img src={visual.asset_url} alt={visual.alt_text} /><figcaption className="sr-only">Approved product visual</figcaption></figure> : <aside><h2>{blueprint.problem_solution.problem}</h2><p>{blueprint.problem_solution.solution}</p></aside>}
+            {reviewedHero ? <figure><ReviewedArticleHero asset={reviewedHero} /><figcaption className="sr-only">Reviewed article visual</figcaption></figure> : visual ? <figure><img src={visual.asset_url} alt={visual.alt_text} /><figcaption className="sr-only">Approved product visual</figcaption></figure> : <aside><h2>{blueprint.problem_solution.problem}</h2><p>{blueprint.problem_solution.solution}</p></aside>}
           </div>
           <div className="landing-reference-composed__hero-decision">
+            <div className="landing-reference-composed__decision-copy">
+              {showSubheadline ? <p className="landing-reference-composed__subheadline">{blueprint.hero.subheadline}</p> : null}
+              {blueprint.hero.risk_reversal ? <p className="landing-reference-composed__risk">{blueprint.hero.risk_reversal}</p> : null}
+            </div>
             <div className="landing-reference-composed__cta-cluster">
               <p className="landing-reference-composed__compact-disclosure">Paid-link note: {blueprint.affiliate_disclosure.short_disclosure}</p>
               <Cta label={blueprint.hero.primary_cta_label} linkId={blueprint.hero.primary_cta_link_id} variant={presentation.cta} override={affiliateUrlOverride} primary />
             </div>
-            {blueprint.hero.risk_reversal ? <p className="landing-reference-composed__risk">{blueprint.hero.risk_reversal}</p> : null}
           </div>
         </section>
         {sections.map((sectionKey) => <section key={sectionKey} className="landing-reference-composed__section" data-section-key={sectionKey} data-section-family={presentation.section_variants[sectionKey]} data-motion="reveal"><div className="landing-reference-composed__divider" data-motion="divider" /><div className="landing-reference-composed__section-content"><SectionContent sectionKey={sectionKey} blueprint={blueprint} affiliateUrlOverride={affiliateUrlOverride} /></div></section>)}

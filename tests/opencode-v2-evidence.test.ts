@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../src/lib/article-import/execution-evidence";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { extractOpenCodeExecution, proseProjectionDigest, sha256, storeEvidence, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 import { normalizeOpenCodeVersion, openCodeExecutable, openCodeExportArgs } from "../src/lib/article-import/opencode-runtime";
 
 const input = { artifact: "complete synthetic artifact" }, output = { judgment: "synthetic judgment" };
@@ -118,4 +121,70 @@ test("visual review binds the ordered native PNG attachments while legacy text e
   assert.throws(() => extractOpenCodeExecution(raw,{...visual,imageRefs:[]}),/IMAGE_BINDING/);
   assert.throws(() => extractOpenCodeExecution(raw,{...visual,imageRefs:[{...image,sha256:"0".repeat(64)}]}),/IMAGE_BINDING/);
   assert.throws(() => extractOpenCodeExecution(raw,{...visual,pass:"content-assessment"}),/IMAGE_BINDING/);
+});
+
+function visualFixture(pass: string, bytes: Buffer, mime: "image/png" | "image/webp", extension: ".png" | ".webp") {
+  const digest = sha256(bytes);
+  const image = {path: `proof/${digest}${extension}`, sha256:digest};
+  const visual = {...selected,version:"2.2.6",pass,imageRefs:[image],inputRefs:[image]};
+  const raw = fixture();
+  const user = raw.messages[0];
+  user.text = JSON.stringify({packetId:visual.packetId,pass:visual.pass,prose:input,digest:proseProjectionDigest(input),instructions:[]});
+  Object.assign(user,{files:[{name:path.basename(image.path),mime,source:{type:"inline"},data:bytes.toString("base64")} ]});
+  return {raw, visual, image};
+}
+
+test("2.2.6 capture and replay bind the exact WebP hero and PNG visual-quality attachments", async t => {
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1WsAAAAASUVORK5CYII=", "base64");
+  const webp = await readFile(path.resolve("public/home-folios/dubbing-paper.webp"));
+  const root = await mkdtemp(path.join(tmpdir(), "opencode-visual-replay-"));
+  t.after(() => rm(root,{recursive:true,force:true}));
+  await mkdir(path.join(root,"config"),{recursive:true});
+  await writeFile(path.join(root,"config/article-workflow-capabilities.json"),JSON.stringify({schemaVersion:"ArticleWorkflowCapabilitiesV1",openCodeVersion:"2.2.6",modelFamilies:{"provider/model":"family"}}));
+
+  for (const item of [
+    visualFixture("hero-image-inspection",webp,"image/webp",".webp"),
+    visualFixture("design:visual-quality",png,"image/png",".png"),
+  ]) {
+    await mkdir(path.dirname(path.join(root,item.image.path)),{recursive:true});
+    const bytes = item.image.path.endsWith(".webp") ? webp : png;
+    await writeFile(path.join(root,item.image.path),bytes);
+    const receipt = extractOpenCodeExecution(item.raw,item.visual);
+    assert.equal(receipt.kind,"opencode");
+    if (receipt.kind !== "opencode") throw new Error("Expected OpenCode receipt");
+    assert.deepEqual(receipt.imageRefs,[item.image]);
+    const receiptRef = await storeEvidence(root,"article-11223344-abcd-abcd-abcd-0123456789ab",receipt);
+    assert.equal((await validateExecutionEvidence(root,receiptRef)).pass,item.visual.pass);
+
+    const corruptReplay = structuredClone(receipt) as typeof receipt & {replay:{export:{messages:Array<{files?:Array<{mime:string;data:string}>}>}}};
+    const replayFile = corruptReplay.replay.export.messages[0].files![0];
+    if (item.visual.pass === "hero-image-inspection") replayFile.mime = "image/png";
+    else replayFile.data = Buffer.from("not-the-retained-png").toString("base64");
+    const corruptRef = await storeEvidence(root,"article-11223344-abcd-abcd-abcd-0123456789ab",corruptReplay);
+    await assert.rejects(validateExecutionEvidence(root,corruptRef),/IMAGE_BINDING/);
+  }
+});
+
+test("2.2.6 visual attachments reject MIME, signature, bytes, name, reference and pass mismatches", async () => {
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1WsAAAAASUVORK5CYII=", "base64");
+  const webp = await readFile(path.resolve("public/home-folios/dubbing-paper.webp"));
+  const hero = visualFixture("hero-image-inspection",webp,"image/webp",".webp");
+  const visual = visualFixture("design:visual-quality",png,"image/png",".png");
+
+  assert.doesNotThrow(() => extractOpenCodeExecution(hero.raw,hero.visual));
+  assert.doesNotThrow(() => extractOpenCodeExecution(visual.raw,visual.visual));
+  for (const mutate of [
+    (raw: ReturnType<typeof fixture>) => { raw.messages[0].files![0].mime = "image/png"; },
+    (raw: ReturnType<typeof fixture>) => { raw.messages[0].files![0].data = png.toString("base64"); },
+    (raw: ReturnType<typeof fixture>) => { raw.messages[0].files![0].name = "other.webp"; },
+  ]) {
+    const raw = structuredClone(hero.raw); mutate(raw);
+    assert.throws(() => extractOpenCodeExecution(raw,hero.visual),/IMAGE_BINDING/);
+  }
+  const wrongSignature = visualFixture("design:visual-quality",Buffer.from("not-png"),"image/png",".png");
+  assert.throws(() => extractOpenCodeExecution(wrongSignature.raw,wrongSignature.visual),/IMAGE_BINDING/);
+  assert.throws(() => extractOpenCodeExecution(visual.raw,{...visual.visual,imageRefs:[]}),/IMAGE_BINDING/);
+  assert.throws(() => extractOpenCodeExecution(visual.raw,{...visual.visual,imageRefs:[{...visual.image,sha256:"0".repeat(64)}]}),/IMAGE_BINDING/);
+  assert.throws(() => extractOpenCodeExecution(visual.raw,{...visual.visual,pass:"content-assessment"}),/IMAGE_BINDING/);
+  assert.throws(() => extractOpenCodeExecution(visual.raw,{...visual.visual,pass:"hero-image-inspection"}),/IMAGE_BINDING/);
 });

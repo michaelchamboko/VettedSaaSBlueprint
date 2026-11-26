@@ -3,7 +3,7 @@ import { createDispatchingImproveExecutor, dispatchArticleImport, dispatchIntake
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { readFile } from "node:fs/promises";
 import { articleExecutionStage, assertPrimaryArticleCheckout, withArticleExecution, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
-import { WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, stageInstructions } from "../src/lib/article-import/workflow-requirements";
+import { WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, stageInstructions, releaseSteps } from "../src/lib/article-import/workflow-requirements";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
@@ -72,7 +72,7 @@ export async function executeImportCommand(root: string, command: ImportCommand,
 
 async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
   if (command.kind === "recover-lease") return recoverWorkflowLease(root, command.leaseKind, command.key);
-  if (command.kind === "describe-workflow") return { requirementRevision: WORKFLOW_REVISION, sequence: WORKFLOW_SEQUENCE, requirements: workflowRequirements, instructions: stageInstructions };
+  if (command.kind === "describe-workflow") return { requirementRevision: WORKFLOW_REVISION, sequence: WORKFLOW_SEQUENCE, requirements: workflowRequirements, instructions: stageInstructions, releaseSteps };
   if (command.kind === "preflight") return inspectArticlePreflight(root, probe);
   if (command.kind === "check-intake") return checkIntakeRun(root, command.runId);
   if (command.kind === "upgrade-evidence") return upgradeImportEvidence(root, command.importId);

@@ -8,7 +8,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { verifyImportRelease, executePendingImport, claimImportLease, advanceImport, approveImportContent, createArticleImport, loadImport, recordImportPresentation, resumeImport } from "../src/lib/article-import/engine";
-import { assessImportRelease as assessRelease, recordImportCodeReview as recordReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
+import { assessImportRelease as assessRelease, recordImportCodeReview as recordReview, isAllowedReleasePath, validationCommandsForFormat, assertArtifactCommercialSafety, assertDirectReviewProjectionBinding, assertPublicationAuthorityBinding, publicationAuthorityPaths, type FullProductionChecks, type ReleaseOperations } from "../src/lib/article-import/release";
 import { browserErrorChecksFor, browserErrorsOkFrom } from "../scripts/verify-decision-set-deployment";
 import { createLocalReleaseOperations, type ReleaseCommandRunner } from "../src/lib/article-import/local-release-adapter";
 import { importPresentationValidationSchema, type ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
@@ -19,6 +19,7 @@ import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/li
 import { visibilityPageSchema } from "../src/lib/visibility-pages/contracts";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
+import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
 const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
@@ -198,6 +199,37 @@ test("successful release records and verifies the full production receipt", asyn
     assert.equal(result.status, "LIVE", JSON.stringify(result));
     assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review projection binding skips the identical path and rejects an altered projection", async () => {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "article-release-projection-binding-"));
+  try {
+    const approved = {
+      ...samplePageBlueprint,
+      metadata: {
+        ...samplePageBlueprint.metadata,
+        canonical_url: "https://vettedsaasblueprint.online/workflow-tools-review",
+        url_slug: "workflow-tools-review",
+      },
+    };
+    const sourcePath = "src/generated/landing-pages/workflow-tools-review.json";
+    await assertDirectReviewProjectionBinding(root, sourcePath, sourcePath, "workflow-tools-review", approved);
+
+    const projectionPath = "src/generated/landing-pages/altered-workflow-tools-review.json";
+    await mkdir(path.dirname(path.join(root, projectionPath)), { recursive: true });
+    await writeFile(path.join(root, projectionPath), JSON.stringify({
+      ...approved,
+      hero: { ...approved.hero, headline: "Altered public projection" },
+    }));
+    await assert.rejects(
+      assertDirectReviewProjectionBinding(root, "build-pack/article-import/approved.json", projectionPath, "workflow-tools-review", approved),
+      /PUBLIC_PROJECTION_MISMATCH/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("failed production verification rolls back and never reports LIVE", async () => {
@@ -700,7 +732,7 @@ test("first release creates a PR and waits without deploying or consuming retrie
     const waiting = await loadImport(root, record.importId);
     assert.equal(waiting.pendingRelease?.reviewedCommitSha, "c".repeat(40));
     assert.deepEqual(waiting.strategyAttempts, record.strategyAttempts);
-    assert.deepEqual(waiting.presentation, record.presentation);
+    assert.deepEqual(JSON.parse(JSON.stringify(waiting.presentation)), JSON.parse(JSON.stringify(record.presentation)));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
