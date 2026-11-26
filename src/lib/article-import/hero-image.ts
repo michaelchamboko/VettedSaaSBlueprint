@@ -1,12 +1,13 @@
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
+import { isDeepStrictEqual } from "node:util";
 
 import sharp from "sharp";
 import { z } from "zod";
 
 import { articleHeroFormatSchema, articleHeroPaths, articleHeroPublicationSchema, fingerprintArticleHeroRendererArtifact, type ArticleHeroFormat } from "../article-heroes";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
-import { evidenceRefSchema, hashSchema, readEvidence, readVerifiedEvidenceBytes, sha256, storeEvidence, storeEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import { evidenceRefSchema, hashSchema, readEvidence, readEvidenceBytes, readVerifiedEvidenceBytes, sha256, storeEvidence, storeEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import { writeJsonAtomically } from "./engine";
 
 const safeSlugSchema = z.string().min(1).refine((value) => value.split("/").every((segment) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(segment)));
@@ -59,6 +60,83 @@ export const articleHeroBindingSchema = z.object({
   generationRef: evidenceRefSchema,
 }).strict();
 export type ArticleHeroBinding = z.infer<typeof articleHeroBindingSchema>;
+
+export const articleHeroVisualInspectionSchema = z.object({
+  schemaVersion: z.literal("ArticleHeroVisualInspectionV1"),
+  artifactFingerprint: hashSchema,
+  assetSha256: hashSchema,
+  verdict: z.enum(["pass", "fail", "insufficient-evidence"]),
+  checks: z.object({
+    noPeople: z.object({ verdict: z.enum(["pass", "fail", "insufficient-evidence"]), observations: z.array(z.string().trim().min(8)).min(1) }).strict(),
+    brandFit: z.object({ verdict: z.enum(["pass", "fail", "insufficient-evidence"]), observations: z.array(z.string().trim().min(8)).min(1) }).strict(),
+  }).strict(),
+  findings: z.array(z.object({ description: z.string().trim().min(1), disposition: z.enum(["resolved", "unresolved"]) }).strict()),
+}).strict();
+
+const articleHeroRejectionSchema = z.object({
+  schemaVersion: z.literal("ArticleHeroVisualRejectionV1"),
+  importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
+  sourceFingerprint: hashSchema,
+  idempotencyKey: hashSchema,
+  heroEvidenceRef: evidenceRefSchema,
+  binding: articleHeroBindingSchema,
+  reviewerExecutionRef: evidenceRefSchema,
+  judgment: articleHeroVisualInspectionSchema,
+}).strict();
+const articleHeroRejectionPointerSchema = z.object({
+  schemaVersion: z.literal("ArticleHeroVisualRejectionPointerV1"),
+  decisionRef: evidenceRefSchema,
+}).strict();
+
+function articleHeroRejectionPointerPath(importId: string, idempotencyKey: string, assetSha256: string): string {
+  return `.automation/article-imports/evidence/${importId}/hero-visual-rejection-${idempotencyKey}-${assetSha256}.json`;
+}
+
+export function isArticleHeroVisualRejection(judgment: z.infer<typeof articleHeroVisualInspectionSchema>): boolean {
+  return judgment.verdict !== "pass" || judgment.checks.noPeople.verdict !== "pass" || judgment.checks.brandFit.verdict !== "pass" ||
+    judgment.findings.some((finding) => finding.disposition !== "resolved");
+}
+
+export async function persistArticleHeroRejection(root: string, input: {
+  importId: string; sourceFingerprint: string; idempotencyKey: string; heroEvidenceRef: EvidenceRef;
+  binding: ArticleHeroBinding; reviewerExecutionRef: EvidenceRef; judgment: z.infer<typeof articleHeroVisualInspectionSchema>;
+}): Promise<EvidenceRef> {
+  const decision = articleHeroRejectionSchema.parse({ schemaVersion: "ArticleHeroVisualRejectionV1", ...input });
+  if (!isArticleHeroVisualRejection(decision.judgment) || decision.judgment.artifactFingerprint !== decision.binding.artifactFingerprint ||
+      decision.judgment.assetSha256 !== decision.binding.assetRef.sha256) throw new Error("ARTICLE_HERO_REJECTION_BINDING_MISMATCH");
+  for (const ref of [decision.heroEvidenceRef, decision.reviewerExecutionRef]) await verifyEvidenceRef(root, ref);
+  if (!isDeepStrictEqual(articleHeroBindingSchema.parse(await readEvidence(root, decision.heroEvidenceRef)), decision.binding)) {
+    throw new Error("ARTICLE_HERO_REJECTION_BINDING_MISMATCH");
+  }
+  const decisionRef = await storeEvidence(root, decision.importId, decision);
+  const pointerPath = articleHeroRejectionPointerPath(decision.importId, decision.idempotencyKey, decision.binding.assetRef.sha256);
+  await mkdir(path.dirname(path.join(root, pointerPath)), { recursive: true });
+  await writeJsonAtomically(path.join(root, pointerPath), { schemaVersion: "ArticleHeroVisualRejectionPointerV1", decisionRef });
+  return decisionRef;
+}
+
+export async function readCurrentArticleHeroRejection(root: string, input: {
+  importId: string; sourceFingerprint: string; idempotencyKey: string; heroEvidenceRef: EvidenceRef; binding: ArticleHeroBinding;
+}): Promise<(z.infer<typeof articleHeroRejectionSchema> & { decisionRef: EvidenceRef }) | undefined> {
+  const pointerPath = articleHeroRejectionPointerPath(input.importId, input.idempotencyKey, input.binding.assetRef.sha256);
+  let pointer: z.infer<typeof articleHeroRejectionPointerSchema>;
+  try {
+    pointer = articleHeroRejectionPointerSchema.parse(JSON.parse((await readEvidenceBytes(root, pointerPath)).toString("utf8")));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw error;
+  }
+  const decision = articleHeroRejectionSchema.parse(await readEvidence(root, pointer.decisionRef));
+  if (decision.importId !== input.importId || decision.sourceFingerprint !== input.sourceFingerprint || decision.idempotencyKey !== input.idempotencyKey ||
+      !isDeepStrictEqual(decision.heroEvidenceRef, input.heroEvidenceRef) || !isDeepStrictEqual(decision.binding, input.binding) ||
+      !isArticleHeroVisualRejection(decision.judgment) || decision.judgment.artifactFingerprint !== input.binding.artifactFingerprint ||
+      decision.judgment.assetSha256 !== input.binding.assetRef.sha256) throw new Error("ARTICLE_HERO_REJECTION_BINDING_MISMATCH");
+  for (const ref of [pointer.decisionRef, decision.heroEvidenceRef, decision.reviewerExecutionRef]) await verifyEvidenceRef(root, ref);
+  if (!isDeepStrictEqual(articleHeroBindingSchema.parse(await readEvidence(root, decision.heroEvidenceRef)), input.binding)) {
+    throw new Error("ARTICLE_HERO_REJECTION_BINDING_MISMATCH");
+  }
+  return { ...decision, decisionRef: pointer.decisionRef };
+}
 
 function articleTitle(format: ArticleHeroFormat, artifact: unknown): string {
   const value = artifact as Record<string, unknown>;

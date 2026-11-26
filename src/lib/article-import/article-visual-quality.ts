@@ -123,15 +123,39 @@ export async function installArticleVisualProbe(page: Page): Promise<void> {
     const properties = ${JSON.stringify(sampleProperties)};
     const startedAt = performance.now();
     const frames = [];
+    let lastSampleAt = Number.NEGATIVE_INFINITY;
+    let domContentLoaded = false;
+    let autoPaused = false;
+    addEventListener("DOMContentLoaded",() => { domContentLoaded = true; },{once:true});
     Object.defineProperty(window,"__articleVisualStartedAt",{value:startedAt,writable:false,configurable:false});
     Object.defineProperty(window,"__articleVisualFrames",{value:frames,writable:false,configurable:false});
     const record = () => {
       const element = document.querySelector("[data-reviewed-article-hero]");
       if (element) {
-        const style = getComputedStyle(element);
-        frames.push({elapsedMs:Math.round(performance.now()-startedAt),values:Object.fromEntries(properties.map((property) => [property,style[property]]))});
+        const now = performance.now();
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches && !domContentLoaded && !autoPaused) {
+          const active = element.getAnimations({subtree:true}).filter((animation) => {
+            const progress = animation.effect?.getComputedTiming().progress;
+            return animation.playState === "running" && typeof progress === "number" && progress > 0.02 && progress < 0.98;
+          });
+          if (active.length) {
+            for (const animation of active) animation.pause();
+            window.__articleVisualPausedAnimations = active;
+            autoPaused = true;
+          }
+        }
+        if (now - lastSampleAt >= 25) {
+          const style = getComputedStyle(element);
+          frames.push({elapsedMs:Math.round(now-startedAt),values:Object.fromEntries(properties.map((property) => [property,style[property]]))});
+          lastSampleAt = now;
+          if (frames.length > 180) {
+            const recent = frames.splice(-90);
+            const earlier = frames.filter((_,index) => index === 0 || index % 2 === 0);
+            frames.splice(0,frames.length,...earlier,...recent);
+          }
+        }
       }
-      if (performance.now()-startedAt < 1400) requestAnimationFrame(record);
+      requestAnimationFrame(record);
     };
     requestAnimationFrame(record);
   })()`});
@@ -143,6 +167,11 @@ export async function pauseArticleVisualIntermediate(page: Page): Promise<boolea
     const paused = await page.evaluate(`(() => {
       const element=document.querySelector("[data-reviewed-article-hero]");
       if(!element)return false;
+      const retained=(window.__articleVisualPausedAnimations??[]).filter((animation)=>{
+        const progress=animation.effect?.getComputedTiming().progress;
+        return animation.playState==="paused"&&typeof progress==="number"&&progress>0.02&&progress<0.98;
+      });
+      if(retained.length){window.__articleVisualPausedAnimations=retained;return true;}
       const active=element.getAnimations({subtree:true}).filter((animation)=>{
         const progress=animation.effect?.getComputedTiming().progress;
         return animation.playState==="running"&&typeof progress==="number"&&progress>0.02&&progress<0.98;
@@ -181,6 +210,7 @@ export async function captureArticleVisualRuntime(page: Page, input: { format: A
     await page.waitForTimeout(50);
   }
   const facts = await page.evaluate(`(() => {
+    const format = ${JSON.stringify(input.format)};
     const rect = (element) => {
       const value = element?.getBoundingClientRect();
       return value ? { x: value.x, y: value.y, width: value.width, height: value.height } : undefined;
@@ -192,11 +222,19 @@ export async function captureArticleVisualRuntime(page: Page, input: { format: A
     };
     const main = document.querySelector("main");
     const heading = main?.querySelector("h1") ?? null;
-    const bodyCopy = [...(main?.querySelectorAll("article p, [data-article-body] p, .prose p, p") ?? [])].filter((element) => {
+    const leadSelectors = {
+      "blog": [".blog-article__question", ".blog-answer > p:last-child"],
+      "visibility": ["main > header h1 + p", "[data-article-body] p"],
+      "decision-set": [".decision-journey__hero-copy h1 + p"],
+      "direct-review": [".landing-reference-composed__answer", ".landing-editorial-v2__answer", "[data-motion='hero-copy'] h1 + p"],
+    }[format] ?? [];
+    const semanticLead = leadSelectors.map((selector) => main?.querySelector(selector)).find((element) => {
+      if (!element) return false;
       const text = (element.textContent ?? "").replace(/\s+/g," ").trim();
       const style = getComputedStyle(element);
-      return text.length >= 40 && !element.closest("[data-eyebrow],.eyebrow,.kicker") && Number.parseFloat(style.fontSize) <= 24 && style.display !== "none" && style.visibility !== "hidden";
-    }).slice(0,6);
+      return text.length > 0 && style.display !== "none" && style.visibility !== "hidden";
+    });
+    const bodyCopy = semanticLead ? [semanticLead] : [];
     const media = document.querySelector("[data-reviewed-article-hero]");
     const mediaElement = media?.matches("img,video") ? media : media?.querySelector("img,video");
     const mediaDecoded = mediaElement instanceof HTMLImageElement ? mediaElement.complete && mediaElement.naturalWidth > 0 : mediaElement instanceof HTMLVideoElement ? mediaElement.readyState >= 2 : false;
@@ -208,7 +246,7 @@ export async function captureArticleVisualRuntime(page: Page, input: { format: A
   facts.assertions.motionPreferenceConfirmed = facts.assertions.motionPreferenceConfirmed === !input.viewport.reducedMotion;
   // Keep the measured sequence. Picking the collection midpoint can miss a
   // late hydration start or an effect that settles early.
-  const frames = facts.frames.slice(0,180);
+  const frames = facts.frames;
   const effect = { target:"[data-reviewed-article-hero]",purpose:"Introduce the reviewed article media as the authored focal moment without delaying access to the article.",properties:[...sampleProperties],samples:frames };
   const spatialChanged = ["transform","clipPath","filter"].some((property) => new Set(frames.map((frame) => frame.values[property])).size > 1);
   const anyChanged = sampleProperties.some((property) => new Set(frames.map((frame) => frame.values[property])).size > 1);

@@ -7,9 +7,12 @@ import sharp from "sharp";
 
 import { articleHeroPaths } from "../src/lib/article-heroes";
 import { loadArticleHero } from "../src/lib/article-heroes";
-import { articleHeroHandoff, bindGeneratedArticleHero, validateArticleHeroBinding } from "../src/lib/article-import/hero-image";
-import { sha256 } from "../src/lib/article-import/execution-evidence";
+import { articleHeroHandoff, bindGeneratedArticleHero, persistArticleHeroRejection, readCurrentArticleHeroRejection, validateArticleHeroBinding } from "../src/lib/article-import/hero-image";
+import { sha256, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { canonicalSubmissionFingerprint, createArticleImport, loadImport, recordImportRepair, saveImport, withImportLease } from "../src/lib/article-import/engine";
+import { createDispatchingExecutor } from "../src/lib/article-import/dispatch";
+import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
+import { EDITORIAL_REVISION, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { isAllowedReleasePath, requiredImportReleaseFiles, validateBoundArticleHeroReleasePaths } from "../src/lib/article-import/release";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
@@ -126,7 +129,7 @@ test("ImageGen PNG provenance is retained while exact derived WebP bytes are ind
   }
 });
 
-test("failed visual inspection preserves the rejected generation and opens a fresh generation", async () => {
+test("an exact rejection error without a verified decision cannot clear the current hero", async () => {
   const root = await fixture();
   try {
     await mkdir(path.join(root, "Article Intake"), { recursive: true });
@@ -144,15 +147,128 @@ test("failed visual inspection preserves the rejected generation and opens a fre
     const current = await loadImport(root, created.importId);
     const before = await canonicalSubmissionFingerprint(current, root);
     const repaired = await recordImportRepair(root, current, { strategy: "validate", message: "ARTICLE_HERO_VISUAL_INSPECTION_FAILED" });
-    assert.equal(repaired.heroImage, undefined);
-    assert.equal(repaired.evidenceRefs?.hero, undefined);
-    assert.equal(repaired.strategyAttempts["hero-generation"], 1);
+    assert.deepEqual(repaired.heroImage, heroImage);
+    assert.deepEqual(repaired.evidenceRefs?.hero, staged.evidenceRefs.hero);
+    assert.equal(repaired.strategyAttempts["hero-generation"], undefined);
     assert.equal(repaired.continuation?.kind, "repair");
     assert.equal(repaired.continuation?.kind === "repair" && repaired.continuation.submittedFingerprint, before);
-    assert.notEqual(await canonicalSubmissionFingerprint(repaired, root), before, "resume observes a changed submission without editing history");
-    assert.match(repaired.nextAction, /rejected hero remains preserved/);
-    assert.match(repaired.nextAction, new RegExp(heroImage.assetRef.sha256));
+    assert.equal(await canonicalSubmissionFingerprint(repaired, root), before);
+    assert.doesNotMatch(repaired.nextAction, /rejected hero remains preserved/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("a bound rejection crosses the worker boundary once, opens generation one, and stale replay cannot clear its replacement", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "Article Intake"), { recursive: true });
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "Article Intake/article.md"), "# Synthetic article\n\nA supervised workflow fixture.");
+    const created = await createArticleImport(root, "Article Intake/article.md");
+    const artifactPath = `build-pack/article-import/${created.importId}/artifact.json`;
+    const artifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, url_slug: "synthetic-review",
+      canonical_url: "https://vettedsaasblueprint.online/synthetic-review" } };
+    await mkdir(path.dirname(path.join(root, artifactPath)), { recursive: true });
+    await writeFile(path.join(root, artifactPath), JSON.stringify(artifact));
+    const artifactFingerprint = fingerprintEditorialArtifact(artifact);
+    const ref = async (name: string) => storeEvidence(root, created.importId, { name });
+    const binding = {
+      schemaVersion: "ArticleHeroBindingV1" as const, format: "direct-review" as const, slug: "synthetic-review", artifactFingerprint,
+      assetRef: await ref("asset-0"), inspectionRef: await ref("inspection-0"), publicationRef: await ref("publication-0"), generationRef: await ref("generation-0"),
+    };
+    const heroEvidenceRef = await storeEvidence(root, created.importId, binding);
+    const staged = {
+      ...created, stage: "VALIDATING" as const, format: "direct-review" as const, heroImage: binding, evidenceRefs: { hero: heroEvidenceRef },
+      contentApproval: { schemaVersion: "ImportContentApprovalV1" as const, artifactPath, format: "direct-review" as const,
+        schemaRevision: "PageBlueprintV1", artifactFingerprint, sourceFingerprint: created.sourceFingerprint,
+        editorialRevision: EDITORIAL_REVISION, editorialEvidencePath: "build-pack/editorial/synthetic.json",
+        editorialEvidenceFingerprint: "a".repeat(64), formatQualityPath: "build-pack/article-import/quality.json",
+        formatQualityFingerprint: "b".repeat(64), approvedAt: new Date().toISOString() },
+    };
+    await withImportLease(root, created.importId, () => saveImport(root, staged));
+    const reviewerExecutionRef = await storeEvidence(root, created.importId, { schemaVersion: "ExecutionEvidenceV1", result: "negative" });
+    let packetKey = "";
+    const executor = async (context: Parameters<ReturnType<typeof createSupervisedImportExecutor>>[0]) => {
+      packetKey = context.idempotencyKey;
+      const directory = `.automation/article-imports/work/${created.importId}`;
+      const workPath = `${directory}/${context.idempotencyKey}.work.json`;
+      const resultPath = `${directory}/${context.idempotencyKey}.result.json`;
+      await mkdir(path.dirname(path.join(root, workPath)), { recursive: true });
+      await writeFile(path.join(root, workPath), JSON.stringify({ importId: created.importId, stage: context.stage,
+        idempotencyKey: context.idempotencyKey, sourceFingerprint: created.sourceFingerprint, resultPath, record: context.record }));
+      return { ...context.record, continuation: { kind: "work" as const, stage: context.stage, workPath, resultPath,
+        idempotencyKey: context.idempotencyKey, sourceFingerprint: created.sourceFingerprint } };
+    };
+    const workerRunner = async ({ args }: { args: string[] }) => {
+      const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
+      const judgment = { schemaVersion: "ArticleHeroVisualInspectionV1" as const, artifactFingerprint, assetSha256: binding.assetRef.sha256,
+        verdict: "pass" as const, checks: { noPeople: { verdict: "fail" as const, observations: ["A visible hand appears in the image."] },
+          brandFit: { verdict: "pass" as const, observations: ["The palette matches the editorial system."] } },
+        findings: [{ description: "Human body part is present.", disposition: "unresolved" as const }] };
+      await persistArticleHeroRejection(root, { importId: created.importId, sourceFingerprint: created.sourceFingerprint,
+        idempotencyKey: packet.idempotencyKey, heroEvidenceRef, binding, reviewerExecutionRef, judgment });
+      const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Worker masked the tool rejection.",
+        work: { stage: "VALIDATING", validationGate: "masked", validationReceiptPath: "masked.json", presentationEvidencePath: "masked-evidence.json" } };
+      const events = [{ type: "step_start", sessionID: "s", part: {} }, { type: "text", sessionID: "s", part: { text: JSON.stringify(result) } },
+        { type: "step_finish", sessionID: "s", part: { reason: "stop" } }];
+      return { stdout: events.map((event) => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };
+    };
+    const boundary = createDispatchingExecutor(root, executor, { workerModel: "fixture/model", workerRunner });
+    const repaired = await withImportLease(root, created.importId, (record) => boundary({ record, stage: "VALIDATING", strategy: "validate", attempt: 1,
+      idempotencyKey: "9".repeat(64), leaseToken: "00000000-0000-4000-8000-000000000009", assertLease: async () => {} }));
+    assert.equal(repaired.heroImage, undefined);
+    assert.equal(repaired.strategyAttempts["hero-generation"], 1);
+
+    // Simulate a controller exit after both the negative receipt and the masked
+    // worker result were persisted, but before the rejection was consumed.
+    const resetAttempts = { ...repaired.strategyAttempts };
+    delete resetAttempts["hero-generation"];
+    const replayable = { ...repaired, heroImage: binding, evidenceRefs: { ...repaired.evidenceRefs, hero: heroEvidenceRef },
+      strategyAttempts: resetAttempts, continuation: undefined, nextAction: "Resume validation after controller restart." };
+    await withImportLease(root, created.importId, () => saveImport(root, replayable));
+    let cachedResultConsumed = false;
+    const restartedBoundary = createDispatchingExecutor(root, async () => {
+      cachedResultConsumed = true;
+      throw new Error("cached worker result must not bypass the rejection receipt");
+    }, { workerModel: "fixture/model", workerRunner });
+    const recovered = await withImportLease(root, created.importId, (record) => restartedBoundary({ record, stage: "VALIDATING", strategy: "validate", attempt: 1,
+      idempotencyKey: packetKey, leaseToken: "00000000-0000-4000-8000-000000000009", assertLease: async () => {} }));
+    assert.equal(cachedResultConsumed, false);
+    assert.equal(recovered.heroImage, undefined);
+    assert.equal(recovered.strategyAttempts["hero-generation"], 1);
+
+    const supervised = createSupervisedImportExecutor(root);
+    const next = await supervised({ record: recovered, stage: "VALIDATING", strategy: "validate", attempt: 1, idempotencyKey: packetKey,
+      leaseToken: "fixture", assertLease: async () => {} });
+    assert.equal(next.continuation?.kind, "work");
+    if (next.continuation?.kind !== "work") throw new Error("Missing next hero handoff");
+    assert.match(next.continuation.workPath, /hero-image-1\.work\.json$/);
+    const handoff = JSON.parse(await readFile(path.join(root, next.continuation.workPath), "utf8"));
+    assert.match(handoff.originalFile, /hero-imagegen-original-1\.png$/);
+
+    const replacement = { ...binding, assetRef: await ref("asset-1"), inspectionRef: await ref("inspection-1"), generationRef: await ref("generation-1") };
+    const replacementRef = await storeEvidence(root, created.importId, replacement);
+    assert.equal(await readCurrentArticleHeroRejection(root, { importId: created.importId, sourceFingerprint: created.sourceFingerprint,
+      idempotencyKey: packetKey, heroEvidenceRef: replacementRef, binding: replacement }), undefined);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("worker error text cannot clear a hero without a verified rejection decision", async () => {
+  const root = await fixture();
+  try {
+    await mkdir(path.join(root, "Article Intake"), { recursive: true });
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "Article Intake/article.md"), "# Synthetic article\n\nA supervised workflow fixture.");
+    const created = await createArticleImport(root, "Article Intake/article.md");
+    const ref = (name: string) => ({ path: `build-pack/article-import/${created.importId}/${name}.json`, sha256: name[0].repeat(64) });
+    const heroImage = { schemaVersion: "ArticleHeroBindingV1" as const, format: "blog" as const, slug: "synthetic-article", artifactFingerprint: "a".repeat(64),
+      assetRef: ref("b-asset"), inspectionRef: ref("c-inspection"), publicationRef: ref("d-publication"), generationRef: ref("e-generation") };
+    const staged = { ...created, stage: "VALIDATING" as const, format: "blog" as const, heroImage, evidenceRefs: { hero: ref("f-hero") } };
+    await withImportLease(root, created.importId, () => saveImport(root, staged));
+    const repaired = await recordImportRepair(root, await loadImport(root, created.importId),
+      { strategy: "validate", message: "CAPABILITY_UNAVAILABLE: ARTICLE_HERO_VISUAL_INSPECTION_FAILED [worker masked]" });
+    assert.deepEqual(repaired.heroImage, heroImage);
+    assert.equal(repaired.strategyAttempts["hero-generation"], undefined);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

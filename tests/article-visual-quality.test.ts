@@ -1,13 +1,70 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { MOTION_SITES_REVIEW_SOURCE, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "../src/lib/article-import/article-visual-quality";
+import { chromium } from "playwright";
+import { renderToStaticMarkup } from "react-dom/server";
+import * as blogPageModule from "../src/app/blog/[slug]/page";
+import { MOTION_SITES_REVIEW_SOURCE, captureArticleVisualRuntime, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "../src/lib/article-import/article-visual-quality";
 import { storeEvidence, storeEvidenceBytes } from "../src/lib/article-import/execution-evidence";
 import { designRuntimeMaterial } from "../src/lib/article-import/workflow-evidence";
 
 const digest = "a".repeat(64);
+const screenshotRef = { path: "evidence/browser.png", sha256: digest };
+
+const browserFixture = `<!doctype html>
+<html><head><style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { width: 100%; }
+  .blog-article__hero { display: grid; grid-template-columns: 1.1fr .9fr; min-height: 44rem; }
+  .blog-article__intro { padding: 4rem; }
+  .blog-article__intro h1 { margin: 0 0 1.5rem; font: 400 96px/.86 Georgia, serif; }
+  .blog-article__question { max-width: 44rem; margin: 0; font: 400 30px/1.5 Georgia, serif; }
+  [data-reviewed-article-hero] { display: block; width: 100%; height: 600px; animation: hero-in 500ms linear both; }
+  [data-reviewed-article-hero] img { display: block; width: 100%; height: 100%; }
+  @keyframes hero-in { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { [data-reviewed-article-hero] { animation: none; opacity: 1; transform: none; } }
+</style><script defer src="/delayed.js"></script></head><body>
+<main><article class="blog-article"><header class="blog-article__hero">
+  <div class="blog-article__intro"><p class="eyebrow">Field guide</p><h1>Choose the workflow that your team can operate</h1><p class="blog-article__question">Can this workflow fit?</p></div>
+  <figure><span data-reviewed-article-hero><img alt="Workflow evidence" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23d8cdbd'/%3E%3C/svg%3E"></span></figure>
+</header></article></main></body></html>`;
+
+async function routeBrowserFixture(page: import("playwright").Page, delayMs: number, html = browserFixture) {
+  await page.route("https://article.test/**", async (route) => {
+    if (route.request().resourceType() === "image") {
+      await route.fulfill({ status: 200, contentType: "image/svg+xml", body: "<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='1000'><rect width='1600' height='1000' fill='#d8cdbd'/></svg>" });
+      return;
+    }
+    if (route.request().url().endsWith("/delayed.js")) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      await route.fulfill({ status: 200, contentType: "text/javascript", body: "window.delayedScriptLoaded = true;" });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: "text/html", body: html });
+  });
+}
+
+async function actualBlogFixture() {
+  const interop = blogPageModule.default as unknown as { default?: typeof blogPageModule.default };
+  const renderPage = interop.default ?? blogPageModule.default;
+  const tree = await renderPage({ params: Promise.resolve({ slug: "production-ready-ai-voice-cloning-checklist" }) });
+  const markup = renderToStaticMarkup(tree).replace(
+    'class="blog-article__hero-media"',
+    'class="blog-article__hero-media reviewed-article-hero-frame" data-reviewed-article-hero',
+  );
+  assert.match(markup, /class="blog-article__question"/);
+  assert.match(markup, /data-reviewed-article-hero/);
+  const css = (await readFile(path.resolve("src/app/globals.css"), "utf8")).replace('@import "tailwindcss";', "");
+  return `<!doctype html><html><head><style>${css}</style></head><body>${markup}</body></html>`;
+}
+
+function launchChromium() {
+  const channel = process.env.ARTICLE_VISUAL_TEST_BROWSER_CHANNEL;
+  return chromium.launch({ headless: true, ...(channel ? { channel } : {}) });
+}
 const baseRuntime = {
   schemaVersion: "ArticleVisualRuntimeV1" as const,
   format: "blog" as const,
@@ -108,6 +165,52 @@ test("accepts restrained useful motion and an intentional static reduced-motion 
     viewport: { ...baseRuntime.viewport, reducedMotion: true },
     motion: { effects: [{...baseRuntime.motion.effects[0],samples:baseRuntime.motion.effects[0].samples.map((sample) => ({...sample,values:{opacity:"1"}}))}], reducedAlternative: "static" },
   }));
+});
+
+test("real Chromium selects the actual 1440px blog question as semantic lead copy", async (t) => {
+  const browser = await launchChromium();
+  t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "no-preference" });
+  await routeBrowserFixture(page, 0, await actualBlogFixture());
+  await installArticleVisualProbe(page);
+  await page.goto("https://article.test/", { waitUntil: "domcontentloaded" });
+  assert.equal(await pauseArticleVisualIntermediate(page), true);
+  await resumeArticleVisualIntermediate(page);
+  await page.waitForTimeout(650);
+  const runtime = await captureArticleVisualRuntime(page, { format: "blog", route: "/blog/fixture", viewport: { width: 1440, height: 900, reducedMotion: false }, screenshots: { early: screenshotRef, settled: screenshotRef } });
+  assert(Number.parseFloat(runtime.typography.body!.fontSize) > 24);
+  assert.equal(runtime.rects.bodyCopy.length, 1);
+  assert.deepEqual(runtime.rects.bodyCopy[0], await page.locator(".blog-article__question").boundingBox());
+});
+
+test("real Chromium preserves delayed normal motion through resumed and settled samples while reduced motion stays static", async (t) => {
+  const browser = await launchChromium();
+  t.after(() => browser.close());
+
+  const normal = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "no-preference" });
+  await routeBrowserFixture(normal, 1650);
+  await installArticleVisualProbe(normal);
+  const startedAt = Date.now();
+  await normal.goto("https://article.test/", { waitUntil: "domcontentloaded" });
+  assert(Date.now() - startedAt >= 1500, "fixture must outlast the former 1400ms probe budget");
+  assert.equal(await normal.evaluate(() => (window as Window & { delayedScriptLoaded?: boolean }).delayedScriptLoaded), true);
+  assert.equal(await pauseArticleVisualIntermediate(normal), true);
+  await resumeArticleVisualIntermediate(normal);
+  await normal.waitForTimeout(650);
+  const normalRuntime = await captureArticleVisualRuntime(normal, { format: "blog", route: "/blog/delayed", viewport: { width: 1440, height: 900, reducedMotion: false }, screenshots: { early: screenshotRef, settled: screenshotRef } });
+  const normalSamples = normalRuntime.motion.effects[0].samples;
+  assert(normalSamples.at(-1)!.elapsedMs > 2000, "sampling must continue through the resumed settled state");
+  assert.equal(normalSamples.at(-1)!.values.opacity, "1");
+  assert(normalSamples.some((sample) => Number(sample.values.opacity) > 0 && Number(sample.values.opacity) < 1));
+
+  const reduced = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  await routeBrowserFixture(reduced, 1650);
+  await installArticleVisualProbe(reduced);
+  await reduced.goto("https://article.test/", { waitUntil: "domcontentloaded" });
+  await reduced.waitForTimeout(100);
+  const reducedRuntime = await captureArticleVisualRuntime(reduced, { format: "blog", route: "/blog/delayed", viewport: { width: 1440, height: 900, reducedMotion: true }, screenshots: { early: screenshotRef, settled: screenshotRef } });
+  assert.equal(reducedRuntime.motion.reducedAlternative, "static");
+  assert.deepEqual(new Set(reducedRuntime.motion.effects[0].samples.map((sample) => sample.values.opacity)), new Set(["1"]));
 });
 
 test("binds a substantive visual-quality review for every supported article format", () => {

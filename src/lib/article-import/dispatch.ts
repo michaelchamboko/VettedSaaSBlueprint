@@ -1,7 +1,7 @@
 import { articleExecutionStage, withArticleExecution, type CapabilityProbe } from "./preflight";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { createArticleImport, executePendingImport, loadImport, saveImport, type ImportStageExecutor } from "./engine";
+import { createArticleImport, executePendingImport, loadImport, recordImportRepair, saveImport, type ImportStageExecutor } from "./engine";
 import type { ExternalArticleImportV1 } from "./contracts";
 import { createSupervisedImportExecutor } from "./supervised-executor";
 import {
@@ -14,6 +14,7 @@ import {
 } from "./intake";
 import { invokeWorker, type WorkerOptions } from "./worker-runner";
 import type { ArticleResearchRegistry } from "./research-registry";
+import { readCurrentArticleHeroRejection } from "./hero-image";
 
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
@@ -48,8 +49,22 @@ function pendingExecutionOptions(repositoryRoot: string, options?: DispatchOptio
   };
 }
 
-function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecutor, options?: DispatchOptions): ImportStageExecutor {
+export function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecutor, options?: DispatchOptions): ImportStageExecutor {
   return async (context) => {
+    const consumeHeroRejection = async () => {
+      const current = await loadImport(root, context.record.importId);
+      if (context.stage !== "VALIDATING" || !current.heroImage || !current.evidenceRefs?.hero) return undefined;
+      const rejection = await readCurrentArticleHeroRejection(root, { importId: current.importId, sourceFingerprint: current.sourceFingerprint,
+        idempotencyKey: context.idempotencyKey, heroEvidenceRef: current.evidenceRefs.hero, binding: current.heroImage });
+      if (!rejection) return undefined;
+      return recordImportRepair(root, current, { strategy: context.strategy, message: "ARTICLE_HERO_VISUAL_INSPECTION_FAILED",
+        verifiedHeroRejection: { decisionRef: rejection.decisionRef, heroEvidenceRef: rejection.heroEvidenceRef,
+          assetRef: rejection.binding.assetRef, generationRef: rejection.binding.generationRef } });
+    };
+    // A controller restart may leave both the worker result and the rejection receipt.
+    // Consume the generation-bound rejection before a cached result can be trusted.
+    const priorRejection = await consumeHeroRejection();
+    if (priorRejection) return priorRejection;
     const first = await baseExecutor(context);
     if (!first.continuation || first.continuation.kind !== "work") return first;
     const workPath = first.continuation.workPath;
@@ -62,7 +77,15 @@ function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecut
     await context.assertLease();
     await saveImport(root, first);
     if (packet.supervisedHandoff === "chatgpt-imagegen") return first;
-    await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options);
+    try {
+      await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options);
+    } catch (error) {
+      const rejected = await consumeHeroRejection();
+      if (rejected) return rejected;
+      throw error;
+    }
+    const rejected = await consumeHeroRejection();
+    if (rejected) return rejected;
 
     return baseExecutor({ ...context, record: first });
   };

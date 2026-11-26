@@ -12,7 +12,7 @@ import { requiredDetectorInputs, validateRenderingInputs } from "./rendering-inp
 import { readImportVerifierEvidence, verificationContext } from "./verification-evidence";
 import { createDesignReviewSchema, designReviewInput, designRuntimeMaterial, designJudgmentInstruction, visualDesignRules, runtimeRefSchema } from "./workflow-evidence";
 import type { Packet } from "./worker-editorial";
-import { articleHeroGenerationEvidenceSchema, validateArticleHeroBinding } from "./hero-image";
+import { articleHeroGenerationEvidenceSchema, articleHeroVisualInspectionSchema, isArticleHeroVisualRejection, persistArticleHeroRejection, validateArticleHeroBinding } from "./hero-image";
 import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articleVisualQualityReviewSchema, captureArticleVisualRuntime, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate } from "./article-visual-quality";
 
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
@@ -51,21 +51,15 @@ export async function presentationOperation(packet: Packet, {rule, observations}
       imageBinding: JSON.stringify(binding),
       imagegenProvenance: JSON.stringify(generation),
     };
-    const reviewSchema = z.object({
-      schemaVersion: z.literal("ArticleHeroVisualInspectionV1"), artifactFingerprint: z.literal(target.artifactFingerprint),
-      assetSha256: z.literal(binding.assetRef.sha256), verdict: z.enum(["pass", "fail", "insufficient-evidence"]),
-      checks: z.object({
-        noPeople: z.object({ verdict: z.enum(["pass", "fail", "insufficient-evidence"]), observations: z.array(z.string().trim().min(8)).min(1) }).strict(),
-        brandFit: z.object({ verdict: z.enum(["pass", "fail", "insufficient-evidence"]), observations: z.array(z.string().trim().min(8)).min(1) }).strict(),
-      }).strict(),
-      findings: z.array(z.object({ description: z.string().trim().min(1), disposition: z.enum(["resolved", "unresolved"]) }).strict()),
-    }).strict();
     const prompt = "Inspect the attached derived WebP pixels using the tracked article hero instructions. Return one JSON object with string field imageInspection containing the ArticleHeroVisualInspectionV1 JSON. Do not infer from the prompt or provenance. Identity: " + JSON.stringify({ artifactFingerprint: target.artifactFingerprint, assetSha256: binding.assetRef.sha256 });
     const model = capability.visualReviewModel;
     if (!model || !Object.hasOwn(capability.modelFamilies, model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
     const result = await exchange("hero-image-inspection", input, [...inputRefs, packet.heroImage, binding.assetRef, binding.inspectionRef, binding.generationRef], [instruction], prompt, model, [binding.inspectionRef]);
-    const judgment = reviewSchema.parse(JSON.parse(result.output.imageInspection));
-    if (judgment.verdict !== "pass" || judgment.checks.noPeople.verdict !== "pass" || judgment.checks.brandFit.verdict !== "pass" || judgment.findings.some((finding) => finding.disposition !== "resolved")) {
+    const judgment = articleHeroVisualInspectionSchema.parse(JSON.parse(result.output.imageInspection));
+    if (judgment.artifactFingerprint !== target.artifactFingerprint || judgment.assetSha256 !== binding.assetRef.sha256) throw new Error("ARTICLE_HERO_REJECTION_BINDING_MISMATCH");
+    if (isArticleHeroVisualRejection(judgment)) {
+      await persistArticleHeroRejection(root, { importId, sourceFingerprint: packet.sourceFingerprint, idempotencyKey: packet.key,
+        heroEvidenceRef: packet.heroImage, binding, reviewerExecutionRef: result.executionRef, judgment });
       throw new Error("ARTICLE_HERO_VISUAL_INSPECTION_FAILED");
     }
     return { rule, artifactRef, judgment, evidenceRefs: [result.executionRef] };

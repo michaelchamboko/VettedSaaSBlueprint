@@ -15,7 +15,7 @@ export { recoverWorkflowLease } from "./workflow-lease";
 import { RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
 import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateResearchEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
-import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, type EvidenceRef } from "./execution-evidence";
+import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import { articleHeroBindingSchema } from "./hero-image";
 
 const ROOT = ".automation/article-imports";
@@ -431,7 +431,9 @@ export async function executePendingImport(repositoryRoot: string, importId: str
 }
 
 /** Executor output is repair work, not an external outage or an automatic quarantine. */
-export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string }): Promise<ExternalArticleImportV1> {
+export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string; verifiedHeroRejection?: {
+  decisionRef: EvidenceRef; heroEvidenceRef: EvidenceRef; assetRef: EvidenceRef; generationRef: EvidenceRef;
+} }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     const attemptKey = `repair:${input.strategy}:${fingerprint(input.message)}`;
@@ -444,7 +446,12 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
     const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
     const submittedFingerprint = await canonicalSubmissionFingerprint(record, repositoryRoot);
     if (record.continuation?.kind === "repair" && record.continuation.submittedFingerprint === submittedFingerprint) return record;
-    const rejectedHero = input.message.includes("ARTICLE_HERO_VISUAL_INSPECTION_FAILED") && record.heroImage
+    const verifiedHeroRejection = input.message === "ARTICLE_HERO_VISUAL_INSPECTION_FAILED" && record.heroImage && record.evidenceRefs?.hero && input.verifiedHeroRejection &&
+      isDeepStrictEqual(input.verifiedHeroRejection.heroEvidenceRef, record.evidenceRefs.hero) &&
+      isDeepStrictEqual(input.verifiedHeroRejection.assetRef, record.heroImage.assetRef) &&
+      isDeepStrictEqual(input.verifiedHeroRejection.generationRef, record.heroImage.generationRef);
+    if (verifiedHeroRejection) await verifyEvidenceRef(repositoryRoot, input.verifiedHeroRejection!.decisionRef);
+    const rejectedHero = verifiedHeroRejection
       ? { heroImage: record.heroImage, heroEvidence: record.evidenceRefs?.hero, presentationEvidence: record.evidenceRefs?.presentation }
       : undefined;
     if (rejectedHero) {
