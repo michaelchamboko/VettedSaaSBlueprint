@@ -2667,6 +2667,28 @@
       "extensions": {
         "authority": "Owner-approved homepage presentation and motion only"
       }
+    },
+    {
+      "id": "ARTICLE-IMAGEGEN-1126",
+      "title": "Mandatory supervised ImageGen article heroes",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "high",
+      "risk_assessment": { "blast_radius": 3, "reversibility": 2, "authority": 2, "sensitive_data": 1, "external_impact": 2 },
+      "source_changes": false,
+      "requirement_ids": ["OWNER-2026-11-26-ARTICLE-IMAGEGEN", "OWNER-2026-11-26-ARTICLE-VISUAL-EVIDENCE"],
+      "context_files": ["planning.md", "src/lib/article-import/hero-image.ts", "src/lib/article-import/supervised-executor.ts", "src/lib/article-import/release.ts", "src/lib/article-import/article-visual-quality.ts", "src/lib/article-heroes.ts"],
+      "validation": [
+        { "name": "Focused article hero tests", "tier": "task", "kind": "command", "location": "local", "argv": ["node", "--import", "tsx", "--test", "tests/article-import-hero.test.ts"], "timeout_seconds": 180 },
+        { "name": "Agent workflow verification", "tier": "repository", "kind": "command", "location": "local", "argv": ["npm", "run", "verify:agent-workflow"], "timeout_seconds": 300 }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": { "worker": "codex-owner-authorized", "verifier": "independent" },
+      "context_packet": { "retrieval": "targeted" },
+      "operation_phase": "implementing",
+      "publication": { "enabled": true, "destinations": ["github-pr", "vercel"] },
+      "extensions": { "authority": "Owner-directed supervised article ImageGen and bound whitespace/motion evidence; pinned MotionSites look-and-fix review; synthetic implementation only, no real imports" }
     }
   ],
   "extensions": {

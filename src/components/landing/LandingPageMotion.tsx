@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { boundedSplitRevealOffset } from "./split-reveal-offset";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,13 +21,14 @@ function applyReferenceComposedMotion(root: HTMLElement, variant: LandingPageMot
   }
 
   if (variant === "split_reveal") {
-    const copyGutter = heroCopy ? heroCopy.getBoundingClientRect().left : 36;
-    const mediaGutter = heroMedia ? document.documentElement.clientWidth - heroMedia.getBoundingClientRect().right : 36;
-    const copyOffset = boundedSplitRevealOffset(copyGutter);
-    const mediaOffset = boundedSplitRevealOffset(mediaGutter);
-    if (heroCopy) gsap.from(heroCopy, { x: -copyOffset, opacity: 0, duration: 0.72, ease: "power3.out" });
-    if (heroMedia) gsap.from(heroMedia, { x: mediaOffset, opacity: 0, duration: 0.72, ease: "power3.out" });
-    sections.forEach((section) => gsap.from(section, { y: 28, opacity: 0, duration: 0.6, ease: "power3.out", scrollTrigger: { trigger: section, start: "top 84%", once: true } }));
+    if (heroCopy) gsap.from(heroCopy.children, { y: 22, opacity: 0, stagger: 0.075, duration: 0.68, ease: "expo.out" });
+    if (heroMedia) gsap.from(heroMedia, { clipPath: "inset(0 0 18% 0)", scale: 1.035, transformOrigin: "center bottom", duration: 0.84, ease: "expo.out" });
+    sections.forEach((section) => {
+      const divider = section.querySelector<HTMLElement>("[data-motion='divider']");
+      if (divider) gsap.from(divider, { scaleX: 0, transformOrigin: "left center", duration: 0.72, ease: "power3.out", scrollTrigger: { trigger: section, start: "top 84%", once: true } });
+      const content = section.querySelector<HTMLElement>(".landing-reference-composed__section-content");
+      if (content) gsap.from(content, { y: 24, opacity: 0, duration: 0.64, ease: "power3.out", scrollTrigger: { trigger: section, start: "top 82%", once: true } });
+    });
     return;
   }
 

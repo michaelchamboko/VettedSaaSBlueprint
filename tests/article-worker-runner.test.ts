@@ -61,6 +61,25 @@ test("alternate command protocol is stage-limited and requires an exact packet p
   await assert.rejects(prepareWorkerInvocation(root, "packet.json", packet(), { ...config, args: ["worker.cjs"] }, "11111111-1111-1111-1111-111111111111"), /must include \{packetPath\}/);
 });
 
+test("RELEASING prompt requires every controller-bound hero and publication path", async t => {
+  const root = await mkdtemp(path.join(process.cwd(), ".tmp-article-worker-release-paths-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const requiredReleaseFiles = [
+    "public/images/direct-review-acme-review-hero.webp",
+    "src/generated/article-heroes/direct-review/acme-review.json",
+    "src/generated/landing-pages/acme-review.json",
+    "src/generated/landing-pages/index.json",
+  ];
+  const invocation = await prepareWorkerInvocation(root, "packet.json", {
+    ...packet("RELEASING"),
+    requiredReleaseFiles,
+    record: { importId, format: "direct-review", stageReceipts: [] },
+  }, { kind: "opencode", executable: "opencode", model: "fixture/model" }, "11111111-1111-1111-1111-111111111111");
+  const prompt = invocation.args.at(-1)!;
+  for (const file of requiredReleaseFiles) assert.match(prompt, new RegExp(file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(prompt, /work\.changedFiles.*every actual scoped release change/);
+});
+
 test("REFINING environment adapter never overrides another stage", async t => {
   const root = await mkdtemp(path.join(process.cwd(), ".tmp-article-worker-env-scope-"));
   t.after(() => rm(root, { recursive: true, force: true }));

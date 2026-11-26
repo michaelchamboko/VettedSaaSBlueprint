@@ -26,6 +26,19 @@ test("imports cannot enter presentation without the mandatory evidence chain", a
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("imports cannot leave validation without presentation evidence", async () => {
+  const { root, record } = await setup();
+  try {
+    const approved = await approveFixture(root, record);
+    const validating = await advanceImport(root, approved, "Approved content");
+    assert.equal(validating.stage, "VALIDATING");
+    await assert.rejects(
+      advanceImport(root, validating, "Ready to release"),
+      /WORKFLOW_EVIDENCE_REQUIRED:presentation/,
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("Transforming cannot advance with a future structured Refining assessment", async () => {
   const { root, record } = await setup();
   try {

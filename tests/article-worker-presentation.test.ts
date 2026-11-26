@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { presentationOperation } from "../src/lib/article-import/worker-presentation";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { presentationOperation, presentationTool } from "../src/lib/article-import/worker-presentation";
 import { captureRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
@@ -11,6 +11,21 @@ import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requiremen
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import { readEvidence } from "../src/lib/article-import/execution-evidence";
 import { candidatePreviewPath } from "../src/lib/article-import/candidate-route";
+
+test("V3 present tool exposes complete collector receipts only to observed visual reviews", async () => {
+  const ref = (name: string) => ({path:`proof/${name}.json`,sha256:"a".repeat(64)});
+  const observations = {desktop:ref("desktop"),mobile:ref("mobile"),"reduced-motion":ref("reduced")};
+  assert.deepEqual(presentationTool.parse({rule:"visual-quality",observations}),{rule:"visual-quality",observations});
+  assert.deepEqual(presentationTool.parse({rule:"hero-image"}),{rule:"hero-image"});
+  assert.throws(() => presentationTool.parse({rule:"visual-quality"}));
+  assert.throws(() => presentationTool.parse({rule:"critique",observations:{desktop:ref("desktop"),mobile:ref("mobile")}}));
+  assert.throws(() => presentationTool.parse({rule:"hero-image",observations}));
+
+  const capabilities = JSON.parse(await readFile("config/article-workflow-capabilities.json","utf8"));
+  assert.equal(capabilities.openCodeVersion,"2.2.6");
+  assert.equal(typeof capabilities.visualReviewModel,"string");
+  assert.equal(typeof capabilities.modelFamilies[capabilities.visualReviewModel],"string");
+});
 
 test("validation tools require the approved artifact and retain the render and route bindings", async t => {
   const root = await mkdtemp(path.join(tmpdir(),"orch01-validation-test-"));

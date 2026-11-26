@@ -2,8 +2,9 @@ import Link from "next/link";
 
 import { EmailCostCalculator } from "@/components/visibility/EmailCostCalculator";
 import type { VisibilityPageV1 } from "@/lib/visibility-pages/contracts";
+import { ReviewedArticleHero, type ReviewedArticleHeroAsset } from "@/components/public/ReviewedArticleHero";
 
-export function VisibilityPage({ page }: { page: VisibilityPageV1 }) {
+export function VisibilityPage({ page, reviewedHero }: { page: VisibilityPageV1; reviewedHero?: ReviewedArticleHeroAsset | null }) {
   return (
     <main>
       <nav aria-label="Breadcrumb"><Link href="/">Home</Link> / <span>{page.title}</span></nav>
@@ -12,6 +13,7 @@ export function VisibilityPage({ page }: { page: VisibilityPageV1 }) {
         <h1>{page.hero.headline}</h1>
         <p>{page.hero.summary}</p>
         <p>This editorial guide may link to reviews that contain affiliate links.</p>
+        {reviewedHero ? <figure className="visibility-page__hero-media"><ReviewedArticleHero asset={reviewedHero} /></figure> : null}
       </header>
       {page.blocks.map((block, index) => {
         switch (block.type) {

@@ -85,6 +85,8 @@ Missing work alone does not justify a durable blocker or selecting the next entr
 
 Design reviews in `VALIDATING` must use `.agents/skills/external-article-import/references/design-judgment.md` as the tracked instruction. It supersedes any historical ad hoc prompt that forced `pass`. They must report `pass`, `fail`, or `insufficient-evidence`; retain unresolved findings; and report unsupported capabilities or missing runtime observations honestly. A source-only review, clean detector, or checklist does not prove runtime behavior. A negative or unresolved design review is valid evidence but does not advance the import; only all-resolved `pass` permits advancement. Never force `pass` or delete findings.
 
+Before those reviews, every newly produced WorkflowEvidenceV3 presentation must complete its generation-specific built-in ChatGPT ImageGen packet. WorkflowEvidenceV1/V2 remain historical-only and cannot satisfy a new supervised packet. Use the exact prompt and no paid or alternate provider. Retain the original PNG, `ArticleHeroProviderOutputV1`, `ArticleHeroGenerationEvidenceV1`, deterministic WebP asset, immutable inspection copy and handoff-bound `ArticleHeroImagegenResultV1`. Follow `references/hero-imagegen.md` and visually inspect the attached WebP, not its prompt or receipt. Any person or body part, weak brand fit, insufficient evidence or unresolved finding rejects that generation. Preserve it, resume the same import, and complete the next numbered handoff. Then follow `references/article-visual-quality.md` for the bound whitespace, type, media, responsive and motion evidence. Changed hero bytes require fresh RenderingInputsV1 and presentation evidence.
+
 Stage result fields (in `work`):
 
 | Stage | Required fields |
@@ -93,7 +95,7 @@ Stage result fields (in `work`):
 | `RESEARCHING` acquisition | `evidencePath`, unchanged `registryDecisionPath`, `registryWritebackPath`: bound `ResearchEvidenceV2`, the frozen pre-acquisition decision, and final validated metadata for new or changed evidence only. |
 | `TRANSFORMING` | `artifactPath`, `format`, `assessmentPath`: a complete supported artifact and matching `ContentAssessmentV1`. |
 | `REFINING` | `artifactPath`, `editorialEvidencePath`, `formatQualityPath`, `editorialExecutionPath`, `assessmentPath`: genuine editorial companion and reassessment of final prose. |
-| `VALIDATING` | `validationGate`, `validationReceiptPath`, `presentationEvidencePath`: owner validation plus actual design/browser executions for the frozen artifact. |
+| `VALIDATING` | First, `ArticleHeroImagegenResultV1` pointing to bound provider and generation evidence for the numbered supervised ImageGen handoff. Then `validationGate`, `validationReceiptPath`, `presentationEvidencePath`: exact-pixel hero inspection plus actual design/browser/visual-quality executions for the frozen artifact and hero. |
 | `RELEASING` | `artifactPath`, `changedFiles`; `slug` for direct reviews. Optional `codeReviewPath`. No caller production origin is accepted. |
 
 `INGESTING` and `VERIFYING` execute locally. The two research packet types are internal steps of the existing `RESEARCHING` stage, not new lifecycle stages. A stale database plan enters the recorded retry path and produces a new plan packet while preserving the earlier packets and article state. A stale result cannot advance a different source, stage or strategy. Results are retained under ignored `.automation/article-imports/work/` so the next heartbeat can continue after interruption.

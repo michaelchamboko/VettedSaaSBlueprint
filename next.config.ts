@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   // The immutable baseline has an incomplete route inventory. Restore typed routes
   // after the Phase One route set is committed and covered by route tests.
   typedRoutes: false,
+  // Article renderers use a static catalogue. Keep the review sidecars in
+  // production traces without widening the trace to .automation or the repo.
+  outputFileTracingIncludes: Object.fromEntries([
+    "/blog/*", "/decision-hub/*", "/solution-hub/*", "/scenarios/*",
+    "/landing-page-builders/*", "/landing-page-previews/*", "/dev/approved-article-preview/*",
+    "/comparisons/*", "/email-marketing-software", "/email-marketing-software/*",
+    "/ai-voice-generators", "/ai-voice-generators/*", "/guides/*", "/tools/*",
+  ].map((route) => [route, ["./src/generated/article-heroes/**/*.json"]])),
   async rewrites() {
     const approvedPreview = {
       source: "/landing-page-previews/:slug",

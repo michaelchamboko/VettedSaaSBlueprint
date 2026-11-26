@@ -122,6 +122,24 @@ export async function createContentApproval(root: string, input: ApprovalFiles &
   return createApprovalForSnapshot(root, loaded, input.format, input.sourceFingerprint, input.editorialEvidencePath, input.formatQualityPath, input.approvedAffiliateUrl);
 }
 
+export async function formatQualityApprovalMatches(root: string, approval: unknown, format: string, sourceFingerprint: string): Promise<boolean> {
+  const parsed = contentApprovalSchema.safeParse(approval);
+  if (!parsed.success || parsed.data.format !== format || parsed.data.sourceFingerprint !== sourceFingerprint) return false;
+  try {
+    const quality = await readCanonicalJson(root, parsed.data.formatQualityPath);
+    z.object({
+      format: z.literal(parsed.data.format),
+      artifactFingerprint: z.literal(parsed.data.artifactFingerprint),
+      passed: z.literal(true),
+      gate: z.literal(importFormatQualityGates[parsed.data.format]),
+    }).passthrough().parse(quality.value);
+    return quality.path === parsed.data.formatQualityPath
+      && fingerprintEditorialArtifact(quality.value) === parsed.data.formatQualityFingerprint;
+  } catch {
+    return false;
+  }
+}
+
 export async function resolveContentApproval(root: string, approval: unknown, format: string, sourceFingerprint: string, artifactPath?: string, approvedAffiliateUrl?: string): Promise<{ ok: true; artifact: unknown } | { ok: false }> {
   const parsed = contentApprovalSchema.safeParse(approval);
   if (!parsed.success || parsed.data.format !== format || parsed.data.sourceFingerprint !== sourceFingerprint) return { ok: false };
