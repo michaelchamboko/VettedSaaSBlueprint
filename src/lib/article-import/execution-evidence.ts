@@ -72,7 +72,7 @@ export async function verifyEvidenceRef(root: string, reference: EvidenceRef): P
 export async function storeEvidence(root: string, importId: string, value: unknown): Promise<EvidenceRef> {
   return storeEvidenceBytes(root, importId, Buffer.from(`${JSON.stringify(value, null, 2)}\n`));
 }
-export async function storeEvidenceBytes(root: string, importId: string, bytes: Buffer, extension: "png" | "json" = "json"): Promise<EvidenceRef> {
+export async function storeEvidenceBytes(root: string, importId: string, bytes: Buffer, extension: "png" | "webp" | "json" = "json"): Promise<EvidenceRef> {
   if (!/^article-[0-9a-f-]{36}$/.test(importId)) throw new Error("EVIDENCE_IMPORT_ID_INVALID");
   if (bytes.length > MAX_EVIDENCE_BYTES) throw new Error("EVIDENCE_FILE_INVALID");
   const digest = sha256(bytes);

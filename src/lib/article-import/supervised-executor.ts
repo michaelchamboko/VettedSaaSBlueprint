@@ -7,18 +7,26 @@ import { assertIgnoredImportStatePath } from "./automation-state";
 import { importArtifactTarget } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
 import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
-import { evidenceReference, validateResearchEvidenceForRegistry, withTransformingArtifact } from "./workflow-evidence";
+import { evidenceReference, validateResearchEvidenceForRegistry, withTransformingArtifact, workflowEvidenceSchema } from "./workflow-evidence";
 import { instructionsForStage, releaseSteps, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
 import { applyPublicationProposals, publicationProposals } from "./worker-publication";
 import { captureRenderingInputs, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { researchRegistryDecisionSchema, researchRegistryPlanSchema, researchRegistryWritebackSchema, validateRegistryDecisionAgainstEvidence, validateRegistryDecisionPlan, type ArticleResearchRegistry, type ResearchRegistryDecision, type ResearchRegistryPlan } from "./research-registry";
 import { NeonArticleResearchRegistry } from "./research-registry-neon";
+import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
+import { articleHeroFormatSchema } from "../article-heroes";
 
 const file = z.string().min(1);
 const resultBase = { idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), summary: z.string().min(1) };
 const researchPlanResultSchema = z.object({
   ...resultBase,
   work: z.object({ stage: z.literal("RESEARCHING"), researchAction: z.enum(["reuse", "acquire"]), registryDecisionPath: file, evidencePath: file.optional() }).strict(),
+}).strict();
+const heroGenerationResultSchema = z.object({
+  ...resultBase,
+  schemaVersion: z.literal("ArticleHeroImagegenResultV1"),
+  handoffFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  work: z.object({ stage: z.literal("VALIDATING"), heroGenerationEvidencePath: file }).strict(),
 }).strict();
 const resultSchema = z.object({
   ...resultBase,
@@ -51,8 +59,9 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     if (!(workStages as readonly string[]).includes(record.stage)) throw new Error(`No productive work for ${record.stage}.`);
     const stage = record.stage as typeof workStages[number];
     const directory = `.automation/article-imports/work/${record.importId}`;
-    const workPath = `${directory}/${context.idempotencyKey}.work.json`;
-    const resultPath = `${directory}/${context.idempotencyKey}.result.json`;
+    const validationGeneration = stage === "VALIDATING" && record.heroImage ? `.${record.heroImage.assetRef.sha256}` : "";
+    const workPath = `${directory}/${context.idempotencyKey}${validationGeneration}.work.json`;
+    const resultPath = `${directory}/${context.idempotencyKey}${validationGeneration}.result.json`;
     await assertIgnoredImportStatePath(root, workPath);
     await assertIgnoredImportStatePath(root, resultPath);
     if (stage === "RESEARCHING") {
@@ -145,9 +154,43 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     }
     let renderingInputs;
     if (stage === "VALIDATING" && record.contentApproval && record.format !== "agent_review_required") {
+      const artifact = await readRepositoryJson(root, record.contentApproval.artifactPath);
+      const target = importArtifactTarget(record.format, artifact);
+      if (!record.heroImage) {
+        const heroGeneration = record.strategyAttempts["hero-generation"] ?? 0;
+        const heroWorkPath = `${directory}/${context.idempotencyKey}.hero-image-${heroGeneration}.work.json`;
+        const heroResultPath = `${directory}/${context.idempotencyKey}.hero-image-${heroGeneration}.result.json`;
+        for (const heroPath of [heroWorkPath, heroResultPath]) await assertIgnoredImportStatePath(root, heroPath);
+        const handoff = articleHeroHandoff(root, { importId: record.importId, sourceFingerprint: record.sourceFingerprint, format: articleHeroFormatSchema.parse(record.format),
+          contentApproval: record.contentApproval }, target, artifact, heroGeneration);
+        await writeJsonAtomically(path.join(root, heroWorkPath), {
+          ...handoff, stage, idempotencyKey: context.idempotencyKey, supervisedHandoff: "chatgpt-imagegen",
+          instructions: "Use built-in ChatGPT ImageGen with the exact prompt. Do not call a paid API or alternate image provider. Save the original returned PNG bytes at originalFile. Retain the tool's generated-image path/output hint in byte-bound ArticleHeroProviderOutputV1, reference it from genuine ArticleHeroGenerationEvidenceV1, and bind both records to the original PNG digest. The controller creates the deterministic WebP derivative. The provider record is retained tool-output provenance, not a signed OpenAI receipt. Missing ImageGen access is a shared capability blocker, not permission to substitute another provider.",
+          resultPath: heroResultPath, resultSchema: z.toJSONSchema(heroGenerationResultSchema),
+          generationEvidenceSchema: z.toJSONSchema(articleHeroGenerationEvidenceSchema),
+          providerOutputSchema: z.toJSONSchema(articleHeroProviderOutputSchema),
+          resultContract: { schemaVersion: "ArticleHeroImagegenResultV1", handoffFingerprint: handoff.handoffFingerprint, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Generated the bound VettedSaaSBlueprint hero with built-in ChatGPT ImageGen.", work: { stage, heroGenerationEvidencePath: "build-pack/article-import/.../hero-generation.json" } },
+          resumeCommand: `npm run import:article -- --resume ${record.importId}`,
+        });
+        let raw: unknown;
+        try { raw = await readRepositoryJson(root, heroResultPath); }
+        catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+          return { ...record, continuation: { kind: "work", stage, workPath: heroWorkPath, resultPath: heroResultPath, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Supervising agent: generate the required hero through built-in ChatGPT ImageGen from ${heroWorkPath}, write ${heroResultPath}, then explicitly resume this import.` };
+        }
+        const result = heroGenerationResultSchema.parse(raw);
+        if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.handoffFingerprint !== handoff.handoffFingerprint) throw new Error("STAGE_RESULT_BINDING_MISMATCH");
+        const bound = await bindGeneratedArticleHero(root, handoff, result.work.heroGenerationEvidencePath);
+        record = { ...record, heroImage: articleHeroBindingSchema.parse(bound.binding), evidenceRefs: { ...record.evidenceRefs, hero: bound.evidenceRef }, continuation: undefined,
+          nextAction: "Inspect the exact generated hero bytes and complete presentation validation." };
+        // Persist the immutable generation before visual review. A rejected inspection can
+        // then retain this generation in history and advance to a fresh ImageGen handoff.
+        return record;
+      } else {
+        await validateArticleHeroBinding(root, record.heroImage, { format: record.format, slug: target.slug, artifactFingerprint: record.contentApproval.artifactFingerprint });
+      }
       const reference = await captureRenderingInputs(root, record.importId);
       const manifest = await validateRenderingInputs(root, reference);
-      const target = importArtifactTarget(record.format, await readRepositoryJson(root, record.contentApproval.artifactPath));
       renderingInputs = { reference, detectorTargets: requiredDetectorInputs(manifest, target) };
     }
     await writeJsonAtomically(path.join(root, workPath), {
@@ -189,6 +232,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         await applyPublicationProposals(root, record, context.idempotencyKey, context.assertLease);
         return advanceImport(root, record, result.summary);
       case "VALIDATING":
+        if (workflowEvidenceSchema.parse(await readRepositoryJson(root, work.presentationEvidencePath)).schemaVersion !== "WorkflowEvidenceV3") throw new Error("PRESENTATION_CURRENT_POLICY_REQUIRED");
         record = { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: await evidenceReference(root, work.presentationEvidencePath) } };
         record = await recordImportPresentation(root, record, { validationGate: work.validationGate, validationReceipt: await readRepositoryJson(root, work.validationReceiptPath) });
         return record.stage === "VALIDATING" && record.presentation ? advanceImport(root, record, result.summary) : record;

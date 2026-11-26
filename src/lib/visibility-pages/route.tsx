@@ -8,6 +8,8 @@ import { getPublishedVisibilityPage } from "@/lib/visibility-pages/catalogue";
 import type { VisibilityPath } from "@/lib/visibility-pages/contracts";
 import { isVisibilityPageIndexable } from "@/lib/visibility-pages/runtime-expiry";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+import { loadArticleHero } from "@/lib/article-heroes";
+import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
 
 function getRoute(path: VisibilityPath) {
   const record = getPublishedVisibilityPage(path);
@@ -35,10 +37,11 @@ export function metadataForPublishedVisibilityPage(path: VisibilityPath): Metada
 export function renderPublishedVisibilityPage(path: VisibilityPath) {
   const { record, config } = getRoute(path);
   if (!isVisibilityPageIndexable(record.summary)) return <VisibilityUnderReviewPage />;
+  const reviewedHero = loadArticleHero("visibility", record.page.path.slice(1), fingerprintEditorialArtifact(record.page))?.asset;
   return (
     <>
       <VisibilityStructuredData origin={config.canonicalOrigin} summary={record.summary} />
-      <VisibilityPage page={record.page} />
+      <VisibilityPage page={record.page} reviewedHero={reviewedHero} />
     </>
   );
 }

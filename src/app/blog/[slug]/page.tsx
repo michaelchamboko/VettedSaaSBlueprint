@@ -7,6 +7,9 @@ import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { getPublishedBlogPost, listPublishedBlogPostParams } from "@/lib/blog/catalogue";
 import { buildBlogStructuredData } from "@/lib/blog/structured-data";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+import { loadArticleHero } from "@/lib/article-heroes";
+import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
+import { ReviewedArticleHero } from "@/components/public/ReviewedArticleHero";
 
 export const dynamic = "force-static";
 
@@ -43,6 +46,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
   if (!post) notFound();
   const config = loadPublicSiteConfig();
   const structuredData = buildBlogStructuredData(post, config.canonicalOrigin);
+  const reviewedHero = loadArticleHero("blog", post.slug, fingerprintEditorialArtifact(post))?.asset;
 
   return (
     <PublicPageShell>
@@ -61,7 +65,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
             </dl>
           </div>
           <figure className="blog-article__hero-media">
-            <Image src={post.media.hero.path} alt={post.media.hero.alt} width={post.media.hero.width} height={post.media.hero.height} priority sizes="(max-width: 800px) 100vw, 42vw" />
+            {reviewedHero ? <ReviewedArticleHero asset={reviewedHero} /> : <Image src={post.media.hero.path} alt={post.media.hero.alt} width={post.media.hero.width} height={post.media.hero.height} priority sizes="(max-width: 800px) 100vw, 42vw" />}
             <figcaption>Evidence before enthusiasm. Test the workflow you will actually operate.</figcaption>
           </figure>
         </header>

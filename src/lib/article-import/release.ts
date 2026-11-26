@@ -14,6 +14,17 @@ import { readImportArtifactTarget } from "./format-validation";
 import { importCodeReviewSchema } from "./contracts";
 import { readProductionVerifierEvidence, type VerifierEvidenceRef } from "./verification-evidence";
 import { evaluateWorkflowEvidence } from "./workflow-evidence";
+import { articleHeroFormatSchema, articleHeroPaths } from "../article-heroes";
+import { validateArticleHeroBinding } from "./hero-image";
+import { readEvidence } from "./execution-evidence";
+
+async function requiresArticleHero(root: string, record: ExternalArticleImportV1): Promise<boolean> {
+  if (record.heroImage || record.evidenceRefs?.hero) return true;
+  const presentationRef = record.evidenceRefs?.presentation;
+  if (!presentationRef) return true;
+  const receipt = await readEvidence(root, presentationRef) as { schemaVersion?: string };
+  return receipt.schemaVersion === "WorkflowEvidenceV3";
+}
 
 export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">, probe?: CapabilityProbe): Promise<ExternalArticleImportV1> {
   return withArticleExecution(repositoryRoot, () => withRecordLease(repositoryRoot, record, async (currentRecord) => {
@@ -110,9 +121,21 @@ function normalizedPathSet(files: readonly string[]): string[] {
   return [...new Set(files.map((file) => file.replaceAll("\\", "/")))].sort();
 }
 
+function isArticleHeroManagedPath(file: string): boolean {
+  const normalized = file.replaceAll("\\", "/");
+  return normalized.startsWith("src/generated/article-heroes/") ||
+    /^public\/blog\/images\/[a-z0-9-]+-hero\.webp$/.test(normalized) ||
+    /^public\/images\/(?:direct-review|visibility|decision-set)-[a-z0-9-]+-hero\.webp$/.test(normalized);
+}
+
+export function validateBoundArticleHeroReleasePaths(files: readonly string[], expected: readonly string[]): string[] {
+  const allowed = new Set(expected.map((file) => file.replaceAll("\\", "/")));
+  return normalizedPathSet(files).filter((file) => isArticleHeroManagedPath(file) && !allowed.has(file));
+}
+
 export function isAllowedReleasePath(file: string, format: ImportFormat, _ownerAuthorizedAffiliateUrl = false): boolean {
   void _ownerAuthorizedAffiliateUrl;
-  const shared = ["build-pack/editorial", "build-pack/article-import"];
+  const shared = ["build-pack/editorial", "build-pack/article-import", "src/generated/article-heroes"];
   const formatRoots: Record<ImportFormat, string[]> = {
     "direct-review": ["src/generated/landing-pages", "public/landing", "public/images"],
     blog: ["src/generated/blog-posts", "public/blog/images"],
@@ -377,6 +400,7 @@ async function assessImportReleaseImpl(input: {
   commitMessage?: string;
 }): Promise<ReleaseAssessment> {
   const reasons: string[] = [];
+  let heroReleasePaths: readonly string[] = [];
   const disallowed = validateReleasePaths(input.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true);
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
   if (input.execute && input.record.contentApproval) {
@@ -392,6 +416,16 @@ async function assessImportReleaseImpl(input: {
       if (input.record.format === "direct-review") await assertDirectReviewProjectionBinding(input.repositoryRoot, normalizedSourceArtifact, publicationArtifactPath, target.slug, artifact);
       input.slug = target.slug;
       assertArtifactCommercialSafety(input.record, input.record.format, artifact);
+      if (await requiresArticleHero(input.repositoryRoot, input.record)) {
+        if (!input.record.heroImage || !input.record.contentApproval) throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
+        const heroFormat = articleHeroFormatSchema.parse(target.format);
+        const hero = await validateArticleHeroBinding(input.repositoryRoot, input.record.heroImage, {
+          format: heroFormat, slug: target.slug, artifactFingerprint: input.record.contentApproval.artifactFingerprint,
+        });
+        const expectedHero = articleHeroPaths(heroFormat, target.slug);
+        if (hero.assetRef.path !== expectedHero.assetFile || hero.publicationRef.path !== expectedHero.publicationFile) throw new Error("ARTICLE_HERO_RELEASE_PATH_MISMATCH");
+        heroReleasePaths = [expectedHero.assetFile, expectedHero.publicationFile];
+      }
       await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
     } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
   }
@@ -414,6 +448,11 @@ async function assessImportReleaseImpl(input: {
     for (const authority of publicationAuthorityPaths(input.record.format)) {
       if (!declared.includes(authority)) reasons.push(`PUBLICATION_AUTHORITY_NOT_IN_RELEASE:${authority}`);
     }
+    for (const heroFile of heroReleasePaths) {
+      if (!declared.includes(heroFile)) reasons.push(`ARTICLE_HERO_NOT_IN_RELEASE:${heroFile}`);
+    }
+    const foreignHeroes = validateBoundArticleHeroReleasePaths(declared, heroReleasePaths);
+    if (foreignHeroes.length) reasons.push(`ARTICLE_HERO_PATH_NOT_BOUND:${foreignHeroes.join(",")}`);
   }
   if (input.killSwitchEnabled) {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
@@ -477,6 +516,11 @@ async function assessImportReleaseImpl(input: {
     for (const authority of publicationAuthorityPaths(input.record.format)) {
       if (!inspectedFiles.includes(authority)) gitReasons.push(`PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:${authority}`);
     }
+    for (const heroFile of heroReleasePaths) {
+      if (!inspectedFiles.includes(heroFile)) gitReasons.push(`ARTICLE_HERO_NOT_IN_WORKTREE:${heroFile}`);
+    }
+    const foreignHeroes = validateBoundArticleHeroReleasePaths(inspectedFiles, heroReleasePaths);
+    if (foreignHeroes.length) gitReasons.push(`ARTICLE_HERO_PATH_NOT_BOUND:${foreignHeroes.join(",")}`);
   }
   if (gitReasons.length) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `The inspected worktree does not match the declared import release: ${gitReasons.join(",")}.` });
@@ -551,6 +595,13 @@ async function assessImportReleaseImpl(input: {
     const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
     try {
       await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!);
+      if (await requiresArticleHero(input.repositoryRoot, input.record)) {
+        if (!input.record.heroImage || !input.record.contentApproval || input.record.format === "agent_review_required") throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
+        await validateArticleHeroBinding(input.repositoryRoot, input.record.heroImage, {
+          format: articleHeroFormatSchema.parse(input.record.format), slug: input.slug ?? input.record.heroImage.slug,
+          artifactFingerprint: input.record.contentApproval.artifactFingerprint,
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout authority binding failed: ${message}` });

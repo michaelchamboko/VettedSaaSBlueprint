@@ -61,6 +61,7 @@ function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecut
     // The local candidate renderer independently verifies the persisted work packet.
     await context.assertLease();
     await saveImport(root, first);
+    if (packet.supervisedHandoff === "chatgpt-imagegen") return first;
     await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options);
 
     return baseExecutor({ ...context, record: first });

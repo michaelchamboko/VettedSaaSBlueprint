@@ -10,6 +10,9 @@ import { renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs 
 import { candidatePreviewPath } from "./candidate-route";
 import { countVisibleArticleWords } from "../editorial/article-visible-word-count";
 import { approvedAffiliateUrl, assertLongFormAffiliateAssessment, assertLongFormAffiliateReview, LONG_FORM_AFFILIATE_INSTRUCTION, longFormAffiliateAssessmentSchema, longFormAffiliateReviewSchema } from "./long-form-affiliate";
+import { articleHeroBindingSchema, validateArticleHeroBinding } from "./hero-image";
+import { articleHeroFormatSchema } from "../article-heroes";
+import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "./article-visual-quality";
 export { evidenceRefSchema, evidenceReference, readEvidence, readVerifiedEvidenceBytes, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
@@ -30,19 +33,19 @@ export function createDesignReviewSchema(input: { rule: string; artifactFingerpr
 const common = { id: nonempty, createdAt: z.string().datetime({ offset: true }), importId: z.string().regex(/^article-[0-9a-f-]{36}$/), sourceFingerprint: hashSchema, requirementRevision: z.literal(WORKFLOW_REVISION) };
 const formatSchema = z.enum(CONTENT_FORMATS);
 export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal(WORKFLOW_REVISION), status: z.enum(["pass", "fail", "not-applicable", "recommendation-not-adopted"]), rationale: nonempty, evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict();
-export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.enum(["WorkflowEvidenceV1","WorkflowEvidenceV2"]), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
+export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.enum(["WorkflowEvidenceV1","WorkflowEvidenceV2","WorkflowEvidenceV3"]), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
 export const researchEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("ResearchEvidenceV2"), sources: z.array(z.object({ id: nonempty, url: z.string().url(), retrievedAt: z.string().datetime({ offset: true }), snapshotRef: evidenceRefSchema }).strict()).min(1), claims: z.array(z.object({ id: nonempty, text: nonempty, sourceIds: z.array(nonempty).min(1), excerptLocations: z.array(z.object({ sourceId: nonempty, quote: nonempty }).strict()).min(1), limitations: z.array(nonempty), price: z.object({ amount: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/), period: nonempty, plan: nonempty, restrictions: z.array(nonempty) }).strict().optional() }).strict()).min(1), freshness: nonempty }).strict();
 export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), longFormAffiliate: longFormAffiliateAssessmentSchema.optional(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview", "independentReview"] as const;
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
-export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), transformAssessment: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
+export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), transformAssessment: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), hero: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, commercialMode: z.enum(["approved", "decommercialized", "none"]).optional(), approvedAffiliateUrl: z.string().url().optional(), evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("quarantine"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), reasonCode: z.enum(["empty", "unusable", "unsupported-format"]), dispositionEvidenceRef: evidenceRefSchema }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
 export const diagnosisSchema = z.object({ ...common, schemaVersion: z.literal("DiagnosisV1"), stage: z.enum(WORKFLOW_SEQUENCE), failedSubmissionDigest: hashSchema, failureCode: nonempty, cause: nonempty, attemptedRecoveryRefs: z.array(evidenceRefSchema).min(1), remedyEvidenceRefs: z.array(evidenceRefSchema).min(1), replacementSubmissionDigest: hashSchema, consumedAt: z.string().datetime({ offset: true }).optional() }).strict();
-export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef; transformAssessment?: EvidenceRef; assessment?: EvidenceRef }; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string; stage?: string; resumeStage?: string; affiliateUrl?: string | null; transformation?: { commercialMode?: string; resolvedAffiliateUrl?: string } };
+export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef; transformAssessment?: EvidenceRef; assessment?: EvidenceRef; hero?: EvidenceRef }; heroImage?: unknown; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string; stage?: string; resumeStage?: string; affiliateUrl?: string | null; transformation?: { commercialMode?: string; resolvedAffiliateUrl?: string } };
 type Bound = { importId: string; sourceFingerprint: string; requirementRevision: string };
 function assertBinding(value: Bound, binding: EvidenceBinding): void {
   if (value.importId !== binding.importId || value.sourceFingerprint !== binding.sourceFingerprint || value.requirementRevision !== (binding.requirementRevision ?? WORKFLOW_REVISION)) throw new Error("EVIDENCE_BINDING_MISMATCH");
@@ -154,8 +157,9 @@ export const runtimeRefSchema = z.object({desktop:evidenceRefSchema, mobile:evid
 
 /** Reconstruct the exact runtime material seen by a visual reviewer from browser receipts. */
 export async function designRuntimeMaterial(root: string, importId: string, artifactRef: EvidenceRef, renderRef: EvidenceRef,
-  routes: string[], observations: z.infer<typeof runtimeRefSchema>) {
+  routes: string[], observations: z.infer<typeof runtimeRefSchema>, mode: "legacy-v2" | "current-v3") {
   const images = new Map<string,EvidenceRef>();
+  const runtimeRefs = new Map<string,EvidenceRef>();
   const material = [];
   let origin: string | undefined;
   for (const rule of runtimeRules) {
@@ -171,11 +175,26 @@ export async function designRuntimeMaterial(root: string, importId: string, arti
     origin = receipt.target;
     for (const image of receipt.screenshots) {
       if (image.path !== prefix + image.sha256 + ".png") throw new Error("PRESENTATION_OBSERVATION_SCOPE");
-      images.set(image.path,image);
+      if (mode === "legacy-v2") images.set(image.path,image);
     }
-    material.push({rule,ref,routes:receipt.routes,viewport:receipt.viewport,checks:receipt.checks,screenshots:receipt.screenshots});
+    if (mode === "legacy-v2") {
+      material.push({rule,ref,routes:receipt.routes,viewport:receipt.viewport,checks:receipt.checks,screenshots:receipt.screenshots});
+      continue;
+    }
+    if (receipt.outputRefs.length !== routes.length) throw new Error("ARTICLE_VISUAL_RUNTIME_EVIDENCE_REQUIRED");
+    const visualRuntime = [];
+    for (const [index, runtimeRef] of receipt.outputRefs.entries()) {
+      if (runtimeRef.path !== prefix + runtimeRef.sha256 + ".json") throw new Error("PRESENTATION_OBSERVATION_SCOPE");
+      const observed = validateArticleVisualRuntime(await readEvidence(root,runtimeRef));
+      if (observed.screenshots.early.path !== prefix + observed.screenshots.early.sha256 + ".png" || observed.route !== routes[index] || observed.screenshots.settled.path !== receipt.screenshots[index]?.path || observed.screenshots.settled.sha256 !== receipt.screenshots[index]?.sha256 || JSON.stringify(observed.viewport) !== JSON.stringify(receipt.viewport)) throw new Error("ARTICLE_VISUAL_RUNTIME_BINDING_MISMATCH");
+      runtimeRefs.set(runtimeRef.path,runtimeRef);
+      images.set(observed.screenshots.early.path,observed.screenshots.early);
+      images.set(observed.screenshots.settled.path,observed.screenshots.settled);
+      visualRuntime.push(observed);
+    }
+    material.push({rule,ref,routes:receipt.routes,viewport:receipt.viewport,checks:receipt.checks,screenshots:receipt.screenshots,visualRuntime});
   }
-  return { browserObservations:JSON.stringify(material), images:[...images.values()] };
+  return { browserObservations:JSON.stringify(material), images:[...images.values()], runtimeRefs:[...runtimeRefs.values()] };
 }
 
 async function artifactFor(root: string, binding: EvidenceBinding): Promise<unknown> {
@@ -417,9 +436,21 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
     });
     if (rank >= 3) await need("assessment", "TRANSFORMING", (ref) => validateContentAssessmentImpl(context.root, ref, binding, prevalidatedResearch, scopedTransformingArtifact(context.root, record, binding, through, mode)));
     if (rank >= 4) await need("editorial", "REFINING", (ref) => validateEditorialExecution(context.root, ref, binding));
+    const presentationVersion = rank >= 5 && record.evidenceRefs?.presentation
+      ? z.object({ schemaVersion: z.enum(["WorkflowEvidenceV1", "WorkflowEvidenceV2", "WorkflowEvidenceV3"]) }).passthrough().parse(await readEvidence(context.root, record.evidenceRefs.presentation)).schemaVersion
+      : undefined;
+    // V1/V2 presentation receipts predate mandatory generated heroes and remain
+    // historically valid. Every newly produced V3 presentation fails closed.
+    if (rank >= 5 && presentationVersion === "WorkflowEvidenceV3") await need("hero", "VALIDATING", async (ref) => {
+      const artifact = await artifactFor(context.root, binding);
+      const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
+      const hero = await validateArticleHeroBinding(context.root, await readEvidence(context.root, ref), { format: articleHeroFormatSchema.parse(target.format), slug: target.slug, artifactFingerprint: target.artifactFingerprint });
+      if (!record.heroImage || JSON.stringify(articleHeroBindingSchema.parse(record.heroImage)) !== JSON.stringify(hero)) throw new Error("ARTICLE_HERO_RECORD_MISMATCH");
+      return hero;
+    });
     if (rank >= 5) await need("presentation", "VALIDATING", async (ref) => {
       const presentation = await validatePresentationEvidence(context.root, ref, binding, record.presentation);
-      for (const predecessor of [record.evidenceRefs?.assessment, record.evidenceRefs?.editorial]) {
+      for (const predecessor of [record.evidenceRefs?.assessment, record.evidenceRefs?.editorial, ...(presentationVersion === "WorkflowEvidenceV3" ? [record.evidenceRefs?.hero] : [])]) {
         if (!predecessor || !presentation.predecessorRefs.some((item) => item.sha256 === predecessor.sha256 && item.path === predecessor.path)) throw new Error("PRESENTATION_PREDECESSOR_MISMATCH");
       }
       return presentation;
@@ -457,7 +488,8 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
   const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
   const designInput = await designInputFromManifest(root, artifact, value.renderInputsRef, rendering, target);
-  const currentDesign = value.schemaVersion === "WorkflowEvidenceV2";
+  const currentDesign = value.schemaVersion === "WorkflowEvidenceV2" || value.schemaVersion === "WorkflowEvidenceV3";
+  const currentHeroPolicy = value.schemaVersion === "WorkflowEvidenceV3";
   const reviewRoutes = target.format === "direct-review" ? [candidatePreviewPath(target.slug)] : target.renderedRoutes;
   let runtime;
   if (currentDesign) {
@@ -466,13 +498,13 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
       if (refs?.length !== 1) throw new Error("PRESENTATION_OBSERVATION_REQUIRED");
       return [rule,refs[0]];
     }));
-    runtime = await designRuntimeMaterial(root,binding.importId,value.artifactRef,value.renderInputsRef,reviewRoutes,runtimeRefSchema.parse(observations));
+    runtime = await designRuntimeMaterial(root,binding.importId,value.artifactRef,value.renderInputsRef,reviewRoutes,runtimeRefSchema.parse(observations),currentHeroPolicy ? "current-v3" : "legacy-v2");
   }
   const detectorInputs = requiredDetectorInputs(rendering, target);
   const detectedFiles = new Set<string>();
   if (fingerprintEditorialArtifact(await readEvidence(root, value.artifactRef)) !== fingerprintEditorialArtifact(artifact)) throw new Error("PRESENTATION_ARTIFACT_MISMATCH");
   for (const predecessor of value.predecessorRefs) await verifyEvidenceRef(root, predecessor);
-  const rules = ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
+  const rules = currentHeroPolicy ? ["hero-image", "design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion", "visual-quality"] : ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
   unique(value.ruleResults.map((r) => r.ruleId));
   if (value.ruleResults.length !== rules.length) throw new Error("PRESENTATION_RULE_MISSING");
   for (const rule of rules) {
@@ -500,6 +532,20 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         z.array(z.unknown()).length(0).parse(JSON.parse(execution.stdout));
         detectedFiles.add(scannedFile);
       }
+      if (rule === "hero-image") {
+        const heroRef = binding.evidenceRefs?.hero;
+        if (!heroRef) throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
+        const hero = await validateArticleHeroBinding(root, await readEvidence(root, heroRef), { format: articleHeroFormatSchema.parse(target.format), slug: target.slug, artifactFingerprint: target.artifactFingerprint });
+        if (execution.kind !== "opencode" || execution.pass !== "hero-image-inspection" || JSON.stringify(execution.imageRefs) !== JSON.stringify([hero.inspectionRef]) ||
+            !execution.inputRefs.some((ref) => ref.path === heroRef.path && ref.sha256 === heroRef.sha256) ||
+            !execution.inputRefs.some((ref) => ref.path === hero.assetRef.path && ref.sha256 === hero.assetRef.sha256) ||
+            !execution.inputRefs.some((ref) => ref.path === hero.inspectionRef.path && ref.sha256 === hero.inspectionRef.sha256)) throw new Error("ARTICLE_HERO_VISUAL_EXECUTION_MISMATCH");
+        await pinnedInstructions(root, execution, [".agents/skills/external-article-import/references/hero-imagegen.md"]);
+        const review = z.object({ schemaVersion: z.literal("ArticleHeroVisualInspectionV1"), artifactFingerprint: z.literal(target.artifactFingerprint), assetSha256: z.literal(hero.assetRef.sha256), verdict: z.literal("pass"),
+          checks: z.object({ noPeople: z.object({ verdict: z.literal("pass"), observations: z.array(nonempty).min(1) }).strict(), brandFit: z.object({ verdict: z.literal("pass"), observations: z.array(nonempty).min(1) }).strict() }).strict(),
+          findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()) }).strict().parse(JSON.parse(execution.output.imageInspection ?? "null"));
+        if (review.findings.some((finding) => finding.disposition !== "resolved")) throw new Error("ARTICLE_HERO_VISUAL_INSPECTION_FAILED");
+      }
       if (["design-read", "context", "shape", "critique", "audit", "polish"].includes(rule)) {
         const visual = runtime && visualDesignRules.has(rule) ? runtime : undefined;
         const expectedInput = visual ? {...designInput,browserObservations:visual.browserObservations} : designInput;
@@ -511,6 +557,13 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
 const designReview = createDesignReviewSchema({ rule, artifactFingerprint: fingerprintEditorialArtifact(artifact), renderInputsRef: value.renderInputsRef, renderingDigest: rendering.digest, allowedRoutes: allowedJudgmentRoutes }).parse(JSON.parse(execution.output.designReview ?? "null"));
 if (designReview.verdict !== "pass") throw new Error("PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS");
 if (designReview.findings.some((finding) => finding.disposition !== "resolved")) throw new Error("PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING");
+      }
+      if (rule === "visual-quality") {
+        const expectedInput = {...designInput,browserObservations:runtime!.browserObservations,source:JSON.stringify(MOTION_SITES_REVIEW_SOURCE)};
+        if (execution.kind !== "opencode" || JSON.stringify(execution.imageRefs ?? []) !== JSON.stringify(runtime!.images) || execution.pass !== "design:visual-quality" || proseProjectionDigest(execution.input) !== proseProjectionDigest(expectedInput) || runtime!.runtimeRefs.some((ref) => !execution.inputRefs.some((item) => item.path === ref.path && item.sha256 === ref.sha256))) throw new Error("ARTICLE_VISUAL_REVIEW_EXECUTION_MISMATCH");
+        assertPacket(execution.packetId,binding,"VALIDATING");
+        await pinnedInstructions(root,execution,[...ARTICLE_VISUAL_QUALITY_INSTRUCTIONS]);
+        validateArticleVisualQualityReview(JSON.parse(execution.output.visualQuality ?? "null"),{format:articleHeroFormatSchema.parse(target.format),artifactFingerprint:target.artifactFingerprint,routes:reviewRoutes});
       }
       if (execution.kind === "browser") {
         const allowedBrowserRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];

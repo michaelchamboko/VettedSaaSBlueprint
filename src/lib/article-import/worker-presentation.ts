@@ -6,15 +6,17 @@ import { z } from "zod";
 import { chromium } from "playwright";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 import { candidatePreviewPath, candidateRequestPath } from "./candidate-route";
-import { captureCommandExecution, evidenceReference, readEvidenceBytes, storeEvidence, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
+import { captureCommandExecution, evidenceReference, readEvidence, readEvidenceBytes, storeEvidence, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { readImportArtifactTarget } from "./format-validation";
 import { requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { readImportVerifierEvidence, verificationContext } from "./verification-evidence";
 import { createDesignReviewSchema, designReviewInput, designRuntimeMaterial, designJudgmentInstruction, visualDesignRules, runtimeRefSchema } from "./workflow-evidence";
 import type { Packet } from "./worker-editorial";
+import { articleHeroGenerationEvidenceSchema, validateArticleHeroBinding } from "./hero-image";
+import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articleVisualQualityReviewSchema, captureArticleVisualRuntime, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate } from "./article-visual-quality";
 
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
-export const presentationTool = z.object({ rule: z.enum([...designRules, "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"]), observations:runtimeRefSchema.optional() }).strict();
+export const presentationTool = z.object({ rule: z.enum(["hero-image", ...designRules, "visual-quality", "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"]), observations:runtimeRefSchema.optional() }).strict();
 type Exchange = (pass: string, input: Record<string,string>, refs: EvidenceRef[], instructions: (EvidenceRef & {text:string})[],
   prompt: string, model: string, images?: EvidenceRef[]) => Promise<{output: Record<string,string>,executionRef:EvidenceRef}>;
 
@@ -30,6 +32,39 @@ export async function presentationOperation(packet: Packet, {rule, observations}
   const routes = target.format === "direct-review" ? [candidatePreviewPath(target.slug)] : target.renderedRoutes;
   if (routes.some(route => !/^\/(?!\/)/.test(route) || route.includes("\\"))) throw new Error("PRESENTATION_ROUTES_MISMATCH");
   const capability = JSON.parse((await readEvidenceBytes(root,"config/article-workflow-capabilities.json")).toString("utf8"));
+  if (rule === "hero-image") {
+    if (!packet.heroImage) throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
+    const bindingValue = await readEvidence(root, packet.heroImage);
+    const binding = await validateArticleHeroBinding(root, bindingValue, { format: packet.format, slug: target.slug, artifactFingerprint: target.artifactFingerprint });
+    const generation = articleHeroGenerationEvidenceSchema.parse(await readEvidence(root, binding.generationRef));
+    const instructionPath = ".agents/skills/external-article-import/references/hero-imagegen.md";
+    const instruction = { ...await evidenceReference(root, instructionPath), text: (await readEvidenceBytes(root, instructionPath)).toString("utf8") };
+    const input = {
+      artifactFingerprint: target.artifactFingerprint,
+      format: packet.format,
+      slug: target.slug,
+      imageBinding: JSON.stringify(binding),
+      imagegenProvenance: JSON.stringify(generation),
+    };
+    const reviewSchema = z.object({
+      schemaVersion: z.literal("ArticleHeroVisualInspectionV1"), artifactFingerprint: z.literal(target.artifactFingerprint),
+      assetSha256: z.literal(binding.assetRef.sha256), verdict: z.enum(["pass", "fail", "insufficient-evidence"]),
+      checks: z.object({
+        noPeople: z.object({ verdict: z.enum(["pass", "fail", "insufficient-evidence"]), observations: z.array(z.string().trim().min(8)).min(1) }).strict(),
+        brandFit: z.object({ verdict: z.enum(["pass", "fail", "insufficient-evidence"]), observations: z.array(z.string().trim().min(8)).min(1) }).strict(),
+      }).strict(),
+      findings: z.array(z.object({ description: z.string().trim().min(1), disposition: z.enum(["resolved", "unresolved"]) }).strict()),
+    }).strict();
+    const prompt = "Inspect the attached derived WebP pixels using the tracked article hero instructions. Return one JSON object with string field imageInspection containing the ArticleHeroVisualInspectionV1 JSON. Do not infer from the prompt or provenance. Identity: " + JSON.stringify({ artifactFingerprint: target.artifactFingerprint, assetSha256: binding.assetRef.sha256 });
+    const model = capability.visualReviewModel;
+    if (!model || !Object.hasOwn(capability.modelFamilies, model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
+    const result = await exchange("hero-image-inspection", input, [...inputRefs, packet.heroImage, binding.assetRef, binding.inspectionRef, binding.generationRef], [instruction], prompt, model, [binding.inspectionRef]);
+    const judgment = reviewSchema.parse(JSON.parse(result.output.imageInspection));
+    if (judgment.verdict !== "pass" || judgment.checks.noPeople.verdict !== "pass" || judgment.checks.brandFit.verdict !== "pass" || judgment.findings.some((finding) => finding.disposition !== "resolved")) {
+      throw new Error("ARTICLE_HERO_VISUAL_INSPECTION_FAILED");
+    }
+    return { rule, artifactRef, judgment, evidenceRefs: [result.executionRef] };
+  }
   if (rule === "detect") {
     const binary = ".agents/skills/impeccable/scripts/bin/windows-x64/impeccable.exe";
     const versionFile = ".agents/skills/impeccable/scripts/VERSION";
@@ -47,6 +82,19 @@ export async function presentationOperation(packet: Packet, {rule, observations}
     }
     return {rule,artifactRef,evidenceRefs};
   }
+  if (rule === "visual-quality") {
+    const runtime = await designRuntimeMaterial(root,importId,artifactRef,renderInputsRef,routes,runtimeRefSchema.parse(observations),"current-v3");
+    const instructions = await Promise.all(ARTICLE_VISUAL_QUALITY_INSTRUCTIONS.map(async file => ({
+      ...await evidenceReference(root,file),text:(await readEvidenceBytes(root,file)).toString("utf8"),
+    })));
+    const input = {...await designReviewInput(root,packet.format,artifact,renderInputsRef),browserObservations:runtime.browserObservations,source:JSON.stringify(MOTION_SITES_REVIEW_SOURCE)};
+    const prompt = "Judge professional article whitespace/density, first-glance hierarchy, typography, media integration, responsive adaptation, purposeful motion, and preserved meaning in the reduced-motion alternative from the attached early/settled screenshots and retained geometry/property samples. Return one JSON object with string field visualQuality containing ArticleVisualQualityReviewV1 exactly as the tracked instruction defines it. Observations must cite concrete visible or measured evidence; do not require maximal motion, one grid, or make percentile claims. Identity: " + JSON.stringify({format:packet.format,artifactFingerprint:target.artifactFingerprint,routes,source:MOTION_SITES_REVIEW_SOURCE});
+    const model = capability.visualReviewModel;
+    if (!model || !Object.hasOwn(capability.modelFamilies,model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
+    const result = await exchange("design:visual-quality",input,[...inputRefs,...Object.values(runtimeRefSchema.parse(observations)),...runtime.runtimeRefs,...runtime.images],instructions,prompt,model,runtime.images);
+    const judgment = articleVisualQualityReviewSchema.parse(JSON.parse(result.output.visualQuality));
+    return {rule,artifactRef,judgment,evidenceRefs:[result.executionRef]};
+  }
   if (designRules.some(name => name === rule)) {
     const impeccable = ".agents/skills/impeccable/";
     const instruction = rule === "design-read" ? ".agents/skills/design-taste-frontend/SKILL.md" : impeccable + (rule === "context" ? "SKILL.md" : "reference/" + rule + ".md");
@@ -54,7 +102,7 @@ export async function presentationOperation(packet: Packet, {rule, observations}
       ...await evidenceReference(root,file),text:(await readEvidenceBytes(root,file)).toString("utf8"),
     })));
     const input = await designReviewInput(root,packet.format,artifact,renderInputsRef);
-    const visual = visualDesignRules.has(rule) ? await designRuntimeMaterial(root,importId,artifactRef,renderInputsRef,routes,runtimeRefSchema.parse(observations)) : undefined;
+    const visual = visualDesignRules.has(rule) ? await designRuntimeMaterial(root,importId,artifactRef,renderInputsRef,routes,runtimeRefSchema.parse(observations),"current-v3") : undefined;
     if (visual && observations) {
       input.browserObservations = visual.browserObservations;
       inputRefs.push(...Object.values(observations),...visual.images);
@@ -94,10 +142,11 @@ export async function presentationOperation(packet: Packet, {rule, observations}
   try {
     const context = await browser.newContext({viewport:{width:viewport.width,height:viewport.height},reducedMotion:viewport.reducedMotion ? "reduce" : "no-preference"});
     const page = await context.newPage();
+    await installArticleVisualProbe(page);
     const errors:string[] = [];
     page.on("pageerror",error => errors.push(error.message));
     await page.route("**/*", route => route.request().isNavigationRequest() && new URL(route.request().url()).origin !== origin ? route.abort() : route.continue());
-    const screenshots = [];
+    const screenshots = [], visualRuntimeRefs = [];
     for (const route of routes) {
       const expected = new URL(target.format === "direct-review" ? candidateRequestPath(target.slug, importId) : route,origin);
       const response = await page.goto(expected.href,{waitUntil:"domcontentloaded",timeout:30000});
@@ -105,14 +154,20 @@ export async function presentationOperation(packet: Packet, {rule, observations}
       if (target.format === "direct-review" && await page.locator('meta[name="artifact-fingerprint"]').getAttribute("content") !== target.artifactFingerprint) {
         throw new Error("PRESENTATION_SERVED_ARTIFACT_MISMATCH");
       }
+      if (!viewport.reducedMotion && !await pauseArticleVisualIntermediate(page)) throw new Error("ARTICLE_VISUAL_ACTIVE_MOTION_NOT_OBSERVED");
       await page.locator("main h1").first().waitFor({state:"visible"});
       const layout = await page.evaluate(() => ({overflow:document.documentElement.scrollWidth > window.innerWidth + 1, reduced:matchMedia("(prefers-reduced-motion: reduce)").matches}));
       if (layout.overflow || layout.reduced !== viewport.reducedMotion || errors.length) throw new Error("PRESENTATION_BROWSER_CHECK_FAILED");
-      screenshots.push(await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:false}),"png"));
+      const early = await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:false,animations:"allow"}),"png");
+      if (!viewport.reducedMotion) await resumeArticleVisualIntermediate(page);
+      await page.waitForTimeout(1100);
+      const settled = await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:false,animations:"allow"}),"png");
+      screenshots.push(settled);
+      visualRuntimeRefs.push(await storeEvidence(root,importId,await captureArticleVisualRuntime(page,{format:packet.format,route,viewport,screenshots:{early,settled}})));
     }
     if (errors.length) throw new Error("PRESENTATION_BROWSER_CHECK_FAILED");
     const executionRef = await storeEvidence(root,importId,{schemaVersion:"ExecutionEvidenceV1",kind:"browser",toolVersion:browser.version(),startedAt,
-      completedAt:new Date().toISOString(),inputRefs,outputRefs:[],target:origin,routes,viewport,screenshots,checks:{routesLoaded:true,headingVisible:true,viewport:true,noRuntimeErrors:true}});
+      completedAt:new Date().toISOString(),inputRefs,outputRefs:visualRuntimeRefs,target:origin,routes,viewport,screenshots,checks:{routesLoaded:true,headingVisible:true,viewport:true,noRuntimeErrors:true}});
     return {rule,artifactRef,evidenceRefs:[executionRef]};
   } finally { await browser.close(); }
 }
