@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import assert from "node:assert/strict";
-import { access, mkdtemp, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -15,6 +15,7 @@ import { type DispatchOptions } from "../src/lib/article-import/dispatch";
 import { loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { storeEvidence } from "../src/lib/article-import/workflow-evidence";
+import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
 
 function dispatchArticleImport(root: string, importId: string, options: DispatchOptions) {
   return executeImportCommand(root, { kind: "dispatch", importId }, undefined, options) as Promise<ExternalArticleImportV1>;
@@ -45,12 +46,27 @@ async function makeResearchEvidence(root: string, importId: string) {
   return evidencePath;
 }
 
-function jsonlResult(packet: { idempotencyKey: string; sourceFingerprint: string; stage: string }, evidencePath: string) {
+function jsonlResult(packet: { idempotencyKey: string; sourceFingerprint: string }, work: Record<string, unknown>) {
   return [
     JSON.stringify({ type: "step_start", timestamp: 1, sessionID: "s", part: { id: "p", sessionID: "s", messageID: "m", type: "step-start" } }),
-    JSON.stringify({ type: "text", timestamp: 2, sessionID: "s", part: { id: "t", sessionID: "s", messageID: "m", type: "text", text: JSON.stringify({ idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "worker", work: { stage: packet.stage, evidencePath } }), time: { start: 1, end: 2 } } }),
+    JSON.stringify({ type: "text", timestamp: 2, sessionID: "s", part: { id: "t", sessionID: "s", messageID: "m", type: "text", text: JSON.stringify({ idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "worker", work }), time: { start: 1, end: 2 } } }),
     JSON.stringify({ type: "step_finish", timestamp: 3, sessionID: "s", part: { id: "f", sessionID: "s", messageID: "m", type: "step-finish", reason: "stop", cost: 0, tokens: { input: 1, output: 1, reasoning: 0, cache: { read: 0, write: 0 } } } }),
   ].join("\n");
+}
+
+async function prepareResearchAcquisition(root: string, importId: string, evidencePath: string) {
+  const research = await loadImport(root, importId);
+  if (research.continuation?.kind !== "work") throw new Error("Missing research plan work");
+  const evidence = JSON.parse(await readFile(path.join(root, evidencePath), "utf8"));
+  await writeGapPlanResult(root, research.continuation, { claimId: evidence.claims[0].id, claimText: evidence.claims[0].text });
+  await executeImportCommand(root, { kind: "resume", importId });
+  const acquiring = await loadImport(root, importId);
+  if (acquiring.continuation?.kind !== "work") throw new Error("Missing research acquisition work");
+  await writeAcquisitionResult(root, acquiring.continuation, evidencePath);
+  const result = JSON.parse(await readFile(path.join(root, acquiring.continuation.resultPath), "utf8"));
+  await rm(path.join(root, acquiring.continuation.resultPath));
+  const packet = JSON.parse(await readFile(path.join(root, acquiring.continuation.workPath), "utf8"));
+  return { continuation: acquiring.continuation, packet, result };
 }
 
 test("tracked: missing worker result reports blocked", async () => {
@@ -102,13 +118,9 @@ test("tracked: consume saved result with zero worker invocations", async () => {
     const importId = record.importId;
     await executeImportCommand(root, { kind: "resume", importId });
     await executeImportCommand(root, { kind: "resume", importId });
-    const current = await loadImport(root, importId);
-    const workPath = current.nextAction.match(/(\S+\.work\.json)/)![1];
-    const packet = JSON.parse(await readFile(path.join(root, workPath), "utf8"));
     const evidencePath = await makeResearchEvidence(root, importId);
-    await writeJsonAtomically(path.join(root, packet.resultPath), {
-      idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "saved", work: { stage: "RESEARCHING", evidencePath },
-    });
+    const prepared = await prepareResearchAcquisition(root, importId, evidencePath);
+    await writeJsonAtomically(path.join(root, prepared.continuation.resultPath), prepared.result);
     let calls = 0;
     const result = await dispatchArticleImport(root, importId, { workerModel: "test/model-a", workerRunner: async () => { calls += 1; return { stdout: "", stderr: "", exitCode: 0, timedOut: false }; }, maxSteps: 1 });
     assert.equal(calls, 0);
@@ -124,12 +136,11 @@ for (const fault of ["malformed", "wrong-stage", "stale"]) test("saved result re
     await executeImportCommand(root, { kind: "resume", importId });
     await executeImportCommand(root, { kind: "resume", importId });
     const current = await loadImport(root, importId);
-    const workPath = current.nextAction.match(/(\S+\.work\.json)/)![1];
-    const packet = JSON.parse(await readFile(path.join(root, workPath), "utf8"));
-    if (fault === "malformed") await writeFile(path.join(root, packet.resultPath), "{");
-    else await writeJsonAtomically(path.join(root, packet.resultPath), { idempotencyKey: packet.idempotencyKey,
-      sourceFingerprint: fault === "stale" ? "0".repeat(64) : packet.sourceFingerprint, summary: "bad",
-      work: { stage: fault === "wrong-stage" ? "TRANSFORMING" : "RESEARCHING", evidencePath: "absent" } });
+    if (current.continuation?.kind !== "work") throw new Error("Missing research plan work");
+    const prepared = await writeGapPlanResult(root, current.continuation, { claimText: "A mocked supported claim.", sourceFingerprint: fault === "stale" ? "0".repeat(64) : undefined });
+    if (fault === "malformed") await writeFile(path.join(root, current.continuation.resultPath), "{");
+    if (fault === "wrong-stage") await writeJsonAtomically(path.join(root, current.continuation.resultPath), { idempotencyKey: current.continuation.idempotencyKey,
+      sourceFingerprint: current.continuation.sourceFingerprint, summary: "bad", work: { stage: "TRANSFORMING", researchAction: "acquire", registryDecisionPath: prepared.decisionPath } });
     const before = current.stage;
     await dispatchArticleImport(root, importId, { workerModel: "test/model-a", maxSteps: 1 });
     const after = await loadImport(root, importId);
@@ -147,10 +158,9 @@ test("tracked: two configured models produce same control flow", async () => {
       const importId = intake.entries[0].importId!;
       await executeImportCommand(root, { kind: "resume", importId });
       await executeImportCommand(root, { kind: "resume", importId });
-      const current = await loadImport(root, importId);
-      const workPath = current.nextAction.match(/(\S+\.work\.json)/)![1];
-      const packet = JSON.parse(await readFile(path.join(root, workPath), "utf8"));
       const evidencePath = await makeResearchEvidence(root, importId);
+      const prepared = await prepareResearchAcquisition(root, importId, evidencePath);
+      const packet = prepared.packet;
       let seenModel = "";
       const workerRunner: WorkerRunner = async (input) => {
         seenModel = input.args[input.args.indexOf("--model") + 1];
@@ -160,24 +170,17 @@ test("tracked: two configured models produce same control flow", async () => {
         const writable = policy.filter((rule: { action: string }) => rule.action === "edit").map((rule: { resource: string }) => rule.resource);
         assert.equal(writable.length, 2);
         assert.ok(writable.every((dir: string) => dir.endsWith(importId + "/" + packet.idempotencyKey + "/*")));
-        const destination = path.join(writable[0].slice(0, -1), "research.json");
-        const source = path.join(root, evidencePath);
-        await rename(source, source + ".input");
         const script = `
           const fs = require("node:fs");
-          const path = require("node:path");
-          const [fixture, source, destination, result] = process.argv.slice(1);
-          fs.mkdirSync(path.dirname(destination), { recursive: true });
-          fs.copyFileSync(source, destination);
+          const [fixture, result] = process.argv.slice(1);
           for (const line of fs.readFileSync(fixture, "utf8").trim().split(/\\r?\\n/)) {
             const event = JSON.parse(line);
             if (event.type === "text") event.part.text = result;
             console.log(JSON.stringify(event));
           }`;
-        const work = { stage: packet.stage, evidencePath: path.relative(root, destination) };
-        const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "tested", work };
+        const result = prepared.result;
         return defaultWorkerRunner({ ...input, executable: process.execPath,
-          args: ["-e", script, fixture, source + ".input", destination, JSON.stringify(result)] });
+          args: ["-e", script, fixture, JSON.stringify(result)] });
 
       };
       const result = await dispatchArticleImport(root, importId, { workerModel: model, workerRunner, maxSteps: 1 });
@@ -220,10 +223,9 @@ test("tracked: parallel dispatch invokes one worker", async () => {
     const importId = record.importId;
     await executeImportCommand(root, { kind: "resume", importId });
     await executeImportCommand(root, { kind: "resume", importId });
-    const current = await loadImport(root, importId);
-    const workPath = current.nextAction.match(/(\S+\.work\.json)/)![1];
-    const packet = JSON.parse(await readFile(path.join(root, workPath), "utf8"));
     const evidencePath = await makeResearchEvidence(root, importId);
+    const prepared = await prepareResearchAcquisition(root, importId, evidencePath);
+    const packet = prepared.packet;
     let calls = 0;
     const workerRunner: WorkerRunner = async (input) => {
       const fileArg = input.args.indexOf("--file");
@@ -231,7 +233,7 @@ test("tracked: parallel dispatch invokes one worker", async () => {
       if (p?.stage !== "RESEARCHING") return { stdout: "", stderr: "not research", exitCode: 1, timedOut: false };
       calls += 1;
       await new Promise((resolve) => setTimeout(resolve, 50));
-      return { stdout: jsonlResult(packet, evidencePath), stderr: "", exitCode: 0, timedOut: false };
+      return { stdout: jsonlResult(packet, prepared.result.work), stderr: "", exitCode: 0, timedOut: false };
     };
     const competing = await Promise.allSettled([
       dispatchArticleImport(root, importId, { workerModel: "test/model-a", workerRunner, maxSteps: 1 }),
@@ -267,9 +269,8 @@ test("recovering a killed dispatcher waits for its worker and reuses its exit re
     await executeImportCommand(root, { kind: "resume", importId });
     await executeImportCommand(root, { kind: "resume", importId });
     const evidencePath = await makeResearchEvidence(root, importId);
-    const record = await loadImport(root, importId);
-    assert.ok(record.continuation?.kind === "work");
-    const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
+    const prepared = await prepareResearchAcquisition(root, importId, evidencePath);
+    const packet = prepared.packet;
     const worker = path.join(root, "worker.cjs");
     await writeFile(worker, `
       const fs = require("node:fs");
@@ -277,7 +278,7 @@ test("recovering a killed dispatcher waits for its worker and reuses its exit re
       const timer = setInterval(() => {
         if (fs.existsSync(process.argv[3])) { clearInterval(timer); console.log(process.argv[4]); }
       }, 50);`);
-    const args = [worker, ready, finish, jsonlResult(packet, evidencePath)];
+    const args = [worker, ready, finish, jsonlResult(packet, prepared.result.work)];
     const controller = spawn(process.execPath, ["--import", "tsx", "-e", `
       const { defaultWorkerRunner } = require("./src/lib/article-import/worker-runner.ts");
       const { executeFixtureCommand: executeImportCommand } = require("./tests/fixtures/article-command.ts");
@@ -361,7 +362,7 @@ for (const fault of ["malformed", "wrong-stage", "stale-key", "stale-source"]) {
         if (fault === "wrong-stage") packet.stage = "TRANSFORMING";
         if (fault === "stale-key") packet.idempotencyKey = "0".repeat(64);
         if (fault === "stale-source") packet.sourceFingerprint = "0".repeat(64);
-        return { stdout: fault === "malformed" ? "{" : jsonlResult(packet, "unused"), stderr: "", exitCode: 0, timedOut: false };
+        return { stdout: fault === "malformed" ? "{" : jsonlResult(packet, { stage: packet.stage, researchAction: "acquire", registryDecisionPath: "unused" }), stderr: "", exitCode: 0, timedOut: false };
       };
       const result = await dispatchArticleImport(root, importId, { workerModel: "fixture/model", workerRunner });
       assert.equal(calls, 1);

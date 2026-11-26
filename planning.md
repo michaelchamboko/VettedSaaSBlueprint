@@ -200,6 +200,12 @@ Classification: user directive (narrow corrective maintenance enabling existing 
 
 Scope: keep the strict intake parser with requested ID equality and V2 safe-integer revision check while removing duplicated post-parse checks; remove the redundant release-checks loop; remove the pre-lease folder-resume scan while retaining terminal-proof and multiple-active validation under the intake lease; reuse already validated research evidence only within the same evaluation. Owned files: src/lib/article-import/{intake,engine,workflow-evidence}.ts; scripts/import-article.ts; tests/transition-checks-1124.test.ts; planning.md; build-pack/execution-state.json. Synthetic tests only; no real article run. Evidence: build-pack/repairs/transition-checks-1124/verification.md.
 
+### Article research registry wiring (RESEARCH-REGISTRY-1126) (registered 2026-11-26)
+
+Classification: explicit owner directive (narrow ORCH-04 implementation).
+
+Scope: connect the existing article RESEARCHING stage to the existing `article_research` PostgreSQL registry before acquisition. Reuse requires exact current claim, product-context, snapshot and retained-byte matches. The same stage records stale, conflicting and missing gaps before a separate acquisition pass can use web tools. Validated new or changed evidence writes through one transactional, idempotent binding with article-to-claim/snapshot lineage; replay, concurrent newer writes and historical files remain preserved. Existing `public.research_sources` and `public.evidence_claims` are read-only leads and require permitted usage; missing retained bytes remain gaps. Owned files: `src/lib/article-import/{research-registry,research-registry-neon,supervised-executor,worker-runner,workflow-evidence,engine}.ts`; `db/article-research-import-bindings-v001.sql`; focused synthetic and isolated-database tests; `planning.md`; `build-pack/execution-state.json`. No source-strategy amendment, live article import, production database write, publication, deployment or new lifecycle stage is authorized.
+
 ### Tracked code deduplication (DEDUPE-TRACKED-1124) (registered 2026-11-24)
 
 Owner directive: use the 207-file Fallow report to remove tracked-code duplicate blocks while retaining one shared implementation, preserve historical `build-pack/` evidence, and exclude `scripts/verify-runtime-contract.mjs` because PR #44 owns that file. Execution is agent-agnostic and does not require Beam or another model-specific workflow.
