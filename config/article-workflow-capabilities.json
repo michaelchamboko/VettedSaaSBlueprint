@@ -203,7 +203,7 @@
     },
     {
       "path": ".agents/skills/impeccable/scripts/live-browser.js",
-      "sha256": "7af0a8665057c83b39bca2c8c7427ef2343734f70d4128c377113a6726a1e3b1"
+      "sha256": "6f6ccc3b4b7ee587191ea1972b0f18bf90a73a464826a1256e2a153d68edd56a"
     },
     {
       "path": ".agents/skills/impeccable/scripts/modern-screenshot.umd.js",

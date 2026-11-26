@@ -6,7 +6,7 @@ import { mkdir, open, readFile, readdir, realpath, rename, unlink, writeFile } f
 import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
-import { contentApprovalMatches, createContentApproval, type ApprovalFiles } from "./content-approval";
+import { contentApprovalMatches, createContentApproval, formatQualityApprovalMatches, type ApprovalFiles } from "./content-approval";
 import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 import { createImportPresentation, verifyImportPresentationEvidence } from "./presentation";
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
@@ -692,6 +692,10 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
     if (reconciled !== record || reconciled.continuation?.kind === "blocked") return reconciled;
     const stage = nextStage[record.stage];
     if (!stage) throw new Error("Stage " + record.stage + " cannot advance automatically.");
+    if (["VALIDATING", "RELEASING"].includes(stage) && record.contentApproval
+        && !(await formatQualityApprovalMatches(repositoryRoot, record.contentApproval, record.format, record.sourceFingerprint))) {
+      return ensureImportContentApproval(repositoryRoot, record);
+    }
     const evidence = await evaluateWorkflowEvidence(record, { root: repositoryRoot, throughStage: stage }, "current-transition");
     if (!evidence.ok) throw new Error(`WORKFLOW_EVIDENCE_INVALID:${JSON.stringify(evidence.diagnostics)}`);
     if (["VALIDATING", "RELEASING"].includes(stage)) {
