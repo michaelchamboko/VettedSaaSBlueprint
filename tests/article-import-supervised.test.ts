@@ -33,6 +33,8 @@ test("describe-workflow exposes exactly the three actionable release steps", asy
     "verify-production",
   ]);
   assert.equal(described.instructions.RELEASING, instructionsForStage("RELEASING"));
+  assert.match(instructionsForStage("VERIFYING"), /1\. Verify the deployed article and reviewed merge/);
+  assert.match(instructionsForStage("VERIFYING"), /2\. Freeze the terminal bundle and validate its receipt before LIVE/);
   assert.match(described.instructions.RELEASING, /exact PR head/);
   assert.match(described.instructions.RELEASING, /exact merged commit/);
   assert.match(described.instructions.RELEASING, /rollback deployment/);

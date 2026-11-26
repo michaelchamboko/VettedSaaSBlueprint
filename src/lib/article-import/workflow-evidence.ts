@@ -390,6 +390,23 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
 
 export type WorkflowEvidenceRecord = EvidenceBinding & { stage: string; schemaVersion?: string; workflowVersion?: number; evidenceRefs?: z.infer<typeof evidenceRefsSchema>; terminalRef?: EvidenceRef; presentation?: {artifactFingerprint: string}; contentApproval?: { artifactPath: string }; release?: { commitSha: string; deploymentId: string; canonicalUrl: string }; sourceRef?: EvidenceRef };
 export type WorkflowEvaluation = { ok: boolean; diagnostics: string[]; earliestRequiredStage?: WorkflowStage; validatedRefs: EvidenceRef[] };
+
+async function validateProductionEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding, release?: WorkflowEvidenceRecord["release"]) {
+  if (!release) throw new Error("RELEASE_EVIDENCE_REQUIRED");
+  const { assertProductionVerifierEvidence } = await import("./verification-evidence");
+  const target = importArtifactTarget(formatSchema.parse(binding.format), await artifactFor(root, binding));
+  return assertProductionVerifierEvidence(await readEvidence(root, ref), { target, deployment: release, importId: binding.importId, sourceFingerprint: binding.sourceFingerprint });
+}
+
+export async function validateProductionWorkflowEvidence(root: string, record: WorkflowEvidenceRecord, artifactPath?: string): Promise<EvidenceRef> {
+  if (record.requirementRevision !== WORKFLOW_REVISION || record.workflowVersion !== 2) throw new Error("LEGACY_UPGRADE_REQUIRED");
+  const ref = record.evidenceRefs?.production;
+  if (!ref) throw new Error("WORKFLOW_EVIDENCE_REQUIRED:production");
+  const binding = { ...record, artifactPath: artifactPath ?? record.artifactPath ?? record.contentApproval?.artifactPath };
+  await validateProductionEvidence(root, ref, binding, record.release);
+  return ref;
+}
+
 export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, context: { root: string; throughStage?: string; artifactPath?: string }, mode: "historical-terminal" | "current-transition" | "duplicate-reuse" = "current-transition"): Promise<WorkflowEvaluation> {
   const validatedRefs: EvidenceRef[] = [];
   let required: WorkflowStage = "INGESTING";
@@ -424,12 +441,7 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
       }
       return presentation;
     });
-    if (rank >= 7) await need("production", "VERIFYING", async (ref) => {
-      if (!record.release) throw new Error("RELEASE_EVIDENCE_REQUIRED");
-      const { assertProductionVerifierEvidence } = await import("./verification-evidence");
-      const target = importArtifactTarget(formatSchema.parse(binding.format), await artifactFor(context.root, binding));
-      return assertProductionVerifierEvidence(await readEvidence(context.root, ref), { target, deployment: record.release, importId: record.importId, sourceFingerprint: record.sourceFingerprint });
-    });
+    if (rank >= 7) await need("production", "VERIFYING", (ref) => validateProductionEvidence(context.root, ref, binding, record.release));
     return { ok: true, diagnostics: [], validatedRefs };
   } catch (error) {
     return { ok: false, diagnostics: [error instanceof Error ? error.message : String(error)], earliestRequiredStage: required, validatedRefs };
