@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
-import { assertResearchRegistryPlanFingerprint, createResearchRegistryPlan, researchRegistryDecisionSchema, researchRegistryPlanSchema, validateRegistryDecisionPlan, type ResearchRegistryCandidate, type ResearchRegistryCommitInput } from "../src/lib/article-import/research-registry";
+import { assertResearchRegistryPlanFingerprint, createResearchRegistryPlan, researchRegistryDecisionSchema, researchRegistryPlanSchema, validateRegistryDecisionAgainstEvidence, validateRegistryDecisionPlan, type ResearchRegistryCandidate, type ResearchRegistryCommitInput } from "../src/lib/article-import/research-registry";
 import { createInMemoryResearchRegistry } from "./fixtures/article-research-registry";
 import { prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
 import { NeonArticleResearchRegistry, prequalifyAcquiredSourceIds, researchSearchExpressions } from "../src/lib/article-import/research-registry-neon";
@@ -224,6 +224,25 @@ test("unprovable legacy bytes are a missing gap and expired conflict does not bl
   const reusePlan = createResearchRegistryPlan({ importId: "article-77777777-7777-4777-8777-777777777777", sourceFingerprint: "b".repeat(64), generatedAt: now, candidates: [supported, expiredConflict], legacyLeads: [] });
   const reuse = researchRegistryDecisionSchema.parse({ schemaVersion: "ResearchRegistryDecisionV1", importId: reusePlan.importId, sourceFingerprint: reusePlan.sourceFingerprint, planFingerprint: reusePlan.planFingerprint, createdAt: now, claims: [{ claimId: "claim", claimText: supported.claimText, material: true, productContext: supported.productContext, action: "reused_current", registryMatches: [{ claimId: supported.claimId, snapshotId: supported.snapshotId, productContext: supported.productContext }], rationale: "The only current evidence supports the claim." }] });
   assert.doesNotThrow(() => validateRegistryDecisionPlan(reusePlan, reuse, now));
+});
+
+test("reuse expiring after lookup enters stale-plan recovery instead of packet repair", () => {
+  const generatedAt = "2026-11-26T00:00:00.000Z";
+  const decidedAt = "2026-11-26T01:00:00.000Z";
+  const expiring = candidate({ expiresAt: "2026-11-26T00:30:00.000Z" });
+  const plan = createResearchRegistryPlan({ importId: "article-99999999-9999-4999-8999-999999999999", sourceFingerprint: "d".repeat(64), generatedAt, candidates: [expiring], legacyLeads: [] });
+  const decision = researchRegistryDecisionSchema.parse({ schemaVersion: "ResearchRegistryDecisionV1", importId: plan.importId, sourceFingerprint: plan.sourceFingerprint, planFingerprint: plan.planFingerprint, createdAt: decidedAt, claims: [{ claimId: "claim", claimText: expiring.claimText, material: true, productContext: expiring.productContext, action: "reused_current", registryMatches: [{ claimId: expiring.claimId, snapshotId: expiring.snapshotId, productContext: expiring.productContext }], rationale: "The evidence was current when the plan was generated." }] });
+  const bytes = Buffer.from(expiring.passage!, "utf8");
+  const research = {
+    evidenceRef: { path: "synthetic/research.json", sha256: "e".repeat(64) }, evidencePath: "synthetic/research.json", evidenceSha256: "e".repeat(64),
+    evidence: { createdAt: decidedAt, sources: [{ id: "source", url: expiring.canonicalUrl, retrievedAt: expiring.retrievedAt, snapshotRef: { path: "synthetic/snapshot.json", sha256: expiring.evidenceSha256 } }], claims: [{ id: "claim", text: expiring.claimText, sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: expiring.claimText }] }] },
+    snapshotBytes: new Map([["source", bytes]]),
+  };
+  assert.throws(() => validateRegistryDecisionAgainstEvidence(plan, decision, research, decidedAt), /RESEARCH_REGISTRY_PLAN_STALE/);
+
+  const alreadyExpiredPlan = createResearchRegistryPlan({ importId: plan.importId, sourceFingerprint: plan.sourceFingerprint, generatedAt: decidedAt, candidates: [expiring], legacyLeads: [] });
+  const invalidDecision = researchRegistryDecisionSchema.parse({ ...decision, planFingerprint: alreadyExpiredPlan.planFingerprint });
+  assert.throws(() => validateRegistryDecisionAgainstEvidence(alreadyExpiredPlan, invalidDecision, research, decidedAt), /RESEARCH_REGISTRY_REUSE_NOT_CURRENT/);
 });
 
 test("lookup covers short Unicode product terms and claims after long introductions", () => {

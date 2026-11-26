@@ -201,7 +201,12 @@ export function validateRegistryDecisionAgainstEvidence(
   now: string,
   writeback?: ResearchRegistryWriteback,
 ): void {
-  validateRegistryDecisionPlan(plan, decision, now);
+  validateRegistryDecisionPlan(plan, decision, plan.generatedAt);
+  const postPlanExpiry = decision.claims.some((tracked) => tracked.action === "reused_current" && tracked.registryMatches.some((match) => {
+    const candidate = plan.candidates.find((item) => item.claimId === match.claimId && item.snapshotId === match.snapshotId && item.productContext === match.productContext);
+    return candidate && Date.parse(candidate.expiresAt) > Date.parse(plan.generatedAt) && Date.parse(candidate.expiresAt) <= Date.parse(now);
+  }));
+  if (postPlanExpiry) throw new Error("RESEARCH_REGISTRY_PLAN_STALE");
   validateRegistryWritebackCompleteness(decision, research, writeback);
   const sources = new Map(research.evidence.sources.map((source) => [source.id, source]));
   const claimDecisions = new Map(decision.claims.map((claim) => [claim.claimId, claim]));
