@@ -7,6 +7,8 @@ description: Mandatory full-article SlopMonster rewrite for drafted Vetted SaaS 
 
 Use this owner-approved stage after evidence-backed drafting and before candidate validation. It is a full rewrite, not a cleanup pass. Publication stays blocked until the final artifact has an `EditorialEvidenceV2` receipt.
 
+The [Refining workflow diagram](../../../docs/article-intake.md#refining-workflow) shows the three rewrite passes, the independent review, and the word-count gate for approved affiliate direct reviews.
+
 Read the pinned references in this directory: principles.md, signs-of-ai-writing.md, and dr-eleanor-hayes.md. Eleanor is a fictional style lens, never a reviewer credential or public byline. The repository's evidence, disclosure, ranking independence and page contracts take priority over upstream advice.
 
 1. Save the complete structured draft before editing. Identify its reader, page intent, decision, evidence constraints and supported format. Run the bundled checker on all editable prose and retain its full output.
