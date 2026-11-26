@@ -50,8 +50,9 @@ async function capturedExchange(packet: Packet, pass: string, prose: Record<stri
   if (capture) {
     if (packet.executionExporterId && capture.exporterId !== packet.executionExporterId) throw new Error("EXECUTION_SELECTION_MISMATCH");
     const execution = await captureStructuredExecution(root, importId, capture);
+    const expectedInputRefs = [...refs, ...instructions.map(({path, sha256}) => ({path, sha256}))];
     if (execution.kind !== "structured" || execution.packetId !== key || execution.pass !== pass || execution.inputDigest !== proseProjectionDigest(prose) ||
-        JSON.stringify(execution.inputRefs) !== JSON.stringify(refs) || JSON.stringify(execution.instructions) !== JSON.stringify(instructions)) throw new Error("EXECUTION_SELECTION_MISMATCH");
+        JSON.stringify(execution.inputRefs) !== JSON.stringify(expectedInputRefs) || JSON.stringify(execution.instructions) !== JSON.stringify(instructions)) throw new Error("EXECUTION_SELECTION_MISMATCH");
     const output = z.record(z.string(), z.string()).parse(execution.output);
     const executionRef = await storeEvidence(root, importId, execution);
     await validateExecutionEvidence(root, executionRef);
@@ -97,6 +98,7 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
   }
   if (name === "assess") {
     const input = assess.parse(args);
+    if (input.capture && packet.stage !== "REFINING") throw new Error("ASSESSMENT_CAPTURE_STAGE_REQUIRED");
     if (!packet.research || (packet.stage === "REFINING" && input.format !== packet.format)) throw new Error("ASSESSMENT_PACKET_BINDING");
     const artifactPath = await scoped(input.artifact);
     const artifact = await json(input.artifact);

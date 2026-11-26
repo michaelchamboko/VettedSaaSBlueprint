@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { editorialOperation } from "../src/lib/article-import/worker-editorial";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
-import { artifactProseProjection, validateEditorialExecution } from "../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, editorialJudgmentReviewInput, editorialPassReviewInput, validateEditorialExecution } from "../src/lib/article-import/workflow-evidence";
 import { editorialProsePaths, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
-import {storeEvidence} from "../src/lib/article-import/execution-evidence";
+import { evidenceReference, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION, workflowRequirements } from "../src/lib/article-import/workflow-requirements";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
 import { samplePageBlueprint as blueprint } from "./fixtures/sample-page-blueprint";
@@ -22,11 +22,16 @@ test("fresh packet produces five independently replayable editorial passes and c
   const capabilitiesPath = path.join(root, "config/article-workflow-capabilities.json");
   const capabilities = JSON.parse(await readFile(capabilitiesPath, "utf8"));
   capabilities.modelFamilies["other/outer-worker"] = "fixture-family";
+  const exporter = path.resolve("tests/fixtures/structured-execution-exporter.mjs");
+  const exportMap = path.join(root, "structured-exports");
+  await mkdir(exportMap);
+  capabilities.executionExporters = { fixture: { executable: process.execPath, versionArgs: [exporter, "--version"],
+    toolName: "fixture-neutral", toolVersion: "fixture-exporter 1", exportArgs: [exporter, "export-map", exportMap, "{contextId}", "{exchangeId}"] } };
   await writeFile(capabilitiesPath, JSON.stringify(capabilities));
   const importId = "article-11223344-abcd-abcd-abcd-0123456789ab", sourceFingerprint = "b".repeat(64);
   const key = importPacketId({ importId, sourceFingerprint }, "REFINING", "fresh-rewrite");
   const packet = { root, importId, sourceFingerprint, key, requirementRevision: WORKFLOW_REVISION, stage: "REFINING" as const,
-    format: "direct-review" as const, model: "other/outer-worker", executable: "fixture-opencode" };
+    format: "direct-review" as const, model: "other/outer-worker", executable: "fixture-opencode", executionExporterId: "fixture" };
   const base = path.join(root, "build-pack/editorial", importId, key);
   await mkdir(base, { recursive: true });
   await writeFile(path.join(base, "before.json"), JSON.stringify(samplePageBlueprint));
@@ -71,15 +76,43 @@ test("fresh packet produces five independently replayable editorial passes and c
   await assert.rejects(editorialOperation({...packet, stage:"TRANSFORMING"}, "exchange", {pass:"independentReview",before:"before.json"}, native));
   await assert.rejects(call("assess", {format:"direct-review", artifact:"before.json"}), /ASSESSMENT_PACKET_BINDING/);
   assert.match((await call("check", {artifact:"before.json"}) as {stdout:string}).stdout, /score /);
+  const instructionFiles = ["SKILL.md", "references/principles.md", "references/signs-of-ai-writing.md", "references/dr-eleanor-hayes.md", "prompts/cleanse.txt"];
+  const independentInstructions = await Promise.all(instructionFiles.map(async name => {
+    const relative = `.agents/skills/eleanor-editorial/${name}`;
+    return { ...await evidenceReference(root, relative), text: await readFile(path.join(root, relative), "utf8") };
+  }));
+  const saveStructuredExport = async (contextId: string, exchangeId: string, pass: string, input: Record<string,string>, output: Record<string,string>, inputRefs: {path:string;sha256:string}[]) => {
+    await writeFile(path.join(exportMap, `${contextId}--${exchangeId}.json`), JSON.stringify({
+      schemaVersion: "StructuredExecutionExportV1", exporterId: "fixture", tool: {name:"fixture-neutral",version:"fixture-exporter 1"},
+      contextId, exchangeId, startedAt:"2026-11-26T00:00:00.000Z",completedAt:"2026-11-26T00:00:01.000Z",status:"succeeded",
+      providerId:"fixture-provider",modelId:"fixture-model",packetId:key,pass,input,output,instructions:independentInstructions,
+      inputRefs:[...inputRefs,...independentInstructions.map(({path,sha256})=>({path,sha256}))],outputRefs:[],
+    }));
+  };
   const passes = [];
   let before = "before.json";
   for (const name of ["purposeAndStructure","meaningAndEvidence","wordingAndRhythm","independentReview","finalFidelityReview"]) {
-    const rewrite = await call("exchange", {pass:name,before}) as Record<string,unknown>;
-    const judgment = await call("exchange", {pass:name,before,after:"after.json"}) as Record<string,unknown>;
+    let rewriteArgs: Record<string,unknown> = {pass:name,before};
+    let judgmentArgs: Record<string,unknown> = {pass:name,before,after:"after.json"};
+    if (name === "independentReview") {
+      const beforeArtifact = JSON.parse(await readFile(path.join(base,before),"utf8"));
+      const beforeRef = await evidenceReference(root,path.relative(root,path.join(base,before)));
+      const afterRef = await evidenceReference(root,path.relative(root,path.join(base,"after.json")));
+      const reviewOutput = artifactProseProjection(packet.format,revised);
+      const judgmentOutput = {judgment:JSON.stringify({pass:name,beforeFingerprint:fingerprintEditorialArtifact(beforeArtifact),afterFingerprint:fingerprintEditorialArtifact(revised),coveredPaths:paths,verdict:"pass",findings:[],semanticNotes:"The synthetic reviewer confirmed all protected fields.",meaningPreserved:true,protectedFieldsPreserved:true})};
+      await saveStructuredExport("independent-rewrite", "rewrite", name, editorialPassReviewInput(beforeArtifact), reviewOutput, [beforeRef]);
+      await saveStructuredExport("independent-judgment", "judgment", `${name}-judgment`, editorialJudgmentReviewInput(beforeArtifact,revised), judgmentOutput, [beforeRef,afterRef]);
+      rewriteArgs = {...rewriteArgs,capture:{exporterId:"fixture",contextId:"independent-rewrite",exchangeId:"rewrite"}};
+      judgmentArgs = {...judgmentArgs,capture:{exporterId:"fixture",contextId:"independent-judgment",exchangeId:"judgment"}};
+    }
+    const rewrite = await call("exchange", rewriteArgs) as Record<string,unknown>;
+    const judgment = await call("exchange", judgmentArgs) as Record<string,unknown>;
     passes.push({name, inputRef:rewrite.inputRef,outputRef:judgment.outputRef, instructionRefs:rewrite.instructionRefs,executionRef:rewrite.executionRef,judgmentRef:judgment.judgmentRef});
     before = "after.json";
   }
-  assert.equal(exports, 10);
+  assert.equal(exports, 8);
+  await assert.rejects(editorialOperation({...packet,research,stage:"TRANSFORMING"},"assess",
+    {artifact:"after.json",format:packet.format,capture:{exporterId:"fixture",contextId:"assessment",exchangeId:"transforming"}},native), /ASSESSMENT_CAPTURE_STAGE_REQUIRED/);
   const assessed = await editorialOperation({...packet, research},"assess",{artifact:"after.json",format:packet.format},native) as {path:string};
   const saved = JSON.parse(await readFile(path.join(root,assessed.path),"utf8"));
   assert.equal(saved.artifactFingerprint, assessment.artifactFingerprint);
