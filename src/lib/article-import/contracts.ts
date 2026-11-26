@@ -156,7 +156,7 @@ export const externalArticleImportSchema = z.object({
   schemaVersion: z.enum(["ExternalArticleImportV1", "ExternalArticleImportV2"]),
   workflowVersion: z.literal(2).optional(),
   requirementRevision: z.string().min(1).optional(),
-  evidenceRefs: z.object({ research: stateEvidenceRef.optional(), assessment: stateEvidenceRef.optional(), editorial: stateEvidenceRef.optional(), presentation: stateEvidenceRef.optional(), production: stateEvidenceRef.optional() }).strict().optional(),
+  evidenceRefs: z.object({ research: stateEvidenceRef.optional(), transformAssessment: stateEvidenceRef.optional(), assessment: stateEvidenceRef.optional(), editorial: stateEvidenceRef.optional(), presentation: stateEvidenceRef.optional(), production: stateEvidenceRef.optional() }).strict().optional(),
   terminalRef: stateEvidenceRef.optional(),
   sourceRef: stateEvidenceRef.optional(),
   artifactPath: z.string().min(1).optional(),

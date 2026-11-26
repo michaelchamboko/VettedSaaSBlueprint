@@ -11,7 +11,7 @@ export async function createImportPresentation(root: string, record: ExternalArt
   if (!workflow.ok) throw new Error(workflow.diagnostics.join("; "));
   const approval = record.contentApproval;
   if (!approval) throw new Error("CONTENT_APPROVAL_INVALID");
-  const resolved = await resolveContentApproval(root, approval, record.format, record.sourceFingerprint);
+  const resolved = await resolveContentApproval(root, approval, record.format, record.sourceFingerprint, undefined, record.transformation?.resolvedAffiliateUrl);
   if (!resolved.ok) throw new Error("CONTENT_APPROVAL_INVALID");
   const artifact = resolved.artifact;
   const renderedRoutes = validateImportArtifact(record.format, artifact);
@@ -40,7 +40,7 @@ export async function presentationInputFromVerifier(root: string, record: Extern
   if (!approval) throw new Error("CONTENT_APPROVAL_INVALID");
   if (!record.evidenceRefs?.presentation) throw new Error("WORKFLOW_EVIDENCE_REQUIRED:presentation");
   await validatePresentationEvidence(root, record.evidenceRefs.presentation, { ...record, artifactPath: approval.artifactPath });
-  const resolved = await resolveContentApproval(root, approval, record.format, record.sourceFingerprint);
+  const resolved = await resolveContentApproval(root, approval, record.format, record.sourceFingerprint, undefined, record.transformation?.resolvedAffiliateUrl);
   if (!resolved.ok) throw new Error("CONTENT_APPROVAL_INVALID");
   const artifact = resolved.artifact;
   const renderedRoutes = validateImportArtifact(record.format, artifact);

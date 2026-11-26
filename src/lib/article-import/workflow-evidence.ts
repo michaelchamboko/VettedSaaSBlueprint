@@ -8,6 +8,8 @@ import { CONTENT_FORMATS, WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirem
 import { evidenceRefSchema, frozenFileSchema, withTerminalEvidenceSnapshot, isEvidenceSnapshotActive, hashSchema, readEvidence, readEvidenceBytes, readVerifiedEvidenceBytes, verifyEvidenceRef, validateExecutionEvidence, proseProjectionDigest, sha256, type EvidenceRef, type ExecutionEvidence } from "./execution-evidence";
 import { renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
 import { candidatePreviewPath } from "./candidate-route";
+import { countVisibleArticleWords } from "../editorial/article-visible-word-count";
+import { approvedAffiliateUrl, assertLongFormAffiliateAssessment, assertLongFormAffiliateReview, LONG_FORM_AFFILIATE_INSTRUCTION, longFormAffiliateAssessmentSchema, longFormAffiliateReviewSchema } from "./long-form-affiliate";
 export { evidenceRefSchema, evidenceReference, readEvidence, readVerifiedEvidenceBytes, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
@@ -30,17 +32,17 @@ const formatSchema = z.enum(CONTENT_FORMATS);
 export const ruleResultSchema = z.object({ ruleId: nonempty, revision: z.literal(WORKFLOW_REVISION), status: z.enum(["pass", "fail", "not-applicable", "recommendation-not-adopted"]), rationale: nonempty, evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict();
 export const workflowEvidenceSchema = z.object({ ...common, schemaVersion: z.enum(["WorkflowEvidenceV1","WorkflowEvidenceV2"]), stage: z.enum(WORKFLOW_SEQUENCE), packetId: hashSchema, artifactRef: evidenceRefSchema, renderInputsRef: evidenceRefSchema, predecessorRefs: z.array(evidenceRefSchema).min(1), ruleResults: z.array(ruleResultSchema).min(1) }).strict();
 export const researchEvidenceSchema = z.object({ ...common, schemaVersion: z.literal("ResearchEvidenceV2"), sources: z.array(z.object({ id: nonempty, url: z.string().url(), retrievedAt: z.string().datetime({ offset: true }), snapshotRef: evidenceRefSchema }).strict()).min(1), claims: z.array(z.object({ id: nonempty, text: nonempty, sourceIds: z.array(nonempty).min(1), excerptLocations: z.array(z.object({ sourceId: nonempty, quote: nonempty }).strict()).min(1), limitations: z.array(nonempty), price: z.object({ amount: z.number().nonnegative(), currency: z.string().regex(/^[A-Z]{3}$/), period: nonempty, plan: nonempty, restrictions: z.array(nonempty) }).strict().optional() }).strict()).min(1), freshness: nonempty }).strict();
-export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
+export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.literal("ContentAssessmentV1"), format: formatSchema, artifactFingerprint: hashSchema, schemaRevision: nonempty, intent: z.object({ audience: nonempty, decision: nonempty, query: nonempty, pageType: nonempty }).strict(), longFormAffiliate: longFormAffiliateAssessmentSchema.optional(), researchRef: evidenceRefSchema, claimCoverage: z.array(z.object({ claimId: nonempty, artifactPaths: z.array(nonempty).min(1) }).strict()).min(1), ruleResults: z.array(ruleResultSchema).min(1), reviewerExecutionRef: evidenceRefSchema, findings: z.array(z.object({ id: nonempty, artifactPaths: z.array(nonempty).min(1), claimIds: z.array(nonempty), description: nonempty, disposition: z.enum(["resolved", "unresolved", "justified-exception"]), evidenceRefs: z.array(evidenceRefSchema).min(1) }).strict()) }).strict();
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview", "independentReview"] as const;
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
-export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
+export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), transformAssessment: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("quarantine"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), reasonCode: z.enum(["empty", "unusable", "unsupported-format"]), dispositionEvidenceRef: evidenceRefSchema }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
 export const diagnosisSchema = z.object({ ...common, schemaVersion: z.literal("DiagnosisV1"), stage: z.enum(WORKFLOW_SEQUENCE), failedSubmissionDigest: hashSchema, failureCode: nonempty, cause: nonempty, attemptedRecoveryRefs: z.array(evidenceRefSchema).min(1), remedyEvidenceRefs: z.array(evidenceRefSchema).min(1), replacementSubmissionDigest: hashSchema, consumedAt: z.string().datetime({ offset: true }).optional() }).strict();
-export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef }; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string; stage?: string; resumeStage?: string };
+export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef; transformAssessment?: EvidenceRef; assessment?: EvidenceRef }; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string; stage?: string; resumeStage?: string; affiliateUrl?: string | null; transformation?: { commercialMode?: string; resolvedAffiliateUrl?: string } };
 type Bound = { importId: string; sourceFingerprint: string; requirementRevision: string };
 function assertBinding(value: Bound, binding: EvidenceBinding): void {
   if (value.importId !== binding.importId || value.sourceFingerprint !== binding.sourceFingerprint || value.requirementRevision !== (binding.requirementRevision ?? WORKFLOW_REVISION)) throw new Error("EVIDENCE_BINDING_MISMATCH");
@@ -64,6 +66,14 @@ async function pinnedInstructions(root: string, execution: ExecutionEvidence, re
     const pin = await pinnedInput(root, execution, file);
     if (!execution.instructions.some((item) => item.path === pin.path && item.sha256 === pin.sha256 && sha256(item.text) === pin.sha256)) throw new Error(`EXECUTION_INSTRUCTION_REQUIRED:${file}`);
   }
+}
+async function longFormAffiliatePolicyRequired(root: string, binding: EvidenceBinding): Promise<string | undefined> {
+  const destination = approvedAffiliateUrl(binding);
+  if (!destination) return undefined;
+  const manifest = z.object({ files: z.array(evidenceRefSchema) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
+  const pinned = manifest.files.some((ref) => ref.path === LONG_FORM_AFFILIATE_INSTRUCTION);
+  if (!pinned && !isEvidenceSnapshotActive()) throw new Error("LONG_FORM_AFFILIATE_POLICY_PIN_REQUIRED");
+  return pinned ? destination : undefined;
 }
 type ReviewExecution = Extract<ExecutionEvidence, { kind: "opencode" | "structured" }>;
 function reviewExecution(execution: ExecutionEvidence): ReviewExecution {
@@ -107,6 +117,15 @@ export function editorialPassReviewInput(before: unknown): Record<string, string
 }
 export function editorialJudgmentReviewInput(before: unknown, after: unknown): Record<string, string> {
   return { beforeArtifact: JSON.stringify(before), afterArtifact: JSON.stringify(after) };
+}
+export async function longFormAffiliateJudgmentReviewInput(root: string, before: unknown, after: unknown, researchRef: EvidenceRef, assessmentRef: EvidenceRef, destination: string): Promise<Record<string, string>> {
+  const retainedResearch = researchEvidenceSchema.parse(await readEvidence(root, researchRef));
+  const research = await validateResearchEvidence(root, researchRef, { importId: retainedResearch.importId, sourceFingerprint: retainedResearch.sourceFingerprint, requirementRevision: retainedResearch.requirementRevision, format: "direct-review" });
+  const assessment = contentAssessmentSchema.parse(await readEvidence(root, assessmentRef));
+  if (!assessment.longFormAffiliate || assessment.longFormAffiliate.approvedAffiliateUrl !== destination) throw new Error("LONG_FORM_AFFILIATE_BRIEF_REQUIRED");
+  const researchInput = await contentAssessmentReviewInput(root, after, research, researchRef);
+  const count = countVisibleArticleWords("direct-review", after);
+  return { ...editorialJudgmentReviewInput(before, after), approvedAffiliateUrl: destination, acceptedBrief: JSON.stringify(assessment.longFormAffiliate.brief), visibleWordCount: String(count.wordCount), retainedResearch: researchInput.research, sourceSnapshots: researchInput.sourceSnapshots };
 }
 async function designInputFromManifest(root: string, artifact: unknown, renderInputsRef: EvidenceRef, rendering: z.infer<typeof renderingInputsSchema>, target: ReturnType<typeof importArtifactTarget>): Promise<Record<string, string>> {
   const rendererSources = [];
@@ -241,7 +260,19 @@ async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, bin
   const reviewInput = await contentAssessmentReviewInput(root, artifact, research, value.researchRef);
   const review = reviewExecution(execution);
   if (review.pass !== "content-assessment" || proseProjectionDigest(review.input) !== proseProjectionDigest(reviewInput) || !review.inputRefs.some((ref) => ref.path === value.researchRef.path && ref.sha256 === value.researchRef.sha256)) throw new Error("ASSESSMENT_EXECUTION_MISMATCH");
-  const assessed = { format: value.format, schemaRevision: value.schemaRevision, artifactFingerprint: value.artifactFingerprint, sourceFingerprint: value.sourceFingerprint, requirementRevision: value.requirementRevision, researchRef: value.researchRef, intent: value.intent, claimCoverage: value.claimCoverage, ruleResults: value.ruleResults, findings: value.findings };
+  const destination = await longFormAffiliatePolicyRequired(root, binding);
+  if (destination) {
+    if (!value.longFormAffiliate) throw new Error("LONG_FORM_AFFILIATE_ASSESSMENT_REQUIRED");
+    const count = countVisibleArticleWords("direct-review", artifact);
+    assertLongFormAffiliateAssessment(value.longFormAffiliate, { artifactFingerprint: value.artifactFingerprint, wordCount: count.wordCount, approvedAffiliateUrl: destination });
+    await pinnedInstructions(root, review, [LONG_FORM_AFFILIATE_INSTRUCTION]);
+    const acceptedRef = binding.evidenceRefs?.transformAssessment;
+    if (acceptedRef && (acceptedRef.path !== ref.path || acceptedRef.sha256 !== ref.sha256)) {
+      const accepted = contentAssessmentSchema.parse(await readEvidence(root, acceptedRef));
+      if (!accepted.longFormAffiliate || JSON.stringify(accepted.longFormAffiliate.brief) !== JSON.stringify(value.longFormAffiliate.brief) || accepted.longFormAffiliate.approvedAffiliateUrl !== value.longFormAffiliate.approvedAffiliateUrl) throw new Error("LONG_FORM_AFFILIATE_BRIEF_CHANGED");
+    }
+  }
+  const assessed = { format: value.format, schemaRevision: value.schemaRevision, artifactFingerprint: value.artifactFingerprint, sourceFingerprint: value.sourceFingerprint, requirementRevision: value.requirementRevision, researchRef: value.researchRef, intent: value.intent, ...(value.longFormAffiliate && { longFormAffiliate: value.longFormAffiliate }), claimCoverage: value.claimCoverage, ruleResults: value.ruleResults, findings: value.findings };
   if (review.output.assessment !== JSON.stringify(assessed)) throw new Error("ASSESSMENT_JUDGMENT_MISMATCH");
   // Structured evidence is the final reassessment and must originate inside REFINING.
   // Retained OpenCode evidence keeps the historical TRANSFORMING-or-REFINING policy.
@@ -273,6 +304,7 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
   const rewriteContexts = new Set<string>();
   const legacyRewriteSessions = new Set<string>();
   const reviewPolicy = value.passes[3]?.name;
+  const affiliateDestination = await longFormAffiliatePolicyRequired(root, binding);
   for (const [index, pass] of value.passes.entries()) {
     const expectedNames = index === 3 ? (historical ? ["rivalFamilyCleanse", "beamReview", "independentReview"] : ["beamReview", "independentReview"]) : [passes[index]];
     if (!expectedNames.includes(pass.name) || (previous && previous !== pass.inputRef.sha256)) throw new Error("EDITORIAL_PASS_ORDER");
@@ -282,7 +314,7 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
     const execution = reviewExecution(await validateExecutionEvidence(root, pass.executionRef));
     if (execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(editorialPassReviewInput(before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
     assertPacket(execution.packetId, binding, "REFINING");
-    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(["rivalFamilyCleanse", "beamReview", "independentReview"].includes(pass.name) ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
+    await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(affiliateDestination ? [LONG_FORM_AFFILIATE_INSTRUCTION] : []), ...(["rivalFamilyCleanse", "beamReview", "independentReview"].includes(pass.name) ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
     const family = execution.kind === "opencode" ? execution.family : undefined;
     if (index === 0 && reviewPolicy !== "independentReview") writerFamily = family;
     if (index === 3) reviewFamily = family;
@@ -301,13 +333,26 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
     }
     if (index === 3 && pass.name === "independentReview" && receipt.passes.independentReview !== true) throw new Error("EDITORIAL_PASS_POLICY_MISMATCH");
     for (const instruction of pass.instructionRefs) await verifyEvidenceRef(root, instruction);
-    const judgment = z.object({ pass: z.literal(pass.name), beforeFingerprint: z.literal(fingerprintEditorialArtifact(before)), afterFingerprint: z.literal(fingerprintEditorialArtifact(after)), coveredPaths: z.array(nonempty), verdict: z.literal("pass"), findings: z.array(z.object({ description: nonempty, disposition: z.literal("resolved") }).strict()), semanticNotes: nonempty, meaningPreserved: z.literal(true), protectedFieldsPreserved: z.literal(true), executionRef: evidenceRefSchema }).strict().parse(await readEvidence(root, pass.judgmentRef));
+    const judgment = z.object({ pass: z.literal(pass.name), beforeFingerprint: z.literal(fingerprintEditorialArtifact(before)), afterFingerprint: z.literal(fingerprintEditorialArtifact(after)), coveredPaths: z.array(nonempty), verdict: z.enum(["pass", "fail", "insufficient-evidence"]), findings: z.array(z.object({ description: nonempty, disposition: z.enum(["resolved", "unresolved"]) }).strict()), semanticNotes: nonempty, meaningPreserved: z.boolean(), protectedFieldsPreserved: z.boolean(), longFormAffiliateReview: longFormAffiliateReviewSchema.optional(), executionRef: evidenceRefSchema }).strict().parse(await readEvidence(root, pass.judgmentRef));
+    if (judgment.verdict !== "pass" || !judgment.meaningPreserved || !judgment.protectedFieldsPreserved || judgment.findings.some((finding) => finding.disposition === "unresolved")) throw new Error("EDITORIAL_JUDGMENT_FAILED");
     if (JSON.stringify(judgment.coveredPaths) !== JSON.stringify(paths)) throw new Error("EDITORIAL_JUDGMENT_COVERAGE");
     const judgmentExecution = reviewExecution(await validateExecutionEvidence(root, judgment.executionRef));
     const judgmentText = { ...judgment, executionRef: undefined };
-    if (judgmentExecution.pass !== `${pass.name}-judgment` || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(editorialJudgmentReviewInput(before, after)) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
+    let expectedJudgmentInput = editorialJudgmentReviewInput(before, after);
+    if (affiliateDestination && index === 3) {
+      const researchRef = binding.evidenceRefs?.research, assessmentRef = binding.evidenceRefs?.transformAssessment;
+      if (!researchRef || !assessmentRef) throw new Error("LONG_FORM_AFFILIATE_REVIEW_INPUT_REQUIRED");
+      expectedJudgmentInput = await longFormAffiliateJudgmentReviewInput(root, before, after, researchRef, assessmentRef, affiliateDestination);
+      if (![researchRef, assessmentRef].every((expected) => judgmentExecution.inputRefs.some((input) => input.path === expected.path && input.sha256 === expected.sha256))) throw new Error("LONG_FORM_AFFILIATE_REVIEW_INPUT_REQUIRED");
+    }
+    if (judgmentExecution.pass !== `${pass.name}-judgment` || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(expectedJudgmentInput) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
     assertPacket(judgmentExecution.packetId, binding, "REFINING");
-    await pinnedInstructions(root, judgmentExecution, requiredEditorialInstructions);
+    await pinnedInstructions(root, judgmentExecution, [...requiredEditorialInstructions, ...(affiliateDestination ? [LONG_FORM_AFFILIATE_INSTRUCTION] : [])]);
+    if (affiliateDestination && index === 3) {
+      if (pass.name !== "independentReview" || !judgment.longFormAffiliateReview) throw new Error("LONG_FORM_AFFILIATE_INDEPENDENT_REVIEW_REQUIRED");
+      const count = countVisibleArticleWords("direct-review", after);
+      assertLongFormAffiliateReview(judgment.longFormAffiliateReview, after, count.visibleProsePaths, { artifactFingerprint: fingerprintEditorialArtifact(after), wordCount: count.wordCount, approvedAffiliateUrl: affiliateDestination });
+    }
     if (index === 3 && pass.name === "independentReview" && rewriteContexts.has(executionContext(judgmentExecution))) throw new Error("EDITORIAL_INDEPENDENT_REVIEW_CONTEXT_REUSED");
     if (index < 3) {
       rewriteContexts.add(executionContext(execution));
@@ -315,6 +360,7 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
       if (execution.kind === "opencode") legacyRewriteSessions.add(execution.sessionId);
     }
     previous = pass.outputRef.sha256;
+    if (affiliateDestination && index === 4 && fingerprintEditorialArtifact(before) !== fingerprintEditorialArtifact(after)) throw new Error("LONG_FORM_AFFILIATE_REVIEW_STALE");
     if (index === 4 && fingerprintEditorialArtifact(after) !== fingerprintEditorialArtifact(artifact)) throw new Error("EDITORIAL_FINAL_ARTIFACT_MISMATCH");
   }
   const checker = await validateExecutionEvidence(root, value.checkerExecutionRef);

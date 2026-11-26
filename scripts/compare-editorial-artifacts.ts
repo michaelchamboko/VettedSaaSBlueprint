@@ -6,7 +6,7 @@ import { compareEditorialArtifacts, createEditorialEvidence, editorialProse, EDI
 import { editorialExecutionSchema, evidenceReference, storeEvidence, validateEditorialExecution } from "../src/lib/article-import/workflow-evidence";
 
 async function main() {
-  const [format, beforeFile, afterFile, notesFile, receiptFile, executionManifestFile, generationArgument] = process.argv.slice(2);
+  const [format, beforeFile, afterFile, notesFile, receiptFile, executionManifestFile, generationArgument, approvedAffiliateUrl, researchRefArgument, assessmentRefArgument] = process.argv.slice(2);
   if (!format || !beforeFile || !afterFile || !notesFile || !receiptFile) {
     throw new Error("Usage: tsx scripts/compare-editorial-artifacts.ts <decision|landing|blog|visibility> <before.json> <after.json> <notes.json> <build-pack/editorial/receipt.json>");
   }
@@ -44,7 +44,10 @@ async function main() {
     });
     const companion = editorialExecutionSchema.parse({ ...manifest, editorialEvidenceRef, checkerExecutionRef });
     executionRef = await storeEvidence(process.cwd(), manifest.importId, companion);
-    await validateEditorialExecution(process.cwd(), executionRef, { importId: companion.importId, sourceFingerprint: companion.sourceFingerprint, format: companion.format, artifactPath: afterFile, researchGeneration, requirementRevision: companion.requirementRevision });
+    const research = researchRefArgument ? JSON.parse(researchRefArgument) : undefined;
+    const transformAssessment = assessmentRefArgument ? JSON.parse(assessmentRefArgument) : undefined;
+    await validateEditorialExecution(process.cwd(), executionRef, { importId: companion.importId, sourceFingerprint: companion.sourceFingerprint, format: companion.format, artifactPath: afterFile, researchGeneration, requirementRevision: companion.requirementRevision,
+      affiliateUrl: approvedAffiliateUrl || undefined, evidenceRefs: { ...(research && { research }), ...(transformAssessment && { transformAssessment }) } });
   }
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, JSON.stringify(evidence, null, 2) + "\n", { flag: "wx" });

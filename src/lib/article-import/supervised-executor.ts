@@ -172,9 +172,13 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     const work = result.work;
     switch (work.stage) {
       case "TRANSFORMING": {
+        if (record.format === "direct-review" && record.transformation?.commercialMode === "approved" && record.transformation.resolvedAffiliateUrl && work.format !== record.format) {
+          throw new Error("LONG_FORM_AFFILIATE_FORMAT_MISMATCH");
+        }
         const transformingRecord = { ...record, format: work.format, artifactPath: work.artifactPath };
         return withTransformingArtifact(root, transformingRecord, (artifact) => assertArtifactCommercialSafety(record, work.format, artifact), async () => {
-          record = { ...transformingRecord, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath) } };
+          const assessment = await evidenceReference(root, work.assessmentPath);
+          record = { ...transformingRecord, evidenceRefs: { ...record.evidenceRefs, transformAssessment: assessment, assessment } };
           return advanceImport(root, record, `${result.summary} Artifact: ${work.artifactPath}`);
         });
       }

@@ -206,7 +206,7 @@ export async function validateApprovedArticlePreview(
   }
 
   // 18. Read-only content approval/evidence validation using the already loaded artifact
-  const approvalValid = await loaded.matches(contentApproval, "direct-review", record.sourceFingerprint as string);
+  const approvalValid = await loaded.matches(contentApproval, "direct-review", record.sourceFingerprint as string, resolvedUrl);
   if (!approvalValid) {
     return { ok: false, error: "CONTENT_APPROVAL_EVIDENCE_INVALID" };
   }
