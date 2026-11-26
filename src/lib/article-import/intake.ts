@@ -13,28 +13,9 @@ const blockerSchema = z.object({ scope: z.enum(["article", "shared"]), code: z.s
 const entrySchema = z.object({ relativePath: z.string().min(1), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), capturedPath: z.string().min(1).optional(), status: z.enum(["PENDING", "SKIPPED", "BLOCKED", "PROCESSING", "LIVE", "QUARANTINED"]), reason: z.string().optional(), importId: z.string().regex(/^article-[0-9a-f-]{36}$/).optional(), blocker: blockerSchema.optional() }).strict();
 const intakeSchema = z.object({ schemaVersion: z.enum(["ArticleIntakeRunV1", "ArticleIntakeRunV2"]), revision: z.number().int().nonnegative().optional(), history: z.array(z.object({ relativePath: z.string(), previousStatus: entrySchema.shape.status, at: z.string().datetime({ offset: true }) }).strict()).optional(), runId: z.string().regex(/^intake-[0-9a-f-]{36}$/), createdAt: z.string().datetime({ offset: true }), sourceDirectory: z.string(), entries: z.array(entrySchema), activeEntry: z.string().optional(), outcome: z.enum(["OPEN", "PROCESSING_PASS_FINISHED", "PUBLISHED_WITH_EXCEPTIONS", "ALL_PUBLISHED"]), blocker: blockerSchema.extend({ scope: z.literal("shared") }).optional() }).strict();
 
-export type IntakeEntry = {
-  relativePath: string;
-  sourceFingerprint?: string;
-  capturedPath?: string;
-  status: "PENDING" | "SKIPPED" | "BLOCKED" | "PROCESSING" | "LIVE" | "QUARANTINED";
-  reason?: string;
-  importId?: string;
-  blocker?: { scope: "article" | "shared"; code: string; stage?: string; message: string };
-};
-
-export type IntakeRun = {
-  schemaVersion: "ArticleIntakeRunV1" | "ArticleIntakeRunV2";
-  revision?: number;
-  history?: { relativePath: string; previousStatus: IntakeEntry["status"]; at: string }[];
-  runId: string;
-  createdAt: string;
-  sourceDirectory: string;
-  entries: IntakeEntry[];
-  activeEntry?: string;
-  outcome: "OPEN" | "PROCESSING_PASS_FINISHED" | "PUBLISHED_WITH_EXCEPTIONS" | "ALL_PUBLISHED";
-  blocker?: { scope: "shared"; code: string; stage?: string; message: string };
-};
+export type IntakeEntry = z.infer<typeof entrySchema>;
+export type IntakeRun = z.infer<typeof intakeSchema>;
+export type IntakeClaim = { run: IntakeRun; entry?: IntakeEntry };
 
 function runPath(root: string, runId: string): string { return path.join(root, INTAKE_ROOT, runId, "run.json"); }
 
@@ -47,7 +28,7 @@ async function saveRun(root: string, run: IntakeRun, lease: WorkflowLease): Prom
 
 export async function loadIntakeRun(root: string, runId: string): Promise<IntakeRun> {
   if (!/^intake-[0-9a-f-]{36}$/.test(runId)) throw new Error("INVALID_INTAKE_ID");
-  const run = intakeSchema.parse(JSON.parse(await readFile(runPath(root, runId), "utf8"))) as IntakeRun;
+  const run = intakeSchema.parse(JSON.parse(await readFile(runPath(root, runId), "utf8")));
   if (run.runId !== runId || run.schemaVersion === "ArticleIntakeRunV2" && !Number.isSafeInteger(run.revision)) throw new Error("INVALID_INTAKE_STATE");
   return run;
 }
@@ -61,7 +42,6 @@ async function mutateRun(root: string, runId: string, change: (run: IntakeRun) =
     const updated = await change(current);
     if (updated === current) return current;
     await lease.assertOwned();
-    if (updated === current) return current;
     updated.revision = (current.revision ?? 0) + 1;
     await saveRun(root, updated, lease); return updated;
   } finally { await lease.release(); }
@@ -170,16 +150,19 @@ export async function clearSharedIntakeBlocker(root: string, run: IntakeRun, rel
   });
 }
 
-export async function claimNextIntakeEntry(root: string, runId: string): Promise<IntakeRun> {
-  return mutateRun(root, runId, async (run) => {
+export async function claimNextIntakeEntry(root: string, runId: string): Promise<IntakeClaim> {
+  let selected: IntakeEntry | undefined;
+  const run = await mutateRun(root, runId, async (run) => {
     if (run.entries.filter((entry) => entry.status === "PROCESSING").length > 1) throw new Error("INTAKE_RECONCILIATION_CONFLICT");
     for (const entry of run.entries) if (["LIVE", "QUARANTINED"].includes(entry.status) && !await terminalProof(root, entry)) throw new Error(`INTAKE_TERMINAL_PROOF_INVALID:${entry.relativePath}`);
     const entry = nextIntakeEntry(run);
     if (!entry) return run;
+    selected = entry;
     if (entry.status === "PROCESSING") return run;
     entry.status = "PROCESSING";
     return { ...run, activeEntry: entry.relativePath };
   });
+  return { run, entry: selected };
 }
 
 export async function upgradeIntakeRun(root: string, runId: string): Promise<IntakeRun> {

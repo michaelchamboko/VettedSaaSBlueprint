@@ -92,8 +92,7 @@ async function runIntakeSteps(
 ): Promise<IntakeRun & { dispatchOutcome?: "STEP_LIMIT" }> {
   const maxSteps = dispatchLimit(options);
   for (let step = 0; step < maxSteps; step += 1) {
-    const run = await claimNextIntakeEntry(repositoryRoot, runId);
-    const entry = nextIntakeEntry(run);
+    const { run, entry } = await claimNextIntakeEntry(repositoryRoot, runId);
     if (!entry) return run;
     if (!entry.importId) {
       if (!entry.capturedPath || !entry.sourceFingerprint) throw new Error("INTAKE_SOURCE_MISSING");
