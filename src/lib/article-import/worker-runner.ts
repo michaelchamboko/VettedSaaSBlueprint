@@ -24,16 +24,20 @@ export type WorkerRunner = (input: {
   timeoutMs: number;
   ownershipFile: string;
   checkpoint: string;
+  resultFormat?: "opencode-jsonl" | "json";
 }) => Promise<WorkerProcessResult>;
 
 export async function prepareWorkerInvocation(root: string, workPath: string, packet: Record<string, unknown>,
-  config: { executable: string; model: string; agent?: string; timeoutMs?: number }, leaseToken: string) {
+  config: WorkerAdapterConfig & { executable: string }, leaseToken: string) {
   const importId = String(packet.importId);
   const key = String(packet.idempotencyKey);
   if (!/^article-[a-f0-9-]{36}$/.test(importId) || !/^[a-f0-9]{64}$/.test(key)) throw new Error("WORKER_PACKET_INVALID");
   const canonical = (await realpath(root)).replaceAll("\\", "/");
   if (/[?*]/.test(canonical)) throw new Error("WORKER_ROOT_UNSUPPORTED");
   if (config.timeoutMs !== undefined && (!Number.isSafeInteger(config.timeoutMs) || config.timeoutMs < 1 || config.timeoutMs > 2147483647)) throw new Error("INVALID_WORKER_TIMEOUT");
+  const kind = config.kind ?? "opencode";
+  if (kind === "command" && packet.stage !== "REFINING") throw new Error("CAPABILITY_UNAVAILABLE: alternate workers are restricted to REFINING");
+  if (kind === "command" && (!config.args?.length || !config.args.includes("{packetPath}"))) throw new Error("INVALID_WORKER_CONFIG: alternate worker argv must include {packetPath}");
   const agent = config.agent || "article-worker";
   const directories = [`build-pack/article-import/${importId}/${key}`, `build-pack/editorial/${importId}/${key}`];
   const writable = directories.map(dir => dir + "/*");
@@ -73,17 +77,23 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
     await writeFile(descriptor, JSON.stringify({ root: canonical, importId, key, format: record.format,
       sourceFingerprint: packet.sourceFingerprint, requirementRevision: packet.requirementRevision,
       affiliateUrl: record.transformation?.resolvedAffiliateUrl, artifactPath: record.contentApproval?.artifactPath, approvedFingerprint: record.contentApproval?.artifactFingerprint, rendering: (packet.renderingInputs as {reference?: unknown} | undefined)?.reference,
-      executable: config.executable, model: config.model, research: record.evidenceRefs?.research, researchGeneration: researchRecoveryGeneration(record), stage: packet.stage }), { flag: "wx" });
+      executable: config.executable, model: config.model ?? "", executionExporterId: config.executionExporterId,
+      independentReviewModel: config.independentReviewModel, research: record.evidenceRefs?.research,
+      researchGeneration: researchRecoveryGeneration(record), stage: packet.stage }), { flag: "wx" });
     mcp = { servers: { editorial: { type: "local", command: [process.execPath,
       require.resolve("tsx/cli"), path.join(__dirname, "worker-editorial.ts"), descriptor],
       cwd: canonical, codemode: false, pool: false, timeout: { execution: 180000 } } } };
   }
-  await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition }, mcp }), { flag: "wx" });
+  if (kind === "opencode") await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition }, mcp }), { flag: "wx" });
   const proposalInstructions = (packet.stage === "REFINING" ? publicationProposals(importId, key, record.format) : [])
     .map(({ file, proposalPath }) => `For ${file}, place a one-article catalogue document in ${proposalPath}. The controller merges the matching entry.`).join(" ");
   const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} ${editorial ? "Use editorial_assess on the final artifact. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : validating ? "Use editorial_present for each required design, detector, desktop, mobile and reduced-motion rule, and owner-verifier for the validation receipt. Collect browser observations before critique, audit and polish and supply the three returned receipt references under observations. Return WorkflowEvidenceV2 bound to the packet rendering reference, approved artifact, editorial and assessment predecessors. Use only actual successful executions." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory and run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
-  return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
-    "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? (editorial || validating ? 1800000 : 300000),
+  const packetPath = path.resolve(root, workPath);
+  const args = kind === "command"
+    ? config.args!.map(arg => arg === "{packetPath}" ? packetPath : arg)
+    : ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model ?? "", "--file", packetPath, prompt];
+  return { executable: config.executable, args, cwd, resultFormat: kind === "command" ? "json" as const : "opencode-jsonl" as const,
+    timeoutMs: config.timeoutMs ?? (editorial || validating ? 1800000 : 300000),
     checkpoint: path.resolve(root, workPath + ".launch"),
     ownershipFile: workerOwnershipFile(root, importId, leaseToken) };
 }
@@ -165,9 +175,13 @@ export function extractJsonObject(text: string): unknown {
 }
 
 export type WorkerAdapterConfig = {
+  kind?: "opencode" | "command";
   executable?: string;
   model?: string;
   agent?: string;
+  args?: string[];
+  executionExporterId?: string;
+  independentReviewModel?: string;
   timeoutMs?: number;
 };
 
@@ -179,12 +193,30 @@ export type WorkerOptions = {
   workerModel?: string;
   worker?: WorkerAdapterConfig;
 };
-function workerConfig(options?: WorkerOptions): Required<Pick<WorkerAdapterConfig, "executable" | "model">> & WorkerAdapterConfig {
+function configuredCommandArgs(): string[] | undefined {
+  const raw = process.env.ARTICLE_REFINING_WORKER_ARGV;
+  if (!raw) return undefined;
+  try {
+    const value = JSON.parse(raw);
+    if (!Array.isArray(value) || !value.every(arg => typeof arg === "string")) throw new Error();
+    return value;
+  } catch {
+    throw new Error("INVALID_WORKER_CONFIG: ARTICLE_REFINING_WORKER_ARGV must be a JSON string array");
+  }
+}
+
+function workerConfig(stage: unknown, options?: WorkerOptions): WorkerAdapterConfig & { executable: string } {
   const fromWorker = options?.worker ?? {};
+  const alternateExecutable = stage === "REFINING" ? process.env.ARTICLE_REFINING_WORKER_EXECUTABLE : undefined;
+  const kind = fromWorker.kind ?? (alternateExecutable ? "command" : "opencode");
   return {
-    executable: options?.workerExecutable ?? fromWorker.executable ?? process.env.OPENCODE_EXECUTABLE ?? "opencode",
+    kind,
+    executable: options?.workerExecutable ?? fromWorker.executable ?? (kind === "command" ? alternateExecutable : process.env.OPENCODE_EXECUTABLE) ?? "opencode",
     model: options?.workerModel ?? fromWorker.model ?? process.env.OPENCODE_MODEL ?? "",
     agent: options?.workerAgent ?? fromWorker.agent ?? process.env.OPENCODE_AGENT ?? "article-worker",
+    args: fromWorker.args ?? (kind === "command" ? configuredCommandArgs() : undefined),
+    executionExporterId: fromWorker.executionExporterId ?? (stage === "REFINING" ? process.env.ARTICLE_REFINING_EXECUTION_EXPORTER_ID : undefined),
+    independentReviewModel: fromWorker.independentReviewModel ?? (stage === "REFINING" ? process.env.ARTICLE_REFINING_REVIEW_MODEL : undefined),
     timeoutMs: options?.workerTimeoutMs ?? fromWorker.timeoutMs,
   };
 }
@@ -200,12 +232,12 @@ export async function invokeWorker(
 ): Promise<void> {
   const absoluteResultPath = path.resolve(root, resultPath);
   if (await fileExists(absoluteResultPath)) return;
-  const config = workerConfig(options);
+  const config = workerConfig(packet.stage, options);
   const checkpoint = path.resolve(root, workPath + ".launch");
   const previous = await launchOwner(checkpoint);
   const record = packet.record as ExternalArticleImportV1;
   const handled = previous && record.stageReceipts.some(receipt => receipt.message.endsWith("[worker " + previous + "]"));
-  if ((!previous || handled) && !config.model.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
+  if ((!previous || handled) && config.kind !== "command" && !config.model?.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
   const runner = options?.workerRunner ?? defaultWorkerRunner;
   const invocation = await prepareWorkerInvocation(root, workPath, packet, config, leaseToken);
   await assertLease();
@@ -218,7 +250,7 @@ export async function invokeWorker(
   try {
     if (processResult.timedOut) throw new Error("CAPABILITY_UNAVAILABLE: worker invocation timed out");
     if (processResult.exitCode !== 0) throw new Error(`CAPABILITY_UNAVAILABLE: worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
-    parsed = decodeBoundWorkerResult(processResult.stdout, packet);
+    parsed = decodeBoundWorkerResult(processResult.stdout, packet, invocation.resultFormat);
   } catch (error) {
     // A restart replays the failure until the engine has durably recorded this owner.
     const owner = await launchOwner(invocation.checkpoint);
@@ -230,10 +262,10 @@ export async function invokeWorker(
   await acknowledgeInvocation(invocation.checkpoint);
 }
 
-function decodeBoundWorkerResult(stdout: string, packet: Record<string, unknown>): unknown {
+function decodeBoundWorkerResult(stdout: string, packet: Record<string, unknown>, resultFormat: "opencode-jsonl" | "json" = "opencode-jsonl"): unknown {
   let parsed: unknown;
   try {
-    parsed = extractJsonObject(stdout);
+    parsed = resultFormat === "json" ? JSON.parse(stdout) : extractJsonObject(stdout);
   } catch {
     throw new Error("INVALID_STAGE_RESULT: worker did not return valid JSON");
   }
