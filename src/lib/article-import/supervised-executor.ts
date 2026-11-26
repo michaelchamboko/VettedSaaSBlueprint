@@ -4,10 +4,10 @@ import { z } from "zod";
 import { advanceImport, approveImportContent, loadImport, recordImportPresentation, verifyImportRelease, writeJsonAtomically, type ImportStageExecutor } from "./engine";
 import { importFormatSchema, type ExternalArticleImportV1 } from "./contracts";
 import { assertIgnoredImportStatePath } from "./automation-state";
-import { validateImportArtifact, importArtifactTarget } from "./format-validation";
+import { importArtifactTarget } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
 import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
-import { evidenceReference, validateResearchEvidenceForRegistry } from "./workflow-evidence";
+import { evidenceReference, validateResearchEvidenceForRegistry, withTransformingArtifact } from "./workflow-evidence";
 import { instructionsForStage, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
 import { applyPublicationProposals, publicationProposals } from "./worker-publication";
 import { captureRenderingInputs, requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
@@ -172,11 +172,11 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     const work = result.work;
     switch (work.stage) {
       case "TRANSFORMING": {
-        const artifact = await readRepositoryJson(root, work.artifactPath);
-        validateImportArtifact(work.format, artifact);
-        assertArtifactCommercialSafety(record, work.format, artifact);
-        record = { ...record, format: work.format, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath) } };
-        return advanceImport(root, record, `${result.summary} Artifact: ${work.artifactPath}`);
+        const transformingRecord = { ...record, format: work.format, artifactPath: work.artifactPath };
+        return withTransformingArtifact(root, transformingRecord, (artifact) => assertArtifactCommercialSafety(record, work.format, artifact), async () => {
+          record = { ...transformingRecord, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath) } };
+          return advanceImport(root, record, `${result.summary} Artifact: ${work.artifactPath}`);
+        });
       }
       case "REFINING":
         record = { ...record, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath), editorial: await evidenceReference(root, work.editorialExecutionPath) } };

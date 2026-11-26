@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { importPacketId, type ResearchGenerationBinding } from "./packet-binding";
 import path from "node:path";
 import { canReuseEditorialEvidence, compareEditorialArtifacts, editorialEvidenceSchema, editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../editorial/refinement";
@@ -145,6 +146,31 @@ async function artifactFor(root: string, binding: EvidenceBinding): Promise<unkn
   validateImportArtifact(formatSchema.parse(binding.format), value);
   return value;
 }
+type TransformingArtifactContext = { root: string; importId: string; sourceFingerprint: string; artifactPath: string; format: string; artifact: unknown };
+const transformingArtifactContext = new AsyncLocalStorage<TransformingArtifactContext>();
+export async function withTransformingArtifact<T>(
+  root: string,
+  binding: EvidenceBinding & { stage: string },
+  check: (artifact: unknown) => void,
+  operation: () => Promise<T>,
+): Promise<T> {
+  if (binding.stage !== "TRANSFORMING" || !binding.artifactPath) throw new Error("TRANSFORMING_ARTIFACT_CONTEXT_INVALID");
+  const artifact = await artifactFor(root, binding);
+  check(artifact);
+  const scoped = { root, importId: binding.importId, sourceFingerprint: binding.sourceFingerprint, artifactPath: binding.artifactPath, format: binding.format, artifact };
+  return transformingArtifactContext.run(scoped, operation);
+}
+function scopedTransformingArtifact(root: string, record: WorkflowEvidenceRecord, binding: EvidenceBinding, through: string, mode: string): unknown | undefined {
+  const scoped = transformingArtifactContext.getStore();
+  if (!scoped || mode !== "current-transition" || record.stage !== "TRANSFORMING" || through !== "REFINING") return undefined;
+  const matchesBinding = scoped.root === root
+    && scoped.importId === binding.importId
+    && scoped.sourceFingerprint === binding.sourceFingerprint
+    && scoped.artifactPath === binding.artifactPath
+    && scoped.format === binding.format;
+  if (!matchesBinding) throw new Error("TRANSFORMING_ARTIFACT_CONTEXT_MISMATCH");
+  return scoped.artifact;
+}
 export async function validateResearchEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
   return (await validateResearchEvidenceForRegistry(root, ref, binding)).evidence;
 }
@@ -168,10 +194,10 @@ export async function validateResearchEvidenceForRegistry(root: string, ref: Evi
   }
   return { evidence: value, snapshotBytes };
 }
-async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, binding: EvidenceBinding, prevalidatedResearch?: { ref: EvidenceRef; value: z.infer<typeof researchEvidenceSchema> }) {
+async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, binding: EvidenceBinding, prevalidatedResearch?: { ref: EvidenceRef; value: z.infer<typeof researchEvidenceSchema> }, artifactSnapshot?: unknown) {
   const value = contentAssessmentSchema.parse(await readEvidence(root, ref));
   assertBinding(value, binding);
-  const artifact = await artifactFor(root, binding);
+  const artifact = artifactSnapshot === undefined ? await artifactFor(root, binding) : artifactSnapshot;
   if (value.format !== binding.format || value.artifactFingerprint !== fingerprintEditorialArtifact(artifact) || value.schemaRevision !== revisions[value.format]) throw new Error("ASSESSMENT_ARTIFACT_MISMATCH");
   const currentResearch = binding.evidenceRefs?.research;
   if (currentResearch && (value.researchRef.path !== currentResearch.path || value.researchRef.sha256 !== currentResearch.sha256)) throw new Error("ASSESSMENT_RESEARCH_MISMATCH");
@@ -188,12 +214,14 @@ async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, bin
     if (!result || result.status === "fail" || result.status === "not-applicable" || (requirement.strength === "required" && result.status !== "pass")) throw new Error(`ASSESSMENT_RULE_FAILED:${requirement.id}`);
     for (const evidence of result.evidenceRefs) await verifyEvidenceRef(root, evidence);
   }
+  const researchClaimIds = new Set(research.claims.map((claim) => claim.id));
   for (const coverage of value.claimCoverage) {
-    if (!research.claims.some((claim) => claim.id === coverage.claimId) || coverage.artifactPaths.some((p) => typeof atPath(artifact, p) !== "string")) throw new Error("ASSESSMENT_CLAIM_MISMATCH");
+    if (!researchClaimIds.has(coverage.claimId) || coverage.artifactPaths.some((p) => typeof atPath(artifact, p) !== "string")) throw new Error("ASSESSMENT_CLAIM_MISMATCH");
   }
   for (const finding of value.findings) {
     if (finding.disposition === "unresolved") throw new Error("ASSESSMENT_UNRESOLVED_FINDING");
     if (finding.artifactPaths.some((p) => atPath(artifact, p) === undefined)) throw new Error("ASSESSMENT_SCOPE_MISMATCH");
+    if (finding.claimIds.some((claimId) => !researchClaimIds.has(claimId))) throw new Error("ASSESSMENT_CLAIM_MISMATCH");
     for (const evidence of finding.evidenceRefs) await verifyEvidenceRef(root, evidence);
   }
   const execution = await validateExecutionEvidence(root, value.reviewerExecutionRef);
@@ -296,7 +324,7 @@ export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, c
       prevalidatedResearch = { ref, value };
       return value;
     });
-    if (rank >= 3) await need("assessment", "TRANSFORMING", (ref) => validateContentAssessmentImpl(context.root, ref, binding, prevalidatedResearch));
+    if (rank >= 3) await need("assessment", "TRANSFORMING", (ref) => validateContentAssessmentImpl(context.root, ref, binding, prevalidatedResearch, scopedTransformingArtifact(context.root, record, binding, through, mode)));
     if (rank >= 4) await need("editorial", "REFINING", (ref) => validateEditorialExecution(context.root, ref, binding));
     if (rank >= 5) await need("presentation", "VALIDATING", async (ref) => {
       const presentation = await validatePresentationEvidence(context.root, ref, binding, record.presentation);
