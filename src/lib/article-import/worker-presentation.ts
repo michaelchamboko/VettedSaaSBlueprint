@@ -18,6 +18,9 @@ import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articl
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
 const observedReviewRules = ["critique", "audit", "polish", "visual-quality"] as const;
 const unobservedRules = ["hero-image", "design-read", "context", "shape", "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"] as const;
+export function shouldCaptureOffscreenArticleMedia(format: Packet["format"], viewportWidth: number): boolean {
+  return ["blog", "decision-set"].includes(format) && viewportWidth <= 767;
+}
 export const presentationTool = z.discriminatedUnion("rule", [
   z.object({ rule: z.enum(observedReviewRules), observations:runtimeRefSchema }).strict(),
   z.object({ rule: z.enum(unobservedRules), observations:z.never().optional() }).strict(),
@@ -161,7 +164,7 @@ export async function presentationOperation(packet: Packet, {rule, observations}
       if (!viewport.reducedMotion) await resumeArticleVisualIntermediate(page);
       await page.waitForTimeout(1100);
       const settled = await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:false,animations:"allow"}),"png");
-      const mediaBytes = packet.format === "decision-set" && viewport.width <= 767 ? await captureOffscreenArticleMedia(page) : null;
+      const mediaBytes = shouldCaptureOffscreenArticleMedia(packet.format, viewport.width) ? await captureOffscreenArticleMedia(page) : null;
       const media = mediaBytes ? await storeEvidenceBytes(root,importId,mediaBytes,"png") : undefined;
       screenshots.push(settled);
       visualRuntimeRefs.push(await storeEvidence(root,importId,await captureArticleVisualRuntime(page,{format:packet.format,route,viewport,screenshots:{early,settled,...(media ? {media} : {})}})));

@@ -92,7 +92,7 @@ export function validateArticleVisualRuntime(value: unknown): ArticleVisualRunti
   if (runtime.screenshots.early.sha256.length !== 64 || runtime.screenshots.settled.sha256.length !== 64 || layout.horizontalOverflow || layout.scrollWidth > viewport.width + 1) throw new Error("ARTICLE_VISUAL_LAYOUT_INVALID");
   if (rects.primaryHeading.width <= 0 || rects.primaryHeading.height <= 0 || rects.primaryHeading.y >= viewport.height || rects.main.width <= 0) throw new Error("ARTICLE_VISUAL_PRIMARY_CONTENT_NOT_VISIBLE");
   if (rects.primaryMedia.width <= 0 || rects.primaryMedia.height <= 0) throw new Error("ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT");
-  const retainedBelowFoldMedia = runtime.format === "decision-set" && viewport.width <= 767 && !runtime.assertions.mediaVisible &&
+  const retainedBelowFoldMedia = ["blog", "decision-set"].includes(runtime.format) && viewport.width <= 767 && !runtime.assertions.mediaVisible &&
     rects.primaryMedia.width > 0 && rects.primaryMedia.height > 0 && rects.primaryMedia.y >= viewport.height && Boolean(runtime.screenshots.media);
   if (!runtime.assertions.mediaVisible && !retainedBelowFoldMedia) throw new Error("ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT");
   if (layout.visibleTextCharacters < 40) throw new Error("ARTICLE_VISUAL_CONTENT_INSUFFICIENT");
