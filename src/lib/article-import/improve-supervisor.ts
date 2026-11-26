@@ -116,7 +116,13 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
     if (assignment.phase === "COMPLETE" || assignment.phase === "BLOCKED") return record;
     if (assignment.pendingReview) {
       const pullRequest = await createLocalReleaseOperations(root, { format: record.format }).inspectPullRequest(assignment.pendingReview.pullRequestUrl);
-      if (pullRequest.headRefOid !== assignment.pendingReview.commitSha) throw new Error("IMPROVE_PR_HEAD_CHANGED");
+      if (pullRequest.headRefOid !== assignment.pendingReview.commitSha) {
+        if (assignment.pendingReview.status !== "CHANGES_REQUESTED" || !assignment.repairWorktree) throw new Error("IMPROVE_PR_HEAD_CHANGED");
+        const cwd = path.resolve(root, assignment.repairWorktree.path);
+        const { stdout } = await execFile("git", ["rev-parse", "HEAD"], { cwd, windowsHide: true });
+        if (stdout.trim() !== pullRequest.headRefOid) throw new Error("IMPROVE_PR_HEAD_CHANGED");
+        await execFile("git", ["merge-base", "--is-ancestor", assignment.pendingReview.commitSha, pullRequest.headRefOid], { cwd, windowsHide: true });
+      }
       if (pullRequest.state === "CLOSED") {
         return { ...record, improve: { ...assignment, phase: "BLOCKED", openKeys: assignment.issueKeys, pendingReview: undefined, workPath: undefined, resultPath: undefined,
           failure: { code: "IMPROVE_REPAIR_PR_CLOSED_UNMERGED", message: "The authenticated repair PR closed without merge; confirmed issues remain open.", at: new Date().toISOString() } } };
@@ -178,12 +184,26 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
       await verifyImproveResearch(root, repair);
     }
     if (result.status !== "READY") {
+      const { status, ...reviewDetails } = z.object({ status: z.string() }).passthrough()
+        .parse(await readRepositoryJson(root, workPath + ".review.json"));
+      if ((status === "PENDING" ? "PENDING_REVIEW" : status) !== result.status) throw new Error("IMPROVE_REVIEW_STATUS_MISMATCH");
+      const verifiedReview = resolutionPendingSchema.shape.pendingReview.parse(reviewDetails);
+      if (verifiedReview.commitSha !== result.pendingReview.commitSha || verifiedReview.pullRequestUrl !== result.pendingReview.pullRequestUrl) throw new Error("IMPROVE_REVIEW_BINDING");
+      result.pendingReview = verifiedReview;
       if (!repairWorktree) throw new Error("IMPROVE_WORKTREE_REQUIRED");
       const repairRoot = path.resolve(root, repairWorktree.path);
       const { stdout } = await execFile("git", ["-C", repairRoot, "rev-parse", "HEAD"], { windowsHide: true, timeout: 10_000 });
       const head = stdout.trim();
       if (head === assignment.boundCommitSha || result.pendingReview.commitSha !== head) throw new Error("IMPROVE_PENDING_REVIEW_HEAD_MISMATCH");
       await execFile("git", ["-C", repairRoot, "merge-base", "--is-ancestor", assignment.boundCommitSha, head], { windowsHide: true, timeout: 10_000 });
+      if (result.status === "CLOSED_UNMERGED") {
+        const pullRequest = await createLocalReleaseOperations(root, { format: record.format }).inspectPullRequest(result.pendingReview.pullRequestUrl);
+        if (pullRequest.state !== "CLOSED" || pullRequest.headRefOid !== head) throw new Error("IMPROVE_CLOSED_PR_STATE_MISMATCH");
+        return { ...record, improve: { ...assignment, phase: "BLOCKED", repairWorktree, openKeys: assignment.issueKeys,
+          pendingReview: undefined, workPath: undefined, resultPath: undefined,
+          handoffRefs: [...assignment.handoffRefs, ...Object.values(result.handoffs)],
+          failure: { code: "IMPROVE_REPAIR_PR_CLOSED_UNMERGED", message: "The authenticated repair PR closed without merge; confirmed issues remain open.", at: new Date().toISOString() } } };
+      }
       return { ...record, improve: { ...assignment, phase: "RESOLVING", attempt: assignment.attempt + 1, repairWorktree,
         pendingReview: { status: result.status, ...result.pendingReview, repairs: result.repairs, handoffs: result.handoffs }, workPath: undefined, resultPath: undefined,
         handoffRefs: [...assignment.handoffRefs, ...Object.values(result.handoffs)], failure: undefined } };

@@ -166,7 +166,13 @@ async function server(root: string, workPath: string) {
       .filter(n => n === "retain" || packet.improvePhase === "RESOLVING")
       .map(n => ({ name: n, description: descriptions[n], inputSchema: z.toJSONSchema(schemas[n]) })) };
     else if (request.method === "tools/call") {
-      try { result = { content: [{ type: "text", text: JSON.stringify(await call(request.params.name, request.params.arguments)) }] }; }
+      try {
+        const outcome = await call(request.params.name, request.params.arguments);
+        if ("status" in outcome && outcome.status !== "REVIEWED") {
+          await writeJsonAtomically(path.resolve(root, workPath + ".review.json"), outcome);
+        }
+        result = { content: [{ type: "text", text: JSON.stringify(outcome) }] };
+      }
       catch (error) { result = { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "IMPROVE_TOOL_FAILED" }] }; }
     } else if (request.method === "ping") result = {};
     else { process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: request.id, error: { code: -32601, message: "Unknown method" } }) + "\n"); continue; }
