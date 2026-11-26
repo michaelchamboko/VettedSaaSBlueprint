@@ -34,12 +34,12 @@ export const articleVisualRuntimeSchema = z.object({
   schemaVersion: z.literal("ArticleVisualRuntimeV1"),
   format: z.enum(["direct-review", "blog", "visibility", "decision-set"]),
   route: z.string().startsWith("/"),
-  screenshots: z.object({ early: evidenceRefSchema, settled: evidenceRefSchema }).strict(),
+  screenshots: z.object({ early: evidenceRefSchema, settled: evidenceRefSchema, media: evidenceRefSchema.optional() }).strict(),
   viewport: z.object({ width: z.number().int().positive(), height: z.number().int().positive(), reducedMotion: z.boolean() }).strict(),
   rects: z.object({ main: rectSchema, primaryHeading: rectSchema, bodyCopy: z.array(rectSchema).min(1), primaryMedia: rectSchema }).strict(),
   typography: z.object({ heading: styleSchema, body: styleSchema.optional() }).strict(),
   layout: z.object({ documentHeight: z.number().positive(), scrollWidth: z.number().positive(), visibleTextCharacters: z.number().int().nonnegative(), horizontalOverflow: z.boolean() }).strict(),
-  assertions: z.object({ headingVisible: z.literal(true), bodyCopyVisible: z.literal(true), mediaVisible: z.literal(true), mediaDecoded: z.literal(true), motionPreferenceConfirmed: z.literal(true) }).strict(),
+  assertions: z.object({ headingVisible: z.literal(true), bodyCopyVisible: z.literal(true), mediaVisible: z.boolean(), mediaDecoded: z.literal(true), motionPreferenceConfirmed: z.literal(true) }).strict(),
   motion: z.object({
     effects: z.array(effectSchema),
     reducedAlternative: z.enum(["static", "gentler", "semantic-only"]).optional(),
@@ -91,6 +91,10 @@ export function validateArticleVisualRuntime(value: unknown): ArticleVisualRunti
   const { viewport, rects, layout, motion } = runtime;
   if (runtime.screenshots.early.sha256.length !== 64 || runtime.screenshots.settled.sha256.length !== 64 || layout.horizontalOverflow || layout.scrollWidth > viewport.width + 1) throw new Error("ARTICLE_VISUAL_LAYOUT_INVALID");
   if (rects.primaryHeading.width <= 0 || rects.primaryHeading.height <= 0 || rects.primaryHeading.y >= viewport.height || rects.main.width <= 0) throw new Error("ARTICLE_VISUAL_PRIMARY_CONTENT_NOT_VISIBLE");
+  if (rects.primaryMedia.width <= 0 || rects.primaryMedia.height <= 0) throw new Error("ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT");
+  const retainedBelowFoldMedia = runtime.format === "decision-set" && viewport.width <= 767 && !runtime.assertions.mediaVisible &&
+    rects.primaryMedia.width > 0 && rects.primaryMedia.height > 0 && rects.primaryMedia.y >= viewport.height && Boolean(runtime.screenshots.media);
+  if (!runtime.assertions.mediaVisible && !retainedBelowFoldMedia) throw new Error("ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT");
   if (layout.visibleTextCharacters < 40) throw new Error("ARTICLE_VISUAL_CONTENT_INSUFFICIENT");
   if (!viewport.reducedMotion) {
     if (!motion.effects.length || !motion.effects.some(hasChangedDeclaredProperty)) throw new Error("ARTICLE_VISUAL_MOTION_EVIDENCE_INSUFFICIENT");
@@ -194,7 +198,37 @@ export async function resumeArticleVisualIntermediate(page: Page): Promise<void>
   })()`);
 }
 
-export async function captureArticleVisualRuntime(page: Page, input: { format: ArticleVisualRuntime["format"]; route: string; viewport: ArticleVisualRuntime["viewport"]; screenshots: { early: EvidenceRef; settled: EvidenceRef } }): Promise<ArticleVisualRuntime> {
+/** Retain a real media-only capture while restoring the initial viewport used for layout evidence. */
+export async function captureOffscreenArticleMedia(page: Page): Promise<Buffer | null> {
+  const media = page.locator("[data-reviewed-article-hero]").first();
+  if (!await media.count()) return null;
+  const state = await media.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const root = document.documentElement;
+    return { visible: rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight, scrollX, scrollY,
+      scrollBehavior:root.style.getPropertyValue("scroll-behavior"),scrollBehaviorPriority:root.style.getPropertyPriority("scroll-behavior") };
+  });
+  if (state.visible) return null;
+  await page.evaluate(() => document.documentElement.style.setProperty("scroll-behavior","auto","important"));
+  try {
+    await media.evaluate(async (element) => {
+      element.scrollIntoView({behavior:"instant",block:"center",inline:"nearest"});
+      await Promise.all([...element.querySelectorAll("img")].map((image) => image.decode()));
+    });
+    return await media.screenshot({ animations:"allow" });
+  } finally {
+    await page.evaluate(({x,y}) => new Promise<void>((resolve) => {
+      scrollTo({left:x,top:y,behavior:"instant"});
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    }),{x:state.scrollX,y:state.scrollY});
+    await page.evaluate(({value,priority}) => {
+      if (value) document.documentElement.style.setProperty("scroll-behavior",value,priority);
+      else document.documentElement.style.removeProperty("scroll-behavior");
+    },{value:state.scrollBehavior,priority:state.scrollBehaviorPriority});
+  }
+}
+
+export async function captureArticleVisualRuntime(page: Page, input: { format: ArticleVisualRuntime["format"]; route: string; viewport: ArticleVisualRuntime["viewport"]; screenshots: { early: EvidenceRef; settled: EvidenceRef; media?: EvidenceRef } }): Promise<ArticleVisualRuntime> {
   for(let attempt=0;attempt<3;attempt++){
     const count=await page.evaluate(`(() => {
       const frames=window.__articleVisualFrames??[];

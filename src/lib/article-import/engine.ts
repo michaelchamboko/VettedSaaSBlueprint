@@ -280,7 +280,7 @@ export async function canonicalSubmissionFingerprint(record: ExternalArticleImpo
   const files = new Set<string>();
   const addFile = (file: string) => files.add(path.relative(path.resolve(root), path.resolve(root, file)).replaceAll("\\", "/"));
   // Explicit supervised-result/approval dependencies; never infer files from arbitrary article path keys.
-    const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "evidencePath", "registryDecisionPath", "registryWritebackPath", "codeReviewPath", "workPath", "resultPath", "proposalPath"]);
+    const fileFields = new Set(["artifactPath", "assessmentPath", "editorialExecutionPath", "editorialEvidencePath", "formatQualityPath", "validationReceiptPath", "presentationEvidencePath", "heroGenerationEvidencePath", "evidencePath", "registryDecisionPath", "registryWritebackPath", "codeReviewPath", "workPath", "resultPath", "proposalPath"]);
   function collect(value: unknown): void {
     if (!value || typeof value !== "object") return;
     const ref = evidenceRefSchema.safeParse(value);

@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdtemp, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright";
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as blogPageModule from "../src/app/blog/[slug]/page";
-import { MOTION_SITES_REVIEW_SOURCE, captureArticleVisualRuntime, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "../src/lib/article-import/article-visual-quality";
+import { DecisionJourneyPage } from "../src/components/public/DecisionJourneyPage";
+import { listDecisionSets } from "../src/lib/decision-journey/sets";
+import { MOTION_SITES_REVIEW_SOURCE, captureArticleVisualRuntime, captureOffscreenArticleMedia, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "../src/lib/article-import/article-visual-quality";
 import { storeEvidence, storeEvidenceBytes } from "../src/lib/article-import/execution-evidence";
 import { designRuntimeMaterial } from "../src/lib/article-import/workflow-evidence";
 
@@ -59,6 +63,18 @@ async function actualBlogFixture() {
   assert.match(markup, /data-reviewed-article-hero/);
   const css = (await readFile(path.resolve("src/app/globals.css"), "utf8")).replace('@import "tailwindcss";', "");
   return `<!doctype html><html><head><style>${css}</style></head><body>${markup}</body></html>`;
+}
+
+async function actualDecisionFixture() {
+  const records = listDecisionSets().flatMap((set) => [set.pages.decisionHub, set.pages.solutionHub, set.pages.scenario]);
+  const record = records.toSorted((left, right) => right.headline.length - left.headline.length)[0]!;
+  const markup = renderToStaticMarkup(createElement(DecisionJourneyPage, { record, reviewedHero: {
+    publicPath: "/images/decision-set-test-hero.webp", width: 1600, height: 900,
+    alt: "A reviewed decision workspace showing evidence and account controls.",
+  } }));
+  assert.match(markup, /data-reviewed-article-hero/);
+  const css = (await readFile(path.resolve("src/app/globals.css"), "utf8")).replace('@import "tailwindcss";', "");
+  return { html: `<!doctype html><html><head><style>${css}</style></head><body>${markup}</body></html>`, record };
 }
 
 function launchChromium() {
@@ -167,6 +183,20 @@ test("accepts restrained useful motion and an intentional static reduced-motion 
   }));
 });
 
+test("off-screen media is allowed only for a retained, below-fold mobile decision-set capture", () => {
+  const offscreen = {
+    ...baseRuntime,
+    format: "decision-set" as const,
+    viewport: { ...baseRuntime.viewport, width: 390, height: 844 },
+    layout: { ...baseRuntime.layout, scrollWidth: 390 },
+    rects: { ...baseRuntime.rects, primaryMedia: { ...baseRuntime.rects.primaryMedia, y: 900 } },
+    assertions: { ...baseRuntime.assertions, mediaVisible: false },
+  };
+  assert.throws(() => validateArticleVisualRuntime(offscreen), /ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT/);
+  assert.doesNotThrow(() => validateArticleVisualRuntime({ ...offscreen, screenshots: { ...offscreen.screenshots, media: screenshotRef } }));
+  assert.throws(() => validateArticleVisualRuntime({ ...offscreen, format: "blog", screenshots: { ...offscreen.screenshots, media: screenshotRef } }), /ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT/);
+});
+
 test("real Chromium selects the actual 1440px blog question as semantic lead copy", async (t) => {
   const browser = await launchChromium();
   t.after(() => browser.close());
@@ -213,6 +243,37 @@ test("real Chromium preserves delayed normal motion through resumed and settled 
   assert.deepEqual(new Set(reducedRuntime.motion.effects[0].samples.map((sample) => sample.values.opacity)), new Set(["1"]));
 });
 
+test("real Chromium retains the actual stacked mobile decision hero without weakening initial readability", async (t) => {
+  const browser = await launchChromium();
+  t.after(() => browser.close());
+  const fixture = await actualDecisionFixture();
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "no-preference" });
+  await routeBrowserFixture(page, 0, fixture.html);
+  await installArticleVisualProbe(page);
+  await page.goto("https://article.test/", { waitUntil: "domcontentloaded" });
+  assert.equal(await pauseArticleVisualIntermediate(page), true);
+  const initial = await page.evaluate(() => {
+    const heading = document.querySelector("main h1")!.getBoundingClientRect().toJSON();
+    const lead = document.querySelector(".decision-journey__hero-copy h1 + p")!.getBoundingClientRect().toJSON();
+    const media = document.querySelector("[data-reviewed-article-hero]")!.getBoundingClientRect().toJSON();
+    return { heading, lead, media, scrollY };
+  });
+  assert(initial.heading.top < 844 && initial.heading.bottom > 0);
+  assert(initial.lead.top < 844 && initial.lead.bottom > 0);
+  assert(initial.media.top >= 844, "the real stacked mobile hero must begin below the initial viewport");
+  await resumeArticleVisualIntermediate(page);
+  await page.waitForTimeout(850);
+  const mediaBytes = await captureOffscreenArticleMedia(page);
+  assert(mediaBytes && mediaBytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")));
+  assert.equal(await page.evaluate(() => scrollY), initial.scrollY);
+  const media = { path: "evidence/mobile-decision-media.png", sha256: createHash("sha256").update(mediaBytes).digest("hex") };
+  const runtime = await captureArticleVisualRuntime(page, { format: "decision-set", route: fixture.record.canonicalPath, viewport: { width: 390, height: 844, reducedMotion: false }, screenshots: { early: screenshotRef, settled: screenshotRef, media } });
+  assert.equal(runtime.assertions.headingVisible, true);
+  assert.equal(runtime.assertions.bodyCopyVisible, true);
+  assert.equal(runtime.assertions.mediaVisible, false);
+  assert.deepEqual(runtime.screenshots.media, media);
+});
+
 test("binds a substantive visual-quality review for every supported article format", () => {
   for (const format of ["direct-review", "blog", "visibility", "decision-set"] as const) {
     const value = review(format);
@@ -246,4 +307,37 @@ test("replays pre-hero V2 observations exactly while V3 rejects missing geometry
   assert.equal(legacy.browserObservations,JSON.stringify(expected));
   assert.deepEqual(legacy.images,expected.flatMap((item)=>item.screenshots));
   await assert.rejects(designRuntimeMaterial(root,importId,artifactRef,renderRef,routes,observations as never,"current-v3"),/ARTICLE_VISUAL_RUNTIME_EVIDENCE_REQUIRED/);
+});
+
+test("current decision-set runtime retains off-screen media for review within the 24-image attachment limit", async () => {
+  const root=await mkdtemp(path.join(os.tmpdir(),"article-visual-media-"));
+  const importId="article-22222222-2222-4222-8222-222222222222";
+  const artifactRef=await storeEvidence(root,importId,{artifact:"decision-set"});
+  const renderRef=await storeEvidence(root,importId,{rendering:"decision-set"});
+  const routes=["/decision-hub/example","/solution-hub/example","/scenarios/example"];
+  const observations:Record<string,{path:string;sha256:string}>={};
+  const retainedMedia=[];
+  for(const rule of ["desktop","mobile","reduced-motion"] as const){
+    const viewport={width:rule==="mobile"?390:1440,height:rule==="mobile"?844:900,reducedMotion:rule==="reduced-motion"};
+    const screenshots=[], outputRefs=[];
+    for(const [index,route] of routes.entries()){
+      const early=await storeEvidenceBytes(root,importId,Buffer.from(`early ${rule} ${index}`),"png");
+      const settled=await storeEvidenceBytes(root,importId,Buffer.from(`settled ${rule} ${index}`),"png");
+      const media=rule==="mobile" ? await storeEvidenceBytes(root,importId,Buffer.from(`media ${rule} ${index}`),"png") : undefined;
+      if(media)retainedMedia.push(media);
+      const runtime=validateArticleVisualRuntime({...baseRuntime,format:"decision-set",route,viewport,
+        screenshots:{early,settled,...(media?{media}:{})},layout:{...baseRuntime.layout,scrollWidth:viewport.width},
+        rects:{...baseRuntime.rects,primaryMedia:{...baseRuntime.rects.primaryMedia,y:media?900:100}},
+        assertions:{...baseRuntime.assertions,mediaVisible:!media},
+        motion:viewport.reducedMotion?{effects:[{...baseRuntime.motion.effects[0],samples:baseRuntime.motion.effects[0].samples.map((sample)=>({...sample,values:{opacity:"1"}}))}],reducedAlternative:"static"}:baseRuntime.motion});
+      outputRefs.push(await storeEvidence(root,importId,runtime));
+      screenshots.push(settled);
+    }
+    observations[rule]=await storeEvidence(root,importId,{schemaVersion:"ExecutionEvidenceV1",kind:"browser",toolVersion:"chromium",startedAt:"2026-11-26T00:00:00.000Z",completedAt:"2026-11-26T00:00:01.000Z",inputRefs:[artifactRef,renderRef],outputRefs,target:"http://127.0.0.1:3000",routes,viewport,checks:{rendered:true},screenshots});
+  }
+  const material=await designRuntimeMaterial(root,importId,artifactRef,renderRef,routes,observations as never,"current-v3");
+  assert.equal(material.images.length,21);
+  assert(material.images.length<=24);
+  assert(retainedMedia.every((media)=>material.images.some((image)=>image.path===media.path&&image.sha256===media.sha256)));
+  assert.match(material.browserObservations,/"media":/);
 });

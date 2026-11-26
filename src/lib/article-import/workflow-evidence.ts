@@ -213,10 +213,15 @@ export async function designRuntimeMaterial(root: string, importId: string, arti
       runtimeRefs.set(runtimeRef.path,runtimeRef);
       images.set(observed.screenshots.early.path,observed.screenshots.early);
       images.set(observed.screenshots.settled.path,observed.screenshots.settled);
+      if (observed.screenshots.media) {
+        if (observed.screenshots.media.path !== prefix + observed.screenshots.media.sha256 + ".png") throw new Error("ARTICLE_VISUAL_RUNTIME_BINDING_MISMATCH");
+        images.set(observed.screenshots.media.path,observed.screenshots.media);
+      }
       visualRuntime.push(observed);
     }
     material.push({rule,ref,routes:receipt.routes,viewport:receipt.viewport,checks:receipt.checks,screenshots:receipt.screenshots,visualRuntime});
   }
+  if (images.size > 24) throw new Error("ARTICLE_VISUAL_REVIEW_IMAGE_LIMIT");
   return { browserObservations:JSON.stringify(material), images:[...images.values()], runtimeRefs:[...runtimeRefs.values()] };
 }
 

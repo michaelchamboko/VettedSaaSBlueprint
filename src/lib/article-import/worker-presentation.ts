@@ -13,7 +13,7 @@ import { readImportVerifierEvidence, verificationContext } from "./verification-
 import { createDesignReviewSchema, designReviewInput, designRuntimeMaterial, designJudgmentInstruction, visualDesignRules, runtimeRefSchema } from "./workflow-evidence";
 import type { Packet } from "./worker-editorial";
 import { articleHeroGenerationEvidenceSchema, articleHeroVisualInspectionSchema, isArticleHeroVisualRejection, persistArticleHeroRejection, validateArticleHeroBinding } from "./hero-image";
-import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articleVisualQualityReviewSchema, captureArticleVisualRuntime, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate } from "./article-visual-quality";
+import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articleVisualQualityReviewSchema, captureArticleVisualRuntime, captureOffscreenArticleMedia, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate } from "./article-visual-quality";
 
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
 const observedReviewRules = ["critique", "audit", "polish", "visual-quality"] as const;
@@ -161,8 +161,10 @@ export async function presentationOperation(packet: Packet, {rule, observations}
       if (!viewport.reducedMotion) await resumeArticleVisualIntermediate(page);
       await page.waitForTimeout(1100);
       const settled = await storeEvidenceBytes(root,importId,await page.screenshot({fullPage:false,animations:"allow"}),"png");
+      const mediaBytes = packet.format === "decision-set" && viewport.width <= 767 ? await captureOffscreenArticleMedia(page) : null;
+      const media = mediaBytes ? await storeEvidenceBytes(root,importId,mediaBytes,"png") : undefined;
       screenshots.push(settled);
-      visualRuntimeRefs.push(await storeEvidence(root,importId,await captureArticleVisualRuntime(page,{format:packet.format,route,viewport,screenshots:{early,settled}})));
+      visualRuntimeRefs.push(await storeEvidence(root,importId,await captureArticleVisualRuntime(page,{format:packet.format,route,viewport,screenshots:{early,settled,...(media ? {media} : {})}})));
     }
     if (errors.length) throw new Error("PRESENTATION_BROWSER_CHECK_FAILED");
     const executionRef = await storeEvidence(root,importId,{schemaVersion:"ExecutionEvidenceV1",kind:"browser",toolVersion:browser.version(),startedAt,
