@@ -238,6 +238,10 @@
       "sha256": "0605d685714712374480d3d1eb9911b04db3affe5b14628c87708899e96e81e3"
     },
     {
+      "path": ".agents/skills/eleanor-editorial/references/long-form-affiliate.md",
+      "sha256": "ecb86fd802cda9a4619277a10ad90931e690444363020fc8b57042f866630fe0"
+    },
+    {
       "path": ".agents/skills/eleanor-editorial/references/principles.md",
       "sha256": "54071dec8421e06187c5ae586d3572e55c5090f0992092a2b29d69607b8f9add"
     },

@@ -8,6 +8,7 @@ import { importArtifactTarget } from "../../src/lib/article-import/format-valida
 import { candidatePreviewPath } from "../../src/lib/article-import/candidate-route";
 import { buildWorkflowFixture } from "./article-workflow-evidence";
 import { editorialExecutionSchema, readEvidence } from "../../src/lib/article-import/workflow-evidence";
+import { countVisibleArticleWords } from "../../src/lib/editorial/article-visible-word-count";
 const samplePageBlueprint = { ...baseBlueprint, metadata: { ...baseBlueprint.metadata, url_slug: "example", canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
 
 export const fullRewriteNotes = {
@@ -48,7 +49,10 @@ export async function prepareApprovalFixture(root: string, record: ExternalArtic
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
   const rewritten = rewriteAllProse("landing", samplePageBlueprint);
-  const notes = options.structuredEditorial ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
+  const initialWordCount = countVisibleArticleWords("direct-review", rewritten).wordCount;
+  if (initialWordCount < 2050) rewritten.benefits[0].benefit_description += ` ${Array(2050 - initialWordCount).fill("decision").join(" ")}`;
+  const independentReview = options.structuredEditorial || record.transformation?.commercialMode === "approved";
+  const notes = independentReview ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
   const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, notes,
     { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
   for (const [file, value] of [[artifactPath, rewritten], [editorialEvidencePath, evidence], [formatQualityPath, { format: "direct-review", artifactFingerprint: fingerprintEditorialArtifact(rewritten), passed: true, gate: "landing:quality:candidate" }]] as const) {

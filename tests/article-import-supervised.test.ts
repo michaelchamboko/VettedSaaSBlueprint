@@ -18,6 +18,7 @@ import { instructionsForStage, releaseSteps, WORKFLOW_REVISION } from "../src/li
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
+import { evaluateWorkflowEvidence, readEvidence } from "../src/lib/article-import/workflow-evidence";
 
 test("describe-workflow exposes exactly the three actionable release steps", async () => {
   const described = await executeArticleCommand(process.cwd(), { kind: "describe-workflow" }) as {
@@ -346,6 +347,10 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     assert.equal(deployments, 1);
     assert.ok(await readFile(path.join(root, research.resultPath), "utf8"));
     const terminal = await current();
+    const terminalEvidence = await readEvidence(root, terminal.terminalRef!) as { commercialMode?: string; approvedAffiliateUrl?: string };
+    assert.equal(terminalEvidence.commercialMode, "approved");
+    assert.equal(terminalEvidence.approvedAffiliateUrl, terminal.transformation?.resolvedAffiliateUrl);
+    assert.deepEqual((await evaluateWorkflowEvidence(terminal, { root }, "historical-terminal")).diagnostics, []);
     await rm(path.join(root, terminal.terminalRef!.path));
     await assert.rejects(heartbeat(), /TERMINAL_PROOF_INVALID/);
   } finally { await rm(root, { recursive: true, force: true }); }

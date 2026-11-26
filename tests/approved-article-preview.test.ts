@@ -4,19 +4,25 @@ import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
+import { countVisibleArticleWords } from "../src/lib/editorial/article-visible-word-count";
 import { validateApprovedArticlePreview, isValidSlug, isDevEnvironment } from "../src/lib/article-import/approved-article-preview";
 import { loadApprovedArtifact } from "../src/lib/article-import/content-approval";
 
 const VALID_SLUG = "test-approved-article";
 const VALID_IMPORT_ID = "article-12345678-1234-4234-8234-123456789abc";
 const SOURCE_FP = "a".repeat(64);
+const APPROVED_AFFILIATE_URL = "https://start.switcherstudio.com/anme6fqvgdx9";
+const LONG_FORM_COPY = Array.from(
+  { length: 130 },
+  (_, index) => `Review section ${index + 1} compares the documented workflow with the buyer's requirements before choosing this service.`,
+).join(" ");
 
 function makeBlueprint(slug: string, overrides: Record<string, unknown> = {}) {
   return {
     metadata: { product_id: "12345678-1234-4234-8234-123456789abc", page_type: "direct_review", target_keyword: "test", search_intent: "test", category_slug: "test", url_slug: slug, title_tag: "t", meta_description: "d", canonical_url: "https://vettedsaasblueprint.online/landing-page-builders/test-approved-article", design_profile: "reference_composed_v1" },
     presentation: {"hero":"media_first_offset","typography":"dm_serif_instrument_sans","section_order":["problem_solution","benefits","proof_blocks","how_it_works","limitations","objection_handling","faq","closing_cta"],"section_variants":{"problem_solution":"closing_manifesto","benefits":"alternating_story","proof_blocks":"decision_matrix","how_it_works":"split_editorial","limitations":"proof_strip","objection_handling":"process_timeline","faq":"objection_accordion","closing_cta":"numbered_ledger"},"cta":"inline_decision","motion":"split_reveal","mobile":"copy_first","design_dials":{"design_variance":7,"motion_intensity":6,"visual_density":4},"reference_ids":["lp-ref-0002","lp-ref-0029"],"recipe_id":"recipe-af7e9c8af1c28ec6","fingerprint":"af7e9c8af1c28ec607e2b99703ed7db69c74059aa77542ba2ef4275b3e1ce3d3"},
     affiliate_disclosure: { short_disclosure: "s", full_disclosure: "f", placement: "above_first_cta" },
-    hero: { headline: "h", subheadline: "sh", primary_cta_label: "cta", primary_cta_link_id: "12345678-1234-4234-8234-123456789abc", answer_snippet: "a" },
+    hero: { headline: "h", subheadline: "sh", primary_cta_label: "cta", primary_cta_link_id: "12345678-1234-4234-8234-123456789abc", answer_snippet: LONG_FORM_COPY },
     problem_solution: { problem: "p", agitation: "a", solution: "s" },
     benefits: [{ benefit_title: "b", benefit_description: "d", feature_supporting_it: "f", source_reference_ids: [] }],
     limitations: [{ limitation: "l", who_it_affects: "w", mitigation: "m" }],
@@ -42,6 +48,7 @@ async function makeFixture(root: string, opts: {
   const bp = opts.blueprint ?? makeBlueprint(slug);
   const artifactContent = opts.artifactContent ?? JSON.stringify(bp);
   const fingerprint = fingerprintEditorialArtifact(JSON.parse(artifactContent));
+  const { wordCount } = countVisibleArticleWords("direct-review", JSON.parse(artifactContent));
 
   const workDir = join(root, ".automation", "article-imports", "work", importId);
   await mkdir(workDir, { recursive: true });
@@ -82,6 +89,7 @@ async function makeFixture(root: string, opts: {
     editorialEvidenceFingerprint: "0".repeat(64),
     formatQualityPath: `.automation/article-imports/work/${importId}/quality-receipt.json`,
     formatQualityFingerprint: "0".repeat(64),
+    longFormAffiliate: { wordCount, approvedAffiliateUrl: APPROVED_AFFILIATE_URL },
     approvedAt: new Date().toISOString(),
   });
 
@@ -92,7 +100,8 @@ async function makeFixture(root: string, opts: {
     contentApproval,
     artifactPath: `src/generated/landing-pages/${slug}.json`,
     continuation: workPacket ? { workPath } : undefined,
-    transformation: { resolvedAffiliateUrl: "https://start.switcherstudio.com/anme6fqvgdx9" },
+    format: "direct-review",
+    transformation: { commercialMode: "approved", resolvedAffiliateUrl: APPROVED_AFFILIATE_URL },
   };
   const importDir = join(root, ".automation", "article-imports");
   await mkdir(importDir, { recursive: true });
@@ -168,7 +177,7 @@ async function makeFixture(root: string, opts: {
   }
 
   // Write approved-urls.md
-  const urls = opts.approvedUrls ?? "- https://start.switcherstudio.com/anme6fqvgdx9\n";
+  const urls = opts.approvedUrls ?? `- ${APPROVED_AFFILIATE_URL}\n`;
   await writeFile(join(root, "approved-urls.md"), urls);
 
   return { root, slug, importId, fingerprint, bp };
@@ -420,7 +429,7 @@ describe("validateApprovedArticlePreview", () => {
     if (!loaded.ok) throw new Error("expected loaded");
     // mutate underlying artifact bytes after loading
     await fs.writeFile(join(root, contentApproval.artifactPath), JSON.stringify(null));
-    assert.equal(await loaded.matches(contentApproval, "direct-review", sourceFingerprint), true);
+    assert.equal(await loaded.matches(contentApproval, "direct-review", sourceFingerprint, APPROVED_AFFILIATE_URL), true);
     const r = await validateApprovedArticlePreview(fx.slug, fx.importId, root);
     assert.equal(r.ok, false);
     await rm(root, { recursive: true, force: true });

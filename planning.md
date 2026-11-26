@@ -51,6 +51,12 @@ Classification: explicit product-owner directive.
 
 Combine the remaining dependency security repairs from PR #45 with mandatory research recovery in the existing article-to-page workflow. Missing or invalid research must require actual research and revalidation. Return downstream work to RESEARCHING and invalidate dependent approvals before release starts; preserve existing release attempts for verified integrity recovery. Preserve valid evidence reuse, source snapshots, retry/diagnosis rules, model identities, independent review and release gates. Add focused regression tests and explicit supervisor instructions. This authorizes the combined PR, merge and deployment after required checks and current-head review, followed by cleanup of obsolete clean merged worktrees. Preserve dirty or unmerged worktrees. Provide a continuation instruction for the existing automation after deployment; do not run real article imports or create schedules during implementation.
 
+### Long-form affiliate article acceptance (AFFILIATE-LONGFORM-1126)
+
+Owner directive, 26 November 2026. Apply the approved article brief, buyer-focused Eleanor passes and independent passage review to long-form affiliate articles. Draft toward 2,050 reader-visible words. Final approval requires 1,800 through 2,300 words inclusive, evidence-backed buyer fit, a reason to choose the product, a disqualifying condition and an accurate disclosed next step. Verify the complete pinned SlopMonster tree and checker tests on upstream updates. Use the existing editorial exchange and preserve commercial independence, protected fields and historical evidence.
+
+The source standard remains D07 §32 (`D07-S-761a1d533ac1`), D07 EO-07 (`D07-S-9ca001b6d2f5`) and D10 §9.4 (`D10-S-574481d73201`). Meet the length requirement by answering decision-relevant questions with evidence. Source strategy and commercial activation authority remain with their existing owners.
+
 ### Independent editorial review in Refining (REFINING-INDEPENDENCE-1126)
 
 Owner directive, 26 November 2026. This amendment supersedes the OpenCode and Beam requirement in BEAM-POLICY-001 for Refining. Any tool and model may perform the editorial work. The independent reviewer must use a verifiable context separate from each rewrite session. Changing tools or models alone does not establish independence.
