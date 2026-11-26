@@ -255,7 +255,7 @@
     },
     {
       "path": ".agents/skills/eleanor-editorial/SKILL.md",
-      "sha256": "dbbecfc9fb6acc11f0ea21bae53472849d0625831780847bf18c19c021329fac"
+      "sha256": "85fdeb65792401627016445869c588233a7e53976b0be80b66a7be58a72ae587"
     },
     {
       "path": ".agents/skills/eleanor-editorial/tools/deslop.py",

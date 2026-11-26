@@ -51,6 +51,12 @@ Classification: explicit product-owner directive.
 
 Combine the remaining dependency security repairs from PR #45 with mandatory research recovery in the existing article-to-page workflow. Missing or invalid research must require actual research and revalidation. Return downstream work to RESEARCHING and invalidate dependent approvals before release starts; preserve existing release attempts for verified integrity recovery. Preserve valid evidence reuse, source snapshots, retry/diagnosis rules, model identities, independent review and release gates. Add focused regression tests and explicit supervisor instructions. This authorizes the combined PR, merge and deployment after required checks and current-head review, followed by cleanup of obsolete clean merged worktrees. Preserve dirty or unmerged worktrees. Provide a continuation instruction for the existing automation after deployment; do not run real article imports or create schedules during implementation.
 
+### Independent editorial review in Refining (REFINING-INDEPENDENCE-1126)
+
+Owner directive, 26 November 2026. This amendment supersedes the OpenCode and Beam requirement in BEAM-POLICY-001 for Refining. Any tool and model may perform the editorial work. The independent reviewer must use a verifiable context separate from each rewrite session. Changing tools or models alone does not establish independence.
+
+Acceptance requires a successful Refining review from another tool and model, rejection of self-review, and preservation of the existing evidence, fidelity, and content approval checks. Keep historical evidence inspectable. Deliver the change in a separate PR and reconcile the research changes in PR #84.
+
 ### Beam policy and OpenCode 2.2.6 support, 2026-11-08
 
 Classification: explicit product-owner directive (BEAM-POLICY-001).
