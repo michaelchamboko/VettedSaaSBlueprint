@@ -29,7 +29,7 @@ function isTerminalStage(stage: string): boolean {
   return stage === "LIVE" || stage === "QUARANTINED";
 }
 
-function improvePending(record: ExternalArticleImportV1): boolean {
+export function improvePending(record: ExternalArticleImportV1): boolean {
   return record.stage === "LIVE" && !!record.improve && !["COMPLETE", "BLOCKED"].includes(record.improve.phase);
 }
 
@@ -157,6 +157,7 @@ async function runIntakeSteps(
       continue;
     }
     const record = await dispatchArticleImport(repositoryRoot, entry.importId, { ...options, maxSteps: 1 });
+    if (record.improve?.pendingReview && record.improve.phase !== "BLOCKED") return loadIntakeRun(repositoryRoot, runId);
     if ((record.stage === "LIVE" && !improvePending(record)) || record.stage === "QUARANTINED") {
       await markIntakeEntry(repositoryRoot, run, entry.relativePath, record.stage);
     } else if (record.continuation?.kind === "blocked") {

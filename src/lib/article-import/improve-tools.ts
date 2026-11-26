@@ -5,11 +5,12 @@ import { createInterface } from "node:readline";
 import { promisify } from "node:util";
 import { z } from "zod";
 import { externalArticleImportSchema } from "./contracts";
-import { evidenceRefSchema, storeEvidence } from "./execution-evidence";
+import { evidenceReference, evidenceRefSchema, storeEvidence } from "./execution-evidence";
 import { writeJsonAtomically } from "./engine";
 import { isRepairFile } from "./improve-scope";
 import { repairDecisionSchema, verifyImproveResearch } from "./improve-supervisor";
 import { createLocalReleaseOperations } from "./local-release-adapter";
+import { improveChecklistPath, retainImproveMeasurement } from "./improve-checklist";
 
 const run = promisify(execFile);
 const key = z.string().regex(/^[a-f0-9]{64}$/);
@@ -21,14 +22,17 @@ const packetSchema = z.object({
 const file = z.string().refine(isRepairFile);
 const schemas = {
   retain: z.object({ content: z.string().min(1) }).strict(),
-  measure: z.object({ issue: z.string(), revision: z.enum(["before", "after"]), file,
-    literal: z.string().min(1), expectedCount: z.number().int().nonnegative() }).strict(),
+  measure: z.union([
+    z.object({ issue: z.string(), revision: z.enum(["before", "after"]), file,
+      literal: z.string().min(1), expectedCount: z.number().int().nonnegative() }).strict(),
+    z.object({ issue: z.string(), revision: z.enum(["before", "after"]), githubCheck: z.string().min(1) }).strict(),
+  ]),
   submit: z.object({ files: z.array(file).min(1), decisions: z.array(repairDecisionSchema).min(1) }).strict(),
   review: z.object({}).strict(),
 };
 const descriptions = {
   retain: "Archive a handoff or JSON receipt and return its path and SHA-256. Pass structured receipts as serialized JSON.",
-  measure: "Count a literal in a committed workflow file at the original or repair revision. Returns a bound regression receipt.",
+  measure: "Measure a literal count in committed source or read a named GitHub Actions check at the bound original or repair revision. Returns a controller-issued regression receipt.",
   submit: "Commit the declared workflow repair on its isolated branch, open its pull request and request independent review.",
   review: "Collect a verified independent review receipt for the current repair head, or return its pending status.",
 };
@@ -59,13 +63,26 @@ async function server(root: string, workPath: string) {
     const issues = assignment!.issueKeys;
     if (name === "measure") {
       const measurement = schemas.measure.parse(args);
-      if (!issues.includes(measurement.issue)) throw new Error("IMPROVE_UNKNOWN_ISSUE");
+      if (!issues.includes(measurement.issue)) {
+        const checklist = JSON.parse(await readFile(path.join(root, improveChecklistPath), "utf8")) as {key: string; resolutions: unknown[]}[];
+        if (!checklist.some(item => item.key === measurement.issue && item.resolutions.length)) throw new Error("IMPROVE_UNKNOWN_ISSUE");
+      }
       const head = measurement.revision === "before" ? boundCommitSha : await git("rev-parse", "HEAD");
-      const source = await git("show", head + ":" + measurement.file);
+      if ("githubCheck" in measurement) {
+        const raw = await gh("api", "--paginate", "--slurp", `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`);
+        type Check = { name: string; head_sha: string; conclusion: string; status: string; app: {slug: string}; html_url: string };
+        const runs = (JSON.parse(raw) as {check_runs: Check[]}[]).flatMap(page => page.check_runs);
+        const matches = runs.filter(run => run.name === measurement.githubCheck && run.head_sha === head && run.app.slug === "github-actions");
+        if (matches.length !== 1 || matches[0].status !== "completed" || !["failure", "success"].includes(matches[0].conclusion)) throw new Error("IMPROVE_CHECK_UNVERIFIED");
+        const output = await save(matches[0]);
+        return retainImproveMeasurement(root, publicationKey, { key: measurement.issue, check: "github-actions/" + measurement.githubCheck,
+          commitSha: head, outcome: matches[0].conclusion === "success" ? "pass" : "fail", output });
+      }
+      const { stdout: source } = await run("git", ["show", head + ":" + measurement.file], { cwd: repair, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
       const count = source.split(measurement.literal).length - 1;
       const { issue, file, literal, expectedCount } = measurement;
       const output = await save({ issue, file, literal, expectedCount, count, head });
-      return save({ key: issue, check: JSON.stringify([file, literal, expectedCount]), commitSha: head,
+      return retainImproveMeasurement(root, publicationKey, { key: issue, check: JSON.stringify([file, literal, expectedCount]), commitSha: head,
         outcome: count === expectedCount ? "pass" : "fail", output });
     }
     if (name === "submit") {
@@ -102,15 +119,17 @@ async function server(root: string, workPath: string) {
       const changed = (await git("diff", "--name-only", "-z", boundCommitSha, "HEAD")).split("\0").filter(Boolean);
       if (!changed.length || changed.some(p => !files.includes(p) || !isRepairFile(p))) throw new Error("IMPROVE_REPAIR_SCOPE");
       await git("push", "origin", "HEAD:refs/heads/" + branch);
-      const open = JSON.parse(await gh("pr", "list", "--head", branch, "--base", "main", "--json", "url")) as {url: string}[];
-      if (!open.length) await gh("pr", "create", "--head", branch, "--base", "main", "--title", "Repair article workflow for " + record.importId,
+      const existing = JSON.parse(await gh("pr", "list", "--head", branch, "--base", "main", "--state", "all", "--json", "url,headRefOid,state")) as {url: string; headRefOid: string; state: string}[];
+      const submitted = await git("rev-parse", "HEAD");
+      if (!existing.some(pr => pr.state === "OPEN" || pr.headRefOid === submitted)) await gh("pr", "create", "--head", branch, "--base", "main", "--title", "Repair article workflow for " + record.importId,
         "--body", "IMPROVE found " + issues.join(", ") + " during verified publication. Independent review is required before closure.");
     } else if (name !== "review") throw new Error("IMPROVE_UNKNOWN_TOOL");
     const head = await git("rev-parse", "HEAD");
-    const pr = JSON.parse(await gh("pr", "view", branch, "--json", "url,headRefOid,comments")) as {
-      url: string; headRefOid: string; comments: { url: string; body: string; author: { login: string } }[];
+    const pr = JSON.parse(await gh("pr", "view", branch, "--json", "url,state,headRefOid,comments")) as {
+      url: string; state: string; headRefOid: string; comments: { url: string; body: string; createdAt: string; author: { login: string } }[];
     };
     if (pr.headRefOid !== head) throw new Error("IMPROVE_REVIEW_HEAD_MISMATCH");
+    if (pr.state === "CLOSED") return { status: "CLOSED_UNMERGED", commitSha: head, pullRequestUrl: pr.url };
     const marker = `<!-- improve-review:${head} -->`;
     if (name === "submit" && !pr.comments.some(comment => comment.body.includes(marker))) {
       await gh("pr", "comment", pr.url, "--body", "@codex review\n\n" + marker);
@@ -119,10 +138,24 @@ async function server(root: string, workPath: string) {
       c.author.login.replace(/\[bot\]$/, "") === "chatgpt-codex-connector");
     if (!review) return { status: "PENDING", commitSha: head, pullRequestUrl: pr.url };
     const verifier = createLocalReleaseOperations(root, { format: record.format });
-    await verifier.verifyCodeReview(pr.url, review.url, head);
-    return { status: "REVIEWED", commitSha: head, review: await save({ schemaVersion: "ImportCodeReviewV1",
+    try { await verifier.verifyCodeReview(pr.url, review.url, head); }
+    catch (error) {
+      if (!(error instanceof Error) || error.message !== "CODE_REVIEW_NOT_CLEAN_CURRENT_HEAD") throw error;
+      const number = new URL(pr.url).pathname.split("/").at(-1);
+      if (!number || !/^[1-9]\d*$/.test(number)) throw new Error("IMPROVE_PR_INVALID");
+      const notes = JSON.parse(await gh("api", "--paginate", "--slurp", `repos/{owner}/{repo}/pulls/${number}/comments?per_page=100`)) as {
+        commit_id: string; path: string; line: number | null; body: string; user: {login: string};
+      }[][];
+      const findings = notes.flat().filter(note => note.commit_id === head && note.user.login === "chatgpt-codex-connector[bot]")
+        .map(({ path, line, body }) => ({ path, line, body }));
+      return { status: "CHANGES_REQUESTED", commitSha: head, pullRequestUrl: pr.url, evidenceUrl: review.url, reviewText: review.body, findings };
+    }
+    if (pr.state !== "MERGED") return { status: "PENDING_MERGE", commitSha: head, pullRequestUrl: pr.url, evidenceUrl: review.url };
+    const reviewFile = path.join(root, ".automation/article-imports/improve", publicationKey, "reviews", head + ".json");
+    await writeJsonAtomically(reviewFile, { schemaVersion: "ImportCodeReviewV1",
       passed: true, independent: true, reviewer: "codex", reviewedCommitSha: head, pullRequestUrl: pr.url,
-      evidenceUrl: review.url, reviewedAt: new Date().toISOString() }) };
+      evidenceUrl: review.url, reviewedAt: new Date(review.createdAt).toISOString() });
+    return { status: "REVIEWED", commitSha: head, review: await evidenceReference(root, reviewFile) };
   }
   for await (const line of createInterface({ input: process.stdin })) {
     const request = JSON.parse(line);

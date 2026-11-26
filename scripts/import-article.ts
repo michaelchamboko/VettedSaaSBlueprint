@@ -1,5 +1,5 @@
 import { createArticleImport, executePendingImport, loadImport, upgradeImportEvidence, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
-import { createDispatchingImproveExecutor, dispatchArticleImport, dispatchIntakeRun, type DispatchOptions } from "../src/lib/article-import/dispatch";
+import { createDispatchingImproveExecutor, dispatchArticleImport, dispatchIntakeRun, improvePending, type DispatchOptions } from "../src/lib/article-import/dispatch";
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { readFile } from "node:fs/promises";
 import { articleExecutionStage, assertPrimaryArticleCheckout, withArticleExecution, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
@@ -11,10 +11,6 @@ import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadInta
 import { createSupervisedImproveExecutor, type ImproveExecutor } from "../src/lib/article-import/improve-supervisor";
 
 export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
-
-function improvePending(record: ExternalArticleImportV1): boolean {
-  return record.stage === "LIVE" && !!record.improve && !["COMPLETE", "BLOCKED"].includes(record.improve.phase);
-}
 
 async function importExecutionStage(root: string, importId: string): Promise<string | undefined> {
   try { return articleExecutionStage(await loadImport(root, importId)); }

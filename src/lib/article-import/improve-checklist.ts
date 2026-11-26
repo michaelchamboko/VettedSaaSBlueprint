@@ -3,7 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { importCodeReviewSchema } from "./contracts";
 import { writeJsonAtomically } from "./engine";
-import { evidenceRefSchema, frozenFileSchema, readEvidence, readVerifiedEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import { evidenceReference, evidenceRefSchema, frozenFileSchema, readEvidence, readVerifiedEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import { claimWorkflowLease } from "./workflow-lease";
 import type { ReleaseOperations } from "./release";
 
@@ -92,15 +92,24 @@ const checkReceipt = z.object({
   key: issueKey, check: label, commitSha: z.string().regex(/^[a-f0-9]{40}$/),
   outcome: z.enum(["fail", "pass"]), output: evidenceRefSchema,
 });
-async function readCheck(root: string, ref: z.infer<typeof evidenceRefSchema>, key: string, outcome: "fail" | "pass", head?: string) {
+// Only the measurement controller can write here. Worker handoffs use a separate evidence directory.
+export async function retainImproveMeasurement(root: string, publication: string, value: z.infer<typeof checkReceipt>) {
+  const receipt = checkReceipt.parse(value);
+  const directory = path.join(root, ".automation/article-imports/improve", publication, "measurements");
+  const target = path.join(directory, receipt.key + "-" + receipt.commitSha + "-" + receipt.output.sha256 + ".json");
+  await writeJsonAtomically(target, receipt);
+  return evidenceReference(root, target);
+}
+async function readCheck(root: string, ref: EvidenceRef, key: string, outcome: "fail" | "pass", head: string, publication: string) {
   const check = checkReceipt.parse(await readEvidence(root, ref));
-  if (check.key !== key || check.outcome !== outcome || (head && head !== check.commitSha)) throw new Error("IMPROVE_CHECK_MISMATCH");
+  const trusted = `.automation/article-imports/improve/${publication}/measurements/${key}-${head}-${check.output.sha256}.json`;
+  if (ref.path !== trusted || check.key !== key || check.outcome !== outcome || head !== check.commitSha) throw new Error("IMPROVE_CHECK_MISMATCH");
   await verifyEvidenceRef(root, check.output);
   return check.check;
 }
 
 export async function resolveImproveFindings(root: string, publication: string, input: unknown,
-  reviewer: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">) {
+  reviewer: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">, baseCommit: string) {
   const resolutions = improveResolutionSchema.array().parse(input);
   if (!resolutions.length) return;
   await updateChecklist(root, async issues => {
@@ -110,13 +119,15 @@ export async function resolveImproveFindings(root: string, publication: string, 
       if (issue.resolutions.some(item => item.publication === publication && item.commitSha === resolution.commitSha)) continue;
       const occurrence = issue.occurrences.at(-1)!;
       if (occurrence.publication !== publication) throw new Error("IMPROVE_OCCURRENCE_CHANGED");
+      if (resolution.review.path !== `.automation/article-imports/improve/${publication}/reviews/${resolution.commitSha}.json`) throw new Error("IMPROVE_REVIEW_BINDING");
       const review = importCodeReviewSchema.parse(await readEvidence(root, resolution.review));
       if (review.reviewedCommitSha !== resolution.commitSha) throw new Error("IMPROVE_REVIEW_HEAD_MISMATCH");
       const pr = await reviewer.inspectPullRequest(review.pullRequestUrl);
       if (pr.headRefOid !== resolution.commitSha) throw new Error("IMPROVE_PR_HEAD_CHANGED");
+      if (!pr.merged || !pr.mergeCommitSha) throw new Error("IMPROVE_REPAIR_NOT_MERGED");
       await reviewer.verifyCodeReview(review.pullRequestUrl, review.evidenceUrl, resolution.commitSha);
-      const before = await readCheck(root, resolution.before, issue.key, "fail");
-      const after = await readCheck(root, resolution.after, issue.key, "pass", resolution.commitSha);
+      const before = await readCheck(root, resolution.before, issue.key, "fail", baseCommit, publication);
+      const after = await readCheck(root, resolution.after, issue.key, "pass", resolution.commitSha, publication);
       if (before !== after) throw new Error("IMPROVE_CHECK_CHANGED");
       const checked = new Set(resolution.regressionChecks.map(item => item.key));
       for (const key of checked) {
@@ -125,8 +136,8 @@ export async function resolveImproveFindings(root: string, publication: string, 
       for (const prior of issues.filter(item => item.resolutions.length && (checked.has(item.key) || item.occurrences.some(event => event.step === occurrence.step)))) {
         const previous = prior.resolutions.at(-1)!;
         const check = prior.key === issue.key ? resolution.after : resolution.regressionChecks.find(item => item.key === prior.key)?.evidence;
-        if (!check || await readCheck(root, check, prior.key, "pass", resolution.commitSha) !==
-          await readCheck(root, previous.after, prior.key, "pass", previous.commitSha)) throw new Error("IMPROVE_PRIOR_CHECK_REQUIRED");
+        if (!check || await readCheck(root, check, prior.key, "pass", resolution.commitSha, publication) !==
+          await readCheck(root, previous.after, prior.key, "pass", previous.commitSha, previous.publication)) throw new Error("IMPROVE_PRIOR_CHECK_REQUIRED");
       }
       issue.resolutions.push({ ...resolution, publication });
       issue.status = "resolved";

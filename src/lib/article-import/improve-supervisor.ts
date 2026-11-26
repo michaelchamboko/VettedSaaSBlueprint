@@ -45,11 +45,12 @@ const resolutionReadySchema = z.object({
 }).strict();
 const resolutionPendingSchema = z.object({
   schemaVersion: z.literal("ImproveResultV1"), publicationKey: z.string().regex(/^[a-f0-9]{64}$/),
-  idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), phase: z.literal("RESOLVING"), status: z.literal("PENDING_REVIEW"),
-  repairs: z.array(repairDecisionSchema).min(1), pendingReview: z.object({ commitSha: z.string().regex(/^[a-f0-9]{40}$/), pullRequestUrl: z.string().url() }).strict(),
+  idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), phase: z.literal("RESOLVING"), status: z.enum(["PENDING_REVIEW", "PENDING_MERGE", "CHANGES_REQUESTED", "CLOSED_UNMERGED"]),
+  repairs: z.array(repairDecisionSchema).min(1), pendingReview: z.object({ commitSha: z.string().regex(/^[a-f0-9]{40}$/), pullRequestUrl: z.string().url(), evidenceUrl: z.string().url().optional(), reviewText: z.string().min(1).optional(),
+    findings: z.array(z.object({ path: z.string().min(1), line: z.number().int().positive().nullable(), body: z.string().min(1) }).strict()).optional() }).strict(),
   handoffs: z.object({ retrospective: handoffRef, diagnosis: handoffRef, repair: handoffRef, architecture: handoffRef }).strict(),
 }).strict();
-const resolutionResultSchema = z.discriminatedUnion("status", [resolutionReadySchema, resolutionPendingSchema]);
+const resolutionResultSchema = z.union([resolutionReadySchema, resolutionPendingSchema]);
 const improveResearchSchema = z.object({
   schemaVersion: z.literal("ImproveResearchV1"), key: issueKey, candidate: z.string().min(1), skill: z.literal("research"),
   primarySourceRefs: z.array(evidenceRefSchema).min(1), simplerAlternatives: z.array(z.string().min(1)).min(1),
@@ -113,6 +114,15 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
   return async ({ record, assignment, assertLease }) => {
     if (record.stage !== "LIVE" || !record.terminalRef || record.release?.commitSha !== assignment.boundCommitSha) throw new Error("IMPROVE_PUBLICATION_BINDING_MISMATCH");
     if (assignment.phase === "COMPLETE" || assignment.phase === "BLOCKED") return record;
+    if (assignment.pendingReview) {
+      const pullRequest = await createLocalReleaseOperations(root, { format: record.format }).inspectPullRequest(assignment.pendingReview.pullRequestUrl);
+      if (pullRequest.headRefOid !== assignment.pendingReview.commitSha) throw new Error("IMPROVE_PR_HEAD_CHANGED");
+      if (pullRequest.state === "CLOSED") {
+        return { ...record, improve: { ...assignment, phase: "BLOCKED", openKeys: assignment.issueKeys, pendingReview: undefined, workPath: undefined, resultPath: undefined,
+          failure: { code: "IMPROVE_REPAIR_PR_CLOSED_UNMERGED", message: "The authenticated repair PR closed without merge; confirmed issues remain open.", at: new Date().toISOString() } } };
+      }
+      if (assignment.pendingReview.status === "PENDING_MERGE" && !pullRequest.merged) return record;
+    }
     const { workPath, resultPath, key } = packetPaths(assignment);
     await assertIgnoredImportStatePath(root, workPath);
     await assertIgnoredImportStatePath(root, resultPath);
@@ -129,8 +139,10 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
       improveSkill, skillInstructions, resultPath, resultSchema: z.toJSONSchema(resultSchema),
       instructions: phase === "assessment"
         ? "Apply the embedded IMPROVE assessment instructions to the immutable run and terminal evidence. Return evidence-only findings and the required assessment handoff."
-        : assignment.pendingReview
-          ? "A repair PR is already pending independent review. Call improve_review; do not resubmit or request another review comment. Return PENDING_REVIEW again until the trusted receipt is available, then return READY with exact-head closure evidence."
+        : assignment.pendingReview?.status === "CHANGES_REQUESTED"
+          ? "Apply the authenticated review findings in the same isolated branch without increasing step complexity. Use improve_submit for the new commit and review request. Do not claim closure for the rejected head."
+          : assignment.pendingReview
+          ? "The repair PR is waiting on trusted review or merge state. Call improve_review without resubmitting or requesting another review comment. Return the exact pending status until the trusted current head is reviewed and merged; only then return READY with closure evidence."
           : "Resolve the recorded findings in the isolated repair worktree. Reject every repair that increases any affected-step complexity dimension, and attach a research receipt for every rejected repair. Use improve_submit for the bounded commit and PR; return PENDING_REVIEW until improve_review provides trusted exact-head evidence.",
     };
     try {
@@ -165,7 +177,7 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
       if (!assignment.issueKeys.includes(repair.key)) throw new Error("IMPROVE_UNKNOWN_ISSUE");
       await verifyImproveResearch(root, repair);
     }
-    if (result.status === "PENDING_REVIEW") {
+    if (result.status !== "READY") {
       if (!repairWorktree) throw new Error("IMPROVE_WORKTREE_REQUIRED");
       const repairRoot = path.resolve(root, repairWorktree.path);
       const { stdout } = await execFile("git", ["-C", repairRoot, "rev-parse", "HEAD"], { windowsHide: true, timeout: 10_000 });
@@ -173,12 +185,11 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
       if (head === assignment.boundCommitSha || result.pendingReview.commitSha !== head) throw new Error("IMPROVE_PENDING_REVIEW_HEAD_MISMATCH");
       await execFile("git", ["-C", repairRoot, "merge-base", "--is-ancestor", assignment.boundCommitSha, head], { windowsHide: true, timeout: 10_000 });
       return { ...record, improve: { ...assignment, phase: "RESOLVING", attempt: assignment.attempt + 1, repairWorktree,
-        pendingReview: { ...result.pendingReview, repairs: result.repairs, handoffs: result.handoffs }, workPath: undefined, resultPath: undefined,
+        pendingReview: { status: result.status, ...result.pendingReview, repairs: result.repairs, handoffs: result.handoffs }, workPath: undefined, resultPath: undefined,
         handoffRefs: [...assignment.handoffRefs, ...Object.values(result.handoffs)], failure: undefined } };
     }
     const accounted = [...result.resolutions.map(item => item.key), ...result.unresolved.map(item => item.key)];
     if (new Set(accounted).size !== accounted.length || accounted.length !== assignment.issueKeys.length || assignment.issueKeys.some(key => !accounted.includes(key))) throw new Error("IMPROVE_ISSUES_UNACCOUNTED");
-    if (assignment.pendingReview && !result.resolutions.some(resolution => resolution.commitSha === assignment.pendingReview?.commitSha)) throw new Error("IMPROVE_PENDING_REVIEW_UNFINISHED");
     for (const resolution of result.resolutions) {
       if (!result.repairs.some(repair => repair.key === resolution.key && repair.decision === "accepted")) throw new Error("IMPROVE_RESOLUTION_WITHOUT_ACCEPTED_REPAIR");
     }
@@ -191,7 +202,7 @@ export function createSupervisedImproveExecutor(root: string): ImproveExecutor {
       if (head === assignment.boundCommitSha || !result.resolutions.every(resolution => resolution.commitSha === head)) throw new Error("IMPROVE_RESOLUTION_HEAD_MISMATCH");
       await execFile("git", ["-C", repairRoot, "merge-base", "--is-ancestor", assignment.boundCommitSha, head], { windowsHide: true, timeout: 10_000 });
     }
-    await resolveImproveFindings(root, assignment.publicationKey, result.resolutions, createLocalReleaseOperations(root, { format: record.format }));
+    await resolveImproveFindings(root, assignment.publicationKey, result.resolutions, createLocalReleaseOperations(root, { format: record.format }), assignment.boundCommitSha);
     return { ...record, improve: { ...assignment, phase: "COMPLETE", repairWorktree, pendingReview: undefined, workPath: undefined, resultPath: undefined,
       resolvedKeys: result.resolutions.map(item => item.key), openKeys: result.unresolved.map(item => item.key),
       handoffRefs: [...assignment.handoffRefs, ...Object.values(result.handoffs)], failure: undefined, completedAt: new Date().toISOString() } };
