@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { presentationOperation, presentationTool } from "../src/lib/article-import/worker-presentation";
+import { presentationOperation, presentationTool, shouldCaptureOffscreenArticleMedia } from "../src/lib/article-import/worker-presentation";
 import { captureRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
@@ -25,6 +25,14 @@ test("V3 present tool exposes complete collector receipts only to observed visua
   assert.equal(capabilities.openCodeVersion,"2.2.6");
   assert.equal(typeof capabilities.visualReviewModel,"string");
   assert.equal(typeof capabilities.modelFamilies[capabilities.visualReviewModel],"string");
+});
+
+test("off-screen media capture is limited to stacked mobile blog and decision pages", () => {
+  assert.equal(shouldCaptureOffscreenArticleMedia("blog", 390), true);
+  assert.equal(shouldCaptureOffscreenArticleMedia("decision-set", 390), true);
+  assert.equal(shouldCaptureOffscreenArticleMedia("blog", 1440), false);
+  assert.equal(shouldCaptureOffscreenArticleMedia("direct-review", 390), false);
+  assert.equal(shouldCaptureOffscreenArticleMedia("visibility", 390), false);
 });
 
 test("validation tools require the approved artifact and retain the render and route bindings", async t => {
