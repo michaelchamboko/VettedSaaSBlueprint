@@ -149,7 +149,8 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
           break;
         case "REFINING": {
           assert.match(packet.instructions, /eleanor-editorial/i);
-          assert.match(packet.instructions, /Beam review/i);
+          assert.match(packet.instructions, /independent review in a distinct verified execution context/i);
+          assert.doesNotMatch(packet.instructions, /Beam review/i);
           assert.match(packet.instructions, /5\/5 CLEAN/i);
           const fingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath), "utf8")).replace(/\r\n/g, "\n")).digest("hex");
           proposalFile = path.join(root, packet.publicationProposals[0].proposalPath);

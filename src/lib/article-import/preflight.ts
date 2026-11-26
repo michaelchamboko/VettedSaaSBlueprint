@@ -95,7 +95,7 @@ export async function withArticleExecution<T>(root: string, action: () => Promis
   const checkout = await realpath(root);
   const active = executionCheckout.getStore();
   if (!active || active.checkout !== checkout) await assertPrimaryArticleCheckout(checkout);
-  const stage = typeof executionStage === "function" ? await executionStage() : executionStage;
+  const stage = typeof executionStage === "function" ? await executionStage() : executionStage ?? (active?.checkout === checkout ? active.stage : undefined);
   if (active?.checkout === checkout && active.stage === stage) return action();
   await assertArticleCapabilities(checkout, probe, stage);
   return executionCheckout.run({ checkout, stage }, action);

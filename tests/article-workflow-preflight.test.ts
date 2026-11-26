@@ -110,7 +110,10 @@ test("nested execution rechecks capabilities when the productive stage changes",
       if (tool === "opencode") return manifest.openCodeVersion;
       return "Python 3.13.0";
     };
-    await withArticleExecution(root, () => withArticleExecution(root, async () => undefined, probe, "VALIDATING"), probe, "REFINING");
+    await withArticleExecution(root, async () => {
+      await withArticleExecution(root, async () => undefined);
+      await withArticleExecution(root, async () => undefined, probe, "VALIDATING");
+    }, probe, "REFINING");
     assert.deepEqual(calls, ["neutral-exporter", "python", "opencode", "python"]);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
