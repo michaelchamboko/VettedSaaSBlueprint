@@ -53,6 +53,8 @@ test("the default CLI consumes bound research output and rejects a result for an
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const transformPath = (await loadImport(root, created.importId)).nextAction.match(/execute (.*?)\.work\.json/)![1];
     const transformPacket = JSON.parse(await readFile(path.join(root, `${transformPath}.work.json`), "utf8"));
+    assert.match(transformPacket.instructions, /1\. Prepare the intent brief and complete draft/);
+    assert.match(transformPacket.instructions, /2\. Assess the full draft's claims, disclosure, SEO and AEO/);
     const neutralArtifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
     await writeJsonAtomically(path.join(root, "src/generated/landing-pages/example.json"), neutralArtifact);
     await writeJsonAtomically(path.join(root, transformPacket.resultPath), { idempotencyKey: transformPacket.idempotencyKey, sourceFingerprint: transformPacket.sourceFingerprint, summary: "Mocked transform selecting the commercial format.", work: { stage: "TRANSFORMING", artifactPath: "src/generated/landing-pages/example.json", assessmentPath: "unused-because-commercial-gate-rejects.json", format: "direct-review" } });
@@ -60,6 +62,41 @@ test("the default CLI consumes bound research output and rejects a result for an
     const rejectedTransform = await loadImport(root, created.importId);
     assert.equal(rejectedTransform.stage, "TRANSFORMING");
     assert.match(rejectedTransform.stageReceipts.at(-1)!.message, /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("supervised transforming handoff reuses its checked artifact and advances to refining", async () => {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "supervised-transform-snapshot-"));
+  const { writeFile } = await import("node:fs/promises");
+  try {
+    const affiliateUrl = "https://start.switcherstudio.com/anme6fqvgdx9";
+    await writeFile(path.join(root, "approved-urls.md"), `- ${affiliateUrl}\n`);
+    await writeFile(path.join(root, "article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "${affiliateUrl}"\n---\n\n# A practical guide\n\nThis sufficiently long article describes a workflow and its trade-offs so the supervising agent can research a defensible topic.`);
+    const created = await createArticleImport(root, "article.md");
+    const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" });
+    const executor = createSupervisedImportExecutor(root, undefined, { researchRegistry: fixtureResearchRegistry(root) });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor);
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor);
+    const research = (await loadImport(root, created.importId)).continuation;
+    if (research?.kind !== "work") throw new Error("Missing research plan work");
+    const researchEvidence = JSON.parse(await readFile(path.join(root, prepared.evidenceRefs.research.path), "utf8"));
+    await writeGapPlanResult(root, research, { claimId: researchEvidence.claims[0].id, claimText: researchEvidence.claims[0].text });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor);
+    const acquisition = (await loadImport(root, created.importId)).continuation;
+    if (acquisition?.kind !== "work") throw new Error("Missing research acquisition work");
+    await writeAcquisitionResult(root, acquisition, prepared.evidenceRefs.research.path);
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor);
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor);
+    const transforming = await loadImport(root, created.importId);
+    if (transforming.continuation?.kind !== "work") throw new Error("Missing transforming work");
+    const packet = JSON.parse(await readFile(path.join(root, transforming.continuation.workPath), "utf8"));
+    assert.match(packet.instructions, /1\. Prepare the intent brief and complete draft/);
+    assert.match(packet.instructions, /2\. Assess the full draft's claims, disclosure, SEO and AEO/);
+    await writeJsonAtomically(path.join(root, transforming.continuation.resultPath), { idempotencyKey: transforming.continuation.idempotencyKey, sourceFingerprint: created.sourceFingerprint, summary: "Completed synthetic transforming handoff.", work: { stage: "TRANSFORMING", artifactPath: prepared.artifactPath, assessmentPath: prepared.evidenceRefs.assessment.path, format: "direct-review" } });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor);
+    assert.equal((await loadImport(root, created.importId)).stage, "REFINING");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
