@@ -5,8 +5,20 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { executeImportCommand, type ImportCommand } from "../../scripts/import-article";
 import { withImportLease, saveImport, type ImportStageExecutor } from "../../src/lib/article-import/engine";
+import { createSupervisedImportExecutor } from "../../src/lib/article-import/supervised-executor";
+import { createInMemoryResearchRegistry } from "./article-research-registry";
 
 import type { ExternalArticleImportV1 } from "../../src/lib/article-import/contracts";
+
+const researchRegistries = new Map<string, ReturnType<typeof createInMemoryResearchRegistry>>();
+
+export function fixtureResearchRegistry(root: string) {
+  const existing = researchRegistries.get(root);
+  if (existing) return existing;
+  const registry = createInMemoryResearchRegistry();
+  researchRegistries.set(root, registry);
+  return registry;
+}
 
 export async function persistFixture(root: string, record: ExternalArticleImportV1) {
   await withImportLease(root, record.importId, () => saveImport(root, record));
@@ -45,5 +57,7 @@ export function fixtureProbe(root: string) {
 
 export async function executeFixtureCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, options?: Parameters<typeof executeImportCommand>[3]) {
   await prepareCommandCheckout(root);
-  return executeImportCommand(root, command, executor, options, fixtureProbe(root));
+  const researchRegistry = fixtureResearchRegistry(root);
+  const selectedExecutor = executor ?? createSupervisedImportExecutor(root, undefined, { researchRegistry });
+  return executeImportCommand(root, command, selectedExecutor, { researchRegistry, ...options }, fixtureProbe(root));
 }

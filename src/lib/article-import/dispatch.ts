@@ -13,6 +13,7 @@ import {
   type IntakeRun,
 } from "./intake";
 import { invokeWorker, type WorkerOptions } from "./worker-runner";
+import type { ArticleResearchRegistry } from "./research-registry";
 
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
@@ -20,6 +21,7 @@ export type DispatchOptions = WorkerOptions & {
   capabilityProbe?: CapabilityProbe;
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
+  researchRegistry?: ArticleResearchRegistry;
 };
 
 function isTerminalStage(stage: string): boolean {
@@ -79,7 +81,7 @@ async function runImportSteps(
   importId: string,
   options?: DispatchOptions,
 ): Promise<ExternalArticleImportV1 & { dispatchOutcome?: "STEP_LIMIT" }> {
-  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot);
+  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry });
   const execute = createDispatchingExecutor(repositoryRoot, baseExecutor, options);
   const now = options?.now ?? (() => Date.now());
   const sleep = options?.sleep ?? (async (ms: number) => { await new Promise((resolve) => setTimeout(resolve, ms)); });
