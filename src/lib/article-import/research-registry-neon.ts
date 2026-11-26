@@ -132,10 +132,33 @@ async function verifyReusedCandidates(tx: TransactionSql, input: ResearchRegistr
   }
 }
 
-type EvidenceLink = { localClaimId: string; localSourceId: string; claimId: string; snapshotId: string; action: "reused_current" | "researched_gap" };
+type EvidenceLink = { localClaimId: string; localSourceId: string; claimId: string; snapshotId: string; productContext: string; action: "reused_current" | "researched_gap" };
 
 export function prequalifyAcquiredSourceIds(input: ResearchRegistryCommitInput): Set<string> {
   return validateRegistryWritebackCompleteness(input.decision, input.research, input.writeback);
+}
+
+// D07 §26.2 (D07-S-ccedf2277b04) sets a 90-day default review backstop.
+export const ARTICLE_RESEARCH_MAX_FRESHNESS_MS = 90 * 24 * 60 * 60 * 1000;
+
+export function assertAcquisitionFreshness(input: ResearchRegistryCommitInput, databaseNow: string): void {
+  if (!input.decision.claims.some((claim) => claim.action === "researched_gap")) return;
+  if (!input.writeback) throw new Error("RESEARCH_REGISTRY_WRITEBACK_REQUIRED");
+  const now = Date.parse(databaseNow);
+  if (!Number.isFinite(now)) throw new Error("CAPABILITY_UNAVAILABLE: RESEARCH_REGISTRY_DATABASE_CLOCK_INVALID");
+  const acquiredAt = [input.research.evidence.createdAt, input.writeback.createdAt, ...input.research.evidence.sources.map((source) => source.retrievedAt)];
+  if (acquiredAt.some((value) => Date.parse(value) > now)) throw new Error("RESEARCH_REGISTRY_ACQUISITION_TIME_INVALID");
+  const maximumExpiry = now + ARTICLE_RESEARCH_MAX_FRESHNESS_MS;
+  if (input.writeback.claims.some((claim) => {
+    const expiresAt = Date.parse(claim.expiresAt);
+    return expiresAt <= now || expiresAt > maximumExpiry;
+  })) throw new Error("RESEARCH_REGISTRY_EXPIRY_INVALID");
+}
+
+export function isRepairableResearchRegistryCommitError(message: string): boolean {
+  return message === "RESEARCH_REGISTRY_PLAN_STALE" ||
+    message === "RESEARCH_REGISTRY_ACQUISITION_TIME_INVALID" ||
+    message === "RESEARCH_REGISTRY_EXPIRY_INVALID";
 }
 
 async function writeEvidence(tx: TransactionSql, input: ResearchRegistryCommitInput): Promise<EvidenceLink[]> {
@@ -170,7 +193,7 @@ async function writeEvidence(tx: TransactionSql, input: ResearchRegistryCommitIn
           return planned && local && bytes && canonicalResearchUrl(local.url) === canonicalResearchUrl(planned.canonicalUrl) && sha256(bytes) === planned.evidenceSha256;
         });
         if (!planned || !localSourceId) throw new Error("RESEARCH_REGISTRY_REUSE_SOURCE_UNBOUND");
-        links.push({ localClaimId: claim.id, localSourceId, claimId: match.claimId, snapshotId: match.snapshotId, action: decision.action });
+        links.push({ localClaimId: claim.id, localSourceId, claimId: match.claimId, snapshotId: match.snapshotId, productContext: match.productContext, action: decision.action });
       }
       continue;
     }
@@ -185,22 +208,22 @@ async function writeEvidence(tx: TransactionSql, input: ResearchRegistryCommitIn
         insert into article_research.claim_evidence
           (claim_id, snapshot_id, verdict, confidence, product_context, reasoning, expires_at, created_at, updated_at)
         values (${claimId}::uuid, ${snapshotId}::uuid, ${final.verdict}, ${final.confidence}, ${decision.productContext}, ${final.reasoning}, ${final.expiresAt}::timestamptz, ${input.writeback.createdAt}::timestamptz, ${input.writeback.createdAt}::timestamptz)
-        on conflict (claim_id, snapshot_id) do update set
+        on conflict (claim_id, snapshot_id, product_context) do update set
           verdict = excluded.verdict,
           confidence = excluded.confidence,
           reasoning = excluded.reasoning,
           expires_at = excluded.expires_at,
           updated_at = excluded.updated_at
-        where article_research.claim_evidence.product_context = excluded.product_context
-          and article_research.claim_evidence.updated_at < excluded.updated_at`;
+        where article_research.claim_evidence.updated_at < excluded.updated_at`;
       const stored = await tx`select verdict, confidence, product_context, reasoning, expires_at, updated_at
-        from article_research.claim_evidence where claim_id = ${claimId}::uuid and snapshot_id = ${snapshotId}::uuid`;
+        from article_research.claim_evidence where claim_id = ${claimId}::uuid and snapshot_id = ${snapshotId}::uuid
+          and product_context = ${decision.productContext}`;
       const actual = stored.rows[0];
       if (!actual || actual.product_context !== decision.productContext || actual.verdict !== final.verdict || Number(actual.confidence) !== final.confidence ||
           actual.reasoning !== final.reasoning || Date.parse(text(actual.expires_at)) !== Date.parse(final.expiresAt)) {
         throw new Error("CAPABILITY_UNAVAILABLE: RESEARCH_REGISTRY_CONCURRENT_EVIDENCE_CHANGED");
       }
-      links.push({ localClaimId: claim.id, localSourceId, claimId, snapshotId, action: decision.action });
+      links.push({ localClaimId: claim.id, localSourceId, claimId, snapshotId, productContext: decision.productContext, action: decision.action });
     }
   }
   return links;
@@ -282,6 +305,9 @@ export class NeonArticleResearchRegistry implements ArticleResearchRegistry {
               row.writeback_sha256 !== (input.writebackSha256 ?? null)) throw new Error("RESEARCH_REGISTRY_REPLAY_MISMATCH");
           return { bindingId: String(row.id), replayed: true };
         }
+        const databaseClock = await tx`select current_timestamp as database_now`;
+        if (!databaseClock.rows[0]?.database_now) throw new Error("CAPABILITY_UNAVAILABLE: RESEARCH_REGISTRY_DATABASE_CLOCK_INVALID");
+        assertAcquisitionFreshness(input, text(databaseClock.rows[0].database_now));
         const inserted = await tx`
           insert into article_research.import_evidence_bindings
             (import_id, idempotency_key, source_fingerprint, plan_fingerprint, decision_path, decision_sha256, writeback_path, writeback_sha256, evidence_path, evidence_sha256)
@@ -293,14 +319,14 @@ export class NeonArticleResearchRegistry implements ArticleResearchRegistry {
         const links = await writeEvidence(tx, input);
         for (const link of links) await tx`
           insert into article_research.import_evidence_links
-            (binding_id, claim_id, snapshot_id, local_claim_id, local_source_id, action)
-          values (${bindingId}::uuid, ${link.claimId}::uuid, ${link.snapshotId}::uuid, ${link.localClaimId}, ${link.localSourceId}, ${link.action})
-          on conflict (binding_id, claim_id, snapshot_id, local_claim_id, local_source_id) do nothing`;
+            (binding_id, claim_id, snapshot_id, product_context, local_claim_id, local_source_id, action)
+          values (${bindingId}::uuid, ${link.claimId}::uuid, ${link.snapshotId}::uuid, ${link.productContext}, ${link.localClaimId}, ${link.localSourceId}, ${link.action})
+          on conflict (binding_id, claim_id, snapshot_id, product_context, local_claim_id, local_source_id) do nothing`;
         return { bindingId, replayed: false };
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.startsWith("CAPABILITY_UNAVAILABLE:") || message === "RESEARCH_REGISTRY_PLAN_STALE") throw error;
+      if (message.startsWith("CAPABILITY_UNAVAILABLE:") || isRepairableResearchRegistryCommitError(message)) throw error;
       throw new Error(`CAPABILITY_UNAVAILABLE: article research registry write failed: ${message}`);
     }
   }
