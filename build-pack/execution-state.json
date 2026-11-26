@@ -1314,6 +1314,10 @@
             "npx",
             "tsx",
             "--test",
+            "tests/article-visible-word-count.test.ts",
+            "tests/article-long-form-affiliate.test.ts",
+            "tests/article-long-form-approval.test.ts",
+            "tests/eleanor-upstream-verification.test.ts",
             "tests/article-workflow-evidence.test.ts",
             "tests/article-worker-editorial.test.ts"
           ],
