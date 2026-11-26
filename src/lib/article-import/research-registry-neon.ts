@@ -62,7 +62,12 @@ async function selectId(tx: TransactionSql, kind: "source" | "snapshot" | "claim
   if (kind === "source") {
     await tx`insert into article_research.sources (canonical_url, source_type, last_checked_at)
       values (${values.canonicalUrl}, ${values.sourceType}, ${values.retrievedAt}::timestamptz)
-      on conflict (canonical_url) do nothing`;
+      on conflict (canonical_url) do update set
+        source_type = excluded.source_type,
+        last_checked_at = excluded.last_checked_at,
+        updated_at = current_timestamp
+      where article_research.sources.last_checked_at is null
+         or article_research.sources.last_checked_at < excluded.last_checked_at`;
     const result = await tx`select id from article_research.sources where canonical_url = ${values.canonicalUrl}`;
     if (!result.rows[0]?.id) throw new Error("CAPABILITY_UNAVAILABLE: RESEARCH_REGISTRY_SOURCE_WRITE_FAILED");
     return String(result.rows[0].id);
@@ -71,7 +76,12 @@ async function selectId(tx: TransactionSql, kind: "source" | "snapshot" | "claim
     await tx`insert into article_research.source_snapshots
       (source_id, evidence_sha256, retrieved_at, access_outcome, passage, locator)
       values (${values.sourceId}::uuid, ${values.evidenceSha256}, ${values.retrievedAt}::timestamptz, ${values.accessOutcome}, ${values.passage}, ${values.locator})
-      on conflict (source_id, evidence_sha256) do nothing`;
+      on conflict (source_id, evidence_sha256) do update set
+        retrieved_at = excluded.retrieved_at,
+        access_outcome = excluded.access_outcome,
+        passage = excluded.passage,
+        locator = excluded.locator
+      where article_research.source_snapshots.retrieved_at < excluded.retrieved_at`;
     const result = await tx`select id from article_research.source_snapshots
       where source_id = ${values.sourceId}::uuid and evidence_sha256 = ${values.evidenceSha256}`;
     if (!result.rows[0]?.id) throw new Error("CAPABILITY_UNAVAILABLE: RESEARCH_REGISTRY_SNAPSHOT_WRITE_FAILED");

@@ -53,6 +53,39 @@ test("isolated PostgreSQL registry reuses across articles and rejects stale repl
     assert.equal((await registry.commit(first)).replayed, false);
     assert.equal((await new NeonArticleResearchRegistry().commit(first)).replayed, true);
 
+    const storedSnapshot = await executeQuery("select ss.id as snapshot_id, s.id as source_id from article_research.source_snapshots ss join article_research.sources s on s.id = ss.source_id where s.canonical_url = $1 and ss.evidence_sha256 = $2", [sourceUrl, evidenceSha256]);
+    await executeQuery("update article_research.source_snapshots set retrieved_at = $1::timestamptz, access_outcome = 'partial' where id = $2::uuid", ["2026-11-25T00:00:00.000Z", storedSnapshot.rows[0]?.snapshot_id]);
+    await executeQuery("update article_research.sources set source_type = 'legacy_partial', last_checked_at = $1::timestamptz where id = $2::uuid", ["2026-11-25T00:00:00.000Z", storedSnapshot.rows[0]?.source_id]);
+
+    const renewalImport = `article-${randomUUID()}`;
+    const renewalPlan = createResearchRegistryPlan({ importId: renewalImport, sourceFingerprint: "c".repeat(64), generatedAt: "2026-11-27T00:00:00.000Z", candidates: [], legacyLeads: [] });
+    const renewalDecision = { ...firstDecision, importId: renewalImport, sourceFingerprint: "c".repeat(64), planFingerprint: renewalPlan.planFingerprint, createdAt: "2026-11-27T00:00:00.000Z" };
+    const renewalDecisionSha256 = sha256(JSON.stringify(renewalDecision));
+    const renewal: ResearchRegistryCommitInput = {
+      ...first, importId: renewalImport, sourceFingerprint: "c".repeat(64), idempotencyKey: "d".repeat(64), plan: renewalPlan, decision: renewalDecision,
+      decisionSha256: renewalDecisionSha256,
+      research: { ...research, evidence: { ...research.evidence, sources: [{ ...research.evidence.sources[0], retrievedAt: "2026-11-27T00:00:00.000Z" }] } },
+      writeback: { ...first.writeback!, importId: renewalImport, sourceFingerprint: "c".repeat(64), decisionSha256: renewalDecisionSha256, createdAt: "2026-11-27T00:00:00.000Z" },
+    };
+    assert.equal((await registry.commit(renewal)).replayed, false);
+
+    const staleAcquisitionImport = `article-${randomUUID()}`;
+    const staleClaimText = `Acme ${runId} has a separately tracked billing note.`;
+    const stalePlan = createResearchRegistryPlan({ importId: staleAcquisitionImport, sourceFingerprint: "e".repeat(64), generatedAt: "2026-11-26T12:00:00.000Z", candidates: [], legacyLeads: [] });
+    const staleDecision = { schemaVersion: "ResearchRegistryDecisionV1" as const, importId: staleAcquisitionImport, sourceFingerprint: "e".repeat(64), planFingerprint: stalePlan.planFingerprint, createdAt: "2026-11-26T12:00:00.000Z", claims: [{ claimId: "stale-note", claimText: staleClaimText, material: true, productContext: `Acme ${runId} billing note`, action: "researched_gap" as const, gapReason: "missing" as const, registryMatches: [], rationale: "No canonical evidence exists for this separate claim." }] };
+    const staleDecisionSha256 = sha256(JSON.stringify(staleDecision));
+    const staleAcquisition: ResearchRegistryCommitInput = {
+      ...first, importId: staleAcquisitionImport, sourceFingerprint: "e".repeat(64), idempotencyKey: "f".repeat(64), plan: stalePlan, decision: staleDecision, decisionSha256: staleDecisionSha256,
+      research: { ...research, evidence: { ...research.evidence, sources: [{ ...research.evidence.sources[0], retrievedAt: "2026-11-26T12:00:00.000Z" }], claims: [{ ...research.evidence.claims[0], id: "stale-note", text: staleClaimText }] } },
+      writeback: { ...first.writeback!, importId: staleAcquisitionImport, sourceFingerprint: "e".repeat(64), decisionSha256: staleDecisionSha256, createdAt: "2026-11-26T12:00:00.000Z", sources: [{ sourceId: "pricing", sourceType: "outdated_partial", accessOutcome: "partial", locator: "older partial retrieval" }], claims: [{ ...first.writeback!.claims[0], plannedClaimId: "stale-note", evidenceClaimId: "stale-note", reasoning: "An older acquisition must not regress newer snapshot metadata." }] },
+    };
+    assert.equal((await registry.commit(staleAcquisition)).replayed, false);
+    const reconciled = await executeQuery("select ss.access_outcome, ss.retrieved_at, s.source_type, s.last_checked_at from article_research.source_snapshots ss join article_research.sources s on s.id = ss.source_id where ss.id = $1::uuid", [storedSnapshot.rows[0]?.snapshot_id]);
+    assert.equal(reconciled.rows[0]?.access_outcome, "success");
+    assert.equal(new Date(String(reconciled.rows[0]?.retrieved_at)).toISOString(), "2026-11-27T00:00:00.000Z");
+    assert.equal(reconciled.rows[0]?.source_type, "official_pricing");
+    assert.equal(new Date(String(reconciled.rows[0]?.last_checked_at)).toISOString(), "2026-11-27T00:00:00.000Z");
+
     const secondImport = `article-${randomUUID()}`;
     const secondPlan = await registry.prepare({ importId: secondImport, sourceFingerprint: "5".repeat(64), sourceText: `A different guide title. Teams compare billing, exports, and setup. ${claimText} Unrelated notes follow.`, now: new Date().toISOString() });
     const scopedCandidates = secondPlan.candidates.filter((candidate) => candidate.claimSha256 === sha256(claimText) && candidate.evidenceSha256 === evidenceSha256 && candidate.productContext === `Acme ${runId} standard plan`);
