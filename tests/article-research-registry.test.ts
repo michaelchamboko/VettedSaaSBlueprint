@@ -68,7 +68,7 @@ test("corrected acquired claims prequalify every source through the writeback ma
     },
     research: {
       evidence: {
-        claims: [{ id: "corrected-claim", sourceIds: ["corrected-source", "corroborating-source"] }],
+        claims: [{ id: "corrected-claim", sourceIds: ["corrected-source", "corroborating-source"], excerptLocations: [{ sourceId: "corrected-source", quote: "Corrected evidence." }, { sourceId: "corroborating-source", quote: "Corroborating evidence." }] }],
         sources: [{ id: "corrected-source" }, { id: "corroborating-source" }],
       },
       snapshotBytes: new Map([["corrected-source", bytes], ["corroborating-source", bytes]]),
@@ -82,7 +82,7 @@ test("incomplete writeback packets fail repairably before a registry transaction
     decision: { claims: [{ claimId: "planned-claim", action: "researched_gap" }] },
     research: {
       evidence: {
-        claims: [{ id: "corrected-claim", sourceIds: ["corrected-source"] }],
+        claims: [{ id: "corrected-claim", sourceIds: ["corrected-source"], excerptLocations: [{ sourceId: "corrected-source", quote: "Corrected retained evidence." }] }],
         sources: [{ id: "corrected-source" }],
       },
       snapshotBytes: new Map([["corrected-source", Buffer.from("Corrected retained evidence.")]]),
@@ -96,6 +96,42 @@ test("incomplete writeback packets fail repairably before a registry transaction
   await assert.rejects(
     registry.commit({ ...base, writeback: { claims: [{ plannedClaimId: "planned-claim", evidenceClaimId: "corrected-claim" }], sources: [] } } as ResearchRegistryCommitInput),
     (error: unknown) => error instanceof Error && error.message === "RESEARCH_REGISTRY_SOURCE_DECISION_MISSING",
+  );
+});
+
+test("an acquired claim cannot persist a verdict for a source without its own excerpt", async () => {
+  const invalid = {
+    decision: { claims: [{ claimId: "planned-claim", action: "researched_gap" }] },
+    writeback: {
+      claims: [{ plannedClaimId: "planned-claim", evidenceClaimId: "corrected-claim" }],
+      sources: [{ sourceId: "supported-source" }, { sourceId: "unsupported-extra-source" }],
+    },
+    research: {
+      evidence: {
+        claims: [{ id: "corrected-claim", sourceIds: ["supported-source", "unsupported-extra-source"], excerptLocations: [{ sourceId: "supported-source", quote: "This source supports the claim." }] }],
+        sources: [{ id: "supported-source" }, { id: "unsupported-extra-source" }],
+      },
+      snapshotBytes: new Map([["supported-source", Buffer.from("supported")], ["unsupported-extra-source", Buffer.from("unbound")]]),
+    },
+  } as ResearchRegistryCommitInput;
+  await assert.rejects(
+    new NeonArticleResearchRegistry().commit(invalid),
+    (error: unknown) => error instanceof Error && error.message === "RESEARCH_REGISTRY_CLAIM_SOURCE_EXCERPT_MISSING",
+  );
+});
+
+test("gap mappings cannot alias a reused claim's effective evidence identity", async () => {
+  const collision = {
+    decision: { claims: [{ claimId: "reused-claim", action: "reused_current" }, { claimId: "gap-claim", action: "researched_gap" }] },
+    writeback: { claims: [{ plannedClaimId: "gap-claim", evidenceClaimId: "reused-claim" }], sources: [] },
+    research: {
+      evidence: { claims: [{ id: "reused-claim", sourceIds: [], excerptLocations: [] }], sources: [] },
+      snapshotBytes: new Map(),
+    },
+  } as ResearchRegistryCommitInput;
+  await assert.rejects(
+    new NeonArticleResearchRegistry().commit(collision),
+    (error: unknown) => error instanceof Error && error.message === "RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH",
   );
 });
 

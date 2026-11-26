@@ -413,7 +413,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
           const refreshed = externalArticleImportSchema.parse({ ...persisted, stageReceipts: [...persisted.stageReceipts, { stage: "RESEARCHING", status: "failed", at: now(), message: "RESEARCH_RECOVERY_REQUIRED: registry plan changed before writeback; preserve the prior packet and retrieve a fresh plan." }] });
           return recordImportFailure(repositoryRoot, refreshed, { strategy: group, classification: "transient", message });
         }
-        if (message === "PUBLICATION_CATALOGUE_BUSY" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
+        if (message === "PUBLICATION_CATALOGUE_BUSY" || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
           return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", message });
         }
         return recordImportRepair(repositoryRoot, persisted, { strategy: group, message });

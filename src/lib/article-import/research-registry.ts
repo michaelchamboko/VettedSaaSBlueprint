@@ -255,6 +255,10 @@ export function validateRegistryWritebackCompleteness(
       new Set(mappings.map((mapping) => mapping.evidenceClaimId)).size !== mappings.length) {
     throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
   }
+  const effectiveEvidenceClaimIds = decision.claims.map((claim) => mappings.find((mapping) => mapping.plannedClaimId === claim.claimId)?.evidenceClaimId ?? claim.claimId);
+  if (new Set(effectiveEvidenceClaimIds).size !== effectiveEvidenceClaimIds.length) {
+    throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+  }
   const evidenceClaimIds = research.evidence.claims.map((claim) => claim.id);
   if (new Set(evidenceClaimIds).size !== evidenceClaimIds.length) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
   const evidenceSourceIds = research.evidence.sources.map((source) => source.id);
@@ -268,7 +272,12 @@ export function validateRegistryWritebackCompleteness(
     if (evidenceClaim.sourceIds.length === 0 || new Set(evidenceClaim.sourceIds).size !== evidenceClaim.sourceIds.length) {
       throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
     }
-    for (const sourceId of evidenceClaim.sourceIds) acquiredSourceIds.add(sourceId);
+    for (const sourceId of evidenceClaim.sourceIds) {
+      if (!evidenceClaim.excerptLocations.some((excerpt) => excerpt.sourceId === sourceId && excerpt.quote.trim().length > 0)) {
+        throw new Error("RESEARCH_REGISTRY_CLAIM_SOURCE_EXCERPT_MISSING");
+      }
+      acquiredSourceIds.add(sourceId);
+    }
   }
   const writebackSources = writeback?.sources ?? [];
   if (new Set(writebackSources.map((source) => source.sourceId)).size !== writebackSources.length ||

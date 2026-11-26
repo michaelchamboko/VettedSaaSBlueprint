@@ -146,8 +146,14 @@ export function assertAcquisitionFreshness(input: ResearchRegistryCommitInput, d
   if (!input.writeback) throw new Error("RESEARCH_REGISTRY_WRITEBACK_REQUIRED");
   const now = Date.parse(databaseNow);
   if (!Number.isFinite(now)) throw new Error("CAPABILITY_UNAVAILABLE: RESEARCH_REGISTRY_DATABASE_CLOCK_INVALID");
-  const acquiredAt = [input.research.evidence.createdAt, input.writeback.createdAt, ...input.research.evidence.sources.map((source) => source.retrievedAt)];
-  if (acquiredAt.some((value) => Date.parse(value) > now)) throw new Error("RESEARCH_REGISTRY_ACQUISITION_TIME_INVALID");
+  const planGeneratedAt = Date.parse(input.plan.generatedAt);
+  const writebackCreatedAt = Date.parse(input.writeback.createdAt);
+  const gapClaimIds = new Set(input.decision.claims.filter((claim) => claim.action === "researched_gap").map((claim) => claim.claimId));
+  const acquiredEvidenceClaimIds = new Set(input.writeback.claims.filter((claim) => gapClaimIds.has(claim.plannedClaimId)).map((claim) => claim.evidenceClaimId));
+  const acquiredSourceIds = new Set(input.research.evidence.claims.filter((claim) => acquiredEvidenceClaimIds.has(claim.id)).flatMap((claim) => claim.sourceIds));
+  const acquisitionTimesInvalid = Date.parse(input.research.evidence.createdAt) > now || writebackCreatedAt > now ||
+    input.research.evidence.sources.some((source) => acquiredSourceIds.has(source.id) && (Date.parse(source.retrievedAt) < planGeneratedAt || Date.parse(source.retrievedAt) > writebackCreatedAt));
+  if (acquisitionTimesInvalid) throw new Error("RESEARCH_REGISTRY_ACQUISITION_TIME_INVALID");
   const maximumExpiry = now + ARTICLE_RESEARCH_MAX_FRESHNESS_MS;
   if (input.writeback.claims.some((claim) => {
     const expiresAt = Date.parse(claim.expiresAt);
@@ -159,6 +165,25 @@ export function isRepairableResearchRegistryCommitError(message: string): boolea
   return message === "RESEARCH_REGISTRY_PLAN_STALE" ||
     message === "RESEARCH_REGISTRY_ACQUISITION_TIME_INVALID" ||
     message === "RESEARCH_REGISTRY_EXPIRY_INVALID";
+}
+
+export const ARTICLE_RESEARCH_SERIALIZATION_ATTEMPTS = 3;
+
+export async function runResearchRegistryTransaction<T>(
+  transaction: TransactionRunner,
+  work: (tx: TransactionSql) => Promise<T>,
+): Promise<T> {
+  for (let attempt = 1; attempt <= ARTICLE_RESEARCH_SERIALIZATION_ATTEMPTS; attempt += 1) {
+    try {
+      return await transaction(work);
+    } catch (error) {
+      if ((error as { code?: string }).code !== "40001") throw error;
+      if (attempt === ARTICLE_RESEARCH_SERIALIZATION_ATTEMPTS) {
+        throw new Error("RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED", { cause: error });
+      }
+    }
+  }
+  throw new Error("RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED");
 }
 
 async function writeEvidence(tx: TransactionSql, input: ResearchRegistryCommitInput): Promise<EvidenceLink[]> {
@@ -287,7 +312,7 @@ export class NeonArticleResearchRegistry implements ArticleResearchRegistry {
   async commit(input: ResearchRegistryCommitInput): Promise<ResearchRegistryCommitResult> {
     validateRegistryWritebackCompleteness(input.decision, input.research, input.writeback);
     try {
-      return await this.transaction(async (tx) => {
+      return await runResearchRegistryTransaction(this.transaction, async (tx) => {
         await tx`set transaction isolation level serializable`;
         await tx`select pg_advisory_xact_lock(hashtextextended(${input.importId}, 0))`;
         const plannedClaimHashes = input.decision.claims.map((claim) => sha256(claim.claimText));
@@ -326,7 +351,7 @@ export class NeonArticleResearchRegistry implements ArticleResearchRegistry {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.startsWith("CAPABILITY_UNAVAILABLE:") || isRepairableResearchRegistryCommitError(message)) throw error;
+      if (message.startsWith("CAPABILITY_UNAVAILABLE:") || isRepairableResearchRegistryCommitError(message) || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED") throw error;
       throw new Error(`CAPABILITY_UNAVAILABLE: article research registry write failed: ${message}`);
     }
   }
