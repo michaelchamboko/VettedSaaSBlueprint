@@ -6,7 +6,7 @@ import { EditorialV2PreviewPage } from "@/components/landing/EditorialV2PreviewP
 import { getCodexBatchPreview, listCodexBatchPreviewSlugs } from "@/lib/generated/codex-batch-previews";
 import { getEditorialV2Preview, listEditorialV2PreviewSlugs } from "@/lib/generated/editorial-v2-previews";
 import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
-import { loadArticleHero } from "@/lib/article-heroes";
+import { loadArticleHeroForArtifact } from "@/lib/article-heroes";
 
 export const dynamic = "force-static";
 
@@ -41,7 +41,7 @@ export default async function LandingPagePreview({ params }: { params: Promise<{
   const { slug } = await params;
   const batchPreview = await getCodexBatchPreview(slug);
   if (batchPreview) {
-    const reviewedHero = loadArticleHero("direct-review", batchPreview.blueprint.metadata.url_slug, fingerprintEditorialArtifact(batchPreview.blueprint))?.asset;
+    const reviewedHero = loadArticleHeroForArtifact("direct-review", batchPreview.blueprint.metadata.url_slug, batchPreview.blueprint)?.asset;
     return (
       <DirectReviewPage
         blueprint={batchPreview.blueprint}

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { ReferenceComposedReviewPage } from "@/components/landing/ReferenceComposedReviewPage";
 import { validateApprovedArticlePreview } from "@/lib/article-import/approved-article-preview";
-import { loadArticleHero } from "@/lib/article-heroes";
+import { loadArticleHeroForArtifact } from "@/lib/article-heroes";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export default async function DevApprovedArticlePreview({ params, searchParams }
   if (!importId) notFound();
   const result = await approved(slug, importId, packetPreview === "1");
   if (!result.ok || !result.blueprint) notFound();
-  const reviewedHero = loadArticleHero("direct-review", result.blueprint.metadata.url_slug, fingerprintEditorialArtifact(result.blueprint))?.asset;
+  const reviewedHero = loadArticleHeroForArtifact("direct-review", result.blueprint.metadata.url_slug, result.blueprint)?.asset;
   if (packetPreview === "1") return <DirectReviewPage blueprint={result.blueprint} mode="preview" affiliateUrlOverride={result.affiliateUrlOverride} reviewedHero={reviewedHero} />;
 
   return (

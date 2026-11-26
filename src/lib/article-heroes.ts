@@ -2,6 +2,12 @@ import { z } from "zod";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { blogPostSchema } from "./blog/contracts";
+import { decisionSetV2Schema } from "./decision-journey/sets";
+import { fingerprintEditorialArtifact } from "./editorial/refinement";
+import { pageBlueprintSchema } from "./schemas/contracts";
+import { visibilityPageSchema } from "./visibility-pages/contracts";
+
 export const articleHeroFormatSchema = z.enum(["direct-review", "blog", "visibility", "decision-set"]);
 export type ArticleHeroFormat = z.infer<typeof articleHeroFormatSchema>;
 
@@ -15,6 +21,7 @@ export const articleHeroPublicationSchema = z.object({
   format: articleHeroFormatSchema,
   slug: safeSlugSchema,
   artifactFingerprint: hashSchema,
+  rendererFingerprint: hashSchema,
   asset: z.object({
     filePath: z.string().regex(/^public\/(?:blog\/images|images)\/[a-z0-9-]+\.webp$/),
     publicPath: z.string().regex(/^\/(?:blog\/images|images)\/[a-z0-9-]+\.webp$/),
@@ -26,6 +33,15 @@ export const articleHeroPublicationSchema = z.object({
 }).strict();
 export type ArticleHeroPublication = z.infer<typeof articleHeroPublicationSchema>;
 export type ArticleHeroLookup = (format: ArticleHeroFormat, key: string) => unknown | null;
+
+export function fingerprintArticleHeroRendererArtifact(formatInput: ArticleHeroFormat, artifact: unknown): string {
+  const format = articleHeroFormatSchema.parse(formatInput);
+  const canonical = format === "direct-review" ? pageBlueprintSchema.parse(artifact)
+    : format === "blog" ? blogPostSchema.parse(artifact)
+      : format === "visibility" ? visibilityPageSchema.parse(artifact)
+        : decisionSetV2Schema.parse(artifact);
+  return fingerprintEditorialArtifact(canonical);
+}
 
 export function articleHeroKey(slug: string): string {
   return safeSlugSchema.parse(slug).split("/").join("--");
@@ -56,7 +72,7 @@ function publishedSidecarLookup(format: ArticleHeroFormat, key: string): unknown
 export function loadArticleHero(
   formatInput: ArticleHeroFormat,
   slug: string,
-  artifactFingerprint: string,
+  rendererFingerprint: string,
   lookup: ArticleHeroLookup = publishedSidecarLookup,
 ): ArticleHeroPublication | null {
   const format = articleHeroFormatSchema.parse(formatInput);
@@ -65,7 +81,7 @@ export function loadArticleHero(
   if (value === null) return null;
   const publication = articleHeroPublicationSchema.parse(value);
   if (publication.format !== format || publication.slug !== slug) throw new Error("ARTICLE_HERO_PATH_MISMATCH");
-  if (publication.artifactFingerprint !== artifactFingerprint) {
+  if (publication.rendererFingerprint !== rendererFingerprint) {
     throw new Error("ARTICLE_HERO_ARTIFACT_MISMATCH");
   }
   if (publication.asset.filePath !== expected.assetFile || publication.asset.publicPath !== expected.publicPath) {
@@ -73,5 +89,16 @@ export function loadArticleHero(
   }
   // Full asset-byte verification belongs to supervised validation and release,
   // never a latency-sensitive public render path.
+  return publication;
+}
+
+export function loadArticleHeroForArtifact(
+  format: ArticleHeroFormat,
+  slug: string,
+  artifact: unknown,
+  lookup: ArticleHeroLookup = publishedSidecarLookup,
+): ArticleHeroPublication | null {
+  const rendererFingerprint = fingerprintArticleHeroRendererArtifact(format, artifact);
+  const publication = loadArticleHero(format, slug, rendererFingerprint, lookup);
   return publication;
 }

@@ -7,8 +7,7 @@ import { PublicPageShell } from "@/components/public/PublicPageShell";
 import { getPublishedBlogPost, listPublishedBlogPostParams } from "@/lib/blog/catalogue";
 import { buildBlogStructuredData } from "@/lib/blog/structured-data";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
-import { loadArticleHero } from "@/lib/article-heroes";
-import { fingerprintEditorialArtifact } from "@/lib/editorial/refinement";
+import { loadArticleHeroForArtifact } from "@/lib/article-heroes";
 import { ReviewedArticleHero } from "@/components/public/ReviewedArticleHero";
 
 export const dynamic = "force-static";
@@ -46,7 +45,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
   if (!post) notFound();
   const config = loadPublicSiteConfig();
   const structuredData = buildBlogStructuredData(post, config.canonicalOrigin);
-  const reviewedHero = loadArticleHero("blog", post.slug, fingerprintEditorialArtifact(post))?.asset;
+  const reviewedHero = loadArticleHeroForArtifact("blog", post.slug, post)?.asset;
 
   return (
     <PublicPageShell>

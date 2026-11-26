@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import { z } from "zod";
 
-import { articleHeroFormatSchema, articleHeroPaths, articleHeroPublicationSchema, type ArticleHeroFormat } from "../article-heroes";
+import { articleHeroFormatSchema, articleHeroPaths, articleHeroPublicationSchema, fingerprintArticleHeroRendererArtifact, type ArticleHeroFormat } from "../article-heroes";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
 import { evidenceRefSchema, hashSchema, readEvidence, readVerifiedEvidenceBytes, sha256, storeEvidence, storeEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import { writeJsonAtomically } from "./engine";
@@ -90,6 +90,7 @@ export function articleHeroHandoff(root: string, record: {
 }, target: { slug: string }, artifact: unknown, generation = 0) {
   const paths = articleHeroPaths(record.format, target.slug);
   const prompt = articleHeroPrompt(record.format, target.slug, artifact);
+  const rendererFingerprint = fingerprintArticleHeroRendererArtifact(record.format, artifact);
   const handoff = {
     schemaVersion: "ArticleHeroImagegenHandoffV1" as const,
     provider: "openai" as const,
@@ -101,6 +102,7 @@ export function articleHeroHandoff(root: string, record: {
     format: record.format,
     slug: target.slug,
     artifactFingerprint: record.contentApproval.artifactFingerprint,
+    rendererFingerprint,
     prompt,
     promptSha256: sha256(prompt),
     alt: articleHeroAlt(record.format, artifact),
@@ -150,6 +152,7 @@ export async function bindGeneratedArticleHero(root: string, handoff: ReturnType
   const publication = articleHeroPublicationSchema.parse({
     schemaVersion: "ArticleHeroPublicationV1", format: evidence.format, slug: evidence.slug,
     artifactFingerprint: evidence.artifactFingerprint,
+    rendererFingerprint: handoff.rendererFingerprint,
     asset: { filePath: assetRef.path, publicPath: handoff.publicPath, sha256: assetRef.sha256,
       width: metadata.width, height: metadata.height, alt: evidence.alt },
   });

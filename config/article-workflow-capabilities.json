@@ -270,8 +270,16 @@
       "sha256": "fb02e92cb5890f4a239bf164db3a435523032f9ddfcbaaff4880d9f2566ef575"
     },
     {
+      "path": ".agents/skills/external-article-import/references/article-visual-quality.md",
+      "sha256": "bf7cfdd3b1d6b663a6644eb3ee5bc8e5b1340c4dbb4520429b82c371c2ada45b"
+    },
+    {
       "path": ".agents/skills/external-article-import/references/design-judgment.md",
       "sha256": "5de2ae80e0bef13fef11573da9f440819b308acec44acf6964d47c3066578f97"
+    },
+    {
+      "path": ".agents/skills/external-article-import/references/hero-imagegen.md",
+      "sha256": "9ce8a69d80fb7c6f2c6c214339cac4047b18ae3d358e1b6b13893d189b8fe3b5"
     }
   ]
 }

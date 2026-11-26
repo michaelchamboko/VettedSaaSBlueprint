@@ -40,10 +40,33 @@ const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm",
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
 export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), transformAssessment: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), hero: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
-  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, commercialMode: z.enum(["approved", "decommercialized", "none"]).optional(), approvedAffiliateUrl: z.string().url().optional(), evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
+  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, commercialMode: z.enum(["approved", "decommercialized", "none"]).optional(), approvedAffiliateUrl: z.string().url().optional(), evidenceRefs: evidenceRefsSchema, heroImage: articleHeroBindingSchema.optional(), frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("quarantine"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), reasonCode: z.enum(["empty", "unusable", "unsupported-format"]), dispositionEvidenceRef: evidenceRefSchema }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
+type LiveTerminalEvidence = Extract<z.infer<typeof terminalEvidenceSchema>, { kind: "live" }>;
+
+/** Rebuild the record-level hero required by V3 from immutable terminal material. */
+export async function reconstructTerminalHeroBinding(
+  root: string,
+  value: Pick<LiveTerminalEvidence, "evidenceRefs" | "heroImage">,
+) {
+  const retainedHero = value.evidenceRefs.hero
+    ? articleHeroBindingSchema.parse(await readEvidence(root, value.evidenceRefs.hero))
+    : undefined;
+  const heroImage = value.heroImage ?? retainedHero;
+  if (value.heroImage && (!retainedHero || JSON.stringify(value.heroImage) !== JSON.stringify(retainedHero))) {
+    throw new Error("TERMINAL_HERO_BINDING_MISMATCH");
+  }
+  if (heroImage) {
+    await validateArticleHeroBinding(root, heroImage, {
+      format: heroImage.format,
+      slug: heroImage.slug,
+      artifactFingerprint: heroImage.artifactFingerprint,
+    });
+  }
+  return heroImage;
+}
 export const diagnosisSchema = z.object({ ...common, schemaVersion: z.literal("DiagnosisV1"), stage: z.enum(WORKFLOW_SEQUENCE), failedSubmissionDigest: hashSchema, failureCode: nonempty, cause: nonempty, attemptedRecoveryRefs: z.array(evidenceRefSchema).min(1), remedyEvidenceRefs: z.array(evidenceRefSchema).min(1), replacementSubmissionDigest: hashSchema, consumedAt: z.string().datetime({ offset: true }).optional() }).strict();
 export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef; transformAssessment?: EvidenceRef; assessment?: EvidenceRef; hero?: EvidenceRef }; heroImage?: unknown; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string; stage?: string; resumeStage?: string; affiliateUrl?: string | null; transformation?: { commercialMode?: string; resolvedAffiliateUrl?: string } };
 type Bound = { importId: string; sourceFingerprint: string; requirementRevision: string };
@@ -595,7 +618,11 @@ export async function validateTerminalEvidence(root: string, ref: EvidenceRef, b
     const currentLongFormPolicy = manifest.files.some((item) => item.path === LONG_FORM_AFFILIATE_INSTRUCTION);
     if (currentLongFormPolicy && !value.commercialMode) throw new Error("LONG_FORM_AFFILIATE_TERMINAL_BINDING_REQUIRED");
     if (currentLongFormPolicy && value.commercialMode === "approved" && !value.approvedAffiliateUrl) throw new Error("LONG_FORM_AFFILIATE_TERMINAL_BINDING_REQUIRED");
-    return evaluateWorkflowEvidence({ ...value, workflowVersion: 2, stage: "LIVE", artifactPath: value.artifactRef.path, affiliateUrl: value.approvedAffiliateUrl, release: value.deployment }, { root, throughStage: "LIVE", artifactPath: value.artifactRef.path });
+    // V3 presentation validation binds the record-level hero to the immutable
+    // binding retained under evidenceRefs.hero. Reconstruct it inside the
+    // frozen snapshot so terminal replay never consults mutable live files.
+    const heroImage = await reconstructTerminalHeroBinding(root, value);
+    return evaluateWorkflowEvidence({ ...value, heroImage, workflowVersion: 2, stage: "LIVE", artifactPath: value.artifactRef.path, affiliateUrl: value.approvedAffiliateUrl, release: value.deployment }, { root, throughStage: "LIVE", artifactPath: value.artifactRef.path });
   });
   if (!result.ok) throw new Error(result.diagnostics.join("; "));
 }

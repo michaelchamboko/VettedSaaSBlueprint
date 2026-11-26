@@ -11,6 +11,7 @@ import { articleHeroHandoff, bindGeneratedArticleHero, validateArticleHeroBindin
 import { sha256 } from "../src/lib/article-import/execution-evidence";
 import { canonicalSubmissionFingerprint, createArticleImport, loadImport, recordImportRepair, saveImport, withImportLease } from "../src/lib/article-import/engine";
 import { isAllowedReleasePath, validateBoundArticleHeroReleasePaths } from "../src/lib/article-import/release";
+import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -39,7 +40,7 @@ test("sidecar loading observes generation and regeneration under one artifact fi
     let current: unknown | null = null;
     const lookup = () => current;
     assert.equal(loadArticleHero("blog", "buyer-guide", fingerprint, lookup), null);
-    const publication = (sha256: string, alt: string) => ({ schemaVersion: "ArticleHeroPublicationV1", format: "blog", slug: "buyer-guide", artifactFingerprint: fingerprint,
+    const publication = (sha256: string, alt: string) => ({ schemaVersion: "ArticleHeroPublicationV1", format: "blog", slug: "buyer-guide", artifactFingerprint: "d".repeat(64), rendererFingerprint: fingerprint,
       asset: { filePath: paths.assetFile, publicPath: paths.publicPath, sha256, width: 1600, height: 900, alt } });
     current = publication("b".repeat(64), "First generated decision workspace illustration");
     assert.equal(loadArticleHero("blog", "buyer-guide", fingerprint, lookup)?.asset.sha256, "b".repeat(64));
@@ -57,8 +58,10 @@ test("ImageGen PNG provenance is retained while exact derived WebP bytes are ind
       format: "direct-review" as const,
       contentApproval: { artifactFingerprint: "2".repeat(64) },
     };
-    const artifact = { hero: { headline: "Choose Acme with evidence, not assumptions" } };
+    const artifact = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, url_slug: "acme-review" } };
     const handoff = articleHeroHandoff(root, record, { slug: "acme-review" }, artifact, 0);
+    assert.equal(handoff.artifactFingerprint, record.contentApproval.artifactFingerprint, "approval and generation retain the raw approved fingerprint");
+    assert.notEqual(handoff.rendererFingerprint, handoff.artifactFingerprint, "renderer identity is a separate schema-canonical projection");
     const png = await sharp({ create: { width: 1600, height: 900, channels: 3, background: "#d9c7a8" } }).png().toBuffer();
     await mkdir(path.dirname(path.join(root, handoff.originalFile)), { recursive: true });
     await writeFile(path.join(root, handoff.originalFile), png);
@@ -80,6 +83,9 @@ test("ImageGen PNG provenance is retained while exact derived WebP bytes are ind
     await writeFile(path.join(root, generationPath), `${JSON.stringify(evidence)}\n`);
 
     const { binding } = await bindGeneratedArticleHero(root, handoff, generationPath);
+    const publication = JSON.parse(await readFile(path.join(root, handoff.publicationFile), "utf8"));
+    assert.equal(publication.artifactFingerprint, record.contentApproval.artifactFingerprint);
+    assert.equal(publication.rendererFingerprint, handoff.rendererFingerprint);
     assert.equal(binding.generationRef.sha256, sha256(await readFile(path.join(root, generationPath))));
     assert.equal(binding.assetRef.sha256, binding.inspectionRef.sha256);
     assert.notEqual(binding.assetRef.sha256, evidence.originalRef.sha256);
