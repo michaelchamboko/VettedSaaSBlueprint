@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { executeFixtureCommand as executeImportCommand, fixtureResearchRegistry } from "./fixtures/article-command";
+import { executeImportCommand as executeArticleCommand } from "../scripts/import-article";
 import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
 import { createIntakeRun, type IntakeRun } from "../src/lib/article-import/intake";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
@@ -13,10 +14,68 @@ import { createSupervisedImportExecutor } from "../src/lib/article-import/superv
 import type { ReleaseOperations } from "../src/lib/article-import/release";
 import { prepareApprovalFixture, preparePresentationFixture } from "./fixtures/article-content-approval";
 import { storeEvidence } from "../src/lib/article-import/execution-evidence";
-import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { instructionsForStage, releaseSteps, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
+
+test("describe-workflow exposes exactly the three actionable release steps", async () => {
+  const described = await executeArticleCommand(process.cwd(), { kind: "describe-workflow" }) as {
+    releaseSteps: typeof releaseSteps;
+    instructions: { RELEASING: string };
+  };
+
+  assert.deepEqual(described.releaseSteps, releaseSteps);
+  assert.deepEqual(described.releaseSteps.map((step) => step.id), [
+    "validate-candidate",
+    "review-and-deploy",
+    "verify-production",
+  ]);
+  assert.equal(described.instructions.RELEASING, instructionsForStage("RELEASING"));
+  assert.match(described.instructions.RELEASING, /exact PR head/);
+  assert.match(described.instructions.RELEASING, /exact merged commit/);
+  assert.match(described.instructions.RELEASING, /rollback deployment/);
+});
+
+test("RELEASING executor writes exactly three actionable steps before awaiting its result", async () => {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "supervised-releasing-packet-"));
+  const { writeFile } = await import("node:fs/promises");
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# Synthetic release packet\n\nA long enough article body for an isolated supervised release packet test.");
+    const created = await createArticleImport(root, "article.md");
+    const record = {
+      ...created,
+      stage: "RELEASING" as const,
+      format: "direct-review" as const,
+      artifactPath: "src/generated/landing-pages/example.json",
+    };
+    const executor = createSupervisedImportExecutor(root);
+    const pending = await executor({
+      record,
+      stage: "RELEASING",
+      strategy: "release",
+      attempt: 1,
+      idempotencyKey: "a".repeat(64),
+      leaseToken: "synthetic-release-lease",
+      assertLease: async () => {},
+    });
+
+    assert.equal(pending.continuation?.kind, "work");
+    if (pending.continuation?.kind !== "work") throw new Error("Missing RELEASING work packet");
+    const packet = JSON.parse(await readFile(path.join(root, pending.continuation.workPath), "utf8"));
+    assert.deepEqual(packet.releaseSteps.map((step: { id: string }) => step.id), ["validate-candidate", "review-and-deploy", "verify-production"]);
+    assert.equal(packet.releaseSteps.length, 3);
+    assert.match(packet.instructions, /1\. Validate the candidate:/);
+    assert.match(packet.instructions, /2\. Review and deploy:/);
+    assert.match(packet.instructions, /3\. Verify production:/);
+    assert.equal(pending.continuation.resultPath, packet.resultPath);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 test("the default CLI consumes bound research output and rejects a result for another source", async () => {
   const parent = path.join(process.cwd(), ".scratch");

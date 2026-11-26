@@ -2447,6 +2447,68 @@
       }
     },
     {
+      "id": "RELEASING-THREE-1126",
+      "title": "Three-action supervised article release handoff",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 1
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "OWNER-2026-11-26-RELEASING-THREE"
+      ],
+      "context_files": [
+        "planning.md",
+        "src/lib/article-import/release.ts",
+        "src/lib/article-import/workflow-requirements.ts",
+        "src/lib/article-import/supervised-executor.ts",
+        "scripts/import-article.ts",
+        ".agents/skills/external-article-import/SKILL.md"
+      ],
+      "validation": [
+        {
+          "name": "release handoff regression",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--import",
+            "tsx",
+            "--test",
+            "--test-name-pattern=describe-workflow exposes exactly|RELEASING executor writes exactly|direct-review projection binding skips",
+            "tests/article-import-supervised.test.ts",
+            "tests/article-import-release.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/releasing-three-1126/verification.md"
+      ],
+      "model_route": {
+        "worker": "codex-owner-authorized",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive; synthetic verification cannot execute, merge, deploy or publish a real article. The code change remains authorized for the repository PR, review, merge and deployment workflow."
+      }
+    },
+    {
       "id": "HOMEPAGE-MOTION-1124",
       "title": "Approved post-hero guide index, localization track and report covers",
       "status": "in_progress",
