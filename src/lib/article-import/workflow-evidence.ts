@@ -210,8 +210,12 @@ async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, bin
   if (review.pass !== "content-assessment" || proseProjectionDigest(review.input) !== proseProjectionDigest(reviewInput) || !review.inputRefs.some((ref) => ref.path === value.researchRef.path && ref.sha256 === value.researchRef.sha256)) throw new Error("ASSESSMENT_EXECUTION_MISMATCH");
   const assessed = { format: value.format, schemaRevision: value.schemaRevision, artifactFingerprint: value.artifactFingerprint, sourceFingerprint: value.sourceFingerprint, requirementRevision: value.requirementRevision, researchRef: value.researchRef, intent: value.intent, claimCoverage: value.claimCoverage, ruleResults: value.ruleResults, findings: value.findings };
   if (review.output.assessment !== JSON.stringify(assessed)) throw new Error("ASSESSMENT_JUDGMENT_MISMATCH");
-  // Final assessments are repeated in REFINING; either authentic stage packet is valid.
-  try { assertPacket(review.packetId, binding, "TRANSFORMING"); } catch { assertPacket(review.packetId, binding, "REFINING"); }
+  // Structured evidence is the final reassessment and must originate inside REFINING.
+  // Retained OpenCode evidence keeps the historical TRANSFORMING-or-REFINING policy.
+  if (review.kind === "structured") assertPacket(review.packetId, binding, "REFINING");
+  else {
+    try { assertPacket(review.packetId, binding, "TRANSFORMING"); } catch { assertPacket(review.packetId, binding, "REFINING"); }
+  }
   return value;
 }
 

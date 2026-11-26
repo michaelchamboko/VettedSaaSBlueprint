@@ -12,7 +12,7 @@ import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requi
 const families = { "opencode-go/beam-free": "reflection-beam", "fixture/cleanser": "fixture-cleanser-family" };
 const now = "2026-11-03T00:00:00.000Z";
 type RecordIdentity = { importId: string; sourceFingerprint: string; researchGeneration?: number };
-export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string; structuredEditorial?: boolean; reuseIndependentContext?: boolean }) {
+export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string; structuredEditorial?: boolean; reuseIndependentContext?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING" }) {
   await mkdir(path.join(root, "config"), { recursive: true });
   const editorialFiles = ["SKILL.md", "references/principles.md", "references/signs-of-ai-writing.md", "references/dr-eleanor-hayes.md", "prompts/cleanse.txt"].map((file) => `.agents/skills/eleanor-editorial/${file}`);
   const designFiles = ["SKILL.md", "reference/craft-floor.md", "reference/shape.md", "reference/critique.md", "reference/audit.md", "reference/polish.md"].map((file) => `.agents/skills/impeccable/${file}`).concat(".agents/skills/design-taste-frontend/SKILL.md");
@@ -40,7 +40,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   let exchangeSequence = 0;
   async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>, sessionId = "fixture-session") {
     const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);
-    const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : "REFINING");
+    const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : pass === "content-assessment" ? (input.assessmentStage ?? "REFINING") : "REFINING");
     const instructions = (pass.startsWith("design:") ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
     if (input.structuredEditorial && !pass.startsWith("design:")) {
       const exchangeId = `exchange-${++exchangeSequence}`;

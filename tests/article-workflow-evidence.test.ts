@@ -14,7 +14,7 @@ import { captureCommandExecution, evidenceReference, executionEvidenceSchema, ex
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
-async function fixture(researchGeneration = 0, options: { structuredEditorial?: boolean; reuseIndependentContext?: boolean } = {}) {
+async function fixture(researchGeneration = 0, options: { structuredEditorial?: boolean; reuseIndependentContext?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING" } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "workflow-proof-"));
   const before = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://example.test/example", url_slug: "example" } };
   const after = rewriteAllProse("landing", before);
@@ -46,6 +46,20 @@ test("structured Refining accepts alternate tools and models but rejects a reuse
   try {
     await assert.rejects(validateEditorialExecution(blocked.root, blocked.record.evidenceRefs!.editorial!, blocked.record), /EDITORIAL_INDEPENDENT_REVIEW_CONTEXT_REUSED/);
   } finally { await rm(blocked.root, { recursive: true, force: true }); }
+});
+test("structured final assessment requires a Refining packet while legacy OpenCode retains Transforming compatibility", async () => {
+  const blocked = await fixture(0, { structuredEditorial: true, assessmentStage: "TRANSFORMING" });
+  try {
+    await assert.rejects(
+      validateContentAssessment(blocked.root, blocked.record.evidenceRefs!.assessment!, blocked.record),
+      /EXECUTION_PACKET_MISMATCH/,
+    );
+  } finally { await rm(blocked.root, { recursive: true, force: true }); }
+
+  const legacy = await fixture(0, { assessmentStage: "TRANSFORMING" });
+  try {
+    await validateContentAssessment(legacy.root, legacy.record.evidenceRefs!.assessment!, legacy.record);
+  } finally { await rm(legacy.root, { recursive: true, force: true }); }
 });
 test("valid synthetic producer chain passes; omitted prerequisites fail closed without writes", async () => {
   const { root, record } = await fixture();
