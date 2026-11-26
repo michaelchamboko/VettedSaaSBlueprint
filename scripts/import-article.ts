@@ -1,15 +1,35 @@
-import { createArticleImport, executePendingImport, upgradeImportEvidence, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
+import { createArticleImport, executePendingImport, loadImport, upgradeImportEvidence, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
 import { dispatchArticleImport, dispatchIntakeRun, type DispatchOptions } from "../src/lib/article-import/dispatch";
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { readFile } from "node:fs/promises";
-import { assertPrimaryArticleCheckout, withArticleExecution, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
+import { articleExecutionStage, assertPrimaryArticleCheckout, withArticleExecution, inspectArticlePreflight, type CapabilityProbe } from "../src/lib/article-import/preflight";
 import { WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, stageInstructions } from "../src/lib/article-import/workflow-requirements";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
+import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
 
 export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
+
+async function importExecutionStage(root: string, importId: string): Promise<string | undefined> {
+  try { return articleExecutionStage(await loadImport(root, importId)); }
+  catch { return undefined; }
+}
+
+async function intakeExecutionStage(root: string, runId: string): Promise<string | undefined> {
+  try {
+    const entry = nextIntakeEntry(await loadIntakeRun(root, runId));
+    return entry?.importId ? importExecutionStage(root, entry.importId) : undefined;
+  } catch { return undefined; }
+}
+
+function pendingExecutionOptions(root: string, probe?: CapabilityProbe) {
+  return {
+    rejectBusy: true,
+    executeStage: (stage: ExternalArticleImportV1["stage"], action: () => Promise<ExternalArticleImportV1>) =>
+      withArticleExecution(root, action, probe, stage),
+  };
+}
 
 export function parseImportCommand(argv: string[]): ImportCommand {
   if (argv[0] === "--recover-lease" && ["source", "intake", "import", "publication"].includes(argv[1]) && argv[2] === "--key" && argv[3]) return { kind: "recover-lease", leaseKind: argv[1] as "source" | "intake" | "import" | "publication", key: argv[3] };
@@ -37,7 +57,13 @@ export function parseImportCommand(argv: string[]): ImportCommand {
 
 export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
   const dispatch = () => dispatchImportCommand(root, command, executor, dispatchOptions, probe);
-  if (["source", "resume", "intake", "intake-resume", "dispatch", "dispatch-intake"].includes(command.kind)) return withArticleExecution(root, dispatch, probe);
+  if (["source", "resume", "intake", "intake-resume", "dispatch", "dispatch-intake"].includes(command.kind)) {
+    return withArticleExecution(root, dispatch, probe, async () => {
+      if (command.kind === "resume" || command.kind === "dispatch") return importExecutionStage(root, command.importId);
+      if (command.kind === "intake-resume" || command.kind === "dispatch-intake") return intakeExecutionStage(root, command.runId);
+      return undefined;
+    });
+  }
   if (!["describe-workflow", "preflight", "check-intake", "check-completion", "intake-status"].includes(command.kind)) await assertPrimaryArticleCheckout(root);
   return dispatch();
 }
@@ -58,8 +84,8 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "check-completion") return inspectImportCompletion(root, command.importId);
   if (command.kind === "intake") return createIntakeRun(root, command.directory);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
-  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor });
-  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor });
+  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
+  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
   if (command.kind === "intake-retry") {
     const run = await loadIntakeRun(root, command.runId);
     if (!command.importId) throw new Error("INTAKE_RETRY_IMPORT_REQUIRED");
@@ -78,7 +104,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     if (!entry) return run;
     if (!entry.capturedPath || !entry.sourceFingerprint) return setIntakeBlocker(root, run, { scope: "shared", code: "CAPTURE_MISSING", message: `No immutable source copy was captured for ${entry.relativePath}.` });
     if (entry.status === "PROCESSING" && entry.importId) {
-      const imported = await executePendingImport(root, entry.importId, execute, { rejectBusy: true });
+      const imported = await executePendingImport(root, entry.importId, execute, pendingExecutionOptions(root, probe));
       if (imported.stage === "LIVE" || imported.stage === "QUARANTINED") {
         const terminal = await markIntakeEntry(root, run, entry.relativePath, imported.stage);
         return { ...terminal, importState: imported };
@@ -94,7 +120,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     const saved = await markIntakeEntry(root, run, entry.relativePath, imported.stage === "QUARANTINED" ? "QUARANTINED" : "PROCESSING", { importId: imported.importId });
     return { ...saved, nextEntry: saved.entries.find((item) => item.relativePath === entry.relativePath) };
   }
-  if (command.kind === "resume") return executePendingImport(root, command.importId, execute, { rejectBusy: true });
+  if (command.kind === "resume") return executePendingImport(root, command.importId, execute, pendingExecutionOptions(root, probe));
   throw new Error("An explicit import ID is required to resume an article import.");
 }
 

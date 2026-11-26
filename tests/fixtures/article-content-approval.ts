@@ -43,18 +43,19 @@ export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   return revised;
 }
 
-export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1) {
+export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean } = {}) {
   const artifactPath = "src/generated/landing-pages/example.json";
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
   const rewritten = rewriteAllProse("landing", samplePageBlueprint);
-  const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, fullRewriteNotes,
+  const notes = options.structuredEditorial ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
+  const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, notes,
     { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
   for (const [file, value] of [[artifactPath, rewritten], [editorialEvidencePath, evidence], [formatQualityPath, { format: "direct-review", artifactFingerprint: fingerprintEditorialArtifact(rewritten), passed: true, gate: "landing:quality:candidate" }]] as const) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
-  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath });
+  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath, structuredEditorial: options.structuredEditorial });
   return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
 }
 

@@ -1246,6 +1246,106 @@
       }
     },
     {
+      "id": "REFINING-INDEPENDENCE-1126",
+      "title": "Tool-independent editorial review in Refining",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "high",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-26-REFINING-INDEPENDENCE"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        ".agents/skills/eleanor-editorial/SKILL.md",
+        "src/lib/editorial/refinement.ts",
+        "src/lib/article-import/workflow-evidence.ts"
+      ],
+      "validation": [
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "lint",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "lint"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "typecheck",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "independent editorial review",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npx",
+            "tsx",
+            "--test",
+            "tests/article-workflow-evidence.test.ts",
+            "tests/capture-replay-1110.test.ts",
+            "tests/article-worker-runner.test.ts",
+            "tests/article-workflow-preflight.test.ts",
+            "tests/beam-review-policy.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": true,
+        "destinations": [
+          "github-pr",
+          "vercel"
+        ]
+      },
+      "extensions": {
+        "authority": "Owner directive in planning.md for Refining, separate PR and reconciliation with PR #84."
+      }
+    },
+    {
       "id": "BEAM-POLICY-001",
       "title": "Beam-only policy and OpenCode 2.2.6 runtime support",
       "status": "in_progress",

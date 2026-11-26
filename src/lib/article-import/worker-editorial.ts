@@ -8,20 +8,20 @@ import { z } from "zod";
 import { presentationTool, presentationOperation } from "./worker-presentation";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact } from "../editorial/refinement";
 import { contentAssessmentReviewInput, contentAssessmentSchema, validateContentAssessment, validateResearchEvidence, editorialExecutionSchema, editorialPassReviewInput, editorialJudgmentReviewInput } from "./workflow-evidence";
-import { readEvidenceBytes, evidenceRefSchema, evidenceReference, extractOpenCodeExecution, proseProjectionDigest, storeEvidence } from "./execution-evidence";
+import { captureStructuredExecution, readEvidenceBytes, evidenceRefSchema, evidenceReference, extractOpenCodeExecution, proseProjectionDigest, storeEvidence, structuredCaptureSelectionSchema, validateExecutionEvidence } from "./execution-evidence";
 import { workflowRequirements } from "./workflow-requirements";
 import { normalizeOpenCodeVersion, openCodeExportArgs } from "./opencode-runtime";
 
 const formats = { blog: "blog", visibility: "visibility", "direct-review": "landing", "decision-set": "decision" } as const;
 export const descriptor = z.object({ root: z.string(), importId: z.string().regex(/^article-[a-f0-9-]{36}$/), key: z.string().regex(/^[a-f0-9]{64}$/),
-  format: z.enum(["blog", "visibility", "direct-review", "decision-set", "agent_review_required"]), stage: z.enum(["TRANSFORMING", "REFINING", "VALIDATING"]), model: z.string(), research: evidenceRefSchema.optional(), researchGeneration: z.number().int().optional(), affiliateUrl: z.string().nullable().optional(), artifactPath: z.string().optional(), approvedFingerprint: z.string().optional(), rendering: evidenceRefSchema.optional(), sourceFingerprint: z.string(), requirementRevision: z.string(), executable: z.string() }).strict();
+  format: z.enum(["blog", "visibility", "direct-review", "decision-set", "agent_review_required"]), stage: z.enum(["TRANSFORMING", "REFINING", "VALIDATING"]), model: z.string(), executionExporterId: z.string().min(1).optional(), independentReviewModel: z.string().min(1).optional(), research: evidenceRefSchema.optional(), researchGeneration: z.number().int().optional(), affiliateUrl: z.string().nullable().optional(), artifactPath: z.string().optional(), approvedFingerprint: z.string().optional(), rendering: evidenceRefSchema.optional(), sourceFingerprint: z.string(), requirementRevision: z.string(), executable: z.string() }).strict();
 export type Packet = z.infer<typeof descriptor>;
-const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "beamReview", "finalFidelityReview"] as const;
+const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "independentReview", "finalFidelityReview"] as const;
 const file = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,100}\.json$/);
 const check = z.object({ artifact: file }).strict();
-const exchange = z.object({ pass: z.enum(passes), before: file, after: file.optional() }).strict();
+const exchange = z.object({ pass: z.enum(passes), before: file, after: file.optional(), capture: structuredCaptureSelectionSchema.optional() }).strict();
 const compare = z.object({ before: file, after: file, notes: file, manifest: file }).strict();
-const assess = z.object({ artifact: file, format: z.enum(["blog", "visibility", "direct-review", "decision-set"]) }).strict();
+const assess = z.object({ artifact: file, format: z.enum(["blog", "visibility", "direct-review", "decision-set"]), capture: structuredCaptureSelectionSchema.optional() }).strict();
 const descriptions = {
   present: "Run one validation rule or the format owner verifier on the controller-bound candidate. Returns references for the presentation packet.",
   assess: "Independently assess the complete packet editorial artifact against its bound research and workflow requirements. Returns the validated assessment reference.",
@@ -44,8 +44,20 @@ function run(executable: string, args: string[], cwd: string, stdin?: string) {
 
 type Reference = z.infer<typeof evidenceRefSchema>;
 async function capturedExchange(packet: Packet, pass: string, prose: Record<string,string>, refs: Reference[],
-  instructions: (Reference & {text:string})[], prompt: string, model: string, invoke: typeof run, imageRefs: Reference[] = []) {
+  instructions: (Reference & {text:string})[], prompt: string, model: string, invoke: typeof run, imageRefs: Reference[] = [],
+  capture?: z.infer<typeof structuredCaptureSelectionSchema>) {
   const {root, key, importId} = packet;
+  if (capture) {
+    if (packet.executionExporterId && capture.exporterId !== packet.executionExporterId) throw new Error("EXECUTION_SELECTION_MISMATCH");
+    const execution = await captureStructuredExecution(root, importId, capture);
+    const expectedInputRefs = [...refs, ...instructions.map(({path, sha256}) => ({path, sha256}))];
+    if (execution.kind !== "structured" || execution.packetId !== key || execution.pass !== pass || execution.inputDigest !== proseProjectionDigest(prose) ||
+        JSON.stringify(execution.inputRefs) !== JSON.stringify(expectedInputRefs) || JSON.stringify(execution.instructions) !== JSON.stringify(instructions)) throw new Error("EXECUTION_SELECTION_MISMATCH");
+    const output = z.record(z.string(), z.string()).parse(execution.output);
+    const executionRef = await storeEvidence(root, importId, execution);
+    await validateExecutionEvidence(root, executionRef);
+    return { output, executionRef };
+  }
   const capabilities = JSON.parse(await readFile(path.join(root, "config/article-workflow-capabilities.json"), "utf8"));
   const version = normalizeOpenCodeVersion(await invoke(packet.executable, ["--version"], root));
   if (version !== capabilities.openCodeVersion || !version.startsWith("2.")) throw new Error("EVIDENCE_UNSUPPORTED");
@@ -86,6 +98,7 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
   }
   if (name === "assess") {
     const input = assess.parse(args);
+    if (input.capture && packet.stage !== "REFINING") throw new Error("ASSESSMENT_CAPTURE_STAGE_REQUIRED");
     if (!packet.research || (packet.stage === "REFINING" && input.format !== packet.format)) throw new Error("ASSESSMENT_PACKET_BINDING");
     const artifactPath = await scoped(input.artifact);
     const artifact = await json(input.artifact);
@@ -98,9 +111,10 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
     const shape = contentAssessmentSchema.omit({id:true, createdAt:true, importId:true, schemaVersion:true, reviewerExecutionRef:true});
     const prompt = "Assess every claim and rule independently. Return only a JSON object with a single string field assessment containing JSON in this order: format, schemaRevision, artifactFingerprint, sourceFingerprint, requirementRevision, researchRef, intent, claimCoverage, ruleResults, findings. Use these identity fields, rules, and output schema: " + JSON.stringify({identity, rules:workflowRequirements, schema:z.toJSONSchema(shape)});
     const capabilities = JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8"));
-    const reviewer = capabilities.assessmentModel ?? packet.model;
-    if (!Object.hasOwn(capabilities.modelFamilies, reviewer)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered assessmentModel");
-    const {output, executionRef} = await capturedExchange(packet, "content-assessment", prose, [await evidenceReference(root,artifactPath),packet.research], [], prompt, reviewer, invoke);
+    const reviewer = packet.stage === "REFINING" ? packet.model : (capabilities.assessmentModel ?? packet.model);
+    if (!input.capture && !Object.hasOwn(capabilities.modelFamilies, reviewer)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered assessmentModel");
+    const {output, executionRef} = await capturedExchange(packet, "content-assessment", prose,
+      [await evidenceReference(root,artifactPath),packet.research], [], prompt, reviewer, invoke, [], input.capture);
     const assessmentRef = await storeEvidence(root, importId, {...shape.parse(JSON.parse(output.assessment)), schemaVersion:"ContentAssessmentV1", id:crypto.randomUUID(), createdAt:new Date().toISOString(), importId, reviewerExecutionRef: executionRef});
     await validateContentAssessment(root, assessmentRef, binding);
     return assessmentRef;
@@ -145,7 +159,7 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
   const pass = input.pass + (after ? "-judgment" : "");
   const prose = after ? editorialJudgmentReviewInput(before, after) : editorialPassReviewInput(before);
   const files = ["SKILL.md","references/principles.md","references/signs-of-ai-writing.md","references/dr-eleanor-hayes.md"];
-  if (input.pass === "beamReview") files.push("prompts/cleanse.txt");
+  if (input.pass === "independentReview") files.push("prompts/cleanse.txt");
   const instructions = await Promise.all(files.map(async name => {
     const relative = ".agents/skills/eleanor-editorial/" + name;
     return { ...await evidenceReference(root, relative), text: await readFile(path.join(root, relative), "utf8") };
@@ -154,7 +168,8 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
   const paths = editorialProsePaths(format, before);
   const prompt = after ? "Independently judge " + input.pass + ". Return a JSON object with a single string judgment encoding JSON with fields in order pass, beforeFingerprint, afterFingerprint, coveredPaths, verdict, findings, semanticNotes, meaningPreserved, protectedFieldsPreserved. Each finding has description and disposition. Report failures honestly. Fingerprints and covered paths: " + JSON.stringify([fingerprintEditorialArtifact(before), fingerprintEditorialArtifact(after), paths]) :
     "Perform " + input.pass + " following the attached editorial instructions. Return only a JSON object mapping each editable dotted path to its complete rewritten text. Editable paths: " + JSON.stringify(paths);
-  const { output, executionRef } = await capturedExchange(packet, pass, prose, refs, instructions, prompt, "opencode-go/beam-free", invoke);
+  const { output, executionRef } = await capturedExchange(packet, pass, prose, refs, instructions, prompt,
+    input.pass === "independentReview" ? (packet.independentReviewModel ?? packet.model) : packet.model, invoke, [], input.capture);
   const judgmentRef = after ? await storeEvidence(root, importId, {...JSON.parse(output.judgment), executionRef}) : undefined;
   return { output, executionRef, judgmentRef, instructionRefs, inputRef: refs[0], outputRef: refs[1] };
 

@@ -5,7 +5,8 @@ import { access, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:f
 import path from "node:path";
 import test from "node:test";
 
-import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
+import { executeFixtureCommand as executeImportCommand, persistFixture, prepareCommandCheckout } from "./fixtures/article-command";
+import { executeImportCommand as executeRawImportCommand } from "../scripts/import-article";
 import { createArticleImport, recoverWorkflowLease } from "../src/lib/article-import/engine";
 import { claimNextIntakeEntry, createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake";
 import { defaultWorkerRunner, extractJsonObject, type WorkerRunner } from "../src/lib/article-import/worker-runner";
@@ -45,6 +46,40 @@ async function makeResearchEvidence(root: string, importId: string) {
   });
   return evidencePath;
 }
+
+test("dispatch and repair resume use the neutral Refining preflight", async () => {
+  const root = await rootWithArticle();
+  try {
+    await prepareCommandCheckout(root);
+    const manifestPath = path.join(root, "config/article-workflow-capabilities.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    await writeFile(manifestPath, JSON.stringify({
+      schemaVersion: "ArticleWorkflowCapabilitiesV1",
+      files: manifest.files,
+      modelFamilies: {},
+      executionExporters: { neutral: { executable: "neutral-exporter", versionArgs: ["--version"], toolName: "neutral", toolVersion: "neutral 1", exportArgs: ["export", "{contextId}", "{exchangeId}"] } },
+    }));
+    const initial = await createArticleImport(root, "Article Intake/a.md");
+    const blocked = await persistFixture(root, {
+      ...initial,
+      stage: "REFINING",
+      continuation: { kind: "blocked", scope: "shared", cause: "Synthetic pause.", attemptedRecovery: "None.", resumptionRequirement: "Resume the fixture." },
+    });
+    const calls: string[] = [];
+    const probe = async (tool: string) => {
+      calls.push(tool);
+      if (tool === "neutral-exporter") return "neutral 1";
+      if (tool === "python") return "Python 3.13.0";
+      throw new Error("OpenCode must not be probed for Refining");
+    };
+    const dispatched = await executeRawImportCommand(root, { kind: "dispatch", importId: blocked.importId }, undefined, { maxSteps: 1 }, probe) as ExternalArticleImportV1;
+    assert.equal(dispatched.stage, "REFINING");
+    const repairing = await persistFixture(root, { ...dispatched, stage: "REPAIRING", resumeStage: "REFINING" });
+    const resumed = await executeRawImportCommand(root, { kind: "resume", importId: repairing.importId }, async ({ record }) => record, undefined, probe) as ExternalArticleImportV1;
+    assert.equal(resumed.resumeStage, "REFINING");
+    assert.deepEqual(calls, ["neutral-exporter", "python", "neutral-exporter", "python"]);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 function jsonlResult(packet: { idempotencyKey: string; sourceFingerprint: string }, work: Record<string, unknown>) {
   return [

@@ -361,7 +361,7 @@ export async function clearImportBlocker(root: string, importId: string, recover
   });
 }
 
-export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean }): Promise<ExternalArticleImportV1> {
+export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean; executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1> }): Promise<ExternalArticleImportV1> {
   const lease = await claimImportLease(repositoryRoot, importId);
   if (!lease && options?.rejectBusy) throw new Error("IMPORT_LEASE_BUSY");
   if (!lease) return loadImport(repositoryRoot, importId);
@@ -402,7 +402,8 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       await lease.assertOwned();
       let result: ExternalArticleImportV1;
       try {
-        result = await execute({ record, stage: record.stage, strategy, attempt: failures % 3 + 1, idempotencyKey, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
+        const runStage = () => execute({ record, stage: record.stage, strategy, attempt: failures % 3 + 1, idempotencyKey, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
+        result = options?.executeStage ? await options.executeStage(record.stage, runStage) : await runStage();
       } catch (error) {
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);

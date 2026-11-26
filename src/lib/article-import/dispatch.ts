@@ -1,4 +1,4 @@
-import { withArticleExecution } from "./preflight";
+import { articleExecutionStage, withArticleExecution, type CapabilityProbe } from "./preflight";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createArticleImport, executePendingImport, loadImport, saveImport, type ImportStageExecutor } from "./engine";
@@ -18,6 +18,7 @@ import type { ArticleResearchRegistry } from "./research-registry";
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
   executor?: ImportStageExecutor;
+  capabilityProbe?: CapabilityProbe;
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   researchRegistry?: ArticleResearchRegistry;
@@ -25,6 +26,26 @@ export type DispatchOptions = WorkerOptions & {
 
 function isTerminalStage(stage: string): boolean {
   return stage === "LIVE" || stage === "QUARANTINED";
+}
+
+async function importExecutionStage(repositoryRoot: string, importId: string): Promise<string | undefined> {
+  try { return articleExecutionStage(await loadImport(repositoryRoot, importId)); }
+  catch { return undefined; }
+}
+
+async function intakeExecutionStage(repositoryRoot: string, runId: string): Promise<string | undefined> {
+  try {
+    const entry = nextIntakeEntry(await loadIntakeRun(repositoryRoot, runId));
+    return entry?.importId ? importExecutionStage(repositoryRoot, entry.importId) : undefined;
+  } catch { return undefined; }
+}
+
+function pendingExecutionOptions(repositoryRoot: string, options?: DispatchOptions) {
+  return {
+    rejectBusy: true,
+    executeStage: (stage: ExternalArticleImportV1["stage"], action: () => Promise<ExternalArticleImportV1>) =>
+      withArticleExecution(repositoryRoot, action, options?.capabilityProbe, stage),
+  };
 }
 
 function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecutor, options?: DispatchOptions): ImportStageExecutor {
@@ -47,7 +68,12 @@ function createDispatchingExecutor(root: string, baseExecutor: ImportStageExecut
 }
 
 export function dispatchArticleImport(repositoryRoot: string, importId: string, options?: DispatchOptions) {
-  return withArticleExecution(repositoryRoot, () => runImportSteps(repositoryRoot, importId, options));
+  return withArticleExecution(
+    repositoryRoot,
+    () => runImportSteps(repositoryRoot, importId, options),
+    options?.capabilityProbe,
+    () => importExecutionStage(repositoryRoot, importId),
+  );
 }
 
 async function runImportSteps(
@@ -62,7 +88,7 @@ async function runImportSteps(
   const maxSteps = dispatchLimit(options);
   let current = await loadImport(repositoryRoot, importId);
   for (let step = 0; step < maxSteps; step += 1) {
-    if (isTerminalStage(current.stage)) return executePendingImport(repositoryRoot, importId, execute, { rejectBusy: true });
+    if (isTerminalStage(current.stage)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options));
     if (current.stage === "ROLLED_BACK" || current.continuation?.kind === "blocked") return current;
     if (current.continuation?.kind === "wait") {
       const due = Math.min(Date.parse(current.continuation.nextCheckAt), Date.parse(current.continuation.timeoutAt));
@@ -70,7 +96,7 @@ async function runImportSteps(
       if (now() < due) return current;
     }
     const previous = current;
-    current = await executePendingImport(repositoryRoot, importId, execute, { rejectBusy: true });
+    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options));
     if (isTerminalStage(current.stage) || current.continuation?.kind === "blocked" || current.continuation?.kind === "repair" ||
         JSON.stringify(current) === JSON.stringify(previous)) return current;
   }
@@ -84,7 +110,12 @@ function dispatchLimit(options?: DispatchOptions): number {
 }
 
 export function dispatchIntakeRun(repositoryRoot: string, runId: string, options?: DispatchOptions) {
-  return withArticleExecution(repositoryRoot, () => runIntakeSteps(repositoryRoot, runId, options));
+  return withArticleExecution(
+    repositoryRoot,
+    () => runIntakeSteps(repositoryRoot, runId, options),
+    options?.capabilityProbe,
+    () => intakeExecutionStage(repositoryRoot, runId),
+  );
 }
 
 async function runIntakeSteps(

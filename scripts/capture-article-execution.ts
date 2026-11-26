@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
-import { captureCommandExecution, captureOpenCodeExecution, evidenceRefSchema, storeEvidence, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
+import { captureCommandExecution, captureOpenCodeExecution, captureStructuredExecution, evidenceRefSchema, storeEvidence, structuredCaptureSelectionSchema, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 import { assertPrimaryArticleCheckout } from "../src/lib/article-import/preflight";
 import { runCliMain } from "./lib/run-cli-main";
 
@@ -16,14 +16,16 @@ const commandSchema = z.object({ executable: text, argv: z.array(z.string()), to
 
 async function main() {
   const [kind, importId, selectionPath] = process.argv.slice(2);
-  if (!["opencode", "command"].includes(kind) || !/^article-[0-9a-f-]{36}$/.test(importId ?? "") || !selectionPath) throw new Error("Use capture-article-execution.ts <opencode|command> <import-id> <selection.json>");
+  if (!["opencode", "command", "structured"].includes(kind) || !/^article-[0-9a-f-]{36}$/.test(importId ?? "") || !selectionPath) throw new Error("Use capture-article-execution.ts <opencode|command|structured> <import-id> <selection.json>");
   const root = process.cwd();
   await assertPrimaryArticleCheckout(root);
   const input: unknown = JSON.parse(await readFile(selectionPath, "utf8"));
   // The production path exports an existing session itself; it accepts no caller-supplied raw export.
   const execution = kind === "opencode"
     ? await captureOpenCodeExecution(root, selectionSchema.parse(input))
-    : await captureCommandExecution(root, commandSchema.parse(input));
+    : kind === "structured"
+      ? await captureStructuredExecution(root, importId, structuredCaptureSelectionSchema.parse(input))
+      : await captureCommandExecution(root, commandSchema.parse(input));
   const ref = await storeEvidence(root, importId, execution);
   await validateExecutionEvidence(root, ref);
   process.stdout.write(`${JSON.stringify(ref)}\n`);

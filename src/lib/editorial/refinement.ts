@@ -146,12 +146,12 @@ const rewritePassesSchema = z.object({
   wordingAndRhythm: z.literal(true),
   rivalFamilyCleanse: z.literal(true).optional(),
   beamReview: z.literal(true).optional(),
+  independentReview: z.literal(true).optional(),
   finalFidelityReview: z.literal(true),
 }).strict().superRefine((passes, context) => {
-  const rival = passes.rivalFamilyCleanse === true;
-  const beam = passes.beamReview === true;
-  if (rival === beam) {
-    context.addIssue({ code: "custom", path: ["rivalFamilyCleanse"], message: "Exactly one of rivalFamilyCleanse or beamReview must be true." });
+  const reviewCount = [passes.rivalFamilyCleanse, passes.beamReview, passes.independentReview].filter((value) => value === true).length;
+  if (reviewCount !== 1) {
+    context.addIssue({ code: "custom", path: ["independentReview"], message: "Exactly one independent editorial review policy must be true." });
   }
 });
 const editorialSharedFields = {
@@ -160,18 +160,18 @@ const editorialSharedFields = {
   meaningPreserved: z.literal(true),
   arrayOrderPreserved: z.literal(true),
   rewriteMode: z.literal("full_article"),
-  writerModelFamily: z.string().trim().min(1),
-  cleanseModelFamily: z.string().trim().min(1),
+  writerModelFamily: z.string().trim().min(1).optional(),
+  cleanseModelFamily: z.string().trim().min(1).optional(),
   passes: rewritePassesSchema,
 };
 
 const notesSchema = z.object(editorialSharedFields).strict().superRefine((notes, context) => {
   const usesBeamReview = notes.passes.beamReview === true;
   if (usesBeamReview) {
-    if (notes.writerModelFamily.toLocaleLowerCase() !== notes.cleanseModelFamily.toLocaleLowerCase()) {
+    if (!notes.writerModelFamily || !notes.cleanseModelFamily || notes.writerModelFamily.toLocaleLowerCase() !== notes.cleanseModelFamily.toLocaleLowerCase()) {
       context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "Beam review must use the same model family as the writer; a distinct OpenCode session establishes independence." });
     }
-  } else if (notes.writerModelFamily.toLocaleLowerCase() === notes.cleanseModelFamily.toLocaleLowerCase()) {
+  } else if (notes.passes.rivalFamilyCleanse === true && (!notes.writerModelFamily || !notes.cleanseModelFamily || notes.writerModelFamily.toLocaleLowerCase() === notes.cleanseModelFamily.toLocaleLowerCase())) {
     context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "The cleanse must use a different model family from the writer." });
   }
 });
@@ -194,10 +194,10 @@ export const editorialEvidenceSchema = z.object({
 }).strict().superRefine((evidence, context) => {
   const usesBeamReview = evidence.passes.beamReview === true;
   if (usesBeamReview) {
-    if (evidence.writerModelFamily.toLocaleLowerCase() !== evidence.cleanseModelFamily.toLocaleLowerCase()) {
+    if (!evidence.writerModelFamily || !evidence.cleanseModelFamily || evidence.writerModelFamily.toLocaleLowerCase() !== evidence.cleanseModelFamily.toLocaleLowerCase()) {
       context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "Beam review must use the same model family as the writer; a distinct OpenCode session establishes independence." });
     }
-  } else if (evidence.writerModelFamily.toLocaleLowerCase() === evidence.cleanseModelFamily.toLocaleLowerCase()) {
+  } else if (evidence.passes.rivalFamilyCleanse === true && (!evidence.writerModelFamily || !evidence.cleanseModelFamily || evidence.writerModelFamily.toLocaleLowerCase() === evidence.cleanseModelFamily.toLocaleLowerCase())) {
     context.addIssue({ code: "custom", path: ["cleanseModelFamily"], message: "The cleanse must use a different model family from the writer." });
   }
   if (evidence.eligibleProsePaths.length !== evidence.changedPaths.length ||

@@ -5,7 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { advanceImport, createArticleImport, ensureImportContentApproval, loadImport, recordImportFailure, resumeImport } from "../src/lib/article-import/engine";
 import { verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
-import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { approveFixture, prepareApprovalFixture, presentFixture } from "./fixtures/article-content-approval";
+import { persistFixture } from "./fixtures/article-command";
 import { recaptureStoredExchange } from "./fixtures/capture-replay";
 import type { ExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 
@@ -22,6 +23,27 @@ test("imports cannot enter presentation without the mandatory evidence chain", a
   const { root, record } = await setup();
   try {
     await assert.rejects(advanceImport(root, record, "No evidence"), /WORKFLOW_EVIDENCE_INVALID/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("Transforming cannot advance with a future structured Refining assessment", async () => {
+  const { root, record } = await setup();
+  try {
+    const transforming = { ...record, stage: "TRANSFORMING" as const };
+    const { evidenceRefs, ...files } = await prepareApprovalFixture(root, transforming, { structuredEditorial: true });
+    const candidate = await persistFixture(root, { ...transforming, artifactPath: files.artifactPath, evidenceRefs });
+    await assert.rejects(
+      advanceImport(root, candidate, "Premature future assessment"),
+      /ASSESSMENT_CONSUMER_STAGE_MISMATCH/,
+    );
+    assert.equal((await loadImport(root, candidate.importId)).stage, "TRANSFORMING");
+    const { evaluateWorkflowEvidence } = await import("../src/lib/article-import/workflow-evidence");
+    const recovery = await evaluateWorkflowEvidence(
+      { ...candidate, stage: "REPAIRING", resumeStage: "TRANSFORMING" },
+      { root, throughStage: "REFINING" },
+    );
+    assert.equal(recovery.ok, false);
+    assert.match(recovery.diagnostics.join(";"), /ASSESSMENT_CONSUMER_STAGE_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

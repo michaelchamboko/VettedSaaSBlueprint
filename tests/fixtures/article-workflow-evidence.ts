@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { importPacketId } from "../../src/lib/article-import/packet-binding";
 import path from "node:path";
 import { artifactProseProjection, contentAssessmentReviewInput, designReviewInput, editorialJudgmentReviewInput, editorialPassReviewInput, evidenceReference, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
-import { extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
+import { captureStructuredExecution, extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION, workflowRequirements } from "../../src/lib/article-import/workflow-requirements";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../../src/lib/editorial/refinement";
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
@@ -12,7 +12,7 @@ import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requi
 const families = { "opencode-go/beam-free": "reflection-beam", "fixture/cleanser": "fixture-cleanser-family" };
 const now = "2026-11-03T00:00:00.000Z";
 type RecordIdentity = { importId: string; sourceFingerprint: string; researchGeneration?: number };
-export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string }) {
+export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string; structuredEditorial?: boolean; reuseIndependentContext?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING" }) {
   await mkdir(path.join(root, "config"), { recursive: true });
   const editorialFiles = ["SKILL.md", "references/principles.md", "references/signs-of-ai-writing.md", "references/dr-eleanor-hayes.md", "prompts/cleanse.txt"].map((file) => `.agents/skills/eleanor-editorial/${file}`);
   const designFiles = ["SKILL.md", "reference/craft-floor.md", "reference/shape.md", "reference/critique.md", "reference/audit.md", "reference/polish.md"].map((file) => `.agents/skills/impeccable/${file}`).concat(".agents/skills/design-taste-frontend/SKILL.md");
@@ -25,15 +25,33 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
     pinned.set(file, { path: file, sha256: sha256(text), text });
   }
   const pinRef = (file: string) => { const pin = pinned.get(file)!; return { path: pin.path, sha256: pin.sha256 }; };
-  await writeFile(path.join(root, "config/article-workflow-capabilities.json"), JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "1.19.4", modelFamilies: families, files: pinFiles.map(pinRef) }));
+  const exportDirectory = path.join(root, ".fixture-structured-exports");
+  const exporter = path.resolve("tests/fixtures/structured-execution-exporter.mjs");
+  if (input.structuredEditorial) await mkdir(exportDirectory, { recursive: true });
+  await writeFile(path.join(root, "config/article-workflow-capabilities.json"), JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "1.19.4", modelFamilies: families, files: pinFiles.map(pinRef),
+    ...(input.structuredEditorial && { executionExporters: {
+      writer: { executable: process.execPath, versionArgs: [exporter, "--version"], toolName: "writer-tool", toolVersion: "fixture-exporter 1", exportArgs: [exporter, "export-map", exportDirectory, "{contextId}", "{exchangeId}"] },
+      reviewer: { executable: process.execPath, versionArgs: [exporter, "--version"], toolName: "review-tool", toolVersion: "fixture-exporter 1", exportArgs: [exporter, "export-map", exportDirectory, "{contextId}", "{exchangeId}"] },
+    } }) }));
   const common = { id: "synthetic-adapter-fixture", createdAt: now, importId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: WORKFLOW_REVISION };
   const save = (value: unknown) => storeEvidence(root, record.importId, value);
   const packet = (stage: string) => importPacketId(record, stage, stage === "TRANSFORMING" ? "field-repair" : "targeted-repair");
   const beforeRef = await save(input.before), afterRef = await evidenceReference(root, input.artifactPath);
+  let exchangeSequence = 0;
   async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>, sessionId = "fixture-session") {
     const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);
-    const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : "REFINING");
+    const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : pass === "content-assessment" ? (input.assessmentStage ?? "REFINING") : "REFINING");
     const instructions = (pass.startsWith("design:") ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
+    if (input.structuredEditorial && !pass.startsWith("design:")) {
+      const exchangeId = `exchange-${++exchangeSequence}`;
+      const independent = pass === "independentReview" || pass === "independentReview-judgment";
+      const exporterId = independent ? "reviewer" : "writer", toolName = independent ? "review-tool" : "writer-tool";
+      const source = { schemaVersion: "StructuredExecutionExportV1", exporterId, tool: { name: toolName, version: "fixture-exporter 1" }, contextId: sessionId, exchangeId,
+        startedAt: now, completedAt: "2026-11-03T00:00:01.000Z", status: "succeeded", providerId: independent ? "alternate-provider" : "writer-provider", modelId,
+        packetId, pass, input: projection, output: result, instructions, inputRefs: [inputRef, ...(pass === "content-assessment" ? [research] : []), ...instructions.map(({path, sha256}) => ({path, sha256}))], outputRefs: [outputRef] };
+      await writeFile(path.join(exportDirectory, `${sessionId}--${exchangeId}.json`), JSON.stringify(source));
+      return save(await captureStructuredExecution(root, record.importId, { exporterId, contextId: sessionId, exchangeId }));
+    }
     return save(extractOpenCodeExecution({ info: { id: sessionId }, messages: [
       { info: { id: "fixture-user", role: "user", sessionID: sessionId }, parts: [{ type: "text", text: JSON.stringify({ packetId, pass, prose: projection, digest: proseProjectionDigest(projection), instructions }) }] },
       { info: { id: "fixture-assistant", role: "assistant", sessionID: sessionId, parentID: "fixture-user", providerID: "opencode-go", modelID: "beam-free", time: { created: 1793664000000, completed: 1793664001000 }, finish: "stop" }, parts: [{ type: "reasoning", text: "Must never be retained." }, { type: "text", text: JSON.stringify(result) }] },
@@ -44,13 +62,15 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const format = { "direct-review": "landing", blog: "blog", visibility: "visibility", "decision-set": "decision" } as const;
   const schemaRevision = { "direct-review": "PageBlueprintV1", blog: "BlogPostV1", visibility: "VisibilityPageV1", "decision-set": "DecisionSetV2" }[input.format];
   const paths = editorialProsePaths(format[input.format], input.after);
-  const passNames = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "beamReview", "finalFidelityReview"];
+  const passNames = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", input.structuredEditorial ? "independentReview" : "beamReview", "finalFidelityReview"];
   const passes = [];
   for (const [index, name] of passNames.entries()) {
     const initial = index === 0 ? input.before : input.after, initialRef = index === 0 ? beforeRef : afterRef;
     const judgment = { pass: name, beforeFingerprint: fingerprintEditorialArtifact(initial), afterFingerprint: fingerprintEditorialArtifact(input.after), coveredPaths: paths, verdict: "pass", findings: [], semanticNotes: "Synthetic scoped judgment for adapter regression tests.", meaningPreserved: true, protectedFieldsPreserved: true };
-    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, "writer", { judgment: JSON.stringify(judgment) }, editorialJudgmentReviewInput(initial, input.after));
-    passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, "writer", undefined, undefined, index === 3 ? "fixture-review-session" : "fixture-session"), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
+    const independentContext = input.reuseIndependentContext ? "fixture-session" : "fixture-review-session";
+    const judgmentContext = input.reuseIndependentContext ? "fixture-session" : "fixture-review-judgment-session";
+    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", { judgment: JSON.stringify(judgment) }, editorialJudgmentReviewInput(initial, input.after), input.structuredEditorial && index === 3 ? judgmentContext : "fixture-session");
+    passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", undefined, undefined, index === 3 ? independentContext : "fixture-session"), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
   }
   const checkerExecutionRef = await save({ schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: EDITORIAL_REVISION, startedAt: now, completedAt: now, inputRefs: [afterRef, pinRef(checkerFile)], outputRefs: [], executable: "python", argv: [checkerFile, "--text", editorialProse(format[input.format], input.after)], cwd: root, stdout: "score 5/5 CLEAN", stderr: "", exitCode: 0 });
   const editorial = await save({ ...common, schemaVersion: "EditorialExecutionV1", format: input.format, editorialEvidenceRef: await evidenceReference(root, input.editorialEvidencePath), schemaRevision, eligibleProsePaths: paths, passes, checkerExecutionRef });
