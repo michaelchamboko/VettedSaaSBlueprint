@@ -51,7 +51,7 @@ async function routeBrowserFixture(page: import("playwright").Page, delayMs: num
   });
 }
 
-async function actualBlogFixture() {
+async function actualBlogFixture(options: { stackedMediaBelowFold?: boolean } = {}) {
   const interop = blogPageModule.default as unknown as { default?: typeof blogPageModule.default };
   const renderPage = interop.default ?? blogPageModule.default;
   const tree = await renderPage({ params: Promise.resolve({ slug: "production-ready-ai-voice-cloning-checklist" }) });
@@ -62,7 +62,10 @@ async function actualBlogFixture() {
   assert.match(markup, /class="blog-article__question"/);
   assert.match(markup, /data-reviewed-article-hero/);
   const css = (await readFile(path.resolve("src/app/globals.css"), "utf8")).replace('@import "tailwindcss";', "");
-  return `<!doctype html><html><head><style>${css}</style></head><body>${markup}</body></html>`;
+  const scenario = options.stackedMediaBelowFold
+    ? "@media (max-width: 767px) { .blog-article__hero-media { margin-top: 40rem; } }"
+    : "";
+  return `<!doctype html><html><head><style>${css}\n${scenario}</style></head><body>${markup}</body></html>`;
 }
 
 async function actualDecisionFixture() {
@@ -183,7 +186,7 @@ test("accepts restrained useful motion and an intentional static reduced-motion 
   }));
 });
 
-test("off-screen media is allowed only for a retained, below-fold mobile decision-set capture", () => {
+test("off-screen media requires a retained capture on stacked mobile blog or decision pages", () => {
   const offscreen = {
     ...baseRuntime,
     format: "decision-set" as const,
@@ -194,7 +197,9 @@ test("off-screen media is allowed only for a retained, below-fold mobile decisio
   };
   assert.throws(() => validateArticleVisualRuntime(offscreen), /ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT/);
   assert.doesNotThrow(() => validateArticleVisualRuntime({ ...offscreen, screenshots: { ...offscreen.screenshots, media: screenshotRef } }));
-  assert.throws(() => validateArticleVisualRuntime({ ...offscreen, format: "blog", screenshots: { ...offscreen.screenshots, media: screenshotRef } }), /ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT/);
+  assert.doesNotThrow(() => validateArticleVisualRuntime({ ...offscreen, format: "blog", screenshots: { ...offscreen.screenshots, media: screenshotRef } }));
+  assert.throws(() => validateArticleVisualRuntime({ ...offscreen, format: "blog", viewport: { ...offscreen.viewport, width: 1440 }, layout: { ...offscreen.layout, scrollWidth: 1440 }, screenshots: { ...offscreen.screenshots, media: screenshotRef } }), /ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT/);
+  assert.throws(() => validateArticleVisualRuntime({ ...offscreen, format: "visibility", screenshots: { ...offscreen.screenshots, media: screenshotRef } }), /ARTICLE_VISUAL_MEDIA_EVIDENCE_INSUFFICIENT/);
 });
 
 test("real Chromium selects the actual 1440px blog question as semantic lead copy", async (t) => {
@@ -211,6 +216,36 @@ test("real Chromium selects the actual 1440px blog question as semantic lead cop
   assert(Number.parseFloat(runtime.typography.body!.fontSize) > 24);
   assert.equal(runtime.rects.bodyCopy.length, 1);
   assert.deepEqual(runtime.rects.bodyCopy[0], await page.locator(".blog-article__question").boundingBox());
+});
+
+test("real Chromium retains a stacked mobile blog hero without weakening initial readability", async (t) => {
+  const browser = await launchChromium();
+  t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "no-preference" });
+  await routeBrowserFixture(page, 0, await actualBlogFixture({ stackedMediaBelowFold: true }));
+  await installArticleVisualProbe(page);
+  await page.goto("https://article.test/", { waitUntil: "domcontentloaded" });
+  assert.equal(await pauseArticleVisualIntermediate(page), true);
+  const initial = await page.evaluate(() => {
+    const heading = document.querySelector("main h1")!.getBoundingClientRect().toJSON();
+    const lead = document.querySelector(".blog-article__question")!.getBoundingClientRect().toJSON();
+    const media = document.querySelector("[data-reviewed-article-hero]")!.getBoundingClientRect().toJSON();
+    return { heading, lead, media, scrollY };
+  });
+  assert(initial.heading.top < 844 && initial.heading.bottom > 0);
+  assert(initial.lead.top < 844 && initial.lead.bottom > 0);
+  assert(initial.media.top >= 844, "the real stacked mobile blog hero must begin below the initial viewport");
+  await resumeArticleVisualIntermediate(page);
+  await page.waitForTimeout(850);
+  const mediaBytes = await captureOffscreenArticleMedia(page);
+  assert(mediaBytes && mediaBytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")));
+  assert.equal(await page.evaluate(() => scrollY), initial.scrollY);
+  const media = { path: "evidence/mobile-blog-media.png", sha256: createHash("sha256").update(mediaBytes).digest("hex") };
+  const runtime = await captureArticleVisualRuntime(page, { format: "blog", route: "/blog/fixture", viewport: { width: 390, height: 844, reducedMotion: false }, screenshots: { early: screenshotRef, settled: screenshotRef, media } });
+  assert.equal(runtime.assertions.headingVisible, true);
+  assert.equal(runtime.assertions.bodyCopyVisible, true);
+  assert.equal(runtime.assertions.mediaVisible, false);
+  assert.deepEqual(runtime.screenshots.media, media);
 });
 
 test("real Chromium preserves delayed normal motion through resumed and settled samples while reduced motion stays static", async (t) => {
