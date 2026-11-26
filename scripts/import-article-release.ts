@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 import { assertPrimaryArticleCheckout, assertArticleCapabilities } from "../src/lib/article-import/preflight";
 import { runCliMain } from "./lib/run-cli-main";
+import { dispatchArticleImport } from "../src/lib/article-import/dispatch";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -61,9 +62,13 @@ async function main(): Promise<void> {
     operations,
   });
   };
-  const result = process.argv.includes("--execute")
+  let result: unknown = process.argv.includes("--execute")
     ? await withImportLease(process.cwd(), importId, assess)
     : await assess(await loadImport(process.cwd(), importId));
+  if (process.argv.includes("--execute") && (result as { status?: string }).status === "LIVE") {
+    const completed = await dispatchArticleImport(process.cwd(), importId);
+    result = { ...(result as object), improve: completed.improve };
+  }
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 

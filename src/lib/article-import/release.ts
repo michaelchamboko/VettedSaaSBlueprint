@@ -77,7 +77,7 @@ export type ReleaseOperations = {
   capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string; verified: boolean }>;
   commit(message: string, files: readonly string[]): Promise<string>;
   preparePullRequest(reviewedCommitSha: string): Promise<{ url: string; branch: string; reviewedCommitSha: string }>;
-  inspectPullRequest(url: string): Promise<{ merged: boolean; headRefOid: string; mergeCommitSha?: string }>;
+  inspectPullRequest(url: string): Promise<{ merged: boolean; state?: "OPEN" | "CLOSED" | "MERGED"; headRefOid: string; mergeCommitSha?: string }>;
   verifyCodeReview(pullRequestUrl: string, evidenceUrl: string, reviewedCommitSha: string): Promise<void>;
   mergePullRequest(pullRequestUrl: string, reviewedCommitSha: string): Promise<{ mergeCommitSha: string }>;
   checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;

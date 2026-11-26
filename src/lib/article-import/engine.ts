@@ -16,6 +16,7 @@ import { RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-req
 import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
 
 const ROOT = ".automation/article-imports";
@@ -363,7 +364,7 @@ export async function clearImportBlocker(root: string, importId: string, recover
   });
 }
 
-export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean; executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1> }): Promise<ExternalArticleImportV1> {
+export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean; executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1>; improveExecutor?: ImproveExecutor }): Promise<ExternalArticleImportV1> {
   const lease = await claimImportLease(repositoryRoot, importId);
   if (!lease && options?.rejectBusy) throw new Error("IMPORT_LEASE_BUSY");
   if (!lease) return loadImport(repositoryRoot, importId);
@@ -373,7 +374,30 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       assertCurrentImport(current);
       if (["LIVE", "QUARANTINED"].includes(current.stage)) {
         if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
-        return current.sourceDeletedAt ? current : deleteRawSource(repositoryRoot, importId, current, now());
+        if (!current.sourceDeletedAt) current = await deleteRawSource(repositoryRoot, importId, current, now());
+        if (current.stage === "LIVE" && current.improve && !["COMPLETE", "BLOCKED"].includes(current.improve.phase)) {
+          if (!options?.improveExecutor) return current;
+          if (!current.improve.startedAt) {
+            current = externalArticleImportSchema.parse({ ...current, improve: { ...current.improve, startedAt: now() } });
+            await saveImport(repositoryRoot, current);
+          }
+          if (!current.improve) throw new Error("IMPROVE_ASSIGNMENT_MISSING");
+          try {
+            const improved = await options.improveExecutor({ record: current, assignment: current.improve, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
+            if (improved.stage !== "LIVE" || improved.terminalRef?.sha256 !== current.terminalRef?.sha256 || improved.release?.commitSha !== current.release?.commitSha || improved.continuation?.kind !== "complete") throw new Error("IMPROVE_MUTATED_PUBLICATION");
+            await lease.assertOwned();
+            await saveImport(repositoryRoot, improved);
+            return improved;
+          } catch (error) {
+            await lease.assertOwned();
+            const persisted = await loadImport(repositoryRoot, importId);
+            if (!persisted.improve || persisted.improve.phase === "COMPLETE") throw error;
+            const failed = externalArticleImportSchema.parse({ ...persisted, improve: { ...persisted.improve, attempt: persisted.improve.attempt + 1, workPath: undefined, resultPath: undefined, failure: { code: "IMPROVE_EXECUTION_FAILED", message: error instanceof Error ? error.message : String(error), at: now() } } });
+            await saveImport(repositoryRoot, failed);
+            throw error;
+          }
+        }
+        return current;
       }
       if (current.continuation?.kind === "blocked") return current;
       if (current.continuation?.kind !== "wait" && !(current.continuation?.kind === "repair" && current.continuation.diagnosisRequired)) current = await ensureImportResearch(repositoryRoot, current);
@@ -775,7 +799,10 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
     const retainedHero = record.heroImage ?? (record.evidenceRefs?.hero ? articleHeroBindingSchema.parse(await readEvidence(repositoryRoot, record.evidenceRefs.hero)) : undefined);
     const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, ...(retainedHero && { heroImage: retainedHero }), frozenFiles, format: record.format, commercialMode: record.transformation?.commercialMode ?? "none", ...(record.transformation?.resolvedAffiliateUrl && { approvedAffiliateUrl: record.transformation.resolvedAffiliateUrl }), reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
-    const updated = externalArticleImportSchema.parse({ ...presented, terminalRef, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+    const publicationKey = fingerprint(`${record.importId}:${release.commitSha}`);
+    const runRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "ImproveRunSnapshotV1", publicationKey, importId: record.importId, sourceFingerprint: record.sourceFingerprint, stageReceipts: record.stageReceipts, repairStageTotals: record.repairStageTotals, strategyAttempts: record.strategyAttempts, pendingRelease: record.pendingRelease, release, terminalRef });
+    const improve = { schemaVersion: "ImportImproveV1" as const, publicationKey, boundCommitSha: release.commitSha, runRef, phase: "ASSESSING" as const, attempt: 0, issueKeys: [], resolvedKeys: [], openKeys: [], handoffRefs: [] };
+    const updated = externalArticleImportSchema.parse({ ...presented, terminalRef, improve, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
     const historical = await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal");
     if (!historical.ok) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(historical.diagnostics)}`);
     await saveImport(repositoryRoot, updated);

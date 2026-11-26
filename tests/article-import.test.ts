@@ -54,6 +54,8 @@ test("verified synthetic completion freezes proof before deleting disposable sou
     assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
     assert.equal(await readFile(path.resolve(root, record.sourceRef!.path), "utf8"), source);
     await writeFile(path.resolve(root, record.contentApproval!.artifactPath), "{}");
+    assert.equal((await inspectImportCompletion(root, record.importId)).status, "WORK", "a verified publication still requires its IMPROVE assessment");
+    await persistFixture(root, { ...record, improve: { ...record.improve!, phase: "COMPLETE", completedAt: new Date().toISOString() } });
     assert.equal((await inspectImportCompletion(root, record.importId)).status, "COMPLETE", "historical proof uses frozen bytes");
     await assert.rejects(createArticleImport(root, "article.md"), /DUPLICATE_REVALIDATION_REQUIRED/);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -387,7 +389,8 @@ async function buildPreReplayTerminal(root: string, record: Awaited<ReturnType<t
   const frozenFiles = await freezeEvidenceGraph(root, record.importId, refList as Parameters<typeof freezeEvidenceGraph>[2]);
   newTerminal.frozenFiles = frozenFiles;
   const finalTerminalRef = await storeEvidence(root, record.importId, newTerminal);
-  const updatedRecord = { ...record, terminalRef: finalTerminalRef, evidenceRefs: newTerminal.evidenceRefs as typeof record.evidenceRefs, stage: "LIVE" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION };
+  const updatedRecord = { ...record, terminalRef: finalTerminalRef, evidenceRefs: newTerminal.evidenceRefs as typeof record.evidenceRefs, stage: "LIVE" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION,
+    improve: record.improve ? { ...record.improve, phase: "COMPLETE" as const, completedAt: new Date().toISOString() } : undefined };
   await persistFixture(root, updatedRecord);
   return { record: updatedRecord, terminal: newTerminal, finalTerminalRef };
 }

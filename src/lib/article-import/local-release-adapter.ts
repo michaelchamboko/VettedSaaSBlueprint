@@ -155,8 +155,8 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
     async inspectPullRequest(url) {
       const identity = /^https:\/\/github\.com\/([A-Za-z0-9-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(url);
       if (!identity) throw new Error("PULL_REQUEST_URL_INVALID");
-      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: string; headRefOid: string; mergeCommit?: { oid: string } };
-      return { merged: pr.state === "MERGED", headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
+      const pr = JSON.parse((await runner("gh", ["pr", "view", url, "--json", "state,headRefOid,mergeCommit"])).stdout) as { state: "OPEN" | "CLOSED" | "MERGED"; headRefOid: string; mergeCommit?: { oid: string } };
+      return { merged: pr.state === "MERGED", state: pr.state, headRefOid: pr.headRefOid, mergeCommitSha: pr.mergeCommit?.oid };
     },
     async verifyCodeReview(pullRequestUrl, evidenceUrl, reviewedCommitSha) {
       const pr = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(pullRequestUrl);

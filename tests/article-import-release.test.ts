@@ -732,7 +732,7 @@ test("first release creates a PR and waits without deploying or consuming retrie
     const waiting = await loadImport(root, record.importId);
     assert.equal(waiting.pendingRelease?.reviewedCommitSha, "c".repeat(40));
     assert.deepEqual(waiting.strategyAttempts, record.strategyAttempts);
-    assert.deepEqual(waiting.presentation, record.presentation);
+    assert.deepEqual(JSON.parse(JSON.stringify(waiting.presentation)), JSON.parse(JSON.stringify(record.presentation)));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

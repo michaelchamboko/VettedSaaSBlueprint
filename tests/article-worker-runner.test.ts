@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { invokeWorker, prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
 
@@ -78,6 +78,24 @@ test("RELEASING prompt requires every controller-bound hero and publication path
   const prompt = invocation.args.at(-1)!;
   for (const file of requiredReleaseFiles) assert.match(prompt, new RegExp(file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(prompt, /work\.changedFiles.*every actual scoped release change/);
+});
+
+test("IMPROVE may read only its import's immutable work history", async t => {
+  const root = await mkdtemp(path.join(process.cwd(), ".tmp-article-worker-improve-history-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const invocation = await prepareWorkerInvocation(root, "packet.json", {
+    ...packet("IMPROVE"),
+    improvePhase: "ASSESSING",
+    record: { importId, format: "agent_review_required", stage: "LIVE", stageReceipts: [] },
+  }, { kind: "opencode", executable: "opencode", model: "fixture/model" }, "11111111-1111-1111-1111-111111111111");
+  const config = JSON.parse(await readFile(path.join(invocation.cwd, "opencode.json"), "utf8"));
+  const permissions = config.agents["article-worker"].permissions as Array<{ action: string; resource: string; effect: string }>;
+  const canonical = (await realpath(root)).replaceAll("\\", "/");
+  const workRoot = `${canonical}/.automation/article-imports/work`;
+  assert.ok(permissions.some(rule => rule.effect === "allow" && rule.action === "read" && rule.resource === `${workRoot}/${importId}/*`));
+  assert.equal(permissions.some(rule => rule.effect === "allow" && rule.action === "read" && rule.resource === `${workRoot}/article-ffffffff-ffff-4fff-8fff-ffffffffffff/*`), false);
+  assert.equal(permissions.some(rule => rule.effect === "allow" && rule.action === "read" && rule.resource === `${workRoot}/*`), false);
+  assert.equal(permissions.some(rule => rule.effect === "allow" && rule.action === "edit" && rule.resource.startsWith(workRoot + "/")), false);
 });
 
 test("REFINING environment adapter never overrides another stage", async t => {
