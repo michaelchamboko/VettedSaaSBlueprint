@@ -39,6 +39,14 @@ test("structured Refining accepts alternate tools and models but rejects a reuse
     assert.notEqual(rewrite.modelId, review.modelId);
     await validateEditorialExecution(passing.root, passing.record.evidenceRefs!.editorial!, passing.record);
     await validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, passing.record);
+    await assert.rejects(
+      validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, { ...passing.record, stage: undefined }),
+      /ASSESSMENT_CONSUMER_STAGE_MISMATCH/,
+    );
+    await assert.rejects(
+      validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, { ...passing.record, stage: "UNKNOWN" }),
+      /ASSESSMENT_CONSUMER_STAGE_MISMATCH/,
+    );
     assert.equal((await evaluateWorkflowEvidence(passing.record, { root: passing.root, throughStage: "REFINING" })).ok, true);
   } finally { await rm(passing.root, { recursive: true, force: true }); }
 

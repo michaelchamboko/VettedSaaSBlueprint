@@ -39,7 +39,7 @@ export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
 export const diagnosisSchema = z.object({ ...common, schemaVersion: z.literal("DiagnosisV1"), stage: z.enum(WORKFLOW_SEQUENCE), failedSubmissionDigest: hashSchema, failureCode: nonempty, cause: nonempty, attemptedRecoveryRefs: z.array(evidenceRefSchema).min(1), remedyEvidenceRefs: z.array(evidenceRefSchema).min(1), replacementSubmissionDigest: hashSchema, consumedAt: z.string().datetime({ offset: true }).optional() }).strict();
-export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef }; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string };
+export type EvidenceBinding = ResearchGenerationBinding & { evidenceRefs?: { research?: EvidenceRef }; importId: string; sourceFingerprint: string; format: string; artifactPath?: string; requirementRevision?: string; stage?: string; resumeStage?: string };
 type Bound = { importId: string; sourceFingerprint: string; requirementRevision: string };
 function assertBinding(value: Bound, binding: EvidenceBinding): void {
   if (value.importId !== binding.importId || value.sourceFingerprint !== binding.sourceFingerprint || value.requirementRevision !== (binding.requirementRevision ?? WORKFLOW_REVISION)) throw new Error("EVIDENCE_BINDING_MISMATCH");
@@ -75,6 +75,11 @@ function executionContext(execution: ReviewExecution): string {
 function assertPacket(packetId: string, binding: EvidenceBinding, stage: string): void {
   const strategies = stage === "REFINING" || stage === "VALIDATING" ? ["targeted-repair", "fresh-rewrite", "fresh-topic"] : ["field-repair", "reconstruct-schema", "reclassify"];
   if (!strategies.some((strategy) => importPacketId(binding, stage, strategy) === packetId)) throw new Error("EXECUTION_PACKET_MISMATCH");
+}
+function consumingStage(binding: EvidenceBinding): string | undefined {
+  return ["REPAIRING", "WAITING_EXTERNAL", "ROLLED_BACK"].includes(binding.stage ?? "")
+    ? binding.resumeStage
+    : binding.stage;
 }
 const editorialFormats = { "direct-review": "landing", blog: "blog", visibility: "visibility", "decision-set": "decision" } as const;
 const revisions = { "direct-review": "PageBlueprintV1", blog: "BlogPostV1", visibility: "VisibilityPageV1", "decision-set": "DecisionSetV2" } as const;
@@ -212,7 +217,11 @@ async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, bin
   if (review.output.assessment !== JSON.stringify(assessed)) throw new Error("ASSESSMENT_JUDGMENT_MISMATCH");
   // Structured evidence is the final reassessment and must originate inside REFINING.
   // Retained OpenCode evidence keeps the historical TRANSFORMING-or-REFINING policy.
-  if (review.kind === "structured") assertPacket(review.packetId, binding, "REFINING");
+  if (review.kind === "structured") {
+    assertPacket(review.packetId, binding, "REFINING");
+    const consumer = consumingStage(binding);
+    if (!consumer || WORKFLOW_SEQUENCE.indexOf(consumer as WorkflowStage) < WORKFLOW_SEQUENCE.indexOf("REFINING")) throw new Error("ASSESSMENT_CONSUMER_STAGE_MISMATCH");
+  }
   else {
     try { assertPacket(review.packetId, binding, "TRANSFORMING"); } catch { assertPacket(review.packetId, binding, "REFINING"); }
   }
