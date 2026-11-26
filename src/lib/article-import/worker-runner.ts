@@ -76,7 +76,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
     ...[String(packet.sourcePath), workPath, ...readable, ...authority, ...writable, `build-pack/article-import/${importId}/*`, `build-pack/editorial/${importId}/*`,
       `.automation/article-imports/evidence/${importId}/*`, ".agents/skills/*", "docs/document-intelligence/*"]
       .map(file => allow("read", canonical + "/" + file)),
-    ...(improve ? [".automation/article-imports/improve/checklist.json", ...repairEditPatterns]
+    ...(improve ? [`.automation/article-imports/work/${importId}/*`, ".automation/article-imports/improve/checklist.json", ...repairEditPatterns]
       .map(pattern => allow("read", canonical + "/" + pattern)) : []),
     ...writable.map(file => allow("edit", canonical + "/" + file)),
   ];
