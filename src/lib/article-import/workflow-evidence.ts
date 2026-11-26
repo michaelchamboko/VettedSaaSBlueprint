@@ -146,11 +146,17 @@ async function artifactFor(root: string, binding: EvidenceBinding): Promise<unkn
   return value;
 }
 export async function validateResearchEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
+  return (await validateResearchEvidenceForRegistry(root, ref, binding)).evidence;
+}
+
+export async function validateResearchEvidenceForRegistry(root: string, ref: EvidenceRef, binding: EvidenceBinding) {
   const value = researchEvidenceSchema.parse(await readEvidence(root, ref));
   assertBinding(value, binding); unique(value.sources.map((x) => x.id)); unique(value.claims.map((x) => x.id));
   const snapshots = new Map<string, string>();
+  const snapshotBytes = new Map<string, Buffer>();
   for (const source of value.sources) {
     const bytes = await readVerifiedEvidenceBytes(root, source.snapshotRef);
+    snapshotBytes.set(source.id, bytes);
     snapshots.set(source.id, bytes.toString("utf8"));
     if (Date.parse(source.retrievedAt) > Date.parse(value.createdAt)) throw new Error("RESEARCH_RETRIEVAL_TIME_INVALID");
   }
@@ -160,7 +166,7 @@ export async function validateResearchEvidence(root: string, ref: EvidenceRef, b
     if (/\b(?:starts? at|costs?|priced? at)\s*\/|(?:\$|\u00a3|\u20ac)\s*\//i.test(claim.text)) throw new Error("RESEARCH_PRICE_INVALID");
     if (/(?:\$|\u00a3|\u20ac)\s*\d|\b\d+(?:\.\d+)?\s*(?:USD|GBP|EUR)\b/i.test(claim.text) && !claim.price) throw new Error("RESEARCH_PRICE_CONTEXT_REQUIRED");
   }
-  return value;
+  return { evidence: value, snapshotBytes };
 }
 async function validateContentAssessmentImpl(root: string, ref: EvidenceRef, binding: EvidenceBinding, prevalidatedResearch?: { ref: EvidenceRef; value: z.infer<typeof researchEvidenceSchema> }) {
   const value = contentAssessmentSchema.parse(await readEvidence(root, ref));

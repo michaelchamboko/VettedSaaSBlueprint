@@ -53,6 +53,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   const readable = references.filter((file): file is string => !!file && /^[a-zA-Z0-9._/-]+$/.test(file) &&
     !file.split("/").includes("..") && ["build-pack/article-import/", "build-pack/editorial/", "src/generated/", "src/content/"].some(prefix => file.startsWith(prefix)));
   const cwd = await mkdtemp(path.join(tmpdir(), "article-worker-"));
+  const researchPlanning = packet.stage === "RESEARCHING" && packet.researchPhase === "plan";
   const allow = (action: string, resource: string) => ({ action, resource, effect: "allow" });
   const permissions = [
     { action: "*", resource: "*", effect: "deny" },
@@ -61,8 +62,8 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
       `.automation/article-imports/evidence/${importId}/*`, ".agents/skills/*", "docs/document-intelligence/*"]
       .map(file => allow("read", canonical + "/" + file)),
     ...writable.map(file => allow("edit", canonical + "/" + file)),
-    allow("webfetch", "*"), allow("websearch", "*"),
   ];
+  if (!researchPlanning) permissions.push(allow("webfetch", "*"), allow("websearch", "*"));
   const definition = { mode: "primary", description: "Work on the attached article packet", permissions };
   const editorial = packet.stage === "REFINING" && record.format !== "agent_review_required";
   let mcp;
@@ -81,7 +82,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   await writeFile(path.join(cwd, "opencode.json"), JSON.stringify({ agents: { [agent]: definition }, mcp }), { flag: "wx" });
   const proposalInstructions = (packet.stage === "REFINING" ? publicationProposals(importId, key, record.format) : [])
     .map(({ file, proposalPath }) => `For ${file}, place a one-article catalogue document in ${proposalPath}. The controller merges the matching entry.`).join(" ");
-  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} ${editorial ? "Use editorial_assess on the final artifact. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : validating ? "Use editorial_present for each required design, detector, desktop, mobile and reduced-motion rule, and owner-verifier for the validation receipt. Collect browser observations before critique, audit and polish and supply the three returned receipt references under observations. Return WorkflowEvidenceV2 bound to the packet rendering reference, approved artifact, editorial and assessment predecessors. Use only actual successful executions." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory and run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
+  const prompt = `Repository root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} within that root. Use repository-relative references in your JSON result. ${proposalInstructions} ${researchPlanning ? "This is the pre-acquisition research plan. Web tools are disabled. Record the bound registry decision first. Use only retained registry bytes for fully covered claims; otherwise request acquisition for the exact stale, conflicting, or missing gaps." : packet.stage === "RESEARCHING" ? "This is the approved acquisition pass. Use web tools only for approvedGaps and preserve the bound registry decision." : editorial ? "Use editorial_assess on the final artifact. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : validating ? "Use editorial_present for each required design, detector, desktop, mobile and reduced-motion rule, and owner-verifier for the validation receipt. Collect browser observations before critique, audit and polish and supply the three returned receipt references under observations. Return WorkflowEvidenceV2 bound to the packet rendering reference, approved artifact, editorial and assessment predecessors. Use only actual successful executions." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory and run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
   return { executable: config.executable, args: ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model,
     "--file", path.resolve(root, workPath), prompt], cwd, timeoutMs: config.timeoutMs ?? (editorial || validating ? 1800000 : 300000),
     checkpoint: path.resolve(root, workPath + ".launch"),

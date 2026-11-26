@@ -1,4 +1,5 @@
-import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
+import { executeFixtureCommand, fixtureResearchRegistry, persistFixture } from "./fixtures/article-command";
+import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -106,27 +107,33 @@ test("supervised work-to-repair transition preserves digest and rejects unchange
   const root = await fixture();
   try {
     const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
-    const supervised = createSupervisedImportExecutor(root);
+    const supervised = createSupervisedImportExecutor(root, undefined, { researchRegistry: fixtureResearchRegistry(root) });
     let executions = 0;
     const execute: typeof supervised = async (context) => { executions++; return supervised(context); };
     const pending = await executePendingImport(root, record.importId, execute);
     assert.ok(pending.continuation?.kind === "work");
-    const packet = pending.continuation;
+    if (pending.continuation?.kind !== "work") throw new Error("Missing research plan work");
+    await writeGapPlanResult(root, pending.continuation, { claimText: "Synthetic invalid research submission" });
+    const acquiring = await executePendingImport(root, record.importId, execute);
+    assert.ok(acquiring.continuation?.kind === "work");
+    if (acquiring.continuation?.kind !== "work") throw new Error("Missing research acquisition work");
     await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [] }));
-    await writeFile(path.resolve(root, packet.resultPath), JSON.stringify({ idempotencyKey: packet.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Synthetic invalid research submission", work: { stage: "RESEARCHING", evidencePath: "research.json" } }));
+    await writeAcquisitionResult(root, acquiring.continuation, "research.json");
     const failed = await executePendingImport(root, record.importId, execute);
     assert.ok(failed.continuation?.kind === "repair");
     assert.equal(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
     await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
-    assert.equal(executions, 2);
+    assert.equal(executions, 3);
     await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [{ url: "https://example.com/source" }] }));
     assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
+    const requeued = await executePendingImport(root, record.importId, execute);
+    assert.ok(requeued.continuation?.kind === "work");
     const retried = await executePendingImport(root, record.importId, execute);
-    assert.equal(executions, 3, "changed evidence reaches validation without granting passage");
+    assert.equal(executions, 5, "changed evidence reaches validation without granting passage");
     assert.ok(retried.continuation?.kind === "repair");
     assert.equal(await canonicalSubmissionFingerprint(retried, root), retried.continuation.submittedFingerprint);
     await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
-    assert.equal(executions, 3);
+    assert.equal(executions, 5);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
