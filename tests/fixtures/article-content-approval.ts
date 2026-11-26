@@ -44,7 +44,7 @@ export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   return revised;
 }
 
-export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean } = {}) {
+export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean } = {}) {
   const artifactPath = "src/generated/landing-pages/example.json";
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
@@ -59,7 +59,7 @@ export async function prepareApprovalFixture(root: string, record: ExternalArtic
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
-  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath, structuredEditorial: options.structuredEditorial });
+  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath, structuredEditorial: options.structuredEditorial, currentPolicy: options.currentPolicy });
   return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
 }
 
@@ -88,6 +88,7 @@ export async function preparePresentationFixture(root: string, record: ExternalA
       schemaVersion: "ImportPresentationValidationV1",
       format: record.format,
       artifactFingerprint: record.contentApproval.artifactFingerprint,
+      ...(record.heroImage && { heroImageFingerprint: fingerprintEditorialArtifact(record.heroImage) }),
       renderedRoutes: ["/imported-guide"],
       checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true },
       pageDesign: validPageDesignReceipt,

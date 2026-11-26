@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import sharp from "sharp";
 import { executeFixtureCommand as executeImportCommand, fixtureResearchRegistry } from "./fixtures/article-command";
 import { executeImportCommand as executeArticleCommand } from "../scripts/import-article";
 import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
@@ -19,6 +20,27 @@ import { productionFixture } from "./fixtures/article-production-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 import { evaluateWorkflowEvidence, readEvidence } from "../src/lib/article-import/workflow-evidence";
+
+async function completeHeroHandoff(root: string, record: Awaited<ReturnType<typeof loadImport>>): Promise<void> {
+  if (record.continuation?.kind !== "work") throw new Error("Missing supervised hero handoff");
+  const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
+  if (packet.supervisedHandoff !== "chatgpt-imagegen") throw new Error("Expected supervised hero handoff");
+  const bytes = await sharp({ create: { width: 1600, height: 900, channels: 4, background: { r: 232, g: 221, b: 202, alpha: 1 } } }).png().toBuffer();
+  await mkdir(path.dirname(path.join(root, packet.originalFile)), { recursive: true });
+  await writeFile(path.join(root, packet.originalFile), bytes);
+  const originalRef = { path: packet.originalFile, sha256: createHash("sha256").update(bytes).digest("hex") };
+  const generatedAt = "2026-11-03T00:00:00.000Z";
+  const toolCallId = "fixture-imagegen-call";
+  const providerOutputRef = await storeEvidence(root, record.importId, { schemaVersion: "ArticleHeroProviderOutputV1", provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId, generatedAt,
+    generatedImage: { providerAssetPath: "generated-image://fixture-hero", originalSha256: originalRef.sha256, outputHint: "Synthetic retained ImageGen fixture output." } });
+  const generationPath = `build-pack/article-import/${record.importId}/hero-generation.json`;
+  await writeJsonAtomically(path.join(root, generationPath), { schemaVersion: "ArticleHeroGenerationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
+    format: packet.format, slug: packet.slug, artifactFingerprint: packet.artifactFingerprint, originalRef, alt: packet.alt,
+    generation: { provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId, generatedAt, prompt: packet.prompt, promptSha256: packet.promptSha256, outputSha256: originalRef.sha256, providerOutputRef } });
+  await writeJsonAtomically(path.join(root, record.continuation.resultPath), { schemaVersion: "ArticleHeroImagegenResultV1", handoffFingerprint: packet.handoffFingerprint,
+    idempotencyKey: record.continuation.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Generated the bound synthetic hero through the supervised ImageGen fixture.",
+    work: { stage: "VALIDATING", heroGenerationEvidencePath: generationPath } });
+}
 
 test("describe-workflow exposes exactly the three actionable release steps", async () => {
   const described = await executeArticleCommand(process.cwd(), { kind: "describe-workflow" }) as {
@@ -196,10 +218,11 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
   const pr = "https://github.com/example/repository/pull/1";
   const artifactPath = "src/generated/landing-pages/example.json";
   const authorityPath = "src/generated/landing-pages/index.json";
+  let releaseFiles = [artifactPath, authorityPath];
   const operations: ReleaseOperations = {
     preflight: async () => ({ ok: true, reasons: [] }),
-    inspectGit: async () => ({ clean: true, changedFiles: [artifactPath, authorityPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
-    refreshMain: async () => ({ clean: true, changedFiles: [artifactPath, authorityPath], headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    inspectGit: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+    refreshMain: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     runValidation: async () => ({ ok: true, summary: "Mocked repository checks passed." }),
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
     commit: async () => { commits++; return commit; },
@@ -218,7 +241,10 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     await writeFile(path.join(root, "Article Intake/article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
     const created = await createArticleImport(root, "Article Intake/article.md");
     importId = created.importId;
-    const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" });
+    const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" }, { currentPolicy: true });
+    await mkdir(path.join(root, ".agents/skills/improve"), { recursive: true });
+    await writeFile(path.join(root, ".agents/skills/improve/SKILL.md"), await readFile(".agents/skills/improve/SKILL.md"));
+    await writeFile(path.join(root, "skills-lock.json"), await readFile("skills-lock.json"));
     const existing = { slug: "another-review", artifact: "another-review.json", title: "Existing published review" };
     await writeJsonAtomically(path.join(root, authorityPath), { generated_at: "preserve-me", pages: [existing] });
     const executor = createSupervisedImportExecutor(root, operations, { researchRegistry: fixtureResearchRegistry(root) });
@@ -260,15 +286,23 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
           break;
         }
         case "VALIDATING": {
-          const presented = await preparePresentationFixture(root, { ...await current(), evidenceRefs: prepared.evidenceRefs });
+          const presented = await preparePresentationFixture(root, await current());
           await writeJsonAtomically(path.join(root, validationReceiptPath), presented.input.validationReceipt);
           work = { stage: packet.stage, validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.record.evidenceRefs!.presentation!.path };
           break;
         }
         case "RELEASING":
           releaseResultPath = packet.resultPath;
-          work = { stage: packet.stage, artifactPath, changedFiles: [artifactPath, authorityPath], slug: "example" };
+          releaseFiles = packet.requiredReleaseFiles;
+          work = { stage: packet.stage, artifactPath, changedFiles: releaseFiles, slug: "example" };
           break;
+        case "IMPROVE": {
+          const assessment = await storeEvidence(root, importId, { schemaVersion: "ImproveAssessmentHandoffV1", publicationKey: packet.publicationKey, summary: "Synthetic assessment found no supported improvements." });
+          const improveResult = { schemaVersion: "ImproveResultV1", publicationKey: packet.publicationKey, idempotencyKey: packet.idempotencyKey, phase: "ASSESSING", findings: [], limitations: [], handoffs: { assessment } };
+          const events = (await readFile("tests/fixtures/opencode-jsonl-fixture.jsonl", "utf8")).trim().split(/\r?\n/).map(line => JSON.parse(line));
+          events.find(event => event.type === "text").part.text = JSON.stringify(improveResult);
+          return { stdout: events.map(event => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };
+        }
         default: throw new Error("Unexpected worker stage " + packet.stage);
       }
       const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Completed synthetic stage", work };
@@ -318,15 +352,20 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
       assert.equal(catalogue.pages[1].slug, "example");
       return;
     }
-    if (failRollback) await heartbeat();
+    if (failRollback) {
+      await heartbeat();
+      await completeHeroHandoff(root, await current());
+      await heartbeat();
+    }
     else {
+      await heartbeat();
+      await completeHeroHandoff(root, await current());
       const intake = await createIntakeRun(root);
-      const completed = await executeImportCommand(root, { kind: "dispatch-intake", runId: intake.runId }, executor,
-        { workerModel: "fixture/model", workerRunner, sleep }) as IntakeRun;
+      const completed = await executeImportCommand(root, { kind: "dispatch-intake", runId: intake.runId }, executor, { workerModel: "fixture/model", workerRunner, sleep }) as IntakeRun;
       assert.equal(completed.outcome, "ALL_PUBLISHED", (await current()).nextAction);
       assert.equal(completed.entries[0].importId, importId);
     }
-    assert.deepEqual(calls, ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING"]);
+    assert.deepEqual(calls, failRollback ? ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING"] : ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING", "IMPROVE"]);
     assert.equal(waits, 2);
     const published = JSON.parse(await readFile(path.join(root, authorityPath), "utf8"));
     assert.deepEqual(published.pages[0], existing);
