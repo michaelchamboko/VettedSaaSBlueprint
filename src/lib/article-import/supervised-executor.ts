@@ -6,7 +6,7 @@ import { importFormatSchema, type ExternalArticleImportV1 } from "./contracts";
 import { assertIgnoredImportStatePath } from "./automation-state";
 import { importArtifactTarget } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
-import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, type ReleaseOperations } from "./release";
+import { assessImportRelease, assertArtifactCommercialSafety, recordImportCodeReview, requiredImportReleaseFiles, type ReleaseOperations } from "./release";
 import { evidenceReference, validateResearchEvidenceForRegistry, withTransformingArtifact, workflowEvidenceSchema } from "./workflow-evidence";
 import { instructionsForStage, releaseSteps, WORKFLOW_REVISION, workflowRequirements } from "./workflow-requirements";
 import { applyPublicationProposals, publicationProposals } from "./worker-publication";
@@ -153,6 +153,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       return finishRegistryResearch(root, record, context.idempotencyKey, result.summary, result.work.evidencePath, result.work.registryDecisionPath, result.work.registryWritebackPath, plan, decision, registry);
     }
     let renderingInputs;
+    let requiredReleaseFiles: string[] | undefined;
     if (stage === "VALIDATING" && record.contentApproval && record.format !== "agent_review_required") {
       const artifact = await readRepositoryJson(root, record.contentApproval.artifactPath);
       const target = importArtifactTarget(record.format, artifact);
@@ -193,12 +194,23 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       const manifest = await validateRenderingInputs(root, reference);
       renderingInputs = { reference, detectorTargets: requiredDetectorInputs(manifest, target) };
     }
+    if (stage === "RELEASING" && record.contentApproval && record.format !== "agent_review_required") {
+      const artifact = await readRepositoryJson(root, record.contentApproval.artifactPath);
+      const target = importArtifactTarget(record.format, artifact);
+      requiredReleaseFiles = requiredImportReleaseFiles({
+        format: record.format,
+        approvedArtifactPath: record.contentApproval.artifactPath,
+        slug: target.slug,
+        includeHero: Boolean(record.heroImage),
+      }).all;
+    }
     await writeJsonAtomically(path.join(root, workPath), {
       schemaVersion: "ImportSupervisedWorkV1", importId: record.importId,
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
       idempotencyKey: context.idempotencyKey, sourcePath: `.automation/article-imports/${record.importId}.source.md`,
       record, resultSchema: z.toJSONSchema(resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
       ...(stage === "RELEASING" && { releaseSteps }),
+      ...(requiredReleaseFiles && { requiredReleaseFiles }),
       ...(stage === "REFINING" && { publicationProposals: publicationProposals(record.importId, context.idempotencyKey, record.format) }),
       instructions: instructionsForStage(stage), resultPath,
       resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },

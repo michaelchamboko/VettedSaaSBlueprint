@@ -10,7 +10,7 @@ import { loadArticleHero } from "../src/lib/article-heroes";
 import { articleHeroHandoff, bindGeneratedArticleHero, validateArticleHeroBinding } from "../src/lib/article-import/hero-image";
 import { sha256 } from "../src/lib/article-import/execution-evidence";
 import { canonicalSubmissionFingerprint, createArticleImport, loadImport, recordImportRepair, saveImport, withImportLease } from "../src/lib/article-import/engine";
-import { isAllowedReleasePath, validateBoundArticleHeroReleasePaths } from "../src/lib/article-import/release";
+import { isAllowedReleasePath, requiredImportReleaseFiles, validateBoundArticleHeroReleasePaths } from "../src/lib/article-import/release";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 async function fixture() {
@@ -30,6 +30,25 @@ test("article hero paths preserve the blog release root and isolate all other fo
   const expected = ["src/generated/article-heroes/blog/buyer-guide.json", "public/blog/images/buyer-guide-hero.webp"];
   assert.deepEqual(validateBoundArticleHeroReleasePaths(expected, expected), []);
   assert.deepEqual(validateBoundArticleHeroReleasePaths([...expected, "src/generated/article-heroes/blog/other-article.json"], expected), ["src/generated/article-heroes/blog/other-article.json"]);
+});
+
+test("release requirements use the canonical direct-review projection and exact bound hero files", () => {
+  assert.deepEqual(requiredImportReleaseFiles({
+    format: "direct-review",
+    approvedArtifactPath: "build-pack/editorial/article/example.json",
+    slug: "acme-review",
+    includeHero: true,
+  }), {
+    artifact: "src/generated/landing-pages/acme-review.json",
+    authorities: ["src/generated/landing-pages/index.json"],
+    hero: ["public/images/direct-review-acme-review-hero.webp", "src/generated/article-heroes/direct-review/acme-review.json"],
+    all: [
+      "public/images/direct-review-acme-review-hero.webp",
+      "src/generated/article-heroes/direct-review/acme-review.json",
+      "src/generated/landing-pages/acme-review.json",
+      "src/generated/landing-pages/index.json",
+    ],
+  });
 });
 
 test("sidecar loading observes generation and regeneration under one artifact fingerprint", async () => {

@@ -16,7 +16,12 @@ import { articleHeroGenerationEvidenceSchema, validateArticleHeroBinding } from 
 import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articleVisualQualityReviewSchema, captureArticleVisualRuntime, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate } from "./article-visual-quality";
 
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
-export const presentationTool = z.object({ rule: z.enum(["hero-image", ...designRules, "visual-quality", "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"]), observations:runtimeRefSchema.optional() }).strict();
+const observedReviewRules = ["critique", "audit", "polish", "visual-quality"] as const;
+const unobservedRules = ["hero-image", "design-read", "context", "shape", "detect", "desktop", "mobile", "reduced-motion", "owner-verifier"] as const;
+export const presentationTool = z.discriminatedUnion("rule", [
+  z.object({ rule: z.enum(observedReviewRules), observations:runtimeRefSchema }).strict(),
+  z.object({ rule: z.enum(unobservedRules), observations:z.never().optional() }).strict(),
+]);
 type Exchange = (pass: string, input: Record<string,string>, refs: EvidenceRef[], instructions: (EvidenceRef & {text:string})[],
   prompt: string, model: string, images?: EvidenceRef[]) => Promise<{output: Record<string,string>,executionRef:EvidenceRef}>;
 

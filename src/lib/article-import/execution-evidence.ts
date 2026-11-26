@@ -168,6 +168,20 @@ export function extractStructuredExecution(source: unknown, sourceRef: EvidenceR
 }
 
 type ExportSelection = { imageRefs?: EvidenceRef[]; version: string; sessionId: string; userMessageId: string; assistantMessageId: string; packetId: string; pass: string; input: Record<string, string>; output: Record<string, string>; families: Readonly<Record<string, string>>; inputRefs?: EvidenceRef[]; outputRefs?: EvidenceRef[]; instructions?: z.infer<typeof capturedInstructionSchema>[] };
+
+const attachmentPolicy = {
+  "hero-image-inspection": { mime: "image/webp", extension: ".webp" },
+  "design:critique": { mime: "image/png", extension: ".png" },
+  "design:audit": { mime: "image/png", extension: ".png" },
+  "design:polish": { mime: "image/png", extension: ".png" },
+  "design:visual-quality": { mime: "image/png", extension: ".png" },
+} as const;
+
+function hasMediaSignature(bytes: Buffer, mime: "image/png" | "image/webp"): boolean {
+  if (mime === "image/png") return bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex"));
+  return bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+    bytes.subarray(8, 12).toString("ascii") === "WEBP" && bytes.readUInt32LE(4) === bytes.length - 8;
+}
 /** V2 has no parentID. Only a dedicated, completed session establishes association. */
 function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const object = z.record(z.string(), z.unknown()).parse(raw);
@@ -177,7 +191,7 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const envelope = z.object({
     info: z.object({ id: z.string(), model, outcome: z.literal("succeeded"), parentID: z.never().optional(), fork: z.never().optional(), revert: z.never().optional() }).passthrough(),
     messages: z.tuple([
-      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time, files: z.array(z.object({ data: z.string(), mime: z.literal("image/png"), name: z.string(), source: z.object({type:z.literal("inline")}).strict() }).strict()).max(24).optional() }).strict(),
+      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time, files: z.array(z.object({ data: z.string(), mime: z.enum(["image/png", "image/webp"]), name: z.string(), source: z.object({type:z.literal("inline")}).strict() }).strict()).max(24).optional() }).strict(),
       z.object({ id: z.string(), type: z.literal("assistant"), model,
         time: z.object({ created: z.number().nonnegative(), streamed: z.number().nonnegative(), completed: z.number().nonnegative() }).strict(),
         finish: z.literal("stop"), rawFinish: z.literal("stop").optional(), agent: z.string().optional(),
@@ -194,11 +208,13 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const [user, assistant, idle] = envelope.messages;
   const images = selected.imageRefs ?? [];
   const files = user.files ?? [];
-  if (files.length !== images.length || (files.length && !["design:critique","design:audit","design:polish"].includes(selected.pass))) throw new Error("EXECUTION_IMAGE_BINDING");
+  const policy = attachmentPolicy[selected.pass as keyof typeof attachmentPolicy];
+  if (files.length !== images.length || (files.length && !policy)) throw new Error("EXECUTION_IMAGE_BINDING");
   for (const [index, image] of images.entries()) {
     const file = files[index];
     const bytes = Buffer.from(file.data, "base64");
-    if (bytes.length > MAX_EVIDENCE_BYTES || bytes.toString("base64") !== file.data || !bytes.subarray(0,8).equals(Buffer.from("89504e470d0a1a0a","hex")) ||
+    if (!policy || bytes.length > MAX_EVIDENCE_BYTES || bytes.toString("base64") !== file.data || file.mime !== policy.mime ||
+        path.extname(image.path).toLowerCase() !== policy.extension || path.extname(file.name).toLowerCase() !== policy.extension || !hasMediaSignature(bytes, policy.mime) ||
         file.name !== path.basename(image.path) || sha256(bytes) !== image.sha256 ||
         !selected.inputRefs?.some(ref => ref.path === image.path && ref.sha256 === image.sha256)) throw new Error("EXECUTION_IMAGE_BINDING");
   }

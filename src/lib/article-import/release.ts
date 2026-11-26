@@ -167,6 +167,22 @@ export function publicationAuthorityPaths(format: ImportFormat): readonly string
   }
 }
 
+/** One source for the exact article files a supervised release must declare. */
+export function requiredImportReleaseFiles(input: {
+  format: Exclude<ImportFormat, "agent_review_required">;
+  approvedArtifactPath: string;
+  slug: string;
+  includeHero: boolean;
+}) {
+  const artifact = input.format === "direct-review"
+    ? `src/generated/landing-pages/${input.slug}.json`
+    : input.approvedArtifactPath.replaceAll("\\", "/");
+  const authorities = [...publicationAuthorityPaths(input.format)];
+  const heroPaths = articleHeroPaths(articleHeroFormatSchema.parse(input.format), input.slug);
+  const hero = input.includeHero ? [heroPaths.assetFile, heroPaths.publicationFile] : [];
+  return { artifact, authorities, hero, all: normalizedPathSet([artifact, ...authorities, ...hero]) };
+}
+
 const AFFILIATE_DESTINATION_KEYS = new Set(["destination_url", "affiliate_url", "final_visible_destination_url", "approved_destinations"]);
 
 export function collectAffiliateDestinationUrls(value: unknown, collected: string[] = []): string[] {
@@ -401,6 +417,7 @@ async function assessImportReleaseImpl(input: {
 }): Promise<ReleaseAssessment> {
   const reasons: string[] = [];
   let heroReleasePaths: readonly string[] = [];
+  let requiredReleaseFiles: ReturnType<typeof requiredImportReleaseFiles> | undefined;
   const disallowed = validateReleasePaths(input.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true);
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
   if (input.execute && input.record.contentApproval) {
@@ -426,6 +443,12 @@ async function assessImportReleaseImpl(input: {
         if (hero.assetRef.path !== expectedHero.assetFile || hero.publicationRef.path !== expectedHero.publicationFile) throw new Error("ARTICLE_HERO_RELEASE_PATH_MISMATCH");
         heroReleasePaths = [expectedHero.assetFile, expectedHero.publicationFile];
       }
+      if (input.record.format !== "agent_review_required") requiredReleaseFiles = requiredImportReleaseFiles({
+        format: input.record.format,
+        approvedArtifactPath: sourceArtifactPath,
+        slug: target.slug,
+        includeHero: heroReleasePaths.length > 0,
+      });
       await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
     } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
   }
@@ -445,10 +468,10 @@ async function assessImportReleaseImpl(input: {
     const declared = normalizedPathSet(input.changedFiles);
     const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
     if (input.record.format !== "direct-review" && approvedArtifact && !declared.includes(approvedArtifact)) reasons.push("ARTIFACT_NOT_IN_RELEASE");
-    for (const authority of publicationAuthorityPaths(input.record.format)) {
+    for (const authority of requiredReleaseFiles?.authorities ?? publicationAuthorityPaths(input.record.format)) {
       if (!declared.includes(authority)) reasons.push(`PUBLICATION_AUTHORITY_NOT_IN_RELEASE:${authority}`);
     }
-    for (const heroFile of heroReleasePaths) {
+    for (const heroFile of requiredReleaseFiles?.hero ?? heroReleasePaths) {
       if (!declared.includes(heroFile)) reasons.push(`ARTICLE_HERO_NOT_IN_RELEASE:${heroFile}`);
     }
     const foreignHeroes = validateBoundArticleHeroReleasePaths(declared, heroReleasePaths);
@@ -513,10 +536,10 @@ async function assessImportReleaseImpl(input: {
       const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
       if (approvedArtifact && !inspectedFiles.includes(approvedArtifact)) gitReasons.push("ARTIFACT_NOT_IN_WORKTREE");
     }
-    for (const authority of publicationAuthorityPaths(input.record.format)) {
+    for (const authority of requiredReleaseFiles?.authorities ?? publicationAuthorityPaths(input.record.format)) {
       if (!inspectedFiles.includes(authority)) gitReasons.push(`PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:${authority}`);
     }
-    for (const heroFile of heroReleasePaths) {
+    for (const heroFile of requiredReleaseFiles?.hero ?? heroReleasePaths) {
       if (!inspectedFiles.includes(heroFile)) gitReasons.push(`ARTICLE_HERO_NOT_IN_WORKTREE:${heroFile}`);
     }
     const foreignHeroes = validateBoundArticleHeroReleasePaths(inspectedFiles, heroReleasePaths);
