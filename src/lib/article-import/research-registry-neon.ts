@@ -5,6 +5,7 @@ import {
   hasRetainedResearchBytes,
   researchRegistryCandidateSchema,
   researchRegistryLegacyLeadSchema,
+  validateRegistryWritebackCompleteness,
   type ArticleResearchRegistry,
   type ResearchRegistryCandidate,
   type ResearchRegistryCommitInput,
@@ -134,25 +135,7 @@ async function verifyReusedCandidates(tx: TransactionSql, input: ResearchRegistr
 type EvidenceLink = { localClaimId: string; localSourceId: string; claimId: string; snapshotId: string; action: "reused_current" | "researched_gap" };
 
 export function prequalifyAcquiredSourceIds(input: ResearchRegistryCommitInput): Set<string> {
-  const gapClaimIds = new Set(input.decision.claims.filter((claim) => claim.action === "researched_gap").map((claim) => claim.claimId));
-  const mappings = input.writeback?.claims ?? [];
-  if (mappings.some((mapping) => !gapClaimIds.has(mapping.plannedClaimId))) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
-  const acquiredSourceIds = new Set<string>();
-  for (const plannedClaimId of gapClaimIds) {
-    const claimMappings = mappings.filter((mapping) => mapping.plannedClaimId === plannedClaimId);
-    if (claimMappings.length !== 1) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
-    const evidenceClaims = input.research.evidence.claims.filter((claim) => claim.id === claimMappings[0].evidenceClaimId);
-    if (evidenceClaims.length !== 1) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
-    for (const sourceId of evidenceClaims[0].sourceIds) {
-      if (input.research.evidence.sources.filter((source) => source.id === sourceId).length !== 1 ||
-          input.writeback?.sources.filter((source) => source.sourceId === sourceId).length !== 1 ||
-          !input.research.snapshotBytes.has(sourceId)) {
-        throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
-      }
-      acquiredSourceIds.add(sourceId);
-    }
-  }
-  return acquiredSourceIds;
+  return validateRegistryWritebackCompleteness(input.decision, input.research, input.writeback);
 }
 
 async function writeEvidence(tx: TransactionSql, input: ResearchRegistryCommitInput): Promise<EvidenceLink[]> {
@@ -279,6 +262,7 @@ export class NeonArticleResearchRegistry implements ArticleResearchRegistry {
   }
 
   async commit(input: ResearchRegistryCommitInput): Promise<ResearchRegistryCommitResult> {
+    validateRegistryWritebackCompleteness(input.decision, input.research, input.writeback);
     try {
       return await this.transaction(async (tx) => {
         await tx`set transaction isolation level serializable`;

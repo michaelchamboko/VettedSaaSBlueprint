@@ -202,6 +202,7 @@ export function validateRegistryDecisionAgainstEvidence(
   writeback?: ResearchRegistryWriteback,
 ): void {
   validateRegistryDecisionPlan(plan, decision, now);
+  validateRegistryWritebackCompleteness(decision, research, writeback);
   const sources = new Map(research.evidence.sources.map((source) => [source.id, source]));
   const claimDecisions = new Map(decision.claims.map((claim) => [claim.claimId, claim]));
   if (claimDecisions.size !== decision.claims.length) throw new Error("RESEARCH_REGISTRY_CLAIM_DECISION_DUPLICATE");
@@ -234,6 +235,49 @@ export function validateRegistryDecisionAgainstEvidence(
     const evidenceClaimId = writeback?.claims.find((item) => item.plannedClaimId === tracked.claimId)?.evidenceClaimId ?? tracked.claimId;
     if (!research.evidence.claims.some((claim) => claim.id === evidenceClaimId)) throw new Error("RESEARCH_REGISTRY_CLAIM_DECISION_MISSING");
   }
+}
+
+export function validateRegistryWritebackCompleteness(
+  decision: ResearchRegistryDecision,
+  research: ValidatedResearchForRegistry,
+  writeback?: ResearchRegistryWriteback,
+): Set<string> {
+  const gapClaimIds = new Set(decision.claims.filter((claim) => claim.action === "researched_gap").map((claim) => claim.claimId));
+  if (gapClaimIds.size > 0 && !writeback) throw new Error("RESEARCH_REGISTRY_WRITEBACK_REQUIRED");
+  const mappings = writeback?.claims ?? [];
+  if (mappings.some((mapping) => !gapClaimIds.has(mapping.plannedClaimId))) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+  if (new Set(mappings.map((mapping) => mapping.plannedClaimId)).size !== mappings.length ||
+      new Set(mappings.map((mapping) => mapping.evidenceClaimId)).size !== mappings.length) {
+    throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+  }
+  const evidenceClaimIds = research.evidence.claims.map((claim) => claim.id);
+  if (new Set(evidenceClaimIds).size !== evidenceClaimIds.length) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+  const evidenceSourceIds = research.evidence.sources.map((source) => source.id);
+  if (new Set(evidenceSourceIds).size !== evidenceSourceIds.length) throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
+  const acquiredSourceIds = new Set<string>();
+  for (const plannedClaimId of gapClaimIds) {
+    const mapping = mappings.find((candidate) => candidate.plannedClaimId === plannedClaimId);
+    if (!mapping) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+    const evidenceClaim = research.evidence.claims.find((claim) => claim.id === mapping.evidenceClaimId);
+    if (!evidenceClaim) throw new Error("RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH");
+    if (evidenceClaim.sourceIds.length === 0 || new Set(evidenceClaim.sourceIds).size !== evidenceClaim.sourceIds.length) {
+      throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
+    }
+    for (const sourceId of evidenceClaim.sourceIds) acquiredSourceIds.add(sourceId);
+  }
+  const writebackSources = writeback?.sources ?? [];
+  if (new Set(writebackSources.map((source) => source.sourceId)).size !== writebackSources.length ||
+      writebackSources.some((source) => !acquiredSourceIds.has(source.sourceId))) {
+    throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
+  }
+  for (const sourceId of acquiredSourceIds) {
+    if (!research.evidence.sources.some((source) => source.id === sourceId) ||
+        !writebackSources.some((source) => source.sourceId === sourceId) ||
+        !research.snapshotBytes.has(sourceId)) {
+      throw new Error("RESEARCH_REGISTRY_SOURCE_DECISION_MISSING");
+    }
+  }
+  return acquiredSourceIds;
 }
 
 export function canonicalResearchUrl(value: string): string {

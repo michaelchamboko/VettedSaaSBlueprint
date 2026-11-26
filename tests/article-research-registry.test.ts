@@ -7,7 +7,7 @@ import { createSupervisedImportExecutor } from "../src/lib/article-import/superv
 import { assertResearchRegistryPlanFingerprint, createResearchRegistryPlan, researchRegistryDecisionSchema, researchRegistryPlanSchema, validateRegistryDecisionPlan, type ResearchRegistryCandidate, type ResearchRegistryCommitInput } from "../src/lib/article-import/research-registry";
 import { createInMemoryResearchRegistry } from "./fixtures/article-research-registry";
 import { prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
-import { prequalifyAcquiredSourceIds, researchSearchExpressions } from "../src/lib/article-import/research-registry-neon";
+import { NeonArticleResearchRegistry, prequalifyAcquiredSourceIds, researchSearchExpressions } from "../src/lib/article-import/research-registry-neon";
 import { evidenceReference, sha256, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { executeFixtureCommand as executeImportCommand, persistFixture } from "./fixtures/article-command";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
@@ -75,6 +75,28 @@ test("corrected acquired claims prequalify every source through the writeback ma
     },
   } as ResearchRegistryCommitInput);
   assert.deepEqual([...acquired], ["corrected-source", "corroborating-source"]);
+});
+
+test("incomplete writeback packets fail repairably before a registry transaction", async () => {
+  const base = {
+    decision: { claims: [{ claimId: "planned-claim", action: "researched_gap" }] },
+    research: {
+      evidence: {
+        claims: [{ id: "corrected-claim", sourceIds: ["corrected-source"] }],
+        sources: [{ id: "corrected-source" }],
+      },
+      snapshotBytes: new Map([["corrected-source", Buffer.from("Corrected retained evidence.")]]),
+    },
+  } as ResearchRegistryCommitInput;
+  const registry = new NeonArticleResearchRegistry();
+  await assert.rejects(
+    registry.commit({ ...base, writeback: { claims: [], sources: [] } } as ResearchRegistryCommitInput),
+    (error: unknown) => error instanceof Error && error.message === "RESEARCH_REGISTRY_WRITEBACK_CLAIM_MISMATCH",
+  );
+  await assert.rejects(
+    registry.commit({ ...base, writeback: { claims: [{ plannedClaimId: "planned-claim", evidenceClaimId: "corrected-claim" }], sources: [] } } as ResearchRegistryCommitInput),
+    (error: unknown) => error instanceof Error && error.message === "RESEARCH_REGISTRY_SOURCE_DECISION_MISSING",
+  );
 });
 
 async function submitResearch(input: Awaited<ReturnType<typeof fixture>>, action: "reused_current" | "researched_gap", gapReason?: "stale" | "conflicting" | "missing") {
