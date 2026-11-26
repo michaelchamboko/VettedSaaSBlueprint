@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { createArticleImport, recoverWorkflowLease } from "../src/lib/article-import/engine";
-import { claimNextIntakeEntry, createIntakeRun } from "../src/lib/article-import/intake";
+import { claimNextIntakeEntry, createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake";
 import { defaultWorkerRunner, extractJsonObject, type WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { type ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { type IntakeRun } from "../src/lib/article-import/intake";
@@ -59,7 +59,8 @@ test("tracked: missing worker result reports blocked", async () => {
     await writeFile(path.join(root, "Article Intake/b.md"), "# B");
     const run = await createIntakeRun(root);
     const claim = await claimNextIntakeEntry(root, run.runId);
-    assert.equal(claim.entries[0].importId, undefined);
+    assert.equal(claim.entry, claim.run.entries[0]);
+    assert.equal(claim.entry?.importId, undefined);
     await writeFile(path.join(root, "Article Intake/a.md"), "changed after capture");
     await writeFile(path.join(root, "Article Intake/0.md"), "late arrival");
     const dispatched = await dispatchIntakeRun(root, run.runId, { workerModel: "test/model-a", workerExecutable: path.join(root, "absent-worker") });
@@ -68,6 +69,29 @@ test("tracked: missing worker result reports blocked", async () => {
     const record = await loadImport(root, dispatched.entries[0].importId!);
     assert.equal(record.sourceFingerprint, run.entries[0].sourceFingerprint);
     assert.equal(record.continuation?.kind, "blocked");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("intake resume reuses the claimed entry and executes it once", async () => {
+  const root = await rootWithArticle();
+  try {
+    const run = await createIntakeRun(root);
+    const created = await executeImportCommand(root, { kind: "intake-resume", runId: run.runId }) as IntakeRun & { nextEntry: { importId: string } };
+    const saved = await loadIntakeRun(root, run.runId);
+    const runPath = path.join(root, ".automation/article-imports/intake", run.runId, "run.json");
+    await writeFile(runPath, JSON.stringify({ ...saved, activeEntry: undefined }));
+    let calls = 0;
+    const resumed = await executeImportCommand(root, { kind: "intake-resume", runId: run.runId }, async ({ record }) => {
+      calls += 1;
+      return record;
+    }) as IntakeRun & { importState: ExternalArticleImportV1; nextEntry: { importId: string } };
+    assert.equal(calls, 1);
+    assert.equal(resumed.importState.importId, created.nextEntry.importId);
+    assert.equal(resumed.nextEntry.importId, created.nextEntry.importId);
+    assert.equal(resumed.activeEntry, run.entries[0].relativePath);
+    const unchanged = await loadIntakeRun(root, run.runId);
+    assert.equal(unchanged.activeEntry, undefined);
+    assert.equal(unchanged.revision, saved.revision);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

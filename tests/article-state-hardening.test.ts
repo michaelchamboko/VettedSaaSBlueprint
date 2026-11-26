@@ -56,9 +56,9 @@ test("intake mutation validates terminal identity and reloads current state", as
   try {
     const run = await createIntakeRun(root);
     await assert.rejects(markIntakeEntry(root, run, run.entries[0].relativePath, "LIVE"), /INTAKE_TERMINAL_PROOF_INVALID/);
-    const selected = await claimNextIntakeEntry(root, run.runId); assert.equal(selected.entries[0].status, "PROCESSING");
-    const record = await createArticleImport(root, selected.entries[0].capturedPath!);
-    await markIntakeEntry(root, selected, selected.entries[0].relativePath, "PROCESSING", { importId: record.importId });
+    const selected = await claimNextIntakeEntry(root, run.runId); assert.equal(selected.entry?.status, "PROCESSING");
+    const record = await createArticleImport(root, selected.entry!.capturedPath!);
+    await markIntakeEntry(root, selected.run, selected.entry!.relativePath, "PROCESSING", { importId: record.importId });
     assert.equal((await loadIntakeRun(root, run.runId)).entries[0].importId, record.importId);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -237,7 +237,7 @@ test("explicit recovery validates retained execution then clears blocked import 
     const proof = await storeEvidence(root, record.importId, recovery);
     const run = await createIntakeRun(root);
     const claimed = await claimNextIntakeEntry(root, run.runId);
-    const bound = await markIntakeEntry(root, claimed, claimed.activeEntry!, "PROCESSING", { importId: record.importId });
+    const bound = await markIntakeEntry(root, claimed.run, claimed.entry!.relativePath, "PROCESSING", { importId: record.importId });
     await setIntakeBlocker(root, bound, { scope: "shared", code: "CREDENTIALS", message: "credentials missing" });
     const retry = { kind: "intake-retry", runId: run.runId, importId: record.importId, recovery: proof.path } as const;
     const intakeLease = await claimWorkflowLease(root, "intake", run.runId);

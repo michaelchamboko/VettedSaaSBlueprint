@@ -7,7 +7,7 @@ import { WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, stageInstru
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
+import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
 
 export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
 
@@ -74,12 +74,11 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     return { ...updated, nextEntry: updated.entries.find((item) => item.relativePath === entry.relativePath) };
   }
   if (command.kind === "intake-resume") {
-    let run = await claimNextIntakeEntry(root, command.runId);
-    const entry = nextIntakeEntry(run);
+    const { run, entry } = await claimNextIntakeEntry(root, command.runId);
     if (!entry) return run;
-      if (!entry.capturedPath || !entry.sourceFingerprint) return setIntakeBlocker(root, run, { scope: "shared", code: "CAPTURE_MISSING", message: `No immutable source copy was captured for ${entry.relativePath}.` });
+    if (!entry.capturedPath || !entry.sourceFingerprint) return setIntakeBlocker(root, run, { scope: "shared", code: "CAPTURE_MISSING", message: `No immutable source copy was captured for ${entry.relativePath}.` });
     if (entry.status === "PROCESSING" && entry.importId) {
-      const imported = await executeImportCommand(root, { kind: "resume", importId: entry.importId }, executor, dispatchOptions, probe) as ExternalArticleImportV1;
+      const imported = await executePendingImport(root, entry.importId, execute, { rejectBusy: true });
       if (imported.stage === "LIVE" || imported.stage === "QUARANTINED") {
         const terminal = await markIntakeEntry(root, run, entry.relativePath, imported.stage);
         return { ...terminal, importState: imported };
@@ -89,11 +88,11 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
         const blocked = await markIntakeEntry(root, run, entry.relativePath, "BLOCKED", { blocker: { scope: "article", code: imported.stage, stage: imported.resumeStage ?? imported.stage, message: imported.nextAction } });
         return { ...blocked, importState: imported };
       }
-      return { ...run, activeEntry: entry.relativePath, nextEntry: { ...entry, status: "PROCESSING", importId: entry.importId }, importState: imported };
+      return { ...run, activeEntry: entry.relativePath, nextEntry: entry, importState: imported };
     }
     const imported = await createArticleImport(root, entry.capturedPath, undefined, entry.sourceFingerprint);
-    run = await markIntakeEntry(root, run, entry.relativePath, imported.stage === "QUARANTINED" ? "QUARANTINED" : "PROCESSING", { importId: imported.importId });
-    return { ...run, nextEntry: { ...entry, importId: imported.importId, status: run.entries.find((item) => item.relativePath === entry.relativePath)?.status } };
+    const saved = await markIntakeEntry(root, run, entry.relativePath, imported.stage === "QUARANTINED" ? "QUARANTINED" : "PROCESSING", { importId: imported.importId });
+    return { ...saved, nextEntry: saved.entries.find((item) => item.relativePath === entry.relativePath) };
   }
   if (command.kind === "resume") return executePendingImport(root, command.importId, execute, { rejectBusy: true });
   throw new Error("An explicit import ID is required to resume an article import.");
