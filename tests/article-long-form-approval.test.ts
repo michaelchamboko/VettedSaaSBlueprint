@@ -4,13 +4,14 @@ import path from "node:path";
 import test from "node:test";
 
 import { approveImportContent, advanceImport, createArticleImport, ensureImportContentApproval } from "../src/lib/article-import/engine";
-import { evidenceReference, storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { contentApprovalMatches } from "../src/lib/article-import/content-approval";
+import { storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import { editorialOperation } from "../src/lib/article-import/worker-editorial";
 import { WORKFLOW_REVISION, workflowRequirements } from "../src/lib/article-import/workflow-requirements";
 import { artifactProseProjection, editorialExecutionSchema, validateEditorialExecution } from "../src/lib/article-import/workflow-evidence";
-import { countVisibleArticleWords } from "../src/lib/editorial/article-visible-word-count";
+import { countVisibleArticleWords, isLongFormAffiliateWordCount } from "../src/lib/editorial/article-visible-word-count";
 import { editorialProsePaths, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { persistFixture } from "./fixtures/article-command";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
@@ -55,6 +56,12 @@ test("eligible affiliate approval binds the worker review, invalidates edits, an
   await writeFile(path.join(root, "article.md"), `---\naffiliate_name: Example\naffiliate_url: ${affiliateUrl}\n---\nA synthetic source article with a specific buyer decision and retained evidence.`);
 
   const initial = await createArticleImport(root, "article.md");
+  for (const [boundary, accepted] of [[1_799, false], [1_800, true], [2_300, true], [2_301, false]] as const) {
+    const boundaryArtifact = longFormArtifacts(boundary).after;
+    const measured = countVisibleArticleWords("direct-review", boundaryArtifact).wordCount;
+    assert.equal(measured, boundary);
+    assert.equal(isLongFormAffiliateWordCount(measured), accepted);
+  }
   const { before, after } = longFormArtifacts();
   const key = importPacketId(initial, "REFINING", "fresh-rewrite");
   const base = path.join(root, "build-pack/editorial", initial.importId, key);
@@ -63,11 +70,12 @@ test("eligible affiliate approval binds the worker review, invalidates edits, an
   await writeFile(path.join(base, "after.json"), JSON.stringify(after));
 
   const claim = "Synthetic retained evidence supports the scoped workflow advantage and limitation.";
+  const evidenceTime = "2026-11-26T00:00:00.000Z";
   const snapshot = await storeEvidence(root, initial.importId, { source: claim });
   const research = await storeEvidence(root, initial.importId, {
-    schemaVersion: "ResearchEvidenceV2", id: "fixture-research", createdAt: new Date().toISOString(),
+    schemaVersion: "ResearchEvidenceV2", id: "fixture-research", createdAt: evidenceTime,
     importId: initial.importId, sourceFingerprint: initial.sourceFingerprint, requirementRevision: WORKFLOW_REVISION,
-    sources: [{ id: "source", url: "https://example.test/source", retrievedAt: new Date().toISOString(), snapshotRef: snapshot }],
+    sources: [{ id: "source", url: "https://example.test/source", retrievedAt: evidenceTime, snapshotRef: snapshot }],
     claims: [{ id: "claim", text: claim, sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: claim }], limitations: ["Synthetic fixture only."] }],
     freshness: "Fixed synthetic evidence for the acceptance test.",
   });
@@ -132,6 +140,12 @@ test("eligible affiliate approval binds the worker review, invalidates edits, an
       };
       output = { judgment: JSON.stringify(judgment) };
     } else {
+      if (["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm"].includes(envelope.pass)) {
+        assert.equal(envelope.prose.approvedAffiliateUrl, affiliateUrl);
+        assert.deepEqual(JSON.parse(envelope.prose.acceptedBrief), brief);
+        assert.match(envelope.prose.retainedResearch, /Synthetic retained evidence supports/);
+        assert.match(envelope.prose.sourceSnapshots, /Synthetic retained evidence supports/);
+      }
       output = artifactProseProjection("direct-review", after);
     }
     const session = `ses_fixture${++sessions}`;
@@ -190,6 +204,13 @@ test("eligible affiliate approval binds the worker review, invalidates edits, an
   assert.equal(validating.stage, "VALIDATING");
   assert.equal(validating.contentApproval?.longFormAffiliate?.wordCount, 1_800);
   assert.equal(validating.contentApproval?.longFormAffiliate?.approvedAffiliateUrl, affiliateUrl);
+  assert.equal(await contentApprovalMatches(root, validating.contentApproval, "direct-review", initial.sourceFingerprint, artifactPath, affiliateUrl), true);
+  const missingLongFormBinding = structuredClone(validating.contentApproval!) as unknown as Record<string, unknown>;
+  delete missingLongFormBinding.longFormAffiliate;
+  assert.equal(await contentApprovalMatches(root, missingLongFormBinding, "direct-review", initial.sourceFingerprint, artifactPath, affiliateUrl), false);
+  const tamperedLongFormBinding = structuredClone(validating.contentApproval!);
+  tamperedLongFormBinding.longFormAffiliate!.wordCount += 1;
+  assert.equal(await contentApprovalMatches(root, tamperedLongFormBinding, "direct-review", initial.sourceFingerprint, artifactPath, affiliateUrl), false);
 
   const changed = structuredClone(after);
   changed.benefits[0].benefit_description += " One unreviewed paragraph change.";
@@ -209,7 +230,7 @@ test("eligible affiliate approval binds the worker review, invalidates edits, an
   const positiveExecution = editorialExecutionSchema.parse(JSON.parse(await readFile(path.join(root, compared.editorialExecutionRef.path), "utf8")));
   const negativeExecutionRef = await storeEvidence(root, initial.importId, { ...positiveExecution, id: "padded-fixture", passes: negativePasses });
   await assert.rejects(
-    validateEditorialExecution(root, negativeExecutionRef, { ...packet, artifactPath }),
+    validateEditorialExecution(root, negativeExecutionRef, { ...packet, artifactPath, evidenceRefs: { research, transformAssessment, assessment: finalAssessment } }),
     /EDITORIAL_JUDGMENT_FAILED|LONG_FORM_AFFILIATE_(?:REVIEW_FAILED|UNRESOLVED_FINDING)/,
   );
   assert.match((await call("check", { artifact: "after.json" }) as { stdout: string }).stdout, /score\s+5\/5\s+CLEAN/i);

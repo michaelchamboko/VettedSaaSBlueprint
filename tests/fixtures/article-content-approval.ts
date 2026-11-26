@@ -51,7 +51,8 @@ export async function prepareApprovalFixture(root: string, record: ExternalArtic
   const rewritten = rewriteAllProse("landing", samplePageBlueprint);
   const initialWordCount = countVisibleArticleWords("direct-review", rewritten).wordCount;
   if (initialWordCount < 2050) rewritten.benefits[0].benefit_description += ` ${Array(2050 - initialWordCount).fill("decision").join(" ")}`;
-  const notes = options.structuredEditorial ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
+  const independentReview = options.structuredEditorial || record.transformation?.commercialMode === "approved";
+  const notes = independentReview ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
   const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, notes,
     { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
   for (const [file, value] of [[artifactPath, rewritten], [editorialEvidencePath, evidence], [formatQualityPath, { format: "direct-review", artifactFingerprint: fingerprintEditorialArtifact(rewritten), passed: true, gate: "landing:quality:candidate" }]] as const) {

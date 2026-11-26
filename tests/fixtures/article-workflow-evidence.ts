@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { importPacketId } from "../../src/lib/article-import/packet-binding";
 import path from "node:path";
-import { artifactProseProjection, contentAssessmentReviewInput, designReviewInput, editorialJudgmentReviewInput, editorialPassReviewInput, evidenceReference, longFormAffiliateJudgmentReviewInput, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, contentAssessmentReviewInput, designReviewInput, editorialJudgmentReviewInput, editorialPassReviewInput, evidenceReference, longFormAffiliateJudgmentReviewInput, longFormAffiliatePassReviewInput, readEvidence, storeEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
 import { captureStructuredExecution, extractOpenCodeExecution, proseProjectionDigest, sha256 } from "../../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION, workflowRequirements } from "../../src/lib/article-import/workflow-requirements";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../../src/lib/editorial/refinement";
@@ -70,7 +70,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const assessed = { format: input.format, schemaRevision, artifactFingerprint: fingerprintEditorialArtifact(input.after), sourceFingerprint: record.sourceFingerprint, requirementRevision: WORKFLOW_REVISION, researchRef: research, intent: { audience: "Fixture reader", decision: "Fixture decision", query: "Fixture query", pageType: input.format }, ...(longForm && { longFormAffiliate: longForm }), claimCoverage: [{ claimId: "claim", artifactPaths: [paths[0]] }], ruleResults: workflowRequirements.map((rule) => ({ ruleId: rule.id, revision: WORKFLOW_REVISION, status: "pass", rationale: "Synthetic assessment for pipeline tests.", evidenceRefs: [research] })), findings: [] };
   const reviewInput = await contentAssessmentReviewInput(root, input.after, await readEvidence(root, research), research);
   const assessment = await save({ ...common, schemaVersion: "ContentAssessmentV1", ...assessed, reviewerExecutionRef: await model("content-assessment", input.after, input.after, afterRef, afterRef, "writer", { assessment: JSON.stringify(assessed) }, reviewInput) });
-  const passNames = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", input.structuredEditorial ? "independentReview" : "beamReview", "finalFidelityReview"];
+  const passNames = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", input.structuredEditorial || longFormAffiliate ? "independentReview" : "beamReview", "finalFidelityReview"];
   const passes = [];
   for (const [index, name] of passNames.entries()) {
     const initial = index === 0 ? input.before : input.after, initialRef = index === 0 ? beforeRef : afterRef;
@@ -80,8 +80,9 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
     const independentContext = input.reuseIndependentContext ? "fixture-session" : "fixture-review-session";
     const judgmentContext = input.reuseIndependentContext ? "fixture-session" : "fixture-review-judgment-session";
     const judgmentInput = longFormAffiliate && name === "independentReview" ? await longFormAffiliateJudgmentReviewInput(root, initial, input.after, research, assessment, approvedAffiliateUrl!) : editorialJudgmentReviewInput(initial, input.after);
-    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", { judgment: JSON.stringify(judgment) }, judgmentInput, input.structuredEditorial && index === 3 ? judgmentContext : "fixture-session", longFormAffiliate && name === "independentReview" ? [research, assessment] : []);
-    passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", undefined, undefined, index === 3 ? independentContext : "fixture-session"), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
+    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", { judgment: JSON.stringify(judgment) }, judgmentInput, name === "independentReview" ? judgmentContext : "fixture-session", longFormAffiliate && name === "independentReview" ? [research, assessment] : []);
+    const rewriteInput = longFormAffiliate && index < 3 ? await longFormAffiliatePassReviewInput(root, initial, research, assessment, approvedAffiliateUrl!) : undefined;
+    passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", undefined, rewriteInput, index === 3 ? independentContext : "fixture-session", longFormAffiliate && index < 3 ? [research, assessment] : []), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
   }
   const checkerExecutionRef = await save({ schemaVersion: "ExecutionEvidenceV1", kind: "command", toolVersion: EDITORIAL_REVISION, startedAt: now, completedAt: now, inputRefs: [afterRef, pinRef(checkerFile)], outputRefs: [], executable: "python", argv: [checkerFile, "--text", editorialProse(format[input.format], input.after)], cwd: root, stdout: "score 5/5 CLEAN", stderr: "", exitCode: 0 });
   const editorial = await save({ ...common, schemaVersion: "EditorialExecutionV1", format: input.format, editorialEvidenceRef: await evidenceReference(root, input.editorialEvidencePath), schemaRevision, eligibleProsePaths: paths, passes, checkerExecutionRef });

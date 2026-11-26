@@ -7,7 +7,7 @@ import path from "node:path";
 import { z } from "zod";
 import { presentationTool, presentationOperation } from "./worker-presentation";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact } from "../editorial/refinement";
-import { contentAssessmentReviewInput, contentAssessmentSchema, validateContentAssessment, validateResearchEvidence, editorialExecutionSchema, editorialPassReviewInput, editorialJudgmentReviewInput, longFormAffiliateJudgmentReviewInput } from "./workflow-evidence";
+import { contentAssessmentReviewInput, contentAssessmentSchema, validateContentAssessment, validateResearchEvidence, editorialExecutionSchema, editorialPassReviewInput, editorialJudgmentReviewInput, longFormAffiliateJudgmentReviewInput, longFormAffiliatePassReviewInput } from "./workflow-evidence";
 import { captureStructuredExecution, readEvidenceBytes, evidenceRefSchema, evidenceReference, extractOpenCodeExecution, proseProjectionDigest, storeEvidence, structuredCaptureSelectionSchema, validateExecutionEvidence } from "./execution-evidence";
 import { workflowRequirements } from "./workflow-requirements";
 import { normalizeOpenCodeVersion, openCodeExportArgs } from "./opencode-runtime";
@@ -165,6 +165,11 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
   if (input.after) refs.push(await evidenceReference(root, await scoped(input.after)));
   const pass = input.pass + (after ? "-judgment" : "");
   let prose = after ? editorialJudgmentReviewInput(before, after) : editorialPassReviewInput(before);
+  if (!after && ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm"].includes(input.pass) && longFormAffiliate) {
+    if (!packet.research || !packet.assessment || !packet.affiliateUrl) throw new Error("LONG_FORM_AFFILIATE_REVIEW_INPUT_REQUIRED");
+    prose = await longFormAffiliatePassReviewInput(root, before, packet.research, packet.assessment, packet.affiliateUrl);
+    refs.push(packet.research, packet.assessment);
+  }
   if (after && input.pass === "independentReview" && longFormAffiliate) {
     if (!packet.research || !packet.assessment || !packet.affiliateUrl) throw new Error("LONG_FORM_AFFILIATE_REVIEW_INPUT_REQUIRED");
     prose = await longFormAffiliateJudgmentReviewInput(root, before, after, packet.research, packet.assessment, packet.affiliateUrl);

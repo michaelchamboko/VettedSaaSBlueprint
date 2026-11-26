@@ -37,7 +37,7 @@ const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm",
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
 export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), transformAssessment: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
-  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
+  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, commercialMode: z.enum(["approved", "decommercialized", "none"]).optional(), approvedAffiliateUrl: z.string().url().optional(), evidenceRefs: evidenceRefsSchema, frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("quarantine"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), reasonCode: z.enum(["empty", "unusable", "unsupported-format"]), dispositionEvidenceRef: evidenceRefSchema }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
@@ -118,14 +118,20 @@ export function editorialPassReviewInput(before: unknown): Record<string, string
 export function editorialJudgmentReviewInput(before: unknown, after: unknown): Record<string, string> {
   return { beforeArtifact: JSON.stringify(before), afterArtifact: JSON.stringify(after) };
 }
-export async function longFormAffiliateJudgmentReviewInput(root: string, before: unknown, after: unknown, researchRef: EvidenceRef, assessmentRef: EvidenceRef, destination: string): Promise<Record<string, string>> {
+async function longFormAffiliateContext(root: string, artifact: unknown, researchRef: EvidenceRef, assessmentRef: EvidenceRef, destination: string): Promise<Record<string, string>> {
   const retainedResearch = researchEvidenceSchema.parse(await readEvidence(root, researchRef));
   const research = await validateResearchEvidence(root, researchRef, { importId: retainedResearch.importId, sourceFingerprint: retainedResearch.sourceFingerprint, requirementRevision: retainedResearch.requirementRevision, format: "direct-review" });
   const assessment = contentAssessmentSchema.parse(await readEvidence(root, assessmentRef));
   if (!assessment.longFormAffiliate || assessment.longFormAffiliate.approvedAffiliateUrl !== destination) throw new Error("LONG_FORM_AFFILIATE_BRIEF_REQUIRED");
-  const researchInput = await contentAssessmentReviewInput(root, after, research, researchRef);
-  const count = countVisibleArticleWords("direct-review", after);
-  return { ...editorialJudgmentReviewInput(before, after), approvedAffiliateUrl: destination, acceptedBrief: JSON.stringify(assessment.longFormAffiliate.brief), visibleWordCount: String(count.wordCount), retainedResearch: researchInput.research, sourceSnapshots: researchInput.sourceSnapshots };
+  const researchInput = await contentAssessmentReviewInput(root, artifact, research, researchRef);
+  const count = countVisibleArticleWords("direct-review", artifact);
+  return { approvedAffiliateUrl: destination, acceptedBrief: JSON.stringify(assessment.longFormAffiliate.brief), visibleWordCount: String(count.wordCount), retainedResearch: researchInput.research, sourceSnapshots: researchInput.sourceSnapshots };
+}
+export async function longFormAffiliatePassReviewInput(root: string, before: unknown, researchRef: EvidenceRef, assessmentRef: EvidenceRef, destination: string): Promise<Record<string, string>> {
+  return { ...editorialPassReviewInput(before), ...await longFormAffiliateContext(root, before, researchRef, assessmentRef, destination) };
+}
+export async function longFormAffiliateJudgmentReviewInput(root: string, before: unknown, after: unknown, researchRef: EvidenceRef, assessmentRef: EvidenceRef, destination: string): Promise<Record<string, string>> {
+  return { ...editorialJudgmentReviewInput(before, after), ...await longFormAffiliateContext(root, after, researchRef, assessmentRef, destination) };
 }
 async function designInputFromManifest(root: string, artifact: unknown, renderInputsRef: EvidenceRef, rendering: z.infer<typeof renderingInputsSchema>, target: ReturnType<typeof importArtifactTarget>): Promise<Record<string, string>> {
   const rendererSources = [];
@@ -312,7 +318,14 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
     if (index === 0 && receipt.beforeFingerprint !== fingerprintEditorialArtifact(before)) throw new Error("EDITORIAL_INITIAL_ARTIFACT_MISMATCH");
     compareEditorialArtifacts(format, before, after);
     const execution = reviewExecution(await validateExecutionEvidence(root, pass.executionRef));
-    if (execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(editorialPassReviewInput(before)) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
+    let expectedPassInput = editorialPassReviewInput(before);
+    if (affiliateDestination && index < 3) {
+      const researchRef = binding.evidenceRefs?.research, assessmentRef = binding.evidenceRefs?.transformAssessment;
+      if (!researchRef || !assessmentRef) throw new Error("LONG_FORM_AFFILIATE_PASS_INPUT_REQUIRED");
+      expectedPassInput = await longFormAffiliatePassReviewInput(root, before, researchRef, assessmentRef, affiliateDestination);
+      if (![researchRef, assessmentRef].every((expected) => execution.inputRefs.some((input) => input.path === expected.path && input.sha256 === expected.sha256))) throw new Error("LONG_FORM_AFFILIATE_PASS_INPUT_REQUIRED");
+    }
+    if (execution.pass !== pass.name || proseProjectionDigest(execution.input) !== proseProjectionDigest(expectedPassInput) || proseProjectionDigest(execution.output) !== proseProjectionDigest(artifactProseProjection(value.format, after))) throw new Error("EDITORIAL_EXECUTION_MISMATCH");
     assertPacket(execution.packetId, binding, "REFINING");
     await pinnedInstructions(root, execution, [...requiredEditorialInstructions, ...(affiliateDestination ? [LONG_FORM_AFFILIATE_INSTRUCTION] : []), ...(["rivalFamilyCleanse", "beamReview", "independentReview"].includes(pass.name) ? [ELEANOR_ROOT + "prompts/cleanse.txt"] : [])], pass.instructionRefs);
     const family = execution.kind === "opencode" ? execution.family : undefined;
@@ -341,9 +354,9 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
     let expectedJudgmentInput = editorialJudgmentReviewInput(before, after);
     if (affiliateDestination && index === 3) {
       const researchRef = binding.evidenceRefs?.research, assessmentRef = binding.evidenceRefs?.transformAssessment;
-      if (!researchRef || !assessmentRef) throw new Error("LONG_FORM_AFFILIATE_REVIEW_INPUT_REQUIRED");
+      if (!researchRef || !assessmentRef) throw new Error("LONG_FORM_AFFILIATE_REVIEW_BINDING_REQUIRED");
       expectedJudgmentInput = await longFormAffiliateJudgmentReviewInput(root, before, after, researchRef, assessmentRef, affiliateDestination);
-      if (![researchRef, assessmentRef].every((expected) => judgmentExecution.inputRefs.some((input) => input.path === expected.path && input.sha256 === expected.sha256))) throw new Error("LONG_FORM_AFFILIATE_REVIEW_INPUT_REQUIRED");
+      if (![researchRef, assessmentRef].every((expected) => judgmentExecution.inputRefs.some((input) => input.path === expected.path && input.sha256 === expected.sha256))) throw new Error("LONG_FORM_AFFILIATE_REVIEW_EXECUTION_INPUT_REQUIRED");
     }
     if (judgmentExecution.pass !== `${pass.name}-judgment` || proseProjectionDigest(judgmentExecution.input) !== proseProjectionDigest(expectedJudgmentInput) || judgmentExecution.output.judgment !== JSON.stringify(judgmentText)) throw new Error("EDITORIAL_JUDGMENT_EXECUTION_MISMATCH");
     assertPacket(judgmentExecution.packetId, binding, "REFINING");
@@ -524,6 +537,12 @@ export async function validateTerminalEvidence(root: string, ref: EvidenceRef, b
   }
   if (value.mergeCommitSha !== value.deployment.commitSha) throw new Error("TERMINAL_COMMIT_MISMATCH");
   z.object({ reviewedCommitSha: z.literal(value.reviewedCommitSha), mergeCommitSha: z.literal(value.mergeCommitSha), pullRequestUrl: z.string().url(), evidenceUrl: z.string().url() }).strict().parse(await readEvidence(root, value.mergeEvidenceRef));
-  const result = await withTerminalEvidenceSnapshot(value.frozenFiles, () => evaluateWorkflowEvidence({ ...value, workflowVersion: 2, stage: "LIVE", artifactPath: value.artifactRef.path, release: value.deployment }, { root, throughStage: "LIVE", artifactPath: value.artifactRef.path }));
+  const result = await withTerminalEvidenceSnapshot(value.frozenFiles, async () => {
+    const manifest = z.object({ files: z.array(evidenceRefSchema) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
+    const currentLongFormPolicy = manifest.files.some((item) => item.path === LONG_FORM_AFFILIATE_INSTRUCTION);
+    if (currentLongFormPolicy && !value.commercialMode) throw new Error("LONG_FORM_AFFILIATE_TERMINAL_BINDING_REQUIRED");
+    if (currentLongFormPolicy && value.commercialMode === "approved" && !value.approvedAffiliateUrl) throw new Error("LONG_FORM_AFFILIATE_TERMINAL_BINDING_REQUIRED");
+    return evaluateWorkflowEvidence({ ...value, workflowVersion: 2, stage: "LIVE", artifactPath: value.artifactRef.path, affiliateUrl: value.approvedAffiliateUrl, release: value.deployment }, { root, throughStage: "LIVE", artifactPath: value.artifactRef.path });
+  });
   if (!result.ok) throw new Error(result.diagnostics.join("; "));
 }
