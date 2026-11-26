@@ -14,6 +14,7 @@ import {
 } from "./intake";
 import { invokeWorker, type WorkerOptions } from "./worker-runner";
 import type { ArticleResearchRegistry } from "./research-registry";
+import { createSupervisedImproveExecutor, type ImproveExecutor } from "./improve-supervisor";
 
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
@@ -28,6 +29,10 @@ function isTerminalStage(stage: string): boolean {
   return stage === "LIVE" || stage === "QUARANTINED";
 }
 
+function improvePending(record: ExternalArticleImportV1): boolean {
+  return record.stage === "LIVE" && !!record.improve && !["COMPLETE", "BLOCKED"].includes(record.improve.phase);
+}
+
 async function importExecutionStage(repositoryRoot: string, importId: string): Promise<string | undefined> {
   try { return articleExecutionStage(await loadImport(repositoryRoot, importId)); }
   catch { return undefined; }
@@ -40,11 +45,27 @@ async function intakeExecutionStage(repositoryRoot: string, runId: string): Prom
   } catch { return undefined; }
 }
 
-function pendingExecutionOptions(repositoryRoot: string, options?: DispatchOptions) {
+function pendingExecutionOptions(repositoryRoot: string, options: DispatchOptions | undefined, improveExecutor: ImproveExecutor) {
   return {
     rejectBusy: true,
+    improveExecutor,
     executeStage: (stage: ExternalArticleImportV1["stage"], action: () => Promise<ExternalArticleImportV1>) =>
       withArticleExecution(repositoryRoot, action, options?.capabilityProbe, stage),
+  };
+}
+
+export function createDispatchingImproveExecutor(root: string, baseExecutor: ImproveExecutor, options?: DispatchOptions): ImproveExecutor {
+  return async (context) => {
+    const first = await baseExecutor(context);
+    const assignment = first.improve;
+    if (!assignment?.workPath || !assignment.resultPath || ["COMPLETE", "BLOCKED"].includes(assignment.phase)) return first;
+    const packet = JSON.parse(await readFile(path.resolve(root, assignment.workPath), "utf8")) as Record<string, unknown>;
+    if (packet.stage !== "IMPROVE" || packet.importId !== context.record.importId || packet.publicationKey !== assignment.publicationKey ||
+        packet.boundCommitSha !== assignment.boundCommitSha || packet.resultPath !== assignment.resultPath) throw new Error("STATE_INTEGRITY: IMPROVE work packet binding mismatch");
+    await context.assertLease();
+    await saveImport(root, first);
+    await invokeWorker(root, assignment.workPath, assignment.resultPath, packet, context.leaseToken, context.assertLease, options);
+    return baseExecutor({ ...context, record: first, assignment });
   };
 }
 
@@ -83,12 +104,13 @@ async function runImportSteps(
 ): Promise<ExternalArticleImportV1 & { dispatchOutcome?: "STEP_LIMIT" }> {
   const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry });
   const execute = createDispatchingExecutor(repositoryRoot, baseExecutor, options);
+  const improveExecutor = createDispatchingImproveExecutor(repositoryRoot, createSupervisedImproveExecutor(repositoryRoot), options);
   const now = options?.now ?? (() => Date.now());
   const sleep = options?.sleep ?? (async (ms: number) => { await new Promise((resolve) => setTimeout(resolve, ms)); });
   const maxSteps = dispatchLimit(options);
   let current = await loadImport(repositoryRoot, importId);
   for (let step = 0; step < maxSteps; step += 1) {
-    if (isTerminalStage(current.stage)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options));
+    if (isTerminalStage(current.stage) && !improvePending(current)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor));
     if (current.stage === "ROLLED_BACK" || current.continuation?.kind === "blocked") return current;
     if (current.continuation?.kind === "wait") {
       const due = Math.min(Date.parse(current.continuation.nextCheckAt), Date.parse(current.continuation.timeoutAt));
@@ -96,8 +118,9 @@ async function runImportSteps(
       if (now() < due) return current;
     }
     const previous = current;
-    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options));
-    if (isTerminalStage(current.stage) || current.continuation?.kind === "blocked" || current.continuation?.kind === "repair" ||
+    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor));
+    if (current.improve?.pendingReview) return current;
+    if ((isTerminalStage(current.stage) && !improvePending(current)) || current.continuation?.kind === "blocked" || current.continuation?.kind === "repair" ||
         JSON.stringify(current) === JSON.stringify(previous)) return current;
   }
   return { ...current, dispatchOutcome: "STEP_LIMIT" };
@@ -134,7 +157,7 @@ async function runIntakeSteps(
       continue;
     }
     const record = await dispatchArticleImport(repositoryRoot, entry.importId, { ...options, maxSteps: 1 });
-    if (record.stage === "LIVE" || record.stage === "QUARANTINED") {
+    if ((record.stage === "LIVE" && !improvePending(record)) || record.stage === "QUARANTINED") {
       await markIntakeEntry(repositoryRoot, run, entry.relativePath, record.stage);
     } else if (record.continuation?.kind === "blocked") {
       const { scope, cause } = record.continuation;

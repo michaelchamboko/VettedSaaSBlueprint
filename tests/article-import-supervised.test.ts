@@ -277,16 +277,21 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
       assert.match(failed.continuation.resumptionRequirement, /dpl-previous/);
       assert.equal(failed.pendingRelease?.operations?.deployment?.deploymentId, "dpl-current");
       assert.equal(failed.terminalRef, undefined);
+      assert.equal(failed.improve, undefined);
       await heartbeat();
       assert.equal(deployments, 1);
       return;
     }
-    assert.equal((await current()).stage, "LIVE");
+    const live = await current();
+    assert.equal(live.stage, "LIVE");
+    assert.ok(live.improve?.publicationKey);
+    assert.equal(live.improve.boundCommitSha, live.release?.commitSha);
     await heartbeat();
     assert.equal(commits, 1);
     assert.equal(deployments, 1);
     assert.ok(await readFile(path.join(root, research.resultPath), "utf8"));
     const terminal = await current();
+    assert.equal(terminal.improve?.publicationKey, live.improve.publicationKey);
     await rm(path.join(root, terminal.terminalRef!.path));
     await assert.rejects(heartbeat(), /TERMINAL_PROOF_INVALID/);
   } finally { await rm(root, { recursive: true, force: true }); }

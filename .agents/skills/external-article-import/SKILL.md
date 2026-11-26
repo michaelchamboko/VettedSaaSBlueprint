@@ -50,6 +50,8 @@ A dev-only route renders a frozen approved artifact through `ReferenceComposedRe
 
 ### Supervised heartbeat execution
 
+When a newly verified LIVE publication returns an IMPROVE assignment, execute `.agents/skills/improve/SKILL.md` in this same supervised run. Resume its saved handoff after an interruption. The article's LIVE receipt establishes publication; only the assessment's own completion record establishes that IMPROVE finished.
+
 The Codex heartbeat is the supervising agent. The CLI executes local gates; it does not call a separate model service. During each existing heartbeat window:
 
 1. Run `npm run import:article -- --resume <import-id>` for the explicitly selected run. For a productive stage, read the `*.work.json` path in `nextAction`. Execute its instructions with the existing research, editorial or presentation tools, write the exact bound result, resume, and repeat until the article is terminal or explicitly blocked; do not stop after listing the packet.

@@ -235,3 +235,7 @@ Acceptance: verified pinned installation; full persistent indexing; source-bound
 ### Homepage post-hero sections (HOMEPAGE-MOTION-1124)
 
 User directive, 25 November 2026. Implement the approved governed-AI guide index, video localization track and illustrated trend report stack. Preserve published copy and destinations. Verify desktop scroll, mobile layout, keyboard access and reduced motion. Codex implementation explicitly authorized.
+
+### IMPROVE after verified publication (IMPROVE-PUBLICATION-1126)
+
+Owner directive, 26 November 2026. Record one resumable IMPROVE assessment for each newly verified article publication in the existing manually or API-triggered workflow. Use the original run records to establish confirmed defects or measurable inefficiencies. Apply the named assessment, retrospective, diagnosis, resolution, architecture, review and handoff skills in `.agents/skills/improve/SKILL.md`. Keep prior resolutions and reopen confirmed recurrences. Reject any fix that increases an affected step's complexity and invoke research for a simpler alternative. Preserve the article stages and terminal proof. The owner approved isolation from origin/main despite overlap with PR #87 and explicitly excluded test execution for this build.

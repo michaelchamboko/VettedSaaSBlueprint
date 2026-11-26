@@ -27,6 +27,14 @@ export async function inspectImportCompletion(repositoryRoot: string, importId: 
   const paths = packetPaths(record.nextAction);
   if (record.stage === "LIVE" || record.stage === "QUARANTINED") {
     const proof = await evaluateWorkflowEvidence(record, { root: repositoryRoot }, "historical-terminal");
+    if (proof.ok && record.stage === "LIVE" && record.improve && record.improve.phase !== "COMPLETE") {
+      const { phase, failure, workPath, resultPath } = record.improve;
+      return {
+        status: phase === "BLOCKED" ? "BLOCKED" : failure ? "REPAIR" : "WORK",
+        importId, stage: record.stage, workPath, resultPath,
+        nextAction: failure?.message ?? `Resume IMPROVE for this published article (${phase}).`,
+      };
+    }
     return { status: proof.ok ? "COMPLETE" : "REPAIR", importId, stage: record.stage, continuation: record.continuation, nextAction: proof.ok ? record.nextAction : `TERMINAL_PROOF_INVALID: ${JSON.stringify(proof.diagnostics)}`, ...paths };
   }
   if (record.schemaVersion !== "ExternalArticleImportV2") return { status: "REPAIR", importId, stage: record.stage, nextAction: "LEGACY_UPGRADE_REQUIRED" };

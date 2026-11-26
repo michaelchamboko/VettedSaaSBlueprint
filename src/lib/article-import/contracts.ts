@@ -119,6 +119,28 @@ export const importCodeReviewSchema = z.object({
   reviewedAt: z.string().datetime({ offset: true }),
 }).strict();
 
+export const importImproveSchema = z.object({
+  schemaVersion: z.literal("ImportImproveV1"),
+  publicationKey: z.string().regex(/^[a-f0-9]{64}$/),
+  boundCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
+  runRef: stateEvidenceRef,
+  phase: z.enum(["ASSESSING", "RESOLVING", "COMPLETE", "BLOCKED"]),
+  attempt: z.number().int().nonnegative(),
+  workPath: z.string().min(1).optional(),
+  resultPath: z.string().min(1).optional(),
+  issueKeys: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).default([]),
+  resolvedKeys: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).default([]),
+  openKeys: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).default([]),
+  handoffRefs: z.array(stateEvidenceRef).default([]),
+  startedAt: z.string().datetime({ offset: true }).optional(),
+  repairWorktree: z.object({ branch: z.string().regex(/^codex\/improve-[a-f0-9]{16}$/), path: z.string().min(1) }).strict().optional(),
+  pendingReview: z.object({ commitSha: z.string().regex(/^[a-f0-9]{40}$/), pullRequestUrl: z.string().url(), repairs: z.array(z.unknown()).min(1),
+    handoffs: z.object({ retrospective: stateEvidenceRef, diagnosis: stateEvidenceRef, repair: stateEvidenceRef, architecture: stateEvidenceRef }).strict() }).strict().optional(),
+  failure: z.object({ code: z.string().min(1), message: z.string().min(1), at: z.string().datetime({ offset: true }) }).strict().optional(),
+  completedAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
+export type ImportImproveV1 = z.infer<typeof importImproveSchema>;
+
 const continuationBase = {
   idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
@@ -185,6 +207,7 @@ export const externalArticleImportSchema = z.object({
   presentation: importPresentationReceiptSchema.optional(),
   pendingRelease: importPendingReleaseSchema.optional(),
   release: importReleaseSchema.optional(),
+  improve: importImproveSchema.optional(),
   stageReceipts: z.array(z.object({
     stage: importStageSchema,
     status: z.enum(["started", "passed", "failed", "waiting", "quarantined"]),
