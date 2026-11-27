@@ -3,6 +3,7 @@ import { z } from "zod";
 import { evidenceReference, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import { activityFindingReviewSubmissionSchema, externalArticleImportSchema, importActivityFindingReviewSchema, importActivityFindingSchema, importActivityReceiptSchema, type ExternalArticleImportV1 } from "./contracts";
 import { WORKFLOW_REVISION } from "./workflow-requirements";
+import { registerActivityFindingEvidence, registerActivityFindingResolutionEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 
 const activityStages = ["REFINING", "VALIDATING"] as const;
 type ActivityStage = typeof activityStages[number];
@@ -99,7 +100,7 @@ export async function nextArticleActivity(root: string, record: ExternalArticleI
   return undefined;
 }
 
-export async function recordArticleActivity(root: string, record: ExternalArticleImportV1, resultPath: string, expected: ActivityBinding, raw: unknown) {
+export async function recordArticleActivity(root: string, record: ExternalArticleImportV1, resultPath: string, expected: ActivityBinding, raw: unknown, registry?: ArticleReviewEvidenceRegistry) {
   const result = activityResultSchema.parse(raw);
   const submitted = result.activity;
   if (result.sourceFingerprint !== record.sourceFingerprint || submitted.stage !== expected.stage || submitted.id !== expected.id || submitted.inputFingerprint !== expected.inputFingerprint || JSON.stringify(submitted.criteria) !== JSON.stringify(expected.criteria) || JSON.stringify(submitted.dependencyRefs) !== JSON.stringify(expected.dependencyRefs)) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
@@ -141,6 +142,7 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
   const resultRef = receipt.resultRef;
   const findingReviews = [...(record.activityFindingReviews ?? [])];
   const reviewedFindings = [...activityFindings];
+  const conclusiveReviewIds: string[] = [];
   for (const submittedReview of submitted.findingReviews ?? []) {
     const review = activityFindingReviewSubmissionSchema.parse(submittedReview);
     const findingIndex = reviewedFindings.findIndex((finding) => finding.findingId === review.findingId && finding.stage === receipt.stage && finding.activityId === receipt.activityId && finding.status !== "resolved");
@@ -166,8 +168,9 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     const reviewId = `finding-review-${digest({ findingId: finding.findingId, reviewer: receipt.reviewer, executionId: receipt.executionId, resultRef }).slice(0, 24)}`;
     findingReviews.push(importActivityFindingReviewSchema.parse({ schemaVersion: "ImportActivityFindingReviewV1", reviewId, ...review, inputFingerprint: receipt.inputFingerprint, resultRef, reviewer: receipt.reviewer, executionId: receipt.executionId, reviewedAt }));
     reviewedFindings[findingIndex] = importActivityFindingSchema.parse({ ...finding, status: conclusive ? "resolved" : review.disposition === "owner-referral" ? "owner-referral" : "open", ...(conclusive && { resolutionReviewId: reviewId, resolvedAt: reviewedAt }) });
+    if (conclusive) conclusiveReviewIds.push(reviewId);
   }
-  return externalArticleImportSchema.parse({
+  const updated = externalArticleImportSchema.parse({
     ...record,
     activityReceipts: [...(record.activityReceipts ?? []), receipt],
     activityFindings: reviewedFindings,
@@ -175,6 +178,25 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     continuation: undefined,
     nextAction: ["accepted", "not-applicable"].includes(receipt.outcome) ? `Resume ${receipt.stage.toLowerCase()} at the earliest unfinished activity.` : `Complete ${receipt.activityId} again; the attributable ${receipt.outcome} review remains retained but does not approve the activity.`,
   });
+  if (registry && receipt.outcome === "rejected") {
+    const finding = updated.activityFindings?.find((candidate) => candidate.findingId === findingId);
+    if (finding) await registerActivityFindingEvidence(root, registry, updated, {
+      ...finding,
+      dependencyRefs: receipt.dependencyRefs,
+      originalEvidenceRef: receipt.resultRef,
+      reviewer: receipt.reviewer,
+      executionId: receipt.executionId,
+      openedAt: receipt.completedAt,
+    });
+  }
+  if (registry) {
+    for (const reviewId of conclusiveReviewIds) {
+      const review = updated.activityFindingReviews?.find((candidate) => candidate.reviewId === reviewId);
+      const finding = review && updated.activityFindings?.find((candidate) => candidate.findingId === review.findingId);
+      if (review && finding) await registerActivityFindingResolutionEvidence(root, registry, updated, finding, review);
+    }
+  }
+  return updated;
 }
 
 export function activityAttempt(record: ExternalArticleImportV1, binding: ActivityBinding) {
