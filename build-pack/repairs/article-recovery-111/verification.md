@@ -6,6 +6,8 @@ Branch: `codex/recovery-111`
 
 Base integration revision: `ade0b52450b9b72c5bf1c596fb9fd27b1c87c101`
 
+Merged integration tip: `bfbd2aa3cd24f5dea0202ae095eab17f1b888ec0`
+
 Scope: synthetic release adapters and isolated article fixtures only. No real article, provider, alias, rollback, deployment, merge, or publication was changed.
 
 ## Observed result
