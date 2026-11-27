@@ -1,0 +1,9 @@
+Command:
+node --import tsx --test docs/designs/recovery-evidence/104/recovery-boundary-probe.test.ts
+
+Result: exit 0
+
+PASS a failed acceptance check remains pre-publication repair
+PASS a verified publication defect uses IMPROVE and preserves acceptance history
+
+Summary: 2 tests, 2 passed, 0 failed.
