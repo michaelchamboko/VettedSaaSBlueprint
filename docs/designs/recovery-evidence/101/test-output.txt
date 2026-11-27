@@ -11,4 +11,3 @@ ok 4 - lease recovery refuses a live owner and succeeds only after that process 
 
 Command: node --import tsx --test docs/designs/recovery-evidence/101/late-result-probe.test.ts
 Revision under investigation: f026bca8b53aecca829262e9a27820ac6d078892
-

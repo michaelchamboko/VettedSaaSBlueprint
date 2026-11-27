@@ -61,4 +61,3 @@ node --import tsx --test docs/designs/recovery-evidence/101/late-result-probe.te
 ```
 
 Expected result: four tests pass. The probe writes `observations.json` and deletes only its owned `.scratch/recovery-evidence-101/case-*` directories.
-
