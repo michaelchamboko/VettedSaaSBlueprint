@@ -12,7 +12,7 @@ import {
 } from "../src/lib/article-import/engine";
 import { externalArticleImportSchema } from "../src/lib/article-import/contracts";
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
-import { persistFixture } from "./fixtures/article-command";
+import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
 import { parseImportCommand } from "../scripts/import-article";
 
 const parent = path.resolve(".scratch/article-cleanup-recovery");
@@ -70,9 +70,8 @@ async function cleanupRemedy(
     operationId,
     failureEvidence,
     kind,
-    verification: "verified",
-    summary: "Synthetic controller proof that the bound cleanup failure was remedied.",
-    verifiedAt: "2026-11-27T12:05:00.000Z",
+    action: "Restored the exact candidate bytes so the controller can verify the cleanup input again.",
+    submittedAt: "2026-11-27T12:05:00.000Z",
   })}\n`);
   return evidenceReference(root, relative);
 }
@@ -80,43 +79,24 @@ async function cleanupRemedy(
 test("a crash after durable attempt admission resumes the same attempt before recording its first failure", async () => {
   const { root, record, candidate } = await fixture();
   try {
-    let cleanupCalls = 0;
+    await rm(path.join(root, candidate.path));
     await assert.rejects(() => executePendingImport(root, record.importId, async (context) => context.record, {
-      cleanup: {
-        ...cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
-          if (boundary === "attempt-recorded") throw new Error("CRASH:attempt-recorded");
-        }),
-        beforeMutation: async () => {
-          cleanupCalls += 1;
-          return {
-            status: "temporary-failure" as const,
-            evidence: await cleanupEvidence(root, record.importId, "first-pre-mutation-failure"),
-          };
-        },
-      },
+      cleanup: cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
+        if (boundary === "attempt-recorded") throw new Error("CRASH:attempt-recorded");
+      }),
     }), /CRASH:attempt-recorded/);
     const interrupted = await loadImport(root, record.importId);
     const admitted = interrupted.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
     assert.equal(admitted.automaticAttempts?.length, 1);
     assert.equal(admitted.automaticAttempts?.[0].status, "admitted");
-    assert.equal(cleanupCalls, 0);
 
-    const resumed = await cleanupImportGateHandoff(root, record.importId, {
-      ...cleanupOptions("2026-11-27T12:01:00.000Z"),
-      beforeMutation: async ({ attemptNumber }) => {
-        cleanupCalls += 1;
-        return {
-          status: "temporary-failure" as const,
-          evidence: await cleanupEvidence(root, record.importId, `resumed-failure-${attemptNumber}`),
-        };
-      },
-    });
+    const resumed = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:01:00.000Z"));
     const failed = resumed.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === admitted.operationId)!;
     assert.equal(failed.automaticAttempts?.length, 1);
     assert.equal(failed.automaticAttempts?.[0].sequence, 1);
     assert.equal(failed.automaticAttempts?.[0].status, "temporary-failure");
-    assert.equal(cleanupCalls, 1);
-    assert.equal(await exists(path.join(root, candidate.path)), true);
+    assert.ok(failed.automaticAttempts?.[0].failureEvidence);
+    assert.equal(await exists(path.join(root, candidate.path)), false);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -127,18 +107,9 @@ test("temporary pre-mutation cleanup failures stop after three total attempts ac
   try {
     const initialRepairs = record.repairStageTotals;
     const initialStrategyAttempts = record.strategyAttempts;
-    let cleanupCalls = 0;
     let workerCalls = 0;
-    const options = {
-      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
-      beforeMutation: async ({ attemptNumber }: { attemptNumber: number }) => {
-        cleanupCalls += 1;
-        return {
-          status: "temporary-failure" as const,
-          evidence: await cleanupEvidence(root, record.importId, `temporary-failure-${attemptNumber}`),
-        };
-      },
-    };
+    await rm(path.join(root, candidate.path));
+    const options = cleanupOptions("2026-11-27T12:00:00.000Z");
 
     const first = await executePendingImport(root, record.importId, async (context) => {
       workerCalls += 1;
@@ -154,7 +125,6 @@ test("temporary pre-mutation cleanup failures stop after three total attempts ac
 
     assert.equal(second.gateHandoffs!.at(-1)!.cleanup.operationId, operationId);
     assert.equal(third.gateHandoffs!.at(-1)!.cleanup.operationId, operationId);
-    assert.equal(cleanupCalls, 3);
     assert.equal(workerCalls, 0);
     assert.equal(exhausted.automaticAttempts?.length, 3);
     assert.deepEqual(exhausted.automaticAttempts?.map((attempt) => attempt.sequence), [1, 2, 3]);
@@ -162,13 +132,12 @@ test("temporary pre-mutation cleanup failures stop after three total attempts ac
     assert.ok(exhausted.automaticAttempts?.every((attempt) => attempt.status === "temporary-failure" && attempt.failureEvidence));
     assert.equal(exhausted.phase, "held");
     assert.equal(exhausted.exhaustedAt, "2026-11-27T12:00:00.000Z");
-    assert.equal(await exists(path.join(root, candidate.path)), true);
+    assert.equal(await exists(path.join(root, candidate.path)), false);
 
     const freshInvocation = await cleanupImportGateHandoff(root, record.importId, options);
     const stillExhausted = freshInvocation.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === operationId)!;
-    assert.equal(cleanupCalls, 3);
     assert.equal(stillExhausted.automaticAttempts?.length, 3);
-    assert.equal(await exists(path.join(root, candidate.path)), true);
+    assert.equal(await exists(path.join(root, candidate.path)), false);
     assert.deepEqual(freshInvocation.repairStageTotals, initialRepairs);
     assert.deepEqual(freshInvocation.strategyAttempts, initialStrategyAttempts);
   } finally {
@@ -180,17 +149,8 @@ test("exhausted cleanup accepts only a verified remedy bound to its operation an
   const exhaustedFixture = await fixture();
   const independentFixture = await fixture();
   try {
-    let exhaustedCalls = 0;
-    const failingOptions = {
-      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
-      beforeMutation: async ({ attemptNumber }: { attemptNumber: number }) => {
-        exhaustedCalls += 1;
-        return {
-          status: "temporary-failure" as const,
-          evidence: await cleanupEvidence(exhaustedFixture.root, exhaustedFixture.record.importId, `bound-failure-${attemptNumber}`),
-        };
-      },
-    };
+    await rm(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path));
+    const failingOptions = cleanupOptions("2026-11-27T12:00:00.000Z");
     await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, failingOptions);
     await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, failingOptions);
     const third = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, failingOptions);
@@ -203,12 +163,13 @@ test("exhausted cleanup accepts only a verified remedy bound to its operation an
       lastFailure,
       "temporary-failure-remedy",
     );
-    const rejectedRemedy = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, {
-      ...failingOptions,
-      resolveVerifiedRemedy: async () => wrongOperationRemedy,
-    });
+    const rejectedRemedy = await executeFixtureCommand(exhaustedFixture.root, {
+      kind: "cleanup-remedy",
+      importId: exhaustedFixture.record.importId,
+      file: wrongOperationRemedy.path,
+    }) as Awaited<ReturnType<typeof loadImport>>;
     assert.equal(rejectedRemedy.gateHandoffs!.at(-1)!.cleanup.status, "held");
-    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), true);
+    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), false);
 
     const unrelatedFailure = await cleanupEvidence(exhaustedFixture.root, exhaustedFixture.record.importId, "unrelated-failure");
     const wrongFailureRemedy = await cleanupRemedy(
@@ -218,12 +179,13 @@ test("exhausted cleanup accepts only a verified remedy bound to its operation an
       unrelatedFailure,
       "temporary-failure-remedy",
     );
-    const rejectedFailureBinding = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, {
-      ...failingOptions,
-      resolveVerifiedRemedy: async () => wrongFailureRemedy,
-    });
+    const rejectedFailureBinding = await executeFixtureCommand(exhaustedFixture.root, {
+      kind: "cleanup-remedy",
+      importId: exhaustedFixture.record.importId,
+      file: wrongFailureRemedy.path,
+    }) as Awaited<ReturnType<typeof loadImport>>;
     assert.equal(rejectedFailureBinding.gateHandoffs!.at(-1)!.cleanup.status, "held");
-    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), true);
+    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), false);
 
     const verifiedRemedy = await cleanupRemedy(
       exhaustedFixture.root,
@@ -232,32 +194,24 @@ test("exhausted cleanup accepts only a verified remedy bound to its operation an
       lastFailure,
       "temporary-failure-remedy",
     );
-    const recovered = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, {
-      ...failingOptions,
-      resolveVerifiedRemedy: async () => verifiedRemedy,
-    });
+    await mkdir(path.dirname(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), { recursive: true });
+    await writeFile(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path), "superseded draft bytes\n");
+    const recovered = await executeFixtureCommand(exhaustedFixture.root, {
+      kind: "cleanup-remedy",
+      importId: exhaustedFixture.record.importId,
+      file: verifiedRemedy.path,
+    }) as Awaited<ReturnType<typeof loadImport>>;
     const recoveredOperation = recovered.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === operation.operationId)!;
-    assert.equal(exhaustedCalls, 3);
     assert.equal(recoveredOperation.automaticAttempts?.length, 3);
     assert.deepEqual(recoveredOperation.remedyRef, verifiedRemedy);
     assert.equal(recoveredOperation.phase, "completed");
     assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), false);
 
-    let independentCalls = 0;
-    const independent = await cleanupImportGateHandoff(independentFixture.root, independentFixture.record.importId, {
-      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
-      beforeMutation: async () => {
-        independentCalls += 1;
-        return {
-          status: "temporary-failure" as const,
-          evidence: await cleanupEvidence(independentFixture.root, independentFixture.record.importId, "independent-failure"),
-        };
-      },
-    });
+    await rm(path.join(independentFixture.root, independentFixture.candidate.path));
+    const independent = await cleanupImportGateHandoff(independentFixture.root, independentFixture.record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
     const independentOperation = independent.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
     assert.notEqual(independentOperation.operationId, operation.operationId);
     assert.equal(independentOperation.automaticAttempts?.length, 1);
-    assert.equal(independentCalls, 1);
   } finally {
     await rm(exhaustedFixture.root, { recursive: true, force: true });
     await rm(independentFixture.root, { recursive: true, force: true });
@@ -268,40 +222,29 @@ test("shared cleanup failure stops immediately and uncertain mutation requires r
   const sharedFixture = await fixture();
   const uncertainFixture = await fixture();
   try {
-    let sharedCalls = 0;
-    const sharedOptions = {
-      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
-      beforeMutation: async () => {
-        sharedCalls += 1;
-        return {
-          status: "shared-failure" as const,
-          evidence: await cleanupEvidence(sharedFixture.root, sharedFixture.record.importId, "shared-capability-failure"),
-        };
-      },
-    };
+    await writeFile(path.join(sharedFixture.root, sharedFixture.candidate.path), "integrity mismatch\n");
+    const sharedOptions = cleanupOptions("2026-11-27T12:00:00.000Z");
     const shared = await cleanupImportGateHandoff(sharedFixture.root, sharedFixture.record.importId, sharedOptions);
     const sharedOperation = shared.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
     await cleanupImportGateHandoff(sharedFixture.root, sharedFixture.record.importId, sharedOptions);
-    assert.equal(sharedCalls, 1);
     assert.equal(sharedOperation.automaticAttempts?.length, 1);
     assert.equal(sharedOperation.automaticAttempts?.[0].status, "shared-failure");
+    assert.ok(sharedOperation.automaticAttempts?.[0].failureEvidence);
     assert.equal(await exists(path.join(sharedFixture.root, sharedFixture.candidate.path)), true);
 
-    let uncertainCalls = 0;
-    const uncertainOptions = {
-      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
-      beforeMutation: async () => {
-        uncertainCalls += 1;
-        return {
-          status: "uncertain-mutation" as const,
-          evidence: await cleanupEvidence(uncertainFixture.root, uncertainFixture.record.importId, "uncertain-mutation"),
-        };
-      },
-    };
-    const uncertain = await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, uncertainOptions);
-    const uncertainOperation = uncertain.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
-    await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, uncertainOptions);
-    assert.equal(uncertainCalls, 1);
+    await assert.rejects(() => cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
+      if (boundary === "archive-copied") throw new Error("CRASH:archive-copied");
+    })), /CRASH:archive-copied/);
+    const interrupted = await loadImport(uncertainFixture.root, uncertainFixture.record.importId);
+    const interruptedOperation = interrupted.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
+    const archivePath = `.automation/article-imports/archive/${uncertainFixture.record.importId}/${uncertainFixture.candidate.sha256}/${path.basename(uncertainFixture.candidate.path)}`;
+    await writeFile(path.join(uncertainFixture.root, archivePath), "different archive bytes\n");
+    const uncertain = await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, cleanupOptions("2026-11-27T12:01:00.000Z"));
+    const uncertainOperation = uncertain.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === interruptedOperation.operationId)!;
+    assert.equal(uncertainOperation.automaticAttempts?.length, 1);
+    assert.equal(uncertainOperation.automaticAttempts?.[0].status, "uncertain-mutation");
+    assert.ok(uncertainOperation.automaticAttempts?.[0].failureEvidence);
+    await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, cleanupOptions("2026-11-27T12:02:00.000Z"));
     assert.equal(await exists(path.join(uncertainFixture.root, uncertainFixture.candidate.path)), true);
 
     const reconciliation = await cleanupRemedy(
@@ -311,12 +254,13 @@ test("shared cleanup failure stops immediately and uncertain mutation requires r
       uncertainOperation.automaticAttempts![0].failureEvidence!,
       "uncertain-mutation-reconciliation",
     );
-    const reconciled = await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, {
-      ...uncertainOptions,
-      resolveVerifiedRemedy: async () => reconciliation,
-    });
+    await writeFile(path.join(uncertainFixture.root, archivePath), "superseded draft bytes\n");
+    const reconciled = await executeFixtureCommand(uncertainFixture.root, {
+      kind: "cleanup-remedy",
+      importId: uncertainFixture.record.importId,
+      file: reconciliation.path,
+    }) as Awaited<ReturnType<typeof loadImport>>;
     const reconciledOperation = reconciled.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === uncertainOperation.operationId)!;
-    assert.equal(uncertainCalls, 1);
     assert.deepEqual(reconciledOperation.remedyRef, reconciliation);
     assert.equal(reconciledOperation.phase, "completed");
     assert.equal(await exists(path.join(uncertainFixture.root, uncertainFixture.candidate.path)), false);
@@ -485,6 +429,11 @@ test("archive uncertainty preserves both recoverable copies and holds dispatch",
 
 test("the manual cleanup command selects the same controller operation", () => {
   assert.deepEqual(parseImportCommand(["--cleanup", "article-123"]), { kind: "cleanup", importId: "article-123" });
+  assert.deepEqual(parseImportCommand(["--cleanup-remedy", "article-123", "--file", "remedy.json"]), {
+    kind: "cleanup-remedy",
+    importId: "article-123",
+    file: "remedy.json",
+  });
 });
 
 test("a normal gate handoff classifies superseded attempt files and fails closed when the canonical register is unavailable", async () => {

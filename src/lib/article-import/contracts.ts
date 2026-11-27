@@ -379,9 +379,8 @@ export const gateCleanupRemedySchema = z.object({
   operationId: z.string().regex(/^cleanup-[a-f0-9]{24}$/),
   failureEvidence: stateEvidenceRef,
   kind: z.enum(["temporary-failure-remedy", "uncertain-mutation-reconciliation", "shared-failure-recovery"]),
-  verification: z.literal("verified"),
-  summary: z.string().min(1),
-  verifiedAt: z.string().datetime({ offset: true }),
+  action: z.string().min(1),
+  submittedAt: z.string().datetime({ offset: true }),
 }).strict();
 const gateCleanupOperationSchema = z.object({
   schemaVersion: z.literal("ImportGateCleanupOperationV1"),

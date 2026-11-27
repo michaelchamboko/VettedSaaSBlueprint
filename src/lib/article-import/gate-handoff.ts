@@ -21,7 +21,6 @@ type CleanupOperation = NonNullable<ImportGateHandoff["cleanup"]["operations"]>[
 type CleanupDisposition = CleanupOperation["dispositions"][number];
 type CleanupAttempt = NonNullable<CleanupOperation["automaticAttempts"]>[number];
 type CleanupFailureStatus = Extract<CleanupAttempt["status"], "temporary-failure" | "shared-failure" | "uncertain-mutation">;
-type CleanupAttemptOutcome = { status: "ready" } | { status: CleanupFailureStatus; evidence: EvidenceRef };
 
 export type GateCleanupOptions = {
   now?: () => Date;
@@ -29,17 +28,7 @@ export type GateCleanupOptions = {
   resolveRetentionDependencies?: (record: ExternalArticleImportV1) => Promise<
     { status: "verified"; references: EvidenceRef[] } | { status: "unavailable"; reason: string }
   >;
-  beforeMutation?: (context: {
-    record: ExternalArticleImportV1;
-    operationId: string;
-    attemptNumber: number;
-    trigger: CleanupTrigger;
-  }) => Promise<CleanupAttemptOutcome>;
-  resolveVerifiedRemedy?: (context: {
-    record: ExternalArticleImportV1;
-    operationId: string;
-    failure: CleanupAttempt;
-  }) => Promise<EvidenceRef | undefined>;
+  remedyRef?: EvidenceRef;
 };
 
 type CleanupTrigger = "gate" | "manual";
@@ -208,22 +197,15 @@ function replaceLatestAttempt(operation: CleanupOperation, attempt: CleanupAttem
   return { ...operation, automaticAttempts: attempts };
 }
 
-function holdStartedAttempt(operation: CleanupOperation, status: Extract<CleanupFailureStatus, "shared-failure" | "uncertain-mutation">, at: Date, failureCode: string): CleanupOperation {
-  const attempt = latestAttempt(operation);
-  const held = attempt?.status === "ready"
-    ? replaceLatestAttempt(operation, { ...attempt, status, failureCode, finishedAt: at.toISOString() })
-    : operation;
-  return { ...held, phase: "held", updatedAt: at.toISOString() };
-}
-
 function remedyKind(status: CleanupFailureStatus) {
   if (status === "temporary-failure") return "temporary-failure-remedy" as const;
   if (status === "uncertain-mutation") return "uncertain-mutation-reconciliation" as const;
   return "shared-failure-recovery" as const;
 }
 
-async function verifyBoundRemedy(root: string, reference: EvidenceRef, operation: CleanupOperation, failure: CleanupAttempt): Promise<void> {
+async function verifyBoundRemedy(root: string, importId: string, reference: EvidenceRef, operation: CleanupOperation, failure: CleanupAttempt): Promise<void> {
   if (!failure.failureEvidence) throw new Error("CLEANUP_REMEDY_FAILURE_EVIDENCE_MISSING");
+  assertAuthorizedCandidatePath(importId, reference);
   const bytes = await readVerifiedEvidenceBytes(root, reference);
   const remedy = gateCleanupRemedySchema.parse(JSON.parse(bytes.toString("utf8")));
   if (remedy.operationId !== operation.operationId) throw new Error("CLEANUP_REMEDY_OPERATION_MISMATCH");
@@ -232,6 +214,68 @@ async function verifyBoundRemedy(root: string, reference: EvidenceRef, operation
   }
   if (failure.status === "admitted" || failure.status === "ready" || failure.status === "succeeded" || remedy.kind !== remedyKind(failure.status)) {
     throw new Error("CLEANUP_REMEDY_KIND_MISMATCH");
+  }
+}
+
+function cleanupErrorCode(error: unknown): string {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code;
+  return code || (error instanceof Error ? error.message : String(error));
+}
+
+function classifyPreMutationFailure(error: unknown): Extract<CleanupFailureStatus, "temporary-failure" | "shared-failure"> {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code;
+  return code && ["ENOENT", "EBUSY", "EAGAIN", "EMFILE", "ENFILE", "ETXTBSY", "EPERM", "EACCES"].includes(code)
+    ? "temporary-failure"
+    : "shared-failure";
+}
+
+async function recordCleanupFailure(
+  root: string,
+  record: ExternalArticleImportV1,
+  operation: CleanupOperation,
+  attempt: CleanupAttempt,
+  status: CleanupFailureStatus,
+  error: unknown,
+  at: Date,
+): Promise<CleanupOperation> {
+  const relative = `.automation/article-imports/work/${record.importId}/${operation.operationId}-attempt-${attempt.sequence}.failure.json`;
+  await writeFile(path.join(root, relative), `${JSON.stringify({
+    schemaVersion: "ImportGateCleanupFailureV1",
+    operationId: operation.operationId,
+    attempt: attempt.sequence,
+    trigger: attempt.trigger,
+    status,
+    code: cleanupErrorCode(error),
+    observedAt: at.toISOString(),
+  })}\n`);
+  const failureEvidence = await evidenceReference(root, relative);
+  const failed = { ...attempt, status, failureEvidence, failureCode: cleanupErrorCode(error), finishedAt: at.toISOString() };
+  return { ...replaceLatestAttempt(operation, failed), phase: "held", updatedAt: at.toISOString() };
+}
+
+async function holdMutationFailure(
+  root: string,
+  record: ExternalArticleImportV1,
+  operation: CleanupOperation,
+  status: Extract<CleanupFailureStatus, "shared-failure" | "uncertain-mutation">,
+  error: unknown,
+  at: Date,
+): Promise<CleanupOperation> {
+  const attempt = latestAttempt(operation);
+  return attempt?.status === "ready"
+    ? recordCleanupFailure(root, record, operation, attempt, status, error, at)
+    : { ...operation, phase: "held", updatedAt: at.toISOString() };
+}
+
+async function verifyMutationInputs(root: string, importId: string, operation: CleanupOperation): Promise<void> {
+  for (const disposition of operation.dispositions) {
+    if (disposition.removedAt || disposition.disposition === "retain" || disposition.disposition === "unclassified") continue;
+    if (disposition.disposition === "archive" && disposition.archiveRef) continue;
+    assertAuthorizedCandidatePath(importId, disposition.original.reference);
+    const target = path.resolve(root, disposition.original.reference.path);
+    const metadata = await lstat(target);
+    if (!metadata.isFile() || metadata.isSymbolicLink()) throw new Error("CLEANUP_ORIGINAL_UNSAFE");
+    await readVerifiedEvidenceBytes(root, disposition.original.reference);
   }
 }
 
@@ -305,10 +349,11 @@ export async function reconcileGateCleanup(
   const needsRemedy = failure && (failure.status !== "temporary-failure" || (operation.automaticAttempts?.length ?? 0) >= MAX_AUTOMATIC_ATTEMPTS);
   if (operation.phase === "held" && !attempt) return { record: current, handled: true };
   if (needsRemedy && !operation.remedyRef) {
-    const remedyRef = await options.resolveVerifiedRemedy?.({ record: current, operationId, failure });
+    const remedyRef = options.remedyRef;
     if (!remedyRef) return { record: current, handled: true };
     try {
-      await verifyBoundRemedy(root, remedyRef, operation, failure);
+      await verifyBoundRemedy(root, current.importId, remedyRef, operation, failure);
+      await verifyMutationInputs(root, current.importId, operation);
     } catch {
       return { record: current, handled: true };
     }
@@ -337,24 +382,12 @@ export async function reconcileGateCleanup(
     await options.afterBoundary?.("attempt-recorded");
   }
   if (!operation.remedyRef && attempt?.status === "admitted") {
-    const outcome = options.beforeMutation
-      ? await options.beforeMutation({ record: current, operationId, attemptNumber: attempt.sequence, trigger: attempt.trigger })
-      : { status: "ready" as const };
-    if (outcome.status !== "ready") {
-      await verifyEvidenceRef(root, outcome.evidence);
-      const failed: CleanupAttempt = {
-        ...attempt,
-        status: outcome.status,
-        failureEvidence: outcome.evidence,
-        finishedAt: at.toISOString(),
-      };
-      operation = replaceLatestAttempt(operation, failed);
-      operation = {
-        ...operation,
-        phase: "held",
-        ...(outcome.status === "temporary-failure" && attempt.sequence === MAX_AUTOMATIC_ATTEMPTS ? { exhaustedAt: at.toISOString() } : {}),
-        updatedAt: at.toISOString(),
-      };
+    try {
+      await verifyMutationInputs(root, current.importId, operation);
+    } catch (error) {
+      const status = classifyPreMutationFailure(error);
+      operation = await recordCleanupFailure(root, current, operation, attempt, status, error, at);
+      if (status === "temporary-failure" && attempt.sequence === MAX_AUTOMATIC_ATTEMPTS) operation = { ...operation, exhaustedAt: at.toISOString() };
       current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
       return { record: current, handled: true };
     }
@@ -371,7 +404,7 @@ export async function reconcileGateCleanup(
     let disposition = dispositions[index];
     const refreshedDependencies = await options.resolveRetentionDependencies!(current);
     if (refreshedDependencies.status === "unavailable") {
-      const held = holdStartedAttempt(operation, "shared-failure", at, refreshedDependencies.reason);
+      const held = await holdMutationFailure(root, current, operation, "shared-failure", new Error(refreshedDependencies.reason), at);
       current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
       return { record: current, handled: true };
     }
@@ -386,7 +419,7 @@ export async function reconcileGateCleanup(
       try {
         archiveRef = await writeVerifiedArchive(root, current.importId, disposition.original);
       } catch (error) {
-        const held = holdStartedAttempt(operation, "uncertain-mutation", at, error instanceof Error ? error.message : String(error));
+        const held = await holdMutationFailure(root, current, operation, "uncertain-mutation", error, at);
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
         return { record: current, handled: true };
       }
@@ -409,14 +442,14 @@ export async function reconcileGateCleanup(
         await verifyEvidenceRef(root, disposition.archiveRef);
         removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
       } catch (error) {
-        const held = holdStartedAttempt(operation, "uncertain-mutation", at, error instanceof Error ? error.message : String(error));
+        const held = await holdMutationFailure(root, current, operation, "uncertain-mutation", error, at);
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
         return { record: current, handled: true };
       }
       disposition = { ...disposition, removedAt: at.toISOString() };
       dispositions[index] = disposition;
       if (removal === "missing" && operation.phase !== "registered") {
-        operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
+        operation = await holdMutationFailure(root, current, { ...operation, dispositions }, "uncertain-mutation", new Error("CLEANUP_ORIGINAL_DISAPPEARED"), at);
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
         return { record: current, handled: true };
       }
@@ -425,12 +458,12 @@ export async function reconcileGateCleanup(
       try {
         removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
       } catch (error) {
-        const held = holdStartedAttempt(operation, "uncertain-mutation", at, error instanceof Error ? error.message : String(error));
+        const held = await holdMutationFailure(root, current, operation, "uncertain-mutation", error, at);
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
         return { record: current, handled: true };
       }
       if (removal === "missing") {
-        operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
+        operation = await holdMutationFailure(root, current, { ...operation, dispositions }, "uncertain-mutation", new Error("CLEANUP_ORIGINAL_DISAPPEARED"), at);
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
         return { record: current, handled: true };
       }

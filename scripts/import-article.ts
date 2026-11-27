@@ -12,7 +12,7 @@ import { createSupervisedImproveExecutor, type ImproveExecutor } from "../src/li
 import { NeonArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry-neon";
 import { reviewRetentionDependencyResolver, type ArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry";
 
-export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence" | "cleanup"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
+export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence" | "cleanup"; importId: string } | { kind: "cleanup-remedy"; importId: string; file: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
 
 async function importExecutionStage(root: string, importId: string): Promise<string | undefined> {
   try { return articleExecutionStage(await loadImport(root, importId)); }
@@ -42,6 +42,7 @@ export function parseImportCommand(argv: string[]): ImportCommand {
   if (argv[0] === "--preflight") return { kind: "preflight" };
   if (argv[0] === "--upgrade-evidence" && argv[1]) return { kind: "upgrade-evidence", importId: argv[1] };
   if (argv[0] === "--cleanup" && argv[1]) return { kind: "cleanup", importId: argv[1] };
+  if (argv[0] === "--cleanup-remedy" && argv[1] && argv[2] === "--file" && argv[3]) return { kind: "cleanup-remedy", importId: argv[1], file: argv[3] };
   if (argv[0] === "--submit-diagnosis" && argv[1] && argv[2] === "--file" && argv[3]) return { kind: "submit-diagnosis", importId: argv[1], file: argv[3] };
   if (argv[0] === "--upgrade-intake" && argv[1]) return { kind: "upgrade-intake", runId: argv[1] };
   if (argv[0] === "--check-intake" && argv[1]) return { kind: "check-intake", runId: argv[1] };
@@ -85,6 +86,10 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "submit-diagnosis") return submitImportDiagnosis(root, command.importId, JSON.parse(await readFile(command.file, "utf8")));
   const reviewEvidenceRegistry = dispatchOptions?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry();
   if (command.kind === "cleanup") return cleanupImportGateHandoff(root, command.importId, { resolveRetentionDependencies: reviewRetentionDependencyResolver(reviewEvidenceRegistry) });
+  if (command.kind === "cleanup-remedy") return cleanupImportGateHandoff(root, command.importId, {
+    resolveRetentionDependencies: reviewRetentionDependencyResolver(reviewEvidenceRegistry),
+    remedyRef: await evidenceReference(root, command.file),
+  });
   const execute = executor ?? createSupervisedImportExecutor(root, undefined, { reviewEvidenceRegistry });
   const improveExecutor = createDispatchingImproveExecutor(root, createSupervisedImproveExecutor(root), dispatchOptions);
   const resumeAfterGateCleanup = async (importId: string) => {

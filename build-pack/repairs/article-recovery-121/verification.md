@@ -14,17 +14,17 @@ The first focused run failed the three new acceptance cases. The cleanup adapter
 
 ## Implemented behavior
 
-- Each durable `cleanup-<24 hex>` operation owns at most three automatic attempts. The ledger records admission before the pre-mutation check, trigger, sequence, result, timestamps, and failure evidence.
+- Each durable `cleanup-<24 hex>` operation owns at most three automatic attempts. The ledger records admission before the controller reads the candidate, trigger, sequence, result, timestamps, and a generated failure-evidence file.
 - Gate, manual, and restarted entry points reuse the same operation and count. A crash after attempt admission resumes that admitted attempt instead of adding another.
 - A confirmed temporary pre-mutation failure may consume the next attempt. Attempt three records exhaustion. Later invocations stay held and do not call the cleanup adapter.
-- Shared failures stop on the first attempt. Uncertain mutation outcomes stay held until reconciliation. Neither path mutates the candidate while held.
-- A held operation can continue only with a readable, hash-verified `ImportGateCleanupRemedyV1` artifact. The artifact must name the operation, the exact failure evidence, and the matching recovery kind.
+- Missing, busy, or inaccessible candidate files count as temporary pre-mutation failures. Hash or path-integrity failures stop on the first attempt as shared failures. Errors after a verified pre-mutation check are uncertain outcomes and stay held until reconciliation.
+- The manual `--cleanup-remedy <import-id> --file <path>` command accepts only an import-scoped, hash-verified `ImportGateCleanupRemedyV1` artifact. The artifact must name the operation, the exact failure evidence, and the matching recovery kind. The controller then reruns the filesystem and hash checks. It does not trust an assertion in the artifact.
 - Cleanup attempts do not change article repair totals or strategy attempts. Different cleanup operation IDs keep independent ledgers.
 
 ## Synthetic proof at the implementation checkpoint
 
 - RED: `node --import tsx --test tests/article-import-cleanup-recovery.test.ts` reported 7 passed and 3 failed before implementation.
-- GREEN: the same focused file reported 11 passed and 0 failed after implementation, including the durable attempt-admission crash case.
+- GREEN: the same focused file reported 11 passed and 0 failed after implementation, including the durable attempt-admission crash case, actual missing-file exhaustion, shared hash failure, uncertain archive reconciliation, and remedy submission through the normal command controller.
 - Directly affected regression files `tests/article-import-gate-handoff.test.ts`, `tests/article-import-dispatch.test.ts`, and `tests/article-import.test.ts` reported 54 passed and 0 failed.
 - `npm run typecheck` passed.
 
