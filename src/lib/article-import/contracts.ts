@@ -192,6 +192,60 @@ export const importContinuationSchema = z.discriminatedUnion("kind", [
 export type ImportContinuation = z.infer<typeof importContinuationSchema>;
 
 const activityCriterionSchema = z.object({ id: z.string().min(1), revision: z.string().min(1) }).strict();
+const activityRegressionCheckSchema = z.object({
+  criterion: activityCriterionSchema,
+  observation: z.string().min(1),
+  outcome: z.enum(["passed", "failed", "inconclusive"]),
+  evidenceRefs: z.array(stateEvidenceRef).min(1),
+}).strict();
+const activityFindingReviewFields = {
+  findingId: z.string().regex(/^finding-[a-f0-9]{24}$/),
+  disposition: z.enum(["verified-repair", "appropriate-removal", "evidenced-dismissal", "inconclusive", "owner-referral"]),
+  expectedCheck: z.string().min(1),
+  observation: z.string().min(1),
+  evidenceRefs: z.array(stateEvidenceRef).min(1),
+  changedInputRefs: z.array(stateEvidenceRef).min(1).optional(),
+  regressionChecks: z.array(activityRegressionCheckSchema).min(1).optional(),
+  ownerReferral: z.object({ kind: z.enum(["requirement-dispute", "required-capability-removal"]), reason: z.string().min(1) }).strict().optional(),
+};
+function validateActivityFindingReview(value: z.infer<z.ZodObject<typeof activityFindingReviewFields>>, context: z.RefinementCtx) {
+  if (["verified-repair", "appropriate-removal"].includes(value.disposition) && !value.changedInputRefs) context.addIssue({ code: "custom", path: ["changedInputRefs"], message: "A repair or removal must identify a relevant changed input." });
+  if (["verified-repair", "appropriate-removal", "evidenced-dismissal"].includes(value.disposition) && !value.regressionChecks) context.addIssue({ code: "custom", path: ["regressionChecks"], message: "A conclusive review must record directly affected regression checks." });
+  if (value.disposition === "owner-referral" && !value.ownerReferral) context.addIssue({ code: "custom", path: ["ownerReferral"], message: "An owner referral must identify the disputed requirement or required capability." });
+  if (value.disposition !== "owner-referral" && value.ownerReferral) context.addIssue({ code: "custom", path: ["ownerReferral"], message: "Owner referral details are only valid for an owner-referral disposition." });
+}
+export const activityFindingReviewSubmissionSchema = z.object(activityFindingReviewFields).strict().superRefine(validateActivityFindingReview);
+export const importActivityFindingReviewSchema = z.object({
+  schemaVersion: z.literal("ImportActivityFindingReviewV1"),
+  reviewId: z.string().regex(/^finding-review-[a-f0-9]{24}$/),
+  ...activityFindingReviewFields,
+  inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  resultRef: stateEvidenceRef,
+  reviewer: z.string().min(1),
+  executionId: z.string().min(1),
+  reviewedAt: z.string().datetime({ offset: true }),
+}).strict().superRefine(validateActivityFindingReview);
+export const importActivityFindingSchema = z.object({
+  schemaVersion: z.literal("ImportActivityFindingV1"),
+  findingId: z.string().regex(/^finding-[a-f0-9]{24}$/),
+  stage: z.enum(["REFINING", "VALIDATING"]),
+  activityId: z.string().min(1),
+  criterion: activityCriterionSchema,
+  revision: z.string().regex(/^[a-f0-9]{64}$/),
+  observation: z.string().min(1),
+  expectedCheck: z.string().min(1),
+  dependencyRefs: z.array(stateEvidenceRef).min(1),
+  originalEvidenceRef: stateEvidenceRef,
+  reviewer: z.string().min(1),
+  executionId: z.string().min(1),
+  status: z.enum(["open", "resolved", "owner-referral"]),
+  resolutionReviewId: z.string().regex(/^finding-review-[a-f0-9]{24}$/).optional(),
+  resolvedAt: z.string().datetime({ offset: true }).optional(),
+  openedAt: z.string().datetime({ offset: true }),
+}).strict().superRefine((value, context) => {
+  if (value.status === "resolved" && (!value.resolutionReviewId || !value.resolvedAt)) context.addIssue({ code: "custom", path: ["status"], message: "A resolved finding must link its independent review and resolution time." });
+  if (value.status !== "resolved" && (value.resolutionReviewId || value.resolvedAt)) context.addIssue({ code: "custom", path: ["status"], message: "Only a resolved finding may carry resolution metadata." });
+});
 export const importActivityReceiptSchema = z.object({
   schemaVersion: z.literal("ImportActivityReceiptV1"),
   stage: z.enum(["REFINING", "VALIDATING"]),
@@ -268,6 +322,8 @@ export const externalArticleImportSchema = z.object({
   }).strict().optional(),
   activityProtocolVersion: z.literal(1).optional(),
   activityReceipts: z.array(importActivityReceiptSchema).optional(),
+  activityFindings: z.array(importActivityFindingSchema).optional(),
+  activityFindingReviews: z.array(importActivityFindingReviewSchema).optional(),
   legacyDiagnostics: z.array(z.string()).optional(),
   importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),

@@ -245,7 +245,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       ...(stage === "RELEASING" && { releaseSteps }),
       ...(requiredReleaseFiles && { requiredReleaseFiles }),
       ...(stage === "REFINING" && { publicationProposals: publicationProposals(record.importId, context.idempotencyKey, record.format) }),
-      instructions: activity ? `${instructionsForStage(stage)} Complete only activity ${activity.id}. Record an attributable accepted, rejected, unverified, or justified not-applicable review against the bound inputs and criterion.` : instructionsForStage(stage), resultPath,
+      instructions: activity ? `${instructionsForStage(stage)} Complete only activity ${activity.id}. Record an attributable accepted, rejected, unverified, or justified not-applicable review against the bound inputs and criterion.${activity.openFindings?.length ? " Repair the listed open findings against a relevant changed input, perform each expected check, and retain fresh independent observations for the original defect and affected regressions." : ""}` : instructionsForStage(stage), resultPath,
       resultContract: activity ? { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe the completed activity review.", activity: { ...activity, reviewer: "reviewer identity", executionId: "execution identity", outcome: "accepted|rejected|unverified|not-applicable", observation: "required for accepted or rejected", applicabilityReason: "required for not-applicable" } } : { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,
     });
@@ -253,7 +253,9 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     try { raw = await readRepositoryJson(root, resultPath); }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      return { ...record, ...(activity && { activityProtocolVersion: 1 as const }), continuation: { kind: "work", stage, workPath, resultPath, ...(activity && { activityId: activity.id, inputFingerprint: activity.inputFingerprint }), idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Supervising agent: execute ${workPath}, write its result to ${resultPath}, then explicitly resume this import.` };
+      return { ...record, ...(activity && { activityProtocolVersion: 1 as const }), continuation: { kind: "work", stage, workPath, resultPath, ...(activity && { activityId: activity.id, inputFingerprint: activity.inputFingerprint }), idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: activity?.openFindings?.length
+        ? `Repair ${activity.id} through ${workPath}. Objections: ${activity.openFindings.map((finding) => `${finding.findingId}: ${finding.observation}`).join("; ")} Expected checks: ${activity.openFindings.map((finding) => finding.expectedCheck).join("; ")} Write the independent result to ${resultPath}, then resume this import.`
+        : `Supervising agent: execute ${workPath}, write its result to ${resultPath}, then explicitly resume this import.` };
     }
     if (activity) {
       const activityResult = activityResultSchema.parse(raw);
