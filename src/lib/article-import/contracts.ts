@@ -39,24 +39,32 @@ export const remedyVerificationEvidenceSchema = z.object({
   stage: remedyCheckResultFields.stage,
   failedSubmissionDigest: remedyCheckResultFields.failedSubmissionDigest,
   replacementSubmissionDigest: remedyCheckResultFields.replacementSubmissionDigest,
-  criterion: z.object({ id: z.enum(["research-evidence", "content-assessment", "presentation-evidence"]), revision: z.string().min(1) }).strict(),
+  criterion: z.object({ id: z.enum(["research-evidence", "content-assessment", "presentation-evidence", "release-result"]), revision: z.string().min(1) }).strict(),
   validatedEvidenceRef: stateEvidenceRef,
+  relatedEvidenceRefs: z.array(stateEvidenceRef).optional(),
   measurementChange: measurementChangeSchema.optional(),
   checkedAt: remedyCheckResultFields.checkedAt,
 }).strict();
-export const remedyMeasurementVerificationSchema = z.object({
+const remedyMeasurementVerificationFields = {
   schemaVersion: z.literal("RemedyMeasurementVerificationV1"),
   importId: remedyCheckResultFields.importId,
   sourceFingerprint: remedyCheckResultFields.sourceFingerprint,
   stage: remedyCheckResultFields.stage,
   failedSubmissionDigest: remedyCheckResultFields.failedSubmissionDigest,
   replacementSubmissionDigest: remedyCheckResultFields.replacementSubmissionDigest,
-  criterion: z.object({ id: z.literal("transformation.title-length"), revision: z.string().min(1) }).strict(),
-  metric: z.literal("transformation.title.length"),
-  observedValue: z.number().int().nonnegative(),
+  previousPresentationRef: stateEvidenceRef,
+  currentPresentationRef: stateEvidenceRef,
+  previousObservationRef: stateEvidenceRef,
+  currentObservationRef: stateEvidenceRef,
+  reviewExecutionRef: stateEvidenceRef,
+  reviewLimitations: z.array(z.string().min(1)).min(1),
   measurementChange: measurementChangeSchema,
   checkedAt: remedyCheckResultFields.checkedAt,
-}).strict();
+};
+export const remedyMeasurementVerificationSchema = z.discriminatedUnion("verificationKind", [
+  z.object({ ...remedyMeasurementVerificationFields, verificationKind: z.literal("presentation-viewport"), criterion: z.object({ id: z.enum(["mobile", "desktop", "reduced-motion"]), reviewRule: z.enum(["critique", "audit", "polish"]), revision: z.string().min(1) }).strict(), sourceViewport: z.object({ width: z.number().int().positive(), height: z.number().int().positive(), reducedMotion: z.boolean() }).strict(), targetViewport: z.object({ width: z.number().int().positive(), height: z.number().int().positive(), reducedMotion: z.boolean() }).strict() }).strict(),
+  z.object({ ...remedyMeasurementVerificationFields, verificationKind: z.literal("typography-tracking-threshold"), criterion: z.object({ id: z.literal("typography.heading.letterSpacing"), stableAuthorityId: z.literal("D04-S-a2bbcd69b901"), observationRule: z.enum(["mobile", "desktop"]), reviewRule: z.enum(["critique", "audit", "polish"]), revision: z.string().min(1) }).strict(), authorityInstructionRef: stateEvidenceRef, sourceComputedValue: z.string().min(1), targetComputedValue: z.string().min(1), sourceCriterionFloor: z.string().min(1), criterionFloor: z.literal("-0.04em") }).strict(),
+]);
 const diagnosisFields = {
   schemaVersion: z.literal("DiagnosisV1"), importId: z.string(), sourceFingerprint: z.string(), stage: z.string(),
   failedSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/), replacementSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/),
@@ -228,7 +236,7 @@ const continuationBase = {
 };
 export const importContinuationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), activityId: z.string().min(1).optional(), inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), ...continuationBase }).strict(),
-  z.object({ kind: z.literal("repair"), stage: importStageSchema, failureCategory: importFailureCategorySchema.optional(), failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
+  z.object({ kind: z.literal("repair"), stage: importStageSchema, failureCategory: importFailureCategorySchema.optional(), failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), failedEvidenceRefs: z.array(stateEvidenceRef).optional(), failedWork: z.object({ workPath: z.string().min(1), resultPath: z.string().min(1), idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), activityId: z.string().min(1).optional() }).strict().optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
   z.object({ kind: z.literal("wait"), resumeStage: importStageSchema, dependency: z.string().min(1), externalId: z.string().min(1).optional(), waitStartedAt: z.string().datetime({ offset: true }), lastProgressAt: z.string().datetime({ offset: true }), nextCheckAt: z.string().datetime({ offset: true }), timeoutAt: z.string().datetime({ offset: true }) }).strict(),
   z.object({ kind: z.literal("blocked"), scope: z.enum(["article", "shared"]), failureCategory: importFailureCategorySchema.optional(), cause: z.string().min(1), attemptedRecovery: z.string().min(1), resumptionRequirement: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("complete"), result: z.enum(["LIVE", "QUARANTINED", "PUBLISHED_WITH_EXCEPTIONS"]), receiptPaths: z.array(z.string().min(1)).min(1) }).strict(),

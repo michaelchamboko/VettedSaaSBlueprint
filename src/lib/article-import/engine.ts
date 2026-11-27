@@ -13,11 +13,12 @@ import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
 import { instructionsForStage, RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
-import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateContentAssessment, validatePresentationEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
+import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateProductionWorkflowEvidence, validateResearchEvidence, workflowEvidenceSchema } from "./workflow-evidence";
 import { recoveryEvidenceSchema } from "./contracts";
-import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import { evidenceRefSchema, evidenceReference, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
+import { readImportArtifactTarget } from "./format-validation";
 import { classifyImportFailure } from "./failure-routing";
 export { ImportFailure } from "./failure-routing";
 import { declareGateHandoff } from "./gate-handoff";
@@ -482,6 +483,7 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
     const researchRecovery = record.stage === "RESEARCHING" || input.message.includes("ASSESSMENT_RULE_FAILED:claims") ? ` ${RESEARCH_RECOVERY_INSTRUCTION}` : "";
     const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
     const submittedFingerprint = await canonicalSubmissionFingerprint(record, repositoryRoot);
+    const failedWork = record.continuation?.kind === "work" && record.continuation.idempotencyKey ? { workPath: record.continuation.workPath, resultPath: record.continuation.resultPath, idempotencyKey: record.continuation.idempotencyKey, ...(record.continuation.activityId && { activityId: record.continuation.activityId }) } : record.continuation?.kind === "repair" ? record.continuation.failedWork : undefined;
     if (record.continuation?.kind === "repair" && record.continuation.submittedFingerprint === submittedFingerprint) return record;
     const verifiedHeroRejection = input.message === "ARTICLE_HERO_VISUAL_INSPECTION_FAILED" && record.heroImage && record.evidenceRefs?.hero && input.verifiedHeroRejection &&
       isDeepStrictEqual(input.verifiedHeroRejection.heroEvidenceRef, record.evidenceRefs.hero) &&
@@ -501,7 +503,7 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
         : `Repair ${record.stage.toLowerCase()} output.`;
     const updated = externalArticleImportSchema.parse({ ...record,
       ...(rejectedHero && { heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined }),
-      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis with supporting evidence, a predicted observation, a disproof check and a separate verified remedy before retrying." : categoryAction) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
+      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint, failedEvidenceRefs: Object.values(record.evidenceRefs ?? {}).filter((ref): ref is EvidenceRef => ref !== undefined), failedWork, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis with supporting evidence, a predicted observation, a disproof check and a separate verified remedy before retrying." : categoryAction) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
       stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
       nextAction: rejectedHero ? `The rejected hero remains preserved in the failed receipt (${JSON.stringify(rejectedHero)}). Resume to generate and inspect a fresh image.` : (diagnostic ? "Record a falsifiable diagnosis and verify its remedy before retrying the same productive stage." : categoryAction) + researchRecovery,
     });
@@ -926,7 +928,7 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
     const blockedAction = input.failureCategory === "uncertain-external-outcome"
       ? { requirement: "Reconcile the external operation identity and observed outcome before any retry.", next: "Reconcile the uncertain external outcome before retrying this operation." }
       : { requirement: "Restore the shared capability and verify it independently before resuming.", next: "Restore the unavailable shared capability and verify the remedy before resuming." };
-    const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, failureCategory: input.failureCategory, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: blockedAction.requirement } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
+    const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, failureCategory: input.failureCategory, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: blockedAction.requirement } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), failedEvidenceRefs: Object.values(record.evidenceRefs ?? {}).filter((ref): ref is EvidenceRef => ref !== undefined), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
     const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: capabilityBlock ? blockedAction.next : stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
     await saveImport(repositoryRoot, updated);
     if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
@@ -972,15 +974,48 @@ export async function upgradeImportEvidence(root: string, importId: string): Pro
 async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis: ReturnType<typeof actionableDiagnosisSchema.parse>, record: ExternalArticleImportV1) {
   const evidence = remedyVerificationEvidenceSchema.parse(await readEvidence(root, ref));
   if (evidence.importId !== diagnosis.importId || evidence.sourceFingerprint !== diagnosis.sourceFingerprint || evidence.stage !== diagnosis.stage || evidence.failedSubmissionDigest !== diagnosis.failedSubmissionDigest || evidence.replacementSubmissionDigest !== diagnosis.replacementSubmissionDigest) throw new Error("DIAGNOSIS_REMEDY_BINDING_MISMATCH");
-  const binding = { ...record, requirementRevision: WORKFLOW_REVISION };
-  const actualEvidenceRef = diagnosis.stage === "RESEARCHING" ? record.evidenceRefs?.research
+  let pendingArtifactPath: string | undefined;
+  let pendingEditorialRef: EvidenceRef | undefined;
+  let pendingReleaseWork: { artifactPath: string; changedFiles: string[]; slug?: string } | undefined;
+  let actualEvidenceRef: EvidenceRef | undefined;
+  if (record.continuation?.kind === "repair" && record.continuation.failedWork) {
+    const resultFile = path.resolve(root, record.continuation.failedWork.resultPath);
+    const relative = path.relative(await realpath(root), await realpath(resultFile));
+    if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("DIAGNOSIS_REMEDY_RESULT_PATH_INVALID");
+    const result = JSON.parse(await readFile(resultFile, "utf8")) as { idempotencyKey?: unknown; sourceFingerprint?: unknown; work?: { stage?: unknown; evidencePath?: unknown; artifactPath?: unknown; assessmentPath?: unknown; editorialExecutionPath?: unknown; presentationEvidencePath?: unknown; changedFiles?: unknown; slug?: unknown } };
+    if (result.idempotencyKey !== record.continuation.failedWork.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work?.stage !== diagnosis.stage) throw new Error("DIAGNOSIS_REMEDY_RESULT_BINDING_MISMATCH");
+    const evidencePath = diagnosis.stage === "RESEARCHING" ? result.work.evidencePath : diagnosis.stage === "TRANSFORMING" || diagnosis.stage === "REFINING" ? result.work.assessmentPath : diagnosis.stage === "VALIDATING" ? result.work.presentationEvidencePath : undefined;
+    if (typeof evidencePath === "string") actualEvidenceRef = await evidenceReference(root, evidencePath);
+    if (typeof result.work.artifactPath === "string") pendingArtifactPath = result.work.artifactPath;
+    if (diagnosis.stage === "REFINING" && typeof result.work.editorialExecutionPath === "string") pendingEditorialRef = await evidenceReference(root, result.work.editorialExecutionPath);
+    if (diagnosis.stage === "RELEASING" && typeof result.work.artifactPath === "string" && Array.isArray(result.work.changedFiles) && result.work.changedFiles.every((file) => typeof file === "string")) {
+      pendingReleaseWork = { artifactPath: result.work.artifactPath, changedFiles: result.work.changedFiles as string[], ...(typeof result.work.slug === "string" && { slug: result.work.slug }) };
+      actualEvidenceRef = await evidenceReference(root, record.continuation.failedWork.resultPath);
+    }
+  }
+  const binding = { ...record, artifactPath: pendingArtifactPath ?? record.artifactPath ?? record.contentApproval?.artifactPath, requirementRevision: WORKFLOW_REVISION };
+  actualEvidenceRef ??= diagnosis.stage === "RESEARCHING" ? record.evidenceRefs?.research
     : diagnosis.stage === "TRANSFORMING" ? record.evidenceRefs?.transformAssessment
       : diagnosis.stage === "REFINING" ? record.evidenceRefs?.assessment
         : diagnosis.stage === "VALIDATING" ? record.evidenceRefs?.presentation : undefined;
   if (!actualEvidenceRef || !isDeepStrictEqual(actualEvidenceRef, evidence.validatedEvidenceRef)) throw new Error("DIAGNOSIS_REMEDY_REPLACEMENT_EVIDENCE_MISMATCH");
   if (diagnosis.stage === "RESEARCHING" && evidence.criterion.id === "research-evidence" && evidence.criterion.revision === WORKFLOW_REVISION) await validateResearchEvidence(root, actualEvidenceRef, binding);
-  else if (["TRANSFORMING", "REFINING"].includes(diagnosis.stage) && evidence.criterion.id === "content-assessment" && evidence.criterion.revision === WORKFLOW_REVISION) await validateContentAssessment(root, actualEvidenceRef, binding);
+  else if (["TRANSFORMING", "REFINING"].includes(diagnosis.stage) && evidence.criterion.id === "content-assessment" && evidence.criterion.revision === WORKFLOW_REVISION) {
+    await validateContentAssessment(root, actualEvidenceRef, binding);
+    if (diagnosis.stage === "REFINING") {
+      if (!pendingEditorialRef || !evidence.relatedEvidenceRefs?.some((candidate) => isDeepStrictEqual(candidate, pendingEditorialRef))) throw new Error("DIAGNOSIS_REMEDY_EDITORIAL_EVIDENCE_MISMATCH");
+      await validateEditorialExecution(root, pendingEditorialRef, binding);
+    }
+  }
   else if (diagnosis.stage === "VALIDATING" && evidence.criterion.id === "presentation-evidence" && evidence.criterion.revision === WORKFLOW_REVISION) await validatePresentationEvidence(root, actualEvidenceRef, binding);
+  else if (diagnosis.stage === "RELEASING" && evidence.criterion.id === "release-result" && evidence.criterion.revision === WORKFLOW_REVISION && pendingReleaseWork) {
+    const target = await readImportArtifactTarget(root, record.format, pendingReleaseWork.artifactPath, pendingReleaseWork.slug);
+    const release = await import("./release");
+    if (release.validateReleasePaths(pendingReleaseWork.changedFiles, record.format).length) throw new Error("DIAGNOSIS_RELEASE_PATHS_INVALID");
+    if (record.format === "agent_review_required") throw new Error("DIAGNOSIS_RELEASE_FORMAT_UNSUPPORTED");
+    const required = release.requiredImportReleaseFiles({ format: record.format, approvedArtifactPath: pendingReleaseWork.artifactPath, slug: target.target.slug, includeHero: Boolean(record.heroImage) });
+    if (required.all.some((file) => !pendingReleaseWork!.changedFiles.includes(file))) throw new Error("DIAGNOSIS_RELEASE_REQUIRED_PATH_MISSING");
+  }
   else throw new Error("DIAGNOSIS_REMEDY_CRITERION_NOT_ALLOWED");
   return { evidence, check: { method: "deterministic" as const, result: "verified" as const, observation: `Controller ${evidence.criterion.id} validator passed revision ${evidence.criterion.revision}.` } };
 }
@@ -989,10 +1024,74 @@ async function verifiedMeasurementChange(root: string, ref: EvidenceRef, diagnos
   const evidence = remedyMeasurementVerificationSchema.parse(await readEvidence(root, ref));
   if (evidence.importId !== diagnosis.importId || evidence.sourceFingerprint !== diagnosis.sourceFingerprint || evidence.stage !== diagnosis.stage || evidence.failedSubmissionDigest !== diagnosis.failedSubmissionDigest || evidence.replacementSubmissionDigest !== diagnosis.replacementSubmissionDigest) throw new Error("DIAGNOSIS_MEASUREMENT_BINDING_MISMATCH");
   if (evidence.criterion.revision !== WORKFLOW_REVISION) throw new Error("DIAGNOSIS_MEASUREMENT_CRITERION_MISMATCH");
-  const actual = record.transformation?.title.length;
-  const threshold = Number(evidence.measurementChange.to);
-  if (actual === undefined || evidence.observedValue !== actual || !Number.isFinite(threshold) || actual < threshold) throw new Error("DIAGNOSIS_MEASUREMENT_VERIFICATION_CONTRADICTED");
+  if (record.continuation?.kind !== "repair" || !record.continuation.failedEvidenceRefs?.some((failed) => isDeepStrictEqual(failed, evidence.previousPresentationRef))) throw new Error("DIAGNOSIS_MEASUREMENT_PRIOR_EVIDENCE_MISMATCH");
+  if (!record.evidenceRefs?.presentation || !isDeepStrictEqual(record.evidenceRefs.presentation, evidence.currentPresentationRef)) throw new Error("DIAGNOSIS_MEASUREMENT_REPLACEMENT_EVIDENCE_MISMATCH");
+  const previous = workflowEvidenceSchema.parse(await readEvidence(root, evidence.previousPresentationRef));
+  const current = await validatePresentationEvidence(root, evidence.currentPresentationRef, { ...record, artifactPath: record.artifactPath ?? record.contentApproval?.artifactPath, requirementRevision: WORKFLOW_REVISION });
+  if (previous.importId !== record.importId || previous.sourceFingerprint !== record.sourceFingerprint || previous.stage !== "VALIDATING") throw new Error("DIAGNOSIS_MEASUREMENT_PRIOR_BINDING_MISMATCH");
+  const ruleEvidence = (presentation: typeof previous, rule: string, expected: EvidenceRef) => {
+    const refs = presentation.ruleResults.find((result) => result.ruleId === rule)?.evidenceRefs;
+    if (!refs?.some((candidate) => isDeepStrictEqual(candidate, expected))) throw new Error("DIAGNOSIS_MEASUREMENT_RULE_EVIDENCE_MISMATCH");
+  };
+  const observationRule = evidence.verificationKind === "presentation-viewport" ? evidence.criterion.id : evidence.criterion.observationRule;
+  ruleEvidence(previous, observationRule, evidence.previousObservationRef);
+  ruleEvidence(current, observationRule, evidence.currentObservationRef);
+  const previousObservation = await validateExecutionEvidence(root, evidence.previousObservationRef);
+  const currentObservation = await validateExecutionEvidence(root, evidence.currentObservationRef);
+  if (previousObservation.kind !== "browser" || currentObservation.kind !== "browser") throw new Error("DIAGNOSIS_MEASUREMENT_OBSERVATION_REQUIRED");
+  const ordinaryReviewRef = current.ruleResults.find((result) => result.ruleId === evidence.criterion.reviewRule)?.evidenceRefs[0];
+  if (!ordinaryReviewRef) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_REQUIRED");
+  const ordinaryReview = await validateExecutionEvidence(root, ordinaryReviewRef);
+  const reviewExecution = await validateExecutionEvidence(root, evidence.reviewExecutionRef);
+  if ((reviewExecution.kind !== "opencode" && reviewExecution.kind !== "structured") || reviewExecution.pass !== "remedy:measurement-change" || reviewExecution.packetId !== importPacketId(record, "VALIDATING", "targeted-repair") || !reviewExecution.inputRefs.some((item) => isDeepStrictEqual(item, evidence.previousObservationRef)) || !reviewExecution.inputRefs.some((item) => isDeepStrictEqual(item, evidence.currentObservationRef))) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_REQUIRED");
+  const context = (execution: typeof reviewExecution | typeof ordinaryReview) => execution.kind === "opencode" ? execution.sessionId : execution.kind === "structured" ? execution.contextId : "";
+  if (context(reviewExecution) === context(ordinaryReview)) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_NOT_INDEPENDENT");
+  let expectedInput: Record<string, string>;
+  let expectedReview: Record<string, unknown>;
+  if (evidence.verificationKind === "presentation-viewport") {
+    if (evidence.measurementChange.aspect !== "viewport" || !isDeepStrictEqual(previousObservation.viewport, evidence.sourceViewport) || !isDeepStrictEqual(currentObservation.viewport, evidence.targetViewport)) throw new Error("DIAGNOSIS_MEASUREMENT_VIEWPORT_CONTRADICTED");
+    expectedInput = { criterion: JSON.stringify({ id: evidence.criterion.id, revision: evidence.criterion.revision }), previousObservationRef: JSON.stringify(evidence.previousObservationRef), currentObservationRef: JSON.stringify(evidence.currentObservationRef), sourceViewport: JSON.stringify(evidence.sourceViewport), targetViewport: JSON.stringify(evidence.targetViewport) };
+    expectedReview = { schemaVersion: "RemedyMeasurementReviewV1", verdict: "pass", criterion: { id: evidence.criterion.id, revision: evidence.criterion.revision }, previousObservationRef: evidence.previousObservationRef, currentObservationRef: evidence.currentObservationRef, sourceViewport: evidence.sourceViewport, targetViewport: evidence.targetViewport, justification: evidence.measurementChange.justification, limitations: evidence.reviewLimitations };
+    if (evidence.measurementChange.from !== JSON.stringify(evidence.sourceViewport) || evidence.measurementChange.to !== JSON.stringify(evidence.targetViewport)) throw new Error("DIAGNOSIS_MEASUREMENT_CHANGE_MISMATCH");
+  } else {
+    if (!['threshold', 'criterion', 'measurement'].includes(evidence.measurementChange.aspect)) throw new Error("DIAGNOSIS_MEASUREMENT_KIND_UNSUPPORTED");
+    const authority = await evidenceReference(root, ".agents/skills/impeccable/reference/craft-floor.md");
+    if (!isDeepStrictEqual(authority, evidence.authorityInstructionRef) || !(await readEvidenceBytes(root, authority.path)).toString("utf8").includes("-0.04em")) throw new Error("DIAGNOSIS_MEASUREMENT_AUTHORITY_MISMATCH");
+    const observed = async (execution: typeof previousObservation, expected: string) => {
+      for (const outputRef of execution.outputRefs) {
+        const value = await readEvidence(root, outputRef).catch(() => undefined) as { schemaVersion?: unknown; criterion?: unknown; computedValue?: unknown; authorityInstructionRef?: unknown } | undefined;
+        if (value?.schemaVersion === "TypographyMeasurementV1" && value.criterion === evidence.criterion.id && value.computedValue === expected && isDeepStrictEqual(value.authorityInstructionRef, authority)) return;
+      }
+      throw new Error("DIAGNOSIS_MEASUREMENT_COMPUTED_VALUE_MISMATCH");
+    };
+    await observed(previousObservation, evidence.sourceComputedValue); await observed(currentObservation, evidence.targetComputedValue);
+    if (!reviewExecution.instructions.some((instruction) => instruction.path === authority.path && instruction.sha256 === authority.sha256)) throw new Error("DIAGNOSIS_MEASUREMENT_AUTHORITY_NOT_PINNED");
+    expectedInput = { criterion: JSON.stringify(evidence.criterion), previousObservationRef: JSON.stringify(evidence.previousObservationRef), currentObservationRef: JSON.stringify(evidence.currentObservationRef), sourceComputedValue: evidence.sourceComputedValue, targetComputedValue: evidence.targetComputedValue, sourceCriterionFloor: evidence.sourceCriterionFloor, criterionFloor: evidence.criterionFloor, authorityInstructionRef: JSON.stringify(authority) };
+    expectedReview = { schemaVersion: "RemedyMeasurementReviewV1", verdict: "pass", criterion: evidence.criterion, previousObservationRef: evidence.previousObservationRef, currentObservationRef: evidence.currentObservationRef, sourceComputedValue: evidence.sourceComputedValue, targetComputedValue: evidence.targetComputedValue, sourceCriterionFloor: evidence.sourceCriterionFloor, criterionFloor: evidence.criterionFloor, authorityInstructionRef: authority, justification: evidence.measurementChange.justification, limitations: evidence.reviewLimitations };
+    if (evidence.measurementChange.from !== evidence.sourceCriterionFloor || evidence.measurementChange.to !== evidence.criterionFloor) throw new Error("DIAGNOSIS_MEASUREMENT_CHANGE_MISMATCH");
+  }
+  if (!isDeepStrictEqual(reviewExecution.input, expectedInput)) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_INPUT_MISMATCH");
+  const review = JSON.parse(reviewExecution.output.measurementReview ?? "null") as Record<string, unknown>;
+  if (!isDeepStrictEqual(review, expectedReview)) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_CONTRADICTED");
   return evidence;
+}
+
+async function presentationMeasurementChanged(root: string, record: ExternalArticleImportV1): Promise<boolean> {
+  if (record.continuation?.kind !== "repair" || !record.evidenceRefs?.presentation) return false;
+  const current = workflowEvidenceSchema.safeParse(await readEvidence(root, record.evidenceRefs.presentation));
+  if (!current.success) return false;
+  for (const failedRef of record.continuation.failedEvidenceRefs ?? []) {
+    const failed = workflowEvidenceSchema.safeParse(await readEvidence(root, failedRef).catch(() => undefined));
+    if (!failed.success || failed.data.stage !== "VALIDATING") continue;
+    for (const rule of ["desktop", "mobile", "reduced-motion"]) {
+      const priorRef = failed.data.ruleResults.find((result) => result.ruleId === rule)?.evidenceRefs[0];
+      const currentRef = current.data.ruleResults.find((result) => result.ruleId === rule)?.evidenceRefs[0];
+      if (!priorRef || !currentRef) continue;
+      const [prior, replacement] = await Promise.all([validateExecutionEvidence(root, priorRef), validateExecutionEvidence(root, currentRef)]);
+      if (prior.kind === "browser" && replacement.kind === "browser" && !isDeepStrictEqual(prior.viewport, replacement.viewport)) return true;
+    }
+  }
+  return false;
 }
 
 export async function submitImportDiagnosis(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
@@ -1002,6 +1101,7 @@ export async function submitImportDiagnosis(root: string, importId: string, inpu
     for (const ref of diagnosis.attemptedRecoveryRefs) await readEvidence(root, ref);
     const remedies = await Promise.all(diagnosis.remedyEvidenceRefs.map((ref) => verifiedRemedyEvidence(root, ref, diagnosis, record)));
     const derivedCheck = remedies[0].check;
+    if (diagnosis.repairChange.kind === "product-repair" && await presentationMeasurementChanged(root, record)) throw new Error("DIAGNOSIS_MEASUREMENT_CHANGE_UNDECLARED");
     if (diagnosis.repairChange.kind === "measurement-change") {
       const repairChange = diagnosis.repairChange;
       if (diagnosis.remedyEvidenceRefs.some((ref) => isDeepStrictEqual(ref, repairChange.independentVerificationRef))) throw new Error("DIAGNOSIS_MEASUREMENT_VERIFICATION_NOT_INDEPENDENT");

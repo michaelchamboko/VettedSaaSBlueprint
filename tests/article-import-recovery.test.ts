@@ -15,11 +15,13 @@ import {
   submitImportDiagnosis,
   withImportLease,
 } from "../src/lib/article-import/engine";
-import { captureCommandExecution, storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { captureCommandExecution, evidenceReference, storeEvidence, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 import { presentationCandidateUnavailable } from "../src/lib/article-import/worker-presentation";
-import { presentationDesignRejected, workflowEvidenceRejected } from "../src/lib/article-import/workflow-evidence";
+import { presentationDesignRejected, readEvidence, workflowEvidenceRejected, workflowEvidenceSchema } from "../src/lib/article-import/workflow-evidence";
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { importPacketId } from "../src/lib/article-import/packet-binding";
+import { approveFixture, refreshPresentationFixture, refreshPresentationFixtureWithMeasurementReview, refreshPresentationFixtureWithTrackingReview } from "./fixtures/article-content-approval";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -294,44 +296,124 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("a normal pending research result supplies the fourth-attempt remedy without seeded record evidence", async () => {
+  const { root, record } = await fixture();
+  try {
+    const directory = `.automation/article-imports/work/${record.importId}`;
+    const workPath = `${directory}/pending.work.json`;
+    const resultPath = `${directory}/pending.result.json`;
+    await mkdir(path.join(root, directory), { recursive: true });
+    await writeFile(path.join(root, workPath), JSON.stringify({ stage: "RESEARCHING" }));
+    const idempotencyKey = importPacketId(record, "RESEARCHING", "alternate-source");
+    let current = await withImportLease(root, record.importId, async (leased) => {
+      const updated = { ...leased, continuation: { kind: "work" as const, stage: "RESEARCHING" as const, workPath, resultPath, idempotencyKey, sourceFingerprint: leased.sourceFingerprint } };
+      await saveImport(root, updated); return updated;
+    });
+    const invalidResearch = await researchEvidence(root, record, false);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: `invalid ${attempt}`, work: { stage: "RESEARCHING", evidencePath: invalidResearch.path, registryDecisionPath: "synthetic-decision.json" } }));
+      current = await recordImportRepair(root, current, { strategy: "research", message: `Pending research validation failed ${attempt}.` });
+    }
+    assert.ok(current.continuation?.kind === "repair" && current.continuation.failedWork?.resultPath === resultPath);
+    const failedSubmissionDigest = current.continuation.submittedFingerprint!;
+    const supporting = await storeEvidence(root, record.importId, { observation: "The pending result failed the research validator three times." });
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "contradicted replacement", work: { stage: "RESEARCHING", evidencePath: invalidResearch.path, registryDecisionPath: "synthetic-decision.json" } }));
+    const contradictedDigest = await canonicalSubmissionFingerprint(current, root);
+    const contradictedRemedy = await validatedResearchRemedy(root, record, { failedSubmissionDigest, replacementSubmissionDigest: contradictedDigest, validatedEvidenceRef: invalidResearch });
+    const diagnosis = (replacementSubmissionDigest: string, remedyEvidenceRefs: Array<{ path: string; sha256: string }>) => ({ schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "PENDING_RESEARCH_INVALID", cause: "The pending result referenced invalid research evidence.", predictedObservation: "The corrected pending result passes the research validator.", disproofCheck: "Reject if the pending packet binding or research validator fails.", attemptedRecoveryRefs: [supporting], remedyEvidenceRefs, repairChange: { kind: "product-repair", changedInputs: [resultPath] }, createdAt: new Date().toISOString() });
+    await assert.rejects(submitImportDiagnosis(root, record.importId, diagnosis(contradictedDigest, [contradictedRemedy])), /RESEARCH_EXCERPT_MISMATCH/);
+    const validResearch = await researchEvidence(root, record);
+    const unrelatedResearch = await researchEvidence(root, record);
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "corrected", work: { stage: "RESEARCHING", evidencePath: validResearch.path, registryDecisionPath: "synthetic-decision.json" } }));
+    const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
+    const remedy = await validatedResearchRemedy(root, record, { failedSubmissionDigest, replacementSubmissionDigest, validatedEvidenceRef: validResearch });
+    const unrelatedRemedy = await validatedResearchRemedy(root, record, { failedSubmissionDigest, replacementSubmissionDigest, validatedEvidenceRef: unrelatedResearch });
+    await assert.rejects(submitImportDiagnosis(root, record.importId, diagnosis(replacementSubmissionDigest, [unrelatedRemedy])), /DIAGNOSIS_REMEDY_REPLACEMENT_EVIDENCE_MISMATCH/);
+    const base = diagnosis(replacementSubmissionDigest, [remedy]);
+    const wrongPacket = await validatedResearchRemedy(root, record, { failedSubmissionDigest, replacementSubmissionDigest, validatedEvidenceRef: validResearch });
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey: "0".repeat(64), sourceFingerprint: record.sourceFingerprint, summary: "wrong packet", work: { stage: "RESEARCHING", evidencePath: validResearch.path, registryDecisionPath: "synthetic-decision.json" } }));
+    await assert.rejects(submitImportDiagnosis(root, record.importId, { ...base, replacementSubmissionDigest: await canonicalSubmissionFingerprint(current, root), remedyEvidenceRefs: [wrongPacket] }), /DIAGNOSIS_REMEDY_RESULT_BINDING_MISMATCH|DIAGNOSIS_REMEDY_BINDING_MISMATCH/);
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "corrected", work: { stage: "RESEARCHING", evidencePath: validResearch.path, registryDecisionPath: "synthetic-decision.json" } }));
+    await submitImportDiagnosis(root, record.importId, base);
+    let calls = 0;
+    await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
+    assert.equal(calls, 1);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a releasing repair verifies corrected paths without invoking a provider", async () => {
+  const { root, record } = await fixture();
+  try {
+    let current = { ...record, stage: "REFINING" as const, format: "direct-review" as const };
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    current = await approveFixture(root, current);
+    current = { ...current, stage: "RELEASING" as const };
+    const directory = `.automation/article-imports/work/${record.importId}`;
+    const workPath = `${directory}/release.work.json`, resultPath = `${directory}/release.result.json`;
+    await mkdir(path.join(root, directory), { recursive: true });
+    await writeFile(path.join(root, workPath), JSON.stringify({ stage: "RELEASING" }));
+    const idempotencyKey = importPacketId(current, "RELEASING", "retry-transient");
+    current = await withImportLease(root, record.importId, async () => {
+      const updated = { ...current, continuation: { kind: "work" as const, stage: "RELEASING" as const, workPath, resultPath, idempotencyKey, sourceFingerprint: current.sourceFingerprint } };
+      await saveImport(root, updated); return updated;
+    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: `invalid release ${attempt}`, work: { stage: "RELEASING", artifactPath: current.contentApproval!.artifactPath, slug: "example", changedFiles: ["approved-urls.md"] } }));
+      current = await recordImportRepair(root, current, { strategy: "release-validation", message: `Disallowed release path ${attempt}.` });
+    }
+    assert.ok(current.continuation?.kind === "repair");
+    const failedSubmissionDigest = current.continuation.submittedFingerprint!;
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "corrected release", work: { stage: "RELEASING", artifactPath: current.contentApproval!.artifactPath, slug: "example", changedFiles: [current.contentApproval!.artifactPath, "src/generated/landing-pages/index.json"] } }));
+    const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
+    const resultRef = await evidenceReference(root, resultPath);
+    const supporting = await storeEvidence(root, record.importId, { observation: "The prior release result declared a disallowed path." });
+    const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: "RELEASING", failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "release-result", revision: WORKFLOW_REVISION }, validatedEvidenceRef: resultRef, checkedAt: new Date().toISOString() });
+    await submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: "RELEASING", failedSubmissionDigest, replacementSubmissionDigest, failureCode: "RELEASE_PATHS_INVALID", cause: "The pending release result included a disallowed path.", predictedObservation: "The corrected release result passes path and artifact identity checks without provider mutation.", disproofCheck: "Reject if the result identity, artifact, slug or required paths do not match.", attemptedRecoveryRefs: [supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "product-repair", changedInputs: [resultPath] }, createdAt: new Date().toISOString() });
+    let calls = 0;
+    await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
+    assert.equal(calls, 1);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("measurement changes require justification and separate independent verification", async () => {
   const { root, record } = await fixture();
   try {
-    let current = record;
+    let current = { ...record, stage: "REFINING" as const, format: "direct-review" as const };
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    current = await approveFixture(root, current);
+    current = await advanceImport(root, current, "Synthetic editorial approval complete.");
+    current = await refreshPresentationFixture(root, current, { mobile: { width: 390, height: 844, reducedMotion: false } });
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
     for (let index = 0; index < 3; index++) {
-      current = await executePendingImport(root, record.importId, async () => {
-        return presentationDesignRejected(`measurement failure ${index}`);
-      });
-      if (index < 2) {
-        current = await withImportLease(root, record.importId, async (leased) => {
-          leased.transformation!.title = `Measurement attempt ${index}`;
-          await saveImport(root, leased);
-          return leased;
-        });
-      }
+      current = await recordImportRepair(root, { ...current, transformation: { ...current.transformation!, title: `Viewport attempt ${index}` } }, { strategy: "design-repair", message: `Mobile viewport criterion rejected attempt ${index}.` });
     }
-    current = await withImportLease(root, record.importId, async (leased) => {
-      leased.transformation!.title = "Candidate with changed threshold";
-      await saveImport(root, leased);
-      return leased;
-    });
     assert.ok(current.continuation?.kind === "repair");
-    const supporting = await storeEvidence(root, record.importId, { observation: "The old threshold rejects the fixture." });
-    const validResearch = await researchEvidence(root, record);
-    current = await withImportLease(root, record.importId, async (leased) => {
-      leased.evidenceRefs = { ...(leased.evidenceRefs ?? {}), research: validResearch };
-      await saveImport(root, leased); return leased;
-    });
+    const previousPresentationRef = current.evidenceRefs!.presentation!;
+    const previous = workflowEvidenceSchema.parse(await readEvidence(root, previousPresentationRef));
+    const previousObservationRef = previous.ruleResults.find((result) => result.ruleId === "mobile")!.evidenceRefs[0];
+    const sourceViewport = (await validateExecutionEvidence(root, previousObservationRef));
+    assert.equal(sourceViewport.kind, "browser");
+    const justification = "The retained prior and replacement mobile observations establish the corrected viewport criterion without weakening layout requirements.";
+    const refreshed = await refreshPresentationFixtureWithMeasurementReview(root, { ...current, transformation: { ...current.transformation!, title: "Replacement viewport candidate" } }, { viewportOverrides: { mobile: { width: 430, height: 900, reducedMotion: false } }, remedyMeasurementReview: { previousObservationRef, criterion: { id: "mobile", revision: WORKFLOW_REVISION }, sourceViewport: sourceViewport.viewport, targetViewport: { width: 430, height: 900, reducedMotion: false }, justification, limitations: ["Synthetic browser observations cover the retained candidate routes only."] } });
+    current = refreshed.record;
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    const currentPresentationRef = current.evidenceRefs!.presentation!;
+    const replacement = workflowEvidenceSchema.parse(await readEvidence(root, currentPresentationRef));
+    const currentObservationRef = replacement.ruleResults.find((result) => result.ruleId === "mobile")!.evidenceRefs[0];
+    const ordinaryCurrentReviewRef = replacement.ruleResults.find((result) => result.ruleId === "critique")!.evidenceRefs[0];
+    const targetViewport = await validateExecutionEvidence(root, currentObservationRef);
+    assert.equal(targetViewport.kind, "browser");
     const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
-    const measurementChange = { aspect: "threshold" as const, from: "40", to: "30", justification: "The deterministic title-length criterion is recalibrated to the retained replacement." };
-    const remedy = await validatedResearchRemedy(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, validatedEvidenceRef: validResearch });
-    const aliasedResearch = await validatedResearchRemedy(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, validatedEvidenceRef: validResearch, measurementChange });
+    const measurementChange = { aspect: "viewport" as const, from: JSON.stringify(sourceViewport.viewport), to: JSON.stringify(targetViewport.viewport), justification };
+    const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, criterion: { id: "presentation-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef: currentPresentationRef, checkedAt: new Date().toISOString() });
     const independent = await storeEvidence(root, record.importId, {
-      schemaVersion: "RemedyMeasurementVerificationV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
+      schemaVersion: "RemedyMeasurementVerificationV1", verificationKind: "presentation-viewport", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
       stage: current.stage, failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest,
-      criterion: { id: "transformation.title-length", revision: WORKFLOW_REVISION }, metric: "transformation.title.length",
-      observedValue: current.transformation!.title.length, measurementChange, checkedAt: new Date().toISOString(),
+      criterion: { id: "mobile", reviewRule: "critique", revision: WORKFLOW_REVISION }, previousPresentationRef, currentPresentationRef,
+      previousObservationRef, currentObservationRef, reviewExecutionRef: refreshed.measurementReviewRef,
+      sourceViewport: sourceViewport.viewport, targetViewport: targetViewport.viewport, reviewLimitations: ["Synthetic browser observations cover the retained candidate routes only."], measurementChange, checkedAt: new Date().toISOString(),
     });
+    const ordinaryReviewOnly = await storeEvidence(root, record.importId, { ...(await readEvidence(root, independent) as object), reviewExecutionRef: ordinaryCurrentReviewRef });
     const diagnosis = {
       schemaVersion: "DiagnosisV1",
       importId: record.importId,
@@ -340,32 +422,69 @@ test("measurement changes require justification and separate independent verific
       failedSubmissionDigest: current.continuation.submittedFingerprint,
       replacementSubmissionDigest,
       failureCode: "SYNTHETIC_MEASUREMENT_REPAIR",
-      cause: "The measurement threshold is not calibrated for this viewport.",
-      predictedObservation: "The revised threshold preserves the criterion and accepts the control.",
-      disproofCheck: "Run the defective control; acceptance would disprove the calibration.",
-      attemptedRecoveryRefs: [supporting],
+      cause: "The mobile presentation criterion was evaluated at the wrong retained viewport.",
+      predictedObservation: "The replacement presentation passes at the independently reviewed target viewport.",
+      disproofCheck: "Re-run the bound mobile observation and independent critique; a mismatch disproves the diagnosis.",
+      attemptedRecoveryRefs: [previousPresentationRef],
       remedyEvidenceRefs: [remedy],
       createdAt: new Date().toISOString(),
     };
 
     await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...diagnosis,
-      repairChange: { kind: "measurement-change", aspect: "threshold", from: "0.90", to: "0.85" },
+      repairChange: { kind: "measurement-change", aspect: "viewport", from: measurementChange.from, to: measurementChange.to },
     }));
     await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...diagnosis,
       repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: remedy },
     }), /Measurement verification must be independent/);
+    await assert.rejects(submitImportDiagnosis(root, record.importId, { ...diagnosis, repairChange: { kind: "product-repair", changedInputs: ["presentation viewport configuration"] } }), /DIAGNOSIS_MEASUREMENT_CHANGE_UNDECLARED/);
+    await assert.rejects(submitImportDiagnosis(root, record.importId, { ...diagnosis, repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: ordinaryReviewOnly } }), /DIAGNOSIS_MEASUREMENT_REVIEW_REQUIRED/);
     await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...diagnosis,
-      repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: aliasedResearch },
-    }), /Invalid input|unrecognized_keys|invalid_type/i);
+      repairChange: { kind: "measurement-change", aspect: "threshold", from: "900", to: "1", justification, independentVerificationRef: independent },
+    }), /DIAGNOSIS_MEASUREMENT_VERIFICATION_MISMATCH/);
+    const contradicted = await storeEvidence(root, record.importId, { ...(await readEvidence(root, independent) as object), targetViewport: { width: 320, height: 900, reducedMotion: false } });
+    await assert.rejects(submitImportDiagnosis(root, record.importId, { ...diagnosis, repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: contradicted } }), /DIAGNOSIS_MEASUREMENT_VIEWPORT_CONTRADICTED/);
     await submitImportDiagnosis(root, record.importId, {
       ...diagnosis,
       repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: independent },
     });
     const saved = await loadImport(root, record.importId);
     assert.equal(saved.diagnoses?.at(-1)?.repairChange?.kind, "measurement-change");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("tracking threshold correction uses the pinned craft-floor authority and distinct computed values", async () => {
+  const { root, record } = await fixture();
+  try {
+    let current = { ...record, stage: "REFINING" as const, format: "direct-review" as const };
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    current = await approveFixture(root, current);
+    current = await advanceImport(root, current, "Synthetic editorial approval complete.");
+    current = await refreshPresentationFixture(root, current);
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    for (let attempt = 0; attempt < 3; attempt++) current = await recordImportRepair(root, { ...current, transformation: { ...current.transformation!, title: `Tracking attempt ${attempt}` } }, { strategy: "design-repair", message: `Incorrect tracking checker threshold ${attempt}.` });
+    assert.ok(current.continuation?.kind === "repair");
+    const previousPresentationRef = current.evidenceRefs!.presentation!;
+    const previous = workflowEvidenceSchema.parse(await readEvidence(root, previousPresentationRef));
+    const previousObservationRef = previous.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
+    const justification = "The checker threshold is corrected to the pinned craft-floor floor while the computed heading tracking remains a separate observed value.";
+    const refreshed = await refreshPresentationFixtureWithTrackingReview(root, { ...current, transformation: { ...current.transformation!, title: "Tracking threshold replacement" } }, { trackingOverride: "-0.03em", remedyTrackingReview: { previousObservationRef, sourceComputedValue: "-0.04em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", justification, limitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."] } });
+    current = refreshed.record;
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    const replacement = workflowEvidenceSchema.parse(await readEvidence(root, current.evidenceRefs!.presentation!));
+    const currentObservationRef = replacement.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
+    const currentObservation = await validateExecutionEvidence(root, currentObservationRef);
+    assert.equal(currentObservation.kind, "browser");
+    const measurement = await readEvidence(root, currentObservation.outputRefs[0]) as { authorityInstructionRef: { path: string; sha256: string } };
+    const failedSubmissionDigest = current.continuation!.kind === "repair" ? current.continuation.submittedFingerprint! : "";
+    const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
+    const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "presentation-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef: current.evidenceRefs!.presentation!, checkedAt: new Date().toISOString() });
+    const change = { aspect: "threshold" as const, from: "-0.4em", to: "-0.04em", justification };
+    const independent = await storeEvidence(root, record.importId, { schemaVersion: "RemedyMeasurementVerificationV1", verificationKind: "typography-tracking-threshold", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "typography.heading.letterSpacing", stableAuthorityId: "D04-S-a2bbcd69b901", observationRule: "desktop", reviewRule: "critique", revision: WORKFLOW_REVISION }, authorityInstructionRef: measurement.authorityInstructionRef, previousPresentationRef, currentPresentationRef: current.evidenceRefs!.presentation!, previousObservationRef, currentObservationRef, reviewExecutionRef: refreshed.measurementReviewRef, sourceComputedValue: "-0.04em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", criterionFloor: "-0.04em", reviewLimitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."], measurementChange: change, checkedAt: new Date().toISOString() });
+    const supporting = await storeEvidence(root, record.importId, { observation: "The old checker used -0.4em while the computed style was independently retained." });
+    await submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "TRACKING_THRESHOLD_INCORRECT", cause: "The checker threshold did not match the pinned craft-floor authority.", predictedObservation: "The approved floor and computed style are evaluated separately.", disproofCheck: "Reject if the authority hash, computed observations or independent review do not bind.", attemptedRecoveryRefs: [previousPresentationRef, supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "measurement-change", ...change, independentVerificationRef: independent }, createdAt: new Date().toISOString() });
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

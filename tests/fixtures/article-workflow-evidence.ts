@@ -13,9 +13,10 @@ import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE } from 
 import { candidatePreviewPath } from "../../src/lib/article-import/candidate-route";
 
 const families = { "opencode-go/beam-free": "reflection-beam", "fixture/cleanser": "fixture-cleanser-family" };
+const IMPECCABLE_ROOT = ".agents/skills/impeccable/";
 const now = "2026-11-03T00:00:00.000Z";
 type RecordIdentity = { importId: string; sourceFingerprint: string; researchGeneration?: number; transformation?: { commercialMode?: string; resolvedAffiliateUrl?: string }; heroImage?: unknown; evidenceRefs?: { hero?: EvidenceRef } };
-export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string; structuredEditorial?: boolean; currentPolicy?: boolean; reuseIndependentContext?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING" }) {
+export async function buildWorkflowFixture(root: string, record: RecordIdentity, input: { format: "direct-review" | "blog" | "visibility" | "decision-set"; artifactPath: string; before: unknown; after: unknown; editorialEvidencePath: string; structuredEditorial?: boolean; currentPolicy?: boolean; reuseIndependentContext?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING"; viewportOverrides?: Partial<Record<"desktop" | "mobile" | "reduced-motion", { width: number; height: number; reducedMotion: boolean }>>; trackingOverride?: string; remedyMeasurementReview?: { previousObservationRef: EvidenceRef; criterion: { id: "mobile" | "desktop" | "reduced-motion"; revision: string }; sourceViewport: { width: number; height: number; reducedMotion: boolean }; targetViewport: { width: number; height: number; reducedMotion: boolean }; justification: string; limitations: string[] }; remedyTrackingReview?: { previousObservationRef: EvidenceRef; sourceComputedValue: string; targetComputedValue: string; sourceCriterionFloor: string; justification: string; limitations: string[] } }) {
   await mkdir(path.join(root, "config"), { recursive: true });
   const approvedAffiliateUrl = record.transformation?.commercialMode === "approved" ? record.transformation.resolvedAffiliateUrl : undefined;
   const longFormAffiliate = isLongFormAffiliateArticle({ format: input.format, approvedAffiliateUrl });
@@ -28,7 +29,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const pinFiles = [...editorialFiles, ...designFiles, checkerFile, detectorFile, detectorVersion];
   const pinned = new Map<string, { path: string; sha256: string; text: string }>();
   for (const file of pinFiles) {
-    const text = file === detectorVersion ? "0.1.5\n" : `Synthetic pinned fixture: ${file}\n`;
+    const text = file === detectorVersion ? "0.1.5\n" : file.endsWith("craft-floor.md") ? "Synthetic craft floor: heading tracking must remain at or above -0.04em.\n" : `Synthetic pinned fixture: ${file}\n`;
     await mkdir(path.dirname(path.join(root, file)), { recursive: true }); await writeFile(path.join(root, file), text);
     pinned.set(file, { path: file, sha256: sha256(text), text });
   }
@@ -48,8 +49,8 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   let exchangeSequence = 0;
   async function model(pass: string, before: unknown, after: unknown, inputRef: EvidenceRef, outputRef: EvidenceRef, modelId = "writer", reviewOutput?: Record<string, string>, assessmentInput?: Record<string, string>, sessionId = "fixture-session", extraInputRefs: EvidenceRef[] = [], imageRefs: EvidenceRef[] = []) {
     const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);
-    const packetId = packet(pass.startsWith("design:") ? "VALIDATING" : pass === "content-assessment" ? (input.assessmentStage ?? "REFINING") : "REFINING");
-    const instructions = (pass.startsWith("design:") || pass === "hero-image-inspection" ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
+    const packetId = packet(pass.startsWith("design:") || pass.startsWith("remedy:") ? "VALIDATING" : pass === "content-assessment" ? (input.assessmentStage ?? "REFINING") : "REFINING");
+    const instructions = (pass.startsWith("design:") || pass.startsWith("remedy:") || pass === "hero-image-inspection" ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
     if (input.structuredEditorial && !pass.startsWith("design:")) {
       const exchangeId = `exchange-${++exchangeSequence}`;
       const independent = pass === "independentReview" || pass === "independentReview-judgment";
@@ -118,11 +119,12 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const detectorInputs = requiredDetectorInputs(rendering, target);
   const designInput = await designReviewInput(root, input.format, input.after, renderInputsRef);
   const reviewRoutes = input.format === "direct-review" ? [candidatePreviewPath(target.slug)] : target.renderedRoutes;
+  const viewportFor = (rule: "desktop" | "mobile" | "reduced-motion") => input.viewportOverrides?.[rule] ?? { width: rule === "mobile" ? 390 : 1440, height: rule === "mobile" ? 844 : 900, reducedMotion: rule === "reduced-motion" };
   const runtimeEvidence: Partial<Record<"desktop" | "mobile" | "reduced-motion", EvidenceRef>> = {};
   if (currentHero) {
     const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1WsAAAAASUVORK5CYII=", "base64");
     for (const rule of ["desktop", "mobile", "reduced-motion"] as const) {
-      const viewport = { width: rule === "mobile" ? 390 : 1440, height: rule === "mobile" ? 844 : 900, reducedMotion: rule === "reduced-motion" };
+      const viewport = viewportFor(rule);
       const screenshots = [];
       const outputRefs = [];
       for (const route of reviewRoutes) {
@@ -171,7 +173,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
       const visual = currentHero && ["critique", "audit", "polish"].includes(rule);
       const projection = visual ? { ...designInput, browserObservations: runtime!.browserObservations } : designInput;
       const extraRefs = visual ? [...Object.values(runtimeEvidence) as EvidenceRef[], ...runtime!.images] : [];
-      ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await model(`design:${rule}`, input.after, input.after, afterRef, afterRef, "writer", { designReview: JSON.stringify({ ...review, routes: currentHero ? reviewRoutes : target.renderedRoutes }) }, projection, `fixture-design-${rule}`, extraRefs, visual ? runtime!.images : [])] });
+      ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await model(`design:${rule}`, input.after, input.after, afterRef, afterRef, "writer", { designReview: JSON.stringify({ ...review, routes: currentHero ? reviewRoutes : target.renderedRoutes }) }, projection, `fixture-design-${rule}-${viewportFor("mobile").width}`, extraRefs, visual ? runtime!.images : [])] });
       continue;
     }
     if (rule === "detect") {
@@ -194,9 +196,26 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
       ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [runtimeEvidence[rule as keyof typeof runtimeEvidence]!] });
       continue;
     }
-    const execution = { schemaVersion: "ExecutionEvidenceV1", kind: "browser", toolVersion: "fixture-1", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef], outputRefs: [], target: "http://127.0.0.1:3000", routes: target.renderedRoutes, viewport: { width: rule === "mobile" ? 390 : 1440, height: 900, reducedMotion: rule === "reduced-motion" }, checks: { rendered: true }, screenshots: [await save({ screenshot: "synthetic browser fixture" })] };
+    const trackingRef = await save({ schemaVersion: "TypographyMeasurementV1", criterion: "typography.heading.letterSpacing", computedValue: input.trackingOverride ?? "-0.04em", authorityInstructionRef: pinRef(IMPECCABLE_ROOT + "reference/craft-floor.md") });
+    const execution = { schemaVersion: "ExecutionEvidenceV1", kind: "browser", toolVersion: "fixture-1", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef], outputRefs: [trackingRef], target: "http://127.0.0.1:3000", routes: target.renderedRoutes, viewport: viewportFor(rule as "desktop" | "mobile" | "reduced-motion"), checks: { rendered: true }, screenshots: [await save({ screenshot: "synthetic browser fixture" })] };
     ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await save(execution)] });
   }
   const presentation = await save({ ...common, schemaVersion: currentHero ? "WorkflowEvidenceV3" : "WorkflowEvidenceV1", stage: "VALIDATING", packetId: packet("VALIDATING"), artifactRef: afterRef, renderInputsRef, predecessorRefs: currentHero ? [assessment, editorial, record.evidenceRefs!.hero!] : [assessment, editorial], ruleResults });
-  return { research, transformAssessment: assessment, assessment, editorial, presentation };
+  let remedyMeasurementReview: EvidenceRef | undefined;
+  if (input.remedyMeasurementReview) {
+    const currentObservationRef = ruleResults.find((result) => result.ruleId === input.remedyMeasurementReview!.criterion.id)!.evidenceRefs[0];
+    const reviewInput = { criterion: JSON.stringify(input.remedyMeasurementReview.criterion), previousObservationRef: JSON.stringify(input.remedyMeasurementReview.previousObservationRef), currentObservationRef: JSON.stringify(currentObservationRef), sourceViewport: JSON.stringify(input.remedyMeasurementReview.sourceViewport), targetViewport: JSON.stringify(input.remedyMeasurementReview.targetViewport) };
+    const reviewOutput = { schemaVersion: "RemedyMeasurementReviewV1", verdict: "pass", criterion: input.remedyMeasurementReview.criterion, previousObservationRef: input.remedyMeasurementReview.previousObservationRef, currentObservationRef, sourceViewport: input.remedyMeasurementReview.sourceViewport, targetViewport: input.remedyMeasurementReview.targetViewport, justification: input.remedyMeasurementReview.justification, limitations: input.remedyMeasurementReview.limitations };
+    remedyMeasurementReview = await model("remedy:measurement-change", input.after, input.after, afterRef, afterRef, "writer", { measurementReview: JSON.stringify(reviewOutput) }, reviewInput, `fixture-remedy-measurement-${input.remedyMeasurementReview.targetViewport.width}`, [input.remedyMeasurementReview.previousObservationRef, currentObservationRef]);
+  }
+  let remedyTrackingReview: EvidenceRef | undefined;
+  if (input.remedyTrackingReview) {
+    const currentObservationRef = ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
+    const authorityInstructionRef = pinRef(IMPECCABLE_ROOT + "reference/craft-floor.md");
+    const criterion = { id: "typography.heading.letterSpacing", stableAuthorityId: "D04-S-a2bbcd69b901", observationRule: "desktop", reviewRule: "critique", revision: WORKFLOW_REVISION };
+    const reviewInput = { criterion: JSON.stringify(criterion), previousObservationRef: JSON.stringify(input.remedyTrackingReview.previousObservationRef), currentObservationRef: JSON.stringify(currentObservationRef), sourceComputedValue: input.remedyTrackingReview.sourceComputedValue, targetComputedValue: input.remedyTrackingReview.targetComputedValue, sourceCriterionFloor: input.remedyTrackingReview.sourceCriterionFloor, criterionFloor: "-0.04em", authorityInstructionRef: JSON.stringify(authorityInstructionRef) };
+    const reviewOutput = { schemaVersion: "RemedyMeasurementReviewV1", verdict: "pass", criterion, previousObservationRef: input.remedyTrackingReview.previousObservationRef, currentObservationRef, sourceComputedValue: input.remedyTrackingReview.sourceComputedValue, targetComputedValue: input.remedyTrackingReview.targetComputedValue, sourceCriterionFloor: input.remedyTrackingReview.sourceCriterionFloor, criterionFloor: "-0.04em", authorityInstructionRef, justification: input.remedyTrackingReview.justification, limitations: input.remedyTrackingReview.limitations };
+    remedyTrackingReview = await model("remedy:measurement-change", input.after, input.after, afterRef, afterRef, "writer", { measurementReview: JSON.stringify(reviewOutput) }, reviewInput, `fixture-remedy-tracking-${input.remedyTrackingReview.targetComputedValue}`, [input.remedyTrackingReview.previousObservationRef, currentObservationRef]);
+  }
+  return { research, transformAssessment: assessment, assessment, editorial, presentation, ...(remedyMeasurementReview && { remedyMeasurementReview }), ...(remedyTrackingReview && { remedyTrackingReview }) };
 }
