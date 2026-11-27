@@ -306,6 +306,7 @@ export const importActivityReceiptSchema = z.object({
   inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   criteria: z.array(activityCriterionSchema).min(1),
   dependencyRefs: z.array(stateEvidenceRef).min(1),
+  outputRefs: z.array(stateEvidenceRef).min(1).optional(),
   resultRef: stateEvidenceRef,
   reviewer: z.string().min(1),
   executionId: z.string().min(1),

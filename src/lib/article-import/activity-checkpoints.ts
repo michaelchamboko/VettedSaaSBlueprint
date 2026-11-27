@@ -33,6 +33,7 @@ export const activityResultSchema = z.object({
     inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
     criteria: z.array(criterionSchema).min(1),
     dependencyRefs: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1),
+    outputRefs: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).optional(),
     reviewer: z.string().min(1),
     executionId: z.string().min(1),
     outcome: z.enum(["accepted", "rejected", "unverified", "not-applicable"]),
@@ -42,6 +43,7 @@ export const activityResultSchema = z.object({
     findingReviews: z.array(activityFindingReviewSubmissionSchema).optional(),
   }).strict().superRefine((value, context) => {
     if (["accepted", "rejected"].includes(value.outcome) && !value.observation) context.addIssue({ code: "custom", path: ["observation"], message: "Accepted and rejected activity reviews require an observation." });
+    if (value.outcome === "accepted" && !value.outputRefs) context.addIssue({ code: "custom", path: ["outputRefs"], message: "Accepted current activity work requires concrete output evidence." });
     if (value.outcome === "not-applicable" && !value.applicabilityReason) context.addIssue({ code: "custom", path: ["applicabilityReason"], message: "Inapplicability requires a reason." });
   }),
 }).strict();
@@ -72,19 +74,36 @@ async function bindings(root: string, record: ExternalArticleImportV1, stage: Ac
   const assessment = await currentRef(root, record.evidenceRefs?.assessment);
   const research = await currentRef(root, record.evidenceRefs?.research);
   const hero = await currentRef(root, record.evidenceRefs?.hero);
-  const dependencies = (id: string): EvidenceRef[] => {
+  const selectedOutputs = new Map<string, EvidenceRef[]>();
+  const resolved: ActivityBinding[] = [];
+  for (const id of activities[stage]) {
+    let prerequisiteIds: string[] = [];
     if (stage === "REFINING") {
-      if (id === "purpose-and-structure") return [artifact, assessment].filter((ref): ref is EvidenceRef => Boolean(ref));
-      if (["meaning-and-evidence", "independent-review"].includes(id)) return [artifact, research].filter((ref): ref is EvidenceRef => Boolean(ref));
-      return [artifact];
+      const index = activities.REFINING.indexOf(id);
+      prerequisiteIds = index > 0 ? [activities.REFINING[index - 1]] : [];
+    } else {
+      const browser = ["desktop", "mobile", "reduced-motion"];
+      const judgments = ["critique", "audit", "polish"];
+      prerequisiteIds = judgments.includes(id) ? browser : ["visual-quality", "owner-verifier"].includes(id) ? [...browser, ...judgments] : [];
     }
-    return [artifact, renderingRef, ...(["hero-image", "visual-quality"].includes(id) ? [hero] : [])].filter((ref): ref is EvidenceRef => Boolean(ref));
-  };
-  return activities[stage].map((id) => {
+    const outputs = prerequisiteIds.flatMap((item) => selectedOutputs.get(item) ?? []);
+    const base = stage === "REFINING"
+      ? id === "purpose-and-structure" ? [artifact, assessment] : ["meaning-and-evidence", "independent-review"].includes(id) ? [artifact, research] : [artifact]
+      : [artifact, renderingRef, ...(["hero-image", "visual-quality", "owner-verifier"].includes(id) ? [hero] : [])];
     const criteria = [{ id: `${stage.toLowerCase()}.${id}`, revision: WORKFLOW_REVISION }];
-    const dependencyRefs = dependencies(id);
-    return { stage, id, criteria, dependencyRefs, inputFingerprint: digest({ stage, id, criteria, dependencyRefs }) };
-  });
+    const dependencyRefs = [...base, ...outputs].filter((ref): ref is EvidenceRef => Boolean(ref));
+    const binding = { stage, id, criteria, dependencyRefs, inputFingerprint: digest({ stage, id, criteria, dependencyRefs }) };
+    resolved.push(binding);
+    for (const receipt of (record.activityReceipts ?? []).filter((item) => item.stage === stage && item.activityId === id && item.inputFingerprint === binding.inputFingerprint && item.outcome === "accepted" && (item.outputRefs?.length ?? 0) > 0).toReversed()) {
+      try {
+        await verifyEvidenceRef(root, receipt.resultRef);
+        for (const ref of receipt.outputRefs!) await verifyEvidenceRef(root, ref);
+        selectedOutputs.set(id, receipt.outputRefs!);
+        break;
+      } catch { /* A changed output reopens its exact producing activity. */ }
+    }
+  }
+  return resolved;
 }
 
 export async function nextArticleActivity(root: string, record: ExternalArticleImportV1, renderingRef?: EvidenceRef): Promise<ActivityBinding | undefined> {
@@ -96,7 +115,13 @@ export async function nextArticleActivity(root: string, record: ExternalArticleI
     const candidates = (record.activityReceipts ?? []).filter((receipt) => receipt.stage === stage && receipt.activityId === binding.id && ["accepted", "not-applicable"].includes(receipt.outcome) && receipt.inputFingerprint === binding.inputFingerprint);
     let accepted = false;
     for (const receipt of candidates) {
-      try { await verifyEvidenceRef(root, receipt.resultRef); accepted = true; break; }
+      try {
+        await verifyEvidenceRef(root, receipt.resultRef);
+        if (receipt.outcome === "accepted" && !(receipt.outputRefs?.length)) continue;
+        for (const ref of receipt.outputRefs ?? []) await verifyEvidenceRef(root, ref);
+        accepted = true;
+        break;
+      }
       catch { /* A stale receipt stays historical but cannot approve current work. */ }
     }
     if (!accepted) return binding;
@@ -113,7 +138,13 @@ export async function acceptedArticleActivityOutputs(root: string, record: Exter
     const receipts = (record.activityReceipts ?? []).filter((receipt) => receipt.stage === stage && receipt.activityId === binding.id && receipt.inputFingerprint === binding.inputFingerprint);
     let current;
     for (const receipt of receipts.toReversed()) {
-      try { await verifyEvidenceRef(root, receipt.resultRef); current = receipt; break; }
+      try {
+        await verifyEvidenceRef(root, receipt.resultRef);
+        if (receipt.outcome === "accepted" && !(receipt.outputRefs?.length)) continue;
+        for (const ref of receipt.outputRefs ?? []) await verifyEvidenceRef(root, ref);
+        current = receipt;
+        break;
+      }
       catch { /* Ignore stale bytes and keep looking for the latest verified result. */ }
     }
     if (!current || !["accepted", "not-applicable"].includes(current.outcome)) continue;
@@ -122,6 +153,7 @@ export async function acceptedArticleActivityOutputs(root: string, record: Exter
       outcome: current.outcome,
       ...(current.observation && { observation: current.observation }),
       ...(current.applicabilityReason && { applicabilityReason: current.applicabilityReason }),
+      ...(current.outputRefs && { outputRefs: current.outputRefs }),
       resultRef: current.resultRef,
     });
   }
@@ -135,6 +167,7 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
   const result = activityResultSchema.parse(retainedRaw);
   const submitted = result.activity;
   if (result.sourceFingerprint !== record.sourceFingerprint || submitted.stage !== expected.stage || submitted.id !== expected.id || submitted.attemptId !== expected.attemptId || submitted.predecessorAttemptId !== expected.predecessorAttemptId || submitted.inputFingerprint !== expected.inputFingerprint || JSON.stringify(submitted.criteria) !== JSON.stringify(expected.criteria) || JSON.stringify(submitted.dependencyRefs) !== JSON.stringify(expected.dependencyRefs)) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
+  for (const ref of submitted.outputRefs ?? []) await verifyEvidenceRef(root, ref);
   const receipt = importActivityReceiptSchema.parse({
     schemaVersion: "ImportActivityReceiptV1",
     attemptId: submitted.attemptId,
@@ -143,6 +176,7 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     inputFingerprint: submitted.inputFingerprint,
     criteria: submitted.criteria,
     dependencyRefs: submitted.dependencyRefs,
+    outputRefs: submitted.outputRefs,
     resultRef,
     reviewer: submitted.reviewer,
     executionId: submitted.executionId,
@@ -179,6 +213,7 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     const findingIndex = reviewedFindings.findIndex((finding) => finding.findingId === review.findingId && finding.stage === receipt.stage && finding.activityId === receipt.activityId && finding.status !== "resolved");
     if (findingIndex < 0) throw new Error("ACTIVITY_FINDING_NOT_OPEN");
     const finding = reviewedFindings[findingIndex];
+    if (finding.status === "owner-referral" && review.disposition !== "owner-referral") throw new Error("ACTIVITY_OWNER_DECISION_REQUIRED");
     if (review.expectedCheck !== finding.expectedCheck) throw new Error("ACTIVITY_FINDING_EXPECTED_CHECK_MISMATCH");
     if (receipt.reviewer === finding.reviewer || receipt.executionId === finding.executionId) throw new Error("ACTIVITY_FINDING_REVIEW_NOT_INDEPENDENT");
     await verifyEvidenceRef(root, finding.originalEvidenceRef);

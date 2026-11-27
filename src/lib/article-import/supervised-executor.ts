@@ -2,7 +2,7 @@ import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { advanceImport, approveImportContent, loadImport, recordImportPresentation, verifyImportRelease, writeJsonAtomically, type ImportStageExecutor } from "./engine";
-import { importFormatSchema, type ExternalArticleImportV1 } from "./contracts";
+import { externalArticleImportSchema, importFormatSchema, type ExternalArticleImportV1 } from "./contracts";
 import { assertIgnoredImportStatePath } from "./automation-state";
 import { importArtifactTarget } from "./format-validation";
 import { createLocalReleaseOperations } from "./local-release-adapter";
@@ -297,6 +297,12 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     let activity: ActivityBinding | undefined;
     let adoptedLegacyActivity = false;
     if (stage === "REFINING" || stage === "VALIDATING") {
+      const ownerReferral = record.activityFindings?.find((finding) => finding.stage === stage && finding.status === "owner-referral");
+      if (ownerReferral) return externalArticleImportSchema.parse({
+        ...record,
+        continuation: { kind: "blocked", scope: "article", cause: `Owner adjudication is required for ${ownerReferral.findingId} at revision ${ownerReferral.revision}.`, attemptedRecovery: "Preserved the original finding, referral evidence, and unrelated approvals without dispatching another worker.", resumptionRequirement: "Submit an authenticated owner decision bound to the exact finding and revision." },
+        nextAction: `Owner adjudication required for ${ownerReferral.findingId}; ordinary workers cannot dismiss or remove this referral.`,
+      });
       let historicalStageResult = false;
       if (record.activityProtocolVersion !== 1) {
         try { await readRepositoryJson(root, resultPath); historicalStageResult = true; }
@@ -336,8 +342,8 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       ...(stage === "RELEASING" && { releaseSteps }),
       ...(requiredReleaseFiles && { requiredReleaseFiles }),
       ...(stage === "REFINING" && { publicationProposals: publicationProposals(record.importId, context.idempotencyKey, record.format) }),
-      instructions: activity ? `${instructionsForStage(stage)} Complete only activity ${activity.id}. Record an attributable accepted, rejected, unverified, or justified not-applicable review against the bound inputs and criterion.${activity.openFindings?.length ? " Repair the listed open findings against a relevant changed input, perform each expected check, and retain fresh independent observations for the original defect and affected regressions." : ""}` : instructionsForStage(stage), resultPath,
-      resultContract: activity ? { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe the completed activity review.", activity: { ...activity, reviewer: "reviewer identity", executionId: "execution identity", outcome: "accepted|rejected|unverified|not-applicable", observation: "required for accepted or rejected", applicabilityReason: "required for not-applicable" } } : { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
+      instructions: activity ? `${instructionsForStage(stage)} Complete only activity ${activity.id}. Record an attributable accepted, rejected, unverified, or justified not-applicable review against the bound inputs and criterion. An accepted result must include outputRefs for the concrete validated activity outputs; do not substitute the wrapper result or textual observation.${activity.openFindings?.length ? " Repair the listed open findings against a relevant changed input, perform each expected check, and retain fresh independent observations for the original defect and affected regressions." : ""}` : instructionsForStage(stage), resultPath,
+      resultContract: activity ? { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe the completed activity review.", activity: { ...activity, reviewer: "reviewer identity", executionId: "execution identity", outcome: "accepted|rejected|unverified|not-applicable", outputRefs: "required concrete evidence refs when accepted", observation: "required for accepted or rejected", applicabilityReason: "required for not-applicable" } } : { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,
     }, record));
     let raw: unknown;

@@ -39,6 +39,7 @@ async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<ty
   if (record.continuation?.kind !== "work") throw new Error("Expected activity work.");
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
   if (!packet.activity) throw new Error("Expected an activity-bound packet.");
+  const outputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: packet.activity.id, inputFingerprint: packet.activity.inputFingerprint, outcome });
   await writeJsonAtomically(path.join(root, record.continuation.resultPath), {
     idempotencyKey: record.continuation.idempotencyKey,
     sourceFingerprint: record.sourceFingerprint,
@@ -48,6 +49,7 @@ async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<ty
       reviewer: "synthetic-reviewer",
       executionId: `${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 8)}-${outcome}`,
       outcome,
+      ...(outcome === "accepted" && { outputRefs: [outputRef] }),
       ...(["accepted", "rejected"].includes(outcome) && { observation: outcome === "accepted" ? "The bound criterion is satisfied." : "The bound criterion has an attributable defect." }),
       ...(outcome === "not-applicable" && { applicabilityReason: "The criterion does not apply to this synthetic format and the reason is retained." }),
     },
@@ -59,6 +61,7 @@ async function submitFindingReview(root: string, record: Awaited<ReturnType<type
   assert.equal(record.continuation?.kind, "work");
   if (record.continuation?.kind !== "work") throw new Error("Expected finding-bound activity work.");
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
+  const outputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: packet.activity.id, inputFingerprint: packet.activity.inputFingerprint, outcome });
   await writeJsonAtomically(path.join(root, record.continuation.resultPath), {
     idempotencyKey: record.continuation.idempotencyKey,
     sourceFingerprint: record.sourceFingerprint,
@@ -68,6 +71,7 @@ async function submitFindingReview(root: string, record: Awaited<ReturnType<type
       reviewer: "independent-reviewer",
       executionId: `independent-${packet.activity.id}-${Date.now()}`,
       outcome,
+      ...(outcome === "accepted" && { outputRefs: [outputRef] }),
       ...(outcome === "accepted" && { observation: "The independent review checked the original defect and affected regressions." }),
       ...(outcome === "not-applicable" && { applicabilityReason: "The independent review verified that the non-required capability was appropriately removed." }),
       findingReviews: [findingReview],
@@ -104,6 +108,7 @@ test("reload resumes the next editorial activity without repeating accepted work
     if (first.continuation?.kind !== "work") throw new Error("Expected editorial activity work.");
     const firstPacket = JSON.parse(await readFile(path.join(root, first.continuation.workPath), "utf8"));
     assert.equal(firstPacket.activity.id, "purpose-and-structure");
+    const purposeOutputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: "purpose-and-structure", inputFingerprint: firstPacket.activity.inputFingerprint });
 
     await writeFile(path.join(root, first.continuation.resultPath), JSON.stringify({
       idempotencyKey: first.continuation.idempotencyKey,
@@ -114,6 +119,7 @@ test("reload resumes the next editorial activity without repeating accepted work
         reviewer: "synthetic-reviewer",
         executionId: "editorial-purpose-1",
         outcome: "accepted",
+        outputRefs: [purposeOutputRef],
         observation: "Purpose and structure meet the bound criterion.",
       },
     }));
@@ -125,13 +131,30 @@ test("reload resumes the next editorial activity without repeating accepted work
 
     const resumed = await executePendingImport(root, record.importId, executor);
     assert.equal(resumed.continuation?.kind, "work");
-    if (resumed.continuation?.kind !== "work") throw new Error("Expected the next editorial activity.");
+    if (resumed.continuation?.kind !== "work") throw new Error("Expected resumed activity work.");
     const resumedPacket = JSON.parse(await readFile(path.join(root, resumed.continuation.workPath), "utf8"));
     assert.equal(resumedPacket.activity.id, "meaning-and-evidence");
+    assert.equal(resumedPacket.activity.dependencyRefs.some((ref: { path: string; sha256: string }) => ref.path === purposeOutputRef.path && ref.sha256 === purposeOutputRef.sha256), true);
     assert.notEqual(resumed.continuation.workPath, first.continuation.workPath);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("tampered concrete activity output reopens its owning pass", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    const issued = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    const accepted = await acceptCurrentActivity(root, issued);
+    const output = accepted.record.activityReceipts?.at(-1)?.outputRefs?.[0];
+    assert.ok(output);
+    await writeFile(path.join(root, output.path), "tampered activity output\n");
+    const reopened = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    assert.equal(reopened.continuation?.kind, "work");
+    if (reopened.continuation?.kind !== "work") throw new Error("Expected reopened activity work.");
+    const packet = JSON.parse(await readFile(path.join(root, reopened.continuation.workPath), "utf8"));
+    assert.equal(packet.activity.id, "purpose-and-structure");
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("interrupted activity work keeps its identity while intentional repair creates a linked attempt", async () => {
@@ -711,7 +734,13 @@ test("finding review records appropriate removal, evidenced dismissal, inconclus
       assert.equal(current.activityFindingReviews?.[0].disposition, scenario);
       if (["inconclusive", "owner-referral"].includes(scenario)) {
         current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
-        assert.equal(current.continuation?.activityId, "purpose-and-structure");
+        if (scenario === "owner-referral") {
+          assert.equal(current.continuation?.kind, "blocked");
+          assert.match(current.nextAction, /ordinary workers cannot dismiss/);
+          const reloaded = await loadImport(root, current.importId);
+          assert.equal(reloaded.activityFindings?.[0].status, "owner-referral");
+          assert.equal(reloaded.activityFindings?.[0].originalEvidenceRef.sha256, finding.originalEvidenceRef.sha256);
+        } else assert.equal(current.continuation?.activityId, "purpose-and-structure");
       }
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -780,8 +809,9 @@ test("the dispatch controller sends an activity-specific packet to the worker an
     const workerRunner: WorkerRunner = async ({ args }) => {
       const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
       calls.push(packet.activity.id);
+      const outputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: packet.activity.id, inputFingerprint: packet.activity.inputFingerprint });
       const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Dispatch completed one bound activity.",
-        activity: { ...packet.activity, reviewer: "dispatch-fixture", executionId: "dispatch-purpose-1", outcome: "accepted", observation: "The dispatched criterion passed." } };
+        activity: { ...packet.activity, reviewer: "dispatch-fixture", executionId: "dispatch-purpose-1", outcome: "accepted", observation: "The dispatched criterion passed.", outputRefs: [outputRef] } };
       const events = (await readFile("tests/fixtures/opencode-jsonl-fixture.jsonl", "utf8")).trim().split(/\r?\n/).map((line) => JSON.parse(line));
       events.find((event) => event.type === "text").part.text = JSON.stringify(result);
       return { stdout: events.map((event) => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };
