@@ -63,8 +63,8 @@ export async function prepareApprovalFixture(root: string, record: ExternalArtic
   return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
 }
 
-export async function approveFixture(root: string, record: ExternalArticleImportV1) {
-  const { evidenceRefs, ...files } = await prepareApprovalFixture(root, record);
+export async function approveFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean } = {}) {
+  const { evidenceRefs, ...files } = await prepareApprovalFixture(root, record, options);
   return approveImportContent(root, { ...record, evidenceRefs }, files);
 }
 

@@ -2792,6 +2792,27 @@
     }
   ],
   "extensions": {
+    "article_recovery_remediation": {
+      "packet_id": "ARTICLE-RECOVERY-1127",
+      "authority": "planning.md#article-recovery-remediation-article-recovery-1127",
+      "first_issue": 111,
+      "scope": "Product corrections and isolated verification",
+      "slices": [
+        {"issue": 111, "blocked_by": []},
+        {"issue": 112, "blocked_by": []},
+        {"issue": 113, "blocked_by": [112]},
+        {"issue": 114, "blocked_by": [112, 113]},
+        {"issue": 115, "blocked_by": []},
+        {"issue": 116, "blocked_by": [113]},
+        {"issue": 117, "blocked_by": []},
+        {"issue": 118, "blocked_by": [111, 117]},
+        {"issue": 119, "blocked_by": [112]},
+        {"issue": 120, "blocked_by": [114, 116, 117, 118, 119]},
+        {"issue": 121, "blocked_by": [120]},
+        {"issue": 122, "blocked_by": []},
+        {"issue": 123, "blocked_by": [115, 118, 121, 122]}
+      ]
+    },
     "article_loop_continuation": {
       "packet_id": "ARTICLE-LOOP-001",
       "status": "ready",

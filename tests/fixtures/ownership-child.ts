@@ -8,9 +8,15 @@ async function main() {
   const file = path.join(root, ".automation", "article-imports", id + ".json");
   if (mode === "hold") {
     const original = fs.readFile;
+    const originalReaddir = fs.readdir;
     let held = false;
     fs.readFile = (async (...args: Parameters<typeof fs.readFile>) => {
-      if (!held && path.resolve(String(args[0])) === file) {
+      if (held || path.resolve(String(args[0])) !== file) return original(...args);
+      const leaseDirectory = path.join(root, ".automation", "article-imports", "leases", "import", id);
+      const claims = await originalReaddir(leaseDirectory).catch(() => []);
+      const generation = Math.max(0, ...claims.filter(name => /^\d+\.json$/.test(name)).map(name => Number(name.slice(0, -5))));
+      const claim = generation ? JSON.parse(await original(path.join(leaseDirectory, `${generation}.json`), "utf8")) : undefined;
+      if (claim?.pid === process.pid && !claim.released) {
         held = true;
         const released = new Promise<void>(resolve => process.once("message", () => resolve()));
         process.send?.("owned");
