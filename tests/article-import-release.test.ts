@@ -26,6 +26,7 @@ import { registerBrowserReviewEvidence, registerEditorialReviewEvidence, type Ar
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
 const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
 const fixtureImports = new Map<string, { importId: string; sourceFingerprint: string; format: ExternalArticleImportV1["format"]; artifactPath: string }>();
+const fixtureReviewedTrees = new Map<string, Map<string, Buffer>>();
 const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\n\nThis is a sufficiently long article body for the release coordinator test and its deterministic validation path.\n";
 
 async function releaseScratch(prefix: string): Promise<string> {
@@ -83,6 +84,11 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   record = await advanceImport(root, record, "editorial complete");
   record = await presentFixture(root, record);
   record = await advanceImport(root, record, "presentation complete");
+  fixtureReviewedTrees.set(root, new Map(await Promise.all([
+    "src/generated/landing-pages/index.json",
+    "src/generated/landing-pages/releases/example/release-receipt.json",
+    "src/generated/landing-pages/example.json",
+  ].map(async (file) => [file, await readFile(path.join(root, file))] as const))));
   return persistFixture(root, { ...record, pendingRelease: { schemaVersion: "ImportPendingReleaseV1", reviewedCommitSha: "c".repeat(40), branch: "codex/article-import/example", pullRequestUrl: "https://github.com/example/repository/pull/1", createdAt: new Date().toISOString(), codeReview: { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true, reviewedCommitSha: "c".repeat(40), pullRequestUrl: "https://github.com/example/repository/pull/1", evidenceUrl: "https://github.com/example/repository/pull/1#issuecomment-review", reviewedAt: new Date().toISOString() } } });
 }
 
@@ -109,6 +115,12 @@ function operations(root: string, overrides: Partial<ReleaseOperations> = {}): R
     },
     rollback: async () => ({ ok: true, summary: "restored" }),
     verifyRollback: async () => true,
+    readReviewedTreeFile: async (commitSha, file) => {
+      if (commitSha !== "c".repeat(40)) throw new Error("SYNTHETIC_REVIEW_COMMIT_MISMATCH");
+      const bytes = fixtureReviewedTrees.get(root)?.get(file.replaceAll("\\", "/"));
+      if (!bytes) throw new Error(`SYNTHETIC_REVIEW_FILE_MISSING:${file}`);
+      return Buffer.from(bytes);
+    },
     ...overrides,
   };
 }

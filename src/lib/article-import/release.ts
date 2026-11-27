@@ -105,6 +105,7 @@ export type ReleaseOperations = {
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
   rollback(deploymentId: string): Promise<{ ok: boolean; summary: string }>;
   verifyRollback(deploymentId: string, expectedCommitSha?: string): Promise<boolean>;
+  readReviewedTreeFile?(commitSha: string, file: string): Promise<Buffer>;
   fixForward?(attempt: number): Promise<boolean>;
 };
 
@@ -338,7 +339,7 @@ export async function assertPublicationAuthorityBinding(
   repositoryRoot: string,
   format: ImportFormat,
   artifactPath: string | undefined,
-  expectation: { reviewedCommitSha?: string } = {},
+  expectation: { reviewedCommitSha?: string; readReviewedTreeFile?: (commitSha: string, file: string) => Promise<Buffer> } = {},
 ): Promise<PublicationAuthorityBinding | undefined> {
   if (format !== "direct-review" && format !== "blog" && format !== "visibility") return;
   if (!artifactPath) throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_MISSING");
@@ -394,7 +395,9 @@ export async function assertPublicationAuthorityBinding(
     try {
       for (const file of [manifestPath, receiptPath, servedArtifactPath]) {
         const relativeFile = path.relative(repository, file).replaceAll("\\", "/");
-        const reviewedBytes = await reviewedTreeFile(repository, reviewedCommitSha, relativeFile);
+        const reviewedBytes = expectation.readReviewedTreeFile
+          ? await expectation.readReviewedTreeFile(reviewedCommitSha, relativeFile)
+          : await reviewedTreeFile(repository, reviewedCommitSha, relativeFile);
         const currentBytes = await readFile(file);
         const sameCheckoutText = reviewedBytes.toString("utf8").replace(/\r\n/g, "\n") === currentBytes.toString("utf8").replace(/\r\n/g, "\n");
         if (!reviewedBytes.equals(currentBytes) && !sameCheckoutText) throw new Error("DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH");
@@ -725,6 +728,7 @@ async function assessImportReleaseImpl(input: {
     try {
       await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!, {
         reviewedCommitSha: input.record.pendingRelease?.reviewedCommitSha,
+        readReviewedTreeFile: input.operations.readReviewedTreeFile,
       });
       if (await requiresArticleHero(input.repositoryRoot, input.record)) {
         if (!input.record.heroImage || !input.record.contentApproval || input.record.format === "agent_review_required") throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
