@@ -194,7 +194,7 @@ export async function validateRenderingInputs(root: string, ref: EvidenceRef, op
     const current = await renderingInputPaths(root);
     if (JSON.stringify(current) !== JSON.stringify(manifest.files.map((file) => file.path))) throw new Error("RENDER_INPUT_INVENTORY_CHANGED");
   }
-  const selected = options.target ? publicationServingInputs(manifest, options.target) : manifest.files;
+  const selected = options.target && !options.historical ? publicationServingInputs(manifest, options.target) : manifest.files;
   for (const file of selected) {
     try { await verifyEvidenceRef(root, file); }
     catch (error) { throw new Error(`RENDER_INPUT_CHANGED:${file.path}`, { cause: error }); }

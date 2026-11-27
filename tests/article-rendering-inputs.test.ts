@@ -68,6 +68,11 @@ test("historical presentation verifies frozen rendering bytes without current in
     await assert.rejects(() => validateRenderingInputs(root, ref, { historical: true }), /RENDER_INPUT_FROZEN_SNAPSHOT_REQUIRED/);
     const retained = await withEvidenceSnapshot(snapshot, () => validateRenderingInputs(root, ref, { historical: true }));
     assert.equal(retained.files.length, 3);
+    const targeted = await withEvidenceSnapshot(snapshot, () => validateRenderingInputs(root, ref, {
+      historical: true,
+      target: { format: "blog", renderedRoutes: ["/blog/synthetic"] },
+    }));
+    assert.equal(targeted.files.length, 3);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
