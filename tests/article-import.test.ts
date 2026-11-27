@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  advanceImport, createArticleImport, loadImport, parseExternalArticle, prepareTransformation,
+  advanceImport, createArticleImport, executePendingImport, loadImport, parseExternalArticle, prepareTransformation,
   recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease,
 } from "../src/lib/article-import/engine";
 import { parseImportCommand } from "../scripts/import-article";
@@ -21,6 +21,30 @@ import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEv
 import { instructionsForStage, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { createHash } from "node:crypto";
 import { verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
+import {
+  registerBrowserReviewEvidence,
+  registerEditorialReviewEvidence,
+  registeredReviewStatus,
+  reviewEvidenceRegistrationSchema,
+  type ArticleReviewEvidenceRegistry,
+  type ReviewEvidenceRegistration,
+} from "../src/lib/article-import/review-evidence-registry";
+import { assessPublicationImpact, registerPublicationApproval } from "../src/lib/article-import/publication-approval";
+
+function isolatedReviewRegistry(initial: ReviewEvidenceRegistration[] = []) {
+  const records = [...initial];
+  return {
+    records,
+    async list(input) {
+      return records.filter((record) => record.importId === input.importId && record.evidenceClass === input.evidenceClass);
+    },
+    async commit(input) {
+      const existing = records.find((record) => record.registrationId === input.registrationId);
+      if (!existing) records.push(reviewEvidenceRegistrationSchema.parse(input));
+      return { registrationId: existing?.registrationId ?? input.registrationId, replayed: Boolean(existing) };
+    },
+  } satisfies ArticleReviewEvidenceRegistry & { records: ReviewEvidenceRegistration[] };
+}
 
 async function releaseFixture(root: string, recovered = false, beforeReceipt?: (record: Awaited<ReturnType<typeof advanceImport>>) => Promise<void>) {
   await writeFile(path.join(root, "approved-urls.md"), allowlist);
@@ -62,6 +86,97 @@ test("verified synthetic completion freezes proof before deleting disposable sou
     assert.equal((await inspectImportCompletion(root, record.importId)).status, "COMPLETE", "historical proof uses frozen bytes");
     await assert.rejects(createArticleImport(root, "article.md"), /DUPLICATE_REVALIDATION_REQUIRED/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("catalogue and import publication approval must agree before LIVE", async () => {
+  const root = await testRoot("article-publication-approval-");
+  try {
+    const released = await releaseFixture(root);
+    let verifying = await persistFixture(root, { ...released, artifactPath: released.contentApproval!.artifactPath });
+    const registry = isolatedReviewRegistry();
+    const editorial = await registerEditorialReviewEvidence(root, registry, verifying);
+    const browserReview = await registerBrowserReviewEvidence(root, registry, verifying);
+    verifying = await persistFixture(root, {
+      ...verifying,
+      reviewEvidence: {
+        editorial: registeredReviewStatus(editorial),
+        browser: registeredReviewStatus(browserReview),
+      },
+    });
+
+    const catalogue = await registerPublicationApproval(root, registry, verifying, "catalogue", "2026-11-27T12:00:00.000Z");
+    const imported = await registerPublicationApproval(root, registry, verifying, "import", "2026-11-27T12:00:00.000Z");
+    assert.notEqual(catalogue.registrationId, imported.registrationId);
+    assert.equal(catalogue.evidenceRef.sha256, verifying.evidenceRefs?.production?.sha256);
+    assert.equal(imported.evidenceRef.sha256, verifying.evidenceRefs?.production?.sha256);
+
+    await assert.rejects(
+      registerPublicationApproval(root, registry, { ...verifying, release: { ...verifying.release!, commitSha: "c".repeat(40) } }, "import"),
+      /PRODUCTION_DEPLOYMENT_MISMATCH|PUBLICATION_INTENDED_COMMIT_MISMATCH/,
+    );
+    await assert.rejects(
+      registerPublicationApproval(root, registry, { ...verifying, evidenceRefs: { ...verifying.evidenceRefs, production: undefined } }, "import"),
+      /PUBLICATION_PRODUCTION_OBSERVATION_REQUIRED/,
+    );
+
+    const browser = registry.records.find((entry) => entry.evidenceClass === "browser-observation");
+    assert.ok(browser);
+    browser.expiresAt = "2026-11-27T11:00:00.000Z";
+    await assert.rejects(
+      registerPublicationApproval(root, registry, verifying, "import", "2026-11-27T12:00:00.000Z"),
+      /PUBLICATION_PRESENTATION_APPROVAL_MISSING_OR_STALE/,
+    );
+    delete browser.expiresAt;
+
+    await assert.rejects(
+      verifyImportRelease(root, verifying),
+      /PUBLICATION_APPROVAL_REGISTRY_REQUIRED/,
+    );
+    const live = await verifyImportRelease(root, verifying, { reviewEvidenceRegistry: registry });
+    assert.equal(live.stage, "LIVE");
+    assert.equal(live.publicationApproval?.catalogue.approvalIdentity, catalogue.approvalIdentity);
+    assert.equal(live.publicationApproval?.import.approvalIdentity, imported.approvalIdentity);
+    const terminal = await readEvidence(root, live.terminalRef!) as { publicationApproval?: unknown };
+    assert.deepEqual(terminal.publicationApproval, live.publicationApproval);
+    const terminalBytes = await readFile(path.join(root, live.terminalRef!.path));
+    await assert.rejects(
+      executePendingImport(root, live.importId, async () => { throw new Error("ordinary executor must not run"); }, {
+        improveExecutor: async ({ record, assignment }) => ({
+          ...record,
+          publicationApproval: {
+            ...record.publicationApproval!,
+            import: { ...record.publicationApproval!.import, approvalIdentity: "0".repeat(64) },
+          },
+          improve: { ...assignment, phase: "COMPLETE", completedAt: new Date().toISOString() },
+        }),
+      }),
+      /IMPROVE_MUTATED_PUBLICATION/,
+    );
+    const afterRejectedImprove = await loadImport(root, live.importId);
+    assert.deepEqual(afterRejectedImprove.publicationApproval, live.publicationApproval);
+    assert.deepEqual(await readFile(path.join(root, live.terminalRef!.path)), terminalBytes);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("publication impact keeps the unaffected control independent", () => {
+  const publications = [
+    { id: "target", contentPaths: ["content/target.json"], assetPaths: ["public/target.webp"] },
+    { id: "control", contentPaths: ["content/control.json"], assetPaths: ["public/control.webp"] },
+  ];
+  const cases = [
+    { kind: "content" as const, path: "content/target.json", expected: [["revalidate", "revalidate"], ["reuse", "reuse"]] },
+    { kind: "renderer" as const, path: "src/app/blog/[slug]/page.tsx", expected: [["reuse", "revalidate"], ["reuse", "revalidate"]] },
+    { kind: "styles" as const, path: "src/app/globals.css", expected: [["reuse", "revalidate"], ["reuse", "revalidate"]] },
+    { kind: "asset" as const, path: "public/target.webp", expected: [["reuse", "revalidate"], ["reuse", "reuse"]] },
+    { kind: "rules" as const, path: "src/lib/blog/contracts.ts", expected: [["reuse", "revalidate"], ["reuse", "revalidate"]] },
+  ];
+  for (const change of cases) {
+    const result = assessPublicationImpact(publications, change);
+    assert.deepEqual(result.map((entry) => [entry.content, entry.presentation]), change.expected, change.kind);
+    assert.ok(result.every((entry) => entry.reason.length > 0));
+  }
 });
 
 test("duplicate reuses recovered terminal proof with its retained research generation", async () => {

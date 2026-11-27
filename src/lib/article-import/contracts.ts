@@ -243,6 +243,13 @@ export const importPendingReleaseSchema = z.object({
   codeReview: importCodeReviewSchema.optional(),
 }).strict();
 
+const publicationApprovalStatusSchema = z.object({
+  registrationId: z.string().uuid(),
+  examinedRevision: z.string().regex(/^[a-f0-9]{64}$/),
+  approvalIdentity: z.string().regex(/^[a-f0-9]{64}$/),
+  evidenceRef: stateEvidenceRef,
+}).strict();
+
 export const externalArticleImportSchema = z.object({
   schemaVersion: z.enum(["ExternalArticleImportV1", "ExternalArticleImportV2"]),
   workflowVersion: z.literal(2).optional(),
@@ -265,6 +272,10 @@ export const externalArticleImportSchema = z.object({
       dimensions: z.object({ relevance: z.boolean(), support: z.boolean(), integrity: z.boolean(), freshness: z.boolean(), reusable: z.boolean() }).strict(),
       action: z.enum(["reused", "registered", "reacquire"]), checkedAt: z.string().datetime({ offset: true }),
     }).strict().optional(),
+  }).strict().optional(),
+  publicationApproval: z.object({
+    catalogue: publicationApprovalStatusSchema,
+    import: publicationApprovalStatusSchema,
   }).strict().optional(),
   activityProtocolVersion: z.literal(1).optional(),
   activityReceipts: z.array(importActivityReceiptSchema).optional(),

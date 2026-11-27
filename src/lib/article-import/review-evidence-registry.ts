@@ -47,6 +47,24 @@ export const reviewEvidenceRegistrationSchema = z.discriminatedUnion("evidenceCl
       presentation: importPresentationReceiptSchema,
     }).strict(),
   }).strict(),
+  z.object({
+    ...registrationBase,
+    evidenceClass: z.literal("production-proof"),
+    payload: z.object({
+      kind: z.literal("production-proof"),
+      publicationPath: z.enum(["catalogue", "import"]),
+      artifactFingerprint: hashSchema,
+      intendedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
+      deployment: z.object({
+        deploymentId: z.string().min(1),
+        canonicalUrl: z.string().url(),
+        commitSha: z.string().regex(/^[a-f0-9]{40}$/),
+      }).strict(),
+      editorialRegistrationId: z.string().uuid(),
+      browserRegistrationId: z.string().uuid(),
+      approvalIdentity: hashSchema,
+    }).strict(),
+  }).strict(),
 ]);
 
 export type ReviewEvidenceRegistration = z.infer<typeof reviewEvidenceRegistrationSchema>;
@@ -68,7 +86,7 @@ export function reviewExaminedRevision(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
-function reviewRegistrationId(value: unknown): string {
+export function reviewRegistrationId(value: unknown): string {
   const hex = reviewExaminedRevision(value).slice(0, 32).split("");
   hex[12] = "4";
   hex[16] = ((Number.parseInt(hex[16], 16) & 0x3) | 0x8).toString(16);
