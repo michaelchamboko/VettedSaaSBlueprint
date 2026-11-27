@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { Page } from "playwright";
 import { evidenceRefSchema, type EvidenceRef } from "./execution-evidence";
+import { ImportFailure } from "./failure-routing";
+import { WORKFLOW_REVISION } from "./workflow-requirements";
 
 export const MOTION_SITES_REVIEW_SOURCE = {
   repository: "https://github.com/michaelchamboko/motion-sites.git",
@@ -86,8 +88,10 @@ function hasChangedDeclaredProperty(effect: z.infer<typeof effectSchema>): boole
   });
 }
 
-export function validateArticleVisualRuntime(value: unknown): ArticleVisualRuntime {
+export function validateArticleVisualRuntime(value: unknown, checkerRevision: "current" | "historical-pre-craft-floor" = "current"): ArticleVisualRuntime {
   const runtime = articleVisualRuntimeSchema.parse(value);
+  const criterionFloor = checkerRevision === "current" ? "-0.04em" : "-0.4em";
+  if (criterionFloor !== "-0.04em") throw new ImportFailure("invalid-evidence", "PRESENTATION_RULE_FAILED: heading tracking checker does not match the pinned craft-floor criterion.", { code: "TYPOGRAPHY_TRACKING_FLOOR", criterionId: "typography.heading.letterSpacing", criterionRevision: WORKFLOW_REVISION, settings: { criterionFloor, checkerRevision } });
   const { viewport, rects, layout, motion } = runtime;
   if (runtime.screenshots.early.sha256.length !== 64 || runtime.screenshots.settled.sha256.length !== 64 || layout.horizontalOverflow || layout.scrollWidth > viewport.width + 1) throw new Error("ARTICLE_VISUAL_LAYOUT_INVALID");
   if (rects.primaryHeading.width <= 0 || rects.primaryHeading.height <= 0 || rects.primaryHeading.y >= viewport.height || rects.main.width <= 0) throw new Error("ARTICLE_VISUAL_PRIMARY_CONTENT_NOT_VISIBLE");

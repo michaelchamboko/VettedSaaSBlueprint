@@ -14,6 +14,15 @@ import { createDesignReviewSchema, designReviewInput, designRuntimeMaterial, des
 import type { Packet } from "./worker-editorial";
 import { articleHeroGenerationEvidenceSchema, articleHeroVisualInspectionSchema, isArticleHeroVisualRejection, persistArticleHeroRejection, validateArticleHeroBinding } from "./hero-image";
 import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, articleVisualQualityReviewSchema, captureArticleVisualRuntime, captureOffscreenArticleMedia, installArticleVisualProbe, pauseArticleVisualIntermediate, resumeArticleVisualIntermediate } from "./article-visual-quality";
+import { ImportFailure } from "./failure-routing";
+
+export function presentationCandidateUnavailable(detail: string): never {
+  throw new ImportFailure("unavailable-capability", `PRESENTATION_CANDIDATE_UNAVAILABLE: ${detail}`);
+}
+
+function presentationCapabilityUnavailable(detail: string): never {
+  throw new ImportFailure("unavailable-capability", `CAPABILITY_UNAVAILABLE: ${detail}`);
+}
 
 const designRules = ["design-read", "context", "shape", "critique", "audit", "polish"] as const;
 const observedReviewRules = ["critique", "audit", "polish", "visual-quality"] as const;
@@ -56,7 +65,7 @@ export async function presentationOperation(packet: Packet, {rule, observations}
     };
     const prompt = "Inspect the attached derived WebP pixels using the tracked article hero instructions. Return one JSON object with string field imageInspection containing the ArticleHeroVisualInspectionV1 JSON. Do not infer from the prompt or provenance. Identity: " + JSON.stringify({ artifactFingerprint: target.artifactFingerprint, assetSha256: binding.assetRef.sha256 });
     const model = capability.visualReviewModel;
-    if (!model || !Object.hasOwn(capability.modelFamilies, model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
+    if (!model || !Object.hasOwn(capability.modelFamilies, model)) presentationCapabilityUnavailable("configure a registered visual reviewer");
     const result = await exchange("hero-image-inspection", input, [...inputRefs, packet.heroImage, binding.assetRef, binding.inspectionRef, binding.generationRef], [instruction], prompt, model, [binding.inspectionRef]);
     const judgment = articleHeroVisualInspectionSchema.parse(JSON.parse(result.output.imageInspection));
     if (judgment.artifactFingerprint !== target.artifactFingerprint || judgment.assetSha256 !== binding.assetRef.sha256) throw new Error("ARTICLE_HERO_REJECTION_BINDING_MISMATCH");
@@ -92,7 +101,7 @@ export async function presentationOperation(packet: Packet, {rule, observations}
     const input = {...await designReviewInput(root,packet.format,artifact,renderInputsRef),browserObservations:runtime.browserObservations,source:JSON.stringify(MOTION_SITES_REVIEW_SOURCE)};
     const prompt = "Judge professional article whitespace/density, first-glance hierarchy, typography, media integration, responsive adaptation, purposeful motion, and preserved meaning in the reduced-motion alternative from the attached early/settled screenshots and retained geometry/property samples. Return one JSON object with string field visualQuality containing ArticleVisualQualityReviewV1 exactly as the tracked instruction defines it. Observations must cite concrete visible or measured evidence; do not require maximal motion, one grid, or make percentile claims. Identity: " + JSON.stringify({format:packet.format,artifactFingerprint:target.artifactFingerprint,routes,source:MOTION_SITES_REVIEW_SOURCE});
     const model = capability.visualReviewModel;
-    if (!model || !Object.hasOwn(capability.modelFamilies,model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
+    if (!model || !Object.hasOwn(capability.modelFamilies,model)) presentationCapabilityUnavailable("configure a registered visual reviewer");
     const result = await exchange("design:visual-quality",input,[...inputRefs,...Object.values(runtimeRefSchema.parse(observations)),...runtime.runtimeRefs,...runtime.images],instructions,prompt,model,runtime.images);
     const judgment = articleVisualQualityReviewSchema.parse(JSON.parse(result.output.visualQuality));
     return {rule,artifactRef,judgment,evidenceRefs:[result.executionRef]};
@@ -112,12 +121,12 @@ export async function presentationOperation(packet: Packet, {rule, observations}
     const shape = createDesignReviewSchema({rule,artifactFingerprint:target.artifactFingerprint,renderInputsRef,renderingDigest:rendering.digest,allowedRoutes:[JSON.stringify(routes)]});
     const prompt = "Independently perform the design review. Return a JSON object with one string designReview containing JSON with rule, artifactFingerprint, routes, renderInputsRef, renderingDigest, verdict, findings and notes. Use pass, fail or insufficient-evidence. Each finding has description and disposition. Required identity: " + JSON.stringify({rule,artifactFingerprint:target.artifactFingerprint,routes,renderInputsRef,renderingDigest:rendering.digest});
     const model = visual ? capability.visualReviewModel : capability.assessmentModel ?? packet.model;
-    if (!model || !Object.hasOwn(capability.modelFamilies,model)) throw new Error("CAPABILITY_UNAVAILABLE: configure a registered visual reviewer");
+    if (!model || !Object.hasOwn(capability.modelFamilies,model)) presentationCapabilityUnavailable("configure a registered visual reviewer");
     const result = await exchange("design:" + rule,input,inputRefs,instructions,prompt,model,visual?.images);
     const judgment = shape.parse(JSON.parse(result.output.designReview));
     return {rule,artifactRef,judgment,evidenceRefs:[result.executionRef]};
   }
-  if (!process.env.ARTICLE_CANDIDATE_ORIGIN) throw new Error("CAPABILITY_UNAVAILABLE: set ARTICLE_CANDIDATE_ORIGIN to the running checkout's local candidate renderer");
+  if (!process.env.ARTICLE_CANDIDATE_ORIGIN) presentationCapabilityUnavailable("set ARTICLE_CANDIDATE_ORIGIN to the running checkout's local candidate renderer");
   const {origin,canonicalOrigin} = verificationContext({mode:"candidate",origin:process.env.ARTICLE_CANDIDATE_ORIGIN,canonicalOrigin:REPOSITORY_CANONICAL_ORIGIN});
   if (rule === "owner-verifier") {
     const parent = path.join(root,".automation/article-imports/evidence",importId);
@@ -152,7 +161,7 @@ export async function presentationOperation(packet: Packet, {rule, observations}
     for (const route of routes) {
       const expected = new URL(target.format === "direct-review" ? candidateRequestPath(target.slug, importId) : route,origin);
       const response = await page.goto(expected.href,{waitUntil:"domcontentloaded",timeout:30000});
-      if (!response?.ok() || page.url() !== expected.href) throw new Error("PRESENTATION_CANDIDATE_UNAVAILABLE");
+      if (!response?.ok() || page.url() !== expected.href) presentationCandidateUnavailable(`candidate route ${expected.pathname} did not return the expected page`);
       if (target.format === "direct-review" && await page.locator('meta[name="artifact-fingerprint"]').getAttribute("content") !== target.artifactFingerprint) {
         throw new Error("PRESENTATION_SERVED_ARTIFACT_MISMATCH");
       }
