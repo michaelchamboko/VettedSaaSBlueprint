@@ -9,6 +9,7 @@ import { approveFixture, prepareApprovalFixture, presentFixture } from "./fixtur
 import { persistFixture } from "./fixtures/article-command";
 import { recaptureStoredExchange } from "./fixtures/capture-replay";
 import type { ExecutionEvidence } from "../src/lib/article-import/execution-evidence";
+import { validatePresentationActivityOutputRefs } from "../src/lib/article-import/activity-checkpoints";
 
 async function setup() {
   const root = await mkdtemp(path.join(os.tmpdir(), "content-approval-"));
@@ -177,6 +178,7 @@ test("advanceImport rejects fail design review through evaluateWorkflowEvidence 
     const negative = { ...review, verdict: "fail", findings: [{ description: "Synthetic design failure.", disposition: "unresolved" }] };
     const negativeOutput = { ...execution.output, designReview: JSON.stringify(negative) };
     const newExecution = await storeEvidence(root, presented.importId, recaptureStoredExchange({ ...execution, output: negativeOutput, outputDigest: proseProjectionDigest(negativeOutput) }, execution.replay!.inputRefs, execution.replay!.outputRefs));
+    await assert.rejects(validatePresentationActivityOutputRefs(root, "context", [newExecution], [presentation.artifactRef, presentation.renderInputsRef]), /Invalid input/);
     rule.evidenceRefs = [newExecution];
     const newPresentation = await storeEvidence(root, presented.importId, presentation);
     const mutatedRecord = { ...presented, evidenceRefs: { ...presented.evidenceRefs, presentation: newPresentation } };

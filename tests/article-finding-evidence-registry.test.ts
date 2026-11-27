@@ -195,7 +195,7 @@ test("the supervised controller registers a rejected finding with its original b
       },
     });
     const resolved = await executePendingImport(root, initial.importId, restartedExecutor);
-    assert.equal(resolved.activityFindings?.[0].status, "resolved");
+    assert.equal(resolved.activityFindings?.[0].status, "resolved", JSON.stringify({ continuation: resolved.continuation, lastStageReceipt: resolved.stageReceipts.at(-1) }));
     const resolutions = await registry.list({ importId: initial.importId, evidenceClass: "finding-resolution" as never });
     assert.equal(resolutions.length, 1);
     assert.equal(resolutions[0].payload.kind, "finding-resolution");

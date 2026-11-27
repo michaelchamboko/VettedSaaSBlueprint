@@ -130,7 +130,20 @@ async function assertValidationActivityOutputs(root: string, activityId: string,
     return;
   }
   const expectedPass = activityId === "hero-image" ? "hero-image-inspection" : activityId === "visual-quality" ? "design:visual-quality" : `design:${activityId}`;
-  if (!executions.some((execution) => "pass" in execution && execution.pass === expectedPass)) throw new Error("ACTIVITY_VALIDATION_OUTPUT_INVALID");
+  const execution = executions.find((candidate) => "pass" in candidate && candidate.pass === expectedPass);
+  if (!execution || !("output" in execution)) throw new Error("ACTIVITY_VALIDATION_OUTPUT_INVALID");
+  const resolvedJudgment = z.object({ verdict: z.literal("pass"), findings: z.array(z.object({ disposition: z.literal("resolved") }).passthrough()) }).passthrough();
+  if (activityId === "hero-image") {
+    const judgment = z.object({ verdict: z.literal("pass"), checks: z.object({ noPeople: z.object({ verdict: z.literal("pass") }).passthrough(), brandFit: z.object({ verdict: z.literal("pass") }).passthrough() }).passthrough(), findings: z.array(z.object({ disposition: z.literal("resolved") }).passthrough()) }).passthrough();
+    judgment.parse(JSON.parse(execution.output.imageInspection ?? "null"));
+  } else if (activityId === "visual-quality") {
+    const judgment = resolvedJudgment.extend({ checks: z.record(z.string(), z.object({ verdict: z.literal("pass") }).passthrough()) });
+    judgment.parse(JSON.parse(execution.output.visualQuality ?? "null"));
+  } else resolvedJudgment.parse(JSON.parse(execution.output.designReview ?? "null"));
+}
+
+export async function validatePresentationActivityOutputRefs(root: string, activityId: string, supplied: EvidenceRef[], dependencyRefs: EvidenceRef[]) {
+  await assertValidationActivityOutputs(root, activityId, supplied, { stage: "VALIDATING", id: activityId, inputFingerprint: digest({ activityId, dependencyRefs }), criteria: [{ id: `validating.${activityId}`, revision: WORKFLOW_REVISION }], dependencyRefs });
 }
 
 async function assertExpectedActivityOutputs(root: string, record: ExternalArticleImportV1, stage: ActivityStage, activityId: string, supplied: EvidenceRef[], binding: ActivityBinding) {
