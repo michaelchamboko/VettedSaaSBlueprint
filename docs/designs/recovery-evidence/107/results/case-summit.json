@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-summit",
+  "reviewerId": "/root/summit_review",
+  "reviewedRevision": "1ce0442",
+  "observedEvidence": "The original asks which account and project should be open after an interruption. The rewrite asks which account and project need attention.",
+  "verdict": "does_not_meet",
+  "explanation": "A reader could identify an urgent project in another account and answer the rewrite while still being unsure which workspace to resume. The rewrite changes the decision from checking the intended workspace to choosing what to work on.",
+  "rawResponse": "Observed evidence: The original asks which account and project should be open after an interruption. The rewrite asks which account and project need attention. Verdict does_not_meet. Explanation: A reader could identify an urgent project in another account and answer the rewrite while still being unsure which workspace to resume. The rewrite changes the decision from checking the intended workspace to choosing what to work on."
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "investigation": "github-issue-107",
+  "reviewInstructions": "Assign one packet to one fresh reviewer. Do not show evaluation/answer-key.json, another packet, or another review result until the reviewer has written their result.",
+  "cases": [
+    { "id": "case-lantern", "packet": "reviewer-packets/case-lantern/packet.md" },
+    { "id": "case-orbit", "packet": "reviewer-packets/case-orbit/packet.md" },
+    { "id": "case-river", "packet": "reviewer-packets/case-river/packet.md" },
+    { "id": "case-summit", "packet": "reviewer-packets/case-summit/packet.md" },
+    { "id": "case-meadow", "packet": "reviewer-packets/case-meadow/packet.md" },
+    { "id": "case-quartz", "packet": "reviewer-packets/case-quartz/packet.md" }
+  ]
+}

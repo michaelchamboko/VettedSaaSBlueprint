@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limitations interaction</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font: 16px/1.45 system-ui, sans-serif; color: #17211b; background: #f4f1e8; }
+  main { width: 358px; margin: 0 auto; }
+  h1 { font: 700 30px/1.05 Georgia, serif; margin: 32px 0 12px; }
+  .focus-stop { border: 1px solid #17211b; background: #fff; padding: 10px 14px; }
+  .strip { display: flex; gap: 16px; width: 358px; overflow-x: auto; padding: 12px 0 18px; scroll-behavior: smooth; }
+  article { flex: 0 0 320px; min-height: 210px; padding: 20px; border: 1px solid #607064; background: #fff; }
+  article h2 { margin-top: 0; font: 700 22px/1.15 Georgia, serif; }
+  :focus-visible { outline: 4px solid #cc4b00; outline-offset: 4px; }
+</style>
+<main>
+  <button id="before" class="focus-stop">Read limitations</button>
+  <h1>Where it may not fit</h1>
+  <div id="strip" class="strip" role="region" aria-label="Product limitations; use left and right arrow keys" tabindex="0">
+    <article><h2>Installation needs an IT review</h2><p>Teams handling sensitive client accounts should confirm installation and policy requirements.</p></article>
+    <article><h2>A browser may already be sufficient</h2><p>People using few apps or one account should compare current browser profiles before paying.</p></article>
+  </div>
+  <a id="after" class="focus-stop" href="#next">Continue to common objections</a>
+</main>
+<script>
+  const strip = document.querySelector("#strip");
+  strip.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight") { event.preventDefault(); strip.scrollBy({ left: 336, behavior: "smooth" }); }
+    if (event.key === "ArrowLeft") { event.preventDefault(); strip.scrollBy({ left: -336, behavior: "smooth" }); }
+  });
+</script>
+</html>

@@ -58,7 +58,7 @@ Final focused result:
 tests 3
 pass 3
 fail 0
-duration_ms 137898.5917
+duration_ms 152269.1262
 ```
 
 The TDD Red run expected the restarted controller to select a different work path. It failed because both paths were identical. The Green diagnostic asserts the observed identity and records the missing activity checkpoint explicitly. The machine-readable snapshot is in `observed-results.json`.
