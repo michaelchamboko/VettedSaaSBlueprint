@@ -19,6 +19,8 @@ import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verify
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
 import { declareGateHandoff } from "./gate-handoff";
+import { registerPublicationApproval } from "./publication-approval";
+import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 
 const ROOT = ".automation/article-imports";
 type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string; writing?: boolean };
@@ -402,7 +404,8 @@ export async function executePendingImport(repositoryRoot: string, importId: str
           if (!current.improve) throw new Error("IMPROVE_ASSIGNMENT_MISSING");
           try {
             const improved = await options.improveExecutor({ record: current, assignment: current.improve, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
-            if (improved.stage !== "LIVE" || improved.terminalRef?.sha256 !== current.terminalRef?.sha256 || improved.release?.commitSha !== current.release?.commitSha || improved.continuation?.kind !== "complete") throw new Error("IMPROVE_MUTATED_PUBLICATION");
+            if (improved.stage !== "LIVE" || improved.terminalRef?.sha256 !== current.terminalRef?.sha256 || improved.release?.commitSha !== current.release?.commitSha ||
+                !isDeepStrictEqual(improved.publicationApproval, current.publicationApproval) || improved.continuation?.kind !== "complete") throw new Error("IMPROVE_MUTATED_PUBLICATION");
             await lease.assertOwned();
             await saveImport(repositoryRoot, improved);
             return improved;
@@ -812,7 +815,7 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
   });
 }
 
-export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1, options?: { reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     if (record.stage !== "VERIFYING" || !record.release) throw new Error("A validated release receipt is required before production verification.");
@@ -831,15 +834,20 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha ||
         record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
     if (deployment && (deployment.commitSha !== merge.mergeCommitSha || deployment.deploymentId !== release.deploymentId || deployment.url !== release.canonicalUrl)) throw new Error("TERMINAL_DEPLOYMENT_PROOF_INVALID");
+    if (record.reviewEvidence && !options?.reviewEvidenceRegistry) throw new Error("PUBLICATION_APPROVAL_REGISTRY_REQUIRED");
+    const publicationApproval = options?.reviewEvidenceRegistry ? {
+      catalogue: await registerPublicationApproval(repositoryRoot, options.reviewEvidenceRegistry, record, "catalogue", at),
+      import: await registerPublicationApproval(repositoryRoot, options.reviewEvidenceRegistry, record, "import", at),
+    } : record.publicationApproval;
     const artifactRef = await storeEvidence(repositoryRoot, record.importId, production.artifact);
     const mergeEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { reviewedCommitSha: merge.reviewedHeadSha, mergeCommitSha: merge.mergeCommitSha, pullRequestUrl: record.pendingRelease.pullRequestUrl, evidenceUrl: review.evidenceUrl });
     const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
     const retainedHero = record.heroImage ?? (record.evidenceRefs?.hero ? articleHeroBindingSchema.parse(await readEvidence(repositoryRoot, record.evidenceRefs.hero)) : undefined);
-    const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, ...(retainedHero && { heroImage: retainedHero }), frozenFiles, format: record.format, commercialMode: record.transformation?.commercialMode ?? "none", ...(record.transformation?.resolvedAffiliateUrl && { approvedAffiliateUrl: record.transformation.resolvedAffiliateUrl }), reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
+    const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, ...(retainedHero && { heroImage: retainedHero }), ...(publicationApproval && { publicationApproval }), frozenFiles, format: record.format, commercialMode: record.transformation?.commercialMode ?? "none", ...(record.transformation?.resolvedAffiliateUrl && { approvedAffiliateUrl: record.transformation.resolvedAffiliateUrl }), reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
     const publicationKey = fingerprint(`${record.importId}:${release.commitSha}`);
     const runRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "ImproveRunSnapshotV1", publicationKey, importId: record.importId, sourceFingerprint: record.sourceFingerprint, stageReceipts: record.stageReceipts, repairStageTotals: record.repairStageTotals, strategyAttempts: record.strategyAttempts, pendingRelease: record.pendingRelease, release, terminalRef });
     const improve = { schemaVersion: "ImportImproveV1" as const, publicationKey, boundCommitSha: release.commitSha, runRef, phase: "ASSESSING" as const, attempt: 0, issueKeys: [], resolvedKeys: [], openKeys: [], handoffRefs: [] };
-    const verified = externalArticleImportSchema.parse({ ...presented, terminalRef, improve });
+    const verified = externalArticleImportSchema.parse({ ...presented, ...(publicationApproval && { publicationApproval }), terminalRef, improve });
     const handoff = await declareGateHandoff(repositoryRoot, verified, "VERIFYING", "LIVE");
     const updated = externalArticleImportSchema.parse({ ...verified, gateHandoffs: [...(verified.gateHandoffs ?? []), handoff], continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...verified.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
     const historical = await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal");

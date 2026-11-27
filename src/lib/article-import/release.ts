@@ -16,6 +16,7 @@ import { readProductionVerifierEvidence, type VerifierEvidenceRef } from "./veri
 import { evaluateWorkflowEvidence } from "./workflow-evidence";
 import { articleHeroFormatSchema, articleHeroPaths } from "../article-heroes";
 import { validateArticleHeroBinding } from "./hero-image";
+import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { readEvidence } from "./execution-evidence";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
@@ -429,6 +430,7 @@ async function assessImportReleaseImpl(input: {
   slug?: string;
   operations: ReleaseOperations;
   commitMessage?: string;
+  reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry;
 }): Promise<ReleaseAssessment> {
   const reasons: string[] = [];
   let heroReleasePaths: readonly string[] = [];
@@ -801,7 +803,7 @@ async function assessImportReleaseImpl(input: {
     input.record = { ...input.record, evidenceRefs: { ...input.record.evidenceRefs, production: productionVerifierRef } };
     const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, productionVerifierRef, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
     input.record = withReceipt;
-    const verified = await verifyImportRelease(input.repositoryRoot, withReceipt);
+    const verified = await verifyImportRelease(input.repositoryRoot, withReceipt, { reviewEvidenceRegistry: input.reviewEvidenceRegistry });
     if (verified.stage !== "LIVE") throw new Error("TERMINAL_PUBLICATION_UNVERIFIED");
     return { status: "LIVE", reasons: [], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl };
   } catch (error) {

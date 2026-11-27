@@ -62,7 +62,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     if (gateHandoffVerification?.status === "held") {
       return { ...record, continuation: undefined, nextAction: `Gate handoff held: ${gateHandoffVerification.reason}` };
     }
-    if (record.stage === "VERIFYING") return verifyImportRelease(root, record);
+    if (record.stage === "VERIFYING") return verifyImportRelease(root, record, { reviewEvidenceRegistry: options?.reviewEvidenceRegistry });
     if (!(workStages as readonly string[]).includes(record.stage)) throw new Error(`No productive work for ${record.stage}.`);
     const stage = record.stage as typeof workStages[number];
     const gateHandoffPacket = gateHandoffVerification?.status === "verified"
@@ -316,7 +316,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
           await assertIgnoredImportStatePath(root, work.codeReviewPath);
           record = await recordImportCodeReview(root, record, await readRepositoryJson(root, work.codeReviewPath), operations);
         }
-        await assessImportRelease({ repositoryRoot: root, record, artifactPath: work.artifactPath, slug: work.slug, changedFiles: work.changedFiles, execute: true, operations });
+        await assessImportRelease({ repositoryRoot: root, record, artifactPath: work.artifactPath, slug: work.slug, changedFiles: work.changedFiles, execute: true, operations, reviewEvidenceRegistry: options?.reviewEvidenceRegistry });
         return loadImport(root, record.importId);
       }
     }
