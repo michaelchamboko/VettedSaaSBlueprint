@@ -560,7 +560,7 @@ async function assessImportReleaseImpl(input: {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
   }
   if (input.execute && reasons.length) {
-    const declarationCodes = new Set(["DISALLOWED_RELEASE_PATHS", "DIRECT_REVIEW_SLUG_REQUIRED", "DIRECT_REVIEW_ARTIFACT_MISMATCH", "DIRECT_REVIEW_ARTIFACT_NOT_CHANGED", "ARTIFACT_NOT_IN_RELEASE", "PUBLICATION_AUTHORITY_NOT_IN_RELEASE", "ARTICLE_HERO_NOT_IN_RELEASE", "ARTICLE_HERO_PATH_NOT_BOUND"]);
+    const declarationCodes = new Set(["DISALLOWED_RELEASE_PATHS", "DIRECT_REVIEW_ARTIFACT_NOT_CHANGED", "ARTIFACT_NOT_IN_RELEASE", "PUBLICATION_AUTHORITY_NOT_IN_RELEASE", "ARTICLE_HERO_NOT_IN_RELEASE"]);
     const declarationFailure = reasons.every((reason) => declarationCodes.has(reason.split(":", 1)[0]));
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: reasons.join("; "), failedCheck: { code: declarationFailure ? "RELEASE_DECLARATION" : "RELEASE_PRECONDITION", criterionId: "release-result", criterionRevision: WORKFLOW_REVISION } });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons };

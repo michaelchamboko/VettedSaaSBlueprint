@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import sharp from "sharp";
 import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import {
   advanceImport,
@@ -15,13 +16,15 @@ import {
   submitImportDiagnosis,
   withImportLease,
 } from "../src/lib/article-import/engine";
-import { captureCommandExecution, evidenceReference, storeEvidence, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
+import { captureCommandExecution, evidenceReference, sha256, storeEvidence, storeEvidenceBytes, validateExecutionEvidence } from "../src/lib/article-import/execution-evidence";
 import { presentationCandidateUnavailable } from "../src/lib/article-import/worker-presentation";
-import { presentationDesignRejected, readEvidence, workflowEvidenceRejected, workflowEvidenceSchema } from "../src/lib/article-import/workflow-evidence";
+import { editorialExecutionSchema, presentationDesignRejected, readEvidence, workflowEvidenceRejected, workflowEvidenceSchema } from "../src/lib/article-import/workflow-evidence";
+import { validateArticleVisualRuntime } from "../src/lib/article-import/article-visual-quality";
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import { approveFixture, refreshPresentationFixture, refreshPresentationFixtureWithMeasurementReview, refreshPresentationFixtureWithTrackingReview } from "./fixtures/article-content-approval";
+import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -31,6 +34,30 @@ async function fixture() {
   await writeFile(path.join(root, "article.md"), "# A workflow guide\n\nThis practical guide describes several workflow choices and their limitations for a team preparing a production.");
   const record = await advanceImport(root, await createArticleImport(root, "article.md"), "Source captured.");
   return { root, record };
+}
+
+async function attachSyntheticHero(root: string, record: Awaited<ReturnType<typeof fixture>>["record"]) {
+  const webp = await sharp({ create: { width: 1600, height: 900, channels: 3, background: "#d9c7a8" } }).webp().toBuffer();
+  const assetPath = "public/images/direct-review-example-hero.webp";
+  await mkdir(path.join(root, "public/images"), { recursive: true });
+  await writeFile(path.join(root, assetPath), webp);
+  const assetRef = { path: assetPath, sha256: sha256(webp) };
+  const inspectionRef = await storeEvidenceBytes(root, record.importId, webp, "webp");
+  const providerOutputRef = await storeEvidence(root, record.importId, { schemaVersion: "ArticleHeroProviderOutputV1", provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "tracking-fixture", generatedAt: "2026-11-03T00:00:00.000Z", generatedImage: { providerAssetPath: "generated-image://tracking-fixture", originalSha256: assetRef.sha256 } });
+  const prompt = "Create a restrained editorial workflow illustration with no people, text, logos, or misleading product imagery.";
+  const generationRef = await storeEvidence(root, record.importId, { schemaVersion: "ArticleHeroGenerationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, format: "direct-review", slug: "example", artifactFingerprint: record.contentApproval!.artifactFingerprint, originalRef: assetRef, alt: "A restrained abstract workflow illustration for the reviewed article.", generation: { provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "tracking-fixture", generatedAt: "2026-11-03T00:00:00.000Z", prompt, promptSha256: sha256(prompt), outputSha256: assetRef.sha256, providerOutputRef } });
+  const publicationRef = await storeEvidence(root, record.importId, { schemaVersion: "ArticleHeroPublicationV1", format: "direct-review", slug: "example", artifactFingerprint: record.contentApproval!.artifactFingerprint, rendererFingerprint: "1".repeat(64), asset: { filePath: assetPath, publicPath: "/images/direct-review-example-hero.webp", sha256: assetRef.sha256, width: 1600, height: 900, alt: "A restrained abstract workflow illustration for the reviewed article." } });
+  const binding = { schemaVersion: "ArticleHeroBindingV1" as const, format: "direct-review" as const, slug: "example", artifactFingerprint: record.contentApproval!.artifactFingerprint, assetRef, inspectionRef, publicationRef, generationRef };
+  const hero = await storeEvidence(root, record.importId, binding);
+  return { ...record, heroImage: binding, evidenceRefs: { ...record.evidenceRefs, hero } };
+}
+
+async function v3Presentation(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], input: { trackingOverride?: string; remedyTrackingReview?: NonNullable<Parameters<typeof buildWorkflowFixture>[2]["remedyTrackingReview"]> } = {}) {
+  const approval = record.contentApproval!;
+  const after = JSON.parse(await readFile(path.join(root, approval.artifactPath), "utf8"));
+  const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs!.editorial!));
+  const before = await readEvidence(root, editorial.passes[0].inputRef);
+  return buildWorkflowFixture(root, record, { format: "direct-review", artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath, ...input });
 }
 
 async function echoRemedyEvidence(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], input: {
@@ -461,36 +488,62 @@ test("measurement changes require justification and separate independent verific
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("tracking threshold correction rejects legacy proof without real runtime measurements", async () => {
+test("tracking threshold correction uses pending V3 runtime evidence and the producer-retained failed check", async () => {
   const { root, record } = await fixture();
   try {
     let current = { ...record, stage: "REFINING" as const, format: "direct-review" as const };
     current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
     current = await approveFixture(root, current);
-    current = await advanceImport(root, current, "Synthetic editorial approval complete.");
-    current = await refreshPresentationFixture(root, current);
+    current = await attachSyntheticHero(root, current);
+    const priorFixture = await v3Presentation(root, current);
+    current = { ...current, stage: "VALIDATING" as const, evidenceRefs: { ...current.evidenceRefs, research: priorFixture.research, transformAssessment: priorFixture.transformAssessment, assessment: priorFixture.assessment, editorial: priorFixture.editorial, presentation: priorFixture.presentation } };
     current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
-    for (let attempt = 0; attempt < 3; attempt++) current = await recordImportRepair(root, { ...current, transformation: { ...current.transformation!, title: `Tracking attempt ${attempt}` } }, { strategy: "design-repair", message: `Incorrect tracking checker threshold ${attempt}.`, failedCheck: { code: "TYPOGRAPHY_TRACKING_FLOOR", criterionId: "typography.heading.letterSpacing", criterionRevision: WORKFLOW_REVISION, settings: { criterionFloor: "-0.4em" } } });
+    const directory = `.automation/article-imports/work/${record.importId}`;
+    const workPath = `${directory}/tracking.work.json`, resultPath = `${directory}/tracking.result.json`;
+    await mkdir(path.join(root, directory), { recursive: true });
+    const idempotencyKey = importPacketId(current, "VALIDATING", "targeted-repair");
+    current = await withImportLease(root, record.importId, async () => {
+      const pending = { ...current, continuation: { kind: "work" as const, stage: "VALIDATING" as const, workPath, resultPath, idempotencyKey, sourceFingerprint: current.sourceFingerprint } };
+      await saveImport(root, pending); return pending;
+    });
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: current.sourceFingerprint, summary: "Historical tracking checker rejected.", work: { stage: "VALIDATING", presentationEvidencePath: priorFixture.presentation.path } }));
+    for (let attempt = 0; attempt < 3; attempt++) {
+      current = await withImportLease(root, record.importId, async () => {
+        const changed = { ...current, transformation: { ...current.transformation!, title: `Tracking checker attempt ${attempt}` } };
+        await saveImport(root, changed); return changed;
+      });
+      current = await executePendingImport(root, record.importId, async ({ record: pending }) => {
+        const presentation = workflowEvidenceSchema.parse(await readEvidence(root, pending.evidenceRefs!.presentation!));
+        const execution = await validateExecutionEvidence(root, presentation.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0]);
+        if (execution.kind !== "browser") throw new Error("Expected browser runtime evidence.");
+        validateArticleVisualRuntime(await readEvidence(root, execution.outputRefs[0]), "historical-pre-craft-floor");
+        return pending;
+      });
+    }
     assert.ok(current.continuation?.kind === "repair");
+    assert.equal(current.continuation.failedCheck?.code, "TYPOGRAPHY_TRACKING_FLOOR");
+    assert.equal(current.continuation.failedCheck?.settings?.criterionFloor, "-0.4em");
+    assert.equal(current.continuation.failedWork?.resultPath, resultPath);
     const previousPresentationRef = current.evidenceRefs!.presentation!;
     const previous = workflowEvidenceSchema.parse(await readEvidence(root, previousPresentationRef));
     const previousObservationRef = previous.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
     const justification = "The checker threshold is corrected to the pinned craft-floor floor while the computed heading tracking remains a separate observed value.";
-    const refreshed = await refreshPresentationFixtureWithTrackingReview(root, { ...current, transformation: { ...current.transformation!, title: "Tracking threshold replacement" } }, { trackingOverride: "-0.03em", remedyTrackingReview: { previousObservationRef, sourceComputedValue: "-0.03125em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", justification, limitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."] } });
-    current = refreshed.record;
-    current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
-    const replacement = workflowEvidenceSchema.parse(await readEvidence(root, current.evidenceRefs!.presentation!));
+    const replacementRecord = { ...current, transformation: { ...current.transformation!, title: "Tracking threshold replacement" } };
+    const replacementFixture = await v3Presentation(root, replacementRecord, { trackingOverride: "-0.03em", remedyTrackingReview: { previousObservationRef, sourceComputedValue: "-0.03125em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", justification, limitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."] } });
+    await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: current.sourceFingerprint, summary: "Corrected tracking checker and replacement presentation.", work: { stage: "VALIDATING", presentationEvidencePath: replacementFixture.presentation.path } }));
+    current = await withImportLease(root, record.importId, async () => { await saveImport(root, replacementRecord); return replacementRecord; });
+    const replacement = workflowEvidenceSchema.parse(await readEvidence(root, replacementFixture.presentation));
     const currentObservationRef = replacement.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
     const currentObservation = await validateExecutionEvidence(root, currentObservationRef);
     assert.equal(currentObservation.kind, "browser");
     const authorityInstructionRef = await evidenceReference(root, ".agents/skills/impeccable/reference/craft-floor.md");
     const failedSubmissionDigest = current.continuation!.kind === "repair" ? current.continuation.submittedFingerprint! : "";
     const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
-    const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "presentation-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef: current.evidenceRefs!.presentation!, checkedAt: new Date().toISOString() });
+    const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "presentation-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef: replacementFixture.presentation, checkedAt: new Date().toISOString() });
     const change = { aspect: "threshold" as const, from: "-0.4em", to: "-0.04em", justification };
-    const independent = await storeEvidence(root, record.importId, { schemaVersion: "RemedyMeasurementVerificationV1", verificationKind: "typography-tracking-threshold", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "typography.heading.letterSpacing", stableAuthorityId: "D04-S-a2bbcd69b901", observationRule: "desktop", reviewRule: "critique", revision: WORKFLOW_REVISION }, authorityInstructionRef, previousPresentationRef, currentPresentationRef: current.evidenceRefs!.presentation!, previousObservationRef, currentObservationRef, reviewExecutionRef: refreshed.measurementReviewRef, sourceComputedValue: "-0.03125em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", criterionFloor: "-0.04em", reviewLimitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."], measurementChange: change, checkedAt: new Date().toISOString() });
+    const independent = await storeEvidence(root, record.importId, { schemaVersion: "RemedyMeasurementVerificationV1", verificationKind: "typography-tracking-threshold", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "typography.heading.letterSpacing", stableAuthorityId: "D04-S-a2bbcd69b901", observationRule: "desktop", reviewRule: "critique", revision: WORKFLOW_REVISION }, authorityInstructionRef, previousPresentationRef, currentPresentationRef: replacementFixture.presentation, previousObservationRef, currentObservationRef, reviewExecutionRef: replacementFixture.remedyTrackingReview, sourceComputedValue: "-0.03125em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", criterionFloor: "-0.04em", reviewLimitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."], measurementChange: change, checkedAt: new Date().toISOString() });
     const supporting = await storeEvidence(root, record.importId, { observation: "The old checker used -0.4em while the computed style was independently retained." });
-    await assert.rejects(submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "TRACKING_THRESHOLD_INCORRECT", cause: "The checker threshold did not match the pinned craft-floor authority.", predictedObservation: "The approved floor and computed style are evaluated separately.", disproofCheck: "Reject if the authority hash, computed observations or independent review do not bind.", attemptedRecoveryRefs: [previousPresentationRef, supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "measurement-change", ...change, independentVerificationRef: independent }, createdAt: new Date().toISOString() }), /DIAGNOSIS_MEASUREMENT_COMPUTED_VALUE_MISMATCH/);
+    await submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "TRACKING_THRESHOLD_INCORRECT", cause: "The producer-retained checker revision did not match the pinned craft-floor authority.", predictedObservation: "The approved floor and computed style are evaluated separately on the pending V3 replacement.", disproofCheck: "Reject if the authority hash, computed observations, pending presentation or independent review do not bind.", attemptedRecoveryRefs: [previousPresentationRef, supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "measurement-change", ...change, independentVerificationRef: independent }, createdAt: new Date().toISOString() });
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

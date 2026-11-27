@@ -293,7 +293,7 @@ export async function invokeWorker(
     const owner = await launchOwner(invocation.checkpoint);
     if (!owner) throw error;
     const message = `${error instanceof Error ? error.message : String(error)} [worker ${owner}]`;
-    if (error instanceof ImportFailure) throw new ImportFailure(error.failureCategory, message);
+    if (error instanceof ImportFailure) throw new ImportFailure(error.failureCategory, message, error.failedCheck);
     throw new Error(message);
   }
   await assertLease();

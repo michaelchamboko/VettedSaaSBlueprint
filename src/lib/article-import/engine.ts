@@ -20,7 +20,7 @@ import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
 import { readImportArtifactTarget } from "./format-validation";
 import { validateArticleVisualRuntime } from "./article-visual-quality";
-import { classifyImportFailure } from "./failure-routing";
+import { classifyImportFailure, ImportFailure } from "./failure-routing";
 export { ImportFailure } from "./failure-routing";
 import { declareGateHandoff } from "./gate-handoff";
 import { registerPublicationApproval } from "./publication-approval";
@@ -442,6 +442,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);
         const failureCategory = classifyImportFailure(error);
+        const failedCheck = error instanceof ImportFailure ? error.failedCheck : undefined;
         const persisted = await loadImport(repositoryRoot, importId);
         if (persisted.stage === "LIVE" || persisted.stage === "QUARANTINED") throw error;
         const code = (error as NodeJS.ErrnoException).code;
@@ -453,12 +454,12 @@ export async function executePendingImport(repositoryRoot: string, importId: str
           return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", failureCategory, message });
         }
         if (failureCategory === "content-rejection" || failureCategory === "invalid-evidence") {
-          return recordImportRepair(repositoryRoot, persisted, { strategy: group, failureCategory, message });
+          return recordImportRepair(repositoryRoot, persisted, { strategy: group, failureCategory, message, failedCheck });
         }
         if (message === "PUBLICATION_CATALOGUE_BUSY" || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
           return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", message });
         }
-        return recordImportRepair(repositoryRoot, persisted, { strategy: group, message });
+        return recordImportRepair(repositoryRoot, persisted, { strategy: group, message, failedCheck });
       }
       if (result.importId !== importId || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("Stage executor changed import identity.");
       await lease.assertOwned();

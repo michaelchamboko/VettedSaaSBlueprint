@@ -1,7 +1,7 @@
 import type { ImportFailureCategory } from "./contracts";
 
 export class ImportFailure extends Error {
-  constructor(readonly failureCategory: ImportFailureCategory, message: string) {
+  constructor(readonly failureCategory: ImportFailureCategory, message: string, readonly failedCheck?: { code: string; criterionId?: string; criterionRevision?: string; settings?: Record<string, string> }) {
     super(message);
     this.name = "ImportFailure";
   }
