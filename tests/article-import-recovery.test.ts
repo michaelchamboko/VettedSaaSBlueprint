@@ -9,14 +9,16 @@ import {
   claimImportLease,
   createArticleImport,
   executePendingImport,
-  ImportFailure,
   loadImport,
   recordImportRepair,
   saveImport,
   submitImportDiagnosis,
   withImportLease,
 } from "../src/lib/article-import/engine";
-import { storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { captureCommandExecution, storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { presentationCandidateUnavailable } from "../src/lib/article-import/worker-presentation";
+import { presentationDesignRejected, workflowEvidenceRejected } from "../src/lib/article-import/workflow-evidence";
+import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -26,6 +28,56 @@ async function fixture() {
   await writeFile(path.join(root, "article.md"), "# A workflow guide\n\nThis practical guide describes several workflow choices and their limitations for a team preparing a production.");
   const record = await advanceImport(root, await createArticleImport(root, "article.md"), "Source captured.");
   return { root, record };
+}
+
+async function remedyEvidence(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], input: {
+  failedSubmissionDigest: string;
+  replacementSubmissionDigest: string;
+  result: "verified" | "contradicted";
+  observation: string;
+  criterion?: { id: string; revision: string };
+  measurements?: Array<{ name: string; expected: string; observed: string; satisfied: boolean }>;
+  measurementChange?: { aspect: "measurement" | "viewport" | "criterion" | "threshold"; from: string; to: string; justification: string };
+}) {
+  const checkedAt = new Date().toISOString();
+  const result = {
+    schemaVersion: "RemedyCheckResultV1",
+    importId: record.importId,
+    sourceFingerprint: record.sourceFingerprint,
+    stage: "RESEARCHING",
+    failedSubmissionDigest: input.failedSubmissionDigest,
+    replacementSubmissionDigest: input.replacementSubmissionDigest,
+    criterion: input.criterion ?? { id: "research.evidence-binding", revision: "fixture-v1" },
+    measurements: input.measurements ?? [{ name: "validator", expected: "pass", observed: input.result === "verified" ? "pass" : "fail", satisfied: input.result === "verified" }],
+    result: input.result,
+    observation: input.observation,
+    ...(input.measurementChange && { measurementChange: input.measurementChange }),
+    checkedAt,
+  } as const;
+  const measurementInput = await storeEvidence(root, record.importId, {
+    schemaVersion: "RemedyMeasurementInputV1",
+    importId: result.importId,
+    sourceFingerprint: result.sourceFingerprint,
+    stage: result.stage,
+    failedSubmissionDigest: result.failedSubmissionDigest,
+    replacementSubmissionDigest: result.replacementSubmissionDigest,
+    criterion: result.criterion,
+    measurements: result.measurements,
+    ...(result.measurementChange && { measurementChange: result.measurementChange }),
+  });
+  const execution = await captureCommandExecution(root, {
+    executable: process.execPath,
+    argv: ["-e", `process.stdout.write(${JSON.stringify(JSON.stringify(result))})`],
+    toolVersion: process.version,
+    inputRefs: [measurementInput],
+  });
+  const executionRef = await storeEvidence(root, record.importId, execution);
+  return storeEvidence(root, record.importId, {
+    ...result,
+    schemaVersion: "RemedyVerificationEvidenceV1",
+    method: "deterministic",
+    executionRef,
+  });
 }
 
 test("three failed repairs require diagnosis before any further execution", async () => {
@@ -70,10 +122,10 @@ test("external failures never exhaust content strategies or delete the source", 
 
 test("failure categories keep their recovery action when wording changes", async () => {
   const scenarios = [
-    { category: "content-rejection", messages: ["review rejected content", "unsupported buyer claim"], kind: "repair", scope: "article" },
-    { category: "invalid-evidence", messages: ["evidence digest mismatch", "citation cannot be validated"], kind: "repair", scope: "article" },
-    { category: "unavailable-capability", messages: ["reviewer offline", "editorial service cannot start"], kind: "blocked", scope: "shared" },
-    { category: "uncertain-external-outcome", messages: ["response lost after remote success", "provider result is indeterminate"], kind: "blocked", scope: "shared" },
+    { category: "content-rejection", fail: (detail: string, _root: string) => presentationDesignRejected(detail), messages: ["review rejected content", "unsupported buyer claim"], kind: "repair", scope: "article" },
+    { category: "invalid-evidence", fail: (detail: string, _root: string) => workflowEvidenceRejected(detail), messages: ["evidence digest mismatch", "citation cannot be validated"], kind: "repair", scope: "article" },
+    { category: "unavailable-capability", fail: (detail: string, _root: string) => presentationCandidateUnavailable(detail), messages: ["reviewer offline", "editorial service cannot start"], kind: "blocked", scope: "shared" },
+    { category: "uncertain-external-outcome", fail: (detail: string, root: string) => createLocalReleaseOperations(root, { format: "blog", runner: async () => { throw new Error(detail); } }).deploy("a".repeat(40)), messages: ["response lost after remote success", "provider result is indeterminate"], kind: "blocked", scope: "shared" },
   ] as const;
 
   for (const scenario of scenarios) {
@@ -84,7 +136,7 @@ test("failure categories keep their recovery action when wording changes", async
       try {
         const failed = await executePendingImport(root, record.importId, async () => {
           calls++;
-          throw new ImportFailure(scenario.category, message);
+          return scenario.fail(message, root);
         });
         assert.equal(failed.continuation?.kind, scenario.kind);
         assert.equal(failed.blockerScope, scenario.scope);
@@ -108,14 +160,14 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
   try {
     let current = record;
     const failures = [
-      new ImportFailure("invalid-evidence", "finding-a worker-one session-one"),
-      new ImportFailure("content-rejection", "finding-b worker-two session-two"),
-      new ImportFailure("invalid-evidence", "finding-c worker-three session-three"),
+      () => workflowEvidenceRejected("finding-a worker-one session-one"),
+      () => presentationDesignRejected("finding-b worker-two session-two"),
+      () => workflowEvidenceRejected("finding-c worker-three session-three"),
     ];
     for (let index = 0; index < failures.length; index++) {
       current = await executePendingImport(root, record.importId, async () => {
         calls++;
-        throw failures[index];
+        return failures[index]();
       });
       current = await loadImport(root, record.importId);
       assert.equal(current.repairStageTotals?.RESEARCHING, index + 1);
@@ -135,8 +187,6 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
       return leased;
     });
     const supporting = await storeEvidence(root, record.importId, { observation: "All three failures reject the same stage output." });
-    const contradictedRemedy = await storeEvidence(root, record.importId, { observation: "The predicted check still fails." });
-    const verifiedRemedy = await storeEvidence(root, record.importId, { observation: "The repaired evidence passes the original deterministic validator." });
     const base = {
       schemaVersion: "DiagnosisV1" as const,
       importId: record.importId,
@@ -153,23 +203,52 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
       createdAt: new Date().toISOString(),
     };
 
+    const contradictedRemedy = await remedyEvidence(root, record, {
+      failedSubmissionDigest: base.failedSubmissionDigest,
+      replacementSubmissionDigest: base.replacementSubmissionDigest,
+      result: "contradicted",
+      observation: "The original validator still rejects the replacement.",
+    });
+    const mismatchedRemedy = await remedyEvidence(root, record, {
+      failedSubmissionDigest: base.failedSubmissionDigest,
+      replacementSubmissionDigest: "f".repeat(64),
+      result: "verified",
+      observation: "This proof belongs to a different replacement.",
+    });
+    const verifiedRemedy = await remedyEvidence(root, record, {
+      failedSubmissionDigest: base.failedSubmissionDigest,
+      replacementSubmissionDigest: base.replacementSubmissionDigest,
+      result: "verified",
+      observation: "The original validator accepts the replacement.",
+    });
+
     await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...base,
       remedyEvidenceRefs: [supporting],
-      remedyCheck: { method: "deterministic", result: "verified", observation: "This is not a separate check." },
     }));
-    await submitImportDiagnosis(root, record.importId, {
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...base,
       remedyEvidenceRefs: [contradictedRemedy],
-      remedyCheck: { method: "deterministic", result: "contradicted", observation: "The original validator still rejects the replacement." },
-    });
+    }), /DIAGNOSIS_REMEDY_CONTRADICTED/);
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
+      ...base,
+      remedyEvidenceRefs: [mismatchedRemedy],
+    }), /DIAGNOSIS_REMEDY_BINDING_MISMATCH/);
     await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
     assert.equal(calls, 3, "a contradicted diagnosis must not unlock another stage execution");
+
+    await withImportLease(root, record.importId, async (leased) => {
+      const legacy = { ...base, remedyEvidenceRefs: [supporting], remedyCheck: { method: "deterministic" as const, result: "verified" as const, observation: "Legacy submitter assertion without controller verification." } };
+      const updated = { ...leased, diagnoses: [...(leased.diagnoses ?? []), legacy] };
+      await saveImport(root, updated);
+      return updated;
+    });
+    await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
+    assert.equal(calls, 3, "historical submitter assertions must not gain retroactive approval");
 
     await submitImportDiagnosis(root, record.importId, {
       ...base,
       remedyEvidenceRefs: [verifiedRemedy],
-      remedyCheck: { method: "deterministic", result: "verified", observation: "The original validator accepts the replacement." },
     });
     await executePendingImport(root, record.importId, async ({ record: repaired }) => { calls++; return repaired; });
     assert.equal(calls, 4);
@@ -184,7 +263,7 @@ test("measurement changes require justification and separate independent verific
     let current = record;
     for (let index = 0; index < 3; index++) {
       current = await executePendingImport(root, record.importId, async () => {
-        throw new ImportFailure("content-rejection", `measurement failure ${index}`);
+        return presentationDesignRejected(`measurement failure ${index}`);
       });
       if (index < 2) {
         current = await withImportLease(root, record.importId, async (leased) => {
@@ -201,22 +280,23 @@ test("measurement changes require justification and separate independent verific
     });
     assert.ok(current.continuation?.kind === "repair");
     const supporting = await storeEvidence(root, record.importId, { observation: "The old threshold rejects the fixture." });
-    const remedy = await storeEvidence(root, record.importId, { observation: "The candidate passes the revised threshold." });
-    const independent = await storeEvidence(root, record.importId, { observation: "An independent reviewer confirmed the threshold still represents the criterion." });
+    const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
+    const measurementChange = { aspect: "threshold" as const, from: "0.90", to: "0.85", justification: "The fixture establishes the applicable calibrated boundary." };
+    const remedy = await remedyEvidence(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, result: "verified", observation: "The candidate passes the revised threshold." });
+    const independent = await remedyEvidence(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, result: "verified", observation: "A distinct check confirms the revised threshold still represents the criterion.", criterion: { id: "measurement.threshold", revision: "fixture-v1" }, measurements: [{ name: "threshold", expected: "0.85", observed: "0.85", satisfied: true }], measurementChange });
     const diagnosis = {
       schemaVersion: "DiagnosisV1",
       importId: record.importId,
       sourceFingerprint: record.sourceFingerprint,
       stage: current.stage,
       failedSubmissionDigest: current.continuation.submittedFingerprint,
-      replacementSubmissionDigest: await canonicalSubmissionFingerprint(current, root),
+      replacementSubmissionDigest,
       failureCode: "SYNTHETIC_MEASUREMENT_REPAIR",
       cause: "The measurement threshold is not calibrated for this viewport.",
       predictedObservation: "The revised threshold preserves the criterion and accepts the control.",
       disproofCheck: "Run the defective control; acceptance would disprove the calibration.",
       attemptedRecoveryRefs: [supporting],
       remedyEvidenceRefs: [remedy],
-      remedyCheck: { method: "independent-judgment", independent: true, result: "verified", observation: "The criterion remains satisfied." },
       createdAt: new Date().toISOString(),
     };
 
@@ -226,7 +306,7 @@ test("measurement changes require justification and separate independent verific
     }));
     await submitImportDiagnosis(root, record.importId, {
       ...diagnosis,
-      repairChange: { kind: "measurement-change", aspect: "threshold", from: "0.90", to: "0.85", justification: "The fixture establishes the applicable calibrated boundary.", independentVerificationRef: independent },
+      repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: independent },
     });
     const saved = await loadImport(root, record.importId);
     assert.equal(saved.diagnoses?.at(-1)?.repairChange?.kind, "measurement-change");

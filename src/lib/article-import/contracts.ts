@@ -9,10 +9,35 @@ const remedyCheckSchema = z.discriminatedUnion("method", [
   z.object({ method: z.literal("deterministic"), result: z.enum(["verified", "contradicted"]), observation: z.string().min(1) }).strict(),
   z.object({ method: z.literal("independent-judgment"), independent: z.literal(true), result: z.enum(["verified", "contradicted"]), observation: z.string().min(1) }).strict(),
 ]);
+const measurementChangeSchema = z.object({ aspect: z.enum(["measurement", "viewport", "criterion", "threshold"]), from: z.string().min(1), to: z.string().min(1), justification: z.string().min(1) }).strict();
 const repairChangeSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("product-repair"), changedInputs: z.array(z.string().min(1)).min(1) }).strict(),
-  z.object({ kind: z.literal("measurement-change"), aspect: z.enum(["measurement", "viewport", "criterion", "threshold"]), from: z.string().min(1), to: z.string().min(1), justification: z.string().min(1), independentVerificationRef: stateEvidenceRef }).strict(),
+  z.object({ kind: z.literal("measurement-change"), ...measurementChangeSchema.shape, independentVerificationRef: stateEvidenceRef }).strict(),
 ]);
+const remedyCheckResultFields = {
+  importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
+  sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  stage: z.string().min(1),
+  failedSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/),
+  replacementSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/),
+  criterion: z.object({ id: z.string().min(1), revision: z.string().min(1) }).strict(),
+  measurements: z.array(z.object({ name: z.string().min(1), expected: z.string().min(1), observed: z.string().min(1), satisfied: z.boolean() }).strict()).min(1),
+  result: z.enum(["verified", "contradicted"]),
+  observation: z.string().min(1),
+  measurementChange: measurementChangeSchema.optional(),
+  checkedAt: z.string().datetime({ offset: true }),
+};
+export const remedyCheckResultSchema = z.object({ schemaVersion: z.literal("RemedyCheckResultV1"), ...remedyCheckResultFields }).strict();
+export const remedyMeasurementInputSchema = z.object({
+  schemaVersion: z.literal("RemedyMeasurementInputV1"),
+  ...remedyCheckResultFields,
+}).omit({ result: true, observation: true, checkedAt: true }).strict();
+export const remedyVerificationEvidenceSchema = z.object({
+  schemaVersion: z.literal("RemedyVerificationEvidenceV1"),
+  method: z.enum(["deterministic", "independent-judgment"]),
+  executionRef: stateEvidenceRef,
+  ...remedyCheckResultFields,
+}).strict();
 const diagnosisFields = {
   schemaVersion: z.literal("DiagnosisV1"), importId: z.string(), sourceFingerprint: z.string(), stage: z.string(),
   failedSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/), replacementSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/),
@@ -25,12 +50,12 @@ export const diagnosisSchema = z.object({
   disproofCheck: z.string().min(1).optional(),
   remedyCheck: remedyCheckSchema.optional(),
   repairChange: repairChangeSchema.optional(),
+  remedyVerifiedAt: z.string().datetime({ offset: true }).optional(),
 }).strict();
 export const actionableDiagnosisSchema = z.object({
   ...diagnosisFields,
   predictedObservation: z.string().min(1),
   disproofCheck: z.string().min(1),
-  remedyCheck: remedyCheckSchema,
   repairChange: repairChangeSchema,
 }).strict().superRefine((diagnosis, context) => {
   const attempted = new Set(diagnosis.attemptedRecoveryRefs.map((ref) => `${ref.path}:${ref.sha256}`));

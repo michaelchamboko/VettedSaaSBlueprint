@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, formatQualityApprovalMatches, type ApprovalFiles } from "./content-approval";
-import { actionableDiagnosisSchema, externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFailureCategory, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
+import { actionableDiagnosisSchema, externalArticleImportSchema, remedyCheckResultSchema, remedyMeasurementInputSchema, remedyVerificationEvidenceSchema, type ExternalArticleImportV1, type FailureClass, type ImportFailureCategory, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
@@ -18,6 +18,8 @@ import { recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
+import { classifyImportFailure } from "./failure-routing";
+export { ImportFailure } from "./failure-routing";
 import { declareGateHandoff } from "./gate-handoff";
 import { registerPublicationApproval } from "./publication-approval";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
@@ -41,23 +43,6 @@ const STRATEGIES: Record<string, string[]> = {
   media: ["retry-generation", "simplify-asset", "brand-graphic"],
   release: ["retry-transient", "rollback", "fix-forward"],
 };
-
-export class ImportFailure extends Error {
-  constructor(readonly failureCategory: ImportFailureCategory, message: string) {
-    super(message);
-    this.name = "ImportFailure";
-  }
-}
-
-function classifyImportFailure(error: unknown): ImportFailureCategory | undefined {
-  if (error instanceof ImportFailure) return error.failureCategory;
-  const message = error instanceof Error ? error.message : String(error);
-  if (/UNCERTAIN_EXTERNAL_OUTCOME|response lost after remote success|external outcome (?:is )?indeterminate/i.test(message)) return "uncertain-external-outcome";
-  if (/CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message)) return "unavailable-capability";
-  if (/WORKFLOW_EVIDENCE_INVALID|EVIDENCE_(?:INVALID|BINDING|INTEGRITY)|evidence .*cannot be validated/i.test(message)) return "invalid-evidence";
-  if (/PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS|ASSESSMENT_RULE_FAILED|review rejected|content rejection/i.test(message)) return "content-rejection";
-  return undefined;
-}
 
 export const ARTICLE_WAIT_POLICY = { firstCheckMs: 15_000, secondCheckMs: 30_000, subsequentCheckMs: 60_000, timeoutMs: 2 * 60 * 60_000 } as const;
 
@@ -428,7 +413,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
         const digest = await canonicalSubmissionFingerprint(current, repositoryRoot);
         if (digest === current.continuation.submittedFingerprint) throw new Error("UNCHANGED_SUBMISSION");
         if (current.continuation.diagnosisRequired) {
-          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.remedyCheck?.result === "verified" && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
+          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.remedyVerifiedAt && d.remedyCheck?.result === "verified" && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
           if (!diagnosis) return current;
           diagnosis.consumedAt = now();
           await saveImport(repositoryRoot, current);
@@ -984,13 +969,47 @@ export async function upgradeImportEvidence(root: string, importId: string): Pro
   }); } finally { await lease.release(); }
 }
 
+async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis: ReturnType<typeof actionableDiagnosisSchema.parse>) {
+  const evidence = remedyVerificationEvidenceSchema.parse(await readEvidence(root, ref));
+  if (evidence.importId !== diagnosis.importId || evidence.sourceFingerprint !== diagnosis.sourceFingerprint || evidence.stage !== diagnosis.stage || evidence.failedSubmissionDigest !== diagnosis.failedSubmissionDigest || evidence.replacementSubmissionDigest !== diagnosis.replacementSubmissionDigest) throw new Error("DIAGNOSIS_REMEDY_BINDING_MISMATCH");
+  const execution = await validateExecutionEvidence(root, evidence.executionRef);
+  const measurementInputs = (await Promise.all(execution.inputRefs.map(async (inputRef) => remedyMeasurementInputSchema.safeParse(await readEvidence(root, inputRef))))).filter((parsed) => parsed.success).map((parsed) => parsed.data);
+  const measurementInput = measurementInputs.find((input) => input.importId === diagnosis.importId && input.sourceFingerprint === diagnosis.sourceFingerprint && input.stage === diagnosis.stage && input.failedSubmissionDigest === diagnosis.failedSubmissionDigest && input.replacementSubmissionDigest === diagnosis.replacementSubmissionDigest && isDeepStrictEqual(input.criterion, evidence.criterion) && isDeepStrictEqual(input.measurements, evidence.measurements) && isDeepStrictEqual(input.measurementChange, evidence.measurementChange));
+  if (!measurementInput) throw new Error("DIAGNOSIS_REMEDY_MEASUREMENT_INPUT_MISSING");
+  if (evidence.method === "deterministic" && execution.kind !== "command") throw new Error("DIAGNOSIS_REMEDY_EXECUTION_MISMATCH");
+  if (evidence.method === "independent-judgment" && execution.kind !== "opencode" && execution.kind !== "structured") throw new Error("DIAGNOSIS_REMEDY_EXECUTION_MISMATCH");
+  const rawResult = execution.kind === "command"
+    ? JSON.parse(execution.stdout)
+    : execution.kind === "opencode" || execution.kind === "structured"
+      ? JSON.parse(execution.output.remedyCheck ?? "")
+      : undefined;
+  const result = remedyCheckResultSchema.parse(rawResult);
+  const { method: _method, executionRef: _executionRef, ...evidenceResult } = evidence;
+  void _method; void _executionRef;
+  const expected = remedyCheckResultSchema.parse({ ...evidenceResult, schemaVersion: "RemedyCheckResultV1" });
+  if (!isDeepStrictEqual(result, expected)) throw new Error("DIAGNOSIS_REMEDY_EXECUTION_BINDING_MISMATCH");
+  const derivedResult = evidence.measurements.every((measurement) => measurement.satisfied) ? "verified" : "contradicted";
+  if (evidence.result !== derivedResult) throw new Error("DIAGNOSIS_REMEDY_MEASUREMENT_CONTRADICTION");
+  if (evidence.result !== "verified") throw new Error("DIAGNOSIS_REMEDY_CONTRADICTED");
+  return evidence;
+}
+
 export async function submitImportDiagnosis(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
   return withImportLease(root, importId, async (record) => {
     const diagnosis = actionableDiagnosisSchema.parse(input);
     if (diagnosis.consumedAt || diagnosis.importId !== importId || diagnosis.sourceFingerprint !== record.sourceFingerprint || diagnosis.stage !== record.stage || record.continuation?.kind !== "repair" || diagnosis.failedSubmissionDigest !== record.continuation.submittedFingerprint || diagnosis.replacementSubmissionDigest !== await canonicalSubmissionFingerprint(record, root)) throw new Error("DIAGNOSIS_BINDING_MISMATCH");
-    for (const ref of [...diagnosis.attemptedRecoveryRefs, ...diagnosis.remedyEvidenceRefs]) await readEvidence(root, ref);
-    if (diagnosis.repairChange.kind === "measurement-change") await readEvidence(root, diagnosis.repairChange.independentVerificationRef);
-    const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), diagnosis] };
+    for (const ref of diagnosis.attemptedRecoveryRefs) await readEvidence(root, ref);
+    const remedies = await Promise.all(diagnosis.remedyEvidenceRefs.map((ref) => verifiedRemedyEvidence(root, ref, diagnosis)));
+    const derivedCheck = remedies[0].method === "independent-judgment"
+      ? { method: "independent-judgment" as const, independent: true as const, result: remedies[0].result, observation: remedies[0].observation }
+      : { method: "deterministic" as const, result: remedies[0].result, observation: remedies[0].observation };
+    if (diagnosis.repairChange.kind === "measurement-change") {
+      const measurement = await verifiedRemedyEvidence(root, diagnosis.repairChange.independentVerificationRef, diagnosis);
+      const expectedChange = { aspect: diagnosis.repairChange.aspect, from: diagnosis.repairChange.from, to: diagnosis.repairChange.to, justification: diagnosis.repairChange.justification };
+      if (!isDeepStrictEqual(measurement.measurementChange, expectedChange)) throw new Error("DIAGNOSIS_MEASUREMENT_VERIFICATION_MISMATCH");
+    }
+    const verified = { ...diagnosis, remedyCheck: derivedCheck, remedyVerifiedAt: now() };
+    const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), verified] };
     await saveImport(root, updated); return updated;
   });
 }

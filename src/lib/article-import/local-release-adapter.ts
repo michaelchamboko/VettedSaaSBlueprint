@@ -8,6 +8,11 @@ import { validateReleasePaths } from "./release";
 import { readImportArtifactTarget } from "./format-validation";
 import { assertVerifierResult, requireVerificationMode, storeProductionVerifierEvidence } from "./verification-evidence";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
+import { ImportFailure } from "./failure-routing";
+
+export function deploymentOutcomeUncertain(detail: string): never {
+  throw new ImportFailure("uncertain-external-outcome", `DEPLOYMENT_OUTCOME_UNCERTAIN: ${detail}`);
+}
 
 const execFile = promisify(execFileCallback);
 const RELEASE_OPERATION_META_KEY = "vettedArticleReleaseOperation";
@@ -270,7 +275,12 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       }
     },
     async deploy(commitSha, operationKey): Promise<ReleaseDeployment> {
-      const result = await runner("vercel", withToken(["deploy", "--prod", "--yes", "--meta", `${RELEASE_OPERATION_META_KEY}=${operationKey}`], token));
+      let result;
+      try {
+        result = await runner("vercel", withToken(["deploy", "--prod", "--yes", "--meta", `${RELEASE_OPERATION_META_KEY}=${operationKey}`], token));
+      } catch (error) {
+        deploymentOutcomeUncertain(error instanceof Error ? error.message : String(error));
+      }
       const url = result.stdout.match(/https:\/\/[^\s]+/)?.[0];
       if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
       const inspected = await verifiedDeployment(url, operationKey);
