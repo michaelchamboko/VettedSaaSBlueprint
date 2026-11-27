@@ -16,9 +16,9 @@ import { createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { readEvidence, storeEvidence, evidenceReference, evaluateWorkflowEvidence, freezeEvidenceGraph, reconstructTerminalHeroBinding } from "../src/lib/article-import/workflow-evidence";
-import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEvidence, extractOpenCodeExecution, proseProjectionDigest } from "../src/lib/article-import/execution-evidence";
-import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { readEvidence, storeEvidence, evidenceReference, evaluateWorkflowEvidence, freezeEvidenceGraph, reconstructTerminalHeroBinding, validateProductionWorkflowEvidence } from "../src/lib/article-import/workflow-evidence";
+import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEvidence, extractOpenCodeExecution, proseProjectionDigest, readEvidenceBytes, storeEvidenceBytes } from "../src/lib/article-import/execution-evidence";
+import { instructionsForStage, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { createHash } from "node:crypto";
 import { verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
 
@@ -36,7 +36,7 @@ async function releaseFixture(root: string, recovered = false, beforeReceipt?: (
   const commitSha = "b".repeat(40), reviewedCommitSha = "a".repeat(40);
   const deployment = { commitSha, deploymentId: "dpl_fixture", canonicalUrl: new URL(target.renderedRoutes[0], "https://vettedsaasblueprint.online").href };
   const checks = await productionFixture(root, record.importId, target, deployment, record.sourceFingerprint);
-  record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha } } };
+  record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha }, deployment: { commitSha, operationKey: `deployment:${commitSha}`, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl } } };
   await beforeReceipt?.(record);
   return recordImportRelease(root, record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, presentationFingerprint: fingerprintEditorialArtifact(record.presentation), verifiedAt: new Date().toISOString(), productionVerifierRef: checks.productionVerifierRef, checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
 }
@@ -44,9 +44,12 @@ async function releaseFixture(root: string, recovered = false, beforeReceipt?: (
 test("verified synthetic completion freezes proof before deleting disposable source", async () => {
   const root = await testRoot("article-import-live-");
   try {
-    const record = await verifyImportRelease(root, await releaseFixture(root));
+    const verifying = await releaseFixture(root);
+    const validatedArtifact = JSON.parse(await readFile(path.resolve(root, verifying.artifactPath ?? verifying.contentApproval!.artifactPath), "utf8"));
+    const record = await verifyImportRelease(root, verifying);
     assert.equal(record.stage, "LIVE"); assert.ok(record.terminalRef); assert.ok(record.sourceRef);
-    const terminal = await readEvidence(root, record.terminalRef) as { evidenceRefs: typeof record.evidenceRefs; frozenFiles: Array<{ path: string; sha256: string }> };
+    const terminal = await readEvidence(root, record.terminalRef) as { artifactRef: { path: string; sha256: string }; evidenceRefs: typeof record.evidenceRefs; frozenFiles: Array<{ path: string; sha256: string }> };
+    assert.deepEqual(await readEvidence(root, terminal.artifactRef), validatedArtifact);
     assert.ok(record.evidenceRefs?.transformAssessment);
     assert.deepEqual(terminal.evidenceRefs.transformAssessment, record.evidenceRefs.transformAssessment);
     assert.ok(terminal.frozenFiles.some((file) => file.path === record.evidenceRefs!.transformAssessment!.path && file.sha256 === record.evidenceRefs!.transformAssessment!.sha256));
@@ -99,6 +102,75 @@ test("direct VERIFYING handover preserves structured invalidation for stale pref
     assert.equal(result.stage, "VALIDATING");
     assert.equal(result.presentation, undefined);
     assert.equal(result.release, undefined);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING rejects a production reference that differs from the release receipt", async () => {
+  const root = await testRoot("article-import-verify-production-ref-");
+  try {
+    const verifying = await releaseFixture(root);
+    assert.equal(verifying.nextAction, instructionsForStage("VERIFYING"));
+    const retained = verifying.evidenceRefs!.production!;
+    const bytes = await readEvidenceBytes(root, retained.path);
+    const divergent = await storeEvidenceBytes(root, verifying.importId, Buffer.concat([bytes, Buffer.from("\n")]));
+    await assert.rejects(
+      verifyImportRelease(root, { ...verifying, evidenceRefs: { ...verifying.evidenceRefs, production: divergent } }),
+      /TERMINAL_PRODUCTION_REFERENCE_MISMATCH/,
+    );
+    assert.equal((await loadImport(root, verifying.importId)).stage, "VERIFYING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING rejects review-merge and optional deployment journals that differ from the receipt", async () => {
+  const root = await testRoot("article-import-verify-release-chain-");
+  try {
+    const verifying = await releaseFixture(root);
+    const wrongMerge = structuredClone(verifying.pendingRelease!);
+    wrongMerge.operations!.merge!.reviewedHeadSha = "c".repeat(40);
+    await assert.rejects(
+      verifyImportRelease(root, { ...verifying, pendingRelease: wrongMerge }),
+      /TERMINAL_MERGE_PROOF_INVALID/,
+    );
+    const wrongDeployment = structuredClone(verifying.pendingRelease!);
+    wrongDeployment.operations!.deployment!.deploymentId = "dpl_other";
+    await assert.rejects(
+      verifyImportRelease(root, { ...verifying, pendingRelease: wrongDeployment }),
+      /TERMINAL_DEPLOYMENT_PROOF_INVALID/,
+    );
+    assert.equal((await loadImport(root, verifying.importId)).stage, "VERIFYING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING production validation returns the matching approved artifact when paths differ", async () => {
+  const root = await testRoot("article-import-verify-artifact-precedence-");
+  try {
+    const verifying = await releaseFixture(root);
+    const approved = JSON.parse(await readFile(path.resolve(root, verifying.contentApproval!.artifactPath), "utf8"));
+    const selected = structuredClone(approved);
+    const validatingPath = "build-pack/article-import/verifying-approved.json";
+    await mkdir(path.dirname(path.join(root, validatingPath)), { recursive: true });
+    await writeFile(path.join(root, validatingPath), JSON.stringify(selected));
+
+    const validated = await validateProductionWorkflowEvidence(root, { ...verifying, artifactPath: validatingPath });
+    assert.deepEqual(validated.artifact, approved);
+    const differentApproved = structuredClone(approved);
+    differentApproved.metadata.meta_description = "A different but valid approved article.";
+    await writeFile(path.resolve(root, verifying.contentApproval!.artifactPath), JSON.stringify(differentApproved));
+    await assert.rejects(
+      validateProductionWorkflowEvidence(root, { ...verifying, artifactPath: validatingPath }),
+      /PRODUCTION_APPROVED_ARTIFACT_MISMATCH/,
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING accepts a valid retained deployment proof without the newer operation journal", async () => {
+  const root = await testRoot("article-import-verify-historical-deployment-");
+  try {
+    const verifying = await releaseFixture(root);
+    const pendingRelease = structuredClone(verifying.pendingRelease!);
+    delete pendingRelease.operations!.deployment;
+    const live = await verifyImportRelease(root, await persistFixture(root, { ...verifying, pendingRelease }));
+    assert.equal(live.stage, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

@@ -15,7 +15,7 @@ import { createSupervisedImportExecutor } from "../src/lib/article-import/superv
 import type { ReleaseOperations } from "../src/lib/article-import/release";
 import { prepareApprovalFixture, preparePresentationFixture } from "./fixtures/article-content-approval";
 import { storeEvidence } from "../src/lib/article-import/execution-evidence";
-import { instructionsForStage, releaseSteps, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { instructionsForStage, releaseSteps, verificationSteps, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
@@ -55,11 +55,25 @@ test("describe-workflow exposes exactly the three actionable release steps", asy
     "verify-production",
   ]);
   assert.equal(described.instructions.RELEASING, instructionsForStage("RELEASING"));
-  assert.match(instructionsForStage("VERIFYING"), /1\. Verify the deployed article and reviewed merge/);
-  assert.match(instructionsForStage("VERIFYING"), /2\. Freeze the terminal bundle and validate its receipt before LIVE/);
   assert.match(described.instructions.RELEASING, /exact PR head/);
   assert.match(described.instructions.RELEASING, /exact merged commit/);
   assert.match(described.instructions.RELEASING, /rollback deployment/);
+});
+
+test("describe-workflow exposes exactly four actionable VERIFYING steps", async () => {
+  const described = await executeArticleCommand(process.cwd(), { kind: "describe-workflow" }) as {
+    verificationSteps: typeof verificationSteps;
+    instructions: { VERIFYING: string };
+  };
+
+  assert.deepEqual(described.verificationSteps, verificationSteps);
+  assert.deepEqual(described.verificationSteps.map((step) => step.id), [
+    "validate-receipt-and-presentation",
+    "check-production-evidence",
+    "match-release-chain",
+    "freeze-and-persist-live",
+  ]);
+  assert.equal(described.instructions.VERIFYING, instructionsForStage("VERIFYING"));
 });
 
 test("RELEASING executor writes exactly three actionable steps before awaiting its result", async () => {

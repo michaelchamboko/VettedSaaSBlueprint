@@ -438,20 +438,33 @@ export async function validateEditorialExecution(root: string, ref: EvidenceRef,
 export type WorkflowEvidenceRecord = EvidenceBinding & { stage: string; schemaVersion?: string; workflowVersion?: number; evidenceRefs?: z.infer<typeof evidenceRefsSchema>; terminalRef?: EvidenceRef; presentation?: {artifactFingerprint: string}; contentApproval?: { artifactPath: string }; release?: { commitSha: string; deploymentId: string; canonicalUrl: string }; sourceRef?: EvidenceRef };
 export type WorkflowEvaluation = { ok: boolean; diagnostics: string[]; earliestRequiredStage?: WorkflowStage; validatedRefs: EvidenceRef[] };
 
+async function checkedArtifactTarget(root: string, binding: EvidenceBinding) {
+  if (!binding.artifactPath) throw new Error("EVIDENCE_ARTIFACT_REQUIRED");
+  const artifact: unknown = JSON.parse((await readEvidenceBytes(root, binding.artifactPath)).toString("utf8"));
+  const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
+  return { artifact, target };
+}
+
 async function validateProductionEvidence(root: string, ref: EvidenceRef, binding: EvidenceBinding, release?: WorkflowEvidenceRecord["release"]) {
   if (!release) throw new Error("RELEASE_EVIDENCE_REQUIRED");
   const { assertProductionVerifierEvidence } = await import("./verification-evidence");
-  const target = importArtifactTarget(formatSchema.parse(binding.format), await artifactFor(root, binding));
-  return assertProductionVerifierEvidence(await readEvidence(root, ref), { target, deployment: release, importId: binding.importId, sourceFingerprint: binding.sourceFingerprint });
+  const { artifact, target } = await checkedArtifactTarget(root, binding);
+  assertProductionVerifierEvidence(await readEvidence(root, ref), { target, deployment: release, importId: binding.importId, sourceFingerprint: binding.sourceFingerprint });
+  return { artifact, target };
 }
 
-export async function validateProductionWorkflowEvidence(root: string, record: WorkflowEvidenceRecord, artifactPath?: string): Promise<EvidenceRef> {
+export async function validateProductionWorkflowEvidence(root: string, record: WorkflowEvidenceRecord, artifactPath?: string): Promise<{ artifact: unknown }> {
   if (record.requirementRevision !== WORKFLOW_REVISION || record.workflowVersion !== 2) throw new Error("LEGACY_UPGRADE_REQUIRED");
   const ref = record.evidenceRefs?.production;
   if (!ref) throw new Error("WORKFLOW_EVIDENCE_REQUIRED:production");
-  const binding = { ...record, artifactPath: artifactPath ?? record.artifactPath ?? record.contentApproval?.artifactPath };
-  await validateProductionEvidence(root, ref, binding, record.release);
-  return ref;
+  const productionArtifactPath = artifactPath ?? record.artifactPath ?? record.contentApproval?.artifactPath;
+  if (!productionArtifactPath) throw new Error("EVIDENCE_ARTIFACT_REQUIRED");
+  const production = await validateProductionEvidence(root, ref, { ...record, artifactPath: productionArtifactPath }, record.release);
+  const approvedArtifactPath = record.contentApproval?.artifactPath ?? productionArtifactPath;
+  if (approvedArtifactPath === productionArtifactPath) return { artifact: production.artifact };
+  const approved = await checkedArtifactTarget(root, { ...record, artifactPath: approvedArtifactPath });
+  if (JSON.stringify(approved.target) !== JSON.stringify(production.target)) throw new Error("PRODUCTION_APPROVED_ARTIFACT_MISMATCH");
+  return { artifact: approved.artifact };
 }
 
 export async function evaluateWorkflowEvidence(record: WorkflowEvidenceRecord, context: { root: string; throughStage?: string; artifactPath?: string }, mode: "historical-terminal" | "current-transition" | "duplicate-reuse" = "current-transition"): Promise<WorkflowEvaluation> {
