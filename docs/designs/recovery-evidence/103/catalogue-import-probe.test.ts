@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawn, type ChildProcess } from "node:child_process";
+import { createHash } from "node:crypto";
+import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { createServer } from "node:net";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -20,6 +24,7 @@ const TARGET_IMPORT = "article-00000000-0000-0000-0000-000000000103";
 const CONTROL_IMPORT = "article-00000000-0000-0000-0000-000000000104";
 const TARGET_SOURCE = "1".repeat(64);
 const CONTROL_SOURCE = "2".repeat(64);
+const require = createRequire(import.meta.url);
 
 type ApprovalFixture = {
   artifactPath: string;
@@ -50,6 +55,20 @@ type ProbeObservation = {
     independentOfMutableImport: boolean;
     renderedHtml: string;
   };
+  httpRoute: {
+    route: string;
+    controlRoute: string;
+    status: number;
+    controlStatus: number;
+    canonicalPath: string;
+    canonicalUrl: string;
+    controlCanonicalPath: string;
+    controlCanonicalUrl: string;
+    title: string;
+    answerSummary: string;
+    bodyEvidenceSha256: string;
+    independentOfMutableImport: boolean;
+  };
   scope: ScopeObservation[];
   reconciliation: Array<{
     disagreement: string;
@@ -68,6 +87,11 @@ test("serves the approved synthetic catalogue article through the public route",
   assert.equal(observed.publicRoute.httpObserved, false);
   assert.equal(observed.publicRoute.servedApprovedRevision, true);
   assert.equal(observed.publicRoute.independentOfMutableImport, true);
+  assert.equal(observed.httpRoute.status, 200);
+  assert.equal(observed.httpRoute.controlStatus, 200);
+  assert.equal(observed.httpRoute.canonicalPath, observed.httpRoute.route);
+  assert.equal(observed.httpRoute.controlCanonicalPath, observed.httpRoute.controlRoute);
+  assert.equal(observed.httpRoute.independentOfMutableImport, true);
   assert.deepEqual(observed.scope.map((entry) => entry.change), [
     "content",
     "shared-renderer",
@@ -99,11 +123,13 @@ async function runCatalogueImportProbe(): Promise<ProbeObservation> {
     const fixtures = await prepareApprovalFixture(fixtureRoot, target, control);
     const scope = await observeApprovalScope(fixtureRoot, fixtures.target, fixtures.control);
     const publicRoute = await observePublicRoute(repositoryRoot, fixtureRoot, fixtures.target);
+    const httpRoute = await observeHttpRoute(repositoryRoot, fixtures.target.post, fixtures.control.post);
     const deploymentMismatch = await observeDeploymentCommitMismatch(fixtureRoot);
     const productionObservationMismatch = observeProductionObservationMismatch(fixtures.target.post);
 
     return {
       publicRoute,
+      httpRoute,
       scope,
       reconciliation: [
         {
@@ -259,6 +285,158 @@ async function observePublicRoute(repositoryRoot: string, fixtureRoot: string, t
   } finally {
     process.chdir(previousCwd);
   }
+}
+
+async function observeHttpRoute(repositoryRoot: string, target: BlogPost, control: BlogPost): Promise<ProbeObservation["httpRoute"]> {
+  const scratch = path.join(repositoryRoot, ".scratch");
+  await mkdir(scratch, { recursive: true });
+  const root = await mkdtemp(path.join(scratch, "recovery-103-http-"));
+  let server: ChildProcess | undefined;
+  try {
+    await copyHttpFixture(repositoryRoot, root);
+    await writeCatalogue(root, [target, control]);
+    const mutableImportPath = "build-pack/article-import/recovery-103-mutable.json";
+    await put(root, mutableImportPath, JSON.stringify(target));
+    await assertPublicationAuthorityBinding(root, "blog", mutableImportPath);
+    const port = await availablePort();
+    server = startFixtureServer(root, port);
+    const route = `/blog/${target.slug}`;
+    const controlRoute = `/blog/${control.slug}`;
+    const first = await requestFixture(server, port, route, target.title);
+    const controlResponse = await requestFixture(server, port, controlRoute, control.title);
+    const firstText = textContent(first.body);
+    const controlText = textContent(controlResponse.body);
+    const canonicalUrl = canonicalFrom(first.body);
+    const controlCanonicalUrl = canonicalFrom(controlResponse.body);
+    const servedTitle = tagText(first.body, "h1");
+    const servedAnswer = blogAnswerText(first.body);
+    const servedControlTitle = tagText(controlResponse.body, "h1");
+    assert.equal(servedTitle, target.title);
+    assert.equal(servedAnswer, target.answerSummary);
+    assert.equal(servedControlTitle, control.title);
+    assert.ok(firstText.includes(servedAnswer));
+    assert.ok(controlText.includes(servedControlTitle));
+    assert.equal(new URL(canonicalUrl).pathname, route);
+    assert.equal(new URL(controlCanonicalUrl).pathname, controlRoute);
+
+    await put(root, mutableImportPath, JSON.stringify({ ...target, answerSummary: `${target.answerSummary} Mutable import changed.` }));
+    const authority = await settles(() => assertPublicationAuthorityBinding(root, "blog", mutableImportPath));
+    assert.equal(authority.ok, false);
+    assert.match(authority.error, /BLOG_AUTHORITY_ARTIFACT_MISMATCH/);
+    const second = await requestFixture(server, port, route, target.title);
+    const secondText = textContent(second.body);
+    const secondTitle = tagText(second.body, "h1");
+    const secondAnswer = blogAnswerText(second.body);
+    const bodyEvidence = JSON.stringify({ title: servedTitle, answerSummary: servedAnswer, controlTitle: servedControlTitle });
+    const observation = {
+      route,
+      controlRoute,
+      status: first.status,
+      controlStatus: controlResponse.status,
+      canonicalPath: new URL(canonicalUrl).pathname,
+      canonicalUrl,
+      controlCanonicalPath: new URL(controlCanonicalUrl).pathname,
+      controlCanonicalUrl,
+      title: servedTitle,
+      answerSummary: servedAnswer,
+      bodyEvidenceSha256: createHash("sha256").update(bodyEvidence).digest("hex"),
+      independentOfMutableImport: second.status === 200 && secondTitle === servedTitle && secondAnswer === servedAnswer && secondText.includes(servedAnswer) && !secondText.includes("Mutable import changed"),
+    };
+    await verifyHttpReference(repositoryRoot, observation);
+    return observation;
+  } finally {
+    if (server) await stopOwnedServer(server);
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+async function copyHttpFixture(repositoryRoot: string, fixtureRoot: string): Promise<void> {
+  await cp(path.join(repositoryRoot, "src"), path.join(fixtureRoot, "src"), { recursive: true });
+  await cp(path.join(repositoryRoot, "public"), path.join(fixtureRoot, "public"), { recursive: true });
+  for (const file of ["package.json", "package-lock.json", "tsconfig.json", "next.config.ts", "next.config.mjs", "postcss.config.mjs"]) {
+    await cp(path.join(repositoryRoot, file), path.join(fixtureRoot, file)).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+    });
+  }
+  const modules = path.dirname(path.dirname(require.resolve("next/package.json")));
+  await symlink(modules, path.join(fixtureRoot, "node_modules"), process.platform === "win32" ? "junction" : "dir");
+}
+
+function startFixtureServer(root: string, port: number): ChildProcess {
+  const next = path.join(path.dirname(require.resolve("next/package.json")), "dist/bin/next");
+  return spawn(process.execPath, [next, "dev", "--webpack", "--hostname", "127.0.0.1", "--port", String(port)], {
+    cwd: root,
+    env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
+
+async function requestFixture(server: ChildProcess, port: number, route: string, expectedTitle: string) {
+  const logs: string[] = [];
+  server.stdout?.on("data", (chunk) => logs.push(String(chunk)));
+  server.stderr?.on("data", (chunk) => logs.push(String(chunk)));
+  const deadline = Date.now() + 120_000;
+  while (Date.now() < deadline) {
+    if (server.exitCode !== null) throw new Error(`Fixture server exited ${server.exitCode}: ${logs.join("")}`);
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}${route}`, { signal: AbortSignal.timeout(10_000) });
+      const body = await response.text();
+      if (response.status === 200 && textContent(body).includes(expectedTitle)) return { status: response.status, body };
+    } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+  throw new Error(`Timed out requesting ${route}: ${logs.join("")}`);
+}
+
+async function stopOwnedServer(server: ChildProcess): Promise<void> {
+  if (server.exitCode !== null) return;
+  const closed = new Promise<void>((resolve) => server.once("close", () => resolve()));
+  server.kill("SIGTERM");
+  await Promise.race([closed, new Promise<void>((resolve) => setTimeout(resolve, 5_000))]);
+  if (server.exitCode === null) server.kill("SIGKILL");
+}
+
+async function availablePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") return reject(new Error("No localhost port allocated"));
+      server.close((error) => error ? reject(error) : resolve(address.port));
+    });
+  });
+}
+
+function canonicalFrom(html: string): string {
+  const match = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)
+    ?? html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i);
+  if (!match) throw new Error("Rendered response did not contain a canonical link");
+  return match[1];
+}
+
+function tagText(html: string, tag: string): string {
+  const match = html.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
+  if (!match) throw new Error(`Rendered response did not contain <${tag}>`);
+  return textContent(match[1]);
+}
+
+function blogAnswerText(html: string): string {
+  const section = html.match(/<section[^>]+class=["']blog-answer["'][^>]*>([\s\S]*?)<\/section>/i);
+  if (!section) throw new Error("Rendered response did not contain the direct answer section");
+  const paragraphs = [...section[1].matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+  if (!paragraphs.length) throw new Error("Rendered response did not contain the direct answer body");
+  return textContent(paragraphs.at(-1)![1]);
+}
+
+async function verifyHttpReference(repositoryRoot: string, observation: ProbeObservation["httpRoute"]): Promise<void> {
+  const file = path.join(repositoryRoot, "docs/designs/recovery-evidence/103/http-observations.json");
+  const bytes = `${JSON.stringify({ schemaVersion: "RecoveryHttpServingEvidenceV1", ...observation }, null, 2)}\n`;
+  if (process.env.RECOVERY_103_UPDATE_HTTP_REFERENCE === "1") {
+    await writeFile(file, bytes);
+    return;
+  }
+  assert.equal(await readFile(file, "utf8"), bytes);
 }
 
 function textContent(html: string): string {
