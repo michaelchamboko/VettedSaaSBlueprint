@@ -1,0 +1,60 @@
+{
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "probeHead": "32559f26cb6aee214d50c45d97481fa85dbb7d7a9c77780af6f472e4f93e2a5d",
+  "syntheticOnly": true,
+  "productCodeChanged": false,
+  "observations": [
+    {
+      "case": "pre-publication-acceptance-failure",
+      "expected": "Route required acceptance failure to pre-publication repair, identify its owner and next work, and do not create publication or IMPROVE state.",
+      "observed": {
+        "stage": "RELEASING",
+        "continuation": {
+          "kind": "repair",
+          "stage": "RELEASING",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair releasing output."
+        },
+        "repairOwner": null,
+        "ownerInferredFromStage": "RELEASING",
+        "nextWork": "Repair releasing output.",
+        "pendingReleaseRetained": true,
+        "releaseReceiptCreated": false,
+        "terminalEvidenceCreated": false,
+        "improveCreated": false,
+        "priorHistoryPrefixUnchanged": true
+      }
+    },
+    {
+      "case": "verified-publication-improve",
+      "expected": "Record a later defect under IMPROVE, bind its before and after measurements and directly affected regressions, and preserve original publication acceptance history.",
+      "observed": {
+        "stage": "LIVE",
+        "improvePhase": "COMPLETE",
+        "occurrenceLinkedToPublication": true,
+        "resolutionLinkedToPublication": true,
+        "originalMeasurementCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "changedRevision": "dddddddddddddddddddddddddddddddddddddddd",
+        "afterMeasurementOutcome": "pass",
+        "regressionChecks": [
+          "published-route-control"
+        ],
+        "terminalReferenceUnchanged": true,
+        "releaseReceiptUnchanged": true,
+        "stageReceiptHistoryUnchanged": true,
+        "terminalBytesUnchanged": true,
+        "improveRunSnapshotBytesUnchanged": true,
+        "checklistDefect": {
+          "key": "later-cta-regression",
+          "status": "resolved",
+          "occurrenceCount": 1,
+          "resolutionCount": 1,
+          "changedRevision": "dddddddddddddddddddddddddddddddddddddddd",
+          "regressionKeys": [
+            "published-route-control"
+          ]
+        }
+      }
+    }
+  ]
+}
