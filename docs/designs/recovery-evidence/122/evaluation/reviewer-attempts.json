@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "resultRevision": "4597dc9249346cb4f5899dd3e11a3f8c8f5a7d12",
+  "attempts": [
+    { "reviewerId": "/root/ticket122/r122_lantern", "caseId": "case-lantern", "outcome": "judgment_retained" },
+    { "reviewerId": "/root/ticket122/r122_orbit", "caseId": "case-orbit", "outcome": "no_judgment", "reason": "The context stopped before opening the packet because its instructions incorrectly prohibited the required shared baseline read." },
+    { "reviewerId": "/root/ticket122/r122_orbit_b", "caseId": "case-orbit", "outcome": "judgment_retained" },
+    { "reviewerId": "/root/ticket122/r122_river", "caseId": "case-river", "outcome": "judgment_retained" },
+    { "reviewerId": "/root/ticket122/r122_summit", "caseId": "case-summit", "outcome": "judgment_retained" },
+    { "reviewerId": "/root/ticket122/r122_meadow", "caseId": "case-meadow", "outcome": "judgment_retained" },
+    { "reviewerId": "/root/ticket122/r122_quartz", "caseId": "case-quartz", "outcome": "judgment_retained" }
+  ]
+}
