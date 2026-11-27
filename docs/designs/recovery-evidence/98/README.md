@@ -49,10 +49,11 @@ if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVe
 New-Item -ItemType Directory -Force -Path '.scratch\temp' | Out-Null
 $env:TEMP = (Resolve-Path '.scratch\temp').Path
 $env:TMP = $env:TEMP
-$env:RECOVERY_EVIDENCE_REVISION = (git rev-parse HEAD)
 node --import tsx --test `
   'docs\designs\recovery-evidence\98\controller-recovery.test.ts'
 ```
+
+The command prints a unique `.scratch/recovery-evidence-runs/98-*/observations.json` path. That rerun record contains the actual checkout SHA under `testedCheckoutRevision`. The tracked `observed-results.json` remains the immutable historical snapshot.
 
 Final focused result:
 

@@ -72,4 +72,6 @@ npx tsx --test docs/designs/recovery-evidence/105/gate-handoff-probe.test.ts
 # observed green: 2 passed, 0 failed, 3 skipped
 ```
 
+Each command allocates a unique `.scratch/recovery-evidence-runs/105-*` directory. Observation mode prints its `observations.json` path and distinguishes `testedCheckoutRevision` from `investigatedRevision`. The tracked observation, red output, and test output remain immutable historical snapshots.
+
 No real import, worker, model, database, GitHub mutation, release, deployment, publication, cleanup, archive move, or artifact deletion ran.

@@ -2,7 +2,7 @@
 
 Issue: GitHub #108, child of #96. Investigated revision: `f026bca8b53aecca829262e9a27820ac6d078892`. Historical publication commit: `b0fe16b5103feed5abed43594c23036b8d7080fe`. Original reviewed candidate commit: `525b21c4c8a48c8a9dfd7d72dc5bc971c2080ef1`. Later prose rewrite: `42d4377c340a5840f3f5e24e11679ffec907fc15`. Receipt-hash reconciliation: `81f3993e931aae2a08992b73cf130cd5f8ec4ab5`.
 
-This is an evidence inventory, not a compliance decision or repair plan. "Expected" means the requirement or release-era criterion. "Observed" means a retained record or the 27 November 2026 review. A missing observation remains unverified. A current test does not prove that the test ran for the historical release, and a fresh judgment applies only to the revision it examined.
+This is an evidence inventory, not a compliance decision or repair plan. "Expected" means the requirement or release-era criterion. "Observed" means a retained record or the 27 November 2026 review. A missing observation remains unverified. A current test does not prove that the test ran for the historical release. The fresh live-page inventory records a date and mutable public URL, but no commit, deployment identity, or capture fingerprint. Its exact revision binding is unavailable.
 
 ## Search bounds and evidence classes
 
@@ -12,7 +12,7 @@ Evidence classes used below:
 
 - **Release-era record (RE):** the 13 October artifact, release reviews, static scanner outputs, browser verification, screenshots, and receipt.
 - **Later record (LR):** the 1 November prose rewrite and 2 November hash reconciliation. These are not release-era approval of the rewritten page.
-- **Fresh judgment (FJ):** the 27 November `issues.md` review. It is evidence about the reviewed production revision, not proof of a historical review.
+- **Fresh judgment (FJ):** the 27 November `issues.md` review of the mutable public URL. It records no commit, deployment identity, or capture fingerprint, so the exact reviewed revision is unavailable. It is not proof of a historical review.
 - **Current coverage (CT):** tests and gates present at `f026bca`. They show current capability, not historical execution.
 - **Reviewer effectiveness (RV):** the release-era records retain none of the six blinded judgments required by #96 testing decision 5. Issue #107 later retained six synthetic judgments, one defective and one adequate control for each of findings 12, 19, and 31. Those later judgments test reviewer recognition on frozen synthetic packets; they do not prove release-era review behavior.
 
@@ -24,7 +24,7 @@ Evidence classes used below:
 | RE-B | `build-pack/evidence/AFFILIATE-DRAFTS-20261013/browser-verification.json` and WebCatalog screenshots. The record checks HTTP status, CTA/disclosure visibility, exact CTA count, source links, review date, robots, viewport width, page scroll width, one H1, hidden-section count, and errors. |
 | RE-C | `build-pack/evidence/AFFILIATE-DRAFTS-20261013/webcatalog/landing-candidate-quality-summary.json` and 16 scanner reports. Most reports retain only pass/fail with empty findings, not criterion-level observations. |
 | LR-A | `build-pack/editorial/article-c23a6320-{before,evidence,quality}.json` and `article-c23a6320-after-prose.md`. The receipt reports 330 editable-prose words and a 5/5 clean result, but no independent exchange identity or whole-render review. |
-| FJ-A | Primary-checkout `issues.md`, reviewed 27 November 2026, including live/headless measurements, Axe, link probes, and explicit audit limits. |
+| FJ-A | Primary-checkout `issues.md`, reviewed 27 November 2026 at the mutable public URL, including live/headless measurements, Axe, link probes, and explicit audit limits. No commit, deployment identity, or capture fingerprint binds this inventory to an immutable revision. |
 | CT-A | Current long-form, visible-word-count, visual-quality, hero-image, workflow-evidence, content-approval, and release tests at `f026bca`. These are synthetic or general coverage unless a row says otherwise. |
 
 ## Source and criteria legend

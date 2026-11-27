@@ -60,4 +60,4 @@ From the isolated checkout:
 node --import tsx --test docs/designs/recovery-evidence/101/late-result-probe.test.ts
 ```
 
-Expected result: four tests pass. The probe writes `observations.json` and deletes only its owned `.scratch/recovery-evidence-101/case-*` directories.
+Expected result: four tests pass. The probe prints a unique `.scratch/recovery-evidence-runs/101-*/observations.json` path and deletes only its owned `.scratch/recovery-evidence-101/case-*` directories. The rerun record distinguishes `testedCheckoutRevision` from `investigatedRevision`; it does not rewrite the tracked historical observation.

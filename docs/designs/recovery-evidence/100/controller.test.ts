@@ -14,10 +14,11 @@ import {
   withImportLease,
 } from "../../../../src/lib/article-import/engine";
 import { storeEvidence } from "../../../../src/lib/article-import/execution-evidence";
+import { createRecoveryEvidenceRun } from "../run-output";
 
 const observations: Record<string, unknown>[] = [];
 const parent = path.resolve(".scratch/recovery-100");
-const output = path.resolve("docs/designs/recovery-evidence/100/observations.json");
+const runOutput = createRecoveryEvidenceRun(100);
 
 async function fixture() {
   await mkdir(parent, { recursive: true });
@@ -222,12 +223,16 @@ test("threshold, viewport and article changes independently alter one generic su
 });
 
 test.after(async () => {
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
+  const output = path.join(outputDirectory, "observations.json");
   await writeFile(output, JSON.stringify({
     schemaVersion: "RecoveryRoutingObservationV1",
     issue: 100,
     investigatedRevision: "f026bca8b53aecca829262e9a27820ac6d078892",
+    testedCheckoutRevision,
     syntheticOnly: true,
     productionCalls: 0,
     observations,
   }, null, 2) + "\n");
+  process.stdout.write(`RECOVERY_100_OUTPUT=${output}\n`);
 });

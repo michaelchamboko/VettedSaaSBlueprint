@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import {
   createArticleImport,
@@ -31,9 +30,10 @@ import { WORKFLOW_REVISION } from "../../../../src/lib/article-import/workflow-r
 import { executeFixtureCommand, persistFixture } from "../../../../tests/fixtures/article-command";
 import { createInMemoryResearchRegistry } from "../../../../tests/fixtures/article-research-registry";
 import { writeAcquisitionResult } from "../../../../tests/fixtures/article-research-flow";
+import { createRecoveryEvidenceRun } from "../run-output";
 
-const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const investigatedRevision = "f026bca8b53aecca829262e9a27820ac6d078892";
+const runOutput = createRecoveryEvidenceRun(102);
 const generatedAt = "2026-11-27T09:00:00.000Z";
 const expiresLater = "2099-01-01T00:00:00.000Z";
 const sourceFingerprint = "a".repeat(64);
@@ -395,10 +395,12 @@ async function retentionGraph() {
 }
 
 async function main() {
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
   const matrix = registryMatrix();
   const observations = {
     schemaVersion: "RegisteredEvidenceRecovery102V1",
     investigatedRevision,
+    testedCheckoutRevision,
     generatedAt: new Date().toISOString(),
     expected: {
       reuseDimensions: ["relevance", "support", "integrity", "freshness"],
@@ -420,7 +422,7 @@ async function main() {
       "A rejected finding has a disposition and evidence refs, but the active schema has no separate integrity-bound resolution record.",
     ],
   };
-  await writeFile(path.join(evidenceDirectory, "observations.json"), `${JSON.stringify(observations, null, 2)}\n`);
+  await writeFile(path.join(outputDirectory, "observations.json"), `${JSON.stringify(observations, null, 2)}\n`);
   assert.equal(observations.controllerRecovery.missing.stage, "TRANSFORMING");
   assert.equal(observations.controllerRecovery.stale.stage, "TRANSFORMING");
   assert.equal(observations.controllerRecovery.invalidResearch.recoveredStage, "TRANSFORMING");
@@ -436,12 +438,15 @@ async function main() {
       "independently valid approvals must survive with a recorded reason",
     );
   }
-  process.stdout.write(`${JSON.stringify({ ok: true, observations: path.join(evidenceDirectory, "observations.json") })}\n`);
+  process.stdout.write(`${JSON.stringify({ ok: true, observations: path.join(outputDirectory, "observations.json") })}\n`);
 }
 
 main().catch(async (error) => {
   const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-  if (process.argv.includes("--assert-required")) await writeFile(path.join(evidenceDirectory, "red-output.txt"), `${message.trimEnd()}\n`);
+  if (process.argv.includes("--assert-required")) {
+    const { outputDirectory } = await runOutput;
+    await writeFile(path.join(outputDirectory, "red-output.txt"), `${message.trimEnd()}\n`);
+  }
   console.error(message);
   process.exitCode = 1;
 });

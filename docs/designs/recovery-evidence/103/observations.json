@@ -45,7 +45,8 @@
     },
     "liveJustified": false,
     "requiredAgreement": ["served article", "approved revision", "intended commit", "retained production observations", "terminal record"],
-    "runtimeValidatorResults": ["BLOG_AUTHORITY_ARTIFACT_MISMATCH", "DEPLOYMENT_COMMIT_METADATA_MISMATCHED", "PRODUCTION_DEPLOYMENT_MISMATCH"],
+    "runtimeValidatorResults": ["BLOG_AUTHORITY_ARTIFACT_MISMATCH", "DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED", "PRODUCTION_DEPLOYMENT_MISMATCH"],
+    "deploymentCommitProbe": { "operation": "deploy", "expectedCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "observedCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "result": { "ok": false, "error": "DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED" } },
     "terminalCheck": "static-unreachable: inspectImportCompletion validates frozen terminal evidence but does not read the served catalogue route",
     "observedLimitation": "Current checks are separate; no unified after-the-fact reconciler compares all five identities."
   }

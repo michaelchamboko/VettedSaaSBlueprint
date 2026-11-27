@@ -25,10 +25,11 @@ import { fingerprintEditorialArtifact } from "../../../../src/lib/editorial/refi
 import { approveFixture, presentFixture } from "../../../../tests/fixtures/article-content-approval";
 import { persistFixture } from "../../../../tests/fixtures/article-command";
 import { productionFixture } from "../../../../tests/fixtures/article-production-evidence";
+import { createRecoveryEvidenceRun } from "../run-output";
 
-const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const fixtureParent = path.resolve(".scratch/recovery-104");
 const revision = "f026bca8b53aecca829262e9a27820ac6d078892";
+const runOutput = createRecoveryEvidenceRun(104);
 const observations: unknown[] = [];
 const requiredMode = process.env.RECOVERY_ASSERT_REQUIRED === "1";
 const allowlist = "- https://start.switcherstudio.com/anme6fqvgdx9\n";
@@ -331,12 +332,15 @@ test("a verified publication defect uses IMPROVE and preserves acceptance histor
 
 test.after(async () => {
   if (requiredMode) return;
-  await mkdir(evidenceDirectory, { recursive: true });
-  await writeFile(path.join(evidenceDirectory, "observations.json"), JSON.stringify({
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
+  const output = path.join(outputDirectory, "observations.json");
+  await writeFile(output, JSON.stringify({
     investigatedRevision: revision,
+    testedCheckoutRevision,
     probeHead: createHash("sha256").update(await readFile(fileURLToPath(import.meta.url))).digest("hex"),
     syntheticOnly: true,
     productCodeChanged: false,
     observations,
   }, null, 2) + "\n");
+  process.stdout.write(`RECOVERY_104_OUTPUT=${output}\n`);
 });

@@ -33,6 +33,8 @@ if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVe
 node --import tsx --test 'docs\designs\recovery-evidence\100\controller.test.ts'
 ```
 
+The command prints a unique `.scratch/recovery-evidence-runs/100-*/observations.json` path. The rerun record distinguishes `testedCheckoutRevision` from `investigatedRevision`; it does not rewrite the tracked historical observation.
+
 Machine-readable observations are in `observations.json`.
 
 ## Failure routing

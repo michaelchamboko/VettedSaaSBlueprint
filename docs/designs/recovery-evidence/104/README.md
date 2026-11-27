@@ -46,6 +46,8 @@ Observation mode records current behavior and writes `observations.json`:
 node --import tsx --test docs/designs/recovery-evidence/104/recovery-boundary-probe.test.ts
 ```
 
+Observation mode prints a unique `.scratch/recovery-evidence-runs/104-*/observations.json` path. The rerun record distinguishes `testedCheckoutRevision` from `investigatedRevision`; neither mode rewrites the tracked historical observation or red output.
+
 It exited 0 with two passing tests. `test-output.txt` retains the summary.
 
 ## Expected and observed behavior

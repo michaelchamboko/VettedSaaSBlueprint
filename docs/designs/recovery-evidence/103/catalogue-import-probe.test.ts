@@ -19,12 +19,15 @@ import { assertProductionVerifierEvidence } from "../../../../src/lib/article-im
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../../../../src/lib/editorial/refinement";
 import { blogPostSchema, type BlogPost } from "../../../../src/lib/blog/contracts";
 import { fullRewriteNotes, rewriteAllProse } from "../../../../tests/fixtures/article-content-approval";
+import { createRecoveryEvidenceRun } from "../run-output";
 
+const investigatedRevision = "f026bca8b53aecca829262e9a27820ac6d078892";
 const TARGET_IMPORT = "article-00000000-0000-0000-0000-000000000103";
 const CONTROL_IMPORT = "article-00000000-0000-0000-0000-000000000104";
 const TARGET_SOURCE = "1".repeat(64);
 const CONTROL_SOURCE = "2".repeat(64);
 const require = createRequire(import.meta.url);
+const runOutput = createRecoveryEvidenceRun(103);
 
 type ApprovalFixture = {
   artifactPath: string;
@@ -110,7 +113,12 @@ test("serves the approved synthetic catalogue article through the public route",
   assert.equal(observed.reconciliation.every((entry) => entry.liveJustified === false), true);
   assert.equal(new Set(Object.values(observed.reconciliation.at(-1)!.identities)).size, 5);
 
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
+  const output = path.join(outputDirectory, "observations.json");
+  await writeFile(output, `${JSON.stringify({ investigatedRevision, testedCheckoutRevision, syntheticOnly: true, observed }, null, 2)}\n`);
+
   console.log(`RECOVERY_103_OBSERVATION=${JSON.stringify(observed)}`);
+  console.log(`RECOVERY_103_OUTPUT=${output}`);
 });
 
 async function runCatalogueImportProbe(): Promise<ProbeObservation> {
@@ -451,14 +459,22 @@ function textContent(html: string): string {
 }
 
 async function observeDeploymentCommitMismatch(root: string): Promise<string> {
+  const expectedCommit = "a".repeat(40);
+  const observedCommit = "b".repeat(40);
   const operations = createLocalReleaseOperations(root, {
     format: "blog",
-    runner: async () => ({ stdout: JSON.stringify({ id: "dpl-intended", gitCommitSha: "a".repeat(40), target: "production", readyState: "READY" }), stderr: "" }),
-    fetchJson: async () => ({ commitSha: "b".repeat(40), environment: "production" }),
+    runner: async (command, args) => {
+      assert.equal(command, "vercel");
+      if (args[0] === "deploy") return { stdout: "https://synthetic-deployment.example.test\n", stderr: "" };
+      if (args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl-observed", gitCommitSha: observedCommit, target: "production", readyState: "READY" }), stderr: "" };
+      throw new Error(`Unexpected synthetic release command: ${command} ${args.join(" ")}`);
+    },
+    fetchJson: async () => ({ commitSha: observedCommit, environment: "production" }),
   });
-  const result = await settles(() => operations.capturePreviousDeployment());
+  const result = await settles(() => operations.deploy(expectedCommit));
   assert.equal(result.ok, false);
-  return result.error;
+  assert.match(result.error, /DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED/);
+  return JSON.stringify({ operation: "deploy", expectedCommit, observedCommit, result });
 }
 
 function observeProductionObservationMismatch(post: BlogPost): string {

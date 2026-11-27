@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 
 import {
   advanceImport,
@@ -13,9 +12,10 @@ import {
 } from "../../../../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../../../../src/lib/article-import/supervised-executor";
 import { fixtureResearchRegistry } from "../../../../tests/fixtures/article-command";
+import { createRecoveryEvidenceRun } from "../run-output";
 
-const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const fixtureParent = path.resolve(".scratch/recovery-105");
+const runOutput = createRecoveryEvidenceRun(105);
 const controlledNow = Date.parse("2026-11-27T12:00:00.000Z");
 const day = 24 * 60 * 60 * 1_000;
 const observations: Record<string, unknown>[] = [];
@@ -187,13 +187,16 @@ test.skip("future acceptance: explicit manual cleanup uses the same durable oper
 test.skip("future acceptance: archived evidence remains resolvable after reference registration and original removal", () => {});
 
 test.after(async () => {
-  await mkdir(evidenceDirectory, { recursive: true });
-  await writeFile(path.join(evidenceDirectory, "observations.json"), JSON.stringify({
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
+  const output = path.join(outputDirectory, "observations.json");
+  await writeFile(output, JSON.stringify({
     schemaVersion: "GateHandoffRecoveryEvidence105V1",
     investigatedRevision: "f026bca8b53aecca829262e9a27820ac6d078892",
+    testedCheckoutRevision,
     branchBaseline: "d3d49f4c132d5d6b2c597df10d189d1564d89a4d",
     syntheticOnly: true,
     normalEntryPoint: "executePendingImport(createSupervisedImportExecutor(root))",
     observations,
   }, null, 2) + "\n");
+  process.stdout.write(`RECOVERY_105_OUTPUT=${output}\n`);
 });

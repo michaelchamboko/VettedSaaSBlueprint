@@ -30,10 +30,12 @@ import {
   proseProjectionDigest,
 } from "../../../../src/lib/article-import/execution-evidence";
 import type { ExternalArticleImportV1 } from "../../../../src/lib/article-import/contracts";
+import { createRecoveryEvidenceRun } from "../run-output";
 
 type Observation = Record<string, unknown>;
 const observations: Observation[] = [];
 const parent = path.resolve(".scratch/recovery-evidence-98/cases");
+const runOutput = createRecoveryEvidenceRun(98);
 
 async function fixture() {
   await mkdir(parent, { recursive: true });
@@ -256,7 +258,8 @@ test("rejection, missing observation, and claimed inapplicability all block appr
 });
 
 test.after(async () => {
-  const output = path.resolve(".scratch/recovery-evidence-98/observations.json");
-  await mkdir(path.dirname(output), { recursive: true });
-  await writeFile(output, JSON.stringify({ revision: process.env.RECOVERY_EVIDENCE_REVISION, syntheticOnly: true, observations }, null, 2) + "\n");
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
+  const output = path.join(outputDirectory, "observations.json");
+  await writeFile(output, JSON.stringify({ testedCheckoutRevision, syntheticOnly: true, observations }, null, 2) + "\n");
+  process.stdout.write(`RECOVERY_98_OUTPUT=${output}\n`);
 });

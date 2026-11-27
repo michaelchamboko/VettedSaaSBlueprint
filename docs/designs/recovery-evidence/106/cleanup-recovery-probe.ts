@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { copyFile, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { externalArticleImportSchema, type ExternalArticleImportV1 } from "../../../../src/lib/article-import/contracts";
 import {
@@ -14,8 +13,8 @@ import {
 import { createSupervisedImportExecutor } from "../../../../src/lib/article-import/supervised-executor";
 import { approveFixture } from "../../../../tests/fixtures/article-content-approval";
 import { fixtureResearchRegistry } from "../../../../tests/fixtures/article-command";
+import { createRecoveryEvidenceRun } from "../run-output";
 
-const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const fixtureParent = path.resolve(".scratch/recovery-106");
 const investigatedRevision = "f026bca8b53aecca829262e9a27820ac6d078892";
 
@@ -304,6 +303,7 @@ async function probeSharedFailureStop() {
 }
 
 async function main() {
+  const { outputDirectory, testedCheckoutRevision } = await createRecoveryEvidenceRun(106);
   const crashPoints = [];
   for (const point of ["before-mutation", "after-archive-copy", "after-reference-registration"] as const) {
     crashPoints.push(await probeCrashPoint(point));
@@ -311,6 +311,7 @@ async function main() {
   const observations = {
     schemaVersion: "CleanupRecoveryEvidence106V1",
     investigatedRevision,
+    testedCheckoutRevision,
     generatedAt: new Date().toISOString(),
     syntheticOnly: true,
     normalControllerSeam: "executePendingImport",
@@ -322,7 +323,7 @@ async function main() {
     retryCounts: await probeRetryCounts(),
     sharedFailureStop: await probeSharedFailureStop(),
   };
-  await writeFile(path.join(evidenceDirectory, "observations.json"), JSON.stringify(observations, null, 2) + "\n");
+  await writeFile(path.join(outputDirectory, "observations.json"), JSON.stringify(observations, null, 2) + "\n");
 
   if (process.argv.includes("--assert-required")) {
     assert.equal(crashPoints[0].stageExecutorCalls, 0, "durable pre-mutation cleanup intent must block next-gate dispatch");
@@ -333,7 +334,7 @@ async function main() {
 
   process.stdout.write(JSON.stringify({
     ok: true,
-    observations: path.join(evidenceDirectory, "observations.json"),
+    observations: path.join(outputDirectory, "observations.json"),
   }) + "\n");
 }
 

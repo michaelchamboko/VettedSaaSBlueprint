@@ -78,4 +78,13 @@ A future authorized implementation needs focused acceptance tests at the same `e
 
 The red assertion required a durable pre-mutation cleanup intent to produce zero next-stage executor calls. It failed with `1 !== 0`; see `red-output.txt`. Product changes were out of scope, so there is no green implementation. The non-asserting probe then recorded current behavior in `observations.json` and exited successfully; see `current-output.txt`.
 
+Rerun either mode from the repository root:
+
+```powershell
+node --import tsx docs/designs/recovery-evidence/106/cleanup-recovery-probe.ts --assert-required
+node --import tsx docs/designs/recovery-evidence/106/cleanup-recovery-probe.ts
+```
+
+Each command allocates a unique `.scratch/recovery-evidence-runs/106-*` directory. Observation mode prints its `observations.json` path and distinguishes `testedCheckoutRevision` from `investigatedRevision`. The tracked observation, red output, and current output remain immutable historical snapshots.
+
 This is the smallest evidence-only result. It deliberately skips a cleanup implementation, real artifact removal, a live article run, and external worker execution.

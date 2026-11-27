@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { stat } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
@@ -36,13 +35,18 @@ test("issue 109 traceability accounts for every required item", async () => {
     );
     for (const evidencePath of entry.evidencePaths) {
       const absolutePath = fileURLToPath(new URL(evidencePath, base));
-      assert.ok((await stat(absolutePath)).isFile(), `${evidencePath} resolves to a file`);
       const repositoryPath = path.relative(process.cwd(), absolutePath).replaceAll("\\", "/");
-      const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "--", repositoryPath], {
+      assert.ok(repositoryPath && !repositoryPath.startsWith("../"), `${evidencePath} stays inside the repository`);
+      const headEntry = spawnSync("git", ["cat-file", "-e", `HEAD:${repositoryPath}`], {
         cwd: process.cwd(),
-        encoding: "utf8",
       });
-      assert.equal(tracked.status, 0, `${evidencePath} is tracked at the integrated head`);
+      assert.equal(headEntry.status, 0, `${evidencePath} exists in the HEAD tree`);
+      const headBytes = spawnSync("git", ["cat-file", "blob", `HEAD:${repositoryPath}`], {
+        cwd: process.cwd(),
+        maxBuffer: 20_000_000,
+      });
+      assert.equal(headBytes.status, 0, `${evidencePath} bytes are readable from HEAD`);
+      assert.deepEqual(await readFile(absolutePath), headBytes.stdout, `${evidencePath} matches the HEAD bytes`);
     }
     for (const field of ["priorEvidence", "newObservation", "unreachable", "futureAcceptance"]) {
       assert.ok(entry[field]?.trim(), `issue ${entry.issue} ${field}`);
@@ -88,6 +92,11 @@ test("issue 109 traceability accounts for every required item", async () => {
     assert.ok(entry.retainedArtifact?.trim(), `finding ${entry.finding} retained artifact`);
     assert.ok(entry.historicalAttribution?.trim(), `finding ${entry.finding} attribution`);
   }
+
+  assert.match(map.userStories.find((entry) => entry.story === 26).evidence, /issue 108.*unavailable/i);
+  assert.match(map.testingDecisions.find((entry) => entry.decision === 1).evidence, /Issue 103.*HTTP route.*directly/i);
+  assert.match(map.findings.find((entry) => entry.finding === 18).futureCheck, /visible, usable CTA.*initial viewport.*390x844.*320x800/i);
+  assert.match(map.findings.find((entry) => entry.finding === 33).futureCheck, /one independent editorial review.*separate from every rewrite session/i);
 });
 
 test("issue 109 report defines a bounded future demonstration", async () => {
@@ -107,6 +116,8 @@ test("issue 109 report defines a bounded future demonstration", async () => {
   }
   assert.match(report, /Q40 remains undecided/);
   assert.match(report, /does not prove historical/);
+  assert.match(report, /one deployment attempt and one rollback attempt/i);
+  assert.match(report, /fresh inventory.*revision binding.*unavailable/i);
   assert.match(report, /separate authorization/);
   assert.match(report, /primary checkout/);
   assert.match(report, /No product fix/i);

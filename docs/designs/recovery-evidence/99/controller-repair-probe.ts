@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
@@ -21,10 +20,11 @@ import { executionEvidenceSchema, extractOpenCodeExecution, proseProjectionDiges
 import { createSupervisedImportExecutor } from "../../../../src/lib/article-import/supervised-executor";
 import { readEvidence, workflowEvidenceSchema } from "../../../../src/lib/article-import/workflow-evidence";
 import { prepareApprovalFixture, preparePresentationFixture } from "../../../../tests/fixtures/article-content-approval";
+import { createRecoveryEvidenceRun } from "../run-output";
 
-const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
 const fixtureParent = path.resolve(".scratch/recovery-99");
 const investigatedRevision = "f026bca8b53aecca829262e9a27820ac6d078892";
+const runOutput = createRecoveryEvidenceRun(99);
 const findingDescription = "The primary CTA does not describe its affiliate destination.";
 
 type Finding = { description: string; disposition: "resolved" | "unresolved"; [key: string]: unknown };
@@ -335,6 +335,7 @@ async function runScenario(name: ScenarioName) {
 }
 
 async function main() {
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
   const scenarios = [];
   const requestedScenario = process.argv.find((argument) => argument.startsWith("--scenario="))?.slice("--scenario=".length) as ScenarioName | undefined;
   const names = ["omitted", "resolved-label", "inconclusive", "appropriate-removal", "evidenced-dismissal", "owner-referral"] as const;
@@ -347,6 +348,7 @@ async function main() {
   const observations = {
     schemaVersion: "RejectedFindingRecoveryEvidence99V1",
     investigatedRevision,
+    testedCheckoutRevision,
     generatedAt: new Date().toISOString(),
     syntheticOnly: true,
     normalEntryPoint: "executePendingImport(createSupervisedImportExecutor(root))",
@@ -358,19 +360,22 @@ async function main() {
     },
     scenarios,
   };
-  await writeFile(path.join(evidenceDirectory, "observations.json"), JSON.stringify(observations, null, 2) + "\n");
+  await writeFile(path.join(outputDirectory, "observations.json"), JSON.stringify(observations, null, 2) + "\n");
   if (process.argv.includes("--assert-required")) {
     const omitted = scenarios.find((scenario) => scenario.scenario === "omitted")!;
     assert.notEqual(omitted.observed.stage, "RELEASING", "a passing replacement that omits the finding must not close it");
     const resolved = scenarios.find((scenario) => scenario.scenario === "resolved-label")!;
     assert.notEqual(resolved.observed.stage, "RELEASING", "a bare resolved label without resolution evidence must not advance");
   }
-  process.stdout.write(JSON.stringify({ ok: true, observations: path.join(evidenceDirectory, "observations.json") }) + "\n");
+  process.stdout.write(JSON.stringify({ ok: true, observations: path.join(outputDirectory, "observations.json") }) + "\n");
 }
 
 main().catch(async (error) => {
   const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-  if (process.argv.includes("--assert-required")) await writeFile(path.join(evidenceDirectory, "red-output.txt"), message + "\n");
+  if (process.argv.includes("--assert-required")) {
+    const { outputDirectory } = await runOutput;
+    await writeFile(path.join(outputDirectory, "red-output.txt"), message + "\n");
+  }
   console.error(message);
   process.exitCode = 1;
 });

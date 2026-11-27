@@ -120,4 +120,6 @@ node --test --test-concurrency=1 --import tsx tests/article-research-registry.te
 PASS (48 tests)
 ```
 
+Each probe command prints a unique `.scratch/recovery-evidence-runs/102-*/observations.json` path. The rerun record distinguishes `testedCheckoutRevision` from `investigatedRevision`. The tracked observation and red-output files remain immutable historical snapshots.
+
 General repository gates are intentionally left to the integration owner, as directed.

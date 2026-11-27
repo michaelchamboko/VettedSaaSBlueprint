@@ -43,6 +43,8 @@ if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVe
 node --import tsx docs/designs/recovery-evidence/99/controller-repair-probe.ts
 ```
 
+Each command prints a unique `.scratch/recovery-evidence-runs/99-*/observations.json` path. The rerun record distinguishes `testedCheckoutRevision` from `investigatedRevision`. The tracked observation and red-output files remain immutable historical snapshots.
+
 Both commands used Node 24.22.3. The first command is supposed to fail. The second is supposed to pass.
 
 ## Acceptance criteria

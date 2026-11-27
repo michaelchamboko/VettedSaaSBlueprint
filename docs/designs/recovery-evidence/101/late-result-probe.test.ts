@@ -25,9 +25,10 @@ import { writeAcquisitionResult, writeGapPlanResult } from "../../../../tests/fi
 import { recaptureStoredExchange } from "../../../../tests/fixtures/capture-replay";
 import { evaluateWorkflowEvidence, readEvidence, storeEvidence, workflowEvidenceSchema } from "../../../../src/lib/article-import/workflow-evidence";
 import { executionEvidenceSchema, proseProjectionDigest } from "../../../../src/lib/article-import/execution-evidence";
+import { createRecoveryEvidenceRun } from "../run-output";
 
 const revision = "f026bca8b53aecca829262e9a27820ac6d078892";
-const evidenceDirectory = path.resolve("docs/designs/recovery-evidence/101");
+const runOutput = createRecoveryEvidenceRun(101);
 const fixtureParent = path.resolve(".scratch/recovery-evidence-101");
 const observations: Record<string, unknown>[] = [];
 
@@ -310,11 +311,14 @@ test("lease recovery refuses a live owner and succeeds only after that process e
 });
 
 test.after(async () => {
-  await mkdir(evidenceDirectory, { recursive: true });
-  await writeFile(path.join(evidenceDirectory, "observations.json"), JSON.stringify({
-    revision,
+  const { outputDirectory, testedCheckoutRevision } = await runOutput;
+  const output = path.join(outputDirectory, "observations.json");
+  await writeFile(output, JSON.stringify({
+    investigatedRevision: revision,
+    testedCheckoutRevision,
     syntheticOnly: true,
     productCodeChanged: false,
     observations,
   }, null, 2) + "\n");
+  process.stdout.write(`RECOVERY_101_OUTPUT=${output}\n`);
 });

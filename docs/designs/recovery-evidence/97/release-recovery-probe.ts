@@ -16,6 +16,7 @@ import type { ExternalArticleImportV1 } from "../../../../src/lib/article-import
 import { approveFixture, presentFixture } from "../../../../tests/fixtures/article-content-approval";
 import { fixtureProbe, persistFixture, prepareCommandCheckout } from "../../../../tests/fixtures/article-command";
 import { productionFixture } from "../../../../tests/fixtures/article-production-evidence";
+import { readTestedCheckoutRevision } from "../run-output";
 
 const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
 let runOutputDirectory = evidenceDirectory;
@@ -298,6 +299,7 @@ async function main() {
   const observations = {
     schemaVersion: "ReleaseRecoveryEvidence97V1",
     investigatedRevision: "f026bca8b53aecca829262e9a27820ac6d078892",
+    testedCheckoutRevision: readTestedCheckoutRevision(),
     generatedAt: new Date().toISOString(),
     expected: {
       remoteCallsAfterRestart: 1,

@@ -12,11 +12,11 @@ Scope: synthetic investigation only. No product code, real deployment, publicati
 
 The current controller does not make a duplicate deployment while the outcome is held or while the killed controller's lease remains active. It also cannot resume the outstanding production verification from the retained journal.
 
-After a successful remote side effect whose response is lost, the remote alias points at the new deployment but the durable journal has no deployment identity. The controller attempts rollback, cannot verify it, and holds in `WAITING_EXTERNAL`. Immediate restart and a due wait both keep the remote call count at one.
+After a successful remote side effect whose response is lost, the remote alias points at the new deployment but the durable journal has no deployment identity. The controller makes one deployment attempt and one rollback attempt, cannot verify the rollback, and holds in `WAITING_EXTERNAL`. Immediate restart and a due wait do not add another deployment or rollback attempt.
 
 After hard controller exit inside `deploy`, the remote alias points at the new deployment while the durable record remains `RELEASING`. Immediate reload through the normal entry point keeps the remote call count at one because the old lease still guards the record. Explicit `recoverWorkflowLease` verifies that the actual killed child PID has exited and releases the lease. The next normal restart then makes a second deployment, verifies that second deployment, retains its production proof, and reaches LIVE.
 
-An indeterminate remote result also holds in `WAITING_EXTERNAL` with one remote call and no local deployment identity.
+An indeterminate remote result also makes one deployment attempt and one rollback attempt, then holds in `WAITING_EXTERNAL` with no local deployment identity.
 
 The safe conclusion is scenario-specific. Lost and indeterminate responses hold without a duplicate, but they cannot resume verification. Hard exit also holds until verified lease recovery; after that authorized recovery, the controller deploys again because no deployment identity was saved. A release operator cannot resume the original deployment's verification without either remaining blocked or making a duplicate deployment.
 
@@ -34,9 +34,9 @@ The exact checkout does not contain `GLOSSARY.md`, `docs/adr/0003-unify-publicat
 
 | Scenario | Remote state after incident | Durable state after incident | Restart observation |
 | --- | --- | --- | --- |
-| Success, response lost | 1 call; `dpl-lost-response-1`; alias assigned; rollback target `dpl-previous` at `bbbb...bbbb` | `WAITING_EXTERNAL`; intended commit `cccc...cccc`; review and merge journal retained; deployment identity absent; no production proof. The probe infers 9 required checks from the non-LIVE stage; the record has no persisted outstanding-check list. | Immediate and due restart stayed `WAITING_EXTERNAL`; call count remained 1 |
+| Success, response lost | 1 deployment attempt; `dpl-lost-response-1`; alias assigned; 1 rollback attempt against `dpl-previous` at `bbbb...bbbb` | `WAITING_EXTERNAL`; intended commit `cccc...cccc`; review and merge journal retained; deployment identity absent; no production proof. The probe infers 9 required checks from the non-LIVE stage; the record has no persisted outstanding-check list. | Immediate and due restart stayed `WAITING_EXTERNAL`; deployment and rollback attempt counts remained 1 |
 | Controller exit before local save | Initial call created `dpl-controller-exit-1` and assigned the alias; no rollback attempt | `RELEASING`; intended commit and prior journal retained; deployment identity absent; no production proof. The probe infers the same 9 checks from stage rather than reading observed check state. | Immediate reload stayed `RELEASING` at 1 call. Explicit recovery verified killed PID 24552, released the lease, then normal restart created `dpl-controller-exit-2`; call count 2; LIVE with retained proof for the second deployment |
-| Indeterminate remote result | 1 call; deployment identity and alias assignment unknown; rollback target retained | `WAITING_EXTERNAL`; deployment identity absent; no production proof. The 9 listed checks are a probe inference from stage, not a controller observation. | Immediate and due restart stayed `WAITING_EXTERNAL`; call count remained 1 |
+| Indeterminate remote result | 1 deployment attempt; deployment identity and alias assignment unknown; rollback target retained; 1 rollback attempt | `WAITING_EXTERNAL`; deployment identity absent; no production proof. The 9 listed checks are a probe inference from stage, not a controller observation. | Immediate and due restart stayed `WAITING_EXTERNAL`; deployment and rollback attempt counts remained 1 |
 
 The machine-readable record is [observations.json](./observations.json). It includes each journal, next action, alias assignment, rollback target, stage-derived check inference, and call count before and after restart.
 
@@ -67,7 +67,7 @@ node --import tsx docs/designs/recovery-evidence/97/release-recovery-probe.ts
 node --import tsx docs/designs/recovery-evidence/97/release-recovery-probe.ts --refresh-snapshots
 ```
 
-The first command is expected to exit 1 at the missing verification-resume assertion. The first two commands write only to a new `.scratch/recovery-evidence-97-runs/run-*` directory, so an expected failure cannot overwrite tracked evidence. The third command explicitly refreshes the tracked observation snapshot and succeeds only after the complete observational run passes its checks.
+The first command is expected to exit 1 at the missing verification-resume assertion. The first two commands write only to a new `.scratch/recovery-evidence-97-runs/run-*` directory, so an expected failure cannot overwrite tracked evidence. Each rerun records `testedCheckoutRevision` separately from `investigatedRevision`. The third command explicitly refreshes the tracked observation snapshot and succeeds only after the complete observational run passes its checks.
 
 ## Revision and source checks
 
