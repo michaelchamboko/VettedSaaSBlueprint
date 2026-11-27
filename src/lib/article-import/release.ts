@@ -75,6 +75,7 @@ export type ReleaseDeploymentIntent = {
   commitSha: string;
   productionAssignment: string;
   rollbackTarget: { deploymentId: string; commitSha: string };
+  recordedDeployment?: { deploymentId: string; canonicalUrl?: string };
 };
 
 export type ReleaseDeploymentLookup =
@@ -692,6 +693,9 @@ async function assessImportReleaseImpl(input: {
       commitSha,
       productionAssignment,
       rollbackTarget: { deploymentId: previous.deploymentId, commitSha: previous.commitSha },
+      recordedDeployment: existingOperation?.deploymentId
+        ? { deploymentId: existingOperation.deploymentId, canonicalUrl: existingOperation.url }
+        : undefined,
     };
     const holdForReconciliation = async (missingEvidence: string[]): Promise<ReleaseAssessment> => {
       const evidence = [...new Set(missingEvidence)];

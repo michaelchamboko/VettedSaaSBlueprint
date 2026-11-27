@@ -10,6 +10,7 @@ import { assertVerifierResult, requireVerificationMode, storeProductionVerifierE
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
 const execFile = promisify(execFileCallback);
+const RELEASE_OPERATION_META_KEY = "vettedArticleReleaseOperation";
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
 export type ReleaseJsonFetcher = (url: string) => Promise<Record<string, unknown>>;
 
@@ -94,13 +95,43 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
   const origin = REPOSITORY_CANONICAL_ORIGIN;
   const deploymentApi = `${origin.replace(/\/$/, "")}/api/deployment`;
   const inspectArgs = (target: string) => withToken(["inspect", target, "--json"], token);
-  async function verifiedDeployment(target: string): Promise<{ id: string; target: string; readyState: string; commitSha: string }> {
-    const inspected = JSON.parse((await runner("vercel", inspectArgs(target))).stdout) as { id?: unknown; target?: unknown; readyState?: unknown; gitCommitSha?: unknown };
+  type InspectedDeployment = { id: string; target: string; readyState: string; commitSha?: string; operationKey?: string };
+  async function inspectDeployment(target: string): Promise<InspectedDeployment> {
+    const inspected = JSON.parse((await runner("vercel", inspectArgs(target))).stdout) as { id?: unknown; target?: unknown; readyState?: unknown; gitCommitSha?: unknown; meta?: unknown };
     if (typeof inspected.id !== "string" || inspected.target !== "production" || inspected.readyState !== "READY") throw new Error("DEPLOYMENT_IDENTITY_UNVERIFIED");
+    const meta = inspected.meta && typeof inspected.meta === "object" && !Array.isArray(inspected.meta) ? inspected.meta as Record<string, unknown> : {};
+    return {
+      id: inspected.id,
+      target: "production",
+      readyState: "READY",
+      commitSha: typeof inspected.gitCommitSha === "string" ? inspected.gitCommitSha : undefined,
+      operationKey: typeof meta[RELEASE_OPERATION_META_KEY] === "string" ? meta[RELEASE_OPERATION_META_KEY] : undefined,
+    };
+  }
+  async function verifiedDeployment(target: string, expectedOperationKey?: string): Promise<{ id: string; target: string; readyState: string; commitSha: string }> {
+    const inspected = await inspectDeployment(target);
+    if (expectedOperationKey !== undefined && inspected.operationKey !== expectedOperationKey) throw new Error("DEPLOYMENT_OPERATION_IDENTITY_UNVERIFIED");
     const api = await fetchJson(deploymentApi);
     if (typeof api.commitSha !== "string" || api.environment !== "production") throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED");
-    if (typeof inspected.gitCommitSha === "string" && inspected.gitCommitSha !== api.commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
-    return { id: inspected.id, target: "production", readyState: "READY", commitSha: typeof inspected.gitCommitSha === "string" ? inspected.gitCommitSha : api.commitSha };
+    if (inspected.commitSha && inspected.commitSha !== api.commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
+    return { id: inspected.id, target: "production", readyState: "READY", commitSha: inspected.commitSha ?? api.commitSha };
+  }
+  async function operationDeployments(operationKey: string): Promise<string[]> {
+    const output = (await runner("vercel", withToken(["list", "--environment", "production", "--meta", `${RELEASE_OPERATION_META_KEY}=${operationKey}`, "--format", "json"], token))).stdout;
+    const parsed = JSON.parse(output) as unknown;
+    const deployments = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === "object" && Array.isArray((parsed as { deployments?: unknown }).deployments)
+        ? (parsed as { deployments: unknown[] }).deployments
+        : undefined;
+    if (!deployments) throw new Error("DEPLOYMENT_OPERATION_LOOKUP_INVALID");
+    return deployments.map((deployment) => {
+      if (!deployment || typeof deployment !== "object") throw new Error("DEPLOYMENT_OPERATION_LOOKUP_INVALID");
+      const item = deployment as { uid?: unknown; id?: unknown; url?: unknown };
+      const identity = [item.uid, item.id, item.url].find((value): value is string => typeof value === "string" && value.length > 0);
+      if (!identity) throw new Error("DEPLOYMENT_OPERATION_LOOKUP_INVALID");
+      return identity;
+    });
   }
   return {
     async preflight() {
@@ -191,29 +222,58 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
     async reconcileDeployment(intent) {
       if (intent.productionAssignment !== origin) return { status: "inconsistent", missingEvidence: ["recorded production assignment does not match the canonical origin"] };
       try {
-        const assigned = await verifiedDeployment(origin);
-        if (assigned.commitSha === intent.commitSha) {
+        const legacyOperationKey = `deployment:${intent.commitSha}`;
+        if (intent.operationKey === legacyOperationKey) {
+          if (!intent.recordedDeployment?.deploymentId) {
+            return { status: "inconsistent", missingEvidence: ["legacy operation has no recorded provider deployment identity"] };
+          }
+          const recorded = await inspectDeployment(intent.recordedDeployment.deploymentId);
+          const assigned = await verifiedDeployment(origin);
+          if (recorded.id !== intent.recordedDeployment.deploymentId || recorded.commitSha !== intent.commitSha
+            || assigned.id !== recorded.id || assigned.commitSha !== intent.commitSha) {
+            return { status: "inconsistent", missingEvidence: ["legacy provider deployment identity, intended commit, and production alias do not agree"] };
+          }
           const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
           const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
           return {
             status: "confirmed",
             productionAssignment: origin,
-            deployment: { deploymentId: assigned.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: assigned.commitSha },
+            deployment: { deploymentId: recorded.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: intent.commitSha },
+          };
+        }
+        const candidates = await operationDeployments(intent.operationKey);
+        if (candidates.length > 1) return { status: "inconsistent", missingEvidence: ["multiple deployments carry the recorded operation identity"] };
+        const assigned = await verifiedDeployment(origin);
+        if (candidates.length === 1) {
+          const candidate = await inspectDeployment(candidates[0]);
+          if (candidate.operationKey !== intent.operationKey || candidate.commitSha !== intent.commitSha
+            || assigned.id !== candidate.id || assigned.commitSha !== intent.commitSha) {
+            return { status: "inconsistent", missingEvidence: ["provider deployment identity, intended commit, metadata, and production alias do not agree"] };
+          }
+          const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
+          const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
+          return {
+            status: "confirmed",
+            productionAssignment: origin,
+            deployment: { deploymentId: candidate.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: intent.commitSha },
           };
         }
         if (assigned.id === intent.rollbackTarget.deploymentId && assigned.commitSha === intent.rollbackTarget.commitSha) {
           return { status: "not-found", evidence: ["production alias still resolves to the recorded rollback target"] };
         }
-        return { status: "inconsistent", missingEvidence: ["production alias resolves to neither the intended commit nor the rollback target"] };
+        if (assigned.commitSha === intent.commitSha) {
+          return { status: "inconsistent", missingEvidence: ["production alias resolves to the intended commit without the recorded operation identity"] };
+        }
+        return { status: "inconsistent", missingEvidence: ["production alias resolves to neither the recorded operation identity nor the rollback target"] };
       } catch (error) {
         return { status: "indeterminate", missingEvidence: [`provider deployment or production alias lookup failed: ${error instanceof Error ? error.message : String(error)}`] };
       }
     },
-    async deploy(commitSha): Promise<ReleaseDeployment> {
-      const result = await runner("vercel", withToken(["deploy", "--prod", "--yes"], token));
+    async deploy(commitSha, operationKey): Promise<ReleaseDeployment> {
+      const result = await runner("vercel", withToken(["deploy", "--prod", "--yes", "--meta", `${RELEASE_OPERATION_META_KEY}=${operationKey}`], token));
       const url = result.stdout.match(/https:\/\/[^\s]+/)?.[0];
       if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
-      const inspected = await verifiedDeployment(url);
+      const inspected = await verifiedDeployment(url, operationKey);
       if (inspected.commitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
       const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
       const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);

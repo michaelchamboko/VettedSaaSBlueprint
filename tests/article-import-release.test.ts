@@ -417,8 +417,10 @@ test("a hard-exit deployment intent remains fenced and then resumes the original
     let lookups = 0;
     let deploys = 0;
     const adapter = operations(root, {
-      reconcileDeployment: async () => {
+      reconcileDeployment: async (intent) => {
         lookups += 1;
+        assert.equal(intent.operationKey, `deployment:${"c".repeat(40)}`);
+        assert.deepEqual(intent.rollbackTarget, { deploymentId: "dpl-previous", commitSha: "b".repeat(40) });
         return { status: "confirmed", productionAssignment: "https://vettedsaasblueprint.online", deployment: { deploymentId: "dpl-original", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha: "c".repeat(40) } };
       },
       deploy: async () => { deploys += 1; throw new Error("duplicate deploy"); },
@@ -624,12 +626,14 @@ test("local adapter resolves the current production deployment from the canonica
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("local adapter reconciles the intended commit and production alias as one deployment identity", async () => {
+test("local adapter reconciles an exact metadata operation match and production alias as one deployment identity", async () => {
   const artifactPath = "src/generated/landing-pages/elevenlabs-ai-voice-generator.json";
   const calls: string[][] = [];
+  const operationKey = `deployment:article-test:${"c".repeat(40)}`;
   const runner: ReleaseCommandRunner = async (command, args) => {
     calls.push([command, ...args]);
-    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_original", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
+    if (command === "vercel" && args[0] === "list") return { stdout: JSON.stringify({ deployments: [{ uid: "dpl_original", url: "original.vercel.app" }] }), stderr: "" };
+    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_original", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY", meta: { vettedArticleReleaseOperation: operationKey } }), stderr: "" };
     return { stdout: "", stderr: "" };
   };
   const adapter = createLocalReleaseOperations(process.cwd(), {
@@ -640,7 +644,7 @@ test("local adapter reconciles the intended commit and production alias as one d
     slug: "elevenlabs-ai-voice-generator",
   });
   const result = await adapter.reconcileDeployment({
-    operationKey: `deployment:${"c".repeat(40)}`,
+    operationKey,
     commitSha: "c".repeat(40),
     productionAssignment: "https://vettedsaasblueprint.online",
     rollbackTarget: { deploymentId: "dpl_previous", commitSha: "b".repeat(40) },
@@ -651,7 +655,84 @@ test("local adapter reconciles the intended commit and production alias as one d
     assert.equal(result.deployment.commitSha, "c".repeat(40));
     assert.equal(result.productionAssignment, "https://vettedsaasblueprint.online");
   }
+  assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "list"), ["vercel", "list", "--environment", "production", "--meta", `vettedArticleReleaseOperation=${operationKey}`, "--format", "json"]);
   assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://vettedsaasblueprint.online", "--json"]);
+});
+
+test("local adapter holds when an unrelated deployment of the same commit owns production", async () => {
+  const operationKey = `deployment:article-test:${"c".repeat(40)}`;
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    if (command === "vercel" && args[0] === "list") return { stdout: JSON.stringify({ deployments: [] }), stderr: "" };
+    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_unrelated", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY", meta: { vettedArticleReleaseOperation: "deployment:other" } }), stderr: "" };
+    return { stdout: "", stderr: "" };
+  };
+  const result = await createLocalReleaseOperations(process.cwd(), {
+    runner,
+    fetchJson: async () => ({ commitSha: "c".repeat(40), environment: "production" }),
+    format: "direct-review", artifactPath: "src/generated/landing-pages/elevenlabs-ai-voice-generator.json", slug: "elevenlabs-ai-voice-generator",
+  }).reconcileDeployment({ operationKey, commitSha: "c".repeat(40), productionAssignment: "https://vettedsaasblueprint.online", rollbackTarget: { deploymentId: "dpl_previous", commitSha: "b".repeat(40) } });
+  assert.equal(result.status, "inconsistent");
+  if (result.status === "inconsistent") assert.match(result.missingEvidence.join(" "), /operation identity/i);
+});
+
+test("local adapter holds duplicate deployments carrying the same operation identity", async () => {
+  const operationKey = `deployment:article-test:${"c".repeat(40)}`;
+  const runner: ReleaseCommandRunner = async (command, args) => command === "vercel" && args[0] === "list"
+    ? { stdout: JSON.stringify({ deployments: [{ uid: "dpl_one" }, { uid: "dpl_two" }] }), stderr: "" }
+    : { stdout: "", stderr: "" };
+  const result = await createLocalReleaseOperations(process.cwd(), { runner, format: "direct-review", artifactPath: "src/generated/landing-pages/elevenlabs-ai-voice-generator.json", slug: "elevenlabs-ai-voice-generator" })
+    .reconcileDeployment({ operationKey, commitSha: "c".repeat(40), productionAssignment: "https://vettedsaasblueprint.online", rollbackTarget: { deploymentId: "dpl_previous", commitSha: "b".repeat(40) } });
+  assert.equal(result.status, "inconsistent");
+  if (result.status === "inconsistent") assert.match(result.missingEvidence.join(" "), /multiple deployments/i);
+});
+
+test("local adapter proves a legacy operation from its recorded provider deployment and alias", async () => {
+  const commitSha = "c".repeat(40);
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_legacy", gitCommitSha: commitSha, target: "production", readyState: "READY", meta: {} }), stderr: "" };
+    return { stdout: "", stderr: "" };
+  };
+  const result = await createLocalReleaseOperations(process.cwd(), {
+    runner, fetchJson: async () => ({ commitSha, environment: "production" }), format: "direct-review",
+    artifactPath: "src/generated/landing-pages/elevenlabs-ai-voice-generator.json", slug: "elevenlabs-ai-voice-generator",
+  }).reconcileDeployment({
+    operationKey: `deployment:${commitSha}`, commitSha, productionAssignment: "https://vettedsaasblueprint.online",
+    rollbackTarget: { deploymentId: "dpl_previous", commitSha: "b".repeat(40) }, recordedDeployment: { deploymentId: "dpl_legacy" },
+  });
+  assert.equal(result.status, "confirmed");
+  if (result.status === "confirmed") assert.equal(result.deployment.deploymentId, "dpl_legacy");
+});
+
+test("local adapter holds an unrecorded legacy operation even when production has the intended commit", async () => {
+  const commitSha = "c".repeat(40);
+  const runner: ReleaseCommandRunner = async (command, args) => command === "vercel" && args[0] === "inspect"
+    ? { stdout: JSON.stringify({ id: "dpl_unknown", gitCommitSha: commitSha, target: "production", readyState: "READY", meta: {} }), stderr: "" }
+    : { stdout: "", stderr: "" };
+  const result = await createLocalReleaseOperations(process.cwd(), {
+    runner, fetchJson: async () => ({ commitSha, environment: "production" }), format: "direct-review",
+    artifactPath: "src/generated/landing-pages/elevenlabs-ai-voice-generator.json", slug: "elevenlabs-ai-voice-generator",
+  }).reconcileDeployment({
+    operationKey: `deployment:${commitSha}`, commitSha, productionAssignment: "https://vettedsaasblueprint.online",
+    rollbackTarget: { deploymentId: "dpl_previous", commitSha: "b".repeat(40) },
+  });
+  assert.equal(result.status, "inconsistent");
+  if (result.status === "inconsistent") assert.match(result.missingEvidence.join(" "), /no recorded provider deployment identity/i);
+});
+
+test("local adapter stamps and verifies the durable operation identity on deploy", async () => {
+  const operationKey = `deployment:article-test:${"c".repeat(40)}`;
+  const calls: string[][] = [];
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    calls.push([command, ...args]);
+    if (command === "vercel" && args[0] === "deploy") return { stdout: "https://original.vercel.app", stderr: "" };
+    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_original", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY", meta: { vettedArticleReleaseOperation: operationKey } }), stderr: "" };
+    return { stdout: "", stderr: "" };
+  };
+  await createLocalReleaseOperations(process.cwd(), {
+    runner, fetchJson: async () => ({ commitSha: "c".repeat(40), environment: "production" }), format: "direct-review",
+    artifactPath: "src/generated/landing-pages/elevenlabs-ai-voice-generator.json", slug: "elevenlabs-ai-voice-generator",
+  }).deploy("c".repeat(40), operationKey);
+  assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "deploy"), ["vercel", "deploy", "--prod", "--yes", "--meta", `vettedArticleReleaseOperation=${operationKey}`]);
 });
 
 test("local adapter falls back to the deployment API commit when inspect omits gitCommitSha", async () => {
