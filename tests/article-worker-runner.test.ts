@@ -166,3 +166,35 @@ test("explicit OpenCode selection remains available for REFINING", async t => {
   assert.equal(invocation?.executable, process.env.OPENCODE_EXECUTABLE ?? "opencode");
   assert.equal(invocation?.args[invocation.args.indexOf("--model") + 1], "fixture/chosen-model");
 });
+
+test("activity workers receive one current activity and only accepted current-stage handoffs", async t => {
+  const root = await mkdtemp(path.join(process.cwd(), ".tmp-article-worker-activity-projection-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const desktopRef = { path: `build-pack/article-import/${importId}/desktop.json`, sha256: "d".repeat(64) };
+  const staleRef = { path: `build-pack/article-import/${importId}/stale.json`, sha256: "e".repeat(64) };
+  const activeFinding = { findingId: `finding-${"f".repeat(24)}`, stage: "VALIDATING", activityId: "mobile", status: "open", observation: "Mobile spacing is clipped." };
+  const invocation = await prepareWorkerInvocation(root, "packet.json", {
+    ...packet("VALIDATING"),
+    activity: { stage: "VALIDATING", id: "mobile", attemptId: `activity-attempt-${"a".repeat(24)}`, inputFingerprint: "1".repeat(64), criteria: [{ id: "validating.mobile", revision: "fixture" }], dependencyRefs: [], openFindings: [activeFinding] },
+    record: {
+      importId, format: "agent_review_required", stage: "VALIDATING", stageReceipts: [{ stage: "REFINING", status: "passed", at: "2026-01-01T00:00:00.000Z", message: "historical" }],
+      activityAttempts: [{ attemptId: `activity-attempt-${"b".repeat(24)}`, resultPath: "old.result.json", status: "superseded" }],
+      activityFindings: [activeFinding, { ...activeFinding, findingId: `finding-${"c".repeat(24)}`, activityId: "desktop", status: "resolved" }],
+      activityReceipts: [
+        { stage: "VALIDATING", activityId: "desktop", outcome: "accepted", resultRef: desktopRef, observation: "Desktop passed." },
+        { stage: "REFINING", activityId: "wording-and-rhythm", outcome: "accepted", resultRef: staleRef, observation: "Old stage output." },
+      ],
+    },
+  }, { kind: "opencode", executable: "opencode", model: "fixture/model" }, "11111111-1111-1111-1111-111111111111");
+
+  const packetPath = invocation.args[invocation.args.indexOf("--file") + 1];
+  const projected = JSON.parse(await readFile(packetPath, "utf8"));
+  assert.equal(projected.record.stageReceipts, undefined);
+  assert.equal(projected.record.activityAttempts, undefined);
+  assert.deepEqual(projected.activeFindings, [activeFinding]);
+  assert.deepEqual(projected.acceptedActivityOutputs, [{ activityId: "desktop", outcome: "accepted", observation: "Desktop passed.", resultRef: desktopRef }]);
+  assert.doesNotMatch(JSON.stringify(projected), /old\.result\.json|stale\.json/);
+  const prompt = invocation.args.at(-1)!;
+  assert.match(prompt, /current activity only: mobile/i);
+  assert.doesNotMatch(prompt, /then every required design/);
+});

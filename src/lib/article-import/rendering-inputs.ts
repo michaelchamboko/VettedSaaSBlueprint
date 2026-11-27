@@ -10,6 +10,7 @@ const CONFIG = /^(next|postcss|tailwind)\.config\.(?:js|cjs|mjs|ts|cts|mts)$/;
 const ENTRY = /^src\/(?:middleware|proxy|instrumentation|instrumentation-client)\.(?:js|ts)$/;
 const excluded = (file: string) => file === "src/lib/article-import" || file.startsWith("src/lib/article-import/");
 const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+const globalInput = (file: string) => ROOT_FILES.has(file) || CONFIG.test(file) || ENTRY.test(file);
 function included(file: string): boolean {
   return !excluded(file) && !file.includes("\\") && !file.split("/").some((part) => part === ".." || part === "." || !part)
     && (ROOT_FILES.has(file) || CONFIG.test(file) || ENTRY.test(file) || ROOTS.some((root) => file.startsWith(`${root}/`)));
@@ -101,7 +102,7 @@ export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsS
   const subtree = core.slice(0, core.lastIndexOf("/") + 1);
   return manifest.files.filter((ref) => {
     const file = ref.path;
-    if (required.includes(file)) return true;
+    if (required.includes(file) || globalInput(file)) return true;
     if (!RENDERABLE.test(file)) return false;
     if (file.startsWith(subtree) || file.startsWith("src/styles/") || (target.format !== "direct-review" && file.startsWith("src/components/public/"))) return true;
     if (!file.startsWith("src/app/")) return false;
@@ -122,11 +123,13 @@ export function publicationServingInputs(manifest: z.infer<typeof renderingInput
     const directory = slash < 0 ? "" : relative.slice(0, slash);
     return target.renderedRoutes.some((route) => routeDirectoryMatches(directory, route, false));
   });
-  return selected.map((file) => {
+  const selectedRefs = selected.map((file) => {
     const ref = manifest.files.find((candidate) => candidate.path === file);
     if (!ref) throw new Error(`PUBLICATION_SERVING_INPUT_MISSING:${file}`);
     return ref;
   });
+  const globals = manifest.files.filter((ref) => globalInput(ref.path));
+  return [...new Map([...selectedRefs, ...globals].map((ref) => [ref.path, ref])).values()];
 }
 
 export function publicationServingInputPaths(format: string): string[] {
@@ -190,6 +193,11 @@ export async function captureRenderingInputs(root: string, importId: string): Pr
 export async function validateRenderingInputs(root: string, ref: EvidenceRef, options: { historical?: boolean; target?: { format: string; renderedRoutes: string[] } } = {}) {
   if (options.historical && !isEvidenceSnapshotActive()) throw new Error("RENDER_INPUT_FROZEN_SNAPSHOT_REQUIRED");
   const manifest = renderingInputsSchema.parse(await readEvidence(root, ref));
+  if (!options.historical && options.target) {
+    const currentGlobals = (await renderingInputPaths(root)).filter(globalInput);
+    const recordedGlobals = manifest.files.map((file) => file.path).filter(globalInput);
+    if (JSON.stringify(currentGlobals) !== JSON.stringify(recordedGlobals)) throw new Error("RENDER_INPUT_GLOBAL_INVENTORY_CHANGED");
+  }
   if (!options.historical && !options.target) {
     const current = await renderingInputPaths(root);
     if (JSON.stringify(current) !== JSON.stringify(manifest.files.map((file) => file.path))) throw new Error("RENDER_INPUT_INVENTORY_CHANGED");

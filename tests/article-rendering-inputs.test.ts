@@ -111,6 +111,23 @@ test("publication serving inputs include transitive format helpers without widen
   assert.equal(visibility.includes("src/lib/blog/structured-data.ts"), false);
 });
 
+test("target-bound current rendering tracks global build inputs but ignores unrelated article files", async () => {
+  const root = await fixture();
+  try {
+    for (const file of publicationServingInputPaths("blog")) await put(root, file, `fixture:${file}`);
+    const target = { format: "blog", renderedRoutes: ["/blog/synthetic"] };
+    const ref = await captureRenderingInputs(root, importId);
+    await put(root, "src/generated/landing-pages/unrelated.json", "{}");
+    await validateRenderingInputs(root, ref, { target });
+    await put(root, "package-lock.json", "{\"lockfileVersion\":4}");
+    await assert.rejects(() => validateRenderingInputs(root, ref, { target }), /RENDER_INPUT_CHANGED:package-lock\.json/);
+
+    await put(root, "package-lock.json", "{\"lockfileVersion\":3}");
+    await put(root, "postcss.config.mjs", "export default {};");
+    await assert.rejects(() => validateRenderingInputs(root, ref, { target }), /RENDER_INPUT_GLOBAL_INVENTORY_CHANGED/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("route-scoped serving dependencies include reachable helpers without widening the historical detector contract", () => {
   const paths = [...new Set(["direct-review", "blog", "visibility", "decision-set"].flatMap(publicationServingInputPaths))];
   const manifest = { schemaVersion: "RenderingInputsV1", inventoryVersion: 1, files: paths.map((path) => ({ path, sha256: "a".repeat(64) })), digest: "b".repeat(64) } as const;

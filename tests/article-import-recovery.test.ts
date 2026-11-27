@@ -179,9 +179,9 @@ test("external failures never exhaust content strategies or delete the source", 
 
 test("failure categories keep their recovery action when wording changes", async () => {
   const scenarios = [
-    { category: "content-rejection", fail: (detail: string, _root: string) => presentationDesignRejected(detail), messages: ["review rejected content", "unsupported buyer claim"], kind: "repair", scope: "article" },
-    { category: "invalid-evidence", fail: (detail: string, _root: string) => workflowEvidenceRejected(detail), messages: ["evidence digest mismatch", "citation cannot be validated"], kind: "repair", scope: "article" },
-    { category: "unavailable-capability", fail: (detail: string, _root: string) => presentationCandidateUnavailable(detail), messages: ["reviewer offline", "editorial service cannot start"], kind: "blocked", scope: "shared" },
+    { category: "content-rejection", fail: (detail: string) => presentationDesignRejected(detail), messages: ["review rejected content", "unsupported buyer claim"], kind: "repair", scope: "article" },
+    { category: "invalid-evidence", fail: (detail: string) => workflowEvidenceRejected(detail), messages: ["evidence digest mismatch", "citation cannot be validated"], kind: "repair", scope: "article" },
+    { category: "unavailable-capability", fail: (detail: string) => presentationCandidateUnavailable(detail), messages: ["reviewer offline", "editorial service cannot start"], kind: "blocked", scope: "shared" },
     { category: "uncertain-external-outcome", fail: (detail: string, root: string) => createLocalReleaseOperations(root, { format: "blog", runner: async () => { throw new Error(detail); } }).deploy("a".repeat(40)), messages: ["response lost after remote success", "provider result is indeterminate"], kind: "blocked", scope: "shared" },
   ] as const;
 
