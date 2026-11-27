@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-river",
+  "reviewerId": "/root/ticket122/r122_river",
+  "route": "native-codex-subagent",
+  "genuineIndependentJudgment": true,
+  "reviewedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "observedEvidence": "Both versions ask which account and project should be open right now. The rewrite addresses the reader directly with 'you.'",
+  "verdict": "meets",
+  "explanation": "The reader can give the same answer to either question. The rewrite keeps the original terms and timing, uses plain English, and adds no factual claim.",
+  "rawResponse": "Observed evidence: Both versions ask which account and project should be open right now. The rewrite addresses the reader directly with “you.”\n\nVerdict: meets\n\nExplanation: The reader can give the same answer to either question. The rewrite keeps the original terms and timing, uses plain English, and adds no factual claim."
+}
