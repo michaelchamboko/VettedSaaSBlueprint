@@ -49,6 +49,6 @@ The publication impact cases varied content, the shared renderer, shared styles,
 - `tests/article-production-evidence.test.ts` passed: 5 tests.
 - Focused release regression tests passed: 2 tests.
 
-The required code-intelligence loader was retried twice. Both attempts stopped before indexing because the installed CLI could not verify exact-build admission while another codebase-memory operation was active. Direct source inspection and the already-published graph at the required historical revision were used instead; no dependency absence was inferred from the unavailable local refresh.
+The required code-intelligence loader was retried twice, and the post-change local updater was attempted once. Each stopped before indexing because the installed CLI could not verify exact-build admission while another codebase-memory operation was active. Direct source inspection and the already-published graph at the required historical revision were used instead; no dependency absence was inferred from the unavailable local refresh.
 
 The first sandboxed release regression attempt could not rename a temporary fixture file or initialize a temporary Git repository. The unchanged tests passed with permission for those isolated fixture operations. This was a test-environment restriction, not a product failure.
