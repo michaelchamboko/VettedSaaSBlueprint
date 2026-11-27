@@ -16,6 +16,8 @@ import { invokeWorker, type WorkerOptions } from "./worker-runner";
 import type { ArticleResearchRegistry } from "./research-registry";
 import { createSupervisedImproveExecutor, type ImproveExecutor } from "./improve-supervisor";
 import { readCurrentArticleHeroRejection } from "./hero-image";
+import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { NeonArticleReviewEvidenceRegistry } from "./review-evidence-registry-neon";
 
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
@@ -24,6 +26,7 @@ export type DispatchOptions = WorkerOptions & {
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   researchRegistry?: ArticleResearchRegistry;
+  reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry;
 };
 
 function isTerminalStage(stage: string): boolean {
@@ -126,7 +129,7 @@ async function runImportSteps(
   importId: string,
   options?: DispatchOptions,
 ): Promise<ExternalArticleImportV1 & { dispatchOutcome?: "STEP_LIMIT" }> {
-  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry });
+  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry, reviewEvidenceRegistry: options?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry() });
   const execute = createDispatchingExecutor(repositoryRoot, baseExecutor, options);
   const improveExecutor = createDispatchingImproveExecutor(repositoryRoot, createSupervisedImproveExecutor(repositoryRoot), options);
   const now = options?.now ?? (() => Date.now());

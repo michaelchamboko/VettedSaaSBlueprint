@@ -15,6 +15,7 @@ import { researchRegistryDecisionSchema, researchRegistryPlanSchema, researchReg
 import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
+import { registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 
 const file = z.string().min(1);
 const resultBase = { idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), summary: z.string().min(1) };
@@ -50,7 +51,7 @@ async function readRepositoryJson(root: string, file: string): Promise<unknown> 
 const workStages = ["RESEARCHING","TRANSFORMING","REFINING","VALIDATING","RELEASING"] as const;
 
 /** Codex owns authoring; the runtime validates its durable stage output and executes local operations. */
-export function createSupervisedImportExecutor(root: string, releaseOperations?: ReleaseOperations, options?: { researchRegistry?: ArticleResearchRegistry }): ImportStageExecutor {
+export function createSupervisedImportExecutor(root: string, releaseOperations?: ReleaseOperations, options?: { researchRegistry?: ArticleResearchRegistry; reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry }): ImportStageExecutor {
   return async (context) => {
     let { record } = context;
     await context.assertLease();
@@ -58,6 +59,16 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     if (record.stage === "VERIFYING") return verifyImportRelease(root, record);
     if (!(workStages as readonly string[]).includes(record.stage)) throw new Error(`No productive work for ${record.stage}.`);
     const stage = record.stage as typeof workStages[number];
+    if (options?.reviewEvidenceRegistry && stage === "REFINING") {
+      const reuse = await reuseEditorialReviewEvidence(root, options.reviewEvidenceRegistry, record);
+      record = { ...(reuse.record ?? record), reviewEvidence: { ...record.reviewEvidence, editorial: reuse.status } };
+      if (reuse.record) return advanceImport(root, record, "Reused registered editorial judgment for the unchanged examined revision.");
+    }
+    if (options?.reviewEvidenceRegistry && stage === "VALIDATING") {
+      const reuse = await reuseBrowserReviewEvidence(root, options.reviewEvidenceRegistry, record);
+      record = { ...(reuse.record ?? record), reviewEvidence: { ...record.reviewEvidence, browser: reuse.status } };
+      if (reuse.record) return advanceImport(root, record, "Reused registered browser observations for the unchanged examined revision.");
+    }
     const directory = `.automation/article-imports/work/${record.importId}`;
     const validationGeneration = stage === "VALIDATING" && record.heroImage ? `.${record.heroImage.assetRef.sha256}` : "";
     const workPath = `${directory}/${context.idempotencyKey}${validationGeneration}.work.json`;
@@ -242,11 +253,19 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         record = { ...record, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath), editorial: await evidenceReference(root, work.editorialExecutionPath) } };
         record = await approveImportContent(root, record, work);
         await applyPublicationProposals(root, record, context.idempotencyKey, context.assertLease);
+        if (options?.reviewEvidenceRegistry) {
+          const registration = await registerEditorialReviewEvidence(root, options.reviewEvidenceRegistry, record);
+          record = { ...record, reviewEvidence: { ...record.reviewEvidence, editorial: registeredReviewStatus(registration) } };
+        }
         return advanceImport(root, record, result.summary);
       case "VALIDATING":
         if (workflowEvidenceSchema.parse(await readRepositoryJson(root, work.presentationEvidencePath)).schemaVersion !== "WorkflowEvidenceV3") throw new Error("PRESENTATION_CURRENT_POLICY_REQUIRED");
         record = { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: await evidenceReference(root, work.presentationEvidencePath) } };
         record = await recordImportPresentation(root, record, { validationGate: work.validationGate, validationReceipt: await readRepositoryJson(root, work.validationReceiptPath) });
+        if (options?.reviewEvidenceRegistry && record.presentation) {
+          const registration = await registerBrowserReviewEvidence(root, options.reviewEvidenceRegistry, record);
+          record = { ...record, reviewEvidence: { ...record.reviewEvidence, browser: registeredReviewStatus(registration) } };
+        }
         return record.stage === "VALIDATING" && record.presentation ? advanceImport(root, record, result.summary) : record;
       case "RELEASING": {
         const operations = releaseOperations ?? createLocalReleaseOperations(root, { format: record.format, artifactPath: work.artifactPath, slug: work.slug, importId: record.importId, sourceFingerprint: record.sourceFingerprint });

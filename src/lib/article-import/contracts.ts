@@ -222,6 +222,18 @@ export const externalArticleImportSchema = z.object({
   repairStageTotals: z.record(z.string(), z.number().int().nonnegative()).optional(),
   diagnoses: z.array(diagnosisSchema).optional(),
   recoveryRefs: z.array(stateEvidenceRef).optional(),
+  reviewEvidence: z.object({
+    editorial: z.object({
+      registrationId: z.string().uuid().optional(), examinedRevision: z.string().regex(/^[a-f0-9]{64}$/),
+      dimensions: z.object({ relevance: z.boolean(), support: z.boolean(), integrity: z.boolean(), freshness: z.boolean(), reusable: z.boolean() }).strict(),
+      action: z.enum(["reused", "registered", "reacquire"]), checkedAt: z.string().datetime({ offset: true }),
+    }).strict().optional(),
+    browser: z.object({
+      registrationId: z.string().uuid().optional(), examinedRevision: z.string().regex(/^[a-f0-9]{64}$/),
+      dimensions: z.object({ relevance: z.boolean(), support: z.boolean(), integrity: z.boolean(), freshness: z.boolean(), reusable: z.boolean() }).strict(),
+      action: z.enum(["reused", "registered", "reacquire"]), checkedAt: z.string().datetime({ offset: true }),
+    }).strict().optional(),
+  }).strict().optional(),
   legacyDiagnostics: z.array(z.string()).optional(),
   importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
