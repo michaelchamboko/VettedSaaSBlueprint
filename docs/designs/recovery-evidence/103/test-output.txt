@@ -1,0 +1,11 @@
+PASS serves the approved synthetic catalogue article through the public route
+public route component: /blog/synthetic-catalogue-target
+HTTP observed: false
+served approved revision: true
+independent of mutable import: true
+one-at-a-time changes: content, shared renderer, shared styles, target asset, shared rule
+unaffected control content approval: reusable for all five cases
+validator results: BLOG_AUTHORITY_ARTIFACT_MISMATCH; DEPLOYMENT_COMMIT_METADATA_MISMATCHED; PRODUCTION_DEPLOYMENT_MISMATCH
+tests 1
+pass 1
+fail 0
