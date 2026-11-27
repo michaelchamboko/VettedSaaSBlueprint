@@ -12,7 +12,7 @@ import { createImportPresentation, requireImportPresentationBinding, verifyImpor
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
-import { RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
+import { instructionsForStage, RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
 import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
 import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
@@ -773,7 +773,7 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
     const presented = await ensureImportPresentationBinding(repositoryRoot, { ...checked, release });
     if (!presented.presentation) return presented;
     const at = now();
-    const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: "Verify every release check before marking LIVE." });
+    const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: instructionsForStage("VERIFYING") });
     await saveImport(repositoryRoot, updated);
     return updated;
   });
@@ -787,14 +787,18 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     const presented = await ensureImportPresentation(repositoryRoot, { ...record, release });
     if (!presented.presentation) return presented;
 
-    try { await validateProductionWorkflowEvidence(repositoryRoot, record); }
+    if (!release.productionVerifierRef || release.productionVerifierRef.path !== record.evidenceRefs?.production?.path || release.productionVerifierRef.sha256 !== record.evidenceRefs.production.sha256) throw new Error("TERMINAL_PRODUCTION_REFERENCE_MISMATCH");
+    let production;
+    try { production = await validateProductionWorkflowEvidence(repositoryRoot, record); }
     catch (error) { throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify([error instanceof Error ? error.message : String(error)])}`); }
     if (!record.sourceRef || !record.contentApproval) throw new Error("TERMINAL_PROOF_INVALID");
     const at = now();
-    const artifact = JSON.parse(await readFile(path.resolve(repositoryRoot, record.contentApproval.artifactPath), "utf8"));
-    const artifactRef = await storeEvidence(repositoryRoot, record.importId, artifact);
-    const merge = record.pendingRelease?.operations?.merge, review = record.pendingRelease?.operations?.review;
-    if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha || record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
+    const operations = record.pendingRelease?.operations;
+    const merge = operations?.merge, review = operations?.review, deployment = operations?.deployment;
+    if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha ||
+        record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
+    if (deployment && (deployment.commitSha !== merge.mergeCommitSha || deployment.deploymentId !== release.deploymentId || deployment.url !== release.canonicalUrl)) throw new Error("TERMINAL_DEPLOYMENT_PROOF_INVALID");
+    const artifactRef = await storeEvidence(repositoryRoot, record.importId, production.artifact);
     const mergeEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { reviewedCommitSha: merge.reviewedHeadSha, mergeCommitSha: merge.mergeCommitSha, pullRequestUrl: record.pendingRelease.pullRequestUrl, evidenceUrl: review.evidenceUrl });
     const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
     const retainedHero = record.heroImage ?? (record.evidenceRefs?.hero ? articleHeroBindingSchema.parse(await readEvidence(repositoryRoot, record.evidenceRefs.hero)) : undefined);
