@@ -1113,6 +1113,12 @@ async function verifiedMeasurementChange(root: string, ref: EvidenceRef, diagnos
 
 async function presentationMeasurementChanged(root: string, record: ExternalArticleImportV1, replacementPresentationRef?: EvidenceRef): Promise<boolean> {
   if (record.continuation?.kind !== "repair" || !replacementPresentationRef) return false;
+  const failedCheck = record.continuation.failedCheck;
+  if (failedCheck?.code === "TYPOGRAPHY_TRACKING_FLOOR" && failedCheck.criterionId === "typography.heading.letterSpacing" && failedCheck.criterionRevision === WORKFLOW_REVISION) {
+    const authority = await evidenceReference(root, ".agents/skills/impeccable/reference/craft-floor.md");
+    const currentFloor = (await readEvidenceBytes(root, authority.path)).toString("utf8").includes("-0.04em") ? "-0.04em" : undefined;
+    if (!currentFloor || failedCheck.settings?.criterionFloor !== currentFloor) return true;
+  }
   const current = workflowEvidenceSchema.safeParse(await readEvidence(root, replacementPresentationRef));
   if (!current.success) return false;
   for (const failedRef of record.continuation.failedEvidenceRefs ?? []) {
