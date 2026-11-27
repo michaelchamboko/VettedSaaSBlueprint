@@ -1,0 +1,95 @@
+{
+  "subjectRevision": "9472dba200865a51573b589bd41796f7321347af",
+  "syntheticOnly": true,
+  "observations": [
+    {
+      "case": "refining-interrupted-after-accepted-activity",
+      "actual": {
+        "orderedDispatch": ["REFINING", "REFINING"],
+        "supervisorWorkerCalls": 2,
+        "sameAggregateWorkPath": true,
+        "sameAggregateResultPath": true,
+        "acceptedActivityRecognizedByController": false,
+        "nextActivity": "REFINING"
+      },
+      "required": {
+        "reuseAcceptedActivity": true,
+        "dispatchEarliestUnfinishedActivity": true,
+        "repeatAcceptedWorkerCall": false
+      },
+      "unreachable": "The persisted continuation and result contract identify a stage only. Neither schema has an activity identity or accepted-activity checkpoint."
+    },
+    {
+      "case": "validating-interrupted-after-accepted-activity",
+      "actual": {
+        "orderedDispatch": ["VALIDATING", "VALIDATING"],
+        "supervisorWorkerCalls": 2,
+        "sameAggregateWorkPath": true,
+        "sameAggregateResultPath": true,
+        "acceptedActivityRecognizedByController": false,
+        "nextActivity": "VALIDATING"
+      },
+      "required": {
+        "reuseAcceptedActivity": true,
+        "dispatchEarliestUnfinishedActivity": true,
+        "repeatAcceptedWorkerCall": false
+      },
+      "unreachable": "The persisted continuation and result contract identify a stage only. Neither schema has an activity identity or accepted-activity checkpoint."
+    },
+    {
+      "case": "unchanged-versus-stale-revision",
+      "actual": {
+        "unchangedContentApprovalReused": true,
+        "unchangedPresentationReused": true,
+        "staleStage": "REFINING",
+        "retainedEvidenceRefs": ["research", "assessment", "editorial"],
+        "clearedApprovals": ["contentApproval", "presentation", "presentationEvidenceRef"],
+        "nextActivity": "Refine the current artifact and record fresh editorial and format quality approval."
+      },
+      "required": "Reuse only activities whose inputs and dependencies remain valid. Obtain fresh dependent editorial and presentation approval for the changed revision.",
+      "limit": "The retained editorial evidence reference remains readable history, but the controller does not model whether an individual editorial activity is reusable."
+    },
+    {
+      "case": "completed-inspection-rejection",
+      "actual": {
+        "finding": "Synthetic visible hierarchy defect remains unresolved.",
+        "diagnostics": ["PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS"],
+        "approvalState": "blocked",
+        "controllerStage": "VALIDATING",
+        "nextActivity": "Repair validating output and resume this import.",
+        "structuredFindingPersistedInControllerState": false,
+        "structuredApplicabilityReasonPersistedInControllerState": false
+      },
+      "required": "Retain the finding and route cause-based repair.",
+      "limit": "The raw evidence remains readable, but controller state reduces the outcome to a generic stage repair."
+    },
+    {
+      "case": "completed-inspection-missing-observation",
+      "actual": {
+        "finding": "Required runtime observation is missing.",
+        "diagnostics": ["PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS"],
+        "approvalState": "blocked",
+        "controllerStage": "VALIDATING",
+        "nextActivity": "Repair validating output and resume this import.",
+        "structuredFindingPersistedInControllerState": false,
+        "structuredApplicabilityReasonPersistedInControllerState": false
+      },
+      "required": "Remain unverified and dispatch the missing observation.",
+      "limit": "The raw evidence remains readable, but controller state reduces the outcome to a generic stage repair."
+    },
+    {
+      "case": "completed-inspection-claimed-inapplicable",
+      "actual": {
+        "applicabilityReason": "Synthetic claim: context is inapplicable because the fixture has no runtime observation.",
+        "diagnostics": ["PRESENTATION_RULE_FAILED:context"],
+        "approvalState": "blocked",
+        "controllerStage": "VALIDATING",
+        "nextActivity": "Repair validating output and resume this import.",
+        "structuredFindingPersistedInControllerState": false,
+        "structuredApplicabilityReasonPersistedInControllerState": false
+      },
+      "required": "Retain the applicability reason and require independent acceptance before approval.",
+      "limit": "The raw evidence remains readable, but controller state reduces the outcome to a generic stage repair."
+    }
+  ]
+}
