@@ -14,6 +14,17 @@ import { readImportArtifactTarget } from "./format-validation";
 import { importCodeReviewSchema } from "./contracts";
 import { readProductionVerifierEvidence, type VerifierEvidenceRef } from "./verification-evidence";
 import { evaluateWorkflowEvidence } from "./workflow-evidence";
+import { articleHeroFormatSchema, articleHeroPaths } from "../article-heroes";
+import { validateArticleHeroBinding } from "./hero-image";
+import { readEvidence } from "./execution-evidence";
+
+async function requiresArticleHero(root: string, record: ExternalArticleImportV1): Promise<boolean> {
+  if (record.heroImage || record.evidenceRefs?.hero) return true;
+  const presentationRef = record.evidenceRefs?.presentation;
+  if (!presentationRef) return true;
+  const receipt = await readEvidence(root, presentationRef) as { schemaVersion?: string };
+  return receipt.schemaVersion === "WorkflowEvidenceV3";
+}
 
 export async function recordImportCodeReview(repositoryRoot: string, record: ExternalArticleImportV1, receipt: unknown, operations: Pick<ReleaseOperations, "inspectPullRequest" | "verifyCodeReview">, probe?: CapabilityProbe): Promise<ExternalArticleImportV1> {
   return withArticleExecution(repositoryRoot, () => withRecordLease(repositoryRoot, record, async (currentRecord) => {
@@ -66,7 +77,7 @@ export type ReleaseOperations = {
   capturePreviousDeployment(): Promise<{ deploymentId: string; commitSha: string; verified: boolean }>;
   commit(message: string, files: readonly string[]): Promise<string>;
   preparePullRequest(reviewedCommitSha: string): Promise<{ url: string; branch: string; reviewedCommitSha: string }>;
-  inspectPullRequest(url: string): Promise<{ merged: boolean; headRefOid: string; mergeCommitSha?: string }>;
+  inspectPullRequest(url: string): Promise<{ merged: boolean; state?: "OPEN" | "CLOSED" | "MERGED"; headRefOid: string; mergeCommitSha?: string }>;
   verifyCodeReview(pullRequestUrl: string, evidenceUrl: string, reviewedCommitSha: string): Promise<void>;
   mergePullRequest(pullRequestUrl: string, reviewedCommitSha: string): Promise<{ mergeCommitSha: string }>;
   checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;
@@ -110,9 +121,21 @@ function normalizedPathSet(files: readonly string[]): string[] {
   return [...new Set(files.map((file) => file.replaceAll("\\", "/")))].sort();
 }
 
+function isArticleHeroManagedPath(file: string): boolean {
+  const normalized = file.replaceAll("\\", "/");
+  return normalized.startsWith("src/generated/article-heroes/") ||
+    /^public\/blog\/images\/[a-z0-9-]+-hero\.webp$/.test(normalized) ||
+    /^public\/images\/(?:direct-review|visibility|decision-set)-[a-z0-9-]+-hero\.webp$/.test(normalized);
+}
+
+export function validateBoundArticleHeroReleasePaths(files: readonly string[], expected: readonly string[]): string[] {
+  const allowed = new Set(expected.map((file) => file.replaceAll("\\", "/")));
+  return normalizedPathSet(files).filter((file) => isArticleHeroManagedPath(file) && !allowed.has(file));
+}
+
 export function isAllowedReleasePath(file: string, format: ImportFormat, _ownerAuthorizedAffiliateUrl = false): boolean {
   void _ownerAuthorizedAffiliateUrl;
-  const shared = ["build-pack/editorial", "build-pack/article-import"];
+  const shared = ["build-pack/editorial", "build-pack/article-import", "src/generated/article-heroes"];
   const formatRoots: Record<ImportFormat, string[]> = {
     "direct-review": ["src/generated/landing-pages", "public/landing", "public/images"],
     blog: ["src/generated/blog-posts", "public/blog/images"],
@@ -142,6 +165,22 @@ export function publicationAuthorityPaths(format: ImportFormat): readonly string
     case "visibility": return ["src/generated/visibility-pages/index.json", "src/generated/visibility-pages/publications.json"];
     case "agent_review_required": return [];
   }
+}
+
+/** One source for the exact article files a supervised release must declare. */
+export function requiredImportReleaseFiles(input: {
+  format: Exclude<ImportFormat, "agent_review_required">;
+  approvedArtifactPath: string;
+  slug: string;
+  includeHero: boolean;
+}) {
+  const artifact = input.format === "direct-review"
+    ? `src/generated/landing-pages/${input.slug}.json`
+    : input.approvedArtifactPath.replaceAll("\\", "/");
+  const authorities = [...publicationAuthorityPaths(input.format)];
+  const heroPaths = articleHeroPaths(articleHeroFormatSchema.parse(input.format), input.slug);
+  const hero = input.includeHero ? [heroPaths.assetFile, heroPaths.publicationFile] : [];
+  return { artifact, authorities, hero, all: normalizedPathSet([artifact, ...authorities, ...hero]) };
 }
 
 const AFFILIATE_DESTINATION_KEYS = new Set(["destination_url", "affiliate_url", "final_visible_destination_url", "approved_destinations"]);
@@ -336,6 +375,23 @@ function productiveStage(record: ExternalArticleImportV1): ImportStage {
   return record.stage === "RELEASING" ? record.stage : record.resumeStage ?? "RELEASING";
 }
 
+export async function assertDirectReviewProjectionBinding(
+  repositoryRoot: string,
+  sourceArtifactPath: string,
+  publicationArtifactPath: string,
+  slug: string,
+  approvedArtifact: unknown,
+): Promise<void> {
+  if (sourceArtifactPath === publicationArtifactPath) return;
+  let projectionArtifact: unknown;
+  try {
+    projectionArtifact = (await readImportArtifactTarget(repositoryRoot, "direct-review", publicationArtifactPath, slug)).artifact;
+  } catch {
+    throw new Error("PUBLIC_PROJECTION_MISSING");
+  }
+  if (JSON.stringify(projectionArtifact) !== JSON.stringify(approvedArtifact)) throw new Error("PUBLIC_PROJECTION_MISMATCH");
+}
+
 function failedRollback(previousId: string) {
   const cause = "Production verification failed and rollback did not verify.";
   const resumptionRequirement = `Verify restoration of ${previousId} and submit recovery evidence before resuming release.`;
@@ -360,6 +416,8 @@ async function assessImportReleaseImpl(input: {
   commitMessage?: string;
 }): Promise<ReleaseAssessment> {
   const reasons: string[] = [];
+  let heroReleasePaths: readonly string[] = [];
+  let requiredReleaseFiles: ReturnType<typeof requiredImportReleaseFiles> | undefined;
   const disallowed = validateReleasePaths(input.changedFiles, input.record.format, input.ownerAuthorizedAffiliateUrl === true);
   if (disallowed.length) reasons.push(`DISALLOWED_RELEASE_PATHS:${disallowed.join(",")}`);
   if (input.execute && input.record.contentApproval) {
@@ -372,17 +430,25 @@ async function assessImportReleaseImpl(input: {
         ? `src/generated/landing-pages/${target.slug}.json`
         : normalizedSourceArtifact;
       if (normalizedInputArtifact !== undefined && normalizedInputArtifact !== normalizedSourceArtifact && normalizedInputArtifact !== publicationArtifactPath) throw new Error("ARTIFACT_PATH_MISMATCH");
-      if (input.record.format === "direct-review") {
-        let projectionArtifact: unknown;
-        try {
-          projectionArtifact = (await readImportArtifactTarget(input.repositoryRoot, input.record.format, publicationArtifactPath, target.slug)).artifact;
-        } catch {
-          throw new Error("PUBLIC_PROJECTION_MISSING");
-        }
-        if (JSON.stringify(projectionArtifact) !== JSON.stringify(artifact)) throw new Error("PUBLIC_PROJECTION_MISMATCH");
-      }
+      if (input.record.format === "direct-review") await assertDirectReviewProjectionBinding(input.repositoryRoot, normalizedSourceArtifact, publicationArtifactPath, target.slug, artifact);
       input.slug = target.slug;
       assertArtifactCommercialSafety(input.record, input.record.format, artifact);
+      if (await requiresArticleHero(input.repositoryRoot, input.record)) {
+        if (!input.record.heroImage || !input.record.contentApproval) throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
+        const heroFormat = articleHeroFormatSchema.parse(target.format);
+        const hero = await validateArticleHeroBinding(input.repositoryRoot, input.record.heroImage, {
+          format: heroFormat, slug: target.slug, artifactFingerprint: input.record.contentApproval.artifactFingerprint,
+        });
+        const expectedHero = articleHeroPaths(heroFormat, target.slug);
+        if (hero.assetRef.path !== expectedHero.assetFile || hero.publicationRef.path !== expectedHero.publicationFile) throw new Error("ARTICLE_HERO_RELEASE_PATH_MISMATCH");
+        heroReleasePaths = [expectedHero.assetFile, expectedHero.publicationFile];
+      }
+      if (input.record.format !== "agent_review_required") requiredReleaseFiles = requiredImportReleaseFiles({
+        format: input.record.format,
+        approvedArtifactPath: sourceArtifactPath,
+        slug: target.slug,
+        includeHero: heroReleasePaths.length > 0,
+      });
       await assertReleaseReceiptAffiliateBinding(input.repositoryRoot, target.slug, input.record);
     } catch (error) { reasons.push(error instanceof Error ? error.message : String(error)); }
   }
@@ -402,9 +468,14 @@ async function assessImportReleaseImpl(input: {
     const declared = normalizedPathSet(input.changedFiles);
     const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
     if (input.record.format !== "direct-review" && approvedArtifact && !declared.includes(approvedArtifact)) reasons.push("ARTIFACT_NOT_IN_RELEASE");
-    for (const authority of publicationAuthorityPaths(input.record.format)) {
+    for (const authority of requiredReleaseFiles?.authorities ?? publicationAuthorityPaths(input.record.format)) {
       if (!declared.includes(authority)) reasons.push(`PUBLICATION_AUTHORITY_NOT_IN_RELEASE:${authority}`);
     }
+    for (const heroFile of requiredReleaseFiles?.hero ?? heroReleasePaths) {
+      if (!declared.includes(heroFile)) reasons.push(`ARTICLE_HERO_NOT_IN_RELEASE:${heroFile}`);
+    }
+    const foreignHeroes = validateBoundArticleHeroReleasePaths(declared, heroReleasePaths);
+    if (foreignHeroes.length) reasons.push(`ARTICLE_HERO_PATH_NOT_BOUND:${foreignHeroes.join(",")}`);
   }
   if (input.killSwitchEnabled) {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
@@ -465,9 +536,14 @@ async function assessImportReleaseImpl(input: {
       const approvedArtifact = input.record.contentApproval?.artifactPath?.replaceAll("\\", "/") ?? input.artifactPath?.replaceAll("\\", "/");
       if (approvedArtifact && !inspectedFiles.includes(approvedArtifact)) gitReasons.push("ARTIFACT_NOT_IN_WORKTREE");
     }
-    for (const authority of publicationAuthorityPaths(input.record.format)) {
+    for (const authority of requiredReleaseFiles?.authorities ?? publicationAuthorityPaths(input.record.format)) {
       if (!inspectedFiles.includes(authority)) gitReasons.push(`PUBLICATION_AUTHORITY_NOT_IN_WORKTREE:${authority}`);
     }
+    for (const heroFile of requiredReleaseFiles?.hero ?? heroReleasePaths) {
+      if (!inspectedFiles.includes(heroFile)) gitReasons.push(`ARTICLE_HERO_NOT_IN_WORKTREE:${heroFile}`);
+    }
+    const foreignHeroes = validateBoundArticleHeroReleasePaths(inspectedFiles, heroReleasePaths);
+    if (foreignHeroes.length) gitReasons.push(`ARTICLE_HERO_PATH_NOT_BOUND:${foreignHeroes.join(",")}`);
   }
   if (gitReasons.length) {
     const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `The inspected worktree does not match the declared import release: ${gitReasons.join(",")}.` });
@@ -539,15 +615,21 @@ async function assessImportReleaseImpl(input: {
     }
     // Publication authorities can also move between review and merge; rebind them to
     // the approved artifact on the merged checkout before anything deploys.
+    const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
     try {
-      const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
       await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!);
+      if (await requiresArticleHero(input.repositoryRoot, input.record)) {
+        if (!input.record.heroImage || !input.record.contentApproval || input.record.format === "agent_review_required") throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
+        await validateArticleHeroBinding(input.repositoryRoot, input.record.heroImage, {
+          format: articleHeroFormatSchema.parse(input.record.format), slug: input.slug ?? input.record.heroImage.slug,
+          artifactFingerprint: input.record.contentApproval.artifactFingerprint,
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `Merged checkout authority binding failed: ${message}` });
       return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
     }
-    const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
     if (input.record.contentApproval) {
       const { artifact: mergedArtifact } = await readImportArtifactTarget(input.repositoryRoot, input.record.format, mergedPublicationPath!, input.slug);
       if (fingerprintEditorialArtifact(mergedArtifact) !== input.record.contentApproval.artifactFingerprint) {
@@ -616,7 +698,6 @@ async function assessImportReleaseImpl(input: {
     }
     input.record = { ...input.record, evidenceRefs: { ...input.record.evidenceRefs, production: productionVerifierRef } };
     const withReceipt = await recordImportRelease(input.repositoryRoot, input.record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, verifiedAt: new Date().toISOString(), checks, productionVerifierRef, previousDeploymentId: previous.deploymentId, presentationFingerprint: fingerprintEditorialArtifact(presentation) });
-    requireImportPresentationBinding(withReceipt);
     input.record = withReceipt;
     const verified = await verifyImportRelease(input.repositoryRoot, withReceipt);
     if (verified.stage !== "LIVE") throw new Error("TERMINAL_PUBLICATION_UNVERIFIED");

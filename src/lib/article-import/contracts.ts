@@ -65,6 +65,7 @@ export const importPresentationValidationSchema = z.object({
   schemaVersion: z.literal("ImportPresentationValidationV1"),
   format: importFormatSchema.exclude(["agent_review_required"]),
   artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  heroImageFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   renderedRoutes: z.array(z.string().startsWith("/")).min(1),
   checks: z.object({ desktop: z.literal(true), mobile: z.literal(true), accessibility: z.literal(true), technicalSeo: z.literal(true), overflow: z.literal(true), runtimeErrors: z.literal(true) }).strict(),
   pageDesign: pageDesignValidationSchema,
@@ -76,6 +77,7 @@ export const importPresentationReceiptSchema = z.object({
   schemaVersion: z.literal("ImportPresentationReceiptV1"),
   format: importFormatSchema.exclude(["agent_review_required"]),
   artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  heroImageFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   artifactPath: z.string().min(1),
   validationGate: z.string().min(1),
   validationReceiptFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
@@ -119,6 +121,29 @@ export const importCodeReviewSchema = z.object({
   reviewedAt: z.string().datetime({ offset: true }),
 }).strict();
 
+export const importImproveSchema = z.object({
+  schemaVersion: z.literal("ImportImproveV1"),
+  publicationKey: z.string().regex(/^[a-f0-9]{64}$/),
+  boundCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
+  runRef: stateEvidenceRef,
+  phase: z.enum(["ASSESSING", "RESOLVING", "COMPLETE", "BLOCKED"]),
+  attempt: z.number().int().nonnegative(),
+  workPath: z.string().min(1).optional(),
+  resultPath: z.string().min(1).optional(),
+  issueKeys: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).default([]),
+  resolvedKeys: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).default([]),
+  openKeys: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).default([]),
+  handoffRefs: z.array(stateEvidenceRef).default([]),
+  startedAt: z.string().datetime({ offset: true }).optional(),
+  repairWorktree: z.object({ branch: z.string().regex(/^codex\/improve-[a-f0-9]{16}$/), path: z.string().min(1) }).strict().optional(),
+  pendingReview: z.object({ status: z.enum(["PENDING_REVIEW", "PENDING_MERGE", "CHANGES_REQUESTED", "CLOSED_UNMERGED"]), commitSha: z.string().regex(/^[a-f0-9]{40}$/), pullRequestUrl: z.string().url(), evidenceUrl: z.string().url().optional(), reviewText: z.string().min(1).optional(),
+    findings: z.array(z.object({ path: z.string().min(1), line: z.number().int().positive().nullable(), body: z.string().min(1) }).strict()).optional(), repairs: z.array(z.unknown()).min(1),
+    handoffs: z.object({ retrospective: stateEvidenceRef, diagnosis: stateEvidenceRef, repair: stateEvidenceRef, architecture: stateEvidenceRef }).strict() }).strict().optional(),
+  failure: z.object({ code: z.string().min(1), message: z.string().min(1), at: z.string().datetime({ offset: true }) }).strict().optional(),
+  completedAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
+export type ImportImproveV1 = z.infer<typeof importImproveSchema>;
+
 const continuationBase = {
   idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
@@ -156,7 +181,7 @@ export const externalArticleImportSchema = z.object({
   schemaVersion: z.enum(["ExternalArticleImportV1", "ExternalArticleImportV2"]),
   workflowVersion: z.literal(2).optional(),
   requirementRevision: z.string().min(1).optional(),
-  evidenceRefs: z.object({ research: stateEvidenceRef.optional(), assessment: stateEvidenceRef.optional(), editorial: stateEvidenceRef.optional(), presentation: stateEvidenceRef.optional(), production: stateEvidenceRef.optional() }).strict().optional(),
+  evidenceRefs: z.object({ research: stateEvidenceRef.optional(), transformAssessment: stateEvidenceRef.optional(), assessment: stateEvidenceRef.optional(), editorial: stateEvidenceRef.optional(), hero: stateEvidenceRef.optional(), presentation: stateEvidenceRef.optional(), production: stateEvidenceRef.optional() }).strict().optional(),
   terminalRef: stateEvidenceRef.optional(),
   sourceRef: stateEvidenceRef.optional(),
   artifactPath: z.string().min(1).optional(),
@@ -182,9 +207,15 @@ export const externalArticleImportSchema = z.object({
   unusableReason: z.string().optional(),
   transformation: importTransformationSchema.optional(),
   contentApproval: contentApprovalSchema.optional(),
+  heroImage: z.object({
+    schemaVersion: z.literal("ArticleHeroBindingV1"), format: importFormatSchema.exclude(["agent_review_required"]), slug: z.string().min(1),
+    artifactFingerprint: z.string().regex(/^[a-f0-9]{64}$/), assetRef: stateEvidenceRef,
+    inspectionRef: stateEvidenceRef, publicationRef: stateEvidenceRef, generationRef: stateEvidenceRef,
+  }).strict().optional(),
   presentation: importPresentationReceiptSchema.optional(),
   pendingRelease: importPendingReleaseSchema.optional(),
   release: importReleaseSchema.optional(),
+  improve: importImproveSchema.optional(),
   stageReceipts: z.array(z.object({
     stage: importStageSchema,
     status: z.enum(["started", "passed", "failed", "waiting", "quarantined"]),

@@ -72,7 +72,7 @@ export async function verifyEvidenceRef(root: string, reference: EvidenceRef): P
 export async function storeEvidence(root: string, importId: string, value: unknown): Promise<EvidenceRef> {
   return storeEvidenceBytes(root, importId, Buffer.from(`${JSON.stringify(value, null, 2)}\n`));
 }
-export async function storeEvidenceBytes(root: string, importId: string, bytes: Buffer, extension: "png" | "json" = "json"): Promise<EvidenceRef> {
+export async function storeEvidenceBytes(root: string, importId: string, bytes: Buffer, extension: "png" | "webp" | "json" = "json"): Promise<EvidenceRef> {
   if (!/^article-[0-9a-f-]{36}$/.test(importId)) throw new Error("EVIDENCE_IMPORT_ID_INVALID");
   if (bytes.length > MAX_EVIDENCE_BYTES) throw new Error("EVIDENCE_FILE_INVALID");
   const digest = sha256(bytes);
@@ -132,15 +132,56 @@ const base = {
 };
 const projection = z.record(z.string().min(1), z.string());
 const capturedInstructionSchema = evidenceRefSchema.extend({ text: z.string() }).strict();
+export const structuredExecutionExportSchema = z.object({
+  schemaVersion: z.literal("StructuredExecutionExportV1"),
+  exporterId: z.string().min(1),
+  tool: z.object({ name: z.string().min(1), version: z.string().min(1) }).strict(),
+  contextId: z.string().min(1), exchangeId: z.string().min(1),
+  startedAt: z.string().datetime({ offset: true }), completedAt: z.string().datetime({ offset: true }),
+  status: z.literal("succeeded"), providerId: z.string().min(1).optional(), modelId: z.string().min(1).optional(),
+  packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection,
+  instructions: z.array(capturedInstructionSchema), inputRefs: z.array(evidenceRefSchema), outputRefs: z.array(evidenceRefSchema),
+}).strict();
+export const structuredCaptureSelectionSchema = z.object({
+  exporterId: z.string().min(1), contextId: z.string().min(1), exchangeId: z.string().min(1),
+}).strict();
 export const executionEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({ ...base, kind: z.literal("command"), executable: z.string().min(1), argv: z.array(z.string()), cwd: z.string().min(1), stdout: z.string(), stderr: z.string(), exitCode: z.number().int() }).strict(),
   z.object({ ...base, kind: z.literal("browser"), target: z.string().url(), routes: z.array(z.string().startsWith("/")).min(1), viewport: z.object({ width: z.number().int().positive(), height: z.number().int().positive(), reducedMotion: z.boolean() }).strict(), checks: z.record(z.string(), z.boolean()), screenshots: z.array(evidenceRefSchema).min(1) }).strict(),
   z.object({ ...base, kind: z.literal("opencode"), imageRefs: z.array(evidenceRefSchema).min(1).max(24).optional(), toolVersion: openCodeVersionSchema, sessionId: z.string().min(1), userMessageId: z.string().min(1), assistantMessageId: z.string().min(1), providerId: z.string().min(1), modelId: z.string().min(1), family: z.string().min(1), packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection, inputDigest: hashSchema, outputDigest: hashSchema, instructions: z.array(capturedInstructionSchema), replay: z.object({ export: z.unknown(), inputRefs: z.array(evidenceRefSchema), outputRefs: z.array(evidenceRefSchema) }).strict().optional() }).strict(),
+  z.object({ ...base, kind: z.literal("structured"), exporterId: z.string().min(1), exporterExecutable: z.string().min(1), exporterArgv: z.array(z.string()), toolName: z.string().min(1), contextId: z.string().min(1), exchangeId: z.string().min(1), providerId: z.string().min(1).optional(), modelId: z.string().min(1).optional(), packetId: hashSchema, pass: z.string().min(1), input: projection, output: projection, inputDigest: hashSchema, outputDigest: hashSchema, instructions: z.array(capturedInstructionSchema), sourceRef: evidenceRefSchema }).strict(),
 ]);
 export type ExecutionEvidence = z.infer<typeof executionEvidenceSchema>;
 export const proseProjectionDigest = (value: Record<string, string>): string => sha256(JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))));
 
+export function extractStructuredExecution(source: unknown, sourceRef: EvidenceRef, provenance: { executable: string; argv: string[] }): ExecutionEvidence {
+  const selected = structuredExecutionExportSchema.parse(source);
+  if (Date.parse(selected.completedAt) < Date.parse(selected.startedAt)) throw new Error("EXECUTION_INCOMPLETE");
+  return executionEvidenceSchema.parse({
+    schemaVersion: "ExecutionEvidenceV1", kind: "structured", exporterId: selected.exporterId, exporterExecutable: provenance.executable, exporterArgv: provenance.argv, toolName: selected.tool.name, toolVersion: selected.tool.version,
+    contextId: selected.contextId, exchangeId: selected.exchangeId, startedAt: selected.startedAt, completedAt: selected.completedAt,
+    ...(selected.providerId && { providerId: selected.providerId }), ...(selected.modelId && { modelId: selected.modelId }),
+    packetId: selected.packetId, pass: selected.pass, input: selected.input, output: selected.output,
+    inputDigest: proseProjectionDigest(selected.input), outputDigest: proseProjectionDigest(selected.output),
+    instructions: selected.instructions, inputRefs: selected.inputRefs, outputRefs: selected.outputRefs, sourceRef,
+  });
+}
+
 type ExportSelection = { imageRefs?: EvidenceRef[]; version: string; sessionId: string; userMessageId: string; assistantMessageId: string; packetId: string; pass: string; input: Record<string, string>; output: Record<string, string>; families: Readonly<Record<string, string>>; inputRefs?: EvidenceRef[]; outputRefs?: EvidenceRef[]; instructions?: z.infer<typeof capturedInstructionSchema>[] };
+
+const attachmentPolicy = {
+  "hero-image-inspection": { mime: "image/webp", extension: ".webp" },
+  "design:critique": { mime: "image/png", extension: ".png" },
+  "design:audit": { mime: "image/png", extension: ".png" },
+  "design:polish": { mime: "image/png", extension: ".png" },
+  "design:visual-quality": { mime: "image/png", extension: ".png" },
+} as const;
+
+function hasMediaSignature(bytes: Buffer, mime: "image/png" | "image/webp"): boolean {
+  if (mime === "image/png") return bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex"));
+  return bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+    bytes.subarray(8, 12).toString("ascii") === "WEBP" && bytes.readUInt32LE(4) === bytes.length - 8;
+}
 /** V2 has no parentID. Only a dedicated, completed session establishes association. */
 function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const object = z.record(z.string(), z.unknown()).parse(raw);
@@ -150,7 +191,7 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const envelope = z.object({
     info: z.object({ id: z.string(), model, outcome: z.literal("succeeded"), parentID: z.never().optional(), fork: z.never().optional(), revert: z.never().optional() }).passthrough(),
     messages: z.tuple([
-      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time, files: z.array(z.object({ data: z.string(), mime: z.literal("image/png"), name: z.string(), source: z.object({type:z.literal("inline")}).strict() }).strict()).max(24).optional() }).strict(),
+      z.object({ id: z.string(), type: z.literal("user"), text: z.string(), time, files: z.array(z.object({ data: z.string(), mime: z.enum(["image/png", "image/webp"]), name: z.string(), source: z.object({type:z.literal("inline")}).strict() }).strict()).max(24).optional() }).strict(),
       z.object({ id: z.string(), type: z.literal("assistant"), model,
         time: z.object({ created: z.number().nonnegative(), streamed: z.number().nonnegative(), completed: z.number().nonnegative() }).strict(),
         finish: z.literal("stop"), rawFinish: z.literal("stop").optional(), agent: z.string().optional(),
@@ -167,11 +208,13 @@ function dedicatedV2Exchange(raw: unknown, selected: ExportSelection) {
   const [user, assistant, idle] = envelope.messages;
   const images = selected.imageRefs ?? [];
   const files = user.files ?? [];
-  if (files.length !== images.length || (files.length && !["design:critique","design:audit","design:polish"].includes(selected.pass))) throw new Error("EXECUTION_IMAGE_BINDING");
+  const policy = attachmentPolicy[selected.pass as keyof typeof attachmentPolicy];
+  if (files.length !== images.length || (files.length && !policy)) throw new Error("EXECUTION_IMAGE_BINDING");
   for (const [index, image] of images.entries()) {
     const file = files[index];
     const bytes = Buffer.from(file.data, "base64");
-    if (bytes.length > MAX_EVIDENCE_BYTES || bytes.toString("base64") !== file.data || !bytes.subarray(0,8).equals(Buffer.from("89504e470d0a1a0a","hex")) ||
+    if (!policy || bytes.length > MAX_EVIDENCE_BYTES || bytes.toString("base64") !== file.data || file.mime !== policy.mime ||
+        path.extname(image.path).toLowerCase() !== policy.extension || path.extname(file.name).toLowerCase() !== policy.extension || !hasMediaSignature(bytes, policy.mime) ||
         file.name !== path.basename(image.path) || sha256(bytes) !== image.sha256 ||
         !selected.inputRefs?.some(ref => ref.path === image.path && ref.sha256 === image.sha256)) throw new Error("EXECUTION_IMAGE_BINDING");
   }
@@ -261,7 +304,7 @@ export async function validateExecutionEvidence(root: string, ref: EvidenceRef):
   for (const item of [...result.inputRefs, ...result.outputRefs, ...(result.kind === "browser" ? result.screenshots : [])]) await verifyEvidenceRef(root, item);
   if (result.kind === "command" && result.exitCode !== 0) throw new Error("EXECUTION_FAILED");
   if (result.kind === "browser" && Object.values(result.checks).some((value) => !value)) throw new Error("EXECUTION_FAILED");
-  if (result.kind === "opencode" && (result.inputDigest !== proseProjectionDigest(result.input) || result.outputDigest !== proseProjectionDigest(result.output))) throw new Error("EXECUTION_PROSE_MISMATCH");
+  if ((result.kind === "opencode" || result.kind === "structured") && (result.inputDigest !== proseProjectionDigest(result.input) || result.outputDigest !== proseProjectionDigest(result.output))) throw new Error("EXECUTION_PROSE_MISMATCH");
   if (result.kind === "opencode") {
     if (result.imageRefs?.length && result.toolVersion === "1.19.4") throw new Error("EXECUTION_IMAGE_BINDING");
     const capabilities = await readModelCapabilities(root);
@@ -301,11 +344,48 @@ export async function validateExecutionEvidence(root: string, ref: EvidenceRef):
       if (JSON.stringify(replayed) !== JSON.stringify(withoutReplay)) throw new Error("EXECUTION_REPLAY_MISMATCH");
     }
   }
+  if (result.kind === "structured") {
+    await verifyEvidenceRef(root, result.sourceRef);
+    for (const instruction of result.instructions) {
+      if (sha256(instruction.text) !== instruction.sha256) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
+      await verifyEvidenceRef(root, { path: instruction.path, sha256: instruction.sha256 });
+    }
+    const capabilities = await readStructuredExporterCapabilities(root);
+    const configured = capabilities.executionExporters[result.exporterId];
+    if (!configured || configured.executable !== result.exporterExecutable || configured.toolName !== result.toolName || configured.toolVersion !== result.toolVersion || JSON.stringify(expandExporterArgs(configured.exportArgs, result)) !== JSON.stringify(result.exporterArgv)) throw new Error("CAPABILITY_UNAVAILABLE");
+    const storedSource = await readEvidence(root, result.sourceRef);
+    if (!isTerminalEvidenceSnapshotActive()) {
+      const current = await exportStructuredExchange(root, result.exporterId, result);
+      if (JSON.stringify(current.source) !== JSON.stringify(storedSource)) throw new Error("EXECUTION_REPLAY_MISMATCH");
+    }
+    const replayed = extractStructuredExecution(storedSource, result.sourceRef, { executable: result.exporterExecutable, argv: result.exporterArgv });
+    if (JSON.stringify(replayed) !== JSON.stringify(result)) throw new Error("EXECUTION_REPLAY_MISMATCH");
+  }
   return result;
 }
 
 async function readModelCapabilities(root: string) {
   return z.object({ schemaVersion: z.literal("ArticleWorkflowCapabilitiesV1"), openCodeVersion: openCodeVersionSchema, modelFamilies: z.record(z.string(), z.string().min(1)) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
+}
+const exporterSchema = z.object({ executable: z.string().min(1), exportArgs: z.array(z.string()), versionArgs: z.array(z.string()), toolName: z.string().min(1), toolVersion: z.string().min(1) }).strict();
+async function readStructuredExporterCapabilities(root: string) {
+  return z.object({ executionExporters: z.record(z.string(), exporterSchema).default({}) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));
+}
+function expandExporterArgs(args: string[], selected: { contextId: string; exchangeId: string }): string[] {
+  return args.map((arg) => arg.replaceAll("{contextId}", selected.contextId).replaceAll("{exchangeId}", selected.exchangeId));
+}
+async function exportStructuredExchange(root: string, exporterId: string, selected: { contextId: string; exchangeId: string }) {
+  const capabilities = await readStructuredExporterCapabilities(root);
+  const configured = capabilities.executionExporters[exporterId];
+  if (!configured) throw new Error("CAPABILITY_UNAVAILABLE");
+  const options = { cwd: root, encoding: "utf8" as const, timeout: 30_000, maxBuffer: MAX_EVIDENCE_BYTES, windowsHide: true };
+  const version = (await runFile(configured.executable, configured.versionArgs, options)).stdout.trim();
+  if (version !== configured.toolVersion) throw new Error("EVIDENCE_UNSUPPORTED");
+  const argv = expandExporterArgs(configured.exportArgs, selected);
+  const exported = await runFile(configured.executable, argv, options);
+  const source = structuredExecutionExportSchema.parse(JSON.parse(exported.stdout));
+  if (source.exporterId !== exporterId || source.contextId !== selected.contextId || source.exchangeId !== selected.exchangeId || source.tool.name !== configured.toolName || source.tool.version !== configured.toolVersion) throw new Error("EXECUTION_SELECTION_MISMATCH");
+  return { configured, argv, source };
 }
 const runFile = promisify(execFile);
 /** Uses argv without shell expansion and bounded output/time. Call only for an authorized tool. */
@@ -330,4 +410,19 @@ export async function captureOpenCodeExecution(root: string, selected: Omit<Expo
     instructions.push({ ...ref, text: (await readEvidenceBytes(root, ref.path)).toString("utf8") });
   }
   return extractOpenCodeExecution(JSON.parse(exported.stdout), { ...selected, instructions, version, families: capabilities.modelFamilies });
+}
+
+/** Invoke a configured exporter for one completed exchange; caller-authored projections are never accepted. */
+export async function captureStructuredExecution(root: string, importId: string, rawSelection: unknown): Promise<ExecutionEvidence> {
+  const selected = structuredCaptureSelectionSchema.parse(rawSelection);
+  const { configured, argv, source } = await exportStructuredExchange(root, selected.exporterId, selected);
+  const sourceRef = await storeEvidence(root, importId, source);
+  const execution = extractStructuredExecution(source, sourceRef, { executable: configured.executable, argv });
+  for (const ref of [...execution.inputRefs, ...execution.outputRefs]) await verifyEvidenceRef(root, ref);
+  if (execution.kind !== "structured") throw new Error("EVIDENCE_UNSUPPORTED");
+  for (const instruction of execution.instructions) {
+    if (sha256(instruction.text) !== instruction.sha256) throw new Error("EXECUTION_INSTRUCTION_MISMATCH");
+    await verifyEvidenceRef(root, { path: instruction.path, sha256: instruction.sha256 });
+  }
+  return execution;
 }

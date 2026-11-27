@@ -14,6 +14,44 @@
   },
   "tasks": [
     {
+      "id": "IMPROVE-PUBLICATION-1126",
+      "title": "Assess each new verified publication once",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 1
+      },
+      "source_changes": true,
+      "requirement_ids": ["OWNER-2026-11-26-IMPROVE"],
+      "context_files": [
+        "planning.md",
+        ".agents/skills/improve/SKILL.md",
+        "src/lib/article-import/engine.ts"
+      ],
+      "validation": [
+        {
+          "name": "Typecheck publication integration",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": ["npm", "run", "typecheck"],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": {"worker": "configured", "verifier": "independent"},
+      "context_packet": {"retrieval": "targeted"},
+      "operation_phase": "implementing",
+      "publication": {"enabled": false},
+      "extensions": {"authority": "Owner directive in planning.md, IMPROVE-PUBLICATION-1126. Build without running tests."}
+    },
+    {
       "id": "P1-PLAN-001",
       "title": "Phase One authority and traceability",
       "status": "done",
@@ -1246,6 +1284,207 @@
       }
     },
     {
+      "id": "AFFILIATE-LONGFORM-1126",
+      "title": "Long-form affiliate article approval",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "high",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-26-AFFILIATE-LONGFORM"
+      ],
+      "context_files": [
+        "planning.md",
+        ".agents/skills/eleanor-editorial/references/long-form-affiliate.md",
+        "src/lib/article-import/workflow-evidence.ts",
+        "src/lib/article-import/worker-editorial.ts"
+      ],
+      "validation": [
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "lint",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "lint"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "typecheck",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "affiliate article acceptance",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npx",
+            "tsx",
+            "--test",
+            "tests/article-visible-word-count.test.ts",
+            "tests/article-long-form-affiliate.test.ts",
+            "tests/article-long-form-approval.test.ts",
+            "tests/article-transforming-reconciliation.test.ts",
+            "tests/eleanor-upstream-verification.test.ts",
+            "tests/article-workflow-evidence.test.ts",
+            "tests/article-worker-editorial.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": true,
+        "destinations": [
+          "github-pr",
+          "vercel"
+        ]
+      },
+      "extensions": {
+        "authority": "Owner-approved long-form affiliate editorial plan in planning.md."
+      }
+    },
+    {
+      "id": "REFINING-INDEPENDENCE-1126",
+      "title": "Tool-independent editorial review in Refining",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "high",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-26-REFINING-INDEPENDENCE"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        ".agents/skills/eleanor-editorial/SKILL.md",
+        "src/lib/editorial/refinement.ts",
+        "src/lib/article-import/workflow-evidence.ts"
+      ],
+      "validation": [
+        {
+          "name": "workflow contract",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "verify:agent-workflow"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "lint",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "lint"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "typecheck",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "timeout_seconds": 900
+        },
+        {
+          "name": "independent editorial review",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "npx",
+            "tsx",
+            "--test",
+            "tests/article-workflow-evidence.test.ts",
+            "tests/capture-replay-1110.test.ts",
+            "tests/article-worker-runner.test.ts",
+            "tests/article-workflow-preflight.test.ts",
+            "tests/beam-review-policy.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": true,
+        "destinations": [
+          "github-pr",
+          "vercel"
+        ]
+      },
+      "extensions": {
+        "authority": "Owner directive in planning.md for Refining, separate PR and reconciliation with PR #84."
+      }
+    },
+    {
       "id": "BEAM-POLICY-001",
       "title": "Beam-only policy and OpenCode 2.2.6 runtime support",
       "status": "in_progress",
@@ -2104,6 +2343,129 @@
       }
     },
     {
+      "id": "RESEARCH-REGISTRY-1126",
+      "title": "Wire article RESEARCHING to the existing reusable evidence registry",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 1,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-26-RESEARCH-REGISTRY"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "docs/typescript-orchestrator-audit.md",
+        "src/lib/article-import/supervised-executor.ts",
+        "src/lib/article-import/workflow-evidence.ts"
+      ],
+      "validation": [
+        {
+          "name": "focused registry tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--test",
+            "--import",
+            "tsx",
+            "tests/article-research-registry.test.ts"
+          ],
+          "timeout_seconds": 300
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit owner directive; synthetic and isolated database tests only, no live import or production database write"
+      }
+    },
+    {
+      "id": "TRANSFORM-CLAIMS-1126",
+      "title": "Validate transforming claims against one checked artifact snapshot",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "low",
+      "risk_assessment": {
+        "blast_radius": 1,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 0
+      },
+      "source_changes": true,
+      "requirement_ids": [
+        "OWNER-2026-11-26-TRANSFORM-CLAIMS"
+      ],
+      "context_files": [
+        "planning.md",
+        "AGENTS.md",
+        "src/lib/article-import/engine.ts",
+        "src/lib/article-import/supervised-executor.ts",
+        "src/lib/article-import/workflow-evidence.ts",
+        "src/lib/article-import/workflow-requirements.ts",
+        "tests/article-workflow-evidence.test.ts",
+        "tests/article-import-supervised.test.ts",
+        "build-pack/repairs/transform-claims-1126/verification.md"
+      ],
+      "validation": [
+        {
+          "name": "focused transform claim tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--test",
+            "--import",
+            "tsx",
+            "--test-name-pattern",
+            "assessment findings|schema and commercial artifact object|the default CLI|supervised transforming handoff",
+            "tests/article-workflow-evidence.test.ts",
+            "tests/article-import-supervised.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/transform-claims-1126/verification.md"
+      ],
+      "model_route": {
+        "worker": "configured",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive; verification uses synthetic fixtures only and does not execute or publish a real article; the code repair remains shippable"
+      }
+    },
+    {
       "id": "DEDUPE-TRACKED-1124",
       "title": "Remove verified tracked-code duplication while preserving history",
       "status": "done",
@@ -2224,6 +2586,68 @@
       }
     },
     {
+      "id": "RELEASING-THREE-1126",
+      "title": "Three-action supervised article release handoff",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 1
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "OWNER-2026-11-26-RELEASING-THREE"
+      ],
+      "context_files": [
+        "planning.md",
+        "src/lib/article-import/release.ts",
+        "src/lib/article-import/workflow-requirements.ts",
+        "src/lib/article-import/supervised-executor.ts",
+        "scripts/import-article.ts",
+        ".agents/skills/external-article-import/SKILL.md"
+      ],
+      "validation": [
+        {
+          "name": "release handoff regression",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--import",
+            "tsx",
+            "--test",
+            "--test-name-pattern=describe-workflow exposes exactly|RELEASING executor writes exactly|direct-review projection binding skips",
+            "tests/article-import-supervised.test.ts",
+            "tests/article-import-release.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/releasing-three-1126/verification.md"
+      ],
+      "model_route": {
+        "worker": "codex-owner-authorized",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive; synthetic verification cannot execute, merge, deploy or publish a real article. The code change remains authorized for the repository PR, review, merge and deployment workflow."
+      }
+    },
+    {
       "id": "HOMEPAGE-MOTION-1124",
       "title": "Approved post-hero guide index, localization track and report covers",
       "status": "in_progress",
@@ -2281,6 +2705,90 @@
       "extensions": {
         "authority": "Owner-approved homepage presentation and motion only"
       }
+    },
+    {
+      "id": "VERIFYING-FOUR-1127",
+      "title": "Four-action supervised article verification handoff",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "medium",
+      "risk_assessment": {
+        "blast_radius": 2,
+        "reversibility": 1,
+        "authority": 1,
+        "sensitive_data": 0,
+        "external_impact": 1
+      },
+      "source_changes": false,
+      "requirement_ids": [
+        "OWNER-2026-11-27-VERIFYING-FOUR"
+      ],
+      "context_files": [
+        "planning.md",
+        "src/lib/article-import/engine.ts",
+        "src/lib/article-import/workflow-evidence.ts",
+        "src/lib/article-import/workflow-requirements.ts",
+        "scripts/import-article.ts",
+        ".agents/skills/external-article-import/SKILL.md"
+      ],
+      "validation": [
+        {
+          "name": "focused VERIFYING transition and replay tests",
+          "tier": "task",
+          "kind": "command",
+          "location": "local",
+          "argv": [
+            "node",
+            "--import",
+            "tsx",
+            "--test",
+            "--test-name-pattern=VERIFYING|verified synthetic completion freezes proof|terminal replay reconstructs and freezes",
+            "tests/article-import-supervised.test.ts",
+            "tests/article-import.test.ts"
+          ],
+          "timeout_seconds": 900
+        }
+      ],
+      "evidence": [],
+      "evidence_refs": [
+        "build-pack/repairs/verifying-four-1127/verification.md"
+      ],
+      "model_route": {
+        "worker": "codex-owner-authorized",
+        "verifier": "independent"
+      },
+      "context_packet": {
+        "retrieval": "targeted"
+      },
+      "operation_phase": "implementing",
+      "publication": {
+        "enabled": false
+      },
+      "extensions": {
+        "authority": "Explicit user directive; synthetic verification cannot execute, deploy or publish a real article. The code change remains authorized for the repository PR, review, merge and deployment workflow."
+      }
+    },
+    {
+      "id": "ARTICLE-IMAGEGEN-1126",
+      "title": "Mandatory supervised ImageGen article heroes",
+      "status": "in_progress",
+      "dependencies": [],
+      "risk": "high",
+      "risk_assessment": { "blast_radius": 3, "reversibility": 2, "authority": 2, "sensitive_data": 1, "external_impact": 2 },
+      "source_changes": false,
+      "requirement_ids": ["OWNER-2026-11-26-ARTICLE-IMAGEGEN", "OWNER-2026-11-26-ARTICLE-VISUAL-EVIDENCE"],
+      "context_files": ["planning.md", "src/lib/article-import/hero-image.ts", "src/lib/article-import/supervised-executor.ts", "src/lib/article-import/release.ts", "src/lib/article-import/article-visual-quality.ts", "src/lib/article-heroes.ts"],
+      "validation": [
+        { "name": "Focused article hero tests", "tier": "task", "kind": "command", "location": "local", "argv": ["node", "--import", "tsx", "--test", "tests/article-import-hero.test.ts"], "timeout_seconds": 180 },
+        { "name": "Agent workflow verification", "tier": "repository", "kind": "command", "location": "local", "argv": ["npm", "run", "verify:agent-workflow"], "timeout_seconds": 300 }
+      ],
+      "evidence": [],
+      "evidence_refs": [],
+      "model_route": { "worker": "codex-owner-authorized", "verifier": "independent" },
+      "context_packet": { "retrieval": "targeted" },
+      "operation_phase": "implementing",
+      "publication": { "enabled": true, "destinations": ["github-pr", "vercel"] },
+      "extensions": { "authority": "Owner-directed supervised article ImageGen and bound whitespace/motion evidence; pinned MotionSites look-and-fix review; synthetic implementation only, no real imports" }
     }
   ],
   "extensions": {

@@ -1,0 +1,30 @@
+{
+  "repository": "https://github.com/michaelchamboko/SlopMonster",
+  "commit": "8bf609edfaeed844f1d03bb6b69f80dc21728c8b",
+  "files": {
+    ".github/workflows/slop.yml": { "mode": "100644", "gitBlobSha1": "f59b7d2947128e3217232dc9cdae18918795691c" },
+    ".gitignore": { "mode": "100644", "gitBlobSha1": "2348c91f7a198200e6bba5fdbb4386917bbb542b" },
+    "LICENSE": { "mode": "100644", "gitBlobSha1": "79819274e47822b4a112374862c4c05d07e211cc" },
+    "README.md": { "mode": "100644", "gitBlobSha1": "a3341052ac7273770512381b788ab22589ac5414" },
+    "SKILL.md": { "mode": "100644", "gitBlobSha1": "ec1e5030fd4bfdad631587fc71f27aaa8835a595" },
+    "docs/img/hero.png": { "mode": "100644", "gitBlobSha1": "f3a620effe4fe9b5697d23faee99d5aa23e2cd22" },
+    "docs/img/rule-1-vocab.png": { "mode": "100644", "gitBlobSha1": "90a8e819077f3926a1a24562528c0f1de18b0cb5" },
+    "docs/img/rule-2-phrases.png": { "mode": "100644", "gitBlobSha1": "040635f7658b95fc481eb234e41d70fb610095f1" },
+    "docs/img/rule-3-punctuation.png": { "mode": "100644", "gitBlobSha1": "fe4f693f5cc281cfc4d902a17ae65f45b9e45b12" },
+    "docs/img/rule-4-rhythm.png": { "mode": "100644", "gitBlobSha1": "58d75baaf0a07a608e7cd9f1853fea267ee3d9d4" },
+    "docs/img/rule-5-conversion.png": { "mode": "100644", "gitBlobSha1": "d4044a6fba0b95252e5d25960b78e6656a44f23f" },
+    "examples/gate-sample.txt": { "mode": "100644", "gitBlobSha1": "e0d142d773672251db7b0fca9904e8169c2ec3fa" },
+    "examples/jasper-live-run.md": { "mode": "100644", "gitBlobSha1": "f2ef20853a7a286c87273ee84713c830017041be" },
+    "examples/ridgeline-roofing.md": { "mode": "100644", "gitBlobSha1": "24306215c3314c90041ee461ee1e340bc811d23d" },
+    "prompts/cleanse.txt": { "mode": "100644", "gitBlobSha1": "b28677c62e0bc5ad095f14c201c9aca952e6c267" },
+    "references/dr-eleanor-hayes.md": { "mode": "100644", "gitBlobSha1": "c93df2fc369002b750449cc9a7012f74d421722f" },
+    "references/principles.md": { "mode": "100644", "gitBlobSha1": "d433c19cc7e16bfa694dffc10f2de9eb1e589999" },
+    "references/signs-of-ai-writing.md": { "mode": "100644", "gitBlobSha1": "fa16be097480878f8deb0f32973191655a537571" },
+    "references/sources.md": { "mode": "100644", "gitBlobSha1": "c0861c375e042dba349f66e35ff02b3d677585d2" },
+    "references/storyscope-findings.md": { "mode": "100644", "gitBlobSha1": "76d784d15523f3456ee9934bc913712997fe251d" },
+    "tools/cleanse.sh": { "mode": "100755", "gitBlobSha1": "0c3113f709f0a56d45293634bbac6306ac3e3fad" },
+    "tools/deslop.py": { "mode": "100644", "gitBlobSha1": "50bf25913730011631cd7a5be2240e410849a9da" },
+    "tools/test_cleanse.sh": { "mode": "100755", "gitBlobSha1": "509941e6c0cc90c1f57eb3a7a3dfb3e78810dc3a" },
+    "tools/test_deslop.py": { "mode": "100644", "gitBlobSha1": "0a2651fd2cdf75229c8225531a687761e8b5c9cf" }
+  }
+}

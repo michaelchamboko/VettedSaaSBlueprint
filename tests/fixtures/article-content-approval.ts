@@ -8,6 +8,7 @@ import { importArtifactTarget } from "../../src/lib/article-import/format-valida
 import { candidatePreviewPath } from "../../src/lib/article-import/candidate-route";
 import { buildWorkflowFixture } from "./article-workflow-evidence";
 import { editorialExecutionSchema, readEvidence } from "../../src/lib/article-import/workflow-evidence";
+import { countVisibleArticleWords } from "../../src/lib/editorial/article-visible-word-count";
 const samplePageBlueprint = { ...baseBlueprint, metadata: { ...baseBlueprint.metadata, url_slug: "example", canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
 
 export const fullRewriteNotes = {
@@ -43,18 +44,22 @@ export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   return revised;
 }
 
-export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1) {
+export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean } = {}) {
   const artifactPath = "src/generated/landing-pages/example.json";
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
   const rewritten = rewriteAllProse("landing", samplePageBlueprint);
-  const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, fullRewriteNotes,
+  const initialWordCount = countVisibleArticleWords("direct-review", rewritten).wordCount;
+  if (initialWordCount < 2050) rewritten.benefits[0].benefit_description += ` ${Array(2050 - initialWordCount).fill("decision").join(" ")}`;
+  const independentReview = options.structuredEditorial || record.transformation?.commercialMode === "approved";
+  const notes = independentReview ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
+  const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, notes,
     { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
   for (const [file, value] of [[artifactPath, rewritten], [editorialEvidencePath, evidence], [formatQualityPath, { format: "direct-review", artifactFingerprint: fingerprintEditorialArtifact(rewritten), passed: true, gate: "landing:quality:candidate" }]] as const) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
-  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath });
+  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath, structuredEditorial: options.structuredEditorial, currentPolicy: options.currentPolicy });
   return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
 }
 
@@ -83,6 +88,7 @@ export async function preparePresentationFixture(root: string, record: ExternalA
       schemaVersion: "ImportPresentationValidationV1",
       format: record.format,
       artifactFingerprint: record.contentApproval.artifactFingerprint,
+      ...(record.heroImage && { heroImageFingerprint: fingerprintEditorialArtifact(record.heroImage) }),
       renderedRoutes: ["/imported-guide"],
       checks: { desktop: true, mobile: true, accessibility: true, technicalSeo: true, overflow: true, runtimeErrors: true },
       pageDesign: validPageDesignReceipt,

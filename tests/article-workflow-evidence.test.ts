@@ -9,21 +9,75 @@ import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-ap
 import { recaptureStoredExchange } from "./fixtures/capture-replay";
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
-import { artifactProseProjection, contentAssessmentSchema, createDesignReviewSchema, editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
+import { artifactProseProjection, contentAssessmentSchema, createDesignReviewSchema, editorialExecutionSchema, evaluateWorkflowEvidence, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateResearchEvidence, withTransformingArtifact, workflowEvidenceSchema, type WorkflowEvidenceRecord } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution, evidenceReference, executionEvidenceSchema, extractOpenCodeExecution, freezeEvidenceGraph, proseProjectionDigest, sha256, validateExecutionEvidence, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
 import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 
 const id = "article-00000000-0000-4000-8000-000000000001";
-async function fixture(researchGeneration = 0) {
+async function fixture(researchGeneration = 0, options: { structuredEditorial?: boolean; reuseIndependentContext?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING" } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "workflow-proof-"));
   const before = { ...samplePageBlueprint, metadata: { ...samplePageBlueprint.metadata, canonical_url: "https://example.test/example", url_slug: "example" } };
   const after = rewriteAllProse("landing", before);
   const artifactPath = "artifact.json", editorialEvidencePath = "editorial.json";
   await writeFile(path.join(root, artifactPath), JSON.stringify(after));
-  await writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, fullRewriteNotes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
+  const notes = options.structuredEditorial ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
+  await writeFile(path.join(root, editorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, after, notes, { before: "score 3/5", after: "score 5/5 CLEAN" })));
   const record: WorkflowEvidenceRecord = { researchGeneration, importId: id, sourceFingerprint: sha256("source"), format: "direct-review", stage: "RELEASING", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, artifactPath };
-  record.evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before, after, editorialEvidencePath });
+  record.evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before, after, editorialEvidencePath, ...options });
   return { root, record };
+}
+test("structured Refining accepts alternate tools and models but rejects a reused rewrite context", async () => {
+  const passing = await fixture(0, { structuredEditorial: true });
+  try {
+    const editorial = editorialExecutionSchema.parse(await readEvidence(passing.root, passing.record.evidenceRefs!.editorial!));
+    const rewrite = executionEvidenceSchema.parse(await readEvidence(passing.root, editorial.passes[0].executionRef));
+    const review = executionEvidenceSchema.parse(await readEvidence(passing.root, editorial.passes[3].executionRef));
+    assert.equal(rewrite.kind, "structured");
+    assert.equal(review.kind, "structured");
+    if (rewrite.kind !== "structured" || review.kind !== "structured") throw new Error("Expected structured executions");
+    assert.notEqual(rewrite.toolName, review.toolName);
+    assert.notEqual(rewrite.modelId, review.modelId);
+    await validateEditorialExecution(passing.root, passing.record.evidenceRefs!.editorial!, passing.record);
+    await validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, passing.record);
+    await assert.rejects(
+      validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, { ...passing.record, stage: undefined }),
+      /ASSESSMENT_CONSUMER_STAGE_MISMATCH/,
+    );
+    await assert.rejects(
+      validateContentAssessment(passing.root, passing.record.evidenceRefs!.assessment!, { ...passing.record, stage: "UNKNOWN" }),
+      /ASSESSMENT_CONSUMER_STAGE_MISMATCH/,
+    );
+    assert.equal((await evaluateWorkflowEvidence(passing.record, { root: passing.root, throughStage: "REFINING" })).ok, true);
+  } finally { await rm(passing.root, { recursive: true, force: true }); }
+
+  const blocked = await fixture(0, { structuredEditorial: true, reuseIndependentContext: true });
+  try {
+    await assert.rejects(validateEditorialExecution(blocked.root, blocked.record.evidenceRefs!.editorial!, blocked.record), /EDITORIAL_INDEPENDENT_REVIEW_CONTEXT_REUSED/);
+  } finally { await rm(blocked.root, { recursive: true, force: true }); }
+});
+test("structured final assessment requires a Refining packet while legacy OpenCode retains Transforming compatibility", async () => {
+  const blocked = await fixture(0, { structuredEditorial: true, assessmentStage: "TRANSFORMING" });
+  try {
+    await assert.rejects(
+      validateContentAssessment(blocked.root, blocked.record.evidenceRefs!.assessment!, blocked.record),
+      /EXECUTION_PACKET_MISMATCH/,
+    );
+  } finally { await rm(blocked.root, { recursive: true, force: true }); }
+
+  const legacy = await fixture(0, { assessmentStage: "TRANSFORMING" });
+  try {
+    await validateContentAssessment(legacy.root, legacy.record.evidenceRefs!.assessment!, legacy.record);
+  } finally { await rm(legacy.root, { recursive: true, force: true }); }
+});
+
+async function assessmentWithFinding(root: string, record: WorkflowEvidenceRecord, claimIds: string[]) {
+  const approved = contentAssessmentSchema.parse(await readEvidence(root, record.evidenceRefs!.assessment!));
+  const execution = executionEvidenceSchema.parse(await readEvidence(root, approved.reviewerExecutionRef));
+  if (execution.kind !== "opencode") throw new Error("Expected fixture model execution");
+  const assessed = { format: approved.format, schemaRevision: approved.schemaRevision, artifactFingerprint: approved.artifactFingerprint, sourceFingerprint: approved.sourceFingerprint, requirementRevision: approved.requirementRevision, researchRef: approved.researchRef, intent: approved.intent, claimCoverage: approved.claimCoverage, ruleResults: approved.ruleResults,
+    findings: [{ id: "finding", artifactPaths: ["metadata.title_tag"], claimIds, description: "Synthetic resolved finding.", disposition: "resolved" as const, evidenceRefs: [approved.researchRef] }] };
+  const reviewerExecutionRef = await storeEvidence(root, id, recaptureStoredExchange({ ...execution, output: { assessment: JSON.stringify(assessed) }, outputDigest: proseProjectionDigest({ assessment: JSON.stringify(assessed) }) }, execution.replay!.inputRefs, execution.replay!.outputRefs));
+  return storeEvidence(root, id, { schemaVersion: approved.schemaVersion, id: approved.id, createdAt: approved.createdAt, importId: approved.importId, ...assessed, reviewerExecutionRef });
 }
 test("valid synthetic producer chain passes; omitted prerequisites fail closed without writes", async () => {
   const { root, record } = await fixture();
@@ -59,6 +113,39 @@ test("research rejects changed snapshot bytes and unsupported excerpts", async (
     await assert.rejects(validateResearchEvidence(root, await storeEvidence(root, id, value), record), /EXCERPT_MISMATCH/);
     await writeFile(path.join(root, value.sources[0].snapshotRef.path), "changed");
     await assert.rejects(validateResearchEvidence(root, record.evidenceRefs!.research!, record), /HASH_MISMATCH/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("assessment findings accept claim IDs present in the bound research", async () => {
+  const { root, record } = await fixture();
+  try {
+    await validateContentAssessment(root, await assessmentWithFinding(root, record, ["claim"]), record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("assessment findings reject claim IDs absent from the bound research", async () => {
+  const { root, record } = await fixture();
+  try {
+    await assert.rejects(validateContentAssessment(root, await assessmentWithFinding(root, record, ["unknown-claim"]), record), /ASSESSMENT_CLAIM_MISMATCH/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("assessment findings may omit claim IDs when no research claim applies", async () => {
+  const { root, record } = await fixture();
+  try {
+    await validateContentAssessment(root, await assessmentWithFinding(root, record, []), record);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+test("transforming assessment reuses the schema and commercial artifact object while verifying evidence refs", async () => {
+  const { root, record } = await fixture();
+  try {
+    let observedReads = 0;
+    await withTransformingArtifact(root, { ...record, stage: "TRANSFORMING" }, (artifact) => {
+      const metadata = (artifact as { metadata: Record<string, unknown> }).metadata;
+      const title = metadata.title_tag;
+      Object.defineProperty(metadata, "title_tag", { enumerable: true, get: () => { observedReads += 1; return title; } });
+    }, async () => {
+      assert.deepEqual((await evaluateWorkflowEvidence({ ...record, stage: "TRANSFORMING" }, { root, throughStage: "REFINING" })).diagnostics, []);
+    });
+    assert.ok(observedReads > 0, "assessment should inspect the exact object checked at the transforming handoff");
+    assert.deepEqual((await evaluateWorkflowEvidence(record, { root, throughStage: "REFINING" })).diagnostics, []);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test("rebinding assessment envelopes cannot reuse a prose-only review after metadata or disclosure changes", async () => {

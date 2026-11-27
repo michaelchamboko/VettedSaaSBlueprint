@@ -10,18 +10,19 @@ import {
 import { parseImportCommand } from "../scripts/import-article";
 import { persistFixture, executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
 import { writeJsonAtomically } from "../src/lib/article-import/engine";
-import { approveFixture, presentFixture } from "./fixtures/article-content-approval";
+import { approveFixture, presentFixture, refreshPresentationFixture } from "./fixtures/article-content-approval";
 import { fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
 import { createIntakeRun, loadIntakeRun } from "../src/lib/article-import/intake";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
-import { readEvidence, storeEvidence, evaluateWorkflowEvidence, freezeEvidenceGraph } from "../src/lib/article-import/workflow-evidence";
-import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEvidence, extractOpenCodeExecution, proseProjectionDigest } from "../src/lib/article-import/execution-evidence";
-import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { readEvidence, storeEvidence, evidenceReference, evaluateWorkflowEvidence, freezeEvidenceGraph, reconstructTerminalHeroBinding, validateProductionWorkflowEvidence } from "../src/lib/article-import/workflow-evidence";
+import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEvidence, extractOpenCodeExecution, proseProjectionDigest, readEvidenceBytes, storeEvidenceBytes } from "../src/lib/article-import/execution-evidence";
+import { instructionsForStage, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { createHash } from "node:crypto";
+import { verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
 
-async function releaseFixture(root: string, recovered = false) {
+async function releaseFixture(root: string, recovered = false, beforeReceipt?: (record: Awaited<ReturnType<typeof advanceImport>>) => Promise<void>) {
   await writeFile(path.join(root, "approved-urls.md"), allowlist);
   await writeFile(path.join(root, "article.md"), source);
   let record = await createArticleImport(root, "article.md");
@@ -35,19 +36,29 @@ async function releaseFixture(root: string, recovered = false) {
   const commitSha = "b".repeat(40), reviewedCommitSha = "a".repeat(40);
   const deployment = { commitSha, deploymentId: "dpl_fixture", canonicalUrl: new URL(target.renderedRoutes[0], "https://vettedsaasblueprint.online").href };
   const checks = await productionFixture(root, record.importId, target, deployment, record.sourceFingerprint);
-  record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha } } };
+  record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha }, deployment: { commitSha, operationKey: `deployment:${commitSha}`, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl } } };
+  await beforeReceipt?.(record);
   return recordImportRelease(root, record, { schemaVersion: "ImportReleaseV1", commitSha, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl, presentationFingerprint: fingerprintEditorialArtifact(record.presentation), verifiedAt: new Date().toISOString(), productionVerifierRef: checks.productionVerifierRef, checks: { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true } });
 }
 
 test("verified synthetic completion freezes proof before deleting disposable source", async () => {
   const root = await testRoot("article-import-live-");
   try {
-    const record = await verifyImportRelease(root, await releaseFixture(root));
+    const verifying = await releaseFixture(root);
+    const validatedArtifact = JSON.parse(await readFile(path.resolve(root, verifying.artifactPath ?? verifying.contentApproval!.artifactPath), "utf8"));
+    const record = await verifyImportRelease(root, verifying);
     assert.equal(record.stage, "LIVE"); assert.ok(record.terminalRef); assert.ok(record.sourceRef);
+    const terminal = await readEvidence(root, record.terminalRef) as { artifactRef: { path: string; sha256: string }; evidenceRefs: typeof record.evidenceRefs; frozenFiles: Array<{ path: string; sha256: string }> };
+    assert.deepEqual(await readEvidence(root, terminal.artifactRef), validatedArtifact);
+    assert.ok(record.evidenceRefs?.transformAssessment);
+    assert.deepEqual(terminal.evidenceRefs.transformAssessment, record.evidenceRefs.transformAssessment);
+    assert.ok(terminal.frozenFiles.some((file) => file.path === record.evidenceRefs!.transformAssessment!.path && file.sha256 === record.evidenceRefs!.transformAssessment!.sha256));
     await assert.rejects(readFile(path.join(root, ".automation/article-imports", `${record.importId}.source.md`)));
     assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
     assert.equal(await readFile(path.resolve(root, record.sourceRef!.path), "utf8"), source);
     await writeFile(path.resolve(root, record.contentApproval!.artifactPath), "{}");
+    assert.equal((await inspectImportCompletion(root, record.importId)).status, "WORK", "a verified publication still requires its IMPROVE assessment");
+    await persistFixture(root, { ...record, improve: { ...record.improve!, phase: "COMPLETE", completedAt: new Date().toISOString() } });
     assert.equal((await inspectImportCompletion(root, record.importId)).status, "COMPLETE", "historical proof uses frozen bytes");
     await assert.rejects(createArticleImport(root, "article.md"), /DUPLICATE_REVALIDATION_REQUIRED/);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -61,6 +72,105 @@ test("duplicate reuses recovered terminal proof with its retained research gener
     const reused = await createArticleImport(root, "article.md");
     assert.equal(reused.importId, live.importId);
     assert.deepEqual(reused.terminalRef, live.terminalRef);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING resume rejects stale workflow evidence before release handover", async () => {
+  const root = await testRoot("article-import-resume-stale-evidence-");
+  try {
+    const verifying = await releaseFixture(root);
+    const assessmentRef = verifying.evidenceRefs!.assessment!;
+    await writeFile(path.resolve(root, assessmentRef.path), "{}");
+
+    await assert.rejects(resumeImport(root, verifying), /EVIDENCE_HASH_MISMATCH/);
+    const unchanged = await loadImport(root, verifying.importId);
+    assert.equal(unchanged.stage, "VERIFYING");
+    assert.ok(unchanged.presentation);
+    assert.ok(unchanged.release);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct VERIFYING handover preserves structured invalidation for stale prefix evidence", async () => {
+  const root = await testRoot("article-import-verify-stale-evidence-");
+  try {
+    const verifying = await releaseFixture(root, false, async (releasing) => {
+      await writeFile(path.resolve(root, releasing.presentation!.validation.evidencePaths[0]), "{}");
+    });
+
+    const result = await verifyImportRelease(root, verifying);
+
+    assert.equal(result.stage, "VALIDATING");
+    assert.equal(result.presentation, undefined);
+    assert.equal(result.release, undefined);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING rejects a production reference that differs from the release receipt", async () => {
+  const root = await testRoot("article-import-verify-production-ref-");
+  try {
+    const verifying = await releaseFixture(root);
+    assert.equal(verifying.nextAction, instructionsForStage("VERIFYING"));
+    const retained = verifying.evidenceRefs!.production!;
+    const bytes = await readEvidenceBytes(root, retained.path);
+    const divergent = await storeEvidenceBytes(root, verifying.importId, Buffer.concat([bytes, Buffer.from("\n")]));
+    await assert.rejects(
+      verifyImportRelease(root, { ...verifying, evidenceRefs: { ...verifying.evidenceRefs, production: divergent } }),
+      /TERMINAL_PRODUCTION_REFERENCE_MISMATCH/,
+    );
+    assert.equal((await loadImport(root, verifying.importId)).stage, "VERIFYING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING rejects review-merge and optional deployment journals that differ from the receipt", async () => {
+  const root = await testRoot("article-import-verify-release-chain-");
+  try {
+    const verifying = await releaseFixture(root);
+    const wrongMerge = structuredClone(verifying.pendingRelease!);
+    wrongMerge.operations!.merge!.reviewedHeadSha = "c".repeat(40);
+    await assert.rejects(
+      verifyImportRelease(root, { ...verifying, pendingRelease: wrongMerge }),
+      /TERMINAL_MERGE_PROOF_INVALID/,
+    );
+    const wrongDeployment = structuredClone(verifying.pendingRelease!);
+    wrongDeployment.operations!.deployment!.deploymentId = "dpl_other";
+    await assert.rejects(
+      verifyImportRelease(root, { ...verifying, pendingRelease: wrongDeployment }),
+      /TERMINAL_DEPLOYMENT_PROOF_INVALID/,
+    );
+    assert.equal((await loadImport(root, verifying.importId)).stage, "VERIFYING");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING production validation returns the matching approved artifact when paths differ", async () => {
+  const root = await testRoot("article-import-verify-artifact-precedence-");
+  try {
+    const verifying = await releaseFixture(root);
+    const approved = JSON.parse(await readFile(path.resolve(root, verifying.contentApproval!.artifactPath), "utf8"));
+    const selected = structuredClone(approved);
+    const validatingPath = "build-pack/article-import/verifying-approved.json";
+    await mkdir(path.dirname(path.join(root, validatingPath)), { recursive: true });
+    await writeFile(path.join(root, validatingPath), JSON.stringify(selected));
+
+    const validated = await validateProductionWorkflowEvidence(root, { ...verifying, artifactPath: validatingPath });
+    assert.deepEqual(validated.artifact, approved);
+    const differentApproved = structuredClone(approved);
+    differentApproved.metadata.meta_description = "A different but valid approved article.";
+    await writeFile(path.resolve(root, verifying.contentApproval!.artifactPath), JSON.stringify(differentApproved));
+    await assert.rejects(
+      validateProductionWorkflowEvidence(root, { ...verifying, artifactPath: validatingPath }),
+      /PRODUCTION_APPROVED_ARTIFACT_MISMATCH/,
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("VERIFYING accepts a valid retained deployment proof without the newer operation journal", async () => {
+  const root = await testRoot("article-import-verify-historical-deployment-");
+  try {
+    const verifying = await releaseFixture(root);
+    const pendingRelease = structuredClone(verifying.pendingRelease!);
+    delete pendingRelease.operations!.deployment;
+    const live = await verifyImportRelease(root, await persistFixture(root, { ...verifying, pendingRelease }));
+    assert.equal(live.stage, "LIVE");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -308,7 +418,11 @@ async function stripReplayFromEvidence(root: string, importId: string, value: un
           if (record.schemaVersion === "ExecutionEvidenceV1" && record.kind === "opencode" && record.replay) {
             const { replay: _replay, ...rest } = record;
             void _replay;
-            const newRef = await storeEvidence(root, importId, rest);
+            // Pre-replay receipts referenced the pre-replay forms of their
+            // inputs too. Rewrite that retained graph consistently rather
+            // than leaving editorial executions bound to a newer assessment.
+            const rewritten = await stripReplayFromEvidence(root, importId, rest);
+            const newRef = await storeEvidence(root, importId, rewritten.value);
             return { value: newRef, changed: true };
           }
         }
@@ -347,7 +461,8 @@ async function buildPreReplayTerminal(root: string, record: Awaited<ReturnType<t
   const frozenFiles = await freezeEvidenceGraph(root, record.importId, refList as Parameters<typeof freezeEvidenceGraph>[2]);
   newTerminal.frozenFiles = frozenFiles;
   const finalTerminalRef = await storeEvidence(root, record.importId, newTerminal);
-  const updatedRecord = { ...record, terminalRef: finalTerminalRef, evidenceRefs: newTerminal.evidenceRefs as typeof record.evidenceRefs, stage: "LIVE" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION };
+  const updatedRecord = { ...record, terminalRef: finalTerminalRef, evidenceRefs: newTerminal.evidenceRefs as typeof record.evidenceRefs, stage: "LIVE" as const, workflowVersion: 2, requirementRevision: WORKFLOW_REVISION,
+    improve: record.improve ? { ...record.improve, phase: "COMPLETE" as const, completedAt: new Date().toISOString() } : undefined };
   await persistFixture(root, updatedRecord);
   return { record: updatedRecord, terminal: newTerminal, finalTerminalRef };
 }
@@ -364,6 +479,61 @@ test("frozen pre-replay terminal record inspects COMPLETE and tolerates changed 
     assert.equal(inspected.status, "COMPLETE");
     await writeFile(path.resolve(root, preReplayRecord.contentApproval!.artifactPath), "{}");
     assert.equal((await inspectImportCompletion(root, preReplayRecord.importId)).status, "COMPLETE");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("terminal replay reconstructs and freezes the retained hero binding", async () => {
+  const root = await testRoot("article-import-terminal-hero-");
+  try {
+    const released = await releaseFixture(root);
+    const artifactFingerprint = released.contentApproval!.artifactFingerprint;
+    const originalPath = `build-pack/article-import/${released.importId}/hero-original.png`;
+    const assetPath = "public/images/direct-review-example-hero.webp";
+    const inspectionPath = `.automation/article-imports/evidence/${released.importId}/hero-inspection.webp`;
+    const publicationPath = "src/generated/article-heroes/direct-review/example.json";
+    for (const [file, bytes] of [[originalPath, Buffer.from("original-png")], [assetPath, Buffer.from("derived-webp")], [inspectionPath, Buffer.from("derived-webp")]] as const) {
+      await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+      await writeFile(path.join(root, file), bytes);
+    }
+    const originalRef = await evidenceReference(root, originalPath);
+    const assetRef = await evidenceReference(root, assetPath);
+    const inspectionRef = await evidenceReference(root, inspectionPath);
+    const providerOutputRef = await storeEvidence(root, released.importId, { schemaVersion: "ArticleHeroProviderOutputV1", provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "synthetic-terminal-call", generatedAt: "2026-11-26T12:00:00.000Z", generatedImage: { providerAssetPath: "generated_images/synthetic.png", originalSha256: originalRef.sha256, outputHint: "Synthetic retained tool output for terminal replay." } });
+    const generationRef = await storeEvidence(root, released.importId, { schemaVersion: "ArticleHeroGenerationEvidenceV1", importId: released.importId, sourceFingerprint: released.sourceFingerprint, format: "direct-review", slug: "example", artifactFingerprint, originalRef, alt: "Synthetic reviewed article decision workspace illustration", generation: { provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "synthetic-terminal-call", generatedAt: "2026-11-26T12:00:00.000Z", prompt: "Synthetic prompt retained only to prove immutable terminal graph traversal for a generated article hero image.", promptSha256: createHash("sha256").update("Synthetic prompt retained only to prove immutable terminal graph traversal for a generated article hero image.").digest("hex"), outputSha256: originalRef.sha256, providerOutputRef } });
+    await mkdir(path.dirname(path.join(root, publicationPath)), { recursive: true });
+    await writeFile(path.join(root, publicationPath), JSON.stringify({ schemaVersion: "ArticleHeroPublicationV1", format: "direct-review", slug: "example", artifactFingerprint, rendererFingerprint: artifactFingerprint, asset: { filePath: assetPath, publicPath: "/images/direct-review-example-hero.webp", sha256: assetRef.sha256, width: 1600, height: 900, alt: "Synthetic reviewed article decision workspace illustration" } }));
+    const publicationRef = await evidenceReference(root, publicationPath);
+    const hero = { schemaVersion: "ArticleHeroBindingV1" as const, format: "direct-review" as const, slug: "example", artifactFingerprint, assetRef, inspectionRef, publicationRef, generationRef };
+    const heroRef = await storeEvidence(root, released.importId, hero);
+    const v3PresentationRef = await storeEvidence(root, released.importId, { schemaVersion: "WorkflowEvidenceV3", fixture: "terminal hero reconstruction boundary" });
+    assert.deepEqual(await reconstructTerminalHeroBinding(root, {
+      evidenceRefs: { hero: heroRef, presentation: v3PresentationRef },
+      heroImage: hero,
+    }), hero);
+    const rerendered = await refreshPresentationFixture(root, { ...released, evidenceRefs: { ...released.evidenceRefs, hero: heroRef } });
+    await persistFixture(root, rerendered);
+    const retained = await loadImport(root, released.importId);
+    await verifyImportPresentationEvidence(root, retained);
+    const live = await verifyImportRelease(root, retained);
+    assert.equal(live.stage, "LIVE");
+    const terminal = await readEvidence(root, live.terminalRef) as { heroImage: unknown; frozenFiles: Array<{ path: string; archiveRef: { path: string } }> };
+    assert.deepEqual(terminal.heroImage, hero);
+    for (const retained of [originalPath, assetPath, inspectionPath, publicationPath, providerOutputRef.path, generationRef.path, heroRef.path]) {
+      assert.ok(terminal.frozenFiles.some((entry) => entry.path === retained), `missing frozen hero input ${retained}`);
+    }
+    assert.equal((await evaluateWorkflowEvidence(live, { root }, "historical-terminal")).ok, true);
+    const bindingTamperRef = await storeEvidence(root, released.importId, {
+      ...terminal,
+      heroImage: { ...hero, assetRef: { ...assetRef, sha256: "0".repeat(64) } },
+    });
+    const bindingTamper = await evaluateWorkflowEvidence({ ...live, terminalRef: bindingTamperRef }, { root }, "historical-terminal");
+    assert.equal(bindingTamper.ok, false);
+    assert.match(bindingTamper.diagnostics.join("; "), /TERMINAL_HERO_BINDING_MISMATCH/);
+    const archivedOriginal = terminal.frozenFiles.find((entry) => entry.path === originalPath)!.archiveRef.path;
+    await writeFile(path.join(root, archivedOriginal), "tampered hero archive");
+    const tampered = await evaluateWorkflowEvidence(live, { root }, "historical-terminal");
+    assert.equal(tampered.ok, false);
+    assert.match(tampered.diagnostics.join("; "), /SNAPSHOT_BYTES_CHANGED/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

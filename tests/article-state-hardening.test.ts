@@ -1,4 +1,5 @@
-import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
+import { executeFixtureCommand, fixtureResearchRegistry, persistFixture } from "./fixtures/article-command";
+import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -56,9 +57,9 @@ test("intake mutation validates terminal identity and reloads current state", as
   try {
     const run = await createIntakeRun(root);
     await assert.rejects(markIntakeEntry(root, run, run.entries[0].relativePath, "LIVE"), /INTAKE_TERMINAL_PROOF_INVALID/);
-    const selected = await claimNextIntakeEntry(root, run.runId); assert.equal(selected.entries[0].status, "PROCESSING");
-    const record = await createArticleImport(root, selected.entries[0].capturedPath!);
-    await markIntakeEntry(root, selected, selected.entries[0].relativePath, "PROCESSING", { importId: record.importId });
+    const selected = await claimNextIntakeEntry(root, run.runId); assert.equal(selected.entry?.status, "PROCESSING");
+    const record = await createArticleImport(root, selected.entry!.capturedPath!);
+    await markIntakeEntry(root, selected.run, selected.entry!.relativePath, "PROCESSING", { importId: record.importId });
     assert.equal((await loadIntakeRun(root, run.runId)).entries[0].importId, record.importId);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -106,27 +107,33 @@ test("supervised work-to-repair transition preserves digest and rejects unchange
   const root = await fixture();
   try {
     const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
-    const supervised = createSupervisedImportExecutor(root);
+    const supervised = createSupervisedImportExecutor(root, undefined, { researchRegistry: fixtureResearchRegistry(root) });
     let executions = 0;
     const execute: typeof supervised = async (context) => { executions++; return supervised(context); };
     const pending = await executePendingImport(root, record.importId, execute);
     assert.ok(pending.continuation?.kind === "work");
-    const packet = pending.continuation;
+    if (pending.continuation?.kind !== "work") throw new Error("Missing research plan work");
+    await writeGapPlanResult(root, pending.continuation, { claimText: "Synthetic invalid research submission" });
+    const acquiring = await executePendingImport(root, record.importId, execute);
+    assert.ok(acquiring.continuation?.kind === "work");
+    if (acquiring.continuation?.kind !== "work") throw new Error("Missing research acquisition work");
     await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [] }));
-    await writeFile(path.resolve(root, packet.resultPath), JSON.stringify({ idempotencyKey: packet.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Synthetic invalid research submission", work: { stage: "RESEARCHING", evidencePath: "research.json" } }));
+    await writeAcquisitionResult(root, acquiring.continuation, "research.json");
     const failed = await executePendingImport(root, record.importId, execute);
     assert.ok(failed.continuation?.kind === "repair");
     assert.equal(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
     await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
-    assert.equal(executions, 2);
+    assert.equal(executions, 3);
     await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [{ url: "https://example.com/source" }] }));
     assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
+    const requeued = await executePendingImport(root, record.importId, execute);
+    assert.ok(requeued.continuation?.kind === "work");
     const retried = await executePendingImport(root, record.importId, execute);
-    assert.equal(executions, 3, "changed evidence reaches validation without granting passage");
+    assert.equal(executions, 5, "changed evidence reaches validation without granting passage");
     assert.ok(retried.continuation?.kind === "repair");
     assert.equal(await canonicalSubmissionFingerprint(retried, root), retried.continuation.submittedFingerprint);
     await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
-    assert.equal(executions, 3);
+    assert.equal(executions, 5);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -159,6 +166,52 @@ for (const evidenceField of ["assessmentPath", "editorialExecutionPath", "presen
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 }
+
+test("hero repair digest follows generation evidence and its source provenance bytes", async () => {
+  const root = await fixture();
+  try {
+    const record = await advanceImport(root, await createArticleImport(root, "Article Intake/a.md"), "Captured.");
+    const workDirectory = path.join(root, ".automation/article-imports/work", record.importId);
+    await mkdir(workDirectory, { recursive: true });
+    const generationPath = "hero-generation.json";
+    const providerPath = "hero-provider-output.json";
+    const originalPath = "hero-original.png";
+    await writeFile(path.join(root, providerPath), JSON.stringify({ approved: false }));
+    await writeFile(path.join(root, originalPath), Buffer.from("synthetic original image bytes"));
+    const generation = (ready: boolean) => ({ ready,
+      originalRef: { path: originalPath, sha256: "a".repeat(64) },
+      generation: { providerOutputRef: { path: providerPath, sha256: "b".repeat(64) } },
+    });
+    await writeFile(path.join(root, generationPath), JSON.stringify(generation(false)));
+    await writeFile(path.join(workDirectory, "synthetic.result.json"), JSON.stringify({
+      work: { stage: record.stage, heroGenerationEvidencePath: generationPath },
+    }));
+    let executions = 0;
+    const executor = async ({ record: current }: { record: typeof record }) => {
+      executions++;
+      const evidence = JSON.parse(await readFile(path.join(root, generationPath), "utf8"));
+      const provider = JSON.parse(await readFile(path.join(root, providerPath), "utf8"));
+      if (!evidence.ready || !provider.approved) throw new Error("Synthetic hero generation evidence failed");
+      return current;
+    };
+    let failed = await executePendingImport(root, record.importId, executor);
+    assert.equal(failed.continuation?.kind, "repair");
+    if (failed.continuation?.kind !== "repair") throw new Error("Missing hero repair continuation");
+    const failedGenerationFingerprint = failed.continuation.submittedFingerprint;
+    await assert.rejects(executePendingImport(root, record.importId, executor), /UNCHANGED_SUBMISSION/);
+    await writeFile(path.join(root, generationPath), JSON.stringify(generation(true)));
+    assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failedGenerationFingerprint);
+    failed = await executePendingImport(root, record.importId, executor);
+    assert.equal(failed.continuation?.kind, "repair");
+    if (failed.continuation?.kind !== "repair") throw new Error("Missing provider repair continuation");
+    const failedProviderFingerprint = failed.continuation.submittedFingerprint;
+    await assert.rejects(executePendingImport(root, record.importId, executor), /UNCHANGED_SUBMISSION/);
+    await writeFile(path.join(root, providerPath), JSON.stringify({ approved: true }));
+    assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failedProviderFingerprint);
+    await executePendingImport(root, record.importId, executor);
+    assert.equal(executions, 3);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 test("explicit legacy upgrade preserves history and terminal mismatch cannot skip", async () => {
   const root = await fixture();
   try {
@@ -237,7 +290,7 @@ test("explicit recovery validates retained execution then clears blocked import 
     const proof = await storeEvidence(root, record.importId, recovery);
     const run = await createIntakeRun(root);
     const claimed = await claimNextIntakeEntry(root, run.runId);
-    const bound = await markIntakeEntry(root, claimed, claimed.activeEntry!, "PROCESSING", { importId: record.importId });
+    const bound = await markIntakeEntry(root, claimed.run, claimed.entry!.relativePath, "PROCESSING", { importId: record.importId });
     await setIntakeBlocker(root, bound, { scope: "shared", code: "CREDENTIALS", message: "credentials missing" });
     const retry = { kind: "intake-retry", runId: run.runId, importId: record.importId, recovery: proof.path } as const;
     const intakeLease = await claimWorkflowLease(root, "intake", run.runId);

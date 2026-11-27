@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { DirectReviewPage } from "@/components/landing/DirectReviewPage";
 import { getPublishedLandingPageRecord, listPublishedLandingPageParams } from "@/lib/generated/landing-pages";
 import { loadPublicSiteConfig } from "@/lib/site/public-site";
+import { loadArticleHeroForArtifact } from "@/lib/article-heroes";
 
 export const dynamic = "force-static";
 
@@ -35,10 +36,12 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const published = getPublishedLandingPageRecord(slug);
   if (!published) notFound();
+  const reviewedHero = loadArticleHeroForArtifact("direct-review", published.blueprint.metadata.url_slug, published.blueprint)?.asset;
   return (
     <DirectReviewPage
       blueprint={published.blueprint}
       affiliateUrlOverride={published.exactAffiliateUrl ?? undefined}
+      reviewedHero={reviewedHero}
     />
   );
 }

@@ -203,7 +203,7 @@
     },
     {
       "path": ".agents/skills/impeccable/scripts/live-browser.js",
-      "sha256": "7af0a8665057c83b39bca2c8c7427ef2343734f70d4128c377113a6726a1e3b1"
+      "sha256": "6f6ccc3b4b7ee587191ea1972b0f18bf90a73a464826a1256e2a153d68edd56a"
     },
     {
       "path": ".agents/skills/impeccable/scripts/modern-screenshot.umd.js",
@@ -238,6 +238,10 @@
       "sha256": "0605d685714712374480d3d1eb9911b04db3affe5b14628c87708899e96e81e3"
     },
     {
+      "path": ".agents/skills/eleanor-editorial/references/long-form-affiliate.md",
+      "sha256": "ecb86fd802cda9a4619277a10ad90931e690444363020fc8b57042f866630fe0"
+    },
+    {
       "path": ".agents/skills/eleanor-editorial/references/principles.md",
       "sha256": "54071dec8421e06187c5ae586d3572e55c5090f0992092a2b29d69607b8f9add"
     },
@@ -255,7 +259,7 @@
     },
     {
       "path": ".agents/skills/eleanor-editorial/SKILL.md",
-      "sha256": "dbbecfc9fb6acc11f0ea21bae53472849d0625831780847bf18c19c021329fac"
+      "sha256": "f766193d434463a9547ded1fc58f5c28610fb79d632ac762499d0e247c5f6cbc"
     },
     {
       "path": ".agents/skills/eleanor-editorial/tools/deslop.py",
@@ -266,8 +270,16 @@
       "sha256": "fb02e92cb5890f4a239bf164db3a435523032f9ddfcbaaff4880d9f2566ef575"
     },
     {
+      "path": ".agents/skills/external-article-import/references/article-visual-quality.md",
+      "sha256": "bf7cfdd3b1d6b663a6644eb3ee5bc8e5b1340c4dbb4520429b82c371c2ada45b"
+    },
+    {
       "path": ".agents/skills/external-article-import/references/design-judgment.md",
       "sha256": "5de2ae80e0bef13fef11573da9f440819b308acec44acf6964d47c3066578f97"
+    },
+    {
+      "path": ".agents/skills/external-article-import/references/hero-imagegen.md",
+      "sha256": "9ce8a69d80fb7c6f2c6c214339cac4047b18ae3d358e1b6b13893d189b8fe3b5"
     }
   ]
 }

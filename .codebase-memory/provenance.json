@@ -1,14 +1,14 @@
 {
   "toolVersion": "0.12.1",
-  "sourceSha": "fb3de4b83505af796279122869c2efe956aa2c35",
-  "sourceDigest": "f08b239310a8859c9e712746ddb43470f1bf132d68cdb3e28e48b57d9fcf1dd7",
+  "sourceSha": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "sourceDigest": "5b7301283f401a30874f73e96446cdcfbb27165687890f06bac0063ae9616c16",
   "hashes": {
-    "graph.db.zst": "d9bf51f25ae642c968c0680124d3de6a56de56634a7af5fb787dd310c812c14d",
-    "artifact.json": "b1de362e1d0a25d9668af877103a4b5da802ee9b610a716bd3271d1cc753e816",
+    "graph.db.zst": "3dc93bfba25772af089ff99a5bc04444698856549fb234768b81c57cd642101f",
+    "artifact.json": "c9aefe373b3c295d37eedcfa18f269fa0121b047a9c9803eae427f6eb2574599",
     ".gitattributes": "e9ccd7b5d343bd2ceb7268d460c3215b10511d11988ec76624abfa0cca46bd44"
   },
-  "durationMs": 15585,
-  "indexedFiles": 1353,
+  "durationMs": 8250,
+  "indexedFiles": 1397,
   "excluded": [
     ".codebase-memory/.gitattributes",
     ".codebase-memory/artifact.json",
@@ -123,16 +123,16 @@
     "project": "VettedSaaSBlueprint",
     "excluded": {
       "dirs": [
-        ".git",
         ".codebase-memory",
         "gate-a-evidence",
-        ".opencode",
-        "gate-b-evidence"
+        ".git",
+        "gate-b-evidence",
+        ".opencode"
       ],
       "count": 6,
       "truncated": true
     },
-    "not_indexed_files_count": 518,
+    "not_indexed_files_count": 522,
     "not_indexed_files": {
       "files": [
         {
@@ -140,49 +140,53 @@
           "reason": "ignored-suffix"
         },
         {
-          "path": "public/blog/images/abandoned-cart-data-hero.webp",
+          "path": "docs/design-references/landing-pages/captures/lp-ref-0018/desktop.webp",
           "reason": "ignored-suffix"
         },
         {
-          "path": "public/blog/images/creative-experiment-evidence.webp",
+          "path": "docs/design-references/landing-pages/captures/lp-ref-0018/mobile.webp",
           "reason": "ignored-suffix"
         },
         {
-          "path": "public/blog/images/marketplace-profit-audit-hero.webp",
+          "path": "docs/design-references/landing-pages/captures/lp-ref-0062/desktop.webp",
           "reason": "ignored-suffix"
         },
         {
-          "path": "public/blog/images/marketplace-profit-lineage.webp",
+          "path": "docs/design-references/landing-pages/captures/lp-ref-0062/mobile.webp",
           "reason": "ignored-suffix"
         }
       ],
-      "count": 518,
+      "count": 522,
       "truncated": true,
       "note": "Excluded by design (gitignore/.cbmignore/skip-lists); examples only — full list in 'logfile'."
     },
     "skipped_count": 0,
-    "logfile": "/home/runner/.cache/codebase-memory-mcp/logs/VettedSaaSBlueprint-1795605955.log",
-    "parse_partial_count": 2,
+    "logfile": "/home/runner/.cache/codebase-memory-mcp/logs/VettedSaaSBlueprint-1795777090.log",
+    "parse_partial_count": 3,
     "parse_partial": {
       "files": [
+        {
+          "path": "db/article-research-import-bindings-v001.sql",
+          "error_ranges": "19-23,31-31,31-32,33-33,36-36,42-43,44-55,59-60,60-74,75-79,80-80,83-85,101-101,103-112,116-116,118-124,129-133"
+        },
         {
           "path": "scripts/DocumentGraph.psm1",
           "error_ranges": "481-481"
         },
         {
           "path": "src/app/globals.css",
-          "error_ranges": "800-800,803-803"
+          "error_ranges": "833-833,836-836"
         }
       ],
-      "count": 2,
+      "count": 3,
       "truncated": false,
       "note": "Indexed, but constructs in these line ranges may be missing (best-effort signal); examples only — full list via index_status or 'logfile'."
     },
     "parse_unusable_count": 0,
-    "nodes": 20645,
-    "edges": 35525,
-    "expected_nodes": 20645,
-    "expected_edges": 35525,
+    "nodes": 21191,
+    "edges": 38352,
+    "expected_nodes": 21191,
+    "expected_edges": 38352,
     "adr_present": false,
     "adr_hint": "Project indexed. Consider creating an Architecture Decision Record: explore the codebase with get_architecture(aspects=['all']), then use manage_adr(mode='update') to persist architectural insights across sessions.",
     "artifact_present": true,

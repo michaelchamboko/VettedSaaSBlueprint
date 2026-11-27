@@ -6,6 +6,7 @@ import { persistFixture, executeFixtureCommand as executeImportCommand } from ".
 import { createArticleImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { sha256, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
+import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -34,10 +35,14 @@ test("invalid research requires actual repair and unchanged submissions cannot a
     assert.equal(waiting.continuation?.kind, "work");
     if (waiting.continuation?.kind !== "work") throw new Error("Missing research work");
     const packet = JSON.parse(await readFile(path.join(root, waiting.continuation.workPath), "utf8"));
-    assert.match(packet.instructions, /must conduct research/i);
+    assert.match(packet.instructions, /material claim|registry decision/i);
     const evidencePath = "research.json";
     await writeJsonAtomically(path.join(root, evidencePath), { ...evidence, claims: [{ ...evidence.claims[0], excerptLocations: [{ sourceId: "source", quote: "Not in the source." }] }] });
-    await writeJsonAtomically(path.join(root, packet.resultPath), { idempotencyKey: packet.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Synthetic failed research.", work: { stage: "RESEARCHING", evidencePath } });
+    await writeGapPlanResult(root, waiting.continuation, { claimId: evidence.claims[0].id, claimText: evidence.claims[0].text });
+    await executeImportCommand(root, { kind: "resume", importId: record.importId });
+    const acquisition = await loadImport(root, record.importId);
+    if (acquisition.continuation?.kind !== "work") throw new Error("Missing research acquisition work");
+    await writeAcquisitionResult(root, acquisition.continuation, evidencePath);
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const failed = await loadImport(root, record.importId);
     assert.equal(failed.stage, "RESEARCHING");
@@ -45,6 +50,7 @@ test("invalid research requires actual repair and unchanged submissions cannot a
     assert.match(failed.nextAction, /must conduct research/i);
     await assert.rejects(executeImportCommand(root, { kind: "resume", importId: record.importId }), /UNCHANGED_SUBMISSION/);
     await writeJsonAtomically(path.join(root, evidencePath), evidence);
+    await executeImportCommand(root, { kind: "resume", importId: record.importId });
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const advanced = await loadImport(root, record.importId);
     assert.equal(advanced.stage, "TRANSFORMING");
@@ -74,7 +80,7 @@ test("later stages with missing or corrupted research return to research before 
         assert.ok(repaired.stageReceipts.some((receipt) => receipt.message.includes("RESEARCH_RECOVERY_REQUIRED")));
         if (repaired.continuation?.kind !== "work") throw new Error("Missing recovery packet");
         const packet = JSON.parse(await readFile(path.join(root, repaired.continuation.workPath), "utf8"));
-        assert.match(packet.instructions, /must conduct research/i);
+        assert.match(packet.instructions, /material claim|registry decision/i);
       } finally { await rm(root, { recursive: true, force: true }); }
     }
   }
@@ -128,9 +134,13 @@ test("failed material-claims assessment requires research even when the receipt 
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const researching = await loadImport(root, record.importId);
     if (researching.continuation?.kind !== "work") throw new Error("Missing initial research packet");
-    const initialPacket = JSON.parse(await readFile(path.join(root, researching.continuation.workPath), "utf8"));
+    const initialPacket = researching.continuation;
     await writeJsonAtomically(path.join(root, "research.json"), evidence);
-    await writeJsonAtomically(path.join(root, initialPacket.resultPath), { idempotencyKey: initialPacket.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Initial research.", work: { stage: "RESEARCHING", evidencePath: "research.json" } });
+    await writeGapPlanResult(root, initialPacket, { claimId: evidence.claims[0].id, claimText: evidence.claims[0].text });
+    await executeImportCommand(root, { kind: "resume", importId: record.importId });
+    const initialAcquisition = await loadImport(root, record.importId);
+    if (initialAcquisition.continuation?.kind !== "work") throw new Error("Missing initial research acquisition");
+    await writeAcquisitionResult(root, initialAcquisition.continuation, "research.json");
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     const current = await loadImport(root, record.importId);
     assert.equal(current.stage, "TRANSFORMING");
@@ -148,7 +158,11 @@ test("failed material-claims assessment requires research even when the receipt 
     assert.ok(await readFile(path.join(root, initialPacket.resultPath), "utf8"));
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     assert.equal((await loadImport(root, record.importId)).stage, "RESEARCHING");
-    await writeJsonAtomically(path.join(root, recovered.continuation.resultPath), { idempotencyKey: recovered.continuation.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "New research submission.", work: { stage: "RESEARCHING", evidencePath: "research.json" } });
+    await writeGapPlanResult(root, recovered.continuation, { claimId: evidence.claims[0].id, claimText: evidence.claims[0].text });
+    await executeImportCommand(root, { kind: "resume", importId: record.importId });
+    const newAcquisition = await loadImport(root, record.importId);
+    if (newAcquisition.continuation?.kind !== "work") throw new Error("Missing new research acquisition");
+    await writeAcquisitionResult(root, newAcquisition.continuation, "research.json");
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
     assert.equal((await loadImport(root, record.importId)).stage, "TRANSFORMING");
     await executeImportCommand(root, { kind: "resume", importId: record.importId });
