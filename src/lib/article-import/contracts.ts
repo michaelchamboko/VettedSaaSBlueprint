@@ -2,13 +2,47 @@ import { z } from "zod";
 import { contentApprovalSchema } from "./content-approval";
 
 const stateEvidenceRef = z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
+export const importFailureCategorySchema = z.enum(["content-rejection", "invalid-evidence", "unavailable-capability", "uncertain-external-outcome"]);
+export type ImportFailureCategory = z.infer<typeof importFailureCategorySchema>;
 export const recoveryEvidenceSchema = z.object({ schemaVersion: z.literal("RecoveryEvidenceV1"), importId: z.string(), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), cause: z.string().min(1), checkedAt: z.string().datetime({ offset: true }), executionRefs: z.array(stateEvidenceRef).min(1), resumptionRequirement: z.string().min(1) }).strict();
-export const diagnosisSchema = z.object({
+const remedyCheckSchema = z.discriminatedUnion("method", [
+  z.object({ method: z.literal("deterministic"), result: z.enum(["verified", "contradicted"]), observation: z.string().min(1) }).strict(),
+  z.object({ method: z.literal("independent-judgment"), independent: z.literal(true), result: z.enum(["verified", "contradicted"]), observation: z.string().min(1) }).strict(),
+]);
+const repairChangeSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("product-repair"), changedInputs: z.array(z.string().min(1)).min(1) }).strict(),
+  z.object({ kind: z.literal("measurement-change"), aspect: z.enum(["measurement", "viewport", "criterion", "threshold"]), from: z.string().min(1), to: z.string().min(1), justification: z.string().min(1), independentVerificationRef: stateEvidenceRef }).strict(),
+]);
+const diagnosisFields = {
   schemaVersion: z.literal("DiagnosisV1"), importId: z.string(), sourceFingerprint: z.string(), stage: z.string(),
   failedSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/), replacementSubmissionDigest: z.string().regex(/^[a-f0-9]{64}$/),
   failureCode: z.string().min(1), cause: z.string().min(1), attemptedRecoveryRefs: z.array(stateEvidenceRef).min(1),
   remedyEvidenceRefs: z.array(stateEvidenceRef).min(1), createdAt: z.string().datetime({ offset: true }), consumedAt: z.string().datetime({ offset: true }).optional(),
+};
+export const diagnosisSchema = z.object({
+  ...diagnosisFields,
+  predictedObservation: z.string().min(1).optional(),
+  disproofCheck: z.string().min(1).optional(),
+  remedyCheck: remedyCheckSchema.optional(),
+  repairChange: repairChangeSchema.optional(),
 }).strict();
+export const actionableDiagnosisSchema = z.object({
+  ...diagnosisFields,
+  predictedObservation: z.string().min(1),
+  disproofCheck: z.string().min(1),
+  remedyCheck: remedyCheckSchema,
+  repairChange: repairChangeSchema,
+}).strict().superRefine((diagnosis, context) => {
+  const attempted = new Set(diagnosis.attemptedRecoveryRefs.map((ref) => `${ref.path}:${ref.sha256}`));
+  const remedy = new Set(diagnosis.remedyEvidenceRefs.map((ref) => `${ref.path}:${ref.sha256}`));
+  if ([...remedy].some((ref) => attempted.has(ref))) {
+    context.addIssue({ code: "custom", path: ["remedyEvidenceRefs"], message: "Remedy verification must use evidence separate from the failed recovery evidence." });
+  }
+  if (diagnosis.repairChange.kind === "measurement-change") {
+    const verification = `${diagnosis.repairChange.independentVerificationRef.path}:${diagnosis.repairChange.independentVerificationRef.sha256}`;
+    if (attempted.has(verification) || remedy.has(verification)) context.addIssue({ code: "custom", path: ["repairChange", "independentVerificationRef"], message: "Measurement verification must be independent from diagnosis and remedy evidence." });
+  }
+});
 
 export const importStageSchema = z.enum([
   "INGESTING", "RESEARCHING", "TRANSFORMING", "REFINING", "VALIDATING",
@@ -150,9 +184,9 @@ const continuationBase = {
 };
 export const importContinuationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), activityId: z.string().min(1).optional(), inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), ...continuationBase }).strict(),
-  z.object({ kind: z.literal("repair"), stage: importStageSchema, failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
+  z.object({ kind: z.literal("repair"), stage: importStageSchema, failureCategory: importFailureCategorySchema.optional(), failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
   z.object({ kind: z.literal("wait"), resumeStage: importStageSchema, dependency: z.string().min(1), externalId: z.string().min(1).optional(), waitStartedAt: z.string().datetime({ offset: true }), lastProgressAt: z.string().datetime({ offset: true }), nextCheckAt: z.string().datetime({ offset: true }), timeoutAt: z.string().datetime({ offset: true }) }).strict(),
-  z.object({ kind: z.literal("blocked"), scope: z.enum(["article", "shared"]), cause: z.string().min(1), attemptedRecovery: z.string().min(1), resumptionRequirement: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal("blocked"), scope: z.enum(["article", "shared"]), failureCategory: importFailureCategorySchema.optional(), cause: z.string().min(1), attemptedRecovery: z.string().min(1), resumptionRequirement: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("complete"), result: z.enum(["LIVE", "QUARANTINED", "PUBLISHED_WITH_EXCEPTIONS"]), receiptPaths: z.array(z.string().min(1)).min(1) }).strict(),
 ]);
 export type ImportContinuation = z.infer<typeof importContinuationSchema>;

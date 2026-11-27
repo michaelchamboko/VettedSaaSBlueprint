@@ -7,14 +7,14 @@ import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, formatQualityApprovalMatches, type ApprovalFiles } from "./content-approval";
-import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
+import { actionableDiagnosisSchema, externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFailureCategory, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
 import { instructionsForStage, RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
 import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
-import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
+import { recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
@@ -38,6 +38,23 @@ const STRATEGIES: Record<string, string[]> = {
   media: ["retry-generation", "simplify-asset", "brand-graphic"],
   release: ["retry-transient", "rollback", "fix-forward"],
 };
+
+export class ImportFailure extends Error {
+  constructor(readonly failureCategory: ImportFailureCategory, message: string) {
+    super(message);
+    this.name = "ImportFailure";
+  }
+}
+
+function classifyImportFailure(error: unknown): ImportFailureCategory | undefined {
+  if (error instanceof ImportFailure) return error.failureCategory;
+  const message = error instanceof Error ? error.message : String(error);
+  if (/UNCERTAIN_EXTERNAL_OUTCOME|response lost after remote success|external outcome (?:is )?indeterminate/i.test(message)) return "uncertain-external-outcome";
+  if (/CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message)) return "unavailable-capability";
+  if (/WORKFLOW_EVIDENCE_INVALID|EVIDENCE_(?:INVALID|BINDING|INTEGRITY)|evidence .*cannot be validated/i.test(message)) return "invalid-evidence";
+  if (/PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS|ASSESSMENT_RULE_FAILED|review rejected|content rejection/i.test(message)) return "content-rejection";
+  return undefined;
+}
 
 export const ARTICLE_WAIT_POLICY = { firstCheckMs: 15_000, secondCheckMs: 30_000, subsequentCheckMs: 60_000, timeoutMs: 2 * 60 * 60_000 } as const;
 
@@ -407,7 +424,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
         const digest = await canonicalSubmissionFingerprint(current, repositoryRoot);
         if (digest === current.continuation.submittedFingerprint) throw new Error("UNCHANGED_SUBMISSION");
         if (current.continuation.diagnosisRequired) {
-          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
+          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.remedyCheck?.result === "verified" && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
           if (!diagnosis) return current;
           diagnosis.consumedAt = now();
           await saveImport(repositoryRoot, current);
@@ -433,6 +450,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       } catch (error) {
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);
+        const failureCategory = classifyImportFailure(error);
         const persisted = await loadImport(repositoryRoot, importId);
         if (persisted.stage === "LIVE" || persisted.stage === "QUARANTINED") throw error;
         const code = (error as NodeJS.ErrnoException).code;
@@ -440,7 +458,13 @@ export async function executePendingImport(repositoryRoot: string, importId: str
           const refreshed = externalArticleImportSchema.parse({ ...persisted, stageReceipts: [...persisted.stageReceipts, { stage: "RESEARCHING", status: "failed", at: now(), message: "RESEARCH_RECOVERY_REQUIRED: registry plan changed before writeback; preserve the prior packet and retrieve a fresh plan." }] });
           return recordImportFailure(repositoryRoot, refreshed, { strategy: group, classification: "transient", message });
         }
-        if (message === "PUBLICATION_CATALOGUE_BUSY" || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
+        if (failureCategory === "unavailable-capability" || failureCategory === "uncertain-external-outcome") {
+          return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", failureCategory, message });
+        }
+        if (failureCategory === "content-rejection" || failureCategory === "invalid-evidence") {
+          return recordImportRepair(repositoryRoot, persisted, { strategy: group, failureCategory, message });
+        }
+        if (message === "PUBLICATION_CATALOGUE_BUSY" || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
           return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", message });
         }
         return recordImportRepair(repositoryRoot, persisted, { strategy: group, message });
@@ -457,7 +481,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
 /** Executor output is repair work, not an external outage or an automatic quarantine. */
 export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string; verifiedHeroRejection?: {
   decisionRef: EvidenceRef; heroEvidenceRef: EvidenceRef; assetRef: EvidenceRef; generationRef: EvidenceRef;
-} }): Promise<ExternalArticleImportV1> {
+}; failureCategory?: ImportFailureCategory }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     const attemptKey = `repair:${input.strategy}:${fingerprint(input.message)}`;
@@ -481,11 +505,16 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
     if (rejectedHero) {
       attempts["hero-generation"] = (record.strategyAttempts["hero-generation"] ?? 0) + 1;
     }
+    const categoryAction = input.failureCategory === "invalid-evidence"
+      ? "Repair and revalidate the rejected evidence."
+      : input.failureCategory === "content-rejection"
+        ? "Repair the rejected content and repeat its criterion check."
+        : `Repair ${record.stage.toLowerCase()} output.`;
     const updated = externalArticleImportSchema.parse({ ...record,
       ...(rejectedHero && { heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined }),
-      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
+      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis with supporting evidence, a predicted observation, a disproof check and a separate verified remedy before retrying." : categoryAction) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
       stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
-      nextAction: rejectedHero ? `The rejected hero remains preserved in the failed receipt (${JSON.stringify(rejectedHero)}). Resume to generate and inspect a fresh image.` : (diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`) + researchRecovery,
+      nextAction: rejectedHero ? `The rejected hero remains preserved in the failed receipt (${JSON.stringify(rejectedHero)}). Resume to generate and inspect a fresh image.` : (diagnostic ? "Record a falsifiable diagnosis and verify its remedy before retrying the same productive stage." : categoryAction) + researchRecovery,
     });
     await saveImport(repositoryRoot, updated);
     return updated;
@@ -881,7 +910,7 @@ export async function resumeImport(repositoryRoot: string, record: ExternalArtic
     return updated;
   });
 }
-export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; message: string }): Promise<ExternalArticleImportV1> {
+export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; failureCategory?: ImportFailureCategory; message: string }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     if (input.classification !== "transient") return recordImportRepair(repositoryRoot, record, input);
     const attemptKey = input.classification === "transient" ? `transient:${input.strategy}` : input.strategy;
@@ -893,10 +922,13 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
     const exhausted = next === "quarantine";
     const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : exhausted ? "QUARANTINED" : "REPAIRING";
     const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
-    const capabilityBlock = input.classification === "transient" && /credentials missing|git unavailable|model[ _]access|editorial[ _]tool|integrity|vercel timeout|CAPABILITY_UNAVAILABLE|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED/i.test(input.message);
+    const capabilityBlock = input.classification === "transient" && (input.failureCategory === "unavailable-capability" || input.failureCategory === "uncertain-external-outcome" || /credentials missing|git unavailable|model[ _]access|editorial[ _]tool|integrity|vercel timeout|CAPABILITY_UNAVAILABLE|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED/i.test(input.message));
     const previousWait = record.continuation?.kind === "wait" ? record.continuation : undefined;
-    const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: "Restore the shared capability, then resume this same import." } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
-    const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: capabilityBlock ? "Restore the shared capability and provide verified recovery evidence." : stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
+    const blockedAction = input.failureCategory === "uncertain-external-outcome"
+      ? { requirement: "Reconcile the external operation identity and observed outcome before any retry.", next: "Reconcile the uncertain external outcome before retrying this operation." }
+      : { requirement: "Restore the shared capability and verify it independently before resuming.", next: "Restore the unavailable shared capability and verify the remedy before resuming." };
+    const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, failureCategory: input.failureCategory, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: blockedAction.requirement } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
+    const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: capabilityBlock ? blockedAction.next : stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
     await saveImport(repositoryRoot, updated);
     if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
     return updated;
@@ -940,9 +972,10 @@ export async function upgradeImportEvidence(root: string, importId: string): Pro
 
 export async function submitImportDiagnosis(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
   return withImportLease(root, importId, async (record) => {
-    const diagnosis = diagnosisSchema.parse(input);
+    const diagnosis = actionableDiagnosisSchema.parse(input);
     if (diagnosis.consumedAt || diagnosis.importId !== importId || diagnosis.sourceFingerprint !== record.sourceFingerprint || diagnosis.stage !== record.stage || record.continuation?.kind !== "repair" || diagnosis.failedSubmissionDigest !== record.continuation.submittedFingerprint || diagnosis.replacementSubmissionDigest !== await canonicalSubmissionFingerprint(record, root)) throw new Error("DIAGNOSIS_BINDING_MISMATCH");
     for (const ref of [...diagnosis.attemptedRecoveryRefs, ...diagnosis.remedyEvidenceRefs]) await readEvidence(root, ref);
+    if (diagnosis.repairChange.kind === "measurement-change") await readEvidence(root, diagnosis.repairChange.independentVerificationRef);
     const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), diagnosis] };
     await saveImport(root, updated); return updated;
   });

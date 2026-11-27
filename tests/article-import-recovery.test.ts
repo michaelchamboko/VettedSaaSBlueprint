@@ -3,7 +3,20 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { executeFixtureCommand as executeImportCommand } from "./fixtures/article-command";
-import { advanceImport, claimImportLease, createArticleImport, executePendingImport, loadImport, recordImportRepair } from "../src/lib/article-import/engine";
+import {
+  advanceImport,
+  canonicalSubmissionFingerprint,
+  claimImportLease,
+  createArticleImport,
+  executePendingImport,
+  ImportFailure,
+  loadImport,
+  recordImportRepair,
+  saveImport,
+  submitImportDiagnosis,
+  withImportLease,
+} from "../src/lib/article-import/engine";
+import { storeEvidence } from "../src/lib/article-import/execution-evidence";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -52,6 +65,171 @@ test("external failures never exhaust content strategies or delete the source", 
     }
     assert.equal(keys.size, 1);
     assert.ok(await readFile(path.join(root, ".automation/article-imports", `${record.importId}.source.md`), "utf8"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("failure categories keep their recovery action when wording changes", async () => {
+  const scenarios = [
+    { category: "content-rejection", messages: ["review rejected content", "unsupported buyer claim"], kind: "repair", scope: "article" },
+    { category: "invalid-evidence", messages: ["evidence digest mismatch", "citation cannot be validated"], kind: "repair", scope: "article" },
+    { category: "unavailable-capability", messages: ["reviewer offline", "editorial service cannot start"], kind: "blocked", scope: "shared" },
+    { category: "uncertain-external-outcome", messages: ["response lost after remote success", "provider result is indeterminate"], kind: "blocked", scope: "shared" },
+  ] as const;
+
+  for (const scenario of scenarios) {
+    const actions: string[] = [];
+    for (const message of scenario.messages) {
+      const { root, record } = await fixture();
+      let calls = 0;
+      try {
+        const failed = await executePendingImport(root, record.importId, async () => {
+          calls++;
+          throw new ImportFailure(scenario.category, message);
+        });
+        assert.equal(failed.continuation?.kind, scenario.kind);
+        assert.equal(failed.blockerScope, scenario.scope);
+        assert.equal(failed.continuation?.failureCategory, scenario.category);
+        assert.equal(calls, 1);
+        actions.push(failed.nextAction);
+
+        if (scenario.kind === "blocked") {
+          await executePendingImport(root, record.importId, async () => { calls++; return failed; });
+          assert.equal(calls, 1, "a demonstrated shared failure must stop before another worker call");
+        }
+      } finally { await rm(root, { recursive: true, force: true }); }
+    }
+    assert.equal(actions[0], actions[1], `${scenario.category} must not route by message text`);
+  }
+});
+
+test("three stage-wide repairs require a falsifiable diagnosis and a verified remedy", async () => {
+  const { root, record } = await fixture();
+  let calls = 0;
+  try {
+    let current = record;
+    const failures = [
+      new ImportFailure("invalid-evidence", "finding-a worker-one session-one"),
+      new ImportFailure("content-rejection", "finding-b worker-two session-two"),
+      new ImportFailure("invalid-evidence", "finding-c worker-three session-three"),
+    ];
+    for (let index = 0; index < failures.length; index++) {
+      current = await executePendingImport(root, record.importId, async () => {
+        calls++;
+        throw failures[index];
+      });
+      current = await loadImport(root, record.importId);
+      assert.equal(current.repairStageTotals?.RESEARCHING, index + 1);
+      if (index < failures.length - 1) {
+        current = await withImportLease(root, record.importId, async (leased) => {
+          leased.transformation!.title = `Changed repair input ${index + 1}`;
+          await saveImport(root, leased);
+          return leased;
+        });
+      }
+    }
+    assert.ok(current.continuation?.kind === "repair" && current.continuation.diagnosisRequired);
+
+    current = await withImportLease(root, record.importId, async (leased) => {
+      leased.transformation!.title = "Replacement after diagnosis";
+      await saveImport(root, leased);
+      return leased;
+    });
+    const supporting = await storeEvidence(root, record.importId, { observation: "All three failures reject the same stage output." });
+    const contradictedRemedy = await storeEvidence(root, record.importId, { observation: "The predicted check still fails." });
+    const verifiedRemedy = await storeEvidence(root, record.importId, { observation: "The repaired evidence passes the original deterministic validator." });
+    const base = {
+      schemaVersion: "DiagnosisV1" as const,
+      importId: record.importId,
+      sourceFingerprint: record.sourceFingerprint,
+      stage: current.stage,
+      failedSubmissionDigest: current.continuation!.kind === "repair" ? current.continuation.submittedFingerprint! : "",
+      replacementSubmissionDigest: await canonicalSubmissionFingerprint(current, root),
+      failureCode: "SYNTHETIC_STAGE_REPAIR_FAILED",
+      cause: "The stage output is bound to stale evidence.",
+      predictedObservation: "Rebinding the evidence makes the original validator pass.",
+      disproofCheck: "Run the original validator; another rejection disproves the cause.",
+      attemptedRecoveryRefs: [supporting],
+      repairChange: { kind: "product-repair" as const, changedInputs: ["transformation.title"] },
+      createdAt: new Date().toISOString(),
+    };
+
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
+      ...base,
+      remedyEvidenceRefs: [supporting],
+      remedyCheck: { method: "deterministic", result: "verified", observation: "This is not a separate check." },
+    }));
+    await submitImportDiagnosis(root, record.importId, {
+      ...base,
+      remedyEvidenceRefs: [contradictedRemedy],
+      remedyCheck: { method: "deterministic", result: "contradicted", observation: "The original validator still rejects the replacement." },
+    });
+    await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
+    assert.equal(calls, 3, "a contradicted diagnosis must not unlock another stage execution");
+
+    await submitImportDiagnosis(root, record.importId, {
+      ...base,
+      remedyEvidenceRefs: [verifiedRemedy],
+      remedyCheck: { method: "deterministic", result: "verified", observation: "The original validator accepts the replacement." },
+    });
+    await executePendingImport(root, record.importId, async ({ record: repaired }) => { calls++; return repaired; });
+    assert.equal(calls, 4);
+    const saved = await loadImport(root, record.importId);
+    assert.ok(saved.diagnoses?.some((diagnosis) => diagnosis.remedyCheck?.result === "verified" && diagnosis.consumedAt));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("measurement changes require justification and separate independent verification", async () => {
+  const { root, record } = await fixture();
+  try {
+    let current = record;
+    for (let index = 0; index < 3; index++) {
+      current = await executePendingImport(root, record.importId, async () => {
+        throw new ImportFailure("content-rejection", `measurement failure ${index}`);
+      });
+      if (index < 2) {
+        current = await withImportLease(root, record.importId, async (leased) => {
+          leased.transformation!.title = `Measurement attempt ${index}`;
+          await saveImport(root, leased);
+          return leased;
+        });
+      }
+    }
+    current = await withImportLease(root, record.importId, async (leased) => {
+      leased.transformation!.title = "Candidate with changed threshold";
+      await saveImport(root, leased);
+      return leased;
+    });
+    assert.ok(current.continuation?.kind === "repair");
+    const supporting = await storeEvidence(root, record.importId, { observation: "The old threshold rejects the fixture." });
+    const remedy = await storeEvidence(root, record.importId, { observation: "The candidate passes the revised threshold." });
+    const independent = await storeEvidence(root, record.importId, { observation: "An independent reviewer confirmed the threshold still represents the criterion." });
+    const diagnosis = {
+      schemaVersion: "DiagnosisV1",
+      importId: record.importId,
+      sourceFingerprint: record.sourceFingerprint,
+      stage: current.stage,
+      failedSubmissionDigest: current.continuation.submittedFingerprint,
+      replacementSubmissionDigest: await canonicalSubmissionFingerprint(current, root),
+      failureCode: "SYNTHETIC_MEASUREMENT_REPAIR",
+      cause: "The measurement threshold is not calibrated for this viewport.",
+      predictedObservation: "The revised threshold preserves the criterion and accepts the control.",
+      disproofCheck: "Run the defective control; acceptance would disprove the calibration.",
+      attemptedRecoveryRefs: [supporting],
+      remedyEvidenceRefs: [remedy],
+      remedyCheck: { method: "independent-judgment", independent: true, result: "verified", observation: "The criterion remains satisfied." },
+      createdAt: new Date().toISOString(),
+    };
+
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
+      ...diagnosis,
+      repairChange: { kind: "measurement-change", aspect: "threshold", from: "0.90", to: "0.85" },
+    }));
+    await submitImportDiagnosis(root, record.importId, {
+      ...diagnosis,
+      repairChange: { kind: "measurement-change", aspect: "threshold", from: "0.90", to: "0.85", justification: "The fixture establishes the applicable calibrated boundary.", independentVerificationRef: independent },
+    });
+    const saved = await loadImport(root, record.importId);
+    assert.equal(saved.diagnoses?.at(-1)?.repairChange?.kind, "measurement-change");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
