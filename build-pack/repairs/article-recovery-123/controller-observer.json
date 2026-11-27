@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "productCommit": "e14ece1ae645a00a1d09cd63e8140a0bbabbfa5f",
+  "scope": "Independent synthetic controller, release coordinator and verifier checks. All provider responses stubbed, no external execution. No browser, reviewer detection or reader-story exercise in this observation.",
+  "observations": [
+    {
+      "test": "a changed candidate before refining dispatch is rebound for the normal activity controller",
+      "file": "tests/article-import-gate-handoff.test.ts",
+      "entry": "executePendingImport + createSupervisedImportExecutor",
+      "input": "After declaring TRANSFORMING→REFINING handoff, changed hero headline in place",
+      "observed": "REFINING, purpose-and-structure work packet; verified candidate ref and dependency match replacement digest, historical handoff still binds original digest",
+      "limit": "No worker output or autonomous prose evaluation"
+    },
+    {
+      "test": "a post-deploy approval write failure records rollback and resumes only after rollback reconciliation",
+      "file": "tests/article-import-release.test.ts",
+      "entry": "assessImportRelease",
+      "input": "Synthetic blog, one failed production-proof registry write, simulated rollback verification outage followed by recovery",
+      "observed": [
+        "ROLLED_BACK / synthetic registry outage",
+        "WAITING_EXTERNAL / ROLLBACK_RECONCILIATION_REQUIRED",
+        "LIVE / dpl-new-2"
+      ],
+      "counts": {
+        "deployments": 2,
+        "rollbacks": 1,
+        "deploymentsThroughOutage": 1
+      },
+      "rollbackTarget": "dpl-previous",
+      "limit": "Instrumented scratch copy replaces repoBlogPost read with independent synthetic post; successful mocked release does not prove live provider or keyboard interaction"
+    },
+    {
+      "test": "rolled back imports resume at their recorded productive stage",
+      "file": "tests/article-import-release.test.ts",
+      "entry": "resumeImport",
+      "input": "constructed ROLLED_BACK / resumeStage RELEASING",
+      "observed": "RELEASING with Resumed receipt",
+      "limit": "No provider or release reconciliation performed by this case"
+    },
+    {
+      "test": "VERIFYING rejects a production reference that differs from the release receipt",
+      "file": "tests/article-import.test.ts",
+      "entry": "verifyImportRelease",
+      "input": "Retained evidence bytes plus one newline stored under divergent ref",
+      "observed": "TERMINAL_PRODUCTION_REFERENCE_MISMATCH; persisted VERIFYING",
+      "limit": "Tests an explicit substituted reference, not provenance of actual external observations"
+    },
+    {
+      "test": "VERIFYING rejects review-merge and optional deployment journals that differ from the receipt",
+      "file": "tests/article-import.test.ts",
+      "entry": "verifyImportRelease",
+      "input": [
+        "wrong reviewedHeadSha",
+        "wrong deploymentId"
+      ],
+      "observed": [
+        "TERMINAL_MERGE_PROOF_INVALID",
+        "TERMINAL_DEPLOYMENT_PROOF_INVALID",
+        "persisted VERIFYING"
+      ]
+    },
+    {
+      "test": "direct-review: retains owner output and rejects substituted production bindings",
+      "file": "tests/article-production-evidence.test.ts",
+      "entry": "assertProductionVerifierEvidence/readProductionVerifierEvidence",
+      "observed": "Accepted matching synthetic owner output; rejected wrong import, source, commit, route, changed deployment, mismatched stdout, candidate mode, wrong expected commit and on-disk byte change",
+      "limit": "Validator-level synthetic evidence, not controller or browser run"
+    },
+    {
+      "test": "a bare successful checks object is not production execution evidence",
+      "file": "tests/article-production-evidence.test.ts",
+      "observed": "assertProductionVerifierEvidence rejected object with routeOk and contentOk only",
+      "limit": "Validator-level only"
+    }
+  ],
+  "regressions": [
+    {
+      "test": "failed production verification rolls back and never reports LIVE",
+      "file": "tests/article-import-release.test.ts",
+      "observed": "REPAIRING / DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH",
+      "cause": "Shared synthetic release helper supplies c×40 without a Git reviewed tree; all three tests stop before the intended rollback branch."
+    },
+    {
+      "test": "rollback verification failure remains fail-closed",
+      "file": "tests/article-import-release.test.ts",
+      "observed": "REPAIRING / DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH",
+      "cause": "Shared synthetic release helper supplies c×40 without a Git reviewed tree; all three tests stop before the intended rollback branch."
+    },
+    {
+      "test": "deployment commit mismatch rolls back before returning",
+      "file": "tests/article-import-release.test.ts",
+      "observed": "REPAIRING / DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH",
+      "cause": "Shared synthetic release helper supplies c×40 without a Git reviewed tree; all three tests stop before the intended rollback branch."
+    }
+  ],
+  "trackedCommands": [
+    "node --import tsx --test --test-isolation=none --test-name-pattern='a changed candidate before refining dispatch' tests/article-import-gate-handoff.test.ts",
+    "node --import tsx --test --test-isolation=none --test-name-pattern='VERIFYING rejects a production reference|VERIFYING rejects review-merge|direct-review: retains owner output|a bare successful checks object' tests/article-import.test.ts tests/article-production-evidence.test.ts"
+  ],
+  "reproducibility": "The refinement and terminal-proof observations use tracked tests. The post-rollback observation used an observer-only synthetic blog substitution with SHA256 bc07bf2b5af70d680e507216c02247cb690b7f190315371023448df9380740d3 and is retained as an independent observation, not a clean-checkout command. The three regression rows name tracked tests and the shared fixture cause; their corrected rerun belongs in the final command ledger."
+}

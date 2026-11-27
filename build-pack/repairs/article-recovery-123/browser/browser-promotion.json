@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "observationRevision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99",
+  "observationTree": "0038ea51ab628d1be8edd4be4765a430b115640b",
+  "promotedRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
+  "promotedTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077",
+  "targetArtifactSha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+  "controlArtifactSha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+  "servedPathScope": [
+    "src/app/landing-page-builders",
+    "src/components/landing",
+    "src/components/public",
+    "src/lib/article-heroes.ts",
+    "src/lib/generated/landing-pages.ts",
+    "src/app/globals.css",
+    "public"
+  ],
+  "servedPathChanges": [],
+  "nonServingChanges": [
+    {
+      "path": "src/lib/article-import/rendering-inputs.ts",
+      "observation": "Historical validation now verifies the full frozen rendering snapshot even when a target is supplied. This changes retained-proof replay, not the bytes served by either captured route."
+    },
+    {
+      "path": "src/lib/article-import/release.ts",
+      "observation": "Synthetic reviewed-tree reads are injectable in release tests. Production still reads the real Git object. Neither captured public route imports this module."
+    }
+  ],
+  "disposition": "Browser observations promoted because both artifact bindings and every served route, component, style and asset path are unchanged. Rendering-input replay was retested separately at the promoted revision."
+}
