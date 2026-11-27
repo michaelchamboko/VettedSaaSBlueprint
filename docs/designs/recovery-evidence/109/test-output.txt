@@ -1,0 +1,21 @@
+Command: node --test docs/designs/recovery-evidence/109/verify.test.mjs
+Integrated head: 741a49a51da0d209baded43f2d6e1e70bb6201a4
+Exit: 0
+
+PASS issue 109 traceability accounts for every required item
+PASS issue 109 report defines a bounded future demonstration
+
+tests 2
+pass 2
+fail 0
+
+The focused verifier checks:
+
+- exact counts, uniqueness, and complete numeric coverage for prerequisite
+  tickets 97-108, stories 1-28, testing decisions 1-11, and findings 1-38;
+- Q1-48, Original Q41, and Q41a-c coverage, with Q40 marked undecided;
+- every prerequisite evidence pointer resolves to a tracked file at the
+  integrated head; and
+- the report contains the required scope, reconciliation, demonstration,
+  entry-condition, measurable-check, retained-artifact, permission, and
+  exclusion sections.

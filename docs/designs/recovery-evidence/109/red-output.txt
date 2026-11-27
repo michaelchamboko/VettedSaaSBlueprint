@@ -1,0 +1,21 @@
+Command: node --test docs/designs/recovery-evidence/109/verify.test.mjs
+Exit: 1
+
+Both tests failed because traceability.json and reconciliation.md did not exist.
+
+The red state established the public documentation seam before the evidence was written:
+
+- the machine-readable map must account for tickets 97-108, stories 1-28,
+  testing decisions 1-11, Q1-48 plus Original Q41 and Q41a-c, and findings
+  1-38; and
+- the human report must define scope, reconciliation, traceability, and a
+  bounded future demonstration with entry conditions, measurable checks,
+  retained artifacts, permissions, and exclusions.
+
+Representative failure:
+
+ENOENT: no such file or directory, open
+docs/designs/recovery-evidence/109/traceability.json
+
+ENOENT: no such file or directory, open
+docs/designs/recovery-evidence/109/reconciliation.md
