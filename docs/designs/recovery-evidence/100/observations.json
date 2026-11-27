@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "RecoveryRoutingObservationV1",
+  "issue": 100,
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "syntheticOnly": true,
+  "productionCalls": 0,
+  "observations": [
+    {
+      "case": "failure-routing",
+      "category": "content-rejection",
+      "wording": "coded",
+      "error": "PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS",
+      "route": "repair",
+      "blockerScope": "article",
+      "stage": "RESEARCHING",
+      "stopped": false,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "content-rejection",
+      "wording": "prose",
+      "error": "review rejected content: unsupported claim",
+      "route": "repair",
+      "blockerScope": "article",
+      "stage": "RESEARCHING",
+      "stopped": false,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "invalid-evidence",
+      "wording": "coded",
+      "error": "WORKFLOW_EVIDENCE_INVALID: research reference mismatch",
+      "route": "repair",
+      "blockerScope": "article",
+      "stage": "RESEARCHING",
+      "stopped": false,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "invalid-evidence",
+      "wording": "prose",
+      "error": "submitted evidence cannot be validated",
+      "route": "repair",
+      "blockerScope": "article",
+      "stage": "RESEARCHING",
+      "stopped": false,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "shared-capability",
+      "wording": "coded",
+      "error": "CAPABILITY_UNAVAILABLE: editorial reviewer offline",
+      "route": "blocked",
+      "blockerScope": "shared",
+      "stage": "WAITING_EXTERNAL",
+      "stopped": true,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "shared-capability",
+      "wording": "prose",
+      "error": "shared reviewer is offline",
+      "route": "repair",
+      "blockerScope": "article",
+      "stage": "RESEARCHING",
+      "stopped": false,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "uncertain-external-outcome",
+      "wording": "coded",
+      "error": "Vercel timeout",
+      "route": "blocked",
+      "blockerScope": "shared",
+      "stage": "WAITING_EXTERNAL",
+      "stopped": true,
+      "externalCalls": 1
+    },
+    {
+      "case": "failure-routing",
+      "category": "uncertain-external-outcome",
+      "wording": "prose",
+      "error": "deployment response lost after remote success",
+      "route": "repair",
+      "blockerScope": "article",
+      "stage": "RESEARCHING",
+      "stopped": false,
+      "externalCalls": 1
+    },
+    {
+      "case": "cumulative-repair-limit",
+      "failures": 3,
+      "variedFindings": 3,
+      "variedWorkers": 3,
+      "variedSessions": 3,
+      "reloads": 3,
+      "cumulativeStageTotalBeforeDiagnosis": 3,
+      "nextActionBeforeDiagnosis": "Record or resolve the diagnosed blocker, then retry the same productive stage. The supervising agent must conduct research when evidence is missing, invalid, stale or insufficient. Retrieve attributable primary sources, repair the claim evidence and submit valid ResearchEvidenceV2 before advancing. Missing research is unfinished work, not a blocker or permission to skip the article.",
+      "callsBeforeDiagnosis": 3,
+      "callBlockedWithoutDiagnosis": true,
+      "predictionAndDisproofFieldsAccepted": false,
+      "identicalAttemptAndRemedyEvidenceAccepted": true,
+      "separateRemedyVerificationObserved": false,
+      "callsAfterAcceptedDiagnosis": 4,
+      "cumulativeStageTotalAfterNextFailure": 4
+    },
+    {
+      "case": "measurement-versus-article-change",
+      "thresholdChanged": true,
+      "viewportChanged": true,
+      "articleChanged": true,
+      "measurementFingerprintChanged": true,
+      "articleFingerprintChanged": true,
+      "explicitChangeClassification": false,
+      "justificationRecorded": false,
+      "independentRegressionChecksRecorded": false,
+      "observation": "The controller detects changed bytes but does not distinguish measurement changes from article changes in the persisted import record."
+    }
+  ]
+}
