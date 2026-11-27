@@ -51,7 +51,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
     const projection = assessmentInput ?? editorialPassReviewInput(before), result = reviewOutput ?? artifactProseProjection(input.format, after);
     const packetId = packet(pass.startsWith("design:") || pass.startsWith("remedy:") ? "VALIDATING" : pass === "content-assessment" ? (input.assessmentStage ?? "REFINING") : "REFINING");
     const instructions = (pass.startsWith("design:") || pass.startsWith("remedy:") || pass === "hero-image-inspection" ? designFiles : editorialFiles).map((file) => pinned.get(file)!);
-    if (input.structuredEditorial && !pass.startsWith("design:")) {
+    if (input.structuredEditorial && !pass.startsWith("design:") && pass !== "hero-image-inspection" && !pass.startsWith("remedy:")) {
       const exchangeId = `exchange-${++exchangeSequence}`;
       const independent = pass === "independentReview" || pass === "independentReview-judgment";
       const exporterId = independent ? "reviewer" : "writer", toolName = independent ? "review-tool" : "writer-tool";
@@ -98,7 +98,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
     const independentContext = input.reuseIndependentContext ? "fixture-session" : "fixture-review-session";
     const judgmentContext = input.reuseIndependentContext ? "fixture-session" : "fixture-review-judgment-session";
     const judgmentInput = longFormAffiliate && name === "independentReview" ? await longFormAffiliateJudgmentReviewInput(root, initial, input.after, research, assessment, approvedAffiliateUrl!) : editorialJudgmentReviewInput(initial, input.after);
-    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", { judgment: JSON.stringify(judgment) }, judgmentInput, name === "independentReview" ? judgmentContext : "fixture-session", longFormAffiliate && name === "independentReview" ? [research, assessment] : []);
+    const judgmentExecution = await model(`${name}-judgment`, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", { judgment: JSON.stringify(judgment) }, judgmentInput, name === "independentReview" ? judgmentContext : "fixture-session", [afterRef, ...(longFormAffiliate && name === "independentReview" ? [research, assessment] : [])]);
     const rewriteInput = longFormAffiliate && index < 3 ? await longFormAffiliatePassReviewInput(root, initial, research, assessment, approvedAffiliateUrl!) : undefined;
     passes.push({ name, inputRef: initialRef, outputRef: afterRef, instructionRefs: editorialFiles.map(pinRef), executionRef: await model(name, initial, input.after, initialRef, afterRef, index === 3 ? "alternate-reviewer" : "writer", undefined, rewriteInput, index === 3 ? independentContext : "fixture-session", longFormAffiliate && index < 3 ? [research, assessment] : []), judgmentRef: await save({ ...judgment, executionRef: judgmentExecution }) });
   }

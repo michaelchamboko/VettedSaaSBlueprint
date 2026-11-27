@@ -117,8 +117,11 @@ test("the supervised controller registers and reuses an independently reviewed e
         research: prepared.evidenceRefs.research,
         transformAssessment: prepared.evidenceRefs.assessment,
         assessment: prepared.evidenceRefs.assessment,
+        editorial: prepared.evidenceRefs.editorial,
       },
     };
+    const editorial = JSON.parse(await readFile(path.join(root, prepared.evidenceRefs.editorial.path), "utf8"));
+    const activityIds = ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm", "independent-review", "final-fidelity-review"];
     const registry = isolatedRegistry();
     const executor = createSupervisedImportExecutor(root, undefined, { reviewEvidenceRegistry: registry });
     const context = {
@@ -145,6 +148,10 @@ test("the supervised controller registers and reuses an independently reviewed e
           executionId: `${activityPacket.activity.id}-${activityPacket.activity.inputFingerprint.slice(0, 12)}`,
           outcome: "accepted",
           observation: "The bound synthetic editorial criterion passed.",
+          outputRefs: (() => {
+            const pass = editorial.passes[activityIds.indexOf(activityPacket.activity.id)];
+            return [pass.inputRef, pass.outputRef, pass.executionRef, pass.judgmentRef];
+          })(),
         },
       });
       pending = await executor({ ...context, record: pending });

@@ -5,6 +5,8 @@ import { activityFindingReviewSubmissionSchema, externalArticleImportSchema, imp
 import { WORKFLOW_REVISION } from "./workflow-requirements";
 import { registerActivityFindingEvidence, registerActivityFindingResolutionEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { editorialExecutionSchema, readEvidence, validateEditorialExecution, workflowEvidenceSchema } from "./workflow-evidence";
+import { readImportArtifactTarget } from "./format-validation";
+import { readImportVerifierEvidence } from "./verification-evidence";
 
 const activityStages = ["REFINING", "VALIDATING"] as const;
 type ActivityStage = typeof activityStages[number];
@@ -73,9 +75,9 @@ async function expectedActivityOutputs(root: string, record: ExternalArticleImpo
     const editorialRef = record.evidenceRefs?.editorial;
     const index = activities.REFINING.indexOf(activityId);
     if (!editorialRef || index < 0) return undefined;
-    const execution = await validateEditorialExecution(root, editorialRef, record);
+    const execution = editorialExecutionSchema.parse(await readEvidence(root, editorialRef));
     const pass = execution.passes[index];
-    return [pass.executionRef, pass.judgmentRef];
+    return [pass.inputRef, pass.outputRef, pass.executionRef, pass.judgmentRef];
   }
   const presentationRef = record.evidenceRefs?.presentation;
   if (!presentationRef) return undefined;
@@ -84,26 +86,99 @@ async function expectedActivityOutputs(root: string, record: ExternalArticleImpo
   return rule?.evidenceRefs;
 }
 
-async function assertExpectedActivityOutputs(root: string, record: ExternalArticleImportV1, stage: ActivityStage, activityId: string, supplied: EvidenceRef[]) {
+async function assertEditorialPassOutputs(root: string, activityId: string, supplied: EvidenceRef[], binding: ActivityBinding, requireDependency: boolean) {
+  const index = activities.REFINING.indexOf(activityId);
+  if (index < 0 || supplied.length !== 4) throw new Error("ACTIVITY_EDITORIAL_OUTPUTS_INVALID");
+  const allowedPasses = index === 3 ? ["beamReview", "independentReview"] : [["purposeAndStructure"], ["meaningAndEvidence"], ["wordingAndRhythm"], [], ["finalFidelityReview"]][index];
+  const [inputRef, outputRef, executionRef, judgmentRef] = supplied;
+  const predecessorOutput = index > 0 ? binding.dependencyRefs.at(-3) : undefined;
+  const boundInput = index === 0
+    ? binding.dependencyRefs.some((dependency) => dependency.sha256 === inputRef.sha256)
+    : !!predecessorOutput && sameRef(inputRef, predecessorOutput);
+  const execution = await validateExecutionEvidence(root, executionRef);
+  if (!("pass" in execution) || !allowedPasses.includes(execution.pass)
+    || !execution.inputRefs.some((ref) => sameRef(ref, inputRef))
+    || (requireDependency && !boundInput)) throw new Error("ACTIVITY_EDITORIAL_OUTPUTS_INVALID");
+  const judgment = z.object({ pass: z.string().min(1), verdict: z.literal("pass"), meaningPreserved: z.literal(true), protectedFieldsPreserved: z.literal(true), findings: z.array(z.object({ disposition: z.enum(["resolved", "unresolved"]) }).passthrough()), executionRef: z.object({ path: z.string(), sha256: z.string() }).strict() }).passthrough().parse(await readEvidence(root, judgmentRef));
+  if (judgment.pass !== execution.pass || judgment.findings.some((finding) => finding.disposition === "unresolved")) throw new Error("ACTIVITY_EDITORIAL_OUTPUTS_INVALID");
+  const judgmentExecution = await validateExecutionEvidence(root, judgment.executionRef);
+  if (!("pass" in judgmentExecution) || judgmentExecution.pass !== `${execution.pass}-judgment`
+    || ![inputRef, outputRef].every((expected) => judgmentExecution.inputRefs.some((ref) => sameRef(ref, expected)))) throw new Error("ACTIVITY_EDITORIAL_OUTPUTS_INVALID");
+}
+
+export async function validateEditorialActivityOutputRefs(root: string, activityId: string, supplied: EvidenceRef[], dependencyRefs: EvidenceRef[]) {
+  await assertEditorialPassOutputs(root, activityId, supplied, { stage: "REFINING", id: activityId, inputFingerprint: digest({ activityId, dependencyRefs }), criteria: [{ id: `refining.${activityId}`, revision: WORKFLOW_REVISION }], dependencyRefs }, true);
+}
+
+async function assertValidationActivityOutputs(root: string, activityId: string, supplied: EvidenceRef[], binding: ActivityBinding) {
+  const executions = [];
+  for (const ref of supplied) {
+    try { executions.push(await validateExecutionEvidence(root, ref)); } catch { /* Structured supporting evidence is checked by the owning aggregate validator. */ }
+  }
+  const requiredInputs = binding.dependencyRefs.slice(0, 2);
+  if (requiredInputs.length < 2 || executions.some((execution) => !requiredInputs.every((required) => execution.inputRefs.some((input) => sameRef(input, required))))) {
+    throw new Error("ACTIVITY_VALIDATION_INPUT_BINDING_MISMATCH");
+  }
+  if (["desktop", "mobile", "reduced-motion"].includes(activityId)) {
+    const browser = executions.find((execution) => execution.kind === "browser");
+    if (!browser || (activityId === "desktop" && browser.viewport.width < 1024) || (activityId === "mobile" && browser.viewport.width > 767)
+      || (activityId === "reduced-motion" && browser.viewport.reducedMotion !== true)) throw new Error("ACTIVITY_BROWSER_OUTPUT_INVALID");
+    return;
+  }
+  if (activityId === "detect") {
+    if (!executions.length || executions.some((execution) => execution.kind !== "command")) throw new Error("ACTIVITY_DETECTOR_OUTPUT_INVALID");
+    return;
+  }
+  const expectedPass = activityId === "hero-image" ? "hero-image-inspection" : activityId === "visual-quality" ? "design:visual-quality" : `design:${activityId}`;
+  if (!executions.some((execution) => "pass" in execution && execution.pass === expectedPass)) throw new Error("ACTIVITY_VALIDATION_OUTPUT_INVALID");
+}
+
+async function assertExpectedActivityOutputs(root: string, record: ExternalArticleImportV1, stage: ActivityStage, activityId: string, supplied: EvidenceRef[], binding: ActivityBinding) {
+  if (stage === "VALIDATING" && activityId === "owner-verifier") {
+    if (supplied.length !== 1 || !record.contentApproval?.artifactPath || record.format === "agent_review_required") throw new Error("ACTIVITY_VALIDATION_OUTPUT_INVALID");
+    const { target } = await readImportArtifactTarget(root, record.format, record.contentApproval.artifactPath);
+    const verified = await readImportVerifierEvidence(root, supplied[0].path, { ...target, importId: record.importId, sourceFingerprint: record.sourceFingerprint });
+    if (!sameRef(verified, supplied[0])) throw new Error("ACTIVITY_VALIDATION_OUTPUT_INVALID");
+    return;
+  }
   const expected = await expectedActivityOutputs(root, record, stage, activityId);
   if (expected && (!expected.every((ref) => supplied.some((candidate) => sameRef(candidate, ref))) || supplied.some((ref) => !expected.some((candidate) => sameRef(candidate, ref))))) {
     throw new Error(stage === "REFINING" ? "ACTIVITY_EDITORIAL_OUTPUTS_INVALID" : "ACTIVITY_VALIDATION_OUTPUT_INVALID");
   }
+  if (stage === "REFINING") await assertEditorialPassOutputs(root, activityId, supplied, binding, !expected);
+  else await assertValidationActivityOutputs(root, activityId, supplied, binding);
 }
 
-export async function validateEditorialActivityOutputs(root: string, record: ExternalArticleImportV1): Promise<void> {
+export async function validateEditorialActivityOutputs(root: string, record: ExternalArticleImportV1, retained: Awaited<ReturnType<typeof acceptedArticleActivityOutputs>>): Promise<void> {
   if (!record.activityProtocolVersion && !(record.activityReceipts?.length)) return;
   const editorialRef = record.evidenceRefs?.editorial;
   if (!editorialRef) throw new Error("ACTIVITY_EDITORIAL_ASSEMBLY_MISSING");
-  const execution = editorialExecutionSchema.parse(await readEvidence(root, editorialRef));
-  const current = await acceptedArticleActivityOutputs(root, record);
+  const execution = await validateEditorialExecution(root, editorialRef, record);
   for (const [index, activityId] of activities.REFINING.entries()) {
-    const accepted = current.find((item) => item.activityId === activityId && item.outcome === "accepted");
-    const expected = [execution.passes[index].executionRef, execution.passes[index].judgmentRef];
+    const accepted = retained.find((item) => item.activityId === activityId && item.outcome === "accepted");
+    const pass = execution.passes[index];
+    const expected = [pass.inputRef, pass.outputRef, pass.executionRef, pass.judgmentRef];
     if (!accepted?.outputRefs || accepted.outputRefs.length !== expected.length || !expected.every((ref) => accepted.outputRefs!.some((candidate) => sameRef(candidate, ref)))) {
       throw new Error(`ACTIVITY_EDITORIAL_ASSEMBLY_MISMATCH:${activityId}`);
     }
   }
+}
+
+export async function validatePresentationActivityOutputs(root: string, record: ExternalArticleImportV1, retained: Awaited<ReturnType<typeof acceptedArticleActivityOutputs>>, validationReceipt: unknown): Promise<void> {
+  if (!record.activityProtocolVersion && !(record.activityReceipts?.length)) return;
+  const presentationRef = record.evidenceRefs?.presentation;
+  if (!presentationRef) throw new Error("ACTIVITY_PRESENTATION_ASSEMBLY_MISSING");
+  const presentation = workflowEvidenceSchema.parse(await readEvidence(root, presentationRef));
+  for (const activityId of activities.VALIDATING.filter((id) => id !== "owner-verifier")) {
+    const accepted = retained.find((item) => item.activityId === activityId && item.outcome === "accepted");
+    const expected = presentation.ruleResults.find((rule) => rule.ruleId === activityId)?.evidenceRefs;
+    if (!accepted?.outputRefs || !expected || accepted.outputRefs.length !== expected.length || !expected.every((ref) => accepted.outputRefs!.some((candidate) => sameRef(candidate, ref)))) {
+      throw new Error(`ACTIVITY_PRESENTATION_ASSEMBLY_MISMATCH:${activityId}`);
+    }
+  }
+  const owner = retained.find((item) => item.activityId === "owner-verifier" && item.outcome === "accepted");
+  const evidencePaths = z.object({ evidencePaths: z.array(z.string().min(1)).length(1) }).passthrough().parse(validationReceipt).evidencePaths;
+  if (owner?.outputRefs?.length !== 1 || evidencePaths[0] !== owner.outputRefs[0].path) throw new Error("ACTIVITY_PRESENTATION_ASSEMBLY_MISMATCH:owner-verifier");
 }
 
 async function currentRef(root: string, ref: EvidenceRef | undefined) {
@@ -230,17 +305,10 @@ export async function validateActivityRemedyEvidence(root: string, record: Exter
       })) throw new Error("DIAGNOSIS_ACTIVITY_CHANGED_INPUT_MISSING");
     }
   }
-  const executions = [];
   for (const ref of result.activity.outputRefs ?? []) {
     await verifyEvidenceRef(root, ref);
-    try { executions.push(await validateExecutionEvidence(root, ref)); } catch { /* Supplemental immutable outputs are allowed. */ }
   }
-  await assertExpectedActivityOutputs(root, record, result.activity.stage, result.activity.id, result.activity.outputRefs ?? []);
-  if (result.activity.stage === "VALIDATING" && ["desktop", "mobile", "reduced-motion"].includes(result.activity.id)) {
-    const browser = executions.find((execution) => execution.kind === "browser");
-    if (!browser || (result.activity.id === "desktop" && browser.viewport.width < 1000) || (result.activity.id === "mobile" && browser.viewport.width >= 1000)
-      || (result.activity.id === "reduced-motion" && browser.viewport.reducedMotion !== true)) throw new Error("DIAGNOSIS_ACTIVITY_BROWSER_OUTPUT_INVALID");
-  }
+  await assertExpectedActivityOutputs(root, record, result.activity.stage, result.activity.id, result.activity.outputRefs ?? [], binding);
 }
 
 export async function recordArticleActivity(root: string, record: ExternalArticleImportV1, resultPath: string, expected: ActivityBinding, raw: unknown, options?: { resultRef?: EvidenceRef; trustProvidedRaw?: boolean; registry?: ArticleReviewEvidenceRegistry }) {
@@ -250,19 +318,11 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
   const result = activityResultSchema.parse(retainedRaw);
   const submitted = result.activity;
   if (result.sourceFingerprint !== record.sourceFingerprint || submitted.stage !== expected.stage || submitted.id !== expected.id || submitted.attemptId !== expected.attemptId || submitted.predecessorAttemptId !== expected.predecessorAttemptId || submitted.inputFingerprint !== expected.inputFingerprint || JSON.stringify(submitted.criteria) !== JSON.stringify(expected.criteria) || JSON.stringify(submitted.dependencyRefs) !== JSON.stringify(expected.dependencyRefs)) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
-  const executions = [];
   for (const ref of submitted.outputRefs ?? []) {
     await verifyEvidenceRef(root, ref);
-    try { executions.push(await validateExecutionEvidence(root, ref)); } catch { /* Non-execution refs may supplement, never replace, an execution receipt. */ }
   }
   if (submitted.outcome === "accepted") {
-    await assertExpectedActivityOutputs(root, record, submitted.stage, submitted.id, submitted.outputRefs ?? []);
-    if (submitted.stage === "VALIDATING" && ["desktop", "mobile", "reduced-motion"].includes(submitted.id)) {
-      const browser = executions.find((execution) => execution.kind === "browser");
-      if (!browser || (submitted.id === "desktop" && browser.viewport.width < 1000) || (submitted.id === "mobile" && browser.viewport.width >= 1000)
-        || (submitted.id === "reduced-motion" && browser.viewport.reducedMotion !== true)) throw new Error("ACTIVITY_BROWSER_OUTPUT_INVALID");
-    }
-    if (submitted.stage === "VALIDATING" && !["desktop", "mobile", "reduced-motion"].includes(submitted.id) && executions.length < 1) throw new Error("ACTIVITY_VALIDATION_OUTPUT_INVALID");
+    await assertExpectedActivityOutputs(root, record, submitted.stage, submitted.id, submitted.outputRefs ?? [], expected);
   }
   const receipt = importActivityReceiptSchema.parse({
     schemaVersion: "ImportActivityReceiptV1",

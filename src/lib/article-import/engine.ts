@@ -26,6 +26,7 @@ import { declareGateHandoff, reconcileGateCleanup, type GateCleanupOptions } fro
 import { registerPublicationApproval } from "./publication-approval";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { validateActivityRemedyEvidence } from "./activity-checkpoints";
+import { captureRenderingInputs } from "./rendering-inputs";
 
 const ROOT = ".automation/article-imports";
 type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string; writing?: boolean };
@@ -436,7 +437,9 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       if (current.continuation?.kind === "repair") {
         const repair = current.continuation;
         const digest = await canonicalSubmissionFingerprint(current, repositoryRoot);
-        if (digest === current.continuation.submittedFingerprint) throw new Error("UNCHANGED_SUBMISSION");
+        const findingBoundActivityReview = !!repair.failedWork?.activityId && !repair.diagnosisRequired
+          && current.activityFindings?.some((finding) => finding.stage === current.stage && finding.activityId === repair.failedWork?.activityId && finding.status === "open");
+        if (digest === current.continuation.submittedFingerprint && !findingBoundActivityReview) throw new Error("UNCHANGED_SUBMISSION");
         if (current.continuation.diagnosisRequired) {
           const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.remedyVerifiedAt && d.remedyCheck?.result === "verified" && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
           if (!diagnosis) return current;
@@ -1009,9 +1012,10 @@ async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis:
       if (evidence.criterion.id !== "activity-result" || evidence.criterion.revision !== WORKFLOW_REVISION) throw new Error("DIAGNOSIS_ACTIVITY_CRITERION_MISMATCH");
       const workPacket = JSON.parse(await readFile(path.resolve(root, record.continuation.failedWork.workPath), "utf8")) as { importId?: unknown; sourceFingerprint?: unknown; activity?: { id?: unknown }; renderingInputs?: { reference?: EvidenceRef } };
       if (workPacket.importId !== record.importId || workPacket.sourceFingerprint !== record.sourceFingerprint || workPacket.activity?.id !== activityRepair) throw new Error("DIAGNOSIS_ACTIVITY_WORK_BINDING_MISMATCH");
-      const renderingRef = workPacket.renderingInputs?.reference;
-      if (record.stage === "VALIDATING" && !renderingRef) throw new Error("DIAGNOSIS_ACTIVITY_RENDER_INPUTS_MISSING");
-      if (renderingRef) await verifyEvidenceRef(root, renderingRef);
+      const failedRenderingRef = workPacket.renderingInputs?.reference;
+      if (record.stage === "VALIDATING" && !failedRenderingRef) throw new Error("DIAGNOSIS_ACTIVITY_RENDER_INPUTS_MISSING");
+      if (failedRenderingRef) await verifyEvidenceRef(root, failedRenderingRef);
+      const renderingRef = record.stage === "VALIDATING" ? await captureRenderingInputs(root, record.importId) : undefined;
       await validateActivityRemedyEvidence(root, record, activityRepair, evidence.validatedEvidenceRef, renderingRef);
       actualEvidenceRef = evidence.validatedEvidenceRef;
     } else {

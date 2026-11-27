@@ -155,9 +155,9 @@ test("the supervised controller registers a rejected finding with its original b
       now: "2026-11-27T13:00:00.000Z",
     }), { relevance: true, support: true, integrity: true, freshness: true, reusable: true });
 
-    const artifactPath = path.join(root, prepared.artifactPath);
-    const artifact = JSON.parse(await readFile(artifactPath, "utf8"));
-    await writeJsonAtomically(artifactPath, { ...artifact, syntheticRepair: "added-the-missing-support" });
+    const assessmentPath = path.join(root, initial.evidenceRefs!.assessment!.path);
+    const assessment = JSON.parse(await readFile(assessmentPath, "utf8"));
+    await writeJsonAtomically(assessmentPath, { ...assessment, syntheticRepair: "added-the-missing-support" });
     const restartedExecutor = createSupervisedImportExecutor(root, undefined, { reviewEvidenceRegistry: registry });
     const repairPending = await executePendingImport(root, initial.importId, restartedExecutor);
     assert.equal(repairPending.continuation?.kind, "work");
@@ -168,8 +168,10 @@ test("the supervised controller registers a rejected finding with its original b
     await writeJsonAtomically(path.join(root, "regression-observation.json"), { observation: "The directly affected criterion still passes." });
     const resolutionRef = await evidenceReference(root, "resolution-observation.json");
     const regressionRef = await evidenceReference(root, "regression-observation.json");
-    const changedArtifactRef = repairPacket.activity.dependencyRefs.find((ref: { path: string }) => ref.path === prepared.artifactPath);
-    assert.ok(changedArtifactRef);
+    const changedAssessmentRef = repairPacket.activity.dependencyRefs.find((ref: { path: string }) => ref.path === initial.evidenceRefs!.assessment!.path);
+    assert.ok(changedAssessmentRef);
+    const editorial = JSON.parse(await readFile(path.join(root, initial.evidenceRefs!.editorial!.path), "utf8"));
+    const pass = editorial.passes[0];
     await writeJsonAtomically(path.join(root, repairPending.continuation.resultPath), {
       idempotencyKey: repairPending.continuation.idempotencyKey,
       sourceFingerprint: repairPending.sourceFingerprint,
@@ -180,13 +182,14 @@ test("the supervised controller registers a rejected finding with its original b
         executionId: "independent-resolution-1",
         outcome: "accepted",
         observation: "The original defect and directly affected regression were checked.",
+        outputRefs: [pass.inputRef, pass.outputRef, pass.executionRef, pass.judgmentRef],
         findingReviews: [{
           findingId: finding.findingId,
           disposition: "verified-repair",
           expectedCheck: finding.expectedCheck,
           observation: "The repaired claim is supported by the changed article bytes.",
           evidenceRefs: [resolutionRef],
-          changedInputRefs: [changedArtifactRef],
+          changedInputRefs: [changedAssessmentRef],
           regressionChecks: [{ criterion: finding.criterion, observation: "The original criterion passes on the changed revision.", outcome: "passed", evidenceRefs: [regressionRef] }],
         }],
       },

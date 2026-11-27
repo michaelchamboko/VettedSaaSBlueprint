@@ -17,7 +17,7 @@ import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { reconcileActivityFindingEvidence, registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
-import { acceptedArticleActivityOutputs, activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, validateEditorialActivityOutputs, type ActivityBinding } from "./activity-checkpoints";
+import { acceptedArticleActivityOutputs, activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, validateEditorialActivityOutputs, validatePresentationActivityOutputs, type ActivityBinding } from "./activity-checkpoints";
 import { completeResearchPlanAttempt, prepareResearchPlanAttempt, reconcileLateResearchPlanResults } from "./stage-attempts";
 import { readEvidenceBytes, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { verifyGateHandoffForDispatch } from "./gate-handoff";
@@ -399,7 +399,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       }
       case "REFINING":
         record = { ...record, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath), editorial: await evidenceReference(root, work.editorialExecutionPath) } };
-        await validateEditorialActivityOutputs(root, record);
+        await validateEditorialActivityOutputs(root, record, acceptedActivityOutputs);
         record = await approveImportContent(root, record, work);
         await applyPublicationProposals(root, record, context.idempotencyKey, context.assertLease);
         if (options?.reviewEvidenceRegistry) {
@@ -410,7 +410,9 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       case "VALIDATING":
         if (workflowEvidenceSchema.parse(await readRepositoryJson(root, work.presentationEvidencePath)).schemaVersion !== "WorkflowEvidenceV3") throw new Error("PRESENTATION_CURRENT_POLICY_REQUIRED");
         record = { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: await evidenceReference(root, work.presentationEvidencePath) } };
-        record = await recordImportPresentation(root, record, { validationGate: work.validationGate, validationReceipt: await readRepositoryJson(root, work.validationReceiptPath) });
+        const validationReceipt = await readRepositoryJson(root, work.validationReceiptPath);
+        await validatePresentationActivityOutputs(root, record, acceptedActivityOutputs, validationReceipt);
+        record = await recordImportPresentation(root, record, { validationGate: work.validationGate, validationReceipt });
         if (options?.reviewEvidenceRegistry && record.presentation) {
           const registration = await registerBrowserReviewEvidence(root, options.reviewEvidenceRegistry, record);
           record = { ...record, reviewEvidence: { ...record.reviewEvidence, browser: registeredReviewStatus(registration) } };

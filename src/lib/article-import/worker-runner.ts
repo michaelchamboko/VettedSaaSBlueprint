@@ -161,8 +161,10 @@ export const defaultWorkerRunner: WorkerRunner = async (input) => {
     return JSON.parse(await readFile(receipt, "utf8")) as WorkerProcessResult;
   }
   writeWorkerMarker(input.ownershipFile, "host-v1");
+  const workerEnvironment = { ...process.env };
+  delete workerEnvironment.ARTICLE_OWNER_DECISION_SECRET;
   const host = spawn(process.execPath, [path.join(__dirname, "worker-host.mjs")], {
-    detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"],
+    detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"], env: workerEnvironment,
   });
   await new Promise<void>((resolve, reject) => {
     const deadline = setTimeout(() => { host.unref(); host.channel?.unref(); reject(new Error("STATE_INTEGRITY: worker termination unverified")); }, Math.min(input.timeoutMs + 15000, 2147483647));
