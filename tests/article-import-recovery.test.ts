@@ -23,7 +23,7 @@ import { validateArticleVisualRuntime } from "../src/lib/article-import/article-
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
 import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
-import { approveFixture, refreshPresentationFixture, refreshPresentationFixtureWithMeasurementReview, refreshPresentationFixtureWithTrackingReview } from "./fixtures/article-content-approval";
+import { approveFixture, refreshPresentationFixture, refreshPresentationFixtureWithMeasurementReview } from "./fixtures/article-content-approval";
 import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 
 async function fixture() {
