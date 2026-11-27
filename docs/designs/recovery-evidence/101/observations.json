@@ -1,0 +1,68 @@
+{
+  "revision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "syntheticOnly": true,
+  "productCodeChanged": false,
+  "observations": [
+    {
+      "case": "interrupted-versus-intentional-repair",
+      "interrupted": {
+        "inheritedIdentity": true,
+        "sameIdempotencyKey": true,
+        "sameWorkPath": true,
+        "sameResultPath": true
+      },
+      "intentionalRepair": {
+        "newAttemptIdentity": false,
+        "predecessorRecorded": false,
+        "observedAttemptValues": [
+          1
+        ]
+      },
+      "lease": {
+        "controllerCalls": 4,
+        "uniqueOwnerTokens": 4
+      },
+      "limit": "Current state has no replacement-attempt identity, so a superseded/replacement pair cannot be represented."
+    },
+    {
+      "case": "relevant-evidence",
+      "repeatEligibilityChanged": true,
+      "cachedResultSelected": true,
+      "workerCalls": 0,
+      "validatorResult": "failed",
+      "validatorMessage": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"id\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"createdAt\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"importId\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"sourceFingerprint\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"article-workflow:2\"\n    ],\n    \"path\": [\n      \"requirementRevision\"\n    ],\n    \"message\": \"Invalid input: expected \\\"article-workflow:2\\\"\"\n  },\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"ResearchEvidenceV2\"\n    ],\n    \"path\": [\n      \"schemaVersion\"\n    ],\n    \"message\": \"Invalid input: expected \\\"ResearchEvidenceV2\\\"\"\n  },\n  {\n    \"origin\": \"array\",\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"inclusive\": true,\n    \"path\": [\n      \"sources\"\n    ],\n    \"message\": \"Too small: expected array to have >=1 items\"\n  },\n  {\n    \"expected\": \"array\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"claims\"\n    ],\n    \"message\": \"Invalid input: expected array, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"freshness\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"syntheticNote\"\n    ],\n    \"path\": [],\n    \"message\": \"Unrecognized key: \\\"syntheticNote\\\"\"\n  }\n]",
+      "originalProvenanceRecorded": false,
+      "controllerReasoningRecorded": false
+    },
+    {
+      "case": "unrelated-history",
+      "repeatEligibilityChanged": true,
+      "cachedResultSelected": true,
+      "workerCalls": 0,
+      "validatorResult": "failed",
+      "validatorMessage": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"id\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"createdAt\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"importId\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"sourceFingerprint\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"article-workflow:2\"\n    ],\n    \"path\": [\n      \"requirementRevision\"\n    ],\n    \"message\": \"Invalid input: expected \\\"article-workflow:2\\\"\"\n  },\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"ResearchEvidenceV2\"\n    ],\n    \"path\": [\n      \"schemaVersion\"\n    ],\n    \"message\": \"Invalid input: expected \\\"ResearchEvidenceV2\\\"\"\n  },\n  {\n    \"origin\": \"array\",\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"inclusive\": true,\n    \"path\": [\n      \"sources\"\n    ],\n    \"message\": \"Too small: expected array to have >=1 items\"\n  },\n  {\n    \"expected\": \"array\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"claims\"\n    ],\n    \"message\": \"Invalid input: expected array, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"freshness\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  }\n]",
+      "originalProvenanceRecorded": false,
+      "controllerReasoningRecorded": false
+    },
+    {
+      "case": "open-finding-and-late-independent-review",
+      "earlierValidatorResult": "failed",
+      "laterValidatorResult": "passed",
+      "independentReview": "synthetic supplied verdict only",
+      "earlierFindingRetained": true,
+      "explicitFindingResolutionSubmitted": false,
+      "controllerAdvanced": true,
+      "originalAttemptProvenanceInSelection": false,
+      "controllerSelectionReasoningRecorded": false,
+      "limit": "No replacement-attempt state exists; the fixture can switch the selected evidence reference but cannot model an active replacement."
+    },
+    {
+      "case": "lease-owner-exit-before-recovery",
+      "recoveryWhileOwnerLive": "rejected",
+      "recoveryAfterOwnerExit": "accepted",
+      "priorOwnerTokenRetained": true,
+      "replacementOwnerTokenChanged": true,
+      "leaseJournalEntries": 5
+    }
+  ]
+}
