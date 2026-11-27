@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from "node:fs/promises";
 
 import {
   advanceImport,
@@ -32,7 +32,7 @@ async function fixture() {
   await writeFile(path.join(root, "article.md"), "# Synthetic cleanup\n\nFixture bytes only.\n");
   const created = await createArticleImport(root, "article.md");
   const researching = await advanceImport(root, created, "Synthetic ingest passed.");
-  const candidatePath = `.automation/article-imports/work/${created.importId}/superseded-draft.md`;
+  const candidatePath = `.automation/article-imports/work/${created.importId}/superseded/superseded-draft.md`;
   await mkdir(path.dirname(path.join(root, candidatePath)), { recursive: true });
   await writeFile(path.join(root, candidatePath), "superseded draft bytes\n");
   const candidate = await evidenceReference(root, candidatePath);
@@ -90,6 +90,10 @@ test("a crash after durable attempt admission resumes the same attempt before re
     const admitted = interrupted.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
     assert.equal(admitted.automaticAttempts?.length, 1);
     assert.equal(admitted.automaticAttempts?.[0].status, "admitted");
+    const failurePath = `.automation/article-imports/cleanup-failures/${record.importId}/${admitted.operationId}-attempt-1.failure.json`;
+    const originalObservedAt = "2026-11-27T12:00:30.000Z";
+    await mkdir(path.dirname(path.join(root, failurePath)), { recursive: true });
+    await writeFile(path.join(root, failurePath), `${JSON.stringify({ schemaVersion: "ImportGateCleanupFailureV1", operationId: admitted.operationId, attempt: 1, trigger: "gate", status: "temporary-failure", code: "ENOENT", observedAt: originalObservedAt })}\n`);
 
     const resumed = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:01:00.000Z"));
     const failed = resumed.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === admitted.operationId)!;
@@ -97,6 +101,7 @@ test("a crash after durable attempt admission resumes the same attempt before re
     assert.equal(failed.automaticAttempts?.[0].sequence, 1);
     assert.equal(failed.automaticAttempts?.[0].status, "temporary-failure");
     assert.ok(failed.automaticAttempts?.[0].failureEvidence);
+    assert.equal(JSON.parse(await readFile(path.join(root, failurePath), "utf8")).observedAt, originalObservedAt);
     assert.equal(await exists(path.join(root, candidate.path)), false);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -432,6 +437,43 @@ test("archive uncertainty preserves both recoverable copies and holds dispatch",
   }
 });
 
+test("cleanup refuses redirected archive and failure-receipt parents without writing outside the import", async () => {
+  for (const surface of ["archive", "cleanup-failures"] as const) {
+    const { root, record, candidate } = await fixture();
+    try {
+      const outside = path.join(root, `outside-${surface}`);
+      const redirected = path.join(root, ".automation/article-imports", surface, record.importId);
+      await mkdir(outside, { recursive: true });
+      await mkdir(path.dirname(redirected), { recursive: true });
+      await symlink(outside, redirected, "junction");
+      if (surface === "cleanup-failures") await rm(path.join(root, candidate.path));
+      const run = cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+      if (surface === "cleanup-failures") await assert.rejects(run, /CLEANUP_PARENT_UNSAFE/);
+      else {
+        const held = await run;
+        assert.equal(held.gateHandoffs!.at(-1)!.cleanup.status, "held");
+      }
+      assert.deepEqual(await readdir(outside), []);
+      if (surface === "archive") assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
+    } finally { await rm(root, { recursive: true, force: true }); }
+  }
+});
+
+test("cleanup refuses an existing archive leaf that redirects to unrelated storage", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    const outside = path.join(root, "outside-archive-leaf");
+    await mkdir(outside, { recursive: true });
+    const archive = path.join(root, `.automation/article-imports/archive/${record.importId}/${candidate.sha256}/${path.basename(candidate.path)}`);
+    await mkdir(path.dirname(archive), { recursive: true });
+    await symlink(outside, archive, "junction");
+    const held = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+    assert.equal(held.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
+    assert.deepEqual(await readdir(outside), []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("the manual cleanup command selects the same controller operation", () => {
   assert.deepEqual(parseImportCommand(["--cleanup", "article-123"]), { kind: "cleanup", importId: "article-123" });
   assert.deepEqual(parseImportCommand(["--cleanup-remedy", "article-123", "--file", "remedy.json"]), {
@@ -635,6 +677,26 @@ test("restart restores an original claimed after a crash immediately following u
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("restart refuses to restore an archived original through a redirected work parent", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    await assert.rejects(() => cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
+      if (boundary === "original-removed") throw new Error("CRASH:original-removed");
+    })), /CRASH:original-removed/);
+    const originalParent = path.dirname(path.join(root, candidate.path));
+    const outside = path.join(root, "outside-restore");
+    await rm(originalParent, { recursive: true, force: true });
+    await mkdir(outside, { recursive: true });
+    await symlink(outside, originalParent, "junction");
+    const held = await cleanupImportGateHandoff(root, record.importId, {
+      ...cleanupOptions("2026-11-27T12:01:00.000Z"),
+      resolveRetentionDependencies: async () => ({ status: "verified", references: [candidate] }),
+    });
+    assert.equal(held.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    assert.deepEqual(await readdir(outside), []);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("a recovered canonical-register outage releases a previously completed fingerprint", async () => {

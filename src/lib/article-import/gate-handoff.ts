@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { lstat, mkdir, readdir, realpath, unlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, realpath, unlink, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import {
@@ -173,27 +173,83 @@ function assertAuthorizedCandidatePath(importId: string, reference: EvidenceRef)
   if (!roots.some((root) => file.startsWith(root)) || file.includes("../")) throw new Error("CLEANUP_PATH_NOT_AUTHORIZED");
 }
 
+function authorizedMutationPath(importId: string, relative: string): string {
+  assertAuthorizedCandidatePath(importId, { path: normalized(relative), sha256: "0".repeat(64) });
+  return normalized(relative);
+}
+
+async function safeMutationTarget(root: string, importId: string, relative: string, createParent: boolean): Promise<string> {
+  const file = authorizedMutationPath(importId, relative);
+  const canonicalRoot = await realpath(root);
+  const target = path.resolve(root, file);
+  const lexical = path.relative(path.resolve(root), target);
+  if (lexical === ".." || lexical.startsWith(`..${path.sep}`) || path.isAbsolute(lexical)) throw new Error("CLEANUP_PATH_NOT_AUTHORIZED");
+  const parent = path.dirname(target);
+  let cursor = path.resolve(root);
+  let parentMissing = false;
+  for (const segment of path.relative(cursor, parent).split(path.sep).filter(Boolean)) {
+    cursor = path.join(cursor, segment);
+    const metadata = await lstat(cursor).catch((error: NodeJS.ErrnoException) => error.code === "ENOENT" ? undefined : Promise.reject(error));
+    if (!metadata) { parentMissing = true; break; }
+    if (!metadata.isDirectory() || metadata.isSymbolicLink()) throw new Error("CLEANUP_PARENT_UNSAFE");
+  }
+  if (createParent) await mkdir(parent, { recursive: true });
+  else if (parentMissing) return target;
+  const canonicalParent = await realpath(parent);
+  const parentRelative = path.relative(canonicalRoot, canonicalParent);
+  if (parentRelative === ".." || parentRelative.startsWith(`..${path.sep}`) || path.isAbsolute(parentRelative)) throw new Error("CLEANUP_PATH_ESCAPE");
+  const expectedParent = path.relative(path.resolve(root), parent);
+  if (normalized(parentRelative) !== normalized(expectedParent)) throw new Error("CLEANUP_PARENT_REDIRECTED");
+  return target;
+}
+
+async function writeCleanupFile(root: string, importId: string, relative: string, bytes: string | Buffer): Promise<void> {
+  const target = await safeMutationTarget(root, importId, relative, true);
+  await writeFile(target, bytes, { flag: "wx" });
+}
+
+async function literalCleanupEvidence(root: string, importId: string, relative: string): Promise<EvidenceRef> {
+  const file = authorizedMutationPath(importId, relative);
+  const target = await safeMutationTarget(root, importId, file, false);
+  const metadata = await lstat(target);
+  if (!metadata.isFile() || metadata.isSymbolicLink()) throw new Error("CLEANUP_OUTPUT_UNSAFE");
+  const canonicalRoot = await realpath(root);
+  const canonicalTarget = await realpath(target);
+  if (normalized(path.relative(canonicalRoot, canonicalTarget)) !== file) throw new Error("CLEANUP_OUTPUT_REDIRECTED");
+  return { path: file, sha256: createHash("sha256").update(await readFile(target)).digest("hex") };
+}
+
+async function writeCleanupReceipt(root: string, importId: string, relative: string, receipt: Record<string, unknown>): Promise<EvidenceRef> {
+  const bytes = `${JSON.stringify(receipt)}\n`;
+  try { await writeCleanupFile(root, importId, relative, bytes); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    const existing = await literalCleanupEvidence(root, importId, relative);
+    const parsed = JSON.parse((await readFile(path.resolve(root, existing.path))).toString("utf8")) as Record<string, unknown>;
+    const expected = { ...receipt };
+    delete parsed.observedAt;
+    delete expected.observedAt;
+    if (JSON.stringify(parsed) !== JSON.stringify(expected)) throw new Error("CLEANUP_RECEIPT_REPLAY_MISMATCH");
+    return existing;
+  }
+  return literalCleanupEvidence(root, importId, relative);
+}
+
 async function writeVerifiedArchive(root: string, importId: string, candidate: DisposalCandidate): Promise<EvidenceRef> {
   assertAuthorizedCandidatePath(importId, candidate.reference);
   const bytes = await readVerifiedEvidenceBytes(root, candidate.reference);
   const relative = archivePath(importId, candidate);
-  const target = path.join(root, relative);
-  await mkdir(path.dirname(target), { recursive: true });
-  const canonicalRoot = await realpath(root);
-  const canonicalParent = await realpath(path.dirname(target));
-  const relativeParent = path.relative(canonicalRoot, canonicalParent);
-  if (relativeParent === ".." || relativeParent.startsWith(`..${path.sep}`) || path.isAbsolute(relativeParent)) throw new Error("CLEANUP_ARCHIVE_PATH_ESCAPE");
-  await writeFile(target, bytes, { flag: "wx" }).catch((error: NodeJS.ErrnoException) => {
+  await writeCleanupFile(root, importId, relative, bytes).catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "EEXIST") throw error;
   });
-  const reference = await evidenceReference(root, relative);
+  const reference = await literalCleanupEvidence(root, importId, relative);
   if (reference.sha256 !== candidate.reference.sha256) throw new Error("CLEANUP_ARCHIVE_INTEGRITY_UNCERTAIN");
   return reference;
 }
 
 async function removeVerifiedOriginal(root: string, importId: string, reference: EvidenceRef): Promise<"removed" | "missing"> {
   assertAuthorizedCandidatePath(importId, reference);
-  const target = path.resolve(root, reference.path);
+  const target = await safeMutationTarget(root, importId, reference.path, false);
   const metadata = await lstat(target).catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") return undefined;
     throw error;
@@ -201,6 +257,8 @@ async function removeVerifiedOriginal(root: string, importId: string, reference:
   if (!metadata) return "missing";
   if (!metadata.isFile() || metadata.isSymbolicLink()) throw new Error("CLEANUP_ORIGINAL_UNSAFE");
   await readVerifiedEvidenceBytes(root, reference);
+  const current = await lstat(target);
+  if (!current.isFile() || current.isSymbolicLink() || current.dev !== metadata.dev || current.ino !== metadata.ino) throw new Error("CLEANUP_ORIGINAL_CHANGED");
   await unlink(target);
   return "removed";
 }
@@ -210,9 +268,7 @@ async function restoreVerifiedOriginal(root: string, importId: string, original:
   assertAuthorizedCandidatePath(importId, archive);
   const bytes = await readVerifiedEvidenceBytes(root, archive);
   if (archive.sha256 !== original.sha256) throw new Error("CLEANUP_RESTORE_INTEGRITY_UNCERTAIN");
-  const target = path.resolve(root, original.path);
-  await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, bytes, { flag: "wx" });
+  await writeCleanupFile(root, importId, original.path, bytes);
   await verifyEvidenceRef(root, original);
 }
 
@@ -268,7 +324,10 @@ async function verifyBoundRemedy(root: string, importId: string, reference: Evid
 
 function cleanupErrorCode(error: unknown): string {
   const code = (error as NodeJS.ErrnoException | undefined)?.code;
-  return code || (error instanceof Error ? error.message : String(error));
+  const message = error instanceof Error ? error.message : String(error);
+  return code && /^[A-Z][A-Z0-9_]{1,40}$/.test(code)
+    ? code
+    : /^[A-Z][A-Z0-9_]{2,80}$/.test(message) ? message : "CLEANUP_FAILURE";
 }
 
 function classifyPreMutationFailure(error: unknown): Extract<CleanupFailureStatus, "temporary-failure" | "shared-failure"> {
@@ -288,8 +347,7 @@ async function recordCleanupFailure(
   at: Date,
 ): Promise<CleanupOperation> {
   const relative = `.automation/article-imports/cleanup-failures/${record.importId}/${operation.operationId}-attempt-${attempt.sequence}.failure.json`;
-  await mkdir(path.dirname(path.join(root, relative)), { recursive: true });
-  await writeFile(path.join(root, relative), `${JSON.stringify({
+  const failureEvidence = await writeCleanupReceipt(root, record.importId, relative, {
     schemaVersion: "ImportGateCleanupFailureV1",
     operationId: operation.operationId,
     attempt: attempt.sequence,
@@ -297,8 +355,7 @@ async function recordCleanupFailure(
     status,
     code: cleanupErrorCode(error),
     observedAt: at.toISOString(),
-  })}\n`);
-  const failureEvidence = await evidenceReference(root, relative);
+  });
   const failed = { ...attempt, status, failureEvidence, failureCode: cleanupErrorCode(error), finishedAt: at.toISOString() };
   return { ...replaceLatestAttempt(operation, failed), phase: "held", updatedAt: at.toISOString() };
 }
@@ -318,15 +375,13 @@ async function holdMutationFailure(
   let failureEvidence = latestAttempt(held)?.failureEvidence;
   if (!failureEvidence || operation.remedyRef) {
     const relative = `.automation/article-imports/cleanup-failures/${record.importId}/${operation.operationId}-hold-${sha256(`${at.toISOString()}:${status}:${cleanupErrorCode(error)}`).slice(0, 16)}.failure.json`;
-    await mkdir(path.dirname(path.join(root, relative)), { recursive: true });
-    await writeFile(path.join(root, relative), `${JSON.stringify({
+    failureEvidence = await writeCleanupReceipt(root, record.importId, relative, {
       schemaVersion: "ImportGateCleanupFailureV1",
       operationId: operation.operationId,
       status,
       code: cleanupErrorCode(error),
       observedAt: at.toISOString(),
-    })}\n`);
-    failureEvidence = await evidenceReference(root, relative);
+    });
   }
   const hold: CleanupHold = {
     status,
