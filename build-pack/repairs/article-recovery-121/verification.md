@@ -38,3 +38,5 @@ The first focused run failed the three new acceptance cases. The cleanup adapter
 - Independent synthetic review reproduced corrupt failure-receipt bytes, a corrupt registered archive, a registry outage before removal, and a missing work directory. The corrected controller rejected or held all four cases. Failure receipts now use the separate import-scoped cleanup-failure directory.
 
 The host uses Node 26.13.0 and npm 11.20.0. `package.json` requires Node 24.x and npm 12.x. `npm ci` completed with the expected engine warning.
+
+`node scripts/code-intelligence/update-local.ts` could not acquire exact-build admission while another codebase-memory operation was active. No graph export changed. Direct source inspection, the focused controller tests, and the required repository gates cover this branch.
