@@ -6,6 +6,8 @@ Branch: `codex/recovery-102`
 
 Base: `codex/recovery-evidence-96` at `32204bd7c4c795e8a985e2657189862235f88378`
 
+Latest integration tip incorporated for final verification: `3c8c5914c59f01ed67db319fec510c8576347be5`
+
 Investigated product revision: `f026bca8b53aecca829262e9a27820ac6d078892`
 
 Scope: synthetic investigation only. No product code, database, network, real article, deployment, publication, or release state was changed.

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "RegisteredEvidenceRecovery102V1",
   "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
-  "generatedAt": "2026-11-27T09:10:19.814Z",
+  "generatedAt": "2026-11-27T09:17:46.402Z",
   "expected": {
     "reuseDimensions": [
       "relevance",
@@ -99,7 +99,7 @@
         "production"
       ],
       "retainedApprovalKeys": [],
-      "invalidationReason": "RESEARCH_RECOVERY_REQUIRED: ASSESSMENT_RULE_FAILED:claims. Invalidated dependent evidence: {\"stage\":\"VALIDATING\",\"evidenceRefs\":{\"research\":{\"path\":\"research-missing.json\",\"sha256\":\"8d488cab68d059bd39b013eec3b116f482620ae8ca7833f3cc78f95e351dace3\"},\"assessment\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2.json\",\"sha256\":\"210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2\"},\"editorial\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928.json\",\"sha256\":\"b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928\"},\"presentation\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a.json\",\"sha256\":\"973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a\"},\"production\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f.json\",\"sha256\":\"f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f\"}}}",
+      "invalidationReason": "RESEARCH_RECOVERY_REQUIRED: ASSESSMENT_RULE_FAILED:claims. Invalidated dependent evidence: {\"stage\":\"VALIDATING\",\"evidenceRefs\":{\"research\":{\"path\":\"research-missing.json\",\"sha256\":\"f8a53f70239d14eadabb1698de918b4c4f3afa29aa7a8c1f6591fb9080323b1b\"},\"assessment\":{\"path\":\".automation/article-imports/evidence/article-10b24285-b832-4e67-ac11-0125cd3a304a/210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2.json\",\"sha256\":\"210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2\"},\"editorial\":{\"path\":\".automation/article-imports/evidence/article-10b24285-b832-4e67-ac11-0125cd3a304a/b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928.json\",\"sha256\":\"b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928\"},\"presentation\":{\"path\":\".automation/article-imports/evidence/article-10b24285-b832-4e67-ac11-0125cd3a304a/973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a.json\",\"sha256\":\"973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a\"},\"production\":{\"path\":\".automation/article-imports/evidence/article-10b24285-b832-4e67-ac11-0125cd3a304a/f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f.json\",\"sha256\":\"f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f\"}}}",
       "priorReadable": {
         "research": true,
         "assessment": true,
@@ -110,7 +110,7 @@
       "recoveredStage": "TRANSFORMING",
       "freshResearchRef": {
         "path": "research-reacquired.json",
-        "sha256": "275808a87e968118697bab65bfeebf672535d645d074cda5fab82a3212a5f848"
+        "sha256": "62eed5d7886e3c861c67b6fe1334f74c540bd0d1093010a7f817e5cbffd4d1c5"
       },
       "examinedRevision": "5084ac4d30a42ec9ccd6a5eaaba7b06224f1c5c6d963f4b7750d0f0f2323900a"
     },
