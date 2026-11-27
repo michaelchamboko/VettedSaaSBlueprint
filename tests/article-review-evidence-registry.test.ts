@@ -22,6 +22,9 @@ function isolatedRegistry(initial: ReviewEvidenceRegistration[] = []) {
     async list(input) {
       return records.filter((record) => record.importId === input.importId && record.evidenceClass === input.evidenceClass);
     },
+    async listAll(input) {
+      return records.filter((record) => record.evidenceClass === input.evidenceClass);
+    },
     async commit(input) {
       const existing = records.find((record) => record.registrationId === input.registrationId);
       if (!existing) records.push(reviewEvidenceRegistrationSchema.parse(input));

@@ -351,12 +351,21 @@ const gateHandoffReferenceSchema = z.object({
   reference: stateEvidenceRef,
   reason: z.string().min(1),
 }).strict();
-const gateHandoffDisposalCandidateSchema = z.object({
-  reference: stateEvidenceRef,
-  kind: z.enum(["verified-temporary", "superseded-draft", "superseded-capture"]),
-  reason: z.string().min(1),
-  archivedAt: z.string().datetime({ offset: true }).optional(),
-}).strict();
+const gateHandoffDisposalCandidateSchema = z.discriminatedUnion("kind", [
+  z.object({
+    reference: stateEvidenceRef,
+    kind: z.literal("verified-temporary"),
+    reason: z.string().min(1),
+    redundantWith: stateEvidenceRef,
+    archivedAt: z.string().datetime({ offset: true }).optional(),
+  }).strict(),
+  z.object({
+    reference: stateEvidenceRef,
+    kind: z.enum(["superseded-draft", "superseded-capture"]),
+    reason: z.string().min(1),
+    archivedAt: z.string().datetime({ offset: true }).optional(),
+  }).strict(),
+]);
 const gateCleanupDispositionSchema = z.object({
   original: gateHandoffDisposalCandidateSchema,
   disposition: z.enum(["retain", "archive", "dispose", "unclassified"]),

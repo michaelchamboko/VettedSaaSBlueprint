@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { lstat, mkdir, readdir, realpath, unlink, writeFile } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import path from "node:path";
 import {
   importGateHandoffSchema,
@@ -21,7 +22,7 @@ type CleanupDisposition = CleanupOperation["dispositions"][number];
 
 export type GateCleanupOptions = {
   now?: () => Date;
-  afterBoundary?: (boundary: "intent-recorded" | "archive-copied" | "archive-registered") => void | Promise<void>;
+  afterBoundary?: (boundary: "intent-recorded" | "archive-copied" | "archive-registered" | "original-removed") => void | Promise<void>;
   resolveRetentionDependencies?: (record: ExternalArticleImportV1) => Promise<
     { status: "verified"; references: EvidenceRef[] } | { status: "unavailable"; reason: string }
   >;
@@ -42,6 +43,10 @@ function normalized(file: string): string {
 
 function sameReference(left: EvidenceRef, right: EvidenceRef): boolean {
   return left.sha256 === right.sha256 || normalized(left.path) === normalized(right.path);
+}
+
+function sameArtifact(left: EvidenceRef, right: EvidenceRef): boolean {
+  return left.sha256 === right.sha256 && normalized(left.path) === normalized(right.path);
 }
 
 function protectedReferences(record: ExternalArticleImportV1): EvidenceRef[] {
@@ -68,7 +73,9 @@ function protectedReferences(record: ExternalArticleImportV1): EvidenceRef[] {
 }
 
 function candidateProtected(candidate: DisposalCandidate, protectedRefs: EvidenceRef[]): boolean {
-  return protectedRefs.some((reference) => sameReference(reference, candidate.reference));
+  return protectedRefs.some((reference) => candidate.kind === "verified-temporary"
+    ? normalized(reference.path) === normalized(candidate.reference.path)
+    : sameReference(reference, candidate.reference));
 }
 
 function classifyCandidate(candidate: DisposalCandidate, protectedRefs: EvidenceRef[], at: Date): CleanupDisposition {
@@ -107,9 +114,33 @@ function eligibilityFingerprint(candidates: DisposalCandidate[], protectedRefs: 
   }))));
 }
 
-function selectedHandoff(record: ExternalArticleImportV1): { handoff: ImportGateHandoff; index: number } | undefined {
-  const index = record.gateHandoffs?.findLastIndex((handoff) => handoff.nextStage === record.stage) ?? -1;
-  return index >= 0 ? { handoff: record.gateHandoffs![index], index } : undefined;
+function handoffMayNeedDependencyCheck(handoff: ImportGateHandoff, at: Date): boolean {
+  const operation = latestOperation(handoff);
+  return handoff.disposalCandidates.length > 0 && (
+    handoff.cleanup.status === "pending" ||
+    handoff.cleanup.status === "held" ||
+    Boolean(operation && operation.phase !== "completed") ||
+    handoff.disposalCandidates.some((candidate) => !candidate.archivedAt || at.getTime() >= Date.parse(candidate.archivedAt) + RETENTION_MS)
+  );
+}
+
+function cleanupOrder(record: ExternalArticleImportV1): number[] {
+  const handoffs = record.gateHandoffs ?? [];
+  const current = handoffs.findLastIndex((handoff) => handoff.nextStage === record.stage);
+  return [...(current >= 0 ? [current] : []), ...handoffs.map((_, index) => index).filter((index) => index !== current)];
+}
+
+function selectedHandoff(record: ExternalArticleImportV1, protectedRefs: EvidenceRef[], at: Date): { handoff: ImportGateHandoff; index: number } | undefined {
+  for (const index of cleanupOrder(record)) {
+    const handoff = record.gateHandoffs![index];
+    if (handoff.disposalCandidates.length === 0) continue;
+    const operation = latestOperation(handoff);
+    const fingerprint = eligibilityFingerprint(handoff.disposalCandidates, protectedRefs, at);
+    if (handoff.cleanup.status === "pending" || handoff.cleanup.status === "held" || (operation && operation.phase !== "completed") || operation?.eligibilityFingerprint !== fingerprint) {
+      return { handoff, index };
+    }
+  }
+  return undefined;
 }
 
 function replaceHandoff(record: ExternalArticleImportV1, index: number, handoff: ImportGateHandoff): ExternalArticleImportV1 {
@@ -166,16 +197,27 @@ async function removeVerifiedOriginal(root: string, importId: string, reference:
   return "removed";
 }
 
+async function restoreVerifiedOriginal(root: string, importId: string, original: EvidenceRef, archive: EvidenceRef): Promise<void> {
+  assertAuthorizedCandidatePath(importId, original);
+  assertAuthorizedCandidatePath(importId, archive);
+  const bytes = await readVerifiedEvidenceBytes(root, archive);
+  if (archive.sha256 !== original.sha256) throw new Error("CLEANUP_RESTORE_INTEGRITY_UNCERTAIN");
+  const target = path.resolve(root, original.path);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, bytes, { flag: "wx" });
+  await verifyEvidenceRef(root, original);
+}
+
 function latestOperation(handoff: ImportGateHandoff): CleanupOperation | undefined {
   return handoff.cleanup.operations?.at(-1);
 }
 
-function operationFor(record: ExternalArticleImportV1, operationId: string) {
-  const selected = selectedHandoff(record);
-  if (!selected) throw new Error("CLEANUP_HANDOFF_MISSING");
-  const operation = selected.handoff.cleanup.operations?.find((item) => item.operationId === operationId);
+function operationFor(record: ExternalArticleImportV1, handoffIndex: number, operationId: string) {
+  const handoff = record.gateHandoffs?.[handoffIndex];
+  if (!handoff) throw new Error("CLEANUP_HANDOFF_MISSING");
+  const operation = handoff.cleanup.operations?.find((item) => item.operationId === operationId);
   if (!operation) throw new Error("CLEANUP_OPERATION_MISSING");
-  return { ...selected, operation };
+  return { handoff, index: handoffIndex, operation };
 }
 
 async function persistOperation(record: ExternalArticleImportV1, index: number, handoff: ImportGateHandoff, operation: CleanupOperation, persist: PersistCleanup) {
@@ -190,9 +232,10 @@ export async function reconcileGateCleanup(
   options: GateCleanupOptions = {},
 ): Promise<{ record: ExternalArticleImportV1; handled: boolean }> {
   let current = record;
-  let selected = selectedHandoff(current);
-  if (!selected || selected.handoff.disposalCandidates.length === 0) return { record: current, handled: false };
   const at = options.now?.() ?? new Date();
+  const uncheckedIndex = cleanupOrder(current).find((index) => handoffMayNeedDependencyCheck(current.gateHandoffs![index], at));
+  if (uncheckedIndex === undefined) return { record: current, handled: false };
+  let selected = { handoff: current.gateHandoffs![uncheckedIndex], index: uncheckedIndex };
   let registeredDependencies;
   try {
     registeredDependencies = options.resolveRetentionDependencies
@@ -202,22 +245,29 @@ export async function reconcileGateCleanup(
     registeredDependencies = { status: "unavailable" as const, reason: error instanceof Error ? error.message : String(error) };
   }
   if (registeredDependencies.status === "unavailable") {
-    if (selected.handoff.cleanup.status === "held" && !selected.handoff.cleanup.operationId) return { record: current, handled: true };
+    if (selected.handoff.cleanup.status === "held") return { record: current, handled: true };
     const held = { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" as const } };
     current = await persist(replaceHandoff(current, selected.index, held));
     return { record: current, handled: true };
   }
   let canonicalReferences = registeredDependencies.references;
   const protectedRefs = [...protectedReferences(current), ...canonicalReferences];
+  selected = selectedHandoff(current, protectedRefs, at) ?? selected;
   const fingerprint = eligibilityFingerprint(selected.handoff.disposalCandidates, protectedRefs, at);
   let operation = latestOperation(selected.handoff);
   const incomplete = operation && operation.phase !== "completed";
-  if (!incomplete && operation?.eligibilityFingerprint === fingerprint) return { record: current, handled: false };
+  if (!incomplete && operation?.eligibilityFingerprint === fingerprint) {
+    if (selected.handoff.cleanup.status !== "verified") {
+      const released = { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "verified" as const } };
+      current = await persist(replaceHandoff(current, selected.index, released));
+      return { record: current, handled: true };
+    }
+    return { record: current, handled: false };
+  }
   if (!incomplete) {
-    const dispositions = selected.handoff.disposalCandidates.map((candidate) => classifyCandidate(candidate, protectedRefs, at));
-    const mutationDue = dispositions.some((item) => item.disposition === "archive" || item.disposition === "dispose");
-    const expiryRecheckDue = selected.handoff.disposalCandidates.some((candidate) => candidate.archivedAt && at.getTime() >= Date.parse(candidate.archivedAt) + RETENTION_MS);
-    if (trigger === "gate" && !mutationDue && !expiryRecheckDue) return { record: current, handled: false };
+    const dispositions = selected.handoff.disposalCandidates
+      .map((candidate) => classifyCandidate(candidate, protectedRefs, at))
+      .sort((left, right) => Number(right.original.kind === "verified-temporary") - Number(left.original.kind === "verified-temporary"));
     const operationId = `cleanup-${sha256(`${current.importId}:${selected.handoff.passedGate}:${selected.handoff.nextStage}:${fingerprint}`).slice(0, 24)}`;
     operation = {
       schemaVersion: "ImportGateCleanupOperationV1",
@@ -242,13 +292,15 @@ export async function reconcileGateCleanup(
 
   if (!operation) throw new Error("CLEANUP_OPERATION_MISSING");
   const operationId = operation.operationId;
-  let located = operationFor(current, operationId);
+  let located = operationFor(current, selected.index, operationId);
   selected = { handoff: located.handoff, index: located.index };
   operation = located.operation;
   let dispositions = [...operation.dispositions];
   for (let index = 0; index < dispositions.length; index += 1) {
     let disposition = dispositions[index];
-    const refreshedDependencies = await options.resolveRetentionDependencies!(current);
+    let refreshedDependencies;
+    try { refreshedDependencies = await options.resolveRetentionDependencies!(current); }
+    catch (error) { refreshedDependencies = { status: "unavailable" as const, reason: error instanceof Error ? error.message : String(error) }; }
     if (refreshedDependencies.status === "unavailable") {
       const held = { ...operation, phase: "held" as const, updatedAt: at.toISOString() };
       current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
@@ -274,41 +326,90 @@ export async function reconcileGateCleanup(
       dispositions[index] = disposition;
       operation = { ...operation, phase: "registered", dispositions, updatedAt: at.toISOString() };
       current = await persistOperation(current, selected.index, selected.handoff, operation, persist);
-      located = operationFor(current, operationId);
+      located = operationFor(current, selected.index, operationId);
       selected = { handoff: located.handoff, index: located.index };
       operation = located.operation;
       dispositions = [...operation.dispositions];
       disposition = dispositions[index];
       await options.afterBoundary?.("archive-registered");
     }
+    let beforeRemoval;
+    try { beforeRemoval = await options.resolveRetentionDependencies!(current); }
+    catch (error) { beforeRemoval = { status: "unavailable" as const, reason: error instanceof Error ? error.message : String(error) }; }
+    if (beforeRemoval.status === "unavailable") {
+      operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
+      current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
+      return { record: current, handled: true };
+    }
+    canonicalReferences = beforeRemoval.references;
+    const claimedBeforeRemoval = candidateProtected(disposition.original, [...protectedReferences(current), ...canonicalReferences]);
+    if (claimedBeforeRemoval && disposition.disposition !== "retain") {
+      disposition = { ...disposition, disposition: "retain", reason: "A dependency claimed the artifact immediately before original removal." };
+      dispositions[index] = disposition;
+    }
+    if (disposition.disposition === "retain") {
+      const originalExists = await lstat(path.resolve(root, disposition.original.reference.path)).then(() => true).catch((error: NodeJS.ErrnoException) => error.code === "ENOENT" ? false : Promise.reject(error));
+      try {
+        if (!originalExists && disposition.archiveRef) await restoreVerifiedOriginal(root, current.importId, disposition.original.reference, disposition.archiveRef);
+        await verifyEvidenceRef(root, disposition.original.reference);
+      } catch {
+        operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
+        current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
+        return { record: current, handled: true };
+      }
+      continue;
+    }
     if (disposition.disposition === "archive") {
       if (!disposition.archiveRef) throw new Error("CLEANUP_ARCHIVE_REGISTRATION_MISSING");
-      await verifyEvidenceRef(root, disposition.archiveRef);
-      const removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      let removal: "removed" | "missing";
+      try {
+        await verifyEvidenceRef(root, disposition.archiveRef);
+        removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      } catch {
+        operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
+        current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
+        return { record: current, handled: true };
+      }
+      if (removal === "removed") await options.afterBoundary?.("original-removed");
       disposition = { ...disposition, removedAt: at.toISOString() };
       dispositions[index] = disposition;
-      if (removal === "missing" && operation.phase !== "registered") {
-        operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
-        current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
-        return { record: current, handled: true };
-      }
     } else if (disposition.disposition === "dispose" && !disposition.removedAt) {
-      const removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
-      if (removal === "missing") {
+      let removal: "removed" | "missing";
+      try {
+        if (disposition.original.kind === "verified-temporary") {
+          const redundantWith = disposition.original.redundantWith;
+          assertAuthorizedCandidatePath(current.importId, redundantWith);
+          if (redundantWith.sha256 !== disposition.original.reference.sha256 ||
+              normalized(redundantWith.path) === normalized(disposition.original.reference.path)) {
+            throw new Error("CLEANUP_TEMPORARY_REDUNDANCY_UNVERIFIED");
+          }
+          try {
+            await verifyEvidenceRef(root, redundantWith);
+          } catch {
+            const archivedTarget = dispositions.find((item) =>
+              sameArtifact(item.original.reference, redundantWith) && item.archiveRef);
+            if (!archivedTarget?.archiveRef) throw new Error("CLEANUP_TEMPORARY_REDUNDANCY_UNVERIFIED");
+            await verifyEvidenceRef(root, archivedTarget.archiveRef);
+          }
+        }
+        removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      }
+      catch {
         operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
         return { record: current, handled: true };
       }
+      if (removal === "removed") await options.afterBoundary?.("original-removed");
       disposition = { ...disposition, removedAt: at.toISOString() };
       dispositions[index] = disposition;
     }
   }
 
-  located = operationFor(current, operationId);
+  located = operationFor(current, selected.index, operationId);
   selected = { handoff: located.handoff, index: located.index };
   operation = located.operation;
   const remainingCandidates = selected.handoff.disposalCandidates.flatMap((candidate) => {
-    const disposition = dispositions.find((item) => sameReference(item.original.reference, candidate.reference));
+    const disposition = dispositions.find((item) => sameArtifact(item.original.reference, candidate.reference));
     if (!disposition || disposition.disposition === "retain" || disposition.disposition === "unclassified") return [candidate];
     if (disposition.disposition === "archive" && disposition.archiveRef) {
       return [{ ...candidate, reference: disposition.archiveRef, archivedAt: at.toISOString() }];
@@ -393,7 +494,7 @@ function requiredFor(nextStage: ImportStage, refs: Record<string, NamedReference
 
 async function unclassifiedMaterial(root: string, record: ExternalArticleImportV1, declared: NamedReference[]) {
   const directory = path.join(root, ".automation/article-imports/work", record.importId);
-  let entries;
+  let entries: Dirent[];
   try { entries = await readdir(directory, { withFileTypes: true }); }
   catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
@@ -435,6 +536,41 @@ async function declaredDisposalCandidates(root: string, record: ExternalArticleI
     if (seen.has(key)) continue;
     seen.add(key);
     candidates.push({ reference, kind: item.kind, reason: item.reason });
+  }
+  const workDirectory = `.automation/article-imports/work/${record.importId}`;
+  const atomicTemporary = /^(.+)\.\d+\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.tmp$/i;
+  let entries: Dirent[];
+  try { entries = await readdir(path.join(root, workDirectory), { withFileTypes: true }); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    entries = [];
+  }
+  for (const entry of entries.filter((item) => item.isFile()).sort((left, right) => left.name.localeCompare(right.name))) {
+    const match = atomicTemporary.exec(entry.name);
+    if (!match) continue;
+    const temporaryPath = `${workDirectory}/${entry.name}`;
+    const targetPath = `${workDirectory}/${match[1]}`;
+    let temporary: EvidenceRef;
+    let target: EvidenceRef;
+    try {
+      const targetMetadata = await lstat(path.join(root, targetPath));
+      if (!targetMetadata.isFile() || targetMetadata.isSymbolicLink()) continue;
+      temporary = await evidenceReference(root, temporaryPath);
+      target = await evidenceReference(root, targetPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+    if (temporary.sha256 !== target.sha256) continue;
+    const key = `${temporary.path}:${temporary.sha256}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    candidates.push({
+      reference: temporary,
+      kind: "verified-temporary",
+      reason: `Verified redundant atomic-write temporary for ${target.path}.`,
+      redundantWith: target,
+    });
   }
   return candidates;
 }

@@ -28,6 +28,19 @@ export class NeonArticleReviewEvidenceRegistry implements ArticleReviewEvidenceR
     }
   }
 
+  async listAll(input: { evidenceClass: ReviewEvidenceClass }): Promise<ReviewEvidenceRegistration[]> {
+    try {
+      const result = await this.query(`
+        select registration
+        from article_research.review_evidence_registrations
+        where evidence_class = $1
+        order by created_at desc`, [input.evidenceClass]);
+      return result.rows.map((row) => registration(row.registration));
+    } catch (error) {
+      throw new Error(`CAPABILITY_UNAVAILABLE: article review evidence registry retention scan failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   async commit(input: ReviewEvidenceRegistration): Promise<{ registrationId: string; replayed: boolean }> {
     const value = reviewEvidenceRegistrationSchema.parse(input);
     try {
