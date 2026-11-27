@@ -14,6 +14,8 @@ import { importPacketId } from "../src/lib/article-import/packet-binding";
 import { articleHeroHandoff, bindGeneratedArticleHero } from "../src/lib/article-import/hero-image";
 import { sha256 } from "../src/lib/article-import/execution-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
+import { captureRenderingInputs } from "../src/lib/article-import/rendering-inputs";
+import { nextArticleActivity, recordArticleActivity } from "../src/lib/article-import/activity-checkpoints";
 import { approveFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
 import { fixtureProbe, prepareCommandCheckout } from "./fixtures/article-command";
 import sharp from "sharp";
@@ -29,6 +31,10 @@ test("a callable recovery command rejects a secondary checkout before accessing 
 
 async function candidate(root: string) {
   await prepareCommandCheckout(root);
+  for (const file of ["src/components/landing/DirectReviewPage.tsx", "src/app/layout.tsx", "src/app/globals.css", "src/app/landing-page-previews/[slug]/page.tsx"]) {
+    await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+    await writeFile(path.join(root, file), await readFile(file));
+  }
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), "---\ntitle: Example\naffiliate_name: Example\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\nAn article with enough text to qualify as useful source content for the import pipeline and its approval tests.");
   const source = await createArticleImport(root, "article.md");
@@ -46,7 +52,21 @@ async function candidate(root: string) {
   const generation = { schemaVersion: "ArticleHeroGenerationEvidenceV1", importId: approved.importId, sourceFingerprint: approved.sourceFingerprint, format: approved.format, slug: target.slug, artifactFingerprint: approved.contentApproval!.artifactFingerprint, originalRef: { path: handoff.originalFile, sha256: sha256(png) }, alt: handoff.alt, generation: { provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "ownership-fixture", generatedAt: "2026-11-27T00:00:00.000Z", prompt: handoff.prompt, promptSha256: handoff.promptSha256, outputSha256: sha256(png), providerOutputRef: { path: providerOutputPath, sha256: sha256(await readFile(path.join(root, providerOutputPath))) } } };
   await writeFile(path.join(root, generationPath), JSON.stringify(generation));
   const hero = await bindGeneratedArticleHero(root, handoff, generationPath);
-  const validating = await advanceImport(root, { ...approved, heroImage: hero.binding, evidenceRefs: { ...approved.evidenceRefs, hero: hero.evidenceRef } }, "fixture approved");
+  let validating = await advanceImport(root, { ...approved, heroImage: hero.binding, evidenceRefs: { ...approved.evidenceRefs, hero: hero.evidenceRef } }, "fixture approved");
+  const renderingRef = await captureRenderingInputs(root, validating.importId);
+  await mkdir(path.join(root, ".automation/article-imports/work", validating.importId), { recursive: true });
+  for (;;) {
+    const activity = await nextArticleActivity(root, validating, renderingRef);
+    if (!activity) break;
+    const resultPath = `.automation/article-imports/work/${validating.importId}/ownership-${activity.id}.result.json`;
+    await writeFile(path.join(root, resultPath), JSON.stringify({
+      idempotencyKey: importPacketId(validating, "VALIDATING", "targeted-repair"),
+      sourceFingerprint: validating.sourceFingerprint,
+      summary: `Accepted synthetic ownership checkpoint ${activity.id}.`,
+      activity: { ...activity, reviewer: "ownership-fixture", executionId: `ownership-${activity.id}`, outcome: "accepted", observation: "The synthetic bound activity passed before the ownership race." },
+    }));
+    validating = await recordArticleActivity(root, validating, resultPath, activity, JSON.parse(await readFile(path.join(root, resultPath), "utf8")));
+  }
   const rendered = await presentFixture(root, validating);
   assert.ok(rendered.presentation);
   const prepared = { ...rendered, presentation: undefined };

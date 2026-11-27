@@ -17,6 +17,7 @@ import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleH
 import { articleHeroFormatSchema } from "../article-heroes";
 import { registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { activityAttempt, activityResultSchema, nextArticleActivity, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
+import { verifyGateHandoffForDispatch } from "./gate-handoff";
 
 const file = z.string().min(1);
 const resultBase = { idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), summary: z.string().min(1) };
@@ -57,9 +58,20 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     let { record } = context;
     await context.assertLease();
     if (record.stage === "INGESTING") return advanceImport(root, record, "Captured source is ready for evidence research.");
+    const gateHandoffVerification = await verifyGateHandoffForDispatch(root, record);
+    if (gateHandoffVerification?.status === "held") {
+      return { ...record, continuation: undefined, nextAction: `Gate handoff held: ${gateHandoffVerification.reason}` };
+    }
     if (record.stage === "VERIFYING") return verifyImportRelease(root, record);
     if (!(workStages as readonly string[]).includes(record.stage)) throw new Error(`No productive work for ${record.stage}.`);
     const stage = record.stage as typeof workStages[number];
+    const gateHandoffPacket = gateHandoffVerification?.status === "verified"
+      ? { gateHandoff: gateHandoffVerification.handoff, gateHandoffVerification: { status: "verified", verifiedInputs: gateHandoffVerification.verifiedInputs } }
+      : {};
+    const sourcePath = gateHandoffVerification?.status === "verified"
+      ? gateHandoffVerification.verifiedInputs.find((input) => input.name === "captured-source")?.reference.path
+      : undefined;
+    const workerSourcePath = sourcePath ?? record.sourceRef?.path ?? `.automation/article-imports/${record.importId}.source.md`;
     if (options?.reviewEvidenceRegistry && stage === "REFINING") {
       const reuse = await reuseEditorialReviewEvidence(root, options.reviewEvidenceRegistry, record);
       record = { ...(reuse.record ?? record), reviewEvidence: { ...record.reviewEvidence, editorial: reuse.status } };
@@ -90,14 +102,15 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         if (plan.importId !== record.importId || plan.sourceFingerprint !== record.sourceFingerprint) throw new Error("RESEARCH_REGISTRY_BINDING_MISMATCH");
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-        const sourceText = await readFile(path.join(root, `.automation/article-imports/${record.importId}.source.md`), "utf8");
+        const sourceText = await readFile(path.join(root, workerSourcePath), "utf8");
         plan = await registry.prepare({ importId: record.importId, sourceFingerprint: record.sourceFingerprint, sourceText, now: new Date().toISOString() });
       }
       const phase = record.continuation?.kind === "work" && record.continuation.workPath === acquisitionWorkPath ? "acquisition" : "plan";
       const basePacket = {
         schemaVersion: "ImportSupervisedWorkV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
         stage, strategy: context.strategy, attempt: context.attempt, idempotencyKey: context.idempotencyKey,
-        sourcePath: `.automation/article-imports/${record.importId}.source.md`, record,
+        sourcePath: workerSourcePath, record,
+        ...gateHandoffPacket,
         requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, researchRegistry: plan,
         resumeCommand: `npm run import:article -- --resume ${record.importId}`,
       };
@@ -178,6 +191,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
           contentApproval: record.contentApproval }, target, artifact, heroGeneration);
         await writeJsonAtomically(path.join(root, heroWorkPath), {
           ...handoff, stage, idempotencyKey: context.idempotencyKey, supervisedHandoff: "chatgpt-imagegen",
+          ...gateHandoffPacket,
           instructions: "Use built-in ChatGPT ImageGen with the exact prompt. Do not call a paid API or alternate image provider. Save the original returned PNG bytes at originalFile. Retain the tool's generated-image path/output hint in byte-bound ArticleHeroProviderOutputV1, reference it from genuine ArticleHeroGenerationEvidenceV1, and bind both records to the original PNG digest. The controller creates the deterministic WebP derivative. The provider record is retained tool-output provenance, not a signed OpenAI receipt. Missing ImageGen access is a shared capability blocker, not permission to substitute another provider.",
           resultPath: heroResultPath, resultSchema: z.toJSONSchema(heroGenerationResultSchema),
           generationEvidenceSchema: z.toJSONSchema(articleHeroGenerationEvidenceSchema),
@@ -239,8 +253,8 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     await writeJsonAtomically(path.join(root, workPath), {
       schemaVersion: "ImportSupervisedWorkV1", importId: record.importId,
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
-      idempotencyKey: context.idempotencyKey, sourcePath: `.automation/article-imports/${record.importId}.source.md`,
-      record, resultSchema: z.toJSONSchema(activity ? activityResultSchema : resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
+      idempotencyKey: context.idempotencyKey, sourcePath: workerSourcePath,
+      record, ...gateHandoffPacket, resultSchema: z.toJSONSchema(activity ? activityResultSchema : resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
       ...(activity && { activity }),
       ...(stage === "RELEASING" && { releaseSteps }),
       ...(requiredReleaseFiles && { requiredReleaseFiles }),

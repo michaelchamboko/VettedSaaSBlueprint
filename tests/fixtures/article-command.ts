@@ -7,16 +7,41 @@ import { executeImportCommand, type ImportCommand } from "../../scripts/import-a
 import { withImportLease, saveImport, type ImportStageExecutor } from "../../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../../src/lib/article-import/supervised-executor";
 import { createInMemoryResearchRegistry } from "./article-research-registry";
+import { reviewEvidenceRegistrationSchema, type ArticleReviewEvidenceRegistry, type ReviewEvidenceRegistration } from "../../src/lib/article-import/review-evidence-registry";
 
 import type { ExternalArticleImportV1 } from "../../src/lib/article-import/contracts";
 
 const researchRegistries = new Map<string, ReturnType<typeof createInMemoryResearchRegistry>>();
+const reviewRegistries = new Map<string, ReturnType<typeof createInMemoryReviewRegistry>>();
+
+function createInMemoryReviewRegistry(initial: ReviewEvidenceRegistration[] = []) {
+  const records = [...initial];
+  return {
+    records,
+    async list(input) {
+      return records.filter((record) => record.importId === input.importId && record.evidenceClass === input.evidenceClass);
+    },
+    async commit(input) {
+      const existing = records.find((record) => record.registrationId === input.registrationId);
+      if (!existing) records.push(reviewEvidenceRegistrationSchema.parse(input));
+      return { registrationId: input.registrationId, replayed: Boolean(existing) };
+    },
+  } satisfies ArticleReviewEvidenceRegistry & { records: ReviewEvidenceRegistration[] };
+}
 
 export function fixtureResearchRegistry(root: string) {
   const existing = researchRegistries.get(root);
   if (existing) return existing;
   const registry = createInMemoryResearchRegistry();
   researchRegistries.set(root, registry);
+  return registry;
+}
+
+export function fixtureReviewEvidenceRegistry(root: string) {
+  const existing = reviewRegistries.get(root);
+  if (existing) return existing;
+  const registry = createInMemoryReviewRegistry();
+  reviewRegistries.set(root, registry);
   return registry;
 }
 
@@ -58,6 +83,7 @@ export function fixtureProbe(root: string) {
 export async function executeFixtureCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, options?: Parameters<typeof executeImportCommand>[3]) {
   await prepareCommandCheckout(root);
   const researchRegistry = fixtureResearchRegistry(root);
-  const selectedExecutor = executor ?? createSupervisedImportExecutor(root, undefined, { researchRegistry });
-  return executeImportCommand(root, command, selectedExecutor, { researchRegistry, ...options }, fixtureProbe(root));
+  const reviewEvidenceRegistry = fixtureReviewEvidenceRegistry(root);
+  const selectedExecutor = executor ?? createSupervisedImportExecutor(root, undefined, { researchRegistry, reviewEvidenceRegistry });
+  return executeImportCommand(root, command, selectedExecutor, { researchRegistry, reviewEvidenceRegistry, ...options }, fixtureProbe(root));
 }
