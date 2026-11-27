@@ -17,7 +17,8 @@ import { parseImportCommand } from "../scripts/import-article";
 
 const parent = path.resolve(".scratch/article-cleanup-recovery");
 const noRegisteredDependencies = async () => ({ status: "verified" as const, references: [] });
-const cleanupOptions = (now: string, afterBoundary?: (boundary: "intent-recorded" | "archive-copied" | "archive-registered") => void) => ({
+type CleanupBoundary = "intent-recorded" | "attempt-recorded" | "pre-mutation-verified" | "archive-copied" | "archive-registered";
+const cleanupOptions = (now: string, afterBoundary?: (boundary: CleanupBoundary) => void) => ({
   now: () => new Date(now),
   resolveRetentionDependencies: noRegisteredDependencies,
   ...(afterBoundary ? { afterBoundary } : {}),
@@ -49,6 +50,281 @@ async function fixture() {
 async function exists(file: string) {
   return Boolean(await stat(file).catch(() => undefined));
 }
+
+async function cleanupEvidence(root: string, importId: string, name: string) {
+  const relative = `.automation/article-imports/work/${importId}/${name}.json`;
+  await writeFile(path.join(root, relative), `${JSON.stringify({ name })}\n`);
+  return evidenceReference(root, relative);
+}
+
+async function cleanupRemedy(
+  root: string,
+  importId: string,
+  operationId: string,
+  failureEvidence: Awaited<ReturnType<typeof evidenceReference>>,
+  kind: "temporary-failure-remedy" | "uncertain-mutation-reconciliation" | "shared-failure-recovery",
+) {
+  const relative = `.automation/article-imports/work/${importId}/remedy-${kind}.json`;
+  await writeFile(path.join(root, relative), `${JSON.stringify({
+    schemaVersion: "ImportGateCleanupRemedyV1",
+    operationId,
+    failureEvidence,
+    kind,
+    verification: "verified",
+    summary: "Synthetic controller proof that the bound cleanup failure was remedied.",
+    verifiedAt: "2026-11-27T12:05:00.000Z",
+  })}\n`);
+  return evidenceReference(root, relative);
+}
+
+test("a crash after durable attempt admission resumes the same attempt before recording its first failure", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    let cleanupCalls = 0;
+    await assert.rejects(() => executePendingImport(root, record.importId, async (context) => context.record, {
+      cleanup: {
+        ...cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
+          if (boundary === "attempt-recorded") throw new Error("CRASH:attempt-recorded");
+        }),
+        beforeMutation: async () => {
+          cleanupCalls += 1;
+          return {
+            status: "temporary-failure" as const,
+            evidence: await cleanupEvidence(root, record.importId, "first-pre-mutation-failure"),
+          };
+        },
+      },
+    }), /CRASH:attempt-recorded/);
+    const interrupted = await loadImport(root, record.importId);
+    const admitted = interrupted.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
+    assert.equal(admitted.automaticAttempts?.length, 1);
+    assert.equal(admitted.automaticAttempts?.[0].status, "admitted");
+    assert.equal(cleanupCalls, 0);
+
+    const resumed = await cleanupImportGateHandoff(root, record.importId, {
+      ...cleanupOptions("2026-11-27T12:01:00.000Z"),
+      beforeMutation: async ({ attemptNumber }) => {
+        cleanupCalls += 1;
+        return {
+          status: "temporary-failure" as const,
+          evidence: await cleanupEvidence(root, record.importId, `resumed-failure-${attemptNumber}`),
+        };
+      },
+    });
+    const failed = resumed.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === admitted.operationId)!;
+    assert.equal(failed.automaticAttempts?.length, 1);
+    assert.equal(failed.automaticAttempts?.[0].sequence, 1);
+    assert.equal(failed.automaticAttempts?.[0].status, "temporary-failure");
+    assert.equal(cleanupCalls, 1);
+    assert.equal(await exists(path.join(root, candidate.path)), true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("temporary pre-mutation cleanup failures stop after three total attempts across gate, manual, and restart", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    const initialRepairs = record.repairStageTotals;
+    const initialStrategyAttempts = record.strategyAttempts;
+    let cleanupCalls = 0;
+    let workerCalls = 0;
+    const options = {
+      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
+      beforeMutation: async ({ attemptNumber }: { attemptNumber: number }) => {
+        cleanupCalls += 1;
+        return {
+          status: "temporary-failure" as const,
+          evidence: await cleanupEvidence(root, record.importId, `temporary-failure-${attemptNumber}`),
+        };
+      },
+    };
+
+    const first = await executePendingImport(root, record.importId, async (context) => {
+      workerCalls += 1;
+      return context.record;
+    }, { cleanup: options });
+    const operationId = first.gateHandoffs!.at(-1)!.cleanup.operationId!;
+    const second = await cleanupImportGateHandoff(root, record.importId, options);
+    const third = await executePendingImport(root, record.importId, async (context) => {
+      workerCalls += 1;
+      return context.record;
+    }, { cleanup: options });
+    const exhausted = third.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === operationId)!;
+
+    assert.equal(second.gateHandoffs!.at(-1)!.cleanup.operationId, operationId);
+    assert.equal(third.gateHandoffs!.at(-1)!.cleanup.operationId, operationId);
+    assert.equal(cleanupCalls, 3);
+    assert.equal(workerCalls, 0);
+    assert.equal(exhausted.automaticAttempts?.length, 3);
+    assert.deepEqual(exhausted.automaticAttempts?.map((attempt) => attempt.sequence), [1, 2, 3]);
+    assert.deepEqual(exhausted.automaticAttempts?.map((attempt) => attempt.trigger), ["gate", "manual", "gate"]);
+    assert.ok(exhausted.automaticAttempts?.every((attempt) => attempt.status === "temporary-failure" && attempt.failureEvidence));
+    assert.equal(exhausted.phase, "held");
+    assert.equal(exhausted.exhaustedAt, "2026-11-27T12:00:00.000Z");
+    assert.equal(await exists(path.join(root, candidate.path)), true);
+
+    const freshInvocation = await cleanupImportGateHandoff(root, record.importId, options);
+    const stillExhausted = freshInvocation.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === operationId)!;
+    assert.equal(cleanupCalls, 3);
+    assert.equal(stillExhausted.automaticAttempts?.length, 3);
+    assert.equal(await exists(path.join(root, candidate.path)), true);
+    assert.deepEqual(freshInvocation.repairStageTotals, initialRepairs);
+    assert.deepEqual(freshInvocation.strategyAttempts, initialStrategyAttempts);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("exhausted cleanup accepts only a verified remedy bound to its operation and failure while other operations count independently", async () => {
+  const exhaustedFixture = await fixture();
+  const independentFixture = await fixture();
+  try {
+    let exhaustedCalls = 0;
+    const failingOptions = {
+      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
+      beforeMutation: async ({ attemptNumber }: { attemptNumber: number }) => {
+        exhaustedCalls += 1;
+        return {
+          status: "temporary-failure" as const,
+          evidence: await cleanupEvidence(exhaustedFixture.root, exhaustedFixture.record.importId, `bound-failure-${attemptNumber}`),
+        };
+      },
+    };
+    await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, failingOptions);
+    await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, failingOptions);
+    const third = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, failingOptions);
+    const operation = third.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
+    const lastFailure = operation.automaticAttempts!.at(-1)!.failureEvidence!;
+    const wrongOperationRemedy = await cleanupRemedy(
+      exhaustedFixture.root,
+      exhaustedFixture.record.importId,
+      `cleanup-${"0".repeat(24)}`,
+      lastFailure,
+      "temporary-failure-remedy",
+    );
+    const rejectedRemedy = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, {
+      ...failingOptions,
+      resolveVerifiedRemedy: async () => wrongOperationRemedy,
+    });
+    assert.equal(rejectedRemedy.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), true);
+
+    const unrelatedFailure = await cleanupEvidence(exhaustedFixture.root, exhaustedFixture.record.importId, "unrelated-failure");
+    const wrongFailureRemedy = await cleanupRemedy(
+      exhaustedFixture.root,
+      exhaustedFixture.record.importId,
+      operation.operationId,
+      unrelatedFailure,
+      "temporary-failure-remedy",
+    );
+    const rejectedFailureBinding = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, {
+      ...failingOptions,
+      resolveVerifiedRemedy: async () => wrongFailureRemedy,
+    });
+    assert.equal(rejectedFailureBinding.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), true);
+
+    const verifiedRemedy = await cleanupRemedy(
+      exhaustedFixture.root,
+      exhaustedFixture.record.importId,
+      operation.operationId,
+      lastFailure,
+      "temporary-failure-remedy",
+    );
+    const recovered = await cleanupImportGateHandoff(exhaustedFixture.root, exhaustedFixture.record.importId, {
+      ...failingOptions,
+      resolveVerifiedRemedy: async () => verifiedRemedy,
+    });
+    const recoveredOperation = recovered.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === operation.operationId)!;
+    assert.equal(exhaustedCalls, 3);
+    assert.equal(recoveredOperation.automaticAttempts?.length, 3);
+    assert.deepEqual(recoveredOperation.remedyRef, verifiedRemedy);
+    assert.equal(recoveredOperation.phase, "completed");
+    assert.equal(await exists(path.join(exhaustedFixture.root, exhaustedFixture.candidate.path)), false);
+
+    let independentCalls = 0;
+    const independent = await cleanupImportGateHandoff(independentFixture.root, independentFixture.record.importId, {
+      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
+      beforeMutation: async () => {
+        independentCalls += 1;
+        return {
+          status: "temporary-failure" as const,
+          evidence: await cleanupEvidence(independentFixture.root, independentFixture.record.importId, "independent-failure"),
+        };
+      },
+    });
+    const independentOperation = independent.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
+    assert.notEqual(independentOperation.operationId, operation.operationId);
+    assert.equal(independentOperation.automaticAttempts?.length, 1);
+    assert.equal(independentCalls, 1);
+  } finally {
+    await rm(exhaustedFixture.root, { recursive: true, force: true });
+    await rm(independentFixture.root, { recursive: true, force: true });
+  }
+});
+
+test("shared cleanup failure stops immediately and uncertain mutation requires reconciliation before mutation", async () => {
+  const sharedFixture = await fixture();
+  const uncertainFixture = await fixture();
+  try {
+    let sharedCalls = 0;
+    const sharedOptions = {
+      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
+      beforeMutation: async () => {
+        sharedCalls += 1;
+        return {
+          status: "shared-failure" as const,
+          evidence: await cleanupEvidence(sharedFixture.root, sharedFixture.record.importId, "shared-capability-failure"),
+        };
+      },
+    };
+    const shared = await cleanupImportGateHandoff(sharedFixture.root, sharedFixture.record.importId, sharedOptions);
+    const sharedOperation = shared.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
+    await cleanupImportGateHandoff(sharedFixture.root, sharedFixture.record.importId, sharedOptions);
+    assert.equal(sharedCalls, 1);
+    assert.equal(sharedOperation.automaticAttempts?.length, 1);
+    assert.equal(sharedOperation.automaticAttempts?.[0].status, "shared-failure");
+    assert.equal(await exists(path.join(sharedFixture.root, sharedFixture.candidate.path)), true);
+
+    let uncertainCalls = 0;
+    const uncertainOptions = {
+      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
+      beforeMutation: async () => {
+        uncertainCalls += 1;
+        return {
+          status: "uncertain-mutation" as const,
+          evidence: await cleanupEvidence(uncertainFixture.root, uncertainFixture.record.importId, "uncertain-mutation"),
+        };
+      },
+    };
+    const uncertain = await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, uncertainOptions);
+    const uncertainOperation = uncertain.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!;
+    await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, uncertainOptions);
+    assert.equal(uncertainCalls, 1);
+    assert.equal(await exists(path.join(uncertainFixture.root, uncertainFixture.candidate.path)), true);
+
+    const reconciliation = await cleanupRemedy(
+      uncertainFixture.root,
+      uncertainFixture.record.importId,
+      uncertainOperation.operationId,
+      uncertainOperation.automaticAttempts![0].failureEvidence!,
+      "uncertain-mutation-reconciliation",
+    );
+    const reconciled = await cleanupImportGateHandoff(uncertainFixture.root, uncertainFixture.record.importId, {
+      ...uncertainOptions,
+      resolveVerifiedRemedy: async () => reconciliation,
+    });
+    const reconciledOperation = reconciled.gateHandoffs!.at(-1)!.cleanup.operations!.find((item) => item.operationId === uncertainOperation.operationId)!;
+    assert.equal(uncertainCalls, 1);
+    assert.deepEqual(reconciledOperation.remedyRef, reconciliation);
+    assert.equal(reconciledOperation.phase, "completed");
+    assert.equal(await exists(path.join(uncertainFixture.root, uncertainFixture.candidate.path)), false);
+  } finally {
+    await rm(sharedFixture.root, { recursive: true, force: true });
+    await rm(uncertainFixture.root, { recursive: true, force: true });
+  }
+});
 
 test("gate cleanup resumes the same durable archive operation at every crash boundary", async () => {
   for (const boundary of ["intent-recorded", "archive-copied", "archive-registered"] as const) {

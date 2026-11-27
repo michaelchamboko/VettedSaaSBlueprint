@@ -365,12 +365,33 @@ const gateCleanupDispositionSchema = z.object({
   retainUntil: z.string().datetime({ offset: true }).optional(),
   removedAt: z.string().datetime({ offset: true }).optional(),
 }).strict();
+const gateCleanupAttemptSchema = z.object({
+  sequence: z.number().int().min(1).max(3),
+  trigger: z.enum(["gate", "manual"]),
+  status: z.enum(["admitted", "ready", "succeeded", "temporary-failure", "shared-failure", "uncertain-mutation"]),
+  startedAt: z.string().datetime({ offset: true }),
+  finishedAt: z.string().datetime({ offset: true }).optional(),
+  failureEvidence: stateEvidenceRef.optional(),
+  failureCode: z.string().min(1).optional(),
+}).strict();
+export const gateCleanupRemedySchema = z.object({
+  schemaVersion: z.literal("ImportGateCleanupRemedyV1"),
+  operationId: z.string().regex(/^cleanup-[a-f0-9]{24}$/),
+  failureEvidence: stateEvidenceRef,
+  kind: z.enum(["temporary-failure-remedy", "uncertain-mutation-reconciliation", "shared-failure-recovery"]),
+  verification: z.literal("verified"),
+  summary: z.string().min(1),
+  verifiedAt: z.string().datetime({ offset: true }),
+}).strict();
 const gateCleanupOperationSchema = z.object({
   schemaVersion: z.literal("ImportGateCleanupOperationV1"),
   operationId: z.string().regex(/^cleanup-[a-f0-9]{24}$/),
   phase: z.enum(["intended", "registered", "completed", "held"]),
   eligibilityFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   dispositions: z.array(gateCleanupDispositionSchema).min(1),
+  automaticAttempts: z.array(gateCleanupAttemptSchema).max(3).optional(),
+  exhaustedAt: z.string().datetime({ offset: true }).optional(),
+  remedyRef: stateEvidenceRef.optional(),
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
 }).strict();

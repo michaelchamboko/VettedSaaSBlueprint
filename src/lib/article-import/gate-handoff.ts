@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readdir, realpath, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  gateCleanupRemedySchema,
   importGateHandoffSchema,
   type ExternalArticleImportV1,
   type ImportGateHandoff,
@@ -18,19 +19,34 @@ type NamedReference = { name: string; reference: EvidenceRef; reason: string };
 type DisposalCandidate = ImportGateHandoff["disposalCandidates"][number];
 type CleanupOperation = NonNullable<ImportGateHandoff["cleanup"]["operations"]>[number];
 type CleanupDisposition = CleanupOperation["dispositions"][number];
+type CleanupAttempt = NonNullable<CleanupOperation["automaticAttempts"]>[number];
+type CleanupFailureStatus = Extract<CleanupAttempt["status"], "temporary-failure" | "shared-failure" | "uncertain-mutation">;
+type CleanupAttemptOutcome = { status: "ready" } | { status: CleanupFailureStatus; evidence: EvidenceRef };
 
 export type GateCleanupOptions = {
   now?: () => Date;
-  afterBoundary?: (boundary: "intent-recorded" | "archive-copied" | "archive-registered") => void | Promise<void>;
+  afterBoundary?: (boundary: "intent-recorded" | "attempt-recorded" | "pre-mutation-verified" | "archive-copied" | "archive-registered") => void | Promise<void>;
   resolveRetentionDependencies?: (record: ExternalArticleImportV1) => Promise<
     { status: "verified"; references: EvidenceRef[] } | { status: "unavailable"; reason: string }
   >;
+  beforeMutation?: (context: {
+    record: ExternalArticleImportV1;
+    operationId: string;
+    attemptNumber: number;
+    trigger: CleanupTrigger;
+  }) => Promise<CleanupAttemptOutcome>;
+  resolveVerifiedRemedy?: (context: {
+    record: ExternalArticleImportV1;
+    operationId: string;
+    failure: CleanupAttempt;
+  }) => Promise<EvidenceRef | undefined>;
 };
 
 type CleanupTrigger = "gate" | "manual";
 type PersistCleanup = (record: ExternalArticleImportV1) => Promise<ExternalArticleImportV1>;
 
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
+const MAX_AUTOMATIC_ATTEMPTS = 3;
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -182,6 +198,43 @@ async function persistOperation(record: ExternalArticleImportV1, index: number, 
   return persist(replaceHandoff(record, index, replaceOperation(handoff, operation)));
 }
 
+function latestAttempt(operation: CleanupOperation): CleanupAttempt | undefined {
+  return operation.automaticAttempts?.at(-1);
+}
+
+function replaceLatestAttempt(operation: CleanupOperation, attempt: CleanupAttempt): CleanupOperation {
+  const attempts = [...(operation.automaticAttempts ?? [])];
+  attempts[attempts.length - 1] = attempt;
+  return { ...operation, automaticAttempts: attempts };
+}
+
+function holdStartedAttempt(operation: CleanupOperation, status: Extract<CleanupFailureStatus, "shared-failure" | "uncertain-mutation">, at: Date, failureCode: string): CleanupOperation {
+  const attempt = latestAttempt(operation);
+  const held = attempt?.status === "ready"
+    ? replaceLatestAttempt(operation, { ...attempt, status, failureCode, finishedAt: at.toISOString() })
+    : operation;
+  return { ...held, phase: "held", updatedAt: at.toISOString() };
+}
+
+function remedyKind(status: CleanupFailureStatus) {
+  if (status === "temporary-failure") return "temporary-failure-remedy" as const;
+  if (status === "uncertain-mutation") return "uncertain-mutation-reconciliation" as const;
+  return "shared-failure-recovery" as const;
+}
+
+async function verifyBoundRemedy(root: string, reference: EvidenceRef, operation: CleanupOperation, failure: CleanupAttempt): Promise<void> {
+  if (!failure.failureEvidence) throw new Error("CLEANUP_REMEDY_FAILURE_EVIDENCE_MISSING");
+  const bytes = await readVerifiedEvidenceBytes(root, reference);
+  const remedy = gateCleanupRemedySchema.parse(JSON.parse(bytes.toString("utf8")));
+  if (remedy.operationId !== operation.operationId) throw new Error("CLEANUP_REMEDY_OPERATION_MISMATCH");
+  if (remedy.failureEvidence.sha256 !== failure.failureEvidence.sha256 || normalized(remedy.failureEvidence.path) !== normalized(failure.failureEvidence.path)) {
+    throw new Error("CLEANUP_REMEDY_FAILURE_MISMATCH");
+  }
+  if (failure.status === "admitted" || failure.status === "ready" || failure.status === "succeeded" || remedy.kind !== remedyKind(failure.status)) {
+    throw new Error("CLEANUP_REMEDY_KIND_MISMATCH");
+  }
+}
+
 export async function reconcileGateCleanup(
   root: string,
   record: ExternalArticleImportV1,
@@ -245,12 +298,80 @@ export async function reconcileGateCleanup(
   let located = operationFor(current, operationId);
   selected = { handoff: located.handoff, index: located.index };
   operation = located.operation;
+  let attempt = latestAttempt(operation);
+  const failure = attempt && ["temporary-failure", "shared-failure", "uncertain-mutation"].includes(attempt.status)
+    ? attempt
+    : undefined;
+  const needsRemedy = failure && (failure.status !== "temporary-failure" || (operation.automaticAttempts?.length ?? 0) >= MAX_AUTOMATIC_ATTEMPTS);
+  if (operation.phase === "held" && !attempt) return { record: current, handled: true };
+  if (needsRemedy && !operation.remedyRef) {
+    const remedyRef = await options.resolveVerifiedRemedy?.({ record: current, operationId, failure });
+    if (!remedyRef) return { record: current, handled: true };
+    try {
+      await verifyBoundRemedy(root, remedyRef, operation, failure);
+    } catch {
+      return { record: current, handled: true };
+    }
+    operation = { ...operation, remedyRef, updatedAt: at.toISOString() };
+    current = await persistOperation(current, selected.index, selected.handoff, operation, persist);
+    located = operationFor(current, operationId);
+    selected = { handoff: located.handoff, index: located.index };
+    operation = located.operation;
+    attempt = latestAttempt(operation);
+  }
+  const retryableFailure = failure?.status === "temporary-failure" && !needsRemedy;
+  if (!operation.remedyRef && (!attempt || retryableFailure)) {
+    const sequence = (operation.automaticAttempts?.length ?? 0) + 1;
+    const admitted: CleanupAttempt = {
+      sequence,
+      trigger,
+      status: "admitted",
+      startedAt: at.toISOString(),
+    };
+    operation = { ...operation, automaticAttempts: [...(operation.automaticAttempts ?? []), admitted], updatedAt: at.toISOString() };
+    current = await persistOperation(current, selected.index, selected.handoff, operation, persist);
+    located = operationFor(current, operationId);
+    selected = { handoff: located.handoff, index: located.index };
+    operation = located.operation;
+    attempt = latestAttempt(operation);
+    await options.afterBoundary?.("attempt-recorded");
+  }
+  if (!operation.remedyRef && attempt?.status === "admitted") {
+    const outcome = options.beforeMutation
+      ? await options.beforeMutation({ record: current, operationId, attemptNumber: attempt.sequence, trigger: attempt.trigger })
+      : { status: "ready" as const };
+    if (outcome.status !== "ready") {
+      await verifyEvidenceRef(root, outcome.evidence);
+      const failed: CleanupAttempt = {
+        ...attempt,
+        status: outcome.status,
+        failureEvidence: outcome.evidence,
+        finishedAt: at.toISOString(),
+      };
+      operation = replaceLatestAttempt(operation, failed);
+      operation = {
+        ...operation,
+        phase: "held",
+        ...(outcome.status === "temporary-failure" && attempt.sequence === MAX_AUTOMATIC_ATTEMPTS ? { exhaustedAt: at.toISOString() } : {}),
+        updatedAt: at.toISOString(),
+      };
+      current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
+      return { record: current, handled: true };
+    }
+    operation = replaceLatestAttempt(operation, { ...attempt, status: "ready" });
+    current = await persistOperation(current, selected.index, selected.handoff, operation, persist);
+    located = operationFor(current, operationId);
+    selected = { handoff: located.handoff, index: located.index };
+    operation = located.operation;
+    attempt = latestAttempt(operation);
+    await options.afterBoundary?.("pre-mutation-verified");
+  }
   let dispositions = [...operation.dispositions];
   for (let index = 0; index < dispositions.length; index += 1) {
     let disposition = dispositions[index];
     const refreshedDependencies = await options.resolveRetentionDependencies!(current);
     if (refreshedDependencies.status === "unavailable") {
-      const held = { ...operation, phase: "held" as const, updatedAt: at.toISOString() };
+      const held = holdStartedAttempt(operation, "shared-failure", at, refreshedDependencies.reason);
       current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
       return { record: current, handled: true };
     }
@@ -264,8 +385,8 @@ export async function reconcileGateCleanup(
       let archiveRef: EvidenceRef;
       try {
         archiveRef = await writeVerifiedArchive(root, current.importId, disposition.original);
-      } catch {
-        const held = { ...operation, phase: "held" as const, updatedAt: at.toISOString() };
+      } catch (error) {
+        const held = holdStartedAttempt(operation, "uncertain-mutation", at, error instanceof Error ? error.message : String(error));
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
         return { record: current, handled: true };
       }
@@ -283,8 +404,15 @@ export async function reconcileGateCleanup(
     }
     if (disposition.disposition === "archive") {
       if (!disposition.archiveRef) throw new Error("CLEANUP_ARCHIVE_REGISTRATION_MISSING");
-      await verifyEvidenceRef(root, disposition.archiveRef);
-      const removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      let removal: "removed" | "missing";
+      try {
+        await verifyEvidenceRef(root, disposition.archiveRef);
+        removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      } catch (error) {
+        const held = holdStartedAttempt(operation, "uncertain-mutation", at, error instanceof Error ? error.message : String(error));
+        current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
+        return { record: current, handled: true };
+      }
       disposition = { ...disposition, removedAt: at.toISOString() };
       dispositions[index] = disposition;
       if (removal === "missing" && operation.phase !== "registered") {
@@ -293,7 +421,14 @@ export async function reconcileGateCleanup(
         return { record: current, handled: true };
       }
     } else if (disposition.disposition === "dispose" && !disposition.removedAt) {
-      const removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      let removal: "removed" | "missing";
+      try {
+        removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
+      } catch (error) {
+        const held = holdStartedAttempt(operation, "uncertain-mutation", at, error instanceof Error ? error.message : String(error));
+        current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, held, persist);
+        return { record: current, handled: true };
+      }
       if (removal === "missing") {
         operation = { ...operation, phase: "held", dispositions, updatedAt: at.toISOString() };
         current = await persistOperation(current, selected.index, { ...selected.handoff, cleanup: { ...selected.handoff.cleanup, status: "held" } }, operation, persist);
@@ -321,6 +456,10 @@ export async function reconcileGateCleanup(
     cleanup: { ...selected.handoff.cleanup, status: "verified", operationId },
   };
   const completedFingerprint = eligibilityFingerprint(remainingCandidates, [...protectedReferences(current), ...canonicalReferences], at);
+  const completedAttempt = latestAttempt(operation);
+  if (completedAttempt?.status === "ready") {
+    operation = replaceLatestAttempt(operation, { ...completedAttempt, status: "succeeded", finishedAt: at.toISOString() });
+  }
   operation = { ...operation, phase: "completed", dispositions, eligibilityFingerprint: completedFingerprint, updatedAt: at.toISOString() };
   current = await persistOperation(current, selected.index, completedHandoff, operation, persist);
   return { record: current, handled: true };
