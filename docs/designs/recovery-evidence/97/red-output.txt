@@ -1,0 +1,5 @@
+AssertionError: lost-response should resume outstanding verification
++ actual - expected
+
++ 'WAITING_EXTERNAL'
+- 'LIVE'

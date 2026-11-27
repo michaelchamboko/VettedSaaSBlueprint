@@ -1,0 +1,615 @@
+{
+  "schemaVersion": "ReleaseRecoveryEvidence97V1",
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "generatedAt": "2026-11-27T08:37:17.823Z",
+  "expected": {
+    "remoteCallsAfterRestart": 1,
+    "nextActionWhenRemoteOutcomeIsUnknown": "hold for reconciliation",
+    "liveRequiresRetainedProductionProof": true
+  },
+  "scenarios": [
+    {
+      "scenario": "lost-response",
+      "afterIncident": {
+        "stage": "WAITING_EXTERNAL",
+        "nextAction": "Verify restoration of dpl-previous and submit recovery evidence before resuming release.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-lost-response-1",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:31:43.179Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:31:43.179Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterImmediateRestart": {
+        "stage": "WAITING_EXTERNAL",
+        "nextAction": "Verify restoration of dpl-previous and submit recovery evidence before resuming release.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-lost-response-1",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:31:43.179Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:31:43.179Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterDueRestart": {
+        "stage": "WAITING_EXTERNAL",
+        "nextAction": "Verify restoration of dpl-previous and submit recovery evidence before resuming release.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-lost-response-1",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:31:43.179Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:31:43.179Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "remote": {
+        "calls": [
+          {
+            "number": 1,
+            "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+            "deploymentId": "dpl-lost-response-1",
+            "aliasAssigned": true,
+            "outcome": "success-response-lost"
+          }
+        ],
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "rollbackAttempts": 1,
+        "aliasDeploymentId": "dpl-lost-response-1"
+      }
+    },
+    {
+      "scenario": "controller-exit",
+      "childPid": 24552,
+      "childExitCode": 86,
+      "afterExit": {
+        "stage": "RELEASING",
+        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.work.json, write its result to .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.result.json, then explicitly resume this import.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-controller-exit-1",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:33:05.763Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:33:05.763Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterImmediateRestart": {
+        "stage": "RELEASING",
+        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.work.json, write its result to .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.result.json, then explicitly resume this import.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-controller-exit-1",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:33:05.763Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:33:05.763Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterVerifiedExitRecovery": {
+        "stage": "RELEASING",
+        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.work.json, write its result to .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.result.json, then explicitly resume this import.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-controller-exit-1",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:33:05.763Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:33:05.763Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterRecoveredRestart": {
+        "stage": "LIVE",
+        "nextAction": "none",
+        "deploymentIdentity": "dpl-controller-exit-2",
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": "dpl-controller-exit-2",
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:33:05.763Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            },
+            "deployment": {
+              "commitSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "operationKey": "deployment:cccccccccccccccccccccccccccccccccccccccc",
+              "deploymentId": "dpl-controller-exit-2",
+              "url": "https://vettedsaasblueprint.online/imported-guide"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:33:05.763Z"
+          }
+        },
+        "outstandingChecks": [],
+        "remoteCallCount": 2,
+        "retainedProductionProof": true
+      },
+      "remote": {
+        "calls": [
+          {
+            "number": 1,
+            "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+            "deploymentId": "dpl-controller-exit-1",
+            "aliasAssigned": true,
+            "outcome": "controller-exit"
+          },
+          {
+            "number": 2,
+            "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+            "deploymentId": "dpl-controller-exit-2",
+            "aliasAssigned": true,
+            "outcome": "success"
+          }
+        ],
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "rollbackAttempts": 0,
+        "aliasDeploymentId": "dpl-controller-exit-2"
+      }
+    },
+    {
+      "scenario": "indeterminate",
+      "afterIncident": {
+        "stage": "WAITING_EXTERNAL",
+        "nextAction": "Verify restoration of dpl-previous and submit recovery evidence before resuming release.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": null,
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:36:23.086Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:36:23.086Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterImmediateRestart": {
+        "stage": "WAITING_EXTERNAL",
+        "nextAction": "Verify restoration of dpl-previous and submit recovery evidence before resuming release.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": null,
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:36:23.086Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:36:23.086Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "afterDueRestart": {
+        "stage": "WAITING_EXTERNAL",
+        "nextAction": "Verify restoration of dpl-previous and submit recovery evidence before resuming release.",
+        "deploymentIdentity": null,
+        "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+        "aliasAssignment": null,
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "journal": {
+          "schemaVersion": "ImportPendingReleaseV1",
+          "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "branch": "codex/article-import/example",
+          "pullRequestUrl": "https://github.com/example/repository/pull/1",
+          "createdAt": "2026-11-27T08:36:23.086Z",
+          "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+          "rollbackDeploymentId": "dpl-previous",
+          "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "operations": {
+            "review": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review"
+            },
+            "merge": {
+              "reviewedHeadSha": "cccccccccccccccccccccccccccccccccccccccc",
+              "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc"
+            }
+          },
+          "codeReview": {
+            "schemaVersion": "ImportCodeReviewV1",
+            "reviewer": "codex",
+            "independent": true,
+            "passed": true,
+            "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
+            "pullRequestUrl": "https://github.com/example/repository/pull/1",
+            "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
+            "reviewedAt": "2026-11-27T08:36:23.086Z"
+          }
+        },
+        "outstandingChecks": [
+          "routeOk",
+          "contentOk",
+          "disclosureOk",
+          "exactCtaOk",
+          "desktopOk",
+          "mobileOk",
+          "robotsOk",
+          "sitemapOk",
+          "browserErrorsOk"
+        ],
+        "remoteCallCount": 1,
+        "retainedProductionProof": false
+      },
+      "remote": {
+        "calls": [
+          {
+            "number": 1,
+            "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
+            "aliasAssigned": null,
+            "outcome": "indeterminate"
+          }
+        ],
+        "rollbackTarget": {
+          "deploymentId": "dpl-previous",
+          "commitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "rollbackAttempts": 1
+      }
+    }
+  ]
+}
