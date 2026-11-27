@@ -149,13 +149,33 @@ const continuationBase = {
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 };
 export const importContinuationSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), ...continuationBase }).strict(),
+  z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), activityId: z.string().min(1).optional(), inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), ...continuationBase }).strict(),
   z.object({ kind: z.literal("repair"), stage: importStageSchema, failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
   z.object({ kind: z.literal("wait"), resumeStage: importStageSchema, dependency: z.string().min(1), externalId: z.string().min(1).optional(), waitStartedAt: z.string().datetime({ offset: true }), lastProgressAt: z.string().datetime({ offset: true }), nextCheckAt: z.string().datetime({ offset: true }), timeoutAt: z.string().datetime({ offset: true }) }).strict(),
   z.object({ kind: z.literal("blocked"), scope: z.enum(["article", "shared"]), cause: z.string().min(1), attemptedRecovery: z.string().min(1), resumptionRequirement: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("complete"), result: z.enum(["LIVE", "QUARANTINED", "PUBLISHED_WITH_EXCEPTIONS"]), receiptPaths: z.array(z.string().min(1)).min(1) }).strict(),
 ]);
 export type ImportContinuation = z.infer<typeof importContinuationSchema>;
+
+const activityCriterionSchema = z.object({ id: z.string().min(1), revision: z.string().min(1) }).strict();
+export const importActivityReceiptSchema = z.object({
+  schemaVersion: z.literal("ImportActivityReceiptV1"),
+  stage: z.enum(["REFINING", "VALIDATING"]),
+  activityId: z.string().min(1),
+  inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  criteria: z.array(activityCriterionSchema).min(1),
+  dependencyRefs: z.array(stateEvidenceRef).min(1),
+  resultRef: stateEvidenceRef,
+  reviewer: z.string().min(1),
+  executionId: z.string().min(1),
+  outcome: z.enum(["accepted", "rejected", "unverified", "not-applicable"]),
+  observation: z.string().min(1).optional(),
+  applicabilityReason: z.string().min(1).optional(),
+  completedAt: z.string().datetime({ offset: true }),
+}).strict().superRefine((value, context) => {
+  if (["accepted", "rejected"].includes(value.outcome) && !value.observation) context.addIssue({ code: "custom", path: ["observation"], message: "Accepted and rejected activity reviews require an observation." });
+  if (value.outcome === "not-applicable" && !value.applicabilityReason) context.addIssue({ code: "custom", path: ["applicabilityReason"], message: "Inapplicability requires a reason." });
+});
 
 export const importPendingReleaseSchema = z.object({
   schemaVersion: z.literal("ImportPendingReleaseV1"),
@@ -188,6 +208,8 @@ export const externalArticleImportSchema = z.object({
   repairStageTotals: z.record(z.string(), z.number().int().nonnegative()).optional(),
   diagnoses: z.array(diagnosisSchema).optional(),
   recoveryRefs: z.array(stateEvidenceRef).optional(),
+  activityProtocolVersion: z.literal(1).optional(),
+  activityReceipts: z.array(importActivityReceiptSchema).optional(),
   legacyDiagnostics: z.array(z.string()).optional(),
   importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),

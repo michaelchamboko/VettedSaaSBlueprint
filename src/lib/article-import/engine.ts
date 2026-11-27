@@ -157,7 +157,7 @@ export function prepareTransformation(parsed: ReturnType<typeof parseExternalArt
 function initialRecord(input: { importId: string; sourceFile: string; sourceFingerprint: string; parsed: ReturnType<typeof parseExternalArticle>; transformation: ImportTransformationV1 }): ExternalArticleImportV1 {
   const at = now();
   return {
-    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], importId: input.importId, sourceFingerprint: input.sourceFingerprint,
+    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], activityProtocolVersion: 1, importId: input.importId, sourceFingerprint: input.sourceFingerprint,
     sourceFile: input.sourceFile, stage: "INGESTING", createdAt: at, updatedAt: at,
     title: input.parsed.title, primaryQuestion: input.parsed.primaryQuestion, format: input.transformation.format,
     promptInjectionDetected: input.parsed.promptInjectionDetected, ...(input.parsed.unusableReason ? { unusableReason: input.parsed.unusableReason } : {}),
