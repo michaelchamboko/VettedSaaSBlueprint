@@ -1,4 +1,4 @@
-import { cleanupImportGateHandoff, createArticleImport, executePendingImport, loadImport, upgradeImportEvidence, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
+import { cleanupImportGateHandoff, createArticleImport, executePendingImport, loadImport, upgradeImportEvidence, submitActivityOwnerDecision, submitImportDiagnosis, recoverWorkflowLease, clearImportBlocker, type ImportStageExecutor } from "../src/lib/article-import/engine";
 import { createDispatchingImproveExecutor, dispatchArticleImport, dispatchIntakeRun, improvePending, type DispatchOptions } from "../src/lib/article-import/dispatch";
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { readFile } from "node:fs/promises";
@@ -12,7 +12,7 @@ import { createSupervisedImproveExecutor, type ImproveExecutor } from "../src/li
 import { NeonArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry-neon";
 import { reviewRetentionDependencyResolver, type ArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry";
 
-export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence" | "cleanup"; importId: string } | { kind: "cleanup-remedy"; importId: string; file: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
+export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence" | "cleanup"; importId: string } | { kind: "cleanup-remedy"; importId: string; file: string } | { kind: "submit-diagnosis" | "submit-owner-decision"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
 
 async function importExecutionStage(root: string, importId: string): Promise<string | undefined> {
   try { return articleExecutionStage(await loadImport(root, importId)); }
@@ -44,6 +44,7 @@ export function parseImportCommand(argv: string[]): ImportCommand {
   if (argv[0] === "--cleanup" && argv[1]) return { kind: "cleanup", importId: argv[1] };
   if (argv[0] === "--cleanup-remedy" && argv[1] && argv[2] === "--file" && argv[3]) return { kind: "cleanup-remedy", importId: argv[1], file: argv[3] };
   if (argv[0] === "--submit-diagnosis" && argv[1] && argv[2] === "--file" && argv[3]) return { kind: "submit-diagnosis", importId: argv[1], file: argv[3] };
+  if (argv[0] === "--submit-owner-decision" && argv[1] && argv[2] === "--file" && argv[3]) return { kind: "submit-owner-decision", importId: argv[1], file: argv[3] };
   if (argv[0] === "--upgrade-intake" && argv[1]) return { kind: "upgrade-intake", runId: argv[1] };
   if (argv[0] === "--check-intake" && argv[1]) return { kind: "check-intake", runId: argv[1] };
   if (argv[0] === "--reconcile-intake-entry" && argv[1] && argv[2] === "--entry" && argv[3]) return { kind: "reconcile-intake-entry", runId: argv[1], entry: argv[3] };
@@ -84,6 +85,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "upgrade-intake") return upgradeIntakeRun(root, command.runId);
   if (command.kind === "reconcile-intake-entry") return reconcileIntakeEntry(root, command.runId, command.entry);
   if (command.kind === "submit-diagnosis") return submitImportDiagnosis(root, command.importId, JSON.parse(await readFile(command.file, "utf8")));
+  if (command.kind === "submit-owner-decision") return submitActivityOwnerDecision(root, command.importId, JSON.parse(await readFile(command.file, "utf8")));
   const reviewEvidenceRegistry = dispatchOptions?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry();
   if (command.kind === "cleanup") return cleanupImportGateHandoff(root, command.importId, { resolveRetentionDependencies: reviewRetentionDependencyResolver(reviewEvidenceRegistry) });
   if (command.kind === "cleanup-remedy") return cleanupImportGateHandoff(root, command.importId, {

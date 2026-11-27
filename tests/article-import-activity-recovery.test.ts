@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import path from "node:path";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
-import { advanceImport, createArticleImport, executePendingImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
+import { advanceImport, canonicalSubmissionFingerprint, createArticleImport, executePendingImport, loadImport, submitActivityOwnerDecision, submitImportDiagnosis, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
-import { approveFixture, prepareApprovalFixture } from "./fixtures/article-content-approval";
+import { nextArticleActivity } from "../src/lib/article-import/activity-checkpoints";
+import { approveFixture, fullRewriteNotes, prepareApprovalFixture } from "./fixtures/article-content-approval";
 import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
 import { storeEvidence, verifyEvidenceRef } from "../src/lib/article-import/execution-evidence";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
@@ -14,8 +15,24 @@ import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
+import { createEditorialEvidence } from "../src/lib/editorial/refinement";
+import { readEvidence } from "../src/lib/article-import/workflow-evidence";
 
 const parent = path.resolve(".scratch/article-activity-recovery");
+const refiningActivities = ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm", "independent-review", "final-fidelity-review"];
+
+async function concreteActivityOutputs(root: string, record: Awaited<ReturnType<typeof loadImport>>, activity: { stage: string; id: string }) {
+  if (activity.stage === "REFINING") {
+    const execution = JSON.parse(await readFile(path.join(root, record.evidenceRefs!.editorial!.path), "utf8"));
+    const pass = execution.passes[refiningActivities.indexOf(activity.id)];
+    if (!pass) throw new Error("Missing fixture editorial pass.");
+    return [pass.executionRef, pass.judgmentRef];
+  }
+  const presentation = JSON.parse(await readFile(path.join(root, record.evidenceRefs!.presentation!.path), "utf8"));
+  const rule = presentation.ruleResults.find((item: { ruleId: string }) => item.ruleId === activity.id);
+  if (!rule) throw new Error("Missing fixture presentation rule.");
+  return rule.evidenceRefs;
+}
 
 async function refiningFixture() {
   await mkdir(parent, { recursive: true });
@@ -39,7 +56,7 @@ async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<ty
   if (record.continuation?.kind !== "work") throw new Error("Expected activity work.");
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
   if (!packet.activity) throw new Error("Expected an activity-bound packet.");
-  const outputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: packet.activity.id, inputFingerprint: packet.activity.inputFingerprint, outcome });
+  const outputRefs = outcome === "accepted" ? await concreteActivityOutputs(root, record, packet.activity) : [];
   await writeJsonAtomically(path.join(root, record.continuation.resultPath), {
     idempotencyKey: record.continuation.idempotencyKey,
     sourceFingerprint: record.sourceFingerprint,
@@ -49,7 +66,7 @@ async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<ty
       reviewer: `${identity}-reviewer`,
       executionId: `${identity}-${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 8)}-${outcome}`,
       outcome,
-      ...(outcome === "accepted" && { outputRefs: [outputRef] }),
+      ...(outcome === "accepted" && { outputRefs }),
       ...(["accepted", "rejected"].includes(outcome) && { observation: outcome === "accepted" ? "The bound criterion is satisfied." : "The bound criterion has an attributable defect." }),
       ...(outcome === "not-applicable" && { applicabilityReason: "The criterion does not apply to this synthetic format and the reason is retained." }),
     },
@@ -61,7 +78,7 @@ async function submitFindingReview(root: string, record: Awaited<ReturnType<type
   assert.equal(record.continuation?.kind, "work");
   if (record.continuation?.kind !== "work") throw new Error("Expected finding-bound activity work.");
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
-  const outputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: packet.activity.id, inputFingerprint: packet.activity.inputFingerprint, outcome });
+  const outputRefs = outcome === "accepted" ? await concreteActivityOutputs(root, record, packet.activity) : [];
   await writeJsonAtomically(path.join(root, record.continuation.resultPath), {
     idempotencyKey: record.continuation.idempotencyKey,
     sourceFingerprint: record.sourceFingerprint,
@@ -71,7 +88,7 @@ async function submitFindingReview(root: string, record: Awaited<ReturnType<type
       reviewer: "independent-reviewer",
       executionId: `independent-${packet.activity.id}-${Date.now()}`,
       outcome,
-      ...(outcome === "accepted" && { outputRefs: [outputRef] }),
+      ...(outcome === "accepted" && { outputRefs }),
       ...(outcome === "accepted" && { observation: "The independent review checked the original defect and affected regressions." }),
       ...(outcome === "not-applicable" && { applicabilityReason: "The independent review verified that the non-required capability was appropriately removed." }),
       findingReviews: [findingReview],
@@ -108,7 +125,7 @@ test("reload resumes the next editorial activity without repeating accepted work
     if (first.continuation?.kind !== "work") throw new Error("Expected editorial activity work.");
     const firstPacket = JSON.parse(await readFile(path.join(root, first.continuation.workPath), "utf8"));
     assert.equal(firstPacket.activity.id, "purpose-and-structure");
-    const purposeOutputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: "purpose-and-structure", inputFingerprint: firstPacket.activity.inputFingerprint });
+    const purposeOutputRefs = await concreteActivityOutputs(root, first, firstPacket.activity);
 
     await writeFile(path.join(root, first.continuation.resultPath), JSON.stringify({
       idempotencyKey: first.continuation.idempotencyKey,
@@ -119,13 +136,13 @@ test("reload resumes the next editorial activity without repeating accepted work
         reviewer: "synthetic-reviewer",
         executionId: "editorial-purpose-1",
         outcome: "accepted",
-        outputRefs: [purposeOutputRef],
+        outputRefs: purposeOutputRefs,
         observation: "Purpose and structure meet the bound criterion.",
       },
     }));
 
     const accepted = await executePendingImport(root, record.importId, executor);
-    assert.equal(accepted.activityReceipts?.at(-1)?.activityId, "purpose-and-structure");
+    assert.equal(accepted.activityReceipts?.at(-1)?.activityId, "purpose-and-structure", JSON.stringify({ continuation: accepted.continuation, nextAction: accepted.nextAction, receipts: accepted.stageReceipts.slice(-2) }));
     const reloaded = await loadImport(root, record.importId);
     assert.equal(reloaded.activityReceipts?.filter((item) => item.outcome === "accepted").length, 1);
 
@@ -134,7 +151,7 @@ test("reload resumes the next editorial activity without repeating accepted work
     if (resumed.continuation?.kind !== "work") throw new Error("Expected resumed activity work.");
     const resumedPacket = JSON.parse(await readFile(path.join(root, resumed.continuation.workPath), "utf8"));
     assert.equal(resumedPacket.activity.id, "meaning-and-evidence");
-    assert.equal(resumedPacket.activity.dependencyRefs.some((ref: { path: string; sha256: string }) => ref.path === purposeOutputRef.path && ref.sha256 === purposeOutputRef.sha256), true);
+    assert.equal(purposeOutputRefs.every((output) => resumedPacket.activity.dependencyRefs.some((ref: { path: string; sha256: string }) => ref.path === output.path && ref.sha256 === output.sha256)), true);
     assert.notEqual(resumed.continuation.workPath, first.continuation.workPath);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -168,12 +185,53 @@ test("three distinct unsuccessful finding repairs require diagnosis before a fou
       current = (await acceptCurrentActivity(root, current, "rejected", `repair-${attempt}`)).record;
       assert.equal(current.repairStageTotals?.REFINING, attempt);
     }
-    assert.equal(current.continuation?.kind, "blocked");
+    assert.equal(current.continuation?.kind, "repair");
+    if (current.continuation?.kind !== "repair") throw new Error("Expected activity diagnosis repair hold.");
+    assert.equal(current.continuation.diagnosisRequired, true);
+    assert.equal(current.continuation.failedWork?.activityId, "purpose-and-structure");
     assert.match(current.nextAction, /Diagnosis required before a fourth/);
     const receiptCount = current.activityReceipts?.length;
-    const reloaded = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    await assert.rejects(() => executePendingImport(root, record.importId, createSupervisedImportExecutor(root)), /UNCHANGED_SUBMISSION/);
+    const reloaded = await loadImport(root, record.importId);
     assert.equal(reloaded.activityReceipts?.length, receiptCount);
     assert.equal(reloaded.repairStageTotals?.REFINING, 3);
+    const failedDigest = current.continuation.submittedFingerprint!;
+    const previousEditorial = JSON.parse((await readFile(path.join(root, current.evidenceRefs!.editorial!.path), "utf8")));
+    const before = await readEvidence(root, previousEditorial.passes[0].inputRef);
+    const changedArtifact = JSON.parse(await readFile(path.join(root, current.artifactPath!), "utf8"));
+    changedArtifact.benefits[0].benefit_description += " The repaired structure now states the decisive buyer outcome explicitly.";
+    const changedArtifactPath = "src/generated/landing-pages/example-remedied.json";
+    const changedEditorialEvidencePath = "build-pack/editorial/example-remedied.json";
+    await mkdir(path.join(root, "src/generated/landing-pages"), { recursive: true });
+    await mkdir(path.join(root, "build-pack/editorial"), { recursive: true });
+    await writeFile(path.join(root, changedArtifactPath), JSON.stringify(changedArtifact));
+    const notes = { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } as const;
+    await writeFile(path.join(root, changedEditorialEvidencePath), JSON.stringify(createEditorialEvidence("landing", before, changedArtifact, notes, { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" })));
+    const replacement = await buildWorkflowFixture(root, { ...current, artifactPath: changedArtifactPath }, { format: "direct-review", artifactPath: changedArtifactPath, before, after: changedArtifact, editorialEvidencePath: changedEditorialEvidencePath, structuredEditorial: true, currentPolicy: true });
+    current = await persistFixture(root, { ...current, artifactPath: changedArtifactPath, evidenceRefs: { ...current.evidenceRefs, research: replacement.research, assessment: replacement.assessment, editorial: replacement.editorial } });
+    const replacementDigest = await canonicalSubmissionFingerprint(current, root);
+    const attemptedRef = await storeEvidence(root, current.importId, { kind: "failed-activity-recovery", failedDigest });
+    const remedyBinding = await nextArticleActivity(root, current);
+    assert.ok(remedyBinding);
+    const finding = current.activityFindings!.find((item) => item.status === "open")!;
+    const changedInputRef = remedyBinding!.dependencyRefs.find((ref, index) => {
+      const beforeRef = finding.dependencyRefs[index];
+      return beforeRef && (beforeRef.path !== ref.path || beforeRef.sha256 !== ref.sha256);
+    })!;
+    assert.ok(changedInputRef);
+    const regressionRef = await storeEvidence(root, current.importId, { kind: "activity-remedy-regression", findingId: finding.findingId, result: "passed" });
+    const outputRefs = await concreteActivityOutputs(root, current, remedyBinding!);
+    const validatedEvidenceRef = await storeEvidence(root, current.importId, { idempotencyKey: "f".repeat(64), sourceFingerprint: current.sourceFingerprint, summary: "Independent activity remedy verification.", activity: { ...remedyBinding, reviewer: "diagnosis-independent-reviewer", executionId: "diagnosis-independent-execution", outcome: "accepted", observation: "The changed input resolves the original defect and affected regression checks pass.", outputRefs, findingReviews: [{ findingId: finding.findingId, disposition: "verified-repair", expectedCheck: finding.expectedCheck, observation: "The original defect is resolved by the changed bound input.", evidenceRefs: [regressionRef], changedInputRefs: [changedInputRef], regressionChecks: [{ criterion: finding.criterion, observation: "The affected criterion remains satisfied.", outcome: "passed", evidenceRefs: [regressionRef] }] }] } });
+    const invalidValidatedRef = await storeEvidence(root, current.importId, { kind: "unbound-activity-remedy", replacementDigest });
+    const invalidRemedyRef = await storeEvidence(root, current.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: current.importId, sourceFingerprint: current.sourceFingerprint, stage: "REFINING", failedSubmissionDigest: failedDigest, replacementSubmissionDigest: replacementDigest, criterion: { id: "activity-result", revision: "article-workflow:2" }, validatedEvidenceRef: invalidValidatedRef, checkedAt: new Date().toISOString() });
+    const diagnosisBase = { schemaVersion: "DiagnosisV1" as const, importId: current.importId, sourceFingerprint: current.sourceFingerprint, stage: "REFINING", failedSubmissionDigest: failedDigest, replacementSubmissionDigest: replacementDigest, failureCode: "ACTIVITY_REPAIR_EXHAUSTED", cause: "The earlier repair attempts repeated an invalid assumption.", predictedObservation: "The bound remedy evidence is independently readable.", disproofCheck: "Reject the remedy if its exact evidence reference is missing or changed.", attemptedRecoveryRefs: [attemptedRef], repairChange: { kind: "product-repair" as const, changedInputs: [current.artifactPath!] }, createdAt: new Date().toISOString() };
+    await assert.rejects(() => submitImportDiagnosis(root, current.importId, { ...diagnosisBase, remedyEvidenceRefs: [invalidRemedyRef] }), /invalid_type|DIAGNOSIS_ACTIVITY/);
+    const remedyRef = await storeEvidence(root, current.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: current.importId, sourceFingerprint: current.sourceFingerprint, stage: "REFINING", failedSubmissionDigest: failedDigest, replacementSubmissionDigest: replacementDigest, criterion: { id: "activity-result", revision: "article-workflow:2" }, validatedEvidenceRef, measurements: undefined, result: undefined, observation: undefined, checkedAt: new Date().toISOString() });
+    const diagnosed = await submitImportDiagnosis(root, current.importId, { ...diagnosisBase, remedyEvidenceRefs: [remedyRef] });
+    assert.equal(diagnosed.diagnoses?.at(-1)?.remedyCheck?.result, "verified");
+    const resumed = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    assert.equal(resumed.repairStageTotals?.REFINING, 3);
+    assert.equal(resumed.continuation?.kind, "work");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -760,6 +818,23 @@ test("finding review records appropriate removal, evidenced dismissal, inconclus
           const reloaded = await loadImport(root, current.importId);
           assert.equal(reloaded.activityFindings?.[0].status, "owner-referral");
           assert.equal(reloaded.activityFindings?.[0].originalEvidenceRef.sha256, finding.originalEvidenceRef.sha256);
+          const operationId = `owner-decision-${createHash("sha256").update(`${finding.findingId}:${finding.revision}`).digest("hex").slice(0, 24)}`;
+          const priorSecret = process.env.ARTICLE_OWNER_DECISION_SECRET;
+          const secret = "fixture-owner-decision-secret-at-least-32-bytes";
+          process.env.ARTICLE_OWNER_DECISION_SECRET = secret;
+          const decisionBase = { operationId, findingId: finding.findingId, revision: finding.revision, decision: "authorize-worker-review" as const, decidedBy: "fixture-owner", reason: "The owner authorizes an independent worker to assess the exact referred finding without changing its evidence.", decidedAt: new Date().toISOString() };
+          const authorizationMac = createHmac("sha256", secret).update(JSON.stringify({ importId: current.importId, sourceFingerprint: current.sourceFingerprint, ...decisionBase })).digest("hex");
+          const decision = { schemaVersion: "OwnerActivityDecisionV1", ...decisionBase, authorizationMac };
+          await assert.rejects(() => submitActivityOwnerDecision(root, current.importId, { ...decision, revision: "0".repeat(64) }), /OWNER_DECISION_FINDING_BINDING_MISMATCH/);
+          await assert.rejects(() => submitActivityOwnerDecision(root, current.importId, { ...decision, authorizationMac: "0".repeat(64) }), /OWNER_DECISION_AUTHORIZATION_MISMATCH/);
+          const authorized = await submitActivityOwnerDecision(root, current.importId, decision);
+          assert.equal(authorized.activityFindings?.[0].status, "open");
+          assert.equal(authorized.activityOwnerDecisions?.[0].findingId, finding.findingId);
+          const resumed = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+          assert.equal(resumed.continuation?.kind, "work");
+          assert.equal(resumed.continuation?.activityId, "purpose-and-structure");
+          if (priorSecret === undefined) delete process.env.ARTICLE_OWNER_DECISION_SECRET;
+          else process.env.ARTICLE_OWNER_DECISION_SECRET = priorSecret;
         } else assert.equal(current.continuation?.activityId, "purpose-and-structure");
       }
     } finally {
@@ -829,9 +904,9 @@ test("the dispatch controller sends an activity-specific packet to the worker an
     const workerRunner: WorkerRunner = async ({ args }) => {
       const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
       calls.push(packet.activity.id);
-      const outputRef = await storeEvidence(root, record.importId, { schemaVersion: "SyntheticActivityOutputV1", activityId: packet.activity.id, inputFingerprint: packet.activity.inputFingerprint });
+      const outputRefs = await concreteActivityOutputs(root, record, packet.activity);
       const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Dispatch completed one bound activity.",
-        activity: { ...packet.activity, reviewer: "dispatch-fixture", executionId: "dispatch-purpose-1", outcome: "accepted", observation: "The dispatched criterion passed.", outputRefs: [outputRef] } };
+        activity: { ...packet.activity, reviewer: "dispatch-fixture", executionId: "dispatch-purpose-1", outcome: "accepted", observation: "The dispatched criterion passed.", outputRefs } };
       const events = (await readFile("tests/fixtures/opencode-jsonl-fixture.jsonl", "utf8")).trim().split(/\r?\n/).map((line) => JSON.parse(line));
       events.find((event) => event.type === "text").part.text = JSON.stringify(result);
       return { stdout: events.map((event) => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };

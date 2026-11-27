@@ -1,7 +1,8 @@
 import { readFile, realpath } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
-import { advanceImport, approveImportContent, loadImport, recordImportPresentation, verifyImportRelease, writeJsonAtomically, type ImportStageExecutor } from "./engine";
+import { advanceImport, approveImportContent, canonicalSubmissionFingerprint, loadImport, recordImportPresentation, verifyImportRelease, writeJsonAtomically, type ImportStageExecutor } from "./engine";
 import { externalArticleImportSchema, importFormatSchema, type ExternalArticleImportV1 } from "./contracts";
 import { assertIgnoredImportStatePath } from "./automation-state";
 import { importArtifactTarget } from "./format-validation";
@@ -16,7 +17,7 @@ import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { reconcileActivityFindingEvidence, registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
-import { acceptedArticleActivityOutputs, activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
+import { acceptedArticleActivityOutputs, activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, validateEditorialActivityOutputs, type ActivityBinding } from "./activity-checkpoints";
 import { completeResearchPlanAttempt, prepareResearchPlanAttempt, reconcileLateResearchPlanResults } from "./stage-attempts";
 import { readEvidenceBytes, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { verifyGateHandoffForDispatch } from "./gate-handoff";
@@ -370,7 +371,15 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       }
       const activityResult = activityResultSchema.parse(raw);
       if (activityResult.idempotencyKey !== context.idempotencyKey) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
-      return recordArticleActivity(root, record, resultPath, activity, activityResult, { resultRef: immutableResultRef, trustProvidedRaw: true, registry: options?.reviewEvidenceRegistry });
+      const updated = await recordArticleActivity(root, record, resultPath, activity, activityResult, { resultRef: immutableResultRef, trustProvidedRaw: true, registry: options?.reviewEvidenceRegistry });
+      const diagnosisRequired = (updated.repairStageTotals?.[stage] ?? 0) >= 3
+        && updated.activityFindings?.some((finding) => finding.stage === stage && finding.status !== "resolved");
+      if (!diagnosisRequired || updated.activityFindings?.some((finding) => finding.stage === stage && finding.status === "owner-referral")) return updated;
+      return externalArticleImportSchema.parse({
+        ...updated,
+        continuation: { kind: "repair", stage, failureCategory: "content-rejection", failureFingerprint: createHash("sha256").update(`${stage}:${activity.id}:${activity.inputFingerprint}`).digest("hex"), submittedFingerprint: await canonicalSubmissionFingerprint(updated, root), failedEvidenceRefs: [immutableResultRef!], failedWork: { workPath, resultPath, idempotencyKey: context.idempotencyKey, activityId: activity.id }, diagnosisRequired: true, requiredChange: "Record a bound diagnosis and independently verified activity remedy before another repair worker.", idempotencyKey: context.idempotencyKey, sourceFingerprint: updated.sourceFingerprint },
+        nextAction: `Diagnosis required before a fourth ${activity.id} repair.`,
+      });
     }
     const result = resultSchema.parse(raw);
     if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work.stage !== stage) throw new Error("STAGE_RESULT_BINDING_MISMATCH");
@@ -390,6 +399,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       }
       case "REFINING":
         record = { ...record, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath), editorial: await evidenceReference(root, work.editorialExecutionPath) } };
+        await validateEditorialActivityOutputs(root, record);
         record = await approveImportContent(root, record, work);
         await applyPublicationProposals(root, record, context.idempotencyKey, context.assertLease);
         if (options?.reviewEvidenceRegistry) {

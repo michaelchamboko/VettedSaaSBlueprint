@@ -609,7 +609,9 @@ async function assessImportReleaseImpl(input: {
     }
   }
   try {
-    const preflight = await input.operations.preflight();
+    let preflight;
+    try { preflight = await input.operations.preflight(); }
+    catch { throw new Error("RELEASE_PREFLIGHT_FAILED"); }
     if (!preflight.ok) reasons.push(...preflight.reasons);
     if (reasons.length || !input.execute) {
       if (input.execute && reasons.length) await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: reasons.join("; ") });

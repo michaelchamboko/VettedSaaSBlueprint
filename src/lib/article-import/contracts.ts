@@ -39,7 +39,7 @@ export const remedyVerificationEvidenceSchema = z.object({
   stage: remedyCheckResultFields.stage,
   failedSubmissionDigest: remedyCheckResultFields.failedSubmissionDigest,
   replacementSubmissionDigest: remedyCheckResultFields.replacementSubmissionDigest,
-  criterion: z.object({ id: z.enum(["research-evidence", "content-assessment", "presentation-evidence", "release-result"]), revision: z.string().min(1) }).strict(),
+  criterion: z.object({ id: z.enum(["research-evidence", "content-assessment", "presentation-evidence", "release-result", "activity-result"]), revision: z.string().min(1) }).strict(),
   validatedEvidenceRef: stateEvidenceRef,
   relatedEvidenceRefs: z.array(stateEvidenceRef).optional(),
   measurementChange: measurementChangeSchema.optional(),
@@ -298,6 +298,17 @@ export const importActivityFindingSchema = z.object({
   if (value.status === "resolved" && (!value.resolutionReviewId || !value.resolvedAt)) context.addIssue({ code: "custom", path: ["status"], message: "A resolved finding must link its independent review and resolution time." });
   if (value.status !== "resolved" && (value.resolutionReviewId || value.resolvedAt)) context.addIssue({ code: "custom", path: ["status"], message: "Only a resolved finding may carry resolution metadata." });
 });
+export const activityOwnerDecisionSchema = z.object({
+  schemaVersion: z.literal("OwnerActivityDecisionV1"),
+  operationId: z.string().regex(/^owner-decision-[a-f0-9]{24}$/),
+  findingId: z.string().regex(/^finding-[a-f0-9]{24}$/),
+  revision: z.string().regex(/^[a-f0-9]{64}$/),
+  decision: z.enum(["authorize-worker-review", "uphold-referral"]),
+  decidedBy: z.string().min(1),
+  authorizationMac: z.string().regex(/^[a-f0-9]{64}$/),
+  reason: z.string().min(1),
+  decidedAt: z.string().datetime({ offset: true }),
+}).strict();
 export const importActivityReceiptSchema = z.object({
   schemaVersion: z.literal("ImportActivityReceiptV1"),
   attemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/).optional(),
@@ -558,6 +569,7 @@ export const externalArticleImportSchema = z.object({
   gateHandoffs: z.array(importGateHandoffSchema).optional(),
   activityFindings: z.array(importActivityFindingSchema).optional(),
   activityFindingReviews: z.array(importActivityFindingReviewSchema).optional(),
+  activityOwnerDecisions: z.array(activityOwnerDecisionSchema).optional(),
   stageAttempts: z.array(importStageAttemptSchema).optional(),
   stageSelections: z.array(importStageSelectionSchema).optional(),
   legacyDiagnostics: z.array(z.string()).optional(),

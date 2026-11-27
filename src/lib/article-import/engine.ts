@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { importPacketId, researchRecoveryGeneration } from "./packet-binding";
 import { isDeepStrictEqual } from "node:util";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, formatQualityApprovalMatches, type ApprovalFiles } from "./content-approval";
-import { actionableDiagnosisSchema, externalArticleImportSchema, remedyMeasurementVerificationSchema, remedyVerificationEvidenceSchema, type ExternalArticleImportV1, type FailureClass, type ImportFailureCategory, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
+import { actionableDiagnosisSchema, activityOwnerDecisionSchema, externalArticleImportSchema, remedyMeasurementVerificationSchema, remedyVerificationEvidenceSchema, type ExternalArticleImportV1, type FailureClass, type ImportFailureCategory, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
@@ -25,6 +25,7 @@ export { ImportFailure } from "./failure-routing";
 import { declareGateHandoff, reconcileGateCleanup, type GateCleanupOptions } from "./gate-handoff";
 import { registerPublicationApproval } from "./publication-approval";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { validateActivityRemedyEvidence } from "./activity-checkpoints";
 
 const ROOT = ".automation/article-imports";
 type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string; writing?: boolean };
@@ -961,7 +962,7 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
 }
 
 async function deleteRawSource(repositoryRoot: string, importId: string, record: ExternalArticleImportV1, at: string): Promise<ExternalArticleImportV1> {
-  try { await unlink(sourcePath(repositoryRoot, importId)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+  try { await unlink(sourcePath(repositoryRoot, importId)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw new Error("SOURCE_CLEANUP_UNLINK_FAILED"); }
   const updated = externalArticleImportSchema.parse({ ...record, sourceDeletedAt: at });
   await saveImport(repositoryRoot, updated);
   return updated;
@@ -1002,7 +1003,18 @@ async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis:
   let pendingEditorialRef: EvidenceRef | undefined;
   let pendingReleaseWork: { artifactPath: string; changedFiles: string[]; slug?: string } | undefined;
   let actualEvidenceRef: EvidenceRef | undefined;
+  const activityRepair = record.continuation?.kind === "repair" ? record.continuation.failedWork?.activityId : undefined;
   if (record.continuation?.kind === "repair" && record.continuation.failedWork) {
+    if (activityRepair) {
+      if (evidence.criterion.id !== "activity-result" || evidence.criterion.revision !== WORKFLOW_REVISION) throw new Error("DIAGNOSIS_ACTIVITY_CRITERION_MISMATCH");
+      const workPacket = JSON.parse(await readFile(path.resolve(root, record.continuation.failedWork.workPath), "utf8")) as { importId?: unknown; sourceFingerprint?: unknown; activity?: { id?: unknown }; renderingInputs?: { reference?: EvidenceRef } };
+      if (workPacket.importId !== record.importId || workPacket.sourceFingerprint !== record.sourceFingerprint || workPacket.activity?.id !== activityRepair) throw new Error("DIAGNOSIS_ACTIVITY_WORK_BINDING_MISMATCH");
+      const renderingRef = workPacket.renderingInputs?.reference;
+      if (record.stage === "VALIDATING" && !renderingRef) throw new Error("DIAGNOSIS_ACTIVITY_RENDER_INPUTS_MISSING");
+      if (renderingRef) await verifyEvidenceRef(root, renderingRef);
+      await validateActivityRemedyEvidence(root, record, activityRepair, evidence.validatedEvidenceRef, renderingRef);
+      actualEvidenceRef = evidence.validatedEvidenceRef;
+    } else {
     const resultFile = path.resolve(root, record.continuation.failedWork.resultPath);
     const relative = path.relative(await realpath(root), await realpath(resultFile));
     if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("DIAGNOSIS_REMEDY_RESULT_PATH_INVALID");
@@ -1016,6 +1028,7 @@ async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis:
       pendingReleaseWork = { artifactPath: result.work.artifactPath, changedFiles: result.work.changedFiles as string[], ...(typeof result.work.slug === "string" && { slug: result.work.slug }) };
       actualEvidenceRef = await evidenceReference(root, record.continuation.failedWork.resultPath);
     }
+    }
   }
   const binding = { ...record, artifactPath: pendingArtifactPath ?? record.artifactPath ?? record.contentApproval?.artifactPath, requirementRevision: WORKFLOW_REVISION };
   actualEvidenceRef ??= diagnosis.stage === "RESEARCHING" ? record.evidenceRefs?.research
@@ -1023,7 +1036,10 @@ async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis:
       : diagnosis.stage === "REFINING" ? record.evidenceRefs?.assessment
         : diagnosis.stage === "VALIDATING" ? record.evidenceRefs?.presentation : undefined;
   if (!actualEvidenceRef || !isDeepStrictEqual(actualEvidenceRef, evidence.validatedEvidenceRef)) throw new Error("DIAGNOSIS_REMEDY_REPLACEMENT_EVIDENCE_MISMATCH");
-  if (diagnosis.stage === "RESEARCHING" && evidence.criterion.id === "research-evidence" && evidence.criterion.revision === WORKFLOW_REVISION) await validateResearchEvidence(root, actualEvidenceRef, binding);
+  if (activityRepair && evidence.criterion.id === "activity-result" && evidence.criterion.revision === WORKFLOW_REVISION) {
+    if (!record.activityFindings?.some((finding) => finding.stage === diagnosis.stage && finding.activityId === activityRepair && finding.status !== "resolved")) throw new Error("DIAGNOSIS_ACTIVITY_FINDING_MISSING");
+  }
+  else if (diagnosis.stage === "RESEARCHING" && evidence.criterion.id === "research-evidence" && evidence.criterion.revision === WORKFLOW_REVISION) await validateResearchEvidence(root, actualEvidenceRef, binding);
   else if (["TRANSFORMING", "REFINING"].includes(diagnosis.stage) && evidence.criterion.id === "content-assessment" && evidence.criterion.revision === WORKFLOW_REVISION) {
     await validateContentAssessment(root, actualEvidenceRef, binding);
     if (diagnosis.stage === "REFINING") {
@@ -1154,5 +1170,35 @@ export async function submitImportDiagnosis(root: string, importId: string, inpu
     const verified = { ...diagnosis, remedyCheck: derivedCheck, remedyVerifiedAt: now() };
     const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), verified] };
     await saveImport(root, updated); return updated;
+  });
+}
+
+export async function submitActivityOwnerDecision(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
+  return withImportLease(root, importId, async (record) => {
+    const decision = activityOwnerDecisionSchema.parse(input);
+    const existing = record.activityOwnerDecisions?.find((item) => item.operationId === decision.operationId);
+    if (existing) {
+      if (!isDeepStrictEqual(existing, decision)) throw new Error("OWNER_DECISION_OPERATION_REPLAY_MISMATCH");
+      return record;
+    }
+    const findingIndex = record.activityFindings?.findIndex((finding) => finding.findingId === decision.findingId && finding.revision === decision.revision && finding.status === "owner-referral") ?? -1;
+    if (findingIndex < 0) throw new Error("OWNER_DECISION_FINDING_BINDING_MISMATCH");
+    const secret = process.env.ARTICLE_OWNER_DECISION_SECRET;
+    if (!secret || secret.length < 32) throw new Error("OWNER_DECISION_AUTHENTICATION_UNAVAILABLE");
+    const payload = JSON.stringify({ importId, sourceFingerprint: record.sourceFingerprint, operationId: decision.operationId, findingId: decision.findingId, revision: decision.revision, decision: decision.decision, decidedBy: decision.decidedBy, reason: decision.reason, decidedAt: decision.decidedAt });
+    const expectedMac = createHmac("sha256", secret).update(payload).digest();
+    const suppliedMac = Buffer.from(decision.authorizationMac, "hex");
+    if (suppliedMac.length !== expectedMac.length || !timingSafeEqual(suppliedMac, expectedMac)) throw new Error("OWNER_DECISION_AUTHORIZATION_MISMATCH");
+    const findings = [...record.activityFindings!];
+    if (decision.decision === "authorize-worker-review") findings[findingIndex] = { ...findings[findingIndex], status: "open" };
+    const updated = externalArticleImportSchema.parse({
+      ...record,
+      activityFindings: findings,
+      activityOwnerDecisions: [...(record.activityOwnerDecisions ?? []), decision],
+      continuation: undefined,
+      nextAction: decision.decision === "authorize-worker-review" ? `Resume ${findings[findingIndex].stage.toLowerCase()} with the exact owner-authorized finding review.` : `Owner upheld referral ${decision.findingId}; no worker may clear it.`,
+    });
+    await saveImport(root, updated);
+    return updated;
   });
 }

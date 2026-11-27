@@ -1779,7 +1779,7 @@ test("late presentation preserves pending release, LIVE and quarantine records w
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: record.contentApproval!.artifactPath, slug: "example", operations: operations(root, { rollback: async () => { rollbacks++; return { ok: true, summary: "unexpected rollback" }; } }) });
     assert.equal(result.status, "LIVE", result.reasons.join(", "));
     assert.equal(rollbacks, 0);
-    assert.ok(result.reasons.some(reason => reason.includes("unlink")));
+    assert.ok(result.reasons.includes("SOURCE_CLEANUP_UNLINK_FAILED"));
     assert.equal((await loadImport(root, record.importId)).sourceDeletedAt, undefined);
     await rm(rawSource, { recursive: true });
     const recovered = await executePendingImport(root, record.importId, async () => { throw Error("unexpected executor"); });
@@ -1795,7 +1795,7 @@ test("late presentation preserves pending release, LIVE and quarantine records w
     assert.deepEqual(await readFile(terminalRecord), terminalBytes);
     const verifying = await persistFixture(root, { ...recovered, stage: "VERIFYING", terminalRef: undefined, continuation: undefined, sourceDeletedAt: undefined });
     await mkdir(rawSource);
-    await assert.rejects(executePendingImport(root, verifying.importId, ({ record }) => verifyImportRelease(root, record)), /unlink/);
+    await assert.rejects(executePendingImport(root, verifying.importId, ({ record }) => verifyImportRelease(root, record)), /SOURCE_CLEANUP_UNLINK_FAILED/);
     const verified = await loadImport(root, verifying.importId);
     assert.equal(verified.stage, "LIVE");
     assert.equal(verified.continuation?.kind, "complete");
@@ -1820,7 +1820,7 @@ test("dry-run preflight exception stays read-only while release execution is bus
       await assert.rejects(assessImportRelease({ ...input, execute: true }), /IMPORT_LEASE_BUSY/);
       const assessment = await assessImportRelease(input);
       assert.equal(assessment.status, "DRY_RUN");
-      assert.ok(assessment.reasons.includes("synthetic outage"));
+      assert.ok(assessment.reasons.includes("RELEASE_PREFLIGHT_FAILED"));
       assert.deepEqual(await readFile(stateFile), before);
       await lease.assertOwned();
     } finally { await lease.release(); }
