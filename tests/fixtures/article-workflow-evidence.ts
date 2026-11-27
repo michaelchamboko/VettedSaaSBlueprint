@@ -7,7 +7,7 @@ import { captureStructuredExecution, extractOpenCodeExecution, proseProjectionDi
 import { WORKFLOW_REVISION, workflowRequirements } from "../../src/lib/article-import/workflow-requirements";
 import { editorialProse, editorialProsePaths, fingerprintEditorialArtifact, EDITORIAL_REVISION } from "../../src/lib/editorial/refinement";
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
-import { captureRenderingInputs, detectorCoreFiles, renderingInputsSchema, requiredDetectorInputs } from "../../src/lib/article-import/rendering-inputs";
+import { captureRenderingInputs, detectorCoreFiles, publicationServingInputPaths, renderingInputsSchema, requiredDetectorInputs } from "../../src/lib/article-import/rendering-inputs";
 import { countVisibleArticleWords, isLongFormAffiliateArticle } from "../../src/lib/editorial/article-visible-word-count";
 import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE } from "../../src/lib/article-import/article-visual-quality";
 import { candidatePreviewPath } from "../../src/lib/article-import/candidate-route";
@@ -108,7 +108,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
     : ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion"];
   const target = importArtifactTarget(input.format, input.after);
   const detectorFiles = input.format === "direct-review" ? [detectorCoreFiles[input.format], "src/app/landing-page-previews/[slug]/page.tsx"] : [detectorCoreFiles[input.format]];
-  for (const file of [...detectorFiles, "src/app/layout.tsx", "src/app/globals.css", "src/styles/fixture-renderer.css", "package-lock.json"]) {
+  for (const file of [...new Set([...detectorFiles, ...publicationServingInputPaths(input.format), "src/styles/fixture-renderer.css", "package-lock.json"])]) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     const bytes = file.endsWith(".css") ? "body { color: black; background: white; }\n" : file.endsWith(".tsx") ? "export default function Fixture() { return <main>Fixture</main>; }\n" : "{}";
     await writeFile(path.join(root, file), bytes, { flag: "wx" }).catch((error: NodeJS.ErrnoException) => { if (error.code !== "EEXIST") throw error; });

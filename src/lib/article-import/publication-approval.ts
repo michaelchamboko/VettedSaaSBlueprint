@@ -27,34 +27,6 @@ export type PublicationApprovalStatus = {
   evidenceRef: EvidenceRef;
 };
 
-type PublicationDependency = {
-  id: string;
-  contentPaths: string[];
-  assetPaths: string[];
-};
-
-export function assessPublicationImpact(
-  publications: PublicationDependency[],
-  change: { kind: "content" | "renderer" | "styles" | "asset" | "rules"; path: string },
-) {
-  return publications.map((publication) => {
-    const contentAffected = change.kind === "content" && publication.contentPaths.includes(change.path);
-    const presentationAffected = contentAffected ||
-      (change.kind === "asset" && publication.assetPaths.includes(change.path)) ||
-      ["renderer", "styles", "rules"].includes(change.kind);
-    return {
-      id: publication.id,
-      content: contentAffected ? "revalidate" as const : "reuse" as const,
-      presentation: presentationAffected ? "revalidate" as const : "reuse" as const,
-      reason: contentAffected
-        ? `Content dependency changed: ${change.path}`
-        : presentationAffected
-          ? `${change.kind} dependency changed: ${change.path}`
-          : `No dependency changed for ${publication.id}.`,
-    };
-  });
-}
-
 function sha256(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
@@ -109,9 +81,13 @@ export async function registerPublicationApproval(
       (deployment && (deployment.commitSha !== record.release.commitSha || deployment.deploymentId !== record.release.deploymentId || deployment.url !== record.release.canonicalUrl))) {
     throw new Error("PUBLICATION_INTENDED_COMMIT_MISMATCH");
   }
+  let authorityDependencies: EvidenceRef[] = [];
   if (publicationPath === "catalogue") {
     const { assertPublicationAuthorityBinding } = await import("./release");
-    await assertPublicationAuthorityBinding(root, record.format, record.contentApproval.artifactPath);
+    const authority = await assertPublicationAuthorityBinding(root, record.format, record.contentApproval.artifactPath, {
+      reviewedCommitSha: record.pendingRelease?.reviewedCommitSha,
+    });
+    authorityDependencies = authority?.retentionDependencies ?? [];
   }
   const artifactRef = await evidenceReference(root, record.contentApproval.artifactPath);
   const approvalIdentity = sha256({
@@ -124,6 +100,7 @@ export async function registerPublicationApproval(
     intendedCommitSha: merge.mergeCommitSha,
     deployment: production.deployment,
     productionRef: record.evidenceRefs.production,
+    authorityDependencies,
   });
   const registration = reviewEvidenceRegistrationSchema.parse({
     schemaVersion: "ArticleReviewEvidenceRegistrationV1",
@@ -143,6 +120,7 @@ export async function registerPublicationApproval(
       artifactRef,
       editorial.evidenceRef,
       browser.evidenceRef,
+      ...authorityDependencies,
       ...editorial.retentionDependencies,
       ...browser.retentionDependencies,
     ]),

@@ -34,6 +34,19 @@ export const detectorCoreFiles = {
 const RENDERABLE = /\.(?:tsx?|jsx?|css|scss|sass|less|html|vue|svelte)$/;
 const PAGE_ENTRY = /^(?:page|layout|template)\.(?:tsx?|jsx?)$/;
 const STYLE = /\.(?:css|scss|sass|less)$/;
+const SERVING_INPUTS: Record<string, readonly string[]> = {
+  "direct-review": [
+    "src/app/landing-page-builders/[slug]/page.tsx", "src/components/landing/DirectReviewPage.tsx",
+    "src/components/landing/AffiliateDisclosure.tsx", "src/components/landing/EditorialReviewPage.tsx",
+    "src/components/landing/LandingPageMotion.tsx", "src/components/landing/LegalTrustLinks.tsx",
+    "src/components/landing/ReferenceComposedReviewPage.tsx", "src/components/public/ReviewedArticleHero.tsx",
+    "src/lib/generated/landing-pages.ts", "src/lib/schemas/contracts.ts", "src/lib/landing/reference-composed.ts",
+    "src/lib/article-heroes.ts", "src/lib/site/public-site.ts", "approved-urls.md",
+  ],
+  blog: ["src/app/blog/[slug]/page.tsx", "src/lib/blog/catalogue.ts", "src/lib/blog/contracts.ts", "src/lib/article-heroes.ts", "src/lib/site/public-site.ts"],
+  visibility: ["src/components/visibility/VisibilityPage.tsx", "src/lib/visibility-pages/catalogue.ts", "src/lib/visibility-pages/contracts.ts", "src/lib/site/public-site.ts"],
+  "decision-set": ["src/components/public/DecisionJourneyPage.tsx", "src/lib/site/public-site.ts"],
+};
 function routeDirectoryMatches(directory: string, route: string, prefix: boolean): boolean {
   const pattern = directory.split("/").filter((part) => part && !/^\(.*\)$/.test(part));
   const segments = route.split("/").filter(Boolean);
@@ -66,6 +79,23 @@ export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsS
     if (!PAGE_ENTRY.test(name) && !STYLE.test(name)) return false;
     return target.renderedRoutes.some((route) => routeDirectoryMatches(directory, route, name.startsWith("layout.") || name.startsWith("template.") || STYLE.test(name)));
   });
+}
+
+/** Runtime approval dependencies shared by every route for a format. Target content and assets are validated by their format owner. */
+export function publicationServingInputs(manifest: z.infer<typeof renderingInputsSchema>, target: { format: string; renderedRoutes: string[] }): EvidenceRef[] {
+  const declared = publicationServingInputPaths(target.format);
+  if (!target.renderedRoutes.length || !SERVING_INPUTS[target.format]) throw new Error("PUBLICATION_SERVING_TARGET_UNSUPPORTED");
+  return declared.map((file) => {
+    const ref = manifest.files.find((candidate) => candidate.path === file);
+    if (!ref) throw new Error(`PUBLICATION_SERVING_INPUT_MISSING:${file}`);
+    return ref;
+  });
+}
+
+export function publicationServingInputPaths(format: string): string[] {
+  const declared = SERVING_INPUTS[format];
+  if (!declared) throw new Error("PUBLICATION_SERVING_TARGET_UNSUPPORTED");
+  return ["src/app/layout.tsx", "src/app/globals.css", ...declared];
 }
 
 /** Deterministic, read-only inventory; symlinks cannot hide external or omitted inputs. */
@@ -120,14 +150,15 @@ export async function captureRenderingInputs(root: string, importId: string): Pr
 }
 
 /** Historical mode reads only the terminal's frozen references, never current inventory. */
-export async function validateRenderingInputs(root: string, ref: EvidenceRef, options: { historical?: boolean } = {}) {
+export async function validateRenderingInputs(root: string, ref: EvidenceRef, options: { historical?: boolean; target?: { format: string; renderedRoutes: string[] } } = {}) {
   if (options.historical && !isEvidenceSnapshotActive()) throw new Error("RENDER_INPUT_FROZEN_SNAPSHOT_REQUIRED");
   const manifest = renderingInputsSchema.parse(await readEvidence(root, ref));
-  if (!options.historical) {
+  if (!options.historical && !options.target) {
     const current = await renderingInputPaths(root);
     if (JSON.stringify(current) !== JSON.stringify(manifest.files.map((file) => file.path))) throw new Error("RENDER_INPUT_INVENTORY_CHANGED");
   }
-  for (const file of manifest.files) {
+  const selected = options.target ? publicationServingInputs(manifest, options.target) : manifest.files;
+  for (const file of selected) {
     try { await verifyEvidenceRef(root, file); }
     catch (error) { throw new Error(`RENDER_INPUT_CHANGED:${file.path}`, { cause: error }); }
   }
