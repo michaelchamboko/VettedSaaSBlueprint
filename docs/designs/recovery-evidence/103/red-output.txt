@@ -1,0 +1,5 @@
+FAIL serves the approved synthetic catalogue article through the public route
+Error: RED: public catalogue/import probe is not implemented
+tests 1
+pass 0
+fail 1
