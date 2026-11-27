@@ -302,13 +302,16 @@ function decodeBoundWorkerResult(stdout: string, packet: Record<string, unknown>
     throw new Error("INVALID_STAGE_RESULT: worker did not return valid JSON");
   }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("INVALID_STAGE_RESULT: worker result is not an object");
-  const result = parsed as { idempotencyKey?: string; sourceFingerprint?: string; publicationKey?: string; phase?: string; work?: { stage?: string } };
+  const result = parsed as { idempotencyKey?: string; sourceFingerprint?: string; publicationKey?: string; phase?: string; work?: { stage?: string }; activity?: { stage?: string; id?: string; inputFingerprint?: string } };
   if (packet.stage === "IMPROVE") {
     if (result.idempotencyKey !== packet.idempotencyKey || result.publicationKey !== packet.publicationKey || result.phase !== packet.improvePhase) throw new Error("INVALID_STAGE_RESULT: IMPROVE binding mismatch");
     return parsed;
   }
   if (result.idempotencyKey !== packet.idempotencyKey) throw new Error("INVALID_STAGE_RESULT: worker idempotency key mismatch");
   if (result.sourceFingerprint !== packet.sourceFingerprint) throw new Error("INVALID_STAGE_RESULT: worker source fingerprint mismatch");
-  if (result.work?.stage !== packet.stage) throw new Error("INVALID_STAGE_RESULT: worker stage mismatch");
+  const activity = packet.activity as { stage?: string; id?: string; inputFingerprint?: string } | undefined;
+  if (activity) {
+    if (result.activity?.stage !== activity.stage || result.activity?.id !== activity.id || result.activity?.inputFingerprint !== activity.inputFingerprint) throw new Error("INVALID_STAGE_RESULT: worker activity binding mismatch");
+  } else if (result.work?.stage !== packet.stage) throw new Error("INVALID_STAGE_RESULT: worker stage mismatch");
   return parsed;
 }

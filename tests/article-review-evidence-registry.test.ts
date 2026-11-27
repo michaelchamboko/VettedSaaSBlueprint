@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -126,9 +126,28 @@ test("the supervised controller registers and reuses an independently reviewed e
       leaseToken: "synthetic-review-registry",
       assertLease: async () => {},
     };
-    const pending = await executor(context);
+    let pending = await executor(context);
+    while (pending.continuation?.kind === "work" && pending.continuation.activityId) {
+      const activityPacket = JSON.parse(await readFile(path.join(root, pending.continuation.workPath), "utf8")) as {
+        activity: Record<string, unknown> & { id: string; inputFingerprint: string };
+      };
+      await writeJsonAtomically(path.join(root, pending.continuation.resultPath), {
+        idempotencyKey: pending.continuation.idempotencyKey,
+        sourceFingerprint: refining.sourceFingerprint,
+        summary: "Completed an isolated editorial activity.",
+        activity: {
+          ...activityPacket.activity,
+          reviewer: "independent-editorial-fixture",
+          executionId: `${activityPacket.activity.id}-${activityPacket.activity.inputFingerprint.slice(0, 12)}`,
+          outcome: "accepted",
+          observation: "The bound synthetic editorial criterion passed.",
+        },
+      });
+      pending = await executor({ ...context, record: pending });
+      if (!pending.continuation) pending = await executor({ ...context, record: pending });
+    }
     assert.equal(pending.continuation?.kind, "work");
-    if (pending.continuation?.kind !== "work") throw new Error("Missing editorial work packet");
+    if (pending.continuation?.kind !== "work") throw new Error("Missing editorial finalization packet");
     await writeJsonAtomically(path.join(root, pending.continuation.resultPath), {
       idempotencyKey: pending.continuation.idempotencyKey,
       sourceFingerprint: refining.sourceFingerprint,

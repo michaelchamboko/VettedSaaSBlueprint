@@ -16,6 +16,7 @@ import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { activityAttempt, activityResultSchema, nextArticleActivity, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
 
 const file = z.string().min(1);
 const resultBase = { idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), summary: z.string().min(1) };
@@ -71,8 +72,8 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     }
     const directory = `.automation/article-imports/work/${record.importId}`;
     const validationGeneration = stage === "VALIDATING" && record.heroImage ? `.${record.heroImage.assetRef.sha256}` : "";
-    const workPath = `${directory}/${context.idempotencyKey}${validationGeneration}.work.json`;
-    const resultPath = `${directory}/${context.idempotencyKey}${validationGeneration}.result.json`;
+    let workPath = `${directory}/${context.idempotencyKey}${validationGeneration}.work.json`;
+    let resultPath = `${directory}/${context.idempotencyKey}${validationGeneration}.result.json`;
     await assertIgnoredImportStatePath(root, workPath);
     await assertIgnoredImportStatePath(root, resultPath);
     if (stage === "RESEARCHING") {
@@ -215,23 +216,49 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         includeHero: Boolean(record.heroImage),
       }).all;
     }
+    let activity: ActivityBinding | undefined;
+    if (stage === "REFINING" || stage === "VALIDATING") {
+      let historicalStageResult = false;
+      if (record.activityProtocolVersion !== 1) {
+        try { await readRepositoryJson(root, resultPath); historicalStageResult = true; }
+        catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+        }
+      }
+      if (!historicalStageResult) {
+        activity = await nextArticleActivity(root, record, renderingInputs?.reference);
+        if (activity) {
+          const attempt = activityAttempt(record, activity);
+          workPath = `${directory}/${context.idempotencyKey}.${activity.id}.${attempt}.work.json`;
+          resultPath = `${directory}/${context.idempotencyKey}.${activity.id}.${attempt}.result.json`;
+          await assertIgnoredImportStatePath(root, workPath);
+          await assertIgnoredImportStatePath(root, resultPath);
+        }
+      }
+    }
     await writeJsonAtomically(path.join(root, workPath), {
       schemaVersion: "ImportSupervisedWorkV1", importId: record.importId,
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
       idempotencyKey: context.idempotencyKey, sourcePath: `.automation/article-imports/${record.importId}.source.md`,
-      record, resultSchema: z.toJSONSchema(resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
+      record, resultSchema: z.toJSONSchema(activity ? activityResultSchema : resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
+      ...(activity && { activity }),
       ...(stage === "RELEASING" && { releaseSteps }),
       ...(requiredReleaseFiles && { requiredReleaseFiles }),
       ...(stage === "REFINING" && { publicationProposals: publicationProposals(record.importId, context.idempotencyKey, record.format) }),
-      instructions: instructionsForStage(stage), resultPath,
-      resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
+      instructions: activity ? `${instructionsForStage(stage)} Complete only activity ${activity.id}. Record an attributable accepted, rejected, unverified, or justified not-applicable review against the bound inputs and criterion.` : instructionsForStage(stage), resultPath,
+      resultContract: activity ? { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe the completed activity review.", activity: { ...activity, reviewer: "reviewer identity", executionId: "execution identity", outcome: "accepted|rejected|unverified|not-applicable", observation: "required for accepted or rejected", applicabilityReason: "required for not-applicable" } } : { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,
     });
     let raw: unknown;
     try { raw = await readRepositoryJson(root, resultPath); }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      return { ...record, continuation: { kind: "work", stage, workPath, resultPath, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Supervising agent: execute ${workPath}, write its result to ${resultPath}, then explicitly resume this import.` };
+      return { ...record, ...(activity && { activityProtocolVersion: 1 as const }), continuation: { kind: "work", stage, workPath, resultPath, ...(activity && { activityId: activity.id, inputFingerprint: activity.inputFingerprint }), idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Supervising agent: execute ${workPath}, write its result to ${resultPath}, then explicitly resume this import.` };
+    }
+    if (activity) {
+      const activityResult = activityResultSchema.parse(raw);
+      if (activityResult.idempotencyKey !== context.idempotencyKey) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
+      return recordArticleActivity(root, record, resultPath, activity, activityResult);
     }
     const result = resultSchema.parse(raw);
     if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work.stage !== stage) throw new Error("STAGE_RESULT_BINDING_MISMATCH");

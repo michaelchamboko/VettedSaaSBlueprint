@@ -281,6 +281,13 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     let proposalFile = "";
     const workerRunner: WorkerRunner = async ({ args }) => {
       const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
+      if (packet.activity) {
+        const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Completed synthetic activity checkpoint",
+          activity: { ...packet.activity, reviewer: "fixture-reviewer", executionId: `${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 12)}`, outcome: "accepted", observation: "The bound synthetic activity criterion passed." } };
+        const events = (await readFile("tests/fixtures/opencode-jsonl-fixture.jsonl", "utf8")).trim().split(/\r?\n/).map(line => JSON.parse(line));
+        events.find(event => event.type === "text").part.text = JSON.stringify(result);
+        return { stdout: events.map(event => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };
+      }
       calls.push(packet.stage);
       let work;
       switch (packet.stage) {
