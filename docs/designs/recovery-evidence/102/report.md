@@ -38,7 +38,7 @@ Command:
 node --import tsx docs/designs/recovery-evidence/102/registered-evidence-probe.ts --assert-required
 ```
 
-The required-behavior assertion failed:
+The required-behavior assertion failed against the exercised registration results, not the static source inventory:
 
 ```text
 AssertionError: every retained evidence class must have a first-class canonical register record
@@ -82,7 +82,7 @@ No approval survived this case. That result is correct for the seeded records be
 
 `freezeEvidenceGraph` followed and froze integrity-bound references for research, a rejected finding, its resolution, an editorial judgment, a browser observation, and production proof. After the mutable originals changed, snapshot reads returned the original bytes for all six categories. Eight files were frozen, including the envelope and capability manifest.
 
-This proves byte retention through the generic evidence graph. It does not prove canonical registration for every category:
+This proves byte retention through the generic evidence graph. The probe records that result separately from a static boundary inventory. Its requirement check uses only exercised product boundaries: research traversed the real registry plan and validators, while the other five classes are marked unreachable because no corresponding boundary exists. It does not treat source-inspection booleans as runtime proof.
 
 - Research has a first-class `ArticleResearchRegistry` prepare/commit interface, plan, decision, writeback, idempotent binding, and provenance fields.
 - Assessment findings, editorial judgments, browser observations, and production proof can be referenced and frozen, but they are active evidence records rather than rows in a shared canonical evidence register.

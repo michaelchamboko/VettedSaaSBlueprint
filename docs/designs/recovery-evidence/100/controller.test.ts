@@ -171,7 +171,7 @@ test("repair totals survive reload and diagnosis does not enforce prediction or 
   }
 });
 
-test("threshold, viewport and article changes alter one generic submission fingerprint", async () => {
+test("threshold, viewport and article changes independently alter one generic submission fingerprint", async () => {
   const { root, record } = await fixture();
   try {
     const workDirectory = path.join(root, ".automation/article-imports/work", record.importId);
@@ -180,13 +180,18 @@ test("threshold, viewport and article changes alter one generic submission finge
     await writeFile(measurementPath, JSON.stringify({ threshold: 0.9, viewport: 390 }));
     const before = await canonicalSubmissionFingerprint(record, root);
 
-    await writeFile(measurementPath, JSON.stringify({ threshold: 0.85, viewport: 412 }));
-    const afterMeasurementChange = await canonicalSubmissionFingerprint(record, root);
-    assert.notEqual(afterMeasurementChange, before);
+    await writeFile(measurementPath, JSON.stringify({ threshold: 0.85, viewport: 390 }));
+    const afterThresholdChange = await canonicalSubmissionFingerprint(record, root);
+    assert.notEqual(afterThresholdChange, before);
+
+    await writeFile(measurementPath, JSON.stringify({ threshold: 0.9, viewport: 412 }));
+    const afterViewportChange = await canonicalSubmissionFingerprint(record, root);
+    assert.notEqual(afterViewportChange, before);
+    assert.notEqual(afterViewportChange, afterThresholdChange);
 
     record.transformation.title = "Synthetic article text changed";
     const afterArticleChange = await canonicalSubmissionFingerprint(record, root);
-    assert.notEqual(afterArticleChange, afterMeasurementChange);
+    assert.notEqual(afterArticleChange, afterViewportChange);
 
     const persisted = await loadImport(root, record.importId) as unknown as Record<string, unknown>;
     const classificationFields = ["changeKind", "measurementJustification", "independentRegressionRefs"].filter((field) => field in persisted);
@@ -196,8 +201,10 @@ test("threshold, viewport and article changes alter one generic submission finge
       thresholdChanged: true,
       viewportChanged: true,
       articleChanged: true,
-      measurementFingerprintChanged: afterMeasurementChange !== before,
-      articleFingerprintChanged: afterArticleChange !== afterMeasurementChange,
+      thresholdFingerprintChanged: afterThresholdChange !== before,
+      viewportFingerprintChanged: afterViewportChange !== before,
+      thresholdAndViewportFingerprintsDiffer: afterThresholdChange !== afterViewportChange,
+      articleFingerprintChanged: afterArticleChange !== afterViewportChange,
       explicitChangeClassification: false,
       justificationRecorded: false,
       independentRegressionChecksRecorded: false,

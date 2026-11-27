@@ -28,7 +28,9 @@ No real article, network, database, model, release or deployment operation ran. 
 Run:
 
 ```powershell
-& '..\..\node_modules\.bin\tsx.cmd' --test 'docs\designs\recovery-evidence\100\controller.test.ts'
+$nodeVersion = node --version
+if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVersion" }
+node --import tsx --test 'docs\designs\recovery-evidence\100\controller.test.ts'
 ```
 
 Machine-readable observations are in `observations.json`.
@@ -67,7 +69,7 @@ The current diagnosis contract retained a cause and evidence references, but exp
 
 ## Measurement changes
 
-Changing a synthetic threshold from 0.90 to 0.85 and a viewport from 390 to 412 changed the canonical submission fingerprint. Changing article text produced another fingerprint. The persisted record exposed no `changeKind`, `measurementJustification` or `independentRegressionRefs` fields.
+Changing only a synthetic threshold from 0.90 to 0.85 changed the canonical submission fingerprint. Resetting that threshold and changing only the viewport from 390 to 412 produced a separate fingerprint. Changing article text produced another fingerprint. The persisted record exposed no `changeKind`, `measurementJustification` or `independentRegressionRefs` fields.
 
 This proves byte-level change detection. It does not prove the distinction, justification or independent regression review required by issue #100.
 

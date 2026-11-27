@@ -24,7 +24,9 @@ The public seam was `executePendingImport(root, importId, createSupervisedImport
 The red command asserted the required continuity rule:
 
 ```powershell
-node ../../node_modules/tsx/dist/cli.mjs docs/designs/recovery-evidence/99/controller-repair-probe.ts --assert-required
+$nodeVersion = node --version
+if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVersion" }
+node --import tsx docs/designs/recovery-evidence/99/controller-repair-probe.ts --assert-required
 ```
 
 It exited 1 with:
@@ -36,7 +38,9 @@ AssertionError: a passing replacement that omits the finding must not close it
 Observation mode ran six controlled cases and wrote `observations.json`:
 
 ```powershell
-node ../../node_modules/tsx/dist/cli.mjs docs/designs/recovery-evidence/99/controller-repair-probe.ts
+$nodeVersion = node --version
+if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVersion" }
+node --import tsx docs/designs/recovery-evidence/99/controller-repair-probe.ts
 ```
 
 Both commands used Node 24.22.3. The first command is supposed to fail. The second is supposed to pass.

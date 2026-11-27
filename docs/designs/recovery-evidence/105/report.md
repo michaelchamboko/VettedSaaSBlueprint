@@ -14,7 +14,7 @@ This investigation changed no product code and moved or deleted no real artifact
 - **Accepted design.** Primary-checkout `docs/adr/0004-clean-up-after-passed-article-gates.md`, headings "Decision", "Consequences", and "Evidence". The file records the owner's Q34 correction and Q35-Q39, Q42-Q44, and Q48 decisions. The ADR says implementation still needs a planning amendment.
 - **Investigation source.** Primary-checkout `docs/designs/orchestrator-introspection/findings.md`, heading "Handoff and evidence dependency map", and the 27 November handoff in `C:/Users/micha/AppData/Local/Temp/orchestrator-recovery-spec-handoff-2026-11-27.md`.
 - **Code baseline.** Branch `codex/recovery-105` started at integration commit `d3d49f4c132d5d6b2c597df10d189d1564d89a4d`. `src` and `tests` have no diff from investigated deployment commit `f026bca8b53aecca829262e9a27820ac6d078892` at this baseline.
-- **Graph limitation.** codebase-memory-mcp was ready, but its indexed worktree was `codex/neon-oauth-registry-1127` at `6383cf8`, not this branch. The graph guided the search; every claim below was checked in the source on this worktree.
+- **Graph limitation.** codebase-memory-mcp was ready, but it indexed another worktree at `6383cf8`, not this branch. The graph guided the search; every claim below was checked in the source on this worktree.
 
 ## Current handoff map
 
@@ -48,9 +48,9 @@ The red run set `RECOVERY_105_ASSERT_REQUIRED=1`. It required an incomplete clea
 The observational run passed two checks:
 
 1. The normal controller packet exposed readable captured-source bytes and the full record. It had no explicit handoff classification. The diagnostic cleanup marker and verified temporary copy remained present while RESEARCHING work was dispatched.
-2. A test-only oracle used fixed time `2026-11-27T12:00:00.000Z`. It classified a verified temporary copy for immediate disposal, retained a 29-day archive, made an unclaimed 30-day archive eligible, retained the same expired capture when a new dependency claimed it, preserved unclassified bytes, and produced the same result for later-gate and manual cleanup triggers. Active work, rejected evidence, resolutions, diagnosis, registered evidence, publication proof, rollback, and IMPROVE stayed readable. Housekeeping did not change the synthetic retry identity or article repair totals.
+2. A test-only classifier used fixed time `2026-11-27T12:00:00.000Z`. It classified a verified temporary copy for immediate disposal, retained a 29-day archive, made an unclaimed 30-day archive eligible, retained the same expired capture when a new dependency claimed it, and preserved unclassified bytes. Active work, rejected evidence, resolutions, diagnosis, registered evidence, publication proof, rollback, and IMPROVE stayed readable.
 
-`observations.json` records the exact dispositions and reasons. `test-output.txt` records the passing run. The oracle is expected behavior only. It is not application code and did not delete its synthetic bytes.
+`observations.json` records the exact dispositions and reasons. `test-output.txt` records the passing run. The classifier is expected behavior only. It is not application code and did not delete its synthetic bytes. Trigger parity, retry identity, repair totals, and worker-call preservation remain untested because this classifier receives no controller trigger or persisted operation state.
 
 ## Unreachable paths and future acceptance
 
@@ -60,7 +60,7 @@ Three required paths are unreachable through the current controller and remain s
 2. **Explicit manual cleanup.** No public manual cleanup entry point exists. Future acceptance must use the same operation record and dependency rules as later-gate cleanup, including the three-attempt pre-mutation retry budget across restarts.
 3. **Archive reference resolution after removal.** Current terminal snapshots resolve frozen references, but there is no per-gate archive registration and expiry protocol. Future acceptance must prove that retained evidence stays readable after archive registration and original removal, then recheck disposal at day 30 with a dependency claimed immediately before removal.
 
-The future check must also prove that cleanup preserves the import's active retry identity, article repair totals, accepted gate result, and worker-call count. It must record a reason for every retained, archived, removed, or unclassified item. A missing file or a clean temporary directory is not enough.
+The future check must also prove trigger parity and that cleanup preserves the import's active retry identity, article repair totals, accepted gate result, and worker-call count. Those claims were not tested by the classifier. It must record a reason for every retained, archived, removed, or unclassified item. A missing file or a clean temporary directory is not enough.
 
 ## Commands run
 

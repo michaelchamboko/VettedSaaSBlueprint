@@ -20,4 +20,4 @@ This evidence bundle measures six independent, blinded judgments at the reviewer
 
 ## Verification
 
-Run `node --test docs/designs/recovery-evidence/107/verify.test.mjs`. The focused test verifies packet count, answer separation, paired coverage, and retained rendered interaction for both keyboard cases.
+Run `node --test docs/designs/recovery-evidence/107/verify.test.mjs`. The focused test verifies packet count, answer separation, paired coverage, and retained rendered interaction for both keyboard cases. It joins the manifest, frozen result, answer key, and retained comparison by case ID; derives verdict accuracy, misses, false alarms, and the pass threshold from those joined records; and proves that a mutated frozen verdict fails verification. Explanation accuracy remains the retained post-freeze human judgment and is not presented as a mechanically derived semantic score.

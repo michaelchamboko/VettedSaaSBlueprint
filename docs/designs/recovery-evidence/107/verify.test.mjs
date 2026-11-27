@@ -10,6 +10,44 @@ function readJson(...parts) {
   return JSON.parse(readFileSync(join(root, ...parts), "utf8"));
 }
 
+function verifyEvaluation(manifest, key, comparison, results) {
+  const resultById = new Map(results.map((result) => [result.caseId, result]));
+  const keyById = new Map(key.cases.map((entry) => [entry.caseId, entry]));
+  const comparisonById = new Map(comparison.results.map((entry) => [entry.caseId, entry]));
+  const ids = manifest.cases.map(({ id }) => id);
+  assert.deepEqual([...resultById.keys()].sort(), [...ids].sort());
+  assert.deepEqual([...keyById.keys()].sort(), [...ids].sort());
+  assert.deepEqual([...comparisonById.keys()].sort(), [...ids].sort());
+
+  let accurate = 0;
+  let misses = 0;
+  let falseAlarms = 0;
+  for (const id of ids) {
+    const result = resultById.get(id);
+    const expected = keyById.get(id);
+    const retainedComparison = comparisonById.get(id);
+    assert.ok(result && expected && retainedComparison);
+    assert.equal(retainedComparison.responsibility, expected.responsibility);
+    assert.equal(retainedComparison.expectedVerdict, expected.expectedVerdict);
+    assert.equal(retainedComparison.observedVerdict, result.verdict);
+    const verdictAccurate = result.verdict === expected.expectedVerdict;
+    assert.equal(retainedComparison.verdictAccurate, verdictAccurate);
+    assert.equal(typeof retainedComparison.explanationAccurate, "boolean");
+    assert.match(retainedComparison.assessment, /\S/);
+    if (verdictAccurate && retainedComparison.explanationAccurate) accurate += 1;
+    if (expected.expectedVerdict === "does_not_meet" && result.verdict === "meets") misses += 1;
+    if (expected.expectedVerdict === "meets" && result.verdict === "does_not_meet") falseAlarms += 1;
+  }
+  const passed = accurate === ids.length && misses === 0 && falseAlarms === 0;
+  assert.deepEqual(comparison.summary, {
+    accurate,
+    misses,
+    falseAlarms,
+    passed,
+    threshold: comparison.summary.threshold,
+  });
+}
+
 test("publishes six neutral reviewer packets without answer leakage", () => {
   const manifest = readJson("reviewer-manifest.json");
   assert.equal(manifest.cases.length, 6);
@@ -72,14 +110,11 @@ test("freezes six independent results before scoring and reports no misses or fa
     assert.match(result.verdict, /^(meets|does_not_meet)$/);
   }
 
+  const key = readJson("evaluation", "answer-key.json");
   const comparison = readJson("evaluation", "comparison.json");
-  assert.equal(comparison.results.length, 6);
-  assert.equal(comparison.summary.accurate, 6);
-  assert.equal(comparison.summary.misses, 0);
-  assert.equal(comparison.summary.falseAlarms, 0);
-  assert.equal(comparison.summary.passed, true);
-  for (const result of comparison.results) {
-    assert.equal(result.verdictAccurate, true);
-    assert.equal(result.explanationAccurate, true);
-  }
+  verifyEvaluation(manifest, key, comparison, results);
+
+  const mutated = structuredClone(results);
+  mutated[0].verdict = mutated[0].verdict === "meets" ? "does_not_meet" : "meets";
+  assert.throws(() => verifyEvaluation(manifest, key, comparison, mutated));
 });

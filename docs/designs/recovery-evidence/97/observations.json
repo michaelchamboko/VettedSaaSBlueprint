@@ -1,7 +1,7 @@
 {
   "schemaVersion": "ReleaseRecoveryEvidence97V1",
   "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
-  "generatedAt": "2026-11-27T08:37:17.823Z",
+  "generatedAt": "2026-11-27T10:00:12.351Z",
   "expected": {
     "remoteCallsAfterRestart": 1,
     "nextActionWhenRemoteOutcomeIsUnknown": "hold for reconciliation",
@@ -25,7 +25,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:31:43.179Z",
+          "createdAt": "2026-11-27T09:59:15.445Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -47,10 +47,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:31:43.179Z"
+            "reviewedAt": "2026-11-27T09:59:15.445Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -61,6 +61,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
@@ -79,7 +80,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:31:43.179Z",
+          "createdAt": "2026-11-27T09:59:15.445Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -101,10 +102,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:31:43.179Z"
+            "reviewedAt": "2026-11-27T09:59:15.445Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -115,6 +116,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
@@ -133,7 +135,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:31:43.179Z",
+          "createdAt": "2026-11-27T09:59:15.445Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -155,10 +157,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:31:43.179Z"
+            "reviewedAt": "2026-11-27T09:59:15.445Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -169,6 +171,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
@@ -192,11 +195,11 @@
     },
     {
       "scenario": "controller-exit",
-      "childPid": 24552,
+      "childPid": 21104,
       "childExitCode": 86,
       "afterExit": {
         "stage": "RELEASING",
-        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.work.json, write its result to .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.result.json, then explicitly resume this import.",
+        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-fe860e19-857f-40bc-bc91-ffbb3027e6c9/e0e31b9063cb72f6344baf79a154333a0f97a7966a49cc2a1af1c60bd6cec0da.work.json, write its result to .automation/article-imports/work/article-fe860e19-857f-40bc-bc91-ffbb3027e6c9/e0e31b9063cb72f6344baf79a154333a0f97a7966a49cc2a1af1c60bd6cec0da.result.json, then explicitly resume this import.",
         "deploymentIdentity": null,
         "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
         "aliasAssignment": "dpl-controller-exit-1",
@@ -209,7 +212,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:33:05.763Z",
+          "createdAt": "2026-11-27T09:59:29.432Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -231,10 +234,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:33:05.763Z"
+            "reviewedAt": "2026-11-27T09:59:29.432Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -245,12 +248,13 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
       "afterImmediateRestart": {
         "stage": "RELEASING",
-        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.work.json, write its result to .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.result.json, then explicitly resume this import.",
+        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-fe860e19-857f-40bc-bc91-ffbb3027e6c9/e0e31b9063cb72f6344baf79a154333a0f97a7966a49cc2a1af1c60bd6cec0da.work.json, write its result to .automation/article-imports/work/article-fe860e19-857f-40bc-bc91-ffbb3027e6c9/e0e31b9063cb72f6344baf79a154333a0f97a7966a49cc2a1af1c60bd6cec0da.result.json, then explicitly resume this import.",
         "deploymentIdentity": null,
         "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
         "aliasAssignment": "dpl-controller-exit-1",
@@ -263,7 +267,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:33:05.763Z",
+          "createdAt": "2026-11-27T09:59:29.432Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -285,10 +289,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:33:05.763Z"
+            "reviewedAt": "2026-11-27T09:59:29.432Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -299,12 +303,13 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
       "afterVerifiedExitRecovery": {
         "stage": "RELEASING",
-        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.work.json, write its result to .automation/article-imports/work/article-6a4aabb8-b863-44b3-acfe-6dddfff851e7/3f2d48643e21ebfc39f2f01412d82a887833cf5567a96ae36ec4eb73f8de3811.result.json, then explicitly resume this import.",
+        "nextAction": "Supervising agent: execute .automation/article-imports/work/article-fe860e19-857f-40bc-bc91-ffbb3027e6c9/e0e31b9063cb72f6344baf79a154333a0f97a7966a49cc2a1af1c60bd6cec0da.work.json, write its result to .automation/article-imports/work/article-fe860e19-857f-40bc-bc91-ffbb3027e6c9/e0e31b9063cb72f6344baf79a154333a0f97a7966a49cc2a1af1c60bd6cec0da.result.json, then explicitly resume this import.",
         "deploymentIdentity": null,
         "intendedCommit": "cccccccccccccccccccccccccccccccccccccccc",
         "aliasAssignment": "dpl-controller-exit-1",
@@ -317,7 +322,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:33:05.763Z",
+          "createdAt": "2026-11-27T09:59:29.432Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -339,10 +344,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:33:05.763Z"
+            "reviewedAt": "2026-11-27T09:59:29.432Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -353,6 +358,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
@@ -371,7 +377,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:33:05.763Z",
+          "createdAt": "2026-11-27T09:59:29.432Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -399,10 +405,11 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:33:05.763Z"
+            "reviewedAt": "2026-11-27T09:59:29.432Z"
           }
         },
-        "outstandingChecks": [],
+        "inferredOutstandingChecks": [],
+        "outstandingChecksInference": "No checks remain after the controller reaches LIVE.",
         "remoteCallCount": 2,
         "retainedProductionProof": true
       },
@@ -448,7 +455,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:36:23.086Z",
+          "createdAt": "2026-11-27T09:59:56.589Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -470,10 +477,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:36:23.086Z"
+            "reviewedAt": "2026-11-27T09:59:56.589Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -484,6 +491,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
@@ -502,7 +510,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:36:23.086Z",
+          "createdAt": "2026-11-27T09:59:56.589Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -524,10 +532,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:36:23.086Z"
+            "reviewedAt": "2026-11-27T09:59:56.589Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -538,6 +546,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
@@ -556,7 +565,7 @@
           "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "branch": "codex/article-import/example",
           "pullRequestUrl": "https://github.com/example/repository/pull/1",
-          "createdAt": "2026-11-27T08:36:23.086Z",
+          "createdAt": "2026-11-27T09:59:56.589Z",
           "mergeCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
           "rollbackDeploymentId": "dpl-previous",
           "rollbackCommitSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -578,10 +587,10 @@
             "reviewedCommitSha": "cccccccccccccccccccccccccccccccccccccccc",
             "pullRequestUrl": "https://github.com/example/repository/pull/1",
             "evidenceUrl": "https://github.com/example/repository/pull/1#issuecomment-review",
-            "reviewedAt": "2026-11-27T08:36:23.086Z"
+            "reviewedAt": "2026-11-27T09:59:56.589Z"
           }
         },
-        "outstandingChecks": [
+        "inferredOutstandingChecks": [
           "routeOk",
           "contentOk",
           "disclosureOk",
@@ -592,6 +601,7 @@
           "sitemapOk",
           "browserErrorsOk"
         ],
+        "outstandingChecksInference": "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
         "remoteCallCount": 1,
         "retainedProductionProof": false
       },
