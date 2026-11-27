@@ -83,4 +83,3 @@ test("freezes six independent results before scoring and reports no misses or fa
     assert.equal(result.explanationAccurate, true);
   }
 });
-
