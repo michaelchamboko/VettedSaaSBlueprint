@@ -6,6 +6,7 @@ import { articleExecutionStage, assertPrimaryArticleCheckout, withArticleExecuti
 import { WORKFLOW_REVISION, WORKFLOW_SEQUENCE, workflowRequirements, stageInstructions, releaseSteps, verificationSteps } from "../src/lib/article-import/workflow-requirements";
 import type { ExternalArticleImportV1 } from "../src/lib/article-import/contracts";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
+import { createArticleResearchRegistryTransport, type ArticleResearchRegistryTransport } from "../src/lib/article-import/research-registry-transport";
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
 import { createSupervisedImproveExecutor, type ImproveExecutor } from "../src/lib/article-import/improve-supervisor";
@@ -68,6 +69,18 @@ export async function executeImportCommand(root: string, command: ImportCommand,
   }
   if (!["describe-workflow", "preflight", "check-intake", "check-completion", "intake-status"].includes(command.kind)) await assertPrimaryArticleCheckout(root);
   return dispatch();
+}
+
+export async function executeImportRunnerCommand(
+  root: string,
+  command: ImportCommand,
+  transport: ArticleResearchRegistryTransport = createArticleResearchRegistryTransport(),
+): Promise<unknown> {
+  try {
+    return await executeImportCommand(root, command, createSupervisedImportExecutor(root, undefined, { researchRegistry: transport.registry }));
+  } finally {
+    await transport.close();
+  }
 }
 
 async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
@@ -141,7 +154,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
 
 async function main(): Promise<void> {
   const command = parseImportCommand(process.argv.slice(2));
-  const result = await executeImportCommand(process.cwd(), command);
+  const result = await executeImportRunnerCommand(process.cwd(), command);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (command.kind === "dispatch") {
     const record = result as ExternalArticleImportV1;
