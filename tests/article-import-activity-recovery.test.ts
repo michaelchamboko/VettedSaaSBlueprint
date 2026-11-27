@@ -34,7 +34,7 @@ async function refiningFixture() {
   return { root, record, prepared };
 }
 
-async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<typeof loadImport>>, outcome: "accepted" | "rejected" | "unverified" | "not-applicable" = "accepted") {
+async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<typeof loadImport>>, outcome: "accepted" | "rejected" | "unverified" | "not-applicable" = "accepted", identity = "synthetic") {
   assert.equal(record.continuation?.kind, "work");
   if (record.continuation?.kind !== "work") throw new Error("Expected activity work.");
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
@@ -46,8 +46,8 @@ async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<ty
     summary: `Synthetic ${outcome} activity review.`,
     activity: {
       ...packet.activity,
-      reviewer: "synthetic-reviewer",
-      executionId: `${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 8)}-${outcome}`,
+      reviewer: `${identity}-reviewer`,
+      executionId: `${identity}-${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 8)}-${outcome}`,
       outcome,
       ...(outcome === "accepted" && { outputRefs: [outputRef] }),
       ...(["accepted", "rejected"].includes(outcome) && { observation: outcome === "accepted" ? "The bound criterion is satisfied." : "The bound criterion has an attributable defect." }),
@@ -154,6 +154,26 @@ test("tampered concrete activity output reopens its owning pass", async () => {
     if (reopened.continuation?.kind !== "work") throw new Error("Expected reopened activity work.");
     const packet = JSON.parse(await readFile(path.join(root, reopened.continuation.workPath), "utf8"));
     assert.equal(packet.activity.id, "purpose-and-structure");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("three distinct unsuccessful finding repairs require diagnosis before a fourth worker", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    let current = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    current = (await acceptCurrentActivity(root, current, "rejected", "initial-review")).record;
+    assert.equal(current.repairStageTotals?.REFINING ?? 0, 0);
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      current = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+      current = (await acceptCurrentActivity(root, current, "rejected", `repair-${attempt}`)).record;
+      assert.equal(current.repairStageTotals?.REFINING, attempt);
+    }
+    assert.equal(current.continuation?.kind, "blocked");
+    assert.match(current.nextAction, /Diagnosis required before a fourth/);
+    const receiptCount = current.activityReceipts?.length;
+    const reloaded = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    assert.equal(reloaded.activityReceipts?.length, receiptCount);
+    assert.equal(reloaded.repairStageTotals?.REFINING, 3);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

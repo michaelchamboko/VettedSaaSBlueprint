@@ -185,6 +185,9 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     applicabilityReason: submitted.applicabilityReason,
     completedAt: new Date().toISOString(),
   });
+  if ((record.activityReceipts ?? []).some((existing) =>
+    (existing.resultRef.path === receipt.resultRef.path && existing.resultRef.sha256 === receipt.resultRef.sha256)
+    || (existing.stage === receipt.stage && existing.activityId === receipt.activityId && existing.inputFingerprint === receipt.inputFingerprint && existing.reviewer === receipt.reviewer && existing.executionId === receipt.executionId))) return record;
   const findingId = `finding-${digest({ stage: receipt.stage, activityId: receipt.activityId, criterion: receipt.criteria[0], revision: receipt.inputFingerprint, observation: receipt.observation }).slice(0, 24)}`;
   const existingFindings = record.activityFindings ?? [];
   const activityFindings = receipt.outcome !== "rejected" || existingFindings.some((finding) => finding.findingId === findingId)
@@ -236,6 +239,10 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     reviewedFindings[findingIndex] = importActivityFindingSchema.parse({ ...finding, status: conclusive ? "resolved" : review.disposition === "owner-referral" ? "owner-referral" : "open", ...(conclusive && { resolutionReviewId: reviewId, resolvedAt: reviewedAt }) });
     if (conclusive) conclusiveReviewIds.push(reviewId);
   }
+  const wasFindingRepair = existingFindings.some((finding) => finding.stage === receipt.stage && finding.activityId === receipt.activityId && finding.status !== "resolved");
+  const unsuccessfulRepair = wasFindingRepair && reviewedFindings.some((finding) => finding.stage === receipt.stage && finding.activityId === receipt.activityId && finding.status !== "resolved");
+  const repairTotal = (record.repairStageTotals?.[receipt.stage] ?? 0) + (unsuccessfulRepair ? 1 : 0);
+  const diagnosisRequired = unsuccessfulRepair && repairTotal >= 3;
   const updated = externalArticleImportSchema.parse({
     ...record,
     activityAttempts: (record.activityAttempts ?? []).map((attempt) => attempt.attemptId === submitted.attemptId
@@ -244,8 +251,9 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     activityReceipts: [...(record.activityReceipts ?? []), receipt],
     activityFindings: reviewedFindings,
     activityFindingReviews: findingReviews,
-    continuation: undefined,
-    nextAction: ["accepted", "not-applicable"].includes(receipt.outcome) ? `Resume ${receipt.stage.toLowerCase()} at the earliest unfinished activity.` : `Complete ${receipt.activityId} again; the attributable ${receipt.outcome} review remains retained but does not approve the activity.`,
+    repairStageTotals: unsuccessfulRepair ? { ...record.repairStageTotals, [receipt.stage]: repairTotal } : record.repairStageTotals,
+    continuation: diagnosisRequired ? { kind: "blocked", scope: "article", failureCategory: "content-rejection", cause: `Three unsuccessful ${receipt.stage.toLowerCase()} repairs are retained for ${receipt.activityId}.`, attemptedRecovery: "Retained each distinct finding-bound repair review without issuing a fourth worker.", resumptionRequirement: "Record and verify a bound diagnosis and genuine remedy before another repair attempt." } : undefined,
+    nextAction: diagnosisRequired ? `Diagnosis required before a fourth ${receipt.activityId} repair.` : ["accepted", "not-applicable"].includes(receipt.outcome) ? `Resume ${receipt.stage.toLowerCase()} at the earliest unfinished activity.` : `Complete ${receipt.activityId} again; the attributable ${receipt.outcome} review remains retained but does not approve the activity.`,
   });
   if (options?.registry && receipt.outcome === "rejected") {
     const finding = updated.activityFindings?.find((candidate) => candidate.findingId === findingId);
