@@ -705,11 +705,15 @@ async function assessImportReleaseImpl(input: {
       const currentPendingRelease = pendingRelease;
       if (!currentPendingRelease) throw new Error("PENDING_RELEASE_REQUIRED");
       pendingRelease = { ...currentPendingRelease, operations: { ...currentPendingRelease.operations, deployment: deploymentOperation } };
+      const cause = `Deployment outcome is uncertain: ${evidence.join(", ")}.`;
+      const resumptionRequirement = "Reconcile the recorded deployment intent through the provider's read-only lookup before another release mutation.";
       input.record = {
         ...input.record,
         pendingRelease,
         stage: "WAITING_EXTERNAL",
         resumeStage: productiveStage(input.record),
+        blockerScope: "shared",
+        continuation: { kind: "blocked", scope: "shared", failureCategory: "uncertain-external-outcome", cause, attemptedRecovery: "Retained the deployment journal and attempted provider reconciliation.", resumptionRequirement },
         updatedAt: new Date().toISOString(),
         nextAction: `Reconcile the original deployment before another release mutation. Missing evidence: ${evidence.join(", ")}.`,
         stageReceipts: [...input.record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at: new Date().toISOString(), message: `Deployment reconciliation held: ${evidence.join(", ")}.` }],

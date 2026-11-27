@@ -19,6 +19,7 @@ import { captureCommandExecution, storeEvidence } from "../src/lib/article-impor
 import { presentationCandidateUnavailable } from "../src/lib/article-import/worker-presentation";
 import { presentationDesignRejected, workflowEvidenceRejected } from "../src/lib/article-import/workflow-evidence";
 import { createLocalReleaseOperations } from "../src/lib/article-import/local-release-adapter";
+import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch");
@@ -30,7 +31,7 @@ async function fixture() {
   return { root, record };
 }
 
-async function remedyEvidence(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], input: {
+async function echoRemedyEvidence(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], input: {
   failedSubmissionDigest: string;
   replacementSubmissionDigest: string;
   result: "verified" | "contradicted";
@@ -77,6 +78,33 @@ async function remedyEvidence(root: string, record: Awaited<ReturnType<typeof fi
     schemaVersion: "RemedyVerificationEvidenceV1",
     method: "deterministic",
     executionRef,
+  });
+}
+
+async function researchEvidence(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], valid = true) {
+  const checkedAt = new Date().toISOString();
+  const snapshot = await storeEvidence(root, record.importId, { text: "The retained source supports the repaired synthetic claim." });
+  return storeEvidence(root, record.importId, {
+    schemaVersion: "ResearchEvidenceV2", id: `research-${crypto.randomUUID()}`, createdAt: checkedAt,
+    importId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: WORKFLOW_REVISION,
+    sources: [{ id: "source-1", url: "https://example.com/source", retrievedAt: checkedAt, snapshotRef: snapshot }],
+    claims: [{ id: "claim-1", text: "The repaired claim has retained support.", sourceIds: ["source-1"], excerptLocations: [{ sourceId: "source-1", quote: valid ? "supports the repaired synthetic claim" : "missing excerpt" }], limitations: ["Synthetic local evidence only."] }],
+    freshness: "Synthetic fixture captured for the current repair.",
+  });
+}
+
+async function validatedResearchRemedy(root: string, record: Awaited<ReturnType<typeof fixture>>["record"], input: {
+  failedSubmissionDigest: string;
+  replacementSubmissionDigest: string;
+  validatedEvidenceRef: { path: string; sha256: string };
+  measurementChange?: { aspect: "measurement" | "viewport" | "criterion" | "threshold"; from: string; to: string; justification: string };
+}) {
+  const checkedAt = new Date().toISOString();
+  return storeEvidence(root, record.importId, {
+    schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
+    stage: "RESEARCHING", failedSubmissionDigest: input.failedSubmissionDigest, replacementSubmissionDigest: input.replacementSubmissionDigest,
+    criterion: { id: "research-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef: input.validatedEvidenceRef,
+    ...(input.measurementChange && { measurementChange: input.measurementChange }), checkedAt,
   });
 }
 
@@ -187,12 +215,28 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
       return leased;
     });
     const supporting = await storeEvidence(root, record.importId, { observation: "All three failures reject the same stage output." });
+    const failedSubmissionDigest = current.continuation!.kind === "repair" ? current.continuation.submittedFingerprint! : "";
+    const invalidResearch = await researchEvidence(root, record, false);
+    current = await withImportLease(root, record.importId, async (leased) => {
+      leased.evidenceRefs = { ...(leased.evidenceRefs ?? {}), research: invalidResearch };
+      await saveImport(root, leased); return leased;
+    });
+    const invalidReplacementDigest = await canonicalSubmissionFingerprint(current, root);
+    const contradictedRemedy = await validatedResearchRemedy(root, record, { failedSubmissionDigest, replacementSubmissionDigest: invalidReplacementDigest, validatedEvidenceRef: invalidResearch });
+    const invalidBase = { schemaVersion: "DiagnosisV1" as const, importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest: invalidReplacementDigest, failureCode: "SYNTHETIC_STAGE_REPAIR_FAILED", cause: "The stage output is bound to stale evidence.", predictedObservation: "Rebinding the evidence makes the original validator pass.", disproofCheck: "Run the original validator; another rejection disproves the cause.", attemptedRecoveryRefs: [supporting], repairChange: { kind: "product-repair" as const, changedInputs: ["transformation.title"] }, createdAt: new Date().toISOString() };
+    await assert.rejects(submitImportDiagnosis(root, record.importId, { ...invalidBase, remedyEvidenceRefs: [contradictedRemedy] }), /RESEARCH_EXCERPT_MISMATCH/);
+
+    const validResearch = await researchEvidence(root, record);
+    current = await withImportLease(root, record.importId, async (leased) => {
+      leased.evidenceRefs = { ...(leased.evidenceRefs ?? {}), research: validResearch };
+      await saveImport(root, leased); return leased;
+    });
     const base = {
       schemaVersion: "DiagnosisV1" as const,
       importId: record.importId,
       sourceFingerprint: record.sourceFingerprint,
       stage: current.stage,
-      failedSubmissionDigest: current.continuation!.kind === "repair" ? current.continuation.submittedFingerprint! : "",
+      failedSubmissionDigest,
       replacementSubmissionDigest: await canonicalSubmissionFingerprint(current, root),
       failureCode: "SYNTHETIC_STAGE_REPAIR_FAILED",
       cause: "The stage output is bound to stale evidence.",
@@ -203,24 +247,17 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
       createdAt: new Date().toISOString(),
     };
 
-    const contradictedRemedy = await remedyEvidence(root, record, {
-      failedSubmissionDigest: base.failedSubmissionDigest,
-      replacementSubmissionDigest: base.replacementSubmissionDigest,
-      result: "contradicted",
-      observation: "The original validator still rejects the replacement.",
-    });
-    const mismatchedRemedy = await remedyEvidence(root, record, {
+    const mismatchedRemedy = await validatedResearchRemedy(root, record, {
       failedSubmissionDigest: base.failedSubmissionDigest,
       replacementSubmissionDigest: "f".repeat(64),
-      result: "verified",
-      observation: "This proof belongs to a different replacement.",
+      validatedEvidenceRef: validResearch,
     });
-    const verifiedRemedy = await remedyEvidence(root, record, {
+    const verifiedRemedy = await validatedResearchRemedy(root, record, {
       failedSubmissionDigest: base.failedSubmissionDigest,
       replacementSubmissionDigest: base.replacementSubmissionDigest,
-      result: "verified",
-      observation: "The original validator accepts the replacement.",
+      validatedEvidenceRef: validResearch,
     });
+    const selfAuthoredEcho = await echoRemedyEvidence(root, record, { failedSubmissionDigest: base.failedSubmissionDigest, replacementSubmissionDigest: base.replacementSubmissionDigest, result: "verified", observation: "Submitter-authored satisfied flags are not a controller check." });
 
     await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...base,
@@ -228,12 +265,12 @@ test("three stage-wide repairs require a falsifiable diagnosis and a verified re
     }));
     await assert.rejects(submitImportDiagnosis(root, record.importId, {
       ...base,
-      remedyEvidenceRefs: [contradictedRemedy],
-    }), /DIAGNOSIS_REMEDY_CONTRADICTED/);
-    await assert.rejects(submitImportDiagnosis(root, record.importId, {
-      ...base,
       remedyEvidenceRefs: [mismatchedRemedy],
     }), /DIAGNOSIS_REMEDY_BINDING_MISMATCH/);
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
+      ...base,
+      remedyEvidenceRefs: [selfAuthoredEcho],
+    }), /invalid_union|unrecognized_keys|invalid_type|Invalid input/i);
     await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
     assert.equal(calls, 3, "a contradicted diagnosis must not unlock another stage execution");
 
@@ -280,10 +317,21 @@ test("measurement changes require justification and separate independent verific
     });
     assert.ok(current.continuation?.kind === "repair");
     const supporting = await storeEvidence(root, record.importId, { observation: "The old threshold rejects the fixture." });
+    const validResearch = await researchEvidence(root, record);
+    current = await withImportLease(root, record.importId, async (leased) => {
+      leased.evidenceRefs = { ...(leased.evidenceRefs ?? {}), research: validResearch };
+      await saveImport(root, leased); return leased;
+    });
     const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
-    const measurementChange = { aspect: "threshold" as const, from: "0.90", to: "0.85", justification: "The fixture establishes the applicable calibrated boundary." };
-    const remedy = await remedyEvidence(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, result: "verified", observation: "The candidate passes the revised threshold." });
-    const independent = await remedyEvidence(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, result: "verified", observation: "A distinct check confirms the revised threshold still represents the criterion.", criterion: { id: "measurement.threshold", revision: "fixture-v1" }, measurements: [{ name: "threshold", expected: "0.85", observed: "0.85", satisfied: true }], measurementChange });
+    const measurementChange = { aspect: "threshold" as const, from: "40", to: "30", justification: "The deterministic title-length criterion is recalibrated to the retained replacement." };
+    const remedy = await validatedResearchRemedy(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, validatedEvidenceRef: validResearch });
+    const aliasedResearch = await validatedResearchRemedy(root, record, { failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest, validatedEvidenceRef: validResearch, measurementChange });
+    const independent = await storeEvidence(root, record.importId, {
+      schemaVersion: "RemedyMeasurementVerificationV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
+      stage: current.stage, failedSubmissionDigest: current.continuation.submittedFingerprint!, replacementSubmissionDigest,
+      criterion: { id: "transformation.title-length", revision: WORKFLOW_REVISION }, metric: "transformation.title.length",
+      observedValue: current.transformation!.title.length, measurementChange, checkedAt: new Date().toISOString(),
+    });
     const diagnosis = {
       schemaVersion: "DiagnosisV1",
       importId: record.importId,
@@ -304,6 +352,14 @@ test("measurement changes require justification and separate independent verific
       ...diagnosis,
       repairChange: { kind: "measurement-change", aspect: "threshold", from: "0.90", to: "0.85" },
     }));
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
+      ...diagnosis,
+      repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: remedy },
+    }), /Measurement verification must be independent/);
+    await assert.rejects(submitImportDiagnosis(root, record.importId, {
+      ...diagnosis,
+      repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: aliasedResearch },
+    }), /Invalid input|unrecognized_keys|invalid_type/i);
     await submitImportDiagnosis(root, record.importId, {
       ...diagnosis,
       repairChange: { kind: "measurement-change", ...measurementChange, independentVerificationRef: independent },

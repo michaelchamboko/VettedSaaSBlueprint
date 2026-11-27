@@ -509,6 +509,9 @@ test("indeterminate deployment lookup holds release and records the missing evid
     const held = await loadImport(root, record.importId);
     assert.equal(held.pendingRelease?.operations?.deployment?.phase, "held");
     assert.deepEqual(held.pendingRelease?.operations?.deployment?.missingEvidence, ["provider deployment identity", "production alias assignment"]);
+    assert.equal(held.blockerScope, "shared");
+    assert.equal(held.continuation?.kind, "blocked");
+    assert.equal(held.continuation?.failureCategory, "uncertain-external-outcome");
     assert.match(held.nextAction, /provider deployment identity/);
     assert.equal(held.release, undefined);
     assert.equal(held.terminalRef, undefined);
@@ -1153,8 +1156,7 @@ test("local PR adapter pushes only the import branch and reuses the exact review
   assert.equal(calls.some((call) => call.includes("create")), false);
 });
 
-test("deploy rejection after a production side effect restores and verifies the previous deployment", async () => {
-  for (const restored of [true, false]) {
+test("deploy rejection with an uncertain provider outcome holds the journal without rollback", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "article-partial-deploy-"));
     try {
       const record = await releasingRecord(root);
@@ -1163,17 +1165,19 @@ test("deploy rejection after a production side effect restores and verifies the 
         deploy: async () => { calls.push("production-changed"); throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED"); },
         verifyProduction: async () => { throw new Error("must not verify a rejected deploy"); },
         rollback: async (id) => { calls.push(`rollback:${id}`); return { ok: true, summary: "rollback requested" }; },
-        verifyRollback: async (id, commit) => { calls.push(`verify:${id}:${commit}`); return restored; },
       }) });
-      assert.deepEqual(calls, ["production-changed", "rollback:dpl-previous", `verify:dpl-previous:${"b".repeat(40)}`]);
-      assert.equal(result.status, restored ? "ROLLED_BACK" : "WAITING_EXTERNAL");
-      assert.deepEqual(result.reasons, ["DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED", ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])]);
+      assert.deepEqual(calls, ["production-changed"]);
+      assert.equal(result.status, "WAITING_EXTERNAL");
+      assert.match(result.reasons.join(" "), /DEPLOYMENT_RECONCILIATION_REQUIRED/);
       const persisted = await loadImport(root, record.importId);
-      assert.equal(persisted.stage, result.status);
+      assert.equal(persisted.stage, "WAITING_EXTERNAL");
       assert.equal(persisted.resumeStage, "RELEASING");
+      assert.equal(persisted.blockerScope, "shared");
+      assert.equal(persisted.continuation?.kind, "blocked");
+      assert.equal(persisted.continuation?.failureCategory, "uncertain-external-outcome");
+      assert.equal(persisted.pendingRelease?.operations?.deployment?.phase, "held");
       assert.equal(persisted.release, undefined);
     } finally { await rm(root, { recursive: true, force: true }); }
-  }
 });
 test("the local adapter merges only the exact reviewed head and verifies the merge commit", async () => {
   const head = "c".repeat(40);

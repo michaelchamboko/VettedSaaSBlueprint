@@ -35,7 +35,9 @@ Observed results:
 - A threshold change without justification and an independent verification reference failed. A separately recorded threshold change with both fields passed and remained distinct from a product repair.
 - Historical diagnosis records remained readable. New diagnosis submissions must satisfy the stronger contract.
 - Review hardening moved category creation to production failure sources (presentation candidate/capability, workflow evidence/design rejection, worker adapters and uncertain deployment outcome). The controller test invokes those sources with equivalent human wording instead of constructing category errors itself; exact legacy error-code prefixes remain a safe fallback.
-- Remedy approval is derived from retained structured execution output. Mismatched replacement bindings, contradicted results and arbitrary JSON evidence are rejected. A legacy `verified` submitter assertion without controller verification cannot unlock execution.
+- Remedy approval is derived by rerunning the controller-selected repository validator over the exact evidence referenced by the current replacement. Mismatched replacement bindings, invalid current evidence, echo commands and arbitrary JSON assertions are rejected. A legacy `verified` submitter assertion without controller verification cannot unlock execution.
+- Measurement changes use a separate allowlisted measurement record. The controller recomputes the actual replacement value and threshold result; a second wrapper around the remedy receipt is rejected as an alias rather than accepted as independent proof.
+- Unresolved deployment outcomes retain the release journal and stop with shared `uncertain-external-outcome` metadata. Read-only reconciliation can still confirm the original operation; no speculative rollback or second deploy occurs.
 
 ## Commands
 

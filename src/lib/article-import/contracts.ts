@@ -34,9 +34,28 @@ export const remedyMeasurementInputSchema = z.object({
 }).omit({ result: true, observation: true, checkedAt: true }).strict();
 export const remedyVerificationEvidenceSchema = z.object({
   schemaVersion: z.literal("RemedyVerificationEvidenceV1"),
-  method: z.enum(["deterministic", "independent-judgment"]),
-  executionRef: stateEvidenceRef,
-  ...remedyCheckResultFields,
+  importId: remedyCheckResultFields.importId,
+  sourceFingerprint: remedyCheckResultFields.sourceFingerprint,
+  stage: remedyCheckResultFields.stage,
+  failedSubmissionDigest: remedyCheckResultFields.failedSubmissionDigest,
+  replacementSubmissionDigest: remedyCheckResultFields.replacementSubmissionDigest,
+  criterion: z.object({ id: z.enum(["research-evidence", "content-assessment", "presentation-evidence"]), revision: z.string().min(1) }).strict(),
+  validatedEvidenceRef: stateEvidenceRef,
+  measurementChange: measurementChangeSchema.optional(),
+  checkedAt: remedyCheckResultFields.checkedAt,
+}).strict();
+export const remedyMeasurementVerificationSchema = z.object({
+  schemaVersion: z.literal("RemedyMeasurementVerificationV1"),
+  importId: remedyCheckResultFields.importId,
+  sourceFingerprint: remedyCheckResultFields.sourceFingerprint,
+  stage: remedyCheckResultFields.stage,
+  failedSubmissionDigest: remedyCheckResultFields.failedSubmissionDigest,
+  replacementSubmissionDigest: remedyCheckResultFields.replacementSubmissionDigest,
+  criterion: z.object({ id: z.literal("transformation.title-length"), revision: z.string().min(1) }).strict(),
+  metric: z.literal("transformation.title.length"),
+  observedValue: z.number().int().nonnegative(),
+  measurementChange: measurementChangeSchema,
+  checkedAt: remedyCheckResultFields.checkedAt,
 }).strict();
 const diagnosisFields = {
   schemaVersion: z.literal("DiagnosisV1"), importId: z.string(), sourceFingerprint: z.string(), stage: z.string(),
