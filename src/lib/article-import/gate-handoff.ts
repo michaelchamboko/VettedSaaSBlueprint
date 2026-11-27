@@ -311,7 +311,7 @@ async function holdMutationFailure(
   at: Date,
 ): Promise<CleanupOperation> {
   const attempt = latestAttempt(operation);
-  let held = attempt?.status === "ready"
+  const held = attempt?.status === "ready"
     ? await recordCleanupFailure(root, record, operation, attempt, status, error, at)
     : operation;
   let failureEvidence = latestAttempt(held)?.failureEvidence;

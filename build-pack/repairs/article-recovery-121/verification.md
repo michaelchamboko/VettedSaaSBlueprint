@@ -28,4 +28,13 @@ The first focused run failed the three new acceptance cases. The cleanup adapter
 - Directly affected regression files `tests/article-import-gate-handoff.test.ts`, `tests/article-import-dispatch.test.ts`, and `tests/article-import.test.ts` reported 54 passed and 0 failed.
 - `npm run typecheck` passed.
 
-The host uses Node 26.13.0 and npm 11.20.0. `package.json` requires Node 24.x and npm 12.x. `npm ci` completed with the expected engine warning. Final required gates and the corrected #120 integration merge remain to be recorded against the final head.
+## Final integrated proof
+
+- Merged corrected #120 cleanup behavior and final integration head `3192e4ee9dd87d9b64946a5022099f86f8a82e42` before the final checks.
+- The directly affected cleanup, handoff, dispatch, and core import files reported 74 passed and 0 failed.
+- `npm run verify:agent-workflow` passed.
+- `npm run typecheck` passed.
+- `npm run lint` passed with 19 pre-existing warnings and no errors.
+- Independent synthetic review reproduced corrupt failure-receipt bytes, a corrupt registered archive, a registry outage before removal, and a missing work directory. The corrected controller rejected or held all four cases. Failure receipts now use the separate import-scoped cleanup-failure directory.
+
+The host uses Node 26.13.0 and npm 11.20.0. `package.json` requires Node 24.x and npm 12.x. `npm ci` completed with the expected engine warning.
