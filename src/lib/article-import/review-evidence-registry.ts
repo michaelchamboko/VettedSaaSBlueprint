@@ -118,15 +118,16 @@ export type ReviewEvidenceDimensions = {
 
 export interface ArticleReviewEvidenceRegistry {
   list(input: { importId: string; evidenceClass: ReviewEvidenceClass }): Promise<ReviewEvidenceRegistration[]>;
+  listAll(input: { evidenceClass: ReviewEvidenceClass }): Promise<ReviewEvidenceRegistration[]>;
   commit(input: ReviewEvidenceRegistration): Promise<{ registrationId: string; replayed: boolean }>;
 }
 
 export function reviewRetentionDependencyResolver(registry: ArticleReviewEvidenceRegistry) {
-  return async (record: ExternalArticleImportV1): Promise<{ status: "verified"; references: EvidenceRef[] }> => {
+  return async (): Promise<{ status: "verified"; references: EvidenceRef[] }> => {
     const classes: ReviewEvidenceClass[] = ["editorial-judgment", "browser-observation", "rejected-finding", "finding-resolution", "production-proof"];
     const references: EvidenceRef[] = [];
     for (const evidenceClass of classes) {
-      const registrations = await registry.list({ importId: record.importId, evidenceClass });
+      const registrations = await registry.listAll({ evidenceClass });
       for (const raw of registrations) {
         const registration = reviewEvidenceRegistrationSchema.parse(raw);
         references.push(registration.evidenceRef, ...registration.retentionDependencies);

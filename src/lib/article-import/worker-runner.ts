@@ -11,6 +11,11 @@ import { workerOwnershipFile, writeWorkerMarker } from "./workflow-lease";
 import path from "node:path";
 import { repairEditPatterns } from "./improve-scope";
 import { z } from "zod";
+import { ImportFailure } from "./failure-routing";
+
+function workerCapabilityUnavailable(detail: string): never {
+  throw new ImportFailure("unavailable-capability", `CAPABILITY_UNAVAILABLE: ${detail}`);
+}
 
 export type WorkerProcessResult = {
   stdout: string;
@@ -38,7 +43,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   if (/[?*]/.test(canonical)) throw new Error("WORKER_ROOT_UNSUPPORTED");
   if (config.timeoutMs !== undefined && (!Number.isSafeInteger(config.timeoutMs) || config.timeoutMs < 1 || config.timeoutMs > 2147483647)) throw new Error("INVALID_WORKER_TIMEOUT");
   const kind = config.kind ?? "opencode";
-  if (kind === "command" && packet.stage !== "REFINING") throw new Error("CAPABILITY_UNAVAILABLE: alternate workers are restricted to REFINING");
+  if (kind === "command" && packet.stage !== "REFINING") workerCapabilityUnavailable("alternate workers are restricted to REFINING");
   if (kind === "command" && (!config.args?.length || !config.args.includes("{packetPath}"))) throw new Error("INVALID_WORKER_CONFIG: alternate worker argv must include {packetPath}");
   const agent = config.agent || "article-worker";
   const improve = packet.stage === "IMPROVE";
@@ -269,7 +274,7 @@ export async function invokeWorker(
   const previous = await launchOwner(checkpoint);
   const record = packet.record as ExternalArticleImportV1;
   const handled = previous && (record.stageReceipts.some(receipt => receipt.message.endsWith("[worker " + previous + "]")) || record.improve?.failure?.message.endsWith("[worker " + previous + "]"));
-  if ((!previous || handled) && config.kind !== "command" && !config.model?.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
+  if ((!previous || handled) && config.kind !== "command" && !config.model?.trim()) workerCapabilityUnavailable("configure a worker model explicitly");
   const runner = options?.workerRunner ?? defaultWorkerRunner;
   const invocation = await prepareWorkerInvocation(root, workPath, packet, config, leaseToken);
   await assertLease();
@@ -280,14 +285,16 @@ export async function invokeWorker(
   await rm(invocation.cwd, { recursive: true, force: true });
   let parsed;
   try {
-    if (processResult.timedOut) throw new Error("CAPABILITY_UNAVAILABLE: worker invocation timed out");
-    if (processResult.exitCode !== 0) throw new Error(`CAPABILITY_UNAVAILABLE: worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
+    if (processResult.timedOut) workerCapabilityUnavailable("worker invocation timed out");
+    if (processResult.exitCode !== 0) workerCapabilityUnavailable(`worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
     parsed = decodeBoundWorkerResult(processResult.stdout, packet, invocation.resultFormat);
   } catch (error) {
     // A restart replays the failure until the engine has durably recorded this owner.
     const owner = await launchOwner(invocation.checkpoint);
     if (!owner) throw error;
-    throw new Error(`${error instanceof Error ? error.message : String(error)} [worker ${owner}]`);
+    const message = `${error instanceof Error ? error.message : String(error)} [worker ${owner}]`;
+    if (error instanceof ImportFailure) throw new ImportFailure(error.failureCategory, message, error.failedCheck);
+    throw new Error(message);
   }
   await assertLease();
   await writeJsonAtomically(absoluteResultPath, parsed);

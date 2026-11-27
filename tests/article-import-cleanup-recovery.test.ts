@@ -14,10 +14,11 @@ import { externalArticleImportSchema } from "../src/lib/article-import/contracts
 import { evidenceReference } from "../src/lib/article-import/execution-evidence";
 import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
 import { parseImportCommand } from "../scripts/import-article";
+import { reviewRetentionDependencyResolver, type ArticleReviewEvidenceRegistry, type ReviewEvidenceRegistration } from "../src/lib/article-import/review-evidence-registry";
 
 const parent = path.resolve(".scratch/article-cleanup-recovery");
 const noRegisteredDependencies = async () => ({ status: "verified" as const, references: [] });
-type CleanupBoundary = "intent-recorded" | "attempt-recorded" | "pre-mutation-verified" | "archive-copied" | "archive-registered";
+type CleanupBoundary = "intent-recorded" | "attempt-recorded" | "pre-mutation-verified" | "archive-copied" | "archive-registered" | "original-removed";
 const cleanupOptions = (now: string, afterBoundary?: (boundary: CleanupBoundary) => void) => ({
   now: () => new Date(now),
   resolveRetentionDependencies: noRegisteredDependencies,
@@ -271,7 +272,7 @@ test("shared cleanup failure stops immediately and uncertain mutation requires r
 });
 
 test("gate cleanup resumes the same durable archive operation at every crash boundary", async () => {
-  for (const boundary of ["intent-recorded", "archive-copied", "archive-registered"] as const) {
+  for (const boundary of ["intent-recorded", "archive-copied", "archive-registered", "original-removed"] as const) {
     const { root, record, candidate } = await fixture();
     try {
       let calls = 0;
@@ -288,7 +289,8 @@ test("gate cleanup resumes the same durable archive operation at every crash bou
       const operationId = interrupted.gateHandoffs!.at(-1)!.cleanup.operationId;
       assert.match(operationId ?? "", /^cleanup-[a-f0-9]{24}$/);
       assert.equal(calls, 0);
-      assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
+      if (boundary === "original-removed") assert.equal(await exists(path.join(root, candidate.path)), false);
+      else assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
 
       const resumed = await executePendingImport(root, record.importId, async (context) => {
         calls += 1;
@@ -320,8 +322,11 @@ test("gate cleanup resumes the same durable archive operation at every crash bou
 test("manual cleanup disposes only verified temporary material and rechecks an expired archive dependency", async () => {
   const temporaryFixture = await fixture();
   try {
+    const durablePath = `.automation/article-imports/work/${temporaryFixture.record.importId}/durable-draft.md`;
+    await writeFile(path.join(temporaryFixture.root, durablePath), "superseded draft bytes\n");
+    const redundantWith = await evidenceReference(temporaryFixture.root, durablePath);
     const handoffs = temporaryFixture.record.gateHandoffs!.map((handoff, index) => index === temporaryFixture.record.gateHandoffs!.length - 1
-      ? { ...handoff, disposalCandidates: handoff.disposalCandidates.map((candidate) => ({ ...candidate, kind: "verified-temporary" as const })) }
+      ? { ...handoff, disposalCandidates: handoff.disposalCandidates.map((candidate) => ({ ...candidate, kind: "verified-temporary" as const, redundantWith })) }
       : handoff);
     await persistFixture(temporaryFixture.root, externalArticleImportSchema.parse({ ...temporaryFixture.record, gateHandoffs: handoffs }));
     const cleaned = await cleanupImportGateHandoff(temporaryFixture.root, temporaryFixture.record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
@@ -510,7 +515,7 @@ test("cleanup retains active, rejected, diagnosis, rollback, IMPROVE, and regist
     const handoffs = record.gateHandoffs!.map((handoff, index) => index === record.gateHandoffs!.length - 1
       ? {
           ...handoff,
-          disposalCandidates: candidates.map((candidate) => ({ reference: candidate.reference, kind: "verified-temporary" as const, reason: `Synthetic ${candidate.kind} candidate.` })),
+          disposalCandidates: candidates.map((candidate, candidateIndex) => ({ reference: candidate.reference, kind: "verified-temporary" as const, reason: `Synthetic ${candidate.kind} candidate.`, redundantWith: candidates[(candidateIndex + 1) % candidates.length].reference })),
           retainedEvidence: [
             ...handoff.retainedEvidence,
             ...candidates.slice(1).map((candidate) => ({ name: candidate.kind, reference: candidate.reference, reason: `Protected ${candidate.kind} dependency.` })),
@@ -536,6 +541,265 @@ test("cleanup retains active, rejected, diagnosis, rollback, IMPROVE, and regist
     assert.equal(dispositions.length, protectedKinds.length);
     assert.ok(dispositions.every((item) => item.disposition === "retain"));
     for (const candidate of candidates) assert.equal(await readFile(path.join(root, candidate.relative), "utf8"), `${candidate.kind} bytes\n`);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a cross-import canonical registration protects a candidate and releases a retain-only handoff", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    const registration: ReviewEvidenceRegistration = {
+      schemaVersion: "ArticleReviewEvidenceRegistrationV1",
+      registrationId: "11111111-1111-4111-8111-111111111111",
+      importId: "article-22222222-2222-4222-8222-222222222222",
+      sourceFingerprint: "a".repeat(64),
+      examinedRevision: "b".repeat(64),
+      reviewer: { id: "synthetic-independent-reviewer", independent: true },
+      criteria: [{ id: "synthetic", revision: "v1" }],
+      evidenceRef: candidate,
+      retentionDependencies: [candidate],
+      support: "accepted",
+      registeredAt: "2026-11-27T11:00:00.000Z",
+      evidenceClass: "production-proof",
+      payload: {
+        kind: "production-proof",
+        publicationPath: "import",
+        artifactFingerprint: "c".repeat(64),
+        intendedCommitSha: "d".repeat(40),
+        deployment: { deploymentId: "synthetic", canonicalUrl: "https://example.com/article", commitSha: "d".repeat(40) },
+        editorialRegistrationId: "33333333-3333-4333-8333-333333333333",
+        browserRegistrationId: "44444444-4444-4444-8444-444444444444",
+        approvalIdentity: "e".repeat(64),
+      },
+    };
+    const registry: ArticleReviewEvidenceRegistry = {
+      list: async () => { throw new Error("cleanup must not scope canonical dependencies to the current import"); },
+      listAll: async ({ evidenceClass }) => evidenceClass === "production-proof" ? [registration] : [],
+      commit: async () => ({ registrationId: registration.registrationId, replayed: false }),
+    };
+    let workerCalls = 0;
+    const first = await executePendingImport(root, record.importId, async (context) => {
+      workerCalls += 1;
+      return context.record;
+    }, { cleanup: { ...cleanupOptions("2026-11-27T12:00:00.000Z"), resolveRetentionDependencies: reviewRetentionDependencyResolver(registry) } });
+    assert.equal(workerCalls, 0);
+    assert.equal(first.gateHandoffs!.at(-1)!.cleanup.status, "verified");
+    assert.equal(first.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!.dispositions[0].disposition, "retain");
+    await executePendingImport(root, record.importId, async (context) => {
+      workerCalls += 1;
+      return context.record;
+    }, { cleanup: { ...cleanupOptions("2026-11-27T12:00:00.000Z"), resolveRetentionDependencies: reviewRetentionDependencyResolver(registry) } });
+    assert.equal(workerCalls, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a dependency claimed after archive registration restores or preserves the original before release", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    let claimed = false;
+    const options = {
+      now: () => new Date("2026-11-27T12:00:00.000Z"),
+      resolveRetentionDependencies: async () => ({ status: "verified" as const, references: claimed ? [candidate] : [] }),
+      afterBoundary: (boundary: "intent-recorded" | "archive-copied" | "archive-registered" | "original-removed") => {
+        if (boundary === "archive-registered") claimed = true;
+      },
+    };
+    const cleaned = await cleanupImportGateHandoff(root, record.importId, options);
+    const disposition = cleaned.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!.dispositions[0];
+    assert.equal(disposition.disposition, "retain");
+    assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
+    assert.ok(disposition.archiveRef);
+    assert.equal(await readFile(path.join(root, disposition.archiveRef!.path), "utf8"), "superseded draft bytes\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("restart restores an original claimed after a crash immediately following unlink", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    await assert.rejects(() => cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
+      if (boundary === "original-removed") throw new Error("CRASH:original-removed");
+    })), /CRASH:original-removed/);
+    assert.equal(await exists(path.join(root, candidate.path)), false);
+    const recovered = await cleanupImportGateHandoff(root, record.importId, {
+      ...cleanupOptions("2026-11-27T12:00:00.000Z"),
+      resolveRetentionDependencies: async () => ({ status: "verified", references: [candidate] }),
+    });
+    assert.equal(recovered.gateHandoffs!.at(-1)!.cleanup.status, "verified");
+    assert.equal(recovered.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!.dispositions[0].disposition, "retain");
+    assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a recovered canonical-register outage releases a previously completed fingerprint", async () => {
+  const { root, record } = await fixture();
+  try {
+    const archived = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+    const candidate = archived.gateHandoffs!.at(-1)!.disposalCandidates[0];
+    const dependencyOptions = {
+      now: () => new Date("2026-12-27T12:01:00.000Z"),
+      resolveRetentionDependencies: async () => ({ status: "verified" as const, references: [candidate.reference] }),
+    };
+    const retained = await cleanupImportGateHandoff(root, record.importId, dependencyOptions);
+    assert.equal(retained.gateHandoffs!.at(-1)!.cleanup.status, "verified");
+    const operationCount = retained.gateHandoffs!.at(-1)!.cleanup.operations!.length;
+    const held = await cleanupImportGateHandoff(root, record.importId, {
+      ...dependencyOptions,
+      resolveRetentionDependencies: async () => ({ status: "unavailable" as const, reason: "synthetic outage" }),
+    });
+    assert.equal(held.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    const released = await cleanupImportGateHandoff(root, record.importId, dependencyOptions);
+    assert.equal(released.gateHandoffs!.at(-1)!.cleanup.status, "verified");
+    assert.equal(released.gateHandoffs!.at(-1)!.cleanup.operations!.length, operationCount);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a later-stage gate rechecks and expires an older recoverable archive", async () => {
+  const { root, record } = await fixture();
+  try {
+    const archived = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+    const older = archived.gateHandoffs!.at(-1)!;
+    const current = { ...older, passedGate: "RESEARCHING" as const, nextStage: "TRANSFORMING" as const, disposalCandidates: [], cleanup: { status: "not-required" as const }, declaredAt: "2026-11-28T12:00:00.000Z" };
+    await persistFixture(root, externalArticleImportSchema.parse({ ...archived, stage: "TRANSFORMING", gateHandoffs: [...archived.gateHandoffs!, current] }));
+    let workerCalls = 0;
+    const expired = await executePendingImport(root, record.importId, async (context) => {
+      workerCalls += 1;
+      return context.record;
+    }, { cleanup: cleanupOptions("2026-12-27T12:01:00.000Z") });
+    assert.equal(workerCalls, 0);
+    assert.equal(expired.gateHandoffs![0].disposalCandidates.length, 0);
+    assert.equal(older.disposalCandidates.length, 1);
+    assert.equal(await exists(path.join(root, older.disposalCandidates[0].reference.path)), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("the normal handoff producer disposes only a byte-identical atomic-write temporary", async () => {
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "temporary-producer-"));
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# Synthetic producer\n\nFixture bytes only.\n");
+    const created = await createArticleImport(root, "article.md");
+    const directory = `.automation/article-imports/work/${created.importId}`;
+    const target = `${directory}/state.json`;
+    const temporary = `${target}.123.11111111-1111-4111-8111-111111111111.tmp`;
+    await mkdir(path.join(root, directory), { recursive: true });
+    await writeFile(path.join(root, target), "identical durable bytes\n");
+    await writeFile(path.join(root, temporary), "identical durable bytes\n");
+    const advanced = await advanceImport(root, created, "Synthetic ingest passed.");
+    const candidate = advanced.gateHandoffs!.at(-1)!.disposalCandidates.find((item) => item.reference.path === temporary);
+    assert.equal(candidate?.kind, "verified-temporary");
+    const cleaned = await executePendingImport(root, created.importId, async (context) => context.record, { cleanup: cleanupOptions("2026-11-27T12:00:00.000Z") });
+    assert.equal(await exists(path.join(root, temporary)), false);
+    assert.equal(await readFile(path.join(root, target), "utf8"), "identical durable bytes\n");
+    assert.equal(cleaned.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!.dispositions.find((item) => item.original.reference.path === temporary)?.disposition, "dispose");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("verified temporary cleanup holds when its durable target changes after declaration", async () => {
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "temporary-recheck-"));
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# Synthetic producer\n\nFixture bytes only.\n");
+    const created = await createArticleImport(root, "article.md");
+    const directory = `.automation/article-imports/work/${created.importId}`;
+    const target = `${directory}/state.json`;
+    const temporary = `${target}.123.11111111-1111-4111-8111-111111111111.tmp`;
+    await mkdir(path.join(root, directory), { recursive: true });
+    await writeFile(path.join(root, target), "original durable bytes\n");
+    await writeFile(path.join(root, temporary), "original durable bytes\n");
+    await advanceImport(root, created, "Synthetic ingest passed.");
+    await writeFile(path.join(root, target), "changed durable bytes\n");
+    const held = await cleanupImportGateHandoff(root, created.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+    assert.equal(held.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    assert.equal(await readFile(path.join(root, temporary), "utf8"), "original durable bytes\n");
+    assert.equal(await readFile(path.join(root, target), "utf8"), "changed durable bytes\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("same-byte superseded files retain distinct archive dispositions", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    const secondPath = `.automation/article-imports/work/${record.importId}/second-superseded.md`;
+    await writeFile(path.join(root, secondPath), "superseded draft bytes\n");
+    const second = await evidenceReference(root, secondPath);
+    const handoffs = record.gateHandoffs!.map((handoff, index) => index === record.gateHandoffs!.length - 1 ? {
+      ...handoff,
+      disposalCandidates: [
+        ...handoff.disposalCandidates,
+        { reference: second, kind: "superseded-capture" as const, reason: "Second same-byte superseded artifact." },
+      ],
+      cleanup: { status: "pending" as const },
+    } : handoff);
+    await persistFixture(root, externalArticleImportSchema.parse({ ...record, gateHandoffs: handoffs }));
+    const cleaned = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+    const remaining = cleaned.gateHandoffs!.at(-1)!.disposalCandidates;
+    assert.equal(remaining.length, 2);
+    assert.deepEqual(remaining.map((item) => path.basename(item.reference.path)).sort(), [path.basename(candidate.path), path.basename(second.path)].sort());
+    assert.ok(remaining.every((item) => item.archivedAt === "2026-11-27T12:00:00.000Z"));
+    assert.ok(await exists(path.join(root, remaining[0].reference.path)));
+    assert.ok(await exists(path.join(root, remaining[1].reference.path)));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a superseded target and its verified atomic temporary both finish cleanup", async () => {
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "temporary-superseded-target-"));
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# Synthetic producer\n\nFixture bytes only.\n");
+    const created = await createArticleImport(root, "article.md");
+    const directory = `.automation/article-imports/work/${created.importId}`;
+    const target = `${directory}/attempt.work.json`;
+    const result = `${directory}/attempt.result.json`;
+    const temporary = `${target}.123.11111111-1111-4111-8111-111111111111.tmp`;
+    await mkdir(path.join(root, directory), { recursive: true });
+    await writeFile(path.join(root, target), "shared bytes\n");
+    await writeFile(path.join(root, temporary), "shared bytes\n");
+    await writeFile(path.join(root, result), "result bytes\n");
+    const prepared = externalArticleImportSchema.parse({
+      ...created,
+      stageAttempts: [{
+        schemaVersion: "ImportStageAttemptV1",
+        attemptId: `stage-attempt-${"f".repeat(24)}`,
+        stage: "RESEARCHING",
+        operation: "research-plan",
+        sequence: 1,
+        inputFingerprint: "1".repeat(64),
+        idempotencyKey: "2".repeat(64),
+        workPath: target,
+        resultPath: result,
+        reason: "initial",
+        status: "superseded",
+        repairTotalAtIssue: 0,
+        issuingLeaseOwnerToken: "11111111-1111-4111-8111-111111111111",
+        issuedAt: "2026-11-27T11:00:00.000Z",
+      }],
+    });
+    await persistFixture(root, prepared);
+    await advanceImport(root, await loadImport(root, created.importId), "Synthetic ingest passed.");
+    const cleaned = await cleanupImportGateHandoff(root, created.importId, cleanupOptions("2026-11-27T12:00:00.000Z"));
+    assert.equal(cleaned.gateHandoffs!.at(-1)!.cleanup.status, "verified");
+    assert.equal(await exists(path.join(root, temporary)), false);
+    assert.equal(await exists(path.join(root, target)), false);
+    assert.ok(cleaned.gateHandoffs!.at(-1)!.disposalCandidates.some((item) => path.basename(item.reference.path) === path.basename(target)));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

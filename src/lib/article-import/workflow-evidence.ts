@@ -13,9 +13,18 @@ import { approvedAffiliateUrl, assertLongFormAffiliateAssessment, assertLongForm
 import { articleHeroBindingSchema, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "./article-visual-quality";
+import { ImportFailure } from "./failure-routing";
 export { evidenceRefSchema, evidenceReference, readEvidence, readVerifiedEvidenceBytes, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
+
+export function presentationDesignRejected(detail: string): never {
+  throw new ImportFailure("content-rejection", `PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS: ${detail}`);
+}
+
+export function workflowEvidenceRejected(detail: string): never {
+  throw new ImportFailure("invalid-evidence", `WORKFLOW_EVIDENCE_INVALID: ${detail}`);
+}
 
 const nonempty = z.string().trim().min(1);
 export function createDesignReviewSchema(input: { rule: string; artifactFingerprint: string; renderInputsRef: { path: string; sha256: string }; renderingDigest: string; allowedRoutes: string[] }) {
@@ -564,7 +573,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   if (value.ruleResults.length !== rules.length) throw new Error("PRESENTATION_RULE_MISSING");
   for (const rule of rules) {
     const result = value.ruleResults.find((r) => r.ruleId === rule);
-    if (!result || result.status !== "pass") throw new Error(`PRESENTATION_RULE_FAILED:${rule}`);
+    if (!result || result.status !== "pass") workflowEvidenceRejected(`PRESENTATION_RULE_FAILED:${rule}`);
     for (const evidence of result.evidenceRefs) {
       const execution = await validateExecutionEvidence(root, evidence);
       if (!execution.inputRefs.some((ref) => ref.path === value.renderInputsRef.path && ref.sha256 === value.renderInputsRef.sha256)) throw new Error("PRESENTATION_RENDER_INPUT_BINDING_MISMATCH");
@@ -610,7 +619,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md", ...(currentDesign ? [designJudgmentInstruction] : [])]);
         const allowedJudgmentRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
 const designReview = createDesignReviewSchema({ rule, artifactFingerprint: fingerprintEditorialArtifact(artifact), renderInputsRef: value.renderInputsRef, renderingDigest: rendering.digest, allowedRoutes: allowedJudgmentRoutes }).parse(JSON.parse(execution.output.designReview ?? "null"));
-if (designReview.verdict !== "pass") throw new Error("PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS");
+if (designReview.verdict !== "pass") presentationDesignRejected(designReview.notes);
 if (designReview.findings.some((finding) => finding.disposition !== "resolved")) throw new Error("PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING");
       }
       if (rule === "visual-quality") {
