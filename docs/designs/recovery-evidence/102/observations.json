@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "RegisteredEvidenceRecovery102V1",
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "generatedAt": "2026-11-27T09:10:19.814Z",
+  "expected": {
+    "reuseDimensions": [
+      "relevance",
+      "support",
+      "integrity",
+      "freshness"
+    ],
+    "invalidDimensionsRequireResearch": true,
+    "dependentApprovalsInvalidated": true,
+    "independentApprovalsRetainedWithReason": true,
+    "everyEvidenceClassHasCanonicalRegistration": true,
+    "freshJudgmentBoundToExaminedRevision": true,
+    "unknownHistoricalProvenanceRetained": true
+  },
+  "registryMatrix": [
+    {
+      "dimension": "control",
+      "reuseAccepted": true,
+      "reuseError": null,
+      "gapReason": null,
+      "gapAccepted": null,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": [
+        {
+          "sourceId": "99999999-9999-4999-8999-999999999999",
+          "productId": null,
+          "sourceUrl": "https://example.test/historical",
+          "sourceType": "historical-review",
+          "sourceHash": null,
+          "retrievedAt": null,
+          "usageAllowed": false,
+          "claimId": null,
+          "claimText": null,
+          "claimUpdatedAt": null
+        }
+      ]
+    },
+    {
+      "dimension": "relevance",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_NOT_CURRENT",
+      "gapReason": "missing",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    },
+    {
+      "dimension": "support",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_CONFLICTING",
+      "gapReason": "conflicting",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    },
+    {
+      "dimension": "integrity",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_NOT_CURRENT",
+      "gapReason": "missing",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    },
+    {
+      "dimension": "freshness",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_NOT_CURRENT",
+      "gapReason": "stale",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    }
+  ],
+  "controllerRecovery": {
+    "missing": {
+      "stage": "TRANSFORMING",
+      "gapReason": "missing"
+    },
+    "stale": {
+      "stage": "TRANSFORMING",
+      "gapReason": "stale"
+    },
+    "invalidResearch": {
+      "stageAfterInvalidation": "RESEARCHING",
+      "invalidatedApprovalKeys": [
+        "assessment",
+        "editorial",
+        "presentation",
+        "production"
+      ],
+      "retainedApprovalKeys": [],
+      "invalidationReason": "RESEARCH_RECOVERY_REQUIRED: ASSESSMENT_RULE_FAILED:claims. Invalidated dependent evidence: {\"stage\":\"VALIDATING\",\"evidenceRefs\":{\"research\":{\"path\":\"research-missing.json\",\"sha256\":\"8d488cab68d059bd39b013eec3b116f482620ae8ca7833f3cc78f95e351dace3\"},\"assessment\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2.json\",\"sha256\":\"210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2\"},\"editorial\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928.json\",\"sha256\":\"b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928\"},\"presentation\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a.json\",\"sha256\":\"973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a\"},\"production\":{\"path\":\".automation/article-imports/evidence/article-70a01c85-453c-46ca-8c4c-045a7af1f6b6/f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f.json\",\"sha256\":\"f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f\"}}}",
+      "priorReadable": {
+        "research": true,
+        "assessment": true,
+        "editorial": true,
+        "presentation": true,
+        "production": true
+      },
+      "recoveredStage": "TRANSFORMING",
+      "freshResearchRef": {
+        "path": "research-reacquired.json",
+        "sha256": "275808a87e968118697bab65bfeebf672535d645d074cda5fab82a3212a5f848"
+      },
+      "examinedRevision": "5084ac4d30a42ec9ccd6a5eaaba7b06224f1c5c6d963f4b7750d0f0f2323900a"
+    },
+    "externalWorkerCalls": 0
+  },
+  "retentionGraph": {
+    "resolvedCategories": [
+      "research",
+      "rejected-finding",
+      "resolution",
+      "editorial-judgment",
+      "browser-observation",
+      "production-proof"
+    ],
+    "frozenFileCount": 8,
+    "allExactRevisions": true,
+    "registration": {
+      "research": true,
+      "rejectedFinding": false,
+      "resolution": false,
+      "editorialJudgment": false,
+      "browserObservation": false,
+      "productionProof": false
+    },
+    "registrationNote": "The generic frozen graph retains exact bytes, but only research has a first-class canonical register interface in the investigated revision."
+  },
+  "unreachable": [
+    "No first-class canonical register schema exists for rejected findings, resolutions, editorial judgments, browser observations, or production proof.",
+    "No approval in the active assessment/editorial/presentation/production chain is independent of research, so a surviving independent approval case cannot be constructed through the current controller contract.",
+    "A rejected finding has a disposition and evidence refs, but the active schema has no separate integrity-bound resolution record."
+  ]
+}
