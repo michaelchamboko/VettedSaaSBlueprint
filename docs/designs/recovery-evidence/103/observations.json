@@ -15,6 +15,19 @@
     "independentOfMutableImport": true,
     "artifact": "docs/designs/recovery-evidence/103/served-catalogue.html"
   },
+  "httpServing": {
+    "route": "/blog/synthetic-catalogue-target",
+    "controlRoute": "/blog/synthetic-catalogue-control",
+    "status": 200,
+    "controlStatus": 200,
+    "canonicalPath": "/blog/synthetic-catalogue-target",
+    "canonicalUrl": "https://vettedsaasblueprint.online/blog/synthetic-catalogue-target",
+    "controlCanonicalPath": "/blog/synthetic-catalogue-control",
+    "controlCanonicalUrl": "https://vettedsaasblueprint.online/blog/synthetic-catalogue-control",
+    "bodyEvidenceSha256": "5738dd62cbafdbcf67d308c0a1bde92394e803114cb804bbb3c55651baa9a88b",
+    "independentOfMutableImport": true,
+    "artifact": "docs/designs/recovery-evidence/103/http-observations.json"
+  },
   "scope": [
     { "change": "content", "path": "src/generated/blog-posts/target.json", "targetContent": "revalidate", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "BLOG_AUTHORITY_ARTIFACT_MISMATCH; RENDER_INPUT_CHANGED:src/generated/blog-posts/target.json" },
     { "change": "shared-renderer", "path": "src/app/blog/[slug]/page.tsx", "targetContent": "reuse", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "RENDER_INPUT_CHANGED:src/app/blog/[slug]/page.tsx" },

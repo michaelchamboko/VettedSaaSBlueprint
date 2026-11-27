@@ -20,7 +20,9 @@ This evidence does not claim a product correction. It records current behavior a
 
 ## Observed evidence
 
-The focused test imports the real `src/app/blog/[slug]/page.tsx` module after installing a two-article synthetic catalogue in a disposable fixture root. React renders that existing public route component to static HTML. This is component rendering, not an HTTP observation. The generated page contains the approved target title and answer. Changing a separate mutable import artifact leaves the rendered HTML byte-for-byte unchanged. The catalogue-authority check rejects that changed import artifact with `BLOG_AUTHORITY_ARTIFACT_MISMATCH`.
+The focused test uses two boundaries. First, it imports the real `src/app/blog/[slug]/page.tsx` module after installing a two-article synthetic catalogue in a disposable fixture root. React renders that route component to static HTML. Second, it copies the application into a separate disposable fixture, starts that fixture's Next server on `127.0.0.1`, and requests the target and control routes over HTTP.
+
+The HTTP target and control both returned 200. Their canonical URLs were `https://vettedsaasblueprint.online/blog/synthetic-catalogue-target` and `https://vettedsaasblueprint.online/blog/synthetic-catalogue-control`. The target response contained the approved title and answer summary. The test then changed only the fixture's separate mutable import artifact. The catalogue-authority validator returned `BLOG_AUTHORITY_ARTIFACT_MISMATCH`, but a fresh HTTP request still served the approved catalogue body. The server never reads the caller's tracked catalogue or local import state.
 
 | One-at-a-time change | Target content approval | Control content approval | Target catalogue binding | Control catalogue binding | Target presentation | Control presentation |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -38,6 +40,7 @@ The release code has separate gates for catalogue binding, content approval, ren
 
 - `catalogue-import-probe.test.ts`: repeatable synthetic probe.
 - `served-catalogue.html`: local render from the real public blog route.
+- `http-observations.json`: retained HTTP status, canonical path, body evidence digest, control result, and serving-independence result.
 - `observations.json`: expected and observed result summary.
 - `red-output.txt`: TDD failure before the probe existed.
 - `test-output.txt`: passing focused test receipt.
@@ -48,4 +51,4 @@ The release code has separate gates for catalogue binding, content approval, ren
 node_modules\.bin\tsx.cmd --test docs/designs/recovery-evidence/103/catalogue-import-probe.test.ts
 ```
 
-The test builds all mutable inputs under a disposable temporary root. It never writes the caller's tracked catalogue, user files, import records, database, deployment, or publication state. The retained HTML is a checked reference. Ordinary test runs compare its bytes and do not rewrite it.
+The test builds all mutable inputs under disposable roots. The HTTP fixture lives in the checkout's owned `.scratch` directory so its Windows dependency junction stays on one drive. This works in a regular checkout and a linked worktree. It never writes the caller's tracked catalogue, user files, import records, database, deployment, or publication state. The retained HTML and HTTP observation are checked references. Ordinary test runs compare their bytes and do not rewrite them. The test records the exact child it starts, sends termination only to that child, waits for exit, and then removes its fixture.
