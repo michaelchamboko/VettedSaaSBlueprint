@@ -18,6 +18,7 @@ import { recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
+import { declareGateHandoff } from "./gate-handoff";
 import { registerPublicationApproval } from "./publication-approval";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 
@@ -176,7 +177,7 @@ export function prepareTransformation(parsed: ReturnType<typeof parseExternalArt
 function initialRecord(input: { importId: string; sourceFile: string; sourceFingerprint: string; parsed: ReturnType<typeof parseExternalArticle>; transformation: ImportTransformationV1 }): ExternalArticleImportV1 {
   const at = now();
   return {
-    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], activityProtocolVersion: 1, importId: input.importId, sourceFingerprint: input.sourceFingerprint,
+    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], activityProtocolVersion: 1, handoffProtocolVersion: 1, gateHandoffs: [], importId: input.importId, sourceFingerprint: input.sourceFingerprint,
     sourceFile: input.sourceFile, stage: "INGESTING", createdAt: at, updatedAt: at,
     title: input.parsed.title, primaryQuestion: input.parsed.primaryQuestion, format: input.transformation.format,
     promptInjectionDetected: input.parsed.promptInjectionDetected, ...(input.parsed.unusableReason ? { unusableReason: input.parsed.unusableReason } : {}),
@@ -773,7 +774,8 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
       record = checked;
     }
     const at = now();
-    const updated = externalArticleImportSchema.parse({ ...record, continuation: undefined, resumeStage: undefined, blockerScope: undefined, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
+    const handoff = await declareGateHandoff(repositoryRoot, record, record.stage, stage);
+    const updated = externalArticleImportSchema.parse({ ...record, gateHandoffs: [...(record.gateHandoffs ?? []), handoff], continuation: undefined, resumeStage: undefined, blockerScope: undefined, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
     await saveImport(repositoryRoot, updated);
     return updated;
   });
@@ -805,7 +807,9 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
     const presented = await ensureImportPresentationBinding(repositoryRoot, { ...checked, release });
     if (!presented.presentation) return presented;
     const at = now();
-    const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: instructionsForStage("VERIFYING") });
+    const released = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, release });
+    const handoff = await declareGateHandoff(repositoryRoot, released, "RELEASING", "VERIFYING");
+    const updated = externalArticleImportSchema.parse({ ...released, gateHandoffs: [...(released.gateHandoffs ?? []), handoff], stage: "VERIFYING", updatedAt: at, stageReceipts: [...released.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: instructionsForStage("VERIFYING") });
     await saveImport(repositoryRoot, updated);
     return updated;
   });
@@ -843,7 +847,9 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     const publicationKey = fingerprint(`${record.importId}:${release.commitSha}`);
     const runRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "ImproveRunSnapshotV1", publicationKey, importId: record.importId, sourceFingerprint: record.sourceFingerprint, stageReceipts: record.stageReceipts, repairStageTotals: record.repairStageTotals, strategyAttempts: record.strategyAttempts, pendingRelease: record.pendingRelease, release, terminalRef });
     const improve = { schemaVersion: "ImportImproveV1" as const, publicationKey, boundCommitSha: release.commitSha, runRef, phase: "ASSESSING" as const, attempt: 0, issueKeys: [], resolvedKeys: [], openKeys: [], handoffRefs: [] };
-    const updated = externalArticleImportSchema.parse({ ...presented, ...(publicationApproval && { publicationApproval }), terminalRef, improve, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+    const verified = externalArticleImportSchema.parse({ ...presented, ...(publicationApproval && { publicationApproval }), terminalRef, improve });
+    const handoff = await declareGateHandoff(repositoryRoot, verified, "VERIFYING", "LIVE");
+    const updated = externalArticleImportSchema.parse({ ...verified, gateHandoffs: [...(verified.gateHandoffs ?? []), handoff], continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...verified.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
     const historical = await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal");
     if (!historical.ok) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(historical.diagnostics)}`);
     await saveImport(repositoryRoot, updated);

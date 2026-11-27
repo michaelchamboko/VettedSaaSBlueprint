@@ -29,7 +29,7 @@ import {
   type ArticleReviewEvidenceRegistry,
   type ReviewEvidenceRegistration,
 } from "../src/lib/article-import/review-evidence-registry";
-import { assessPublicationImpact, registerPublicationApproval } from "../src/lib/article-import/publication-approval";
+import { registerPublicationApproval } from "../src/lib/article-import/publication-approval";
 
 function isolatedReviewRegistry(initial: ReviewEvidenceRegistration[] = []) {
   const records = [...initial];
@@ -58,6 +58,17 @@ async function releaseFixture(root: string, recovered = false, beforeReceipt?: (
   const artifact = JSON.parse(await readFile(path.resolve(root, record.contentApproval!.artifactPath), "utf8"));
   const target = importArtifactTarget(record.format as "direct-review", artifact);
   const commitSha = "b".repeat(40), reviewedCommitSha = "a".repeat(40);
+  const catalogueDirectory = path.join(root, "src/generated/landing-pages");
+  const catalogueArtifact = `${target.slug}.json`;
+  const catalogueReceipt = `releases/${target.slug}/release-receipt.json`;
+  await mkdir(path.join(catalogueDirectory, "releases", target.slug), { recursive: true });
+  const catalogueBytes = await readFile(path.resolve(root, record.contentApproval!.artifactPath));
+  const catalogueRoute = `/landing-page-builders/${target.slug}`;
+  await writeFile(path.join(catalogueDirectory, "index.json"), JSON.stringify({ pages: [{ slug: target.slug, artifact: catalogueArtifact, path: catalogueRoute, release_receipt: catalogueReceipt }] }));
+  await writeFile(path.join(catalogueDirectory, catalogueReceipt), JSON.stringify({
+    slug: target.slug, path: catalogueRoute, artifacts: { page: { path: catalogueArtifact, sha256: createHash("sha256").update(catalogueBytes).digest("hex") } },
+    release: { reviewed_commit: reviewedCommitSha },
+  }));
   const deployment = { commitSha, deploymentId: "dpl_fixture", canonicalUrl: new URL(target.renderedRoutes[0], "https://vettedsaasblueprint.online").href };
   const checks = await productionFixture(root, record.importId, target, deployment, record.sourceFingerprint);
   record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha }, deployment: { commitSha, operationKey: `deployment:${commitSha}`, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl } } };
@@ -157,25 +168,6 @@ test("catalogue and import publication approval must agree before LIVE", async (
     assert.deepEqual(await readFile(path.join(root, live.terminalRef!.path)), terminalBytes);
   } finally {
     await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("publication impact keeps the unaffected control independent", () => {
-  const publications = [
-    { id: "target", contentPaths: ["content/target.json"], assetPaths: ["public/target.webp"] },
-    { id: "control", contentPaths: ["content/control.json"], assetPaths: ["public/control.webp"] },
-  ];
-  const cases = [
-    { kind: "content" as const, path: "content/target.json", expected: [["revalidate", "revalidate"], ["reuse", "reuse"]] },
-    { kind: "renderer" as const, path: "src/app/blog/[slug]/page.tsx", expected: [["reuse", "revalidate"], ["reuse", "revalidate"]] },
-    { kind: "styles" as const, path: "src/app/globals.css", expected: [["reuse", "revalidate"], ["reuse", "revalidate"]] },
-    { kind: "asset" as const, path: "public/target.webp", expected: [["reuse", "revalidate"], ["reuse", "reuse"]] },
-    { kind: "rules" as const, path: "src/lib/blog/contracts.ts", expected: [["reuse", "revalidate"], ["reuse", "revalidate"]] },
-  ];
-  for (const change of cases) {
-    const result = assessPublicationImpact(publications, change);
-    assert.deepEqual(result.map((entry) => [entry.content, entry.presentation]), change.expected, change.kind);
-    assert.ok(result.every((entry) => entry.reason.length > 0));
   }
 });
 

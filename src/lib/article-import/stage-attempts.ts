@@ -105,15 +105,15 @@ export async function reconcileLateResearchPlanResults(root: string, record: Ext
         ...updated,
         stageAttempts: (updated.stageAttempts ?? []).map((attempt) => attempt.attemptId === current.attemptId ? importStageAttemptSchema.parse({ ...attempt, status: "superseded" }) : attempt),
       });
-      return { record: updated, selected: { raw: parsed, attempt: candidate } };
+      return { record: updated, selected: { raw: parsed, attempt: candidate, resultRef, decisionRef: decisionRef! } };
     }
   }
   return { record: updated, selected: undefined };
 }
 
-export function completeResearchPlanAttempt(record: ExternalArticleImportV1, attemptId: string) {
+export function completeResearchPlanAttempt(record: ExternalArticleImportV1, attemptId: string, refs: { resultRef: EvidenceRef; decisionRef: EvidenceRef }) {
   return externalArticleImportSchema.parse({
     ...record,
-    stageAttempts: (record.stageAttempts ?? []).map((attempt) => attempt.attemptId === attemptId ? importStageAttemptSchema.parse({ ...attempt, status: "completed", completedAt: new Date().toISOString() }) : attempt),
+    stageAttempts: (record.stageAttempts ?? []).map((attempt) => attempt.attemptId === attemptId ? importStageAttemptSchema.parse({ ...attempt, ...refs, status: "completed", completedAt: new Date().toISOString() }) : attempt),
   });
 }

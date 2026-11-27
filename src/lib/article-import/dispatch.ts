@@ -18,6 +18,7 @@ import { createSupervisedImproveExecutor, type ImproveExecutor } from "./improve
 import { readCurrentArticleHeroRejection } from "./hero-image";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { NeonArticleReviewEvidenceRegistry } from "./review-evidence-registry-neon";
+import { verifyGateHandoffForDispatch } from "./gate-handoff";
 
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
@@ -90,6 +91,10 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
     const priorRejection = await consumeHeroRejection();
     if (priorRejection) return priorRejection;
     const first = await baseExecutor(context);
+    const handoffVerification = await verifyGateHandoffForDispatch(root, first);
+    if (handoffVerification?.status === "held") {
+      return { ...first, continuation: undefined, nextAction: `Gate handoff held before dispatch: ${handoffVerification.reason}` };
+    }
     if (!first.continuation || first.continuation.kind !== "work") return first;
     const workPath = first.continuation.workPath;
     const resultPath = first.continuation.resultPath;
@@ -97,6 +102,11 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
     if (packet.importId !== context.record.importId || packet.stage !== context.stage ||
         packet.idempotencyKey !== context.idempotencyKey || packet.sourceFingerprint !== context.record.sourceFingerprint ||
         packet.resultPath !== resultPath) throw new Error("STATE_INTEGRITY: work packet binding mismatch");
+    if (handoffVerification?.status === "verified" &&
+        (JSON.stringify(packet.gateHandoff) !== JSON.stringify(handoffVerification.handoff) ||
+         (packet.gateHandoffVerification as { status?: unknown } | undefined)?.status !== "verified")) {
+      throw new Error("STATE_INTEGRITY: gate handoff packet binding mismatch");
+    }
     // The local candidate renderer independently verifies the persisted work packet.
     await context.assertLease();
     await saveImport(root, first);

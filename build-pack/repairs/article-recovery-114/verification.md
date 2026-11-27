@@ -60,6 +60,8 @@ The focused controller test also held dispatch at zero worker calls while a live
 
 The first independent Codex review of commit `404c2a2` found seven actionable defects. The corrected tests now prove that B is consumed before conflicting A, malformed or misbound A cannot block B, independent review needs prior review evidence, selected bytes are retained immutably, legacy packets are adopted at their existing paths, and historical decisions are scoped to the replacement and compared input.
 
+After merging integration tip `f622a4e`, the controller also preserves the issued public decision-path alias while validating from the immutable result and decision references stored on every completed research-plan attempt. Initial, selected-A, delivered-B, and pre-upgrade pending acquisition all resume through the next stage. A late reuse candidate without valid bound evidence remains historical, leaves B active, and does not increment the repair total. The merged #116 PGlite checks passed 2/2, and an independent compound PGlite probe confirmed a late selected A immediately registers exactly one finding resolution and rehydrates it after restart.
+
 ## Environment
 
 The repository declares Node 24 and npm 12. This shell exposed Node 26.13.0 and npm 11.20.0. The locked dependency install completed, and all commands above passed under the available runtime. The full test suite was not run because the repository correction policy requires only the changed behavior and its direct callers.

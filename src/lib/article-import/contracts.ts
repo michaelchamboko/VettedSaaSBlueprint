@@ -318,6 +318,8 @@ export const importStageAttemptSchema = z.object({
   idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/),
   workPath: z.string().min(1),
   resultPath: z.string().min(1),
+  resultRef: stateEvidenceRef.optional(),
+  decisionRef: stateEvidenceRef.optional(),
   predecessorAttemptId: z.string().regex(/^stage-attempt-[a-f0-9]{24}$/).optional(),
   reason: z.enum(["initial", "intentional-repair", "dependency-change", "legacy-adoption"]),
   status: z.enum(["active", "completed", "superseded"]),
@@ -343,6 +345,29 @@ export const importStageSelectionSchema = z.object({
   independentReview: z.literal("not-applicable"),
   selectedAt: z.string().datetime({ offset: true }),
 }).strict();
+
+const gateHandoffReferenceSchema = z.object({
+  name: z.string().min(1),
+  reference: stateEvidenceRef,
+  reason: z.string().min(1),
+}).strict();
+export const importGateHandoffSchema = z.object({
+  schemaVersion: z.literal("ImportGateHandoffV1"),
+  passedGate: importStageSchema,
+  nextStage: importStageSchema,
+  acceptedOutputs: z.array(gateHandoffReferenceSchema),
+  requiredNextInputs: z.array(gateHandoffReferenceSchema).min(1),
+  retainedEvidence: z.array(gateHandoffReferenceSchema),
+  disposalCandidates: z.array(z.object({ path: z.string().min(1), reason: z.string().min(1) }).strict()),
+  unclassifiedMaterial: z.array(z.object({ reference: stateEvidenceRef, reason: z.string().min(1) }).strict()),
+  constraints: z.record(z.string(), z.string()),
+  cleanup: z.object({
+    status: z.enum(["not-required", "pending", "verified"]),
+    operationId: z.string().min(1).optional(),
+  }).strict(),
+  declaredAt: z.string().datetime({ offset: true }),
+}).strict();
+export type ImportGateHandoff = z.infer<typeof importGateHandoffSchema>;
 
 export const importPendingReleaseSchema = z.object({
   schemaVersion: z.literal("ImportPendingReleaseV1"),
@@ -414,6 +439,8 @@ export const externalArticleImportSchema = z.object({
   activityReceipts: z.array(importActivityReceiptSchema).optional(),
   activityAttempts: z.array(importActivityAttemptSchema).optional(),
   activitySelections: z.array(importActivitySelectionSchema).optional(),
+  handoffProtocolVersion: z.literal(1).optional(),
+  gateHandoffs: z.array(importGateHandoffSchema).optional(),
   activityFindings: z.array(importActivityFindingSchema).optional(),
   activityFindingReviews: z.array(importActivityFindingReviewSchema).optional(),
   stageAttempts: z.array(importStageAttemptSchema).optional(),

@@ -4,13 +4,21 @@ import { readFile } from "node:fs/promises";
 import { z } from "zod";
 
 import { contentApprovalSchema, resolveContentApproval } from "./content-approval";
-import { importPresentationReceiptSchema, type ExternalArticleImportV1 } from "./contracts";
-import { evidenceRefSchema, evidenceReference, readEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import { externalArticleImportSchema, importPresentationReceiptSchema, type ExternalArticleImportV1 } from "./contracts";
+import { evidenceRefSchema, evidenceReference, readEvidence, readVerifiedEvidenceBytes, storeEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
 import { validateEditorialExecution, workflowEvidenceSchema } from "./workflow-evidence";
 import { verifyImportPresentationEvidence } from "./presentation";
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);
+const findingProvenanceSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("known"), reviewer: z.string().min(1), executionId: z.string().min(1) }).strict(),
+  z.object({ status: z.literal("missing"), reason: z.string().min(1) }).strict(),
+]);
+const findingApplicabilitySchema = z.object({
+  status: z.enum(["applicable", "not-applicable"]),
+  reason: z.string().min(1),
+}).strict();
 const registrationBase = {
   schemaVersion: z.literal("ArticleReviewEvidenceRegistrationV1"),
   registrationId: z.string().uuid(),
@@ -45,6 +53,37 @@ export const reviewEvidenceRegistrationSchema = z.discriminatedUnion("evidenceCl
       kind: z.literal("browser-observation"),
       presentationRef: evidenceRefSchema,
       presentation: importPresentationReceiptSchema,
+    }).strict(),
+  }).strict(),
+  z.object({
+    ...registrationBase,
+    evidenceClass: z.literal("rejected-finding"),
+    payload: z.object({
+      kind: z.literal("rejected-finding"),
+      findingId: z.string().regex(/^finding-[a-f0-9]{24}$/),
+      stage: z.enum(["REFINING", "VALIDATING"]),
+      activityId: z.string().min(1),
+      observation: z.string().min(1),
+      expectedCheck: z.string().min(1),
+      provenance: findingProvenanceSchema,
+      applicability: findingApplicabilitySchema,
+      protectedReferences: z.array(evidenceRefSchema).min(1),
+    }).strict(),
+  }).strict(),
+  z.object({
+    ...registrationBase,
+    evidenceClass: z.literal("finding-resolution"),
+    payload: z.object({
+      kind: z.literal("finding-resolution"),
+      findingId: z.string().regex(/^finding-[a-f0-9]{24}$/),
+      findingRegistrationId: z.string().uuid(),
+      reviewId: z.string().regex(/^finding-review-[a-f0-9]{24}$/),
+      disposition: z.enum(["verified-repair", "appropriate-removal", "evidenced-dismissal"]),
+      observation: z.string().min(1),
+      expectedCheck: z.string().min(1),
+      provenance: findingProvenanceSchema,
+      applicability: findingApplicabilitySchema,
+      protectedReferences: z.array(evidenceRefSchema).min(1),
     }).strict(),
   }).strict(),
   z.object({
@@ -102,7 +141,9 @@ export async function evaluateRegisteredReviewEvidence(
   const relevance = registration.importId === context.importId &&
     registration.sourceFingerprint === context.sourceFingerprint &&
     registration.examinedRevision === context.examinedRevision;
-  const support = registration.support === "accepted" && registration.reviewer.independent && registration.criteria.length > 0;
+  const support = registration.evidenceClass === "rejected-finding"
+    ? registration.support === "rejected" && registration.payload.provenance.status === "known" && registration.criteria.length > 0
+    : registration.support === "accepted" && registration.reviewer.independent && registration.criteria.length > 0;
   const freshness = !registration.expiresAt || Date.parse(registration.expiresAt) > Date.parse(context.now);
   let integrity = true;
   try {
@@ -131,6 +172,176 @@ export async function resolveRegisteredReviewEvidence(
 
 export function uniqueEvidenceRefs(refs: EvidenceRef[]): EvidenceRef[] {
   return [...new Map(refs.map((ref) => [`${ref.path}:${ref.sha256}`, ref])).values()];
+}
+
+type ActivityFinding = NonNullable<ExternalArticleImportV1["activityFindings"]>[number];
+type ActivityFindingReview = NonNullable<ExternalArticleImportV1["activityFindingReviews"]>[number];
+
+export async function registerActivityFindingEvidence(
+  root: string,
+  registry: ArticleReviewEvidenceRegistry,
+  record: ExternalArticleImportV1,
+  finding: ActivityFinding,
+): Promise<ReviewEvidenceRegistration> {
+  const frozen = await freezeActivityReferences(root, record.importId, [finding.originalEvidenceRef, ...finding.dependencyRefs]);
+  const originalEvidenceRef = frozen[0];
+  const protectedReferences = uniqueEvidenceRefs(frozen);
+  const registration = reviewEvidenceRegistrationSchema.parse({
+    schemaVersion: "ArticleReviewEvidenceRegistrationV1",
+    registrationId: reviewRegistrationId({ importId: record.importId, evidenceClass: "rejected-finding", findingId: finding.findingId, evidenceSha256: originalEvidenceRef.sha256 }),
+    evidenceClass: "rejected-finding",
+    importId: record.importId,
+    sourceFingerprint: record.sourceFingerprint,
+    examinedRevision: finding.revision,
+    reviewer: { id: finding.reviewer, independent: false },
+    criteria: [finding.criterion],
+    evidenceRef: originalEvidenceRef,
+    retentionDependencies: protectedReferences,
+    support: "rejected",
+    registeredAt: finding.openedAt,
+    payload: {
+      kind: "rejected-finding",
+      findingId: finding.findingId,
+      stage: finding.stage,
+      activityId: finding.activityId,
+      observation: finding.observation,
+      expectedCheck: finding.expectedCheck,
+      provenance: { status: "known", reviewer: finding.reviewer, executionId: finding.executionId },
+      applicability: { status: "applicable", reason: "The rejected criterion applies to the examined activity revision." },
+      protectedReferences,
+    },
+  });
+  await registry.commit(registration);
+  return registration;
+}
+
+export async function registerActivityFindingResolutionEvidence(
+  root: string,
+  registry: ArticleReviewEvidenceRegistry,
+  record: ExternalArticleImportV1,
+  finding: ActivityFinding,
+  review: ActivityFindingReview,
+): Promise<ReviewEvidenceRegistration> {
+  if (!["verified-repair", "appropriate-removal", "evidenced-dismissal"].includes(review.disposition)) throw new Error("ACTIVITY_FINDING_RESOLUTION_NOT_CONCLUSIVE");
+  const findingRegistrations = await registry.list({ importId: record.importId, evidenceClass: "rejected-finding" });
+  const findingRegistration = await reusableFindingRegistration(root, record, finding, findingRegistrations, review.reviewedAt)
+    ?? await registerActivityFindingEvidence(root, registry, record, finding);
+  const findingRegistrationId = findingRegistration.registrationId;
+  const currentReferences = await freezeActivityReferences(root, record.importId, [
+    review.resultRef,
+    ...review.evidenceRefs,
+    ...(review.changedInputRefs ?? []),
+    ...(review.regressionChecks ?? []).flatMap((check) => check.evidenceRefs),
+  ]);
+  const protectedReferences = uniqueEvidenceRefs([findingRegistration.evidenceRef, ...findingRegistration.retentionDependencies, ...currentReferences]);
+  const resolutionEvidenceRef = currentReferences[0];
+  const registration = reviewEvidenceRegistrationSchema.parse({
+    schemaVersion: "ArticleReviewEvidenceRegistrationV1",
+    registrationId: reviewRegistrationId({ importId: record.importId, evidenceClass: "finding-resolution", findingId: finding.findingId, reviewId: review.reviewId }),
+    evidenceClass: "finding-resolution",
+    importId: record.importId,
+    sourceFingerprint: record.sourceFingerprint,
+    examinedRevision: review.inputFingerprint,
+    reviewer: { id: review.reviewer, independent: review.reviewer !== finding.reviewer && review.executionId !== finding.executionId },
+    criteria: uniqueCriteria([finding.criterion, ...(review.regressionChecks ?? []).map((check) => check.criterion)]),
+    evidenceRef: resolutionEvidenceRef,
+    retentionDependencies: protectedReferences,
+    support: "accepted",
+    registeredAt: review.reviewedAt,
+    payload: {
+      kind: "finding-resolution",
+      findingId: finding.findingId,
+      findingRegistrationId,
+      reviewId: review.reviewId,
+      disposition: review.disposition,
+      observation: review.observation,
+      expectedCheck: review.expectedCheck,
+      provenance: { status: "known", reviewer: review.reviewer, executionId: review.executionId },
+      applicability: review.disposition === "appropriate-removal"
+        ? { status: "not-applicable", reason: review.observation }
+        : { status: "applicable", reason: "The independent resolution applies to the changed activity revision." },
+      protectedReferences,
+    },
+  });
+  await registry.commit(registration);
+  return registration;
+}
+
+export async function reconcileActivityFindingEvidence(
+  root: string,
+  registry: ArticleReviewEvidenceRegistry,
+  record: ExternalArticleImportV1,
+  now = new Date().toISOString(),
+): Promise<ExternalArticleImportV1> {
+  const findings = [...(record.activityFindings ?? [])];
+  let changed = false;
+  for (let index = 0; index < findings.length; index += 1) {
+    const finding = findings[index];
+    const findingCandidates = await registry.list({ importId: record.importId, evidenceClass: "rejected-finding" });
+    const findingRegistration = await reusableFindingRegistration(root, record, finding, findingCandidates, now);
+    let findingReusable = Boolean(findingRegistration);
+    if (!findingCandidates.some((candidate) => candidate.payload.kind === "rejected-finding" && candidate.payload.findingId === finding.findingId)) {
+      try { await registerActivityFindingEvidence(root, registry, record, finding); findingReusable = true; }
+      catch (error) { rethrowRegistryFailure(error); findingReusable = false; }
+    }
+    if (!findingReusable) {
+      if (finding.status === "resolved") { findings[index] = reopenFinding(finding); changed = true; }
+      continue;
+    }
+    if (finding.status !== "resolved" || !finding.resolutionReviewId) continue;
+    const review = record.activityFindingReviews?.find((candidate) => candidate.reviewId === finding.resolutionReviewId);
+    if (!review) { findings[index] = reopenFinding(finding); changed = true; continue; }
+    const resolutionCandidates = await registry.list({ importId: record.importId, evidenceClass: "finding-resolution" });
+    const resolutionCandidate = resolutionCandidates.find((candidate) => candidate.payload.kind === "finding-resolution" && candidate.payload.reviewId === review.reviewId);
+    if (resolutionCandidate) {
+      const dimensions = await evaluateRegisteredReviewEvidence(resolutionCandidate, { root, importId: record.importId, sourceFingerprint: record.sourceFingerprint, examinedRevision: review.inputFingerprint, now });
+      if (dimensions.reusable) continue;
+    } else {
+      try {
+        await registerActivityFindingResolutionEvidence(root, registry, record, finding, review);
+        continue;
+      } catch (error) { rethrowRegistryFailure(error); /* Missing local evidence must be reacquired through the owning activity. */ }
+    }
+    findings[index] = reopenFinding(finding);
+    changed = true;
+  }
+  return changed ? externalArticleImportSchema.parse({ ...record, activityFindings: findings }) : record;
+}
+
+async function reusableFindingRegistration(
+  root: string,
+  record: ExternalArticleImportV1,
+  finding: ActivityFinding,
+  candidates: ReviewEvidenceRegistration[],
+  now: string,
+): Promise<ReviewEvidenceRegistration | undefined> {
+  for (const candidate of candidates) {
+    if (candidate.payload.kind !== "rejected-finding" || candidate.payload.findingId !== finding.findingId) continue;
+    const dimensions = await evaluateRegisteredReviewEvidence(candidate, { root, importId: record.importId, sourceFingerprint: record.sourceFingerprint, examinedRevision: finding.revision, now });
+    if (dimensions.reusable) return candidate;
+  }
+  return undefined;
+}
+
+function rethrowRegistryFailure(error: unknown): void {
+  if (error instanceof Error && error.message.startsWith("CAPABILITY_UNAVAILABLE:")) throw error;
+}
+
+function reopenFinding(finding: ActivityFinding): ActivityFinding {
+  const reopened = { ...finding };
+  delete reopened.resolutionReviewId;
+  delete reopened.resolvedAt;
+  return { ...reopened, status: "open" };
+}
+
+async function freezeActivityReferences(root: string, importId: string, refs: EvidenceRef[]): Promise<EvidenceRef[]> {
+  const frozen: EvidenceRef[] = [];
+  for (const ref of refs) frozen.push(await storeEvidenceBytes(root, importId, await readVerifiedEvidenceBytes(root, ref)));
+  return uniqueEvidenceRefs(frozen);
+}
+
+function uniqueCriteria(criteria: Array<{ id: string; revision: string }>) {
+  return [...new Map(criteria.map((criterion) => [`${criterion.id}:${criterion.revision}`, criterion])).values()];
 }
 
 export async function editorialReviewRevision(root: string, record: ExternalArticleImportV1): Promise<string> {

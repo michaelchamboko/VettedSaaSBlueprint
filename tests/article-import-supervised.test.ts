@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { executeFixtureCommand as executeImportCommand, fixtureResearchRegistry } from "./fixtures/article-command";
 import { executeImportCommand as executeArticleCommand } from "../scripts/import-article";
 import { writeAcquisitionResult, writeGapPlanResult } from "./fixtures/article-research-flow";
+import { createInMemoryResearchRegistry } from "./fixtures/article-research-registry";
 import { createIntakeRun, type IntakeRun } from "../src/lib/article-import/intake";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
@@ -189,6 +190,9 @@ test("a delivered replacement plan wins while a corrected late original is retai
     await writeFile(path.join(root, "approved-urls.md"), "");
     await writeFile(path.join(root, "article.md"), "# A practical guide\n\nThis sufficiently long article describes a workflow and its trade-offs so the supervising agent can research a defensible topic.");
     const created = await createArticleImport(root, "article.md");
+    const evidencePath = "build-pack/article-import/research-ab.json";
+    const snapshotRef = await storeEvidence(root, created.importId, { source: "A mocked supported claim." });
+    await writeJsonAtomically(path.join(root, evidencePath), { schemaVersion: "ResearchEvidenceV2", id: "research-ab-fixture", createdAt: "2026-11-03T00:00:00.000Z", importId: created.importId, sourceFingerprint: created.sourceFingerprint, requirementRevision: WORKFLOW_REVISION, sources: [{ id: "source", url: "https://example.com/manual", retrievedAt: "2026-11-03T00:00:00.000Z", snapshotRef }], claims: [{ id: "claim", text: "A mocked supported claim.", sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: "A mocked supported claim." }], limitations: [] }], freshness: "Synthetic fixture." });
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const original = await loadImport(root, created.importId);
@@ -215,9 +219,53 @@ test("a delivered replacement plan wins while a corrected late original is retai
     assert.equal(late?.validator, "passed");
     assert.ok(late?.candidateDecisionRef);
     assert.equal(late?.independentReview, "not-applicable");
+    if (consumed.continuation?.kind !== "work") throw new Error("Missing replacement acquisition work");
+    await writeAcquisitionResult(root, consumed.continuation, evidencePath);
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    assert.equal((await loadImport(root, created.importId)).stage, "TRANSFORMING");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("late reuse without bound evidence stays historical and leaves replacement active", async () => {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "supervised-plan-reuse-invalid-"));
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# A practical guide\n\nThis sufficiently long article describes a workflow and its trade-offs so the supervising agent can research a defensible topic.");
+    const passage = "A mocked supported claim.";
+    const claimId = crypto.randomUUID();
+    const snapshotId = crypto.randomUUID();
+    const registry = createInMemoryResearchRegistry([{ claimId, claimSha256: createHash("sha256").update(passage).digest("hex"), claimText: passage, claimKind: "factual", material: true, claimUpdatedAt: "2026-11-03T00:00:00.000Z", snapshotId, sourceId: crypto.randomUUID(), canonicalUrl: "https://example.com/manual", sourceType: "synthetic", evidenceSha256: createHash("sha256").update(passage).digest("hex"), retrievedAt: "2026-11-03T00:00:00.000Z", accessOutcome: "success", passage, locator: null, verdict: "SUPPORTED", confidence: 1, productContext: "general", reasoning: "Synthetic current evidence.", expiresAt: "2099-01-01T00:00:00.000Z", evidenceUpdatedAt: "2026-11-03T00:00:00.000Z" }]);
+    const executor = createSupervisedImportExecutor(root, undefined, { researchRegistry: registry });
+    const options = { researchRegistry: registry };
+    const created = await createArticleImport(root, "article.md");
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor, options);
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor, options);
+    const original = await loadImport(root, created.importId);
+    if (original.continuation?.kind !== "work") throw new Error("Missing original research plan work");
+    await writeGapPlanResult(root, original.continuation, { claimText: "A different unsupported claim.", sourceFingerprint: "0".repeat(64) });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor, options);
+    await writeGapPlanResult(root, original.continuation, { claimText: "A different unsupported claim.", sourceFingerprint: "1".repeat(64) });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor, options);
+    const replacement = await loadImport(root, created.importId);
+    if (replacement.continuation?.kind !== "work") throw new Error("Missing replacement research plan work");
+    const packet = JSON.parse(await readFile(path.join(root, original.continuation.workPath), "utf8"));
+    const decisionPath = path.posix.join(path.posix.dirname(original.continuation.resultPath), "late-reuse.registry-decision.json");
+    await writeJsonAtomically(path.join(root, decisionPath), { schemaVersion: "ResearchRegistryDecisionV1", importId: created.importId, sourceFingerprint: created.sourceFingerprint, planFingerprint: packet.researchRegistry.planFingerprint, createdAt: packet.researchRegistry.generatedAt, claims: [{ claimId: "claim", claimText: passage, material: true, productContext: "general", action: "reused_current", registryMatches: [{ claimId, snapshotId, productContext: "general" }], rationale: "Reuse the retained current registry evidence." }] });
+    await writeJsonAtomically(path.join(root, original.continuation.resultPath), { idempotencyKey: original.continuation.idempotencyKey, sourceFingerprint: created.sourceFingerprint, summary: "Late reuse without evidence binding.", work: { stage: "RESEARCHING", researchAction: "reuse", registryDecisionPath: decisionPath } });
+    const repairTotal = replacement.repairStageTotals?.RESEARCHING;
+    await executeImportCommand(root, { kind: "resume", importId: created.importId }, executor, options);
+    const held = await loadImport(root, created.importId);
+    assert.equal(held.continuation?.kind, "work");
+    assert.equal(held.continuation?.kind === "work" ? held.continuation.resultPath : undefined, replacement.continuation.resultPath);
+    assert.equal(held.stageAttempts?.[1].status, "active");
+    assert.equal(held.stageSelections?.at(-1)?.decision, "historical");
+    assert.equal(held.stageSelections?.at(-1)?.reason, "invalid-result");
+    assert.equal(held.repairStageTotals?.RESEARCHING, repairTotal);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("supervised transforming handoff reuses its checked artifact and advances to refining", async () => {

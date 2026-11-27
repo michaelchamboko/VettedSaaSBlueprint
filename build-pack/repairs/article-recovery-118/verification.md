@@ -24,11 +24,13 @@ The IMPROVE mutation test then failed with `Missing expected rejection`. The con
 
 The evidence-aware release bypass test also failed with `Missing expected rejection` when the review registry was omitted. After the fail-closed guard was added, the same fixture rejected the release with `PUBLICATION_APPROVAL_REGISTRY_REQUIRED`; supplying the isolated registry then completed both approval paths.
 
+Independent integration review found that direct-review catalogue approval still returned early and that the first impact helper had no production caller. The direct-review authority regression first failed with `Missing expected rejection` for an absent catalogue. The replacement authority resolver now requires the manifest-selected artifact and receipt, binds their reviewed commit, retains all three references, and rejects both missing catalogue state and a wrong reviewed head. The test-only impact helper was removed; presentation reuse now validates a format-specific serving dependency set through the production workflow.
+
 ## Runtime observations
 
 The loopback HTTP test started the repository's Next server in a disposable checkout and requested two synthetic blog routes. Target and control both returned 200. The target returned its catalogue title and answer summary before and after a separate mutable import record changed. The changed import title never appeared in the second response.
 
-The publication impact cases varied content, the shared renderer, shared styles, the target asset, and shared publication rules one at a time. Target-only content and asset changes left the control reusable. Shared renderer, style, and rule changes invalidated presentation approval for both records while leaving content approval reusable.
+The follow-up loopback test used a synthetic direct-review catalogue and its actual `/landing-page-builders/[slug]` serving path. It independently changed target content, the shared renderer, shared styles, a target asset, and the catalogue loader rules. Every mutation was requested through loopback HTTP. Target-only content and asset changes left the control reusable; shared renderer, style, and rule changes invalidated presentation approval for both records. The same fixture proved missing-catalogue and wrong-reviewed-commit negatives before the positive target/control agreement.
 
 ## Negative and positive agreement checks
 
@@ -43,12 +45,13 @@ The publication impact cases varied content, the shared renderer, shared styles,
 
 - `npm run typecheck` passed. Next type generation reported the repository's existing Edge Runtime deprecation warning.
 - `npm run lint` passed with 16 existing warnings outside this change and no errors.
-- Focused publication approval and impact tests passed: 2 tests.
-- `tests/article-publication-http.test.ts` passed: 1 loopback HTTP test.
+- Focused catalogue/import publication approval passed: 1 test.
+- `tests/article-publication-http.test.ts` passed both the original mutable-state isolation and the direct-review five-mutation loopback coverage.
 - `tests/article-review-evidence-registry.test.ts` passed: 2 tests.
 - `tests/article-production-evidence.test.ts` passed: 5 tests.
-- Focused release regression tests passed: 2 tests.
+- Focused release and authority regressions passed: 5 tests.
+- Focused #119 gate-handoff regression passed: 4 tests.
 
-The required code-intelligence loader was retried twice, and the post-change local updater was attempted once. Each stopped before indexing because the installed CLI could not verify exact-build admission while another codebase-memory operation was active. Direct source inspection and the already-published graph at the required historical revision were used instead; no dependency absence was inferred from the unavailable local refresh.
+The required code-intelligence loader was retried twice, and the post-change local updater was attempted twice, including after the integration-review corrections. Each stopped before indexing because the installed CLI could not verify exact-build admission while another codebase-memory operation was active. Direct source inspection and the already-published graph at the required historical revision were used instead; no dependency absence was inferred from the unavailable local refresh.
 
 The first sandboxed release regression attempt could not rename a temporary fixture file or initialize a temporary Git repository. The unchanged tests passed with permission for those isolated fixture operations. This was a test-environment restriction, not a product failure.
