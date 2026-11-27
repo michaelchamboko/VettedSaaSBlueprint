@@ -392,9 +392,9 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     for (const ref of [...review.evidenceRefs, ...(review.changedInputRefs ?? []), ...(review.regressionChecks ?? []).flatMap((check) => check.evidenceRefs)]) await verifyEvidenceRef(root, ref);
     if (review.changedInputRefs) {
       for (const changed of review.changedInputRefs) {
-        const before = finding.dependencyRefs.find((ref) => ref.path === changed.path);
-        const current = expected.dependencyRefs.find((ref) => ref.path === changed.path);
-        if (!before || !current || current.sha256 !== changed.sha256 || before.sha256 === current.sha256) throw new Error("ACTIVITY_FINDING_CHANGED_INPUT_MISMATCH");
+        const currentIndex = expected.dependencyRefs.findIndex((ref) => sameRef(ref, changed));
+        const before = currentIndex >= 0 ? finding.dependencyRefs[currentIndex] : undefined;
+        if (!before || sameRef(before, changed)) throw new Error("ACTIVITY_FINDING_CHANGED_INPUT_MISMATCH");
       }
     }
     const conclusive = ["verified-repair", "appropriate-removal", "evidenced-dismissal"].includes(review.disposition);

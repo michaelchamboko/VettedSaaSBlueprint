@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { PGlite } from "@electric-sql/pglite";
 
-import { evidenceReference } from "../src/lib/article-import/execution-evidence";
+import { evidenceReference, storeEvidence } from "../src/lib/article-import/execution-evidence";
 import { createArticleImport, executePendingImport, loadImport, writeJsonAtomically } from "../src/lib/article-import/engine";
 import { NeonArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry-neon";
 import { evaluateRegisteredReviewEvidence, reconcileActivityFindingEvidence } from "../src/lib/article-import/review-evidence-registry";
@@ -157,7 +157,8 @@ test("the supervised controller registers a rejected finding with its original b
 
     const assessmentPath = path.join(root, initial.evidenceRefs!.assessment!.path);
     const assessment = JSON.parse(await readFile(assessmentPath, "utf8"));
-    await writeJsonAtomically(assessmentPath, { ...assessment, syntheticRepair: "added-the-missing-support" });
+    const revisedAssessment = await storeEvidence(root, initial.importId, { ...assessment, syntheticRepair: "added-the-missing-support" });
+    await persistFixture(root, { ...rejected, evidenceRefs: { ...rejected.evidenceRefs, assessment: revisedAssessment } });
     const restartedExecutor = createSupervisedImportExecutor(root, undefined, { reviewEvidenceRegistry: registry });
     const repairPending = await executePendingImport(root, initial.importId, restartedExecutor);
     assert.equal(repairPending.continuation?.kind, "work");
@@ -168,7 +169,7 @@ test("the supervised controller registers a rejected finding with its original b
     await writeJsonAtomically(path.join(root, "regression-observation.json"), { observation: "The directly affected criterion still passes." });
     const resolutionRef = await evidenceReference(root, "resolution-observation.json");
     const regressionRef = await evidenceReference(root, "regression-observation.json");
-    const changedAssessmentRef = repairPacket.activity.dependencyRefs.find((ref: { path: string }) => ref.path === initial.evidenceRefs!.assessment!.path);
+    const changedAssessmentRef = repairPacket.activity.dependencyRefs.find((ref: { path: string; sha256: string }) => ref.path === revisedAssessment.path && ref.sha256 === revisedAssessment.sha256);
     assert.ok(changedAssessmentRef);
     const editorial = JSON.parse(await readFile(path.join(root, initial.evidenceRefs!.editorial!.path), "utf8"));
     const pass = editorial.passes[0];
