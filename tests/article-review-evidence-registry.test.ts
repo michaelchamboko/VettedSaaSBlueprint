@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -126,7 +127,7 @@ test("the supervised controller registers and reuses an independently reviewed e
       strategy: "validate",
       attempt: 1,
       idempotencyKey: "a".repeat(64),
-      leaseToken: "synthetic-review-registry",
+      leaseToken: randomUUID(),
       assertLease: async () => {},
     };
     let pending = await executor(context);
