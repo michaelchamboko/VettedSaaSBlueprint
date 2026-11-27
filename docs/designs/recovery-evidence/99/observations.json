@@ -1,0 +1,541 @@
+{
+  "schemaVersion": "RejectedFindingRecoveryEvidence99V1",
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "generatedAt": "2026-11-27T09:07:13.648Z",
+  "syntheticOnly": true,
+  "normalEntryPoint": "executePendingImport(createSupervisedImportExecutor(root))",
+  "findingExpectation": {
+    "findingId": "finding-99-cta",
+    "owningActivity": "VALIDATING/context design review",
+    "inputToChange": "the exact rendered revision that produced the CTA observation",
+    "expectedCheck": "fresh independent review of the original observation and directly affected CTA regressions"
+  },
+  "scenarios": [
+    {
+      "scenario": "omitted",
+      "expected": {
+        "originalFindingRemainsOpenUntilIndependentResolution": true,
+        "changedRevisionAndDirectRegressionsRequired": true,
+        "removalOrDismissalRequiresTypedEvidence": false,
+        "inconclusiveRemainsOpen": false,
+        "disputeReachesOwnerAndStaysOpen": false
+      },
+      "observed": {
+        "stage": "RELEASING",
+        "continuation": null,
+        "lastReceipt": {
+          "stage": "RELEASING",
+          "status": "passed",
+          "at": "2026-11-27T09:05:35.838Z",
+          "message": "Submitted a synthetic presentation judgment through the normal controller packet."
+        },
+        "unchangedResubmissionError": "UNCHANGED_SUBMISSION",
+        "originalFindingBytesRetained": true,
+        "replacementOmitsOriginalFinding": true,
+        "sameArtifactRevision": true,
+        "sameRenderingRevision": true,
+        "approvalsSurvived": true,
+        "repairContinuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "237739fa9d3c44df5c945dafaa3f661bd3ebfc22ceb26a61a09f39ecb43749b1",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "f7e5908e58e354153c0693120b832bf755d4cd9b46731ea50c2c9600fdf6cd76",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "freshRepairPacketDispatched": false,
+        "reusedPacketIdentity": "6960dc081def3c49fc3cf494b8c6d6b9d07e2bada37984508fddde076880316a",
+        "originalReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-original-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "observation": "The primary CTA does not describe its affiliate destination.",
+          "findingIdentity": null
+        },
+        "replacementReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-omitted-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "supplied": {
+            "rule": "context",
+            "artifactFingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+            "routes": [
+              "/landing-page-previews/example"
+            ],
+            "renderInputsRef": {
+              "path": ".automation/article-imports/evidence/article-6b83df50-3175-4e1d-bcf1-441662767c42/8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009.json",
+              "sha256": "8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009"
+            },
+            "renderingDigest": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+            "verdict": "pass",
+            "findings": [],
+            "notes": "Synthetic scoped context review."
+          },
+          "linkedFindingIdentity": null
+        }
+      }
+    },
+    {
+      "scenario": "resolved-label",
+      "expected": {
+        "originalFindingRemainsOpenUntilIndependentResolution": true,
+        "changedRevisionAndDirectRegressionsRequired": true,
+        "removalOrDismissalRequiresTypedEvidence": false,
+        "inconclusiveRemainsOpen": false,
+        "disputeReachesOwnerAndStaysOpen": false
+      },
+      "observed": {
+        "stage": "RELEASING",
+        "continuation": null,
+        "lastReceipt": {
+          "stage": "RELEASING",
+          "status": "passed",
+          "at": "2026-11-27T09:05:56.969Z",
+          "message": "Submitted a synthetic presentation judgment through the normal controller packet."
+        },
+        "unchangedResubmissionError": "UNCHANGED_SUBMISSION",
+        "originalFindingBytesRetained": true,
+        "replacementOmitsOriginalFinding": false,
+        "sameArtifactRevision": true,
+        "sameRenderingRevision": true,
+        "approvalsSurvived": true,
+        "repairContinuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "4b21b07624058f3d58b7b5648ec9a71da835717893108c236b4d95f3a376bdf7",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "5de95c7f1b942683d83f9600b58bd95a1181827754fe2877d296868ae745e8d0",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "freshRepairPacketDispatched": false,
+        "reusedPacketIdentity": "1791ae57aab437bdcb708fc9c8d43377a0455fbd621cd1a104c2c7841bb0c8cb",
+        "originalReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-original-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "observation": "The primary CTA does not describe its affiliate destination.",
+          "findingIdentity": null
+        },
+        "replacementReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-resolved-label-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "supplied": {
+            "rule": "context",
+            "artifactFingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+            "routes": [
+              "/landing-page-previews/example"
+            ],
+            "renderInputsRef": {
+              "path": ".automation/article-imports/evidence/article-93b59490-60b7-4284-a17c-7e80ba34a749/8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009.json",
+              "sha256": "8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009"
+            },
+            "renderingDigest": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+            "verdict": "pass",
+            "findings": [
+              {
+                "description": "The primary CTA does not describe its affiliate destination.",
+                "disposition": "resolved"
+              }
+            ],
+            "notes": "Synthetic scoped context review."
+          },
+          "linkedFindingIdentity": null
+        }
+      }
+    },
+    {
+      "scenario": "inconclusive",
+      "expected": {
+        "originalFindingRemainsOpenUntilIndependentResolution": true,
+        "changedRevisionAndDirectRegressionsRequired": true,
+        "removalOrDismissalRequiresTypedEvidence": false,
+        "inconclusiveRemainsOpen": true,
+        "disputeReachesOwnerAndStaysOpen": false
+      },
+      "observed": {
+        "stage": "VALIDATING",
+        "continuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "a386b561e11c8ff89df4b411b278c50abc216656ee592011b51c76a2ef11d2e6",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "33ea1097245c5c4bf9d86793f82e22f76d1ad38ea6649f02a06e6cc4c478c5a2",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "lastReceipt": {
+          "stage": "VALIDATING",
+          "status": "failed",
+          "at": "2026-11-27T09:06:14.499Z",
+          "message": "PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS"
+        },
+        "unchangedResubmissionError": "UNCHANGED_SUBMISSION",
+        "originalFindingBytesRetained": true,
+        "replacementOmitsOriginalFinding": true,
+        "sameArtifactRevision": true,
+        "sameRenderingRevision": true,
+        "approvalsSurvived": true,
+        "repairContinuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "43a447c497cfa07a90f8b5a30d25912e7ade969004044ef7743aa55f50b8f3ff",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "33ea1097245c5c4bf9d86793f82e22f76d1ad38ea6649f02a06e6cc4c478c5a2",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "freshRepairPacketDispatched": false,
+        "reusedPacketIdentity": "c7aee620a1bc783c6d17f1333b5c3f0d2100136aa8aaab8e470cb2b47965a6bf",
+        "originalReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-original-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "observation": "The primary CTA does not describe its affiliate destination.",
+          "findingIdentity": null
+        },
+        "replacementReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-inconclusive-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "supplied": {
+            "rule": "context",
+            "artifactFingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+            "routes": [
+              "/landing-page-previews/example"
+            ],
+            "renderInputsRef": {
+              "path": ".automation/article-imports/evidence/article-005919b3-d142-400e-9a18-20229f5f2cd0/8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009.json",
+              "sha256": "8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009"
+            },
+            "renderingDigest": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+            "verdict": "insufficient-evidence",
+            "findings": [
+              {
+                "description": "The changed rendering was not observed.",
+                "disposition": "unresolved"
+              }
+            ],
+            "notes": "Synthetic scoped context review."
+          },
+          "linkedFindingIdentity": null
+        }
+      }
+    },
+    {
+      "scenario": "appropriate-removal",
+      "expected": {
+        "originalFindingRemainsOpenUntilIndependentResolution": true,
+        "changedRevisionAndDirectRegressionsRequired": true,
+        "removalOrDismissalRequiresTypedEvidence": true,
+        "inconclusiveRemainsOpen": false,
+        "disputeReachesOwnerAndStaysOpen": false
+      },
+      "observed": {
+        "stage": "VALIDATING",
+        "continuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "106f14c6c11cf0700c996d591629d719c1aab361d4072d91fdad665943cd3072",
+          "submittedFingerprint": "f486a34cde5d64010d7d7519fcddaad3c99fb8085bd908aebd5f56587c781db5",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "e3939ba3ea76f416c94b32bebb668cd1076e954d6d56148a9573cdf0c76ccd0c",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "lastReceipt": {
+          "stage": "VALIDATING",
+          "status": "failed",
+          "at": "2026-11-27T09:06:33.611Z",
+          "message": "[\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"resolution\"\n    ],\n    \"path\": [],\n    \"message\": \"Unrecognized key: \\\"resolution\\\"\"\n  }\n]"
+        },
+        "unchangedResubmissionError": "UNCHANGED_SUBMISSION",
+        "originalFindingBytesRetained": true,
+        "replacementOmitsOriginalFinding": true,
+        "sameArtifactRevision": true,
+        "sameRenderingRevision": true,
+        "approvalsSurvived": true,
+        "repairContinuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "5b12089e9275041c9d10c4a51887dddd5bef5b3c6e1d613a8fd8349d3907178f",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "e3939ba3ea76f416c94b32bebb668cd1076e954d6d56148a9573cdf0c76ccd0c",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "freshRepairPacketDispatched": false,
+        "reusedPacketIdentity": "7b990ea0403f1a83827fb39e97710c9aee5e39584a7dc0d98f07ff92ea19f8be",
+        "originalReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-original-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "observation": "The primary CTA does not describe its affiliate destination.",
+          "findingIdentity": null
+        },
+        "replacementReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-appropriate-removal-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "supplied": {
+            "rule": "context",
+            "artifactFingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+            "routes": [
+              "/landing-page-previews/example"
+            ],
+            "renderInputsRef": {
+              "path": ".automation/article-imports/evidence/article-cc1d9f01-4352-44ea-8177-517288ff3099/8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009.json",
+              "sha256": "8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009"
+            },
+            "renderingDigest": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+            "verdict": "pass",
+            "findings": [],
+            "notes": "Synthetic scoped context review.",
+            "resolution": {
+              "type": "appropriate-removal",
+              "findingId": "finding-99-cta",
+              "evidenceRefs": []
+            }
+          },
+          "linkedFindingIdentity": null
+        }
+      }
+    },
+    {
+      "scenario": "evidenced-dismissal",
+      "expected": {
+        "originalFindingRemainsOpenUntilIndependentResolution": true,
+        "changedRevisionAndDirectRegressionsRequired": true,
+        "removalOrDismissalRequiresTypedEvidence": true,
+        "inconclusiveRemainsOpen": false,
+        "disputeReachesOwnerAndStaysOpen": false
+      },
+      "observed": {
+        "stage": "VALIDATING",
+        "continuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "106f14c6c11cf0700c996d591629d719c1aab361d4072d91fdad665943cd3072",
+          "submittedFingerprint": "3c95183166de428cd8158d317c502cdaa540aadbc42b941e09b22a4ba750117f",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "7e55838e66d728af029423ea7f85c1fa5b8211f56ccdef4d5d40a10afa54ae5c",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "lastReceipt": {
+          "stage": "VALIDATING",
+          "status": "failed",
+          "at": "2026-11-27T09:06:54.334Z",
+          "message": "[\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"resolution\"\n    ],\n    \"path\": [],\n    \"message\": \"Unrecognized key: \\\"resolution\\\"\"\n  }\n]"
+        },
+        "unchangedResubmissionError": "UNCHANGED_SUBMISSION",
+        "originalFindingBytesRetained": true,
+        "replacementOmitsOriginalFinding": true,
+        "sameArtifactRevision": true,
+        "sameRenderingRevision": true,
+        "approvalsSurvived": true,
+        "repairContinuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "a68441c31821e5551ac7fc4ca4adf0747fd0755849b69eb0da8d6c58d73b531d",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "7e55838e66d728af029423ea7f85c1fa5b8211f56ccdef4d5d40a10afa54ae5c",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "freshRepairPacketDispatched": false,
+        "reusedPacketIdentity": "0c6e4617deff6e2cf36cb81178d1559e9ea2c5ce4f5c556d93019e1543fdfc6c",
+        "originalReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-original-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "observation": "The primary CTA does not describe its affiliate destination.",
+          "findingIdentity": null
+        },
+        "replacementReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-evidenced-dismissal-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "supplied": {
+            "rule": "context",
+            "artifactFingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+            "routes": [
+              "/landing-page-previews/example"
+            ],
+            "renderInputsRef": {
+              "path": ".automation/article-imports/evidence/article-e6994a49-3b17-4eac-8c81-3008facb0725/8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009.json",
+              "sha256": "8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009"
+            },
+            "renderingDigest": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+            "verdict": "pass",
+            "findings": [],
+            "notes": "Synthetic scoped context review.",
+            "resolution": {
+              "type": "evidenced-dismissal",
+              "findingId": "finding-99-cta",
+              "evidenceRefs": [
+                {
+                  "path": "synthetic-dismissal.json",
+                  "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+                }
+              ]
+            }
+          },
+          "linkedFindingIdentity": null
+        }
+      }
+    },
+    {
+      "scenario": "owner-referral",
+      "expected": {
+        "originalFindingRemainsOpenUntilIndependentResolution": true,
+        "changedRevisionAndDirectRegressionsRequired": true,
+        "removalOrDismissalRequiresTypedEvidence": false,
+        "inconclusiveRemainsOpen": false,
+        "disputeReachesOwnerAndStaysOpen": true
+      },
+      "observed": {
+        "stage": "VALIDATING",
+        "continuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "6ee8a0241506f6f98a149990b0af1ae4bd8ccc56dc00b28b98672f9055b29778",
+          "submittedFingerprint": "3af1e9e8777e8a9212e9bde85cd9be454b79edb80b3cefa1cfcb7a084909c872",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "82a9c043e8cabec79b1f0d995cb3c6c1f7c25a579fb3ca50ec917d4624691363",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "lastReceipt": {
+          "stage": "VALIDATING",
+          "status": "failed",
+          "at": "2026-11-27T09:07:13.139Z",
+          "message": "[\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"ownerReferral\"\n    ],\n    \"path\": [],\n    \"message\": \"Unrecognized key: \\\"ownerReferral\\\"\"\n  }\n]"
+        },
+        "unchangedResubmissionError": "UNCHANGED_SUBMISSION",
+        "originalFindingBytesRetained": true,
+        "replacementOmitsOriginalFinding": false,
+        "sameArtifactRevision": true,
+        "sameRenderingRevision": true,
+        "approvalsSurvived": true,
+        "repairContinuation": {
+          "kind": "repair",
+          "stage": "VALIDATING",
+          "failureFingerprint": "a753eaa4fda92b881669da15362f9c86ad2c791e395a923167a92185dd301968",
+          "submittedFingerprint": "303ae6caf293529f5d9cd63fc0968d4d4fb5be2f8dd9190237dafa868080195e",
+          "diagnosisRequired": false,
+          "requiredChange": "Repair validating output.",
+          "idempotencyKey": "82a9c043e8cabec79b1f0d995cb3c6c1f7c25a579fb3ca50ec917d4624691363",
+          "sourceFingerprint": "2a5cbbfaca838eea453959f6a491bcebaaa76158368ff6d2be2de93466a38c2e"
+        },
+        "freshRepairPacketDispatched": false,
+        "reusedPacketIdentity": "cde5ad8507521f60db7249e9114da4a600ccfc240c8f3fa5e934824e5855f505",
+        "originalReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-original-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "observation": "The primary CTA does not describe its affiliate destination.",
+          "findingIdentity": null
+        },
+        "replacementReview": {
+          "reviewer": {
+            "kind": "opencode",
+            "family": "reflection-beam",
+            "sessionId": "recovery-99-owner-referral-reviewer"
+          },
+          "criterion": "context",
+          "artifactRevision": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+          "renderingRevision": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+          "supplied": {
+            "rule": "context",
+            "artifactFingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+            "routes": [
+              "/landing-page-previews/example"
+            ],
+            "renderInputsRef": {
+              "path": ".automation/article-imports/evidence/article-2b583520-5a08-4eb5-8825-5ad1ebd8f0f2/8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009.json",
+              "sha256": "8d594020389b22c0cac755747a68170fcbded92b895eb7308b9b66a8f0c8b009"
+            },
+            "renderingDigest": "1748895b67fb82a44b027eedae5263eb0dd45b0de02c8fa04d3fcb61d290b167",
+            "verdict": "fail",
+            "findings": [
+              {
+                "description": "The primary CTA does not describe its affiliate destination.",
+                "disposition": "unresolved"
+              }
+            ],
+            "notes": "Synthetic scoped context review.",
+            "ownerReferral": {
+              "findingId": "finding-99-cta",
+              "reason": "The reviewer disputes whether the CTA capability is required."
+            }
+          },
+          "linkedFindingIdentity": null
+        }
+      }
+    }
+  ]
+}
