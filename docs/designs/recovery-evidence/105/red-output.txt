@@ -1,0 +1,9 @@
+RECOVERY_105_ASSERT_REQUIRED=1 npx tsx --test docs/designs/recovery-evidence/105/gate-handoff-probe.test.ts
+
+FAIL normal controller dispatch exposes the current full-record handoff and ignores an incomplete cleanup marker
+AssertionError: a passed gate must not dispatch next work while cleanup is incomplete
+Actual: continuation.kind=work, continuation.stage=RESEARCHING
+Expected: continuation=undefined until cleanup completes
+
+Tests: 5; pass: 1; fail: 1; skipped future acceptance: 3.
+This is the intended red observation at the normal controller seam. It proves the missing dispatch barrier; it does not test recovery of an implemented cleanup protocol.
