@@ -130,6 +130,12 @@ test("the default CLI consumes bound research output and rejects a result for an
     const current = await loadImport(root, created.importId);
     assert.ok(current.continuation?.kind === "work");
     if (current.continuation?.kind !== "work") throw new Error("Missing research plan work");
+    assert.equal(current.stageAttempts?.length, 1);
+    const interruptedAttemptId = current.stageAttempts![0].attemptId;
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    const interrupted = await loadImport(root, created.importId);
+    assert.equal(interrupted.stageAttempts?.length, 1);
+    assert.equal(interrupted.stageAttempts?.[0].attemptId, interruptedAttemptId);
     const evidencePath = "build-pack/article-import/research.json";
     const snapshotRef = await storeEvidence(root, created.importId, { source: "A mocked supported claim." });
     await writeJsonAtomically(path.join(root, evidencePath), { schemaVersion: "ResearchEvidenceV2", id: "research-fixture", createdAt: "2026-11-03T00:00:00.000Z", importId: created.importId, sourceFingerprint: created.sourceFingerprint, requirementRevision: WORKFLOW_REVISION, sources: [{ id: "source", url: "https://example.com/manual", retrievedAt: "2026-11-03T00:00:00.000Z", snapshotRef }], claims: [{ id: "claim", text: "A mocked supported claim.", sourceIds: ["source"], excerptLocations: [{ sourceId: "source", quote: "A mocked supported claim." }], limitations: [] }], freshness: "Synthetic fixture." });
@@ -139,14 +145,25 @@ test("the default CLI consumes bound research output and rejects a result for an
     assert.equal(rejected.stage, "RESEARCHING");
     assert.equal(rejected.resumeStage, "RESEARCHING");
     assert.match(rejected.stageReceipts.at(-1)!.message, /STAGE_RESULT_BINDING_MISMATCH/);
-    await writeGapPlanResult(root, current.continuation, { claimText: "A mocked supported claim." });
+    const correctedOriginal = await writeGapPlanResult(root, current.continuation, { claimText: "A mocked supported claim." });
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const acquisition = await loadImport(root, created.importId);
     assert.ok(acquisition.continuation?.kind === "work");
     if (acquisition.continuation?.kind !== "work") throw new Error("Missing research acquisition work");
+    assert.equal(acquisition.stageAttempts?.length, 2);
+    assert.equal(acquisition.stageAttempts?.[0].status, "completed");
+    assert.equal(acquisition.stageAttempts?.[1].status, "superseded");
+    assert.equal(acquisition.stageAttempts?.[1].reason, "intentional-repair");
+    assert.equal(acquisition.stageAttempts?.[1].predecessorAttemptId, interruptedAttemptId);
+    assert.equal(acquisition.stageSelections?.at(-1)?.decision, "selected");
+    assert.equal(acquisition.stageSelections?.at(-1)?.validator, "passed");
+    assert.equal(acquisition.stageSelections?.at(-1)?.independentReview, "not-applicable");
+    await writeJsonAtomically(path.join(root, current.continuation.resultPath), { overwritten: true });
+    await writeJsonAtomically(path.join(root, correctedOriginal.decisionPath), { overwritten: true });
     await writeAcquisitionResult(root, acquisition.continuation, evidencePath);
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
-    assert.equal((await loadImport(root, created.importId)).stage, "TRANSFORMING");
+    const afterFrozenResume = await loadImport(root, created.importId);
+    assert.equal(afterFrozenResume.stage, "TRANSFORMING", JSON.stringify(afterFrozenResume.stageReceipts.at(-1)));
     // A neutral (mode-"none") import must not be able to select the commercial direct-review format.
     await executeImportCommand(root, { kind: "resume", importId: created.importId });
     const transformPath = (await loadImport(root, created.importId)).nextAction.match(/execute (.*?)\.work\.json/)![1];
@@ -161,6 +178,46 @@ test("the default CLI consumes bound research output and rejects a result for an
     assert.equal(rejectedTransform.stage, "TRANSFORMING");
     assert.match(rejectedTransform.stageReceipts.at(-1)!.message, /DIRECT_REVIEW_REQUIRES_APPROVED_COMMERCIAL_MODE/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a delivered replacement plan wins while a corrected late original is retained as validated history", async () => {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "supervised-plan-ab-"));
+  const { writeFile } = await import("node:fs/promises");
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "");
+    await writeFile(path.join(root, "article.md"), "# A practical guide\n\nThis sufficiently long article describes a workflow and its trade-offs so the supervising agent can research a defensible topic.");
+    const created = await createArticleImport(root, "article.md");
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    const original = await loadImport(root, created.importId);
+    if (original.continuation?.kind !== "work") throw new Error("Missing original research plan work");
+    await writeGapPlanResult(root, original.continuation, { claimText: "A mocked supported claim.", sourceFingerprint: "0".repeat(64) });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    await writeGapPlanResult(root, original.continuation, { claimText: "A mocked supported claim.", sourceFingerprint: "1".repeat(64) });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    const replacement = await loadImport(root, created.importId);
+    if (replacement.continuation?.kind !== "work") throw new Error("Missing replacement research plan work");
+    assert.notEqual(replacement.continuation.resultPath, original.continuation.resultPath);
+    assert.equal(replacement.stageAttempts?.[0].status, "superseded");
+    assert.equal(replacement.stageAttempts?.[1].status, "active");
+    await writeGapPlanResult(root, original.continuation, { claimText: "A mocked supported claim." });
+    await writeGapPlanResult(root, replacement.continuation, { claimText: "A mocked supported claim." });
+    await executeImportCommand(root, { kind: "resume", importId: created.importId });
+    const consumed = await loadImport(root, created.importId);
+    assert.equal(consumed.stageAttempts?.[1].status, "completed");
+    const late = consumed.stageSelections?.at(-1);
+    assert.equal(late?.candidateAttemptId, consumed.stageAttempts?.[0].attemptId);
+    assert.equal(late?.replacementAttemptId, consumed.stageAttempts?.[1].attemptId);
+    assert.equal(late?.decision, "historical");
+    assert.equal(late?.reason, "replacement-delivered");
+    assert.equal(late?.validator, "passed");
+    assert.ok(late?.candidateDecisionRef);
+    assert.equal(late?.independentReview, "not-applicable");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("supervised transforming handoff reuses its checked artifact and advances to refining", async () => {

@@ -8,9 +8,10 @@ import { advanceImport, createArticleImport, executePendingImport, loadImport, w
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
 import { approveFixture, prepareApprovalFixture } from "./fixtures/article-content-approval";
 import { executeFixtureCommand, persistFixture } from "./fixtures/article-command";
-import { storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { storeEvidence, verifyEvidenceRef } from "../src/lib/article-import/execution-evidence";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
+import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 
 const parent = path.resolve(".scratch/article-activity-recovery");
 
@@ -126,6 +127,295 @@ test("reload resumes the next editorial activity without repeating accepted work
     const resumedPacket = JSON.parse(await readFile(path.join(root, resumed.continuation.workPath), "utf8"));
     assert.equal(resumedPacket.activity.id, "meaning-and-evidence");
     assert.notEqual(resumed.continuation.workPath, first.continuation.workPath);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("interrupted activity work keeps its identity while intentional repair creates a linked attempt", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    const seeded = await persistFixture(root, { ...record, repairStageTotals: { REFINING: 2 } });
+    const executor = createSupervisedImportExecutor(root);
+    const first = await executePendingImport(root, seeded.importId, executor);
+    assert.equal(first.continuation?.kind, "work");
+    if (first.continuation?.kind !== "work") throw new Error("Expected first activity attempt.");
+    const firstPacket = JSON.parse(await readFile(path.join(root, first.continuation.workPath), "utf8"));
+    const firstAttemptId = firstPacket.activity.attemptId;
+    assert.match(firstAttemptId, /^activity-attempt-[a-f0-9]{24}$/);
+
+    const interrupted = await executePendingImport(root, first.importId, executor);
+    assert.equal(interrupted.continuation?.kind, "work");
+    if (interrupted.continuation?.kind !== "work") throw new Error("Expected interrupted activity attempt.");
+    const interruptedPacket = JSON.parse(await readFile(path.join(root, interrupted.continuation.workPath), "utf8"));
+    assert.equal(interruptedPacket.activity.attemptId, firstAttemptId);
+    assert.equal(interrupted.continuation.resultPath, first.continuation.resultPath);
+    assert.equal(interrupted.activityAttempts?.length, 1);
+
+    await writeJsonAtomically(path.join(root, interrupted.continuation.resultPath), {
+      idempotencyKey: interrupted.continuation.idempotencyKey,
+      sourceFingerprint: interrupted.sourceFingerprint,
+      summary: "The first attempt completed without a usable observation.",
+      activity: {
+        ...interruptedPacket.activity,
+        reviewer: "synthetic-reviewer-a",
+        executionId: "attempt-a-unverified",
+        outcome: "unverified",
+      },
+    });
+    const unverified = await executePendingImport(root, interrupted.importId, executor);
+    assert.equal(unverified.activityAttempts?.[0].status, "completed");
+
+    const replacement = await executePendingImport(root, unverified.importId, executor);
+    assert.equal(replacement.continuation?.kind, "work");
+    if (replacement.continuation?.kind !== "work") throw new Error("Expected intentional replacement attempt.");
+    const replacementPacket = JSON.parse(await readFile(path.join(root, replacement.continuation.workPath), "utf8"));
+    assert.notEqual(replacementPacket.activity.attemptId, firstAttemptId);
+    assert.equal(replacementPacket.activity.predecessorAttemptId, firstAttemptId);
+    assert.equal(replacement.activityAttempts?.length, 2);
+    assert.equal(replacement.activityAttempts?.[0].status, "superseded");
+    assert.equal(replacement.activityAttempts?.[1].reason, "intentional-repair");
+    assert.equal(replacement.repairStageTotals?.REFINING, 2);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("the dispatch controller explicitly selects eligible late output from a superseded attempt", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    const executor = createSupervisedImportExecutor(root);
+    const attemptA = await executePendingImport(root, record.importId, executor);
+    assert.equal(attemptA.continuation?.kind, "work");
+    if (attemptA.continuation?.kind !== "work") throw new Error("Expected attempt A.");
+    const packetA = JSON.parse(await readFile(path.join(root, attemptA.continuation.workPath), "utf8"));
+    await writeJsonAtomically(path.join(root, attemptA.continuation.resultPath), {
+      idempotencyKey: attemptA.continuation.idempotencyKey,
+      sourceFingerprint: attemptA.sourceFingerprint,
+      summary: "Attempt A ended without a conclusive observation.",
+      activity: { ...packetA.activity, reviewer: "reviewer-a", executionId: "attempt-a-unverified", outcome: "unverified" },
+    });
+    const completedA = await executePendingImport(root, attemptA.importId, executor);
+    const attemptB = await executePendingImport(root, completedA.importId, executor);
+    assert.equal(attemptB.continuation?.kind, "work");
+    if (attemptB.continuation?.kind !== "work") throw new Error("Expected replacement attempt B.");
+    const packetB = JSON.parse(await readFile(path.join(root, attemptB.continuation.workPath), "utf8"));
+    assert.equal(packetB.activity.predecessorAttemptId, packetA.activity.attemptId);
+
+    const liveOwner = await claimWorkflowLease(root, "import", attemptB.importId);
+    assert.ok(liveOwner);
+    let fencedControllerCalls = 0;
+    const fenced = await executePendingImport(root, attemptB.importId, async (context) => {
+      fencedControllerCalls += 1;
+      return executor(context);
+    });
+    assert.equal(fencedControllerCalls, 0);
+    assert.equal(fenced.continuation?.attemptId, packetB.activity.attemptId);
+    await liveOwner.release();
+
+    await writeJsonAtomically(path.join(root, attemptA.continuation.resultPath), {
+      idempotencyKey: attemptA.continuation.idempotencyKey,
+      sourceFingerprint: attemptA.sourceFingerprint,
+      summary: "Late attempt A passed an independent review.",
+      activity: {
+        ...packetA.activity,
+        reviewer: "late-independent-reviewer",
+        executionId: "attempt-a-late-independent-review",
+        outcome: "accepted",
+        observation: "The current dependency-bound criterion is satisfied.",
+      },
+    });
+
+    let workerCalls = 0;
+    const selected = await executeFixtureCommand(root, { kind: "dispatch", importId: attemptB.importId }, executor, {
+      maxSteps: 1,
+      workerModel: "fixture/model",
+      workerRunner: async () => { workerCalls += 1; throw new Error("Replacement B must not run after eligible A is selected."); },
+    });
+    assert.equal(workerCalls, 0);
+    assert.equal(selected.activitySelections?.length, 1);
+    assert.equal(selected.activitySelections?.[0].candidateAttemptId, packetA.activity.attemptId);
+    assert.equal(selected.activitySelections?.[0].replacementAttemptId, packetB.activity.attemptId);
+    assert.equal(selected.activitySelections?.[0].decision, "selected");
+    assert.equal(selected.activitySelections?.[0].reason, "eligible-current-dependencies-and-review");
+    assert.equal(selected.activitySelections?.[0].validator, "passed");
+    assert.equal(selected.activitySelections?.[0].independentReview, "passed");
+    assert.equal(selected.activityReceipts?.at(-1)?.attemptId, packetA.activity.attemptId);
+    assert.deepEqual(selected.activityReceipts?.at(-1)?.resultRef, selected.activitySelections?.[0].candidateResultRef);
+    await writeFile(path.join(root, attemptA.continuation.resultPath), "late path changed after selection");
+    await verifyEvidenceRef(root, selected.activityReceipts!.at(-1)!.resultRef);
+    assert.equal(selected.activityAttempts?.find((item) => item.attemptId === packetB.activity.attemptId)?.status, "superseded");
+
+    const reloaded = await loadImport(root, selected.importId);
+    assert.equal(reloaded.activitySelections?.length, 1);
+    const resumed = await executePendingImport(root, selected.importId, executor);
+    assert.equal(resumed.activitySelections?.length, 1);
+    assert.equal(resumed.continuation?.activityId, "meaning-and-evidence");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("stale, invalid, misbound, and finding-omitting late results remain historical and deduplicate after reload", async () => {
+  for (const scenario of ["stale", "invalid", "wrong-key", "open-finding"] as const) {
+    const { root, record } = await refiningFixture();
+    try {
+      const executor = createSupervisedImportExecutor(root);
+      const attemptA = await executePendingImport(root, record.importId, executor);
+      assert.equal(attemptA.continuation?.kind, "work");
+      if (attemptA.continuation?.kind !== "work") throw new Error("Expected attempt A.");
+      const packetA = JSON.parse(await readFile(path.join(root, attemptA.continuation.workPath), "utf8"));
+      const firstOutcome = scenario === "open-finding" ? "rejected" : "unverified";
+      await writeJsonAtomically(path.join(root, attemptA.continuation.resultPath), {
+        idempotencyKey: attemptA.continuation.idempotencyKey,
+        sourceFingerprint: attemptA.sourceFingerprint,
+        summary: `Attempt A ${firstOutcome}.`,
+        activity: {
+          ...packetA.activity,
+          reviewer: "reviewer-a",
+          executionId: `attempt-a-${firstOutcome}`,
+          outcome: firstOutcome,
+          ...(firstOutcome === "rejected" && { observation: "The original criterion has a retained defect." }),
+        },
+      });
+      const completedA = await executePendingImport(root, attemptA.importId, executor);
+      const attemptB = await executePendingImport(root, completedA.importId, executor);
+      assert.equal(attemptB.continuation?.kind, "work");
+      if (attemptB.continuation?.kind !== "work") throw new Error("Expected attempt B.");
+
+      if (scenario === "stale") {
+        const assessmentPath = attemptB.evidenceRefs!.assessment!.path;
+        const assessment = JSON.parse(await readFile(path.join(root, assessmentPath), "utf8"));
+        await writeJsonAtomically(path.join(root, assessmentPath), { ...assessment, lateSelectionRevision: "changed" });
+      }
+      if (scenario === "invalid") {
+        await writeFile(path.join(root, attemptA.continuation.resultPath), "{malformed late result");
+      } else {
+        await writeJsonAtomically(path.join(root, attemptA.continuation.resultPath), {
+            idempotencyKey: scenario === "wrong-key" ? "f".repeat(64) : attemptA.continuation.idempotencyKey,
+            sourceFingerprint: attemptA.sourceFingerprint,
+            summary: "Late A claims acceptance.",
+            activity: {
+              ...packetA.activity,
+              reviewer: "late-independent-reviewer",
+              executionId: `attempt-a-late-${scenario}`,
+              outcome: "accepted",
+              observation: "The candidate claims the criterion is satisfied.",
+            },
+          });
+      }
+
+      const reconciled = await executePendingImport(root, attemptB.importId, executor);
+      assert.equal(reconciled.activitySelections?.length, 1, JSON.stringify({ scenario, selections: reconciled.activitySelections }));
+      assert.equal(reconciled.activitySelections?.[0].decision, "historical");
+      assert.equal(reconciled.activitySelections?.[0].reason, scenario === "stale" ? "dependencies-changed" : ["invalid", "wrong-key"].includes(scenario) ? "invalid-result" : "open-findings-unresolved");
+      assert.equal(reconciled.activityReceipts?.filter((receipt) => receipt.attemptId === packetA.activity.attemptId && receipt.outcome === "accepted").length, 0);
+
+      const reloaded = await loadImport(root, reconciled.importId);
+      const duplicate = await executePendingImport(root, reloaded.importId, executor);
+      assert.equal(duplicate.activitySelections?.length, 1);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }
+});
+
+test("a delivered replacement is consumed before conflicting late output", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    const executor = createSupervisedImportExecutor(root);
+    const attemptA = await executePendingImport(root, record.importId, executor);
+    if (attemptA.continuation?.kind !== "work") throw new Error("Expected attempt A.");
+    const packetA = JSON.parse(await readFile(path.join(root, attemptA.continuation.workPath), "utf8"));
+    await writeJsonAtomically(path.join(root, attemptA.continuation.resultPath), {
+      idempotencyKey: attemptA.continuation.idempotencyKey, sourceFingerprint: attemptA.sourceFingerprint, summary: "A was initially unverified.",
+      activity: { ...packetA.activity, reviewer: "reviewer-a", executionId: "a-unverified", outcome: "unverified" },
+    });
+    const completedA = await executePendingImport(root, attemptA.importId, executor);
+    const attemptB = await executePendingImport(root, completedA.importId, executor);
+    if (attemptB.continuation?.kind !== "work") throw new Error("Expected attempt B.");
+    const packetB = JSON.parse(await readFile(path.join(root, attemptB.continuation.workPath), "utf8"));
+    await writeJsonAtomically(path.join(root, attemptA.continuation.resultPath), {
+      idempotencyKey: attemptA.continuation.idempotencyKey, sourceFingerprint: attemptA.sourceFingerprint, summary: "Late A claims acceptance.",
+      activity: { ...packetA.activity, reviewer: "late-reviewer-a", executionId: "a-late", outcome: "accepted", observation: "A claims the criterion passed." },
+    });
+    await writeJsonAtomically(path.join(root, attemptB.continuation.resultPath), {
+      idempotencyKey: attemptB.continuation.idempotencyKey, sourceFingerprint: attemptB.sourceFingerprint, summary: "B found a current defect.",
+      activity: { ...packetB.activity, reviewer: "reviewer-b", executionId: "b-rejected", outcome: "rejected", observation: "B found a current dependency-bound defect." },
+    });
+
+    const consumedB = await executePendingImport(root, attemptB.importId, executor);
+    assert.equal(consumedB.activityReceipts?.at(-1)?.attemptId, packetB.activity.attemptId);
+    assert.equal(consumedB.activityReceipts?.at(-1)?.outcome, "rejected");
+    assert.equal(consumedB.activitySelections?.length, 1, JSON.stringify(consumedB.activitySelections));
+    assert.equal(consumedB.activitySelections?.at(-1)?.decision, "historical");
+    assert.equal(consumedB.activitySelections?.at(-1)?.reason, "replacement-delivered");
+    const reconciled = await executePendingImport(root, consumedB.importId, executor);
+    assert.equal(reconciled.activitySelections?.at(-1)?.decision, "historical");
+    assert.equal(reconciled.activitySelections?.at(-1)?.reason, "open-findings-unresolved");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("late output without prior review evidence cannot claim independent review", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    const executor = createSupervisedImportExecutor(root);
+    const issued = await executePendingImport(root, record.importId, executor);
+    if (issued.continuation?.kind !== "work") throw new Error("Expected attempt A.");
+    const packetA = JSON.parse(await readFile(path.join(root, issued.continuation.workPath), "utf8"));
+    const attemptA = issued.activityAttempts![0];
+    const attemptBId = `activity-attempt-${"b".repeat(24)}`;
+    const workPathB = attemptA.workPath.replace(/\.1\.work\.json$/, ".2.work.json");
+    const resultPathB = attemptA.resultPath.replace(/\.1\.result\.json$/, ".2.result.json");
+    const syntheticReplacement = await persistFixture(root, {
+      ...issued,
+      activityAttempts: [
+        { ...attemptA, status: "superseded" },
+        { ...attemptA, attemptId: attemptBId, sequence: 2, predecessorAttemptId: attemptA.attemptId, reason: "intentional-repair", status: "active", workPath: workPathB, resultPath: resultPathB },
+      ],
+      continuation: { ...issued.continuation, attemptId: attemptBId, workPath: workPathB, resultPath: resultPathB },
+    });
+    await writeJsonAtomically(path.join(root, attemptA.resultPath), {
+      idempotencyKey: attemptA.idempotencyKey, sourceFingerprint: issued.sourceFingerprint, summary: "First delivery arrived after replacement.",
+      activity: { ...packetA.activity, reviewer: "late-reviewer", executionId: "late-without-prior-review", outcome: "accepted", observation: "The late delivery claims acceptance." },
+    });
+
+    const reconciled = await executePendingImport(root, syntheticReplacement.importId, executor);
+    assert.equal(reconciled.activitySelections?.at(-1)?.decision, "historical");
+    assert.equal(reconciled.activitySelections?.at(-1)?.reason, "independent-review-required");
+    assert.equal(reconciled.activitySelections?.at(-1)?.independentReview, "failed");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a pre-upgrade outstanding activity packet is adopted without repeating its work", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    const executor = createSupervisedImportExecutor(root);
+    const issued = await executePendingImport(root, record.importId, executor);
+    if (issued.continuation?.kind !== "work") throw new Error("Expected issued activity.");
+    const packet = JSON.parse(await readFile(path.join(root, issued.continuation.workPath), "utf8"));
+    const legacyActivity = { ...packet.activity };
+    delete legacyActivity.attemptId;
+    delete legacyActivity.predecessorAttemptId;
+    const legacy = await persistFixture(root, {
+      ...issued,
+      activityAttempts: undefined,
+      continuation: { ...issued.continuation, attemptId: undefined },
+    });
+    await writeJsonAtomically(path.join(root, issued.continuation.resultPath), {
+      idempotencyKey: issued.continuation.idempotencyKey, sourceFingerprint: issued.sourceFingerprint, summary: "Legacy packet completed before upgrade.",
+      activity: { ...legacyActivity, reviewer: "legacy-reviewer", executionId: "legacy-accepted", outcome: "accepted", observation: "The legacy review passed." },
+    });
+
+    const adopted = await executePendingImport(root, legacy.importId, executor);
+    assert.equal(adopted.activityAttempts?.[0].reason, "legacy-adoption");
+    assert.equal(adopted.activityAttempts?.[0].resultPath, issued.continuation.resultPath);
+    assert.equal(adopted.activityReceipts?.at(-1)?.attemptId, adopted.activityAttempts?.[0].attemptId);
+    assert.equal(adopted.activityReceipts?.at(-1)?.outcome, "accepted");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
