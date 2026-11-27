@@ -52,6 +52,6 @@ The follow-up loopback test used a synthetic direct-review catalogue and its act
 - Focused release and authority regressions passed: 5 tests.
 - Focused #119 gate-handoff regression passed: 4 tests.
 
-The required code-intelligence loader was retried twice, and the post-change local updater was attempted once. Each stopped before indexing because the installed CLI could not verify exact-build admission while another codebase-memory operation was active. Direct source inspection and the already-published graph at the required historical revision were used instead; no dependency absence was inferred from the unavailable local refresh.
+The required code-intelligence loader was retried twice, and the post-change local updater was attempted twice, including after the integration-review corrections. Each stopped before indexing because the installed CLI could not verify exact-build admission while another codebase-memory operation was active. Direct source inspection and the already-published graph at the required historical revision were used instead; no dependency absence was inferred from the unavailable local refresh.
 
 The first sandboxed release regression attempt could not rename a temporary fixture file or initialize a temporary Git repository. The unchanged tests passed with permission for those isolated fixture operations. This was a test-environment restriction, not a product failure.
