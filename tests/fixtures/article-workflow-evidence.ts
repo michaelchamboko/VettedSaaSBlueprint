@@ -141,7 +141,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
         outputRefs.push(await save({
           schemaVersion: "ArticleVisualRuntimeV1", format: input.format, route, screenshots: { early, settled }, viewport,
           rects: { main: { x: 20, y: 20, width: viewport.width - 40, height: 1800 }, primaryHeading: { x: 40, y: 80, width: Math.min(760, viewport.width - 80), height: 140 }, bodyCopy: [{ x: 40, y: 300, width: Math.min(680, viewport.width - 80), height: 180 }], primaryMedia: { x: 40, y: 500, width: Math.min(600, viewport.width - 80), height: 300 } },
-          typography: { heading: { fontFamily: "Editorial Display", fontSize: "64px", fontWeight: "650", lineHeight: "68px", letterSpacing: "-2px" }, body: { fontFamily: "Editorial Sans", fontSize: "18px", fontWeight: "400", lineHeight: "29px", letterSpacing: "normal" } },
+          typography: { heading: { fontFamily: "Editorial Display", fontSize: "64px", fontWeight: "650", lineHeight: "68px", letterSpacing: input.trackingOverride ?? "-2px" }, body: { fontFamily: "Editorial Sans", fontSize: "18px", fontWeight: "400", lineHeight: "29px", letterSpacing: "normal" } },
           layout: { documentHeight: 2100, scrollWidth: viewport.width, visibleTextCharacters: 720, horizontalOverflow: false },
           assertions: { headingVisible: true, bodyCopyVisible: true, mediaVisible: true, mediaDecoded: true, motionPreferenceConfirmed: true },
           motion: { effects: [effect], ...(viewport.reducedMotion && { reducedAlternative: "static" }) },
@@ -196,8 +196,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
       ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [runtimeEvidence[rule as keyof typeof runtimeEvidence]!] });
       continue;
     }
-    const trackingRef = await save({ schemaVersion: "TypographyMeasurementV1", criterion: "typography.heading.letterSpacing", computedValue: input.trackingOverride ?? "-0.04em", authorityInstructionRef: pinRef(IMPECCABLE_ROOT + "reference/craft-floor.md") });
-    const execution = { schemaVersion: "ExecutionEvidenceV1", kind: "browser", toolVersion: "fixture-1", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef], outputRefs: [trackingRef], target: "http://127.0.0.1:3000", routes: target.renderedRoutes, viewport: viewportFor(rule as "desktop" | "mobile" | "reduced-motion"), checks: { rendered: true }, screenshots: [await save({ screenshot: "synthetic browser fixture" })] };
+    const execution = { schemaVersion: "ExecutionEvidenceV1", kind: "browser", toolVersion: "fixture-1", startedAt: now, completedAt: now, inputRefs: [afterRef, renderInputsRef], outputRefs: [], target: "http://127.0.0.1:3000", routes: target.renderedRoutes, viewport: viewportFor(rule as "desktop" | "mobile" | "reduced-motion"), checks: { rendered: true }, screenshots: [await save({ screenshot: "synthetic browser fixture" })] };
     ruleResults.push({ ruleId: rule, revision: WORKFLOW_REVISION, status: "pass", rationale: `Synthetic ${rule} evidence.`, evidenceRefs: [await save(execution)] });
   }
   const presentation = await save({ ...common, schemaVersion: currentHero ? "WorkflowEvidenceV3" : "WorkflowEvidenceV1", stage: "VALIDATING", packetId: packet("VALIDATING"), artifactRef: afterRef, renderInputsRef, predecessorRefs: currentHero ? [assessment, editorial, record.evidenceRefs!.hero!] : [assessment, editorial], ruleResults });

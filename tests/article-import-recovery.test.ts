@@ -359,7 +359,7 @@ test("a releasing repair verifies corrected paths without invoking a provider", 
     });
     for (let attempt = 0; attempt < 3; attempt++) {
       await writeFile(path.join(root, resultPath), JSON.stringify({ idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: `invalid release ${attempt}`, work: { stage: "RELEASING", artifactPath: current.contentApproval!.artifactPath, slug: "example", changedFiles: ["approved-urls.md"] } }));
-      current = await recordImportRepair(root, current, { strategy: "release-validation", message: `Disallowed release path ${attempt}.` });
+      current = await recordImportRepair(root, current, { strategy: "release-validation", message: `Disallowed release path ${attempt}.`, failedCheck: { code: "RELEASE_DECLARATION", criterionId: "release-result", criterionRevision: WORKFLOW_REVISION } });
     }
     assert.ok(current.continuation?.kind === "repair");
     const failedSubmissionDigest = current.continuation.submittedFingerprint!;
@@ -368,7 +368,13 @@ test("a releasing repair verifies corrected paths without invoking a provider", 
     const resultRef = await evidenceReference(root, resultPath);
     const supporting = await storeEvidence(root, record.importId, { observation: "The prior release result declared a disallowed path." });
     const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: "RELEASING", failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "release-result", revision: WORKFLOW_REVISION }, validatedEvidenceRef: resultRef, checkedAt: new Date().toISOString() });
-    await submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: "RELEASING", failedSubmissionDigest, replacementSubmissionDigest, failureCode: "RELEASE_PATHS_INVALID", cause: "The pending release result included a disallowed path.", predictedObservation: "The corrected release result passes path and artifact identity checks without provider mutation.", disproofCheck: "Reject if the result identity, artifact, slug or required paths do not match.", attemptedRecoveryRefs: [supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "product-repair", changedInputs: [resultPath] }, createdAt: new Date().toISOString() });
+    const diagnosis = { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: "RELEASING", failedSubmissionDigest, replacementSubmissionDigest, failureCode: "RELEASE_PATHS_INVALID", cause: "The pending release result included a disallowed path.", predictedObservation: "The corrected release result passes path and artifact identity checks without provider mutation.", disproofCheck: "Reject if the result identity, artifact, slug or required paths do not match.", attemptedRecoveryRefs: [supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "product-repair", changedInputs: [resultPath] }, createdAt: new Date().toISOString() } as const;
+    const unrelatedFailure = { ...current, updatedAt: new Date(Date.parse(current.updatedAt) + 1).toISOString(), continuation: { ...current.continuation, failedCheck: { code: "FORMAT_VALIDATION", criterionId: "release-result", criterionRevision: WORKFLOW_REVISION } } };
+    await withImportLease(root, record.importId, async () => { await saveImport(root, unrelatedFailure); return unrelatedFailure; });
+    await assert.rejects(submitImportDiagnosis(root, record.importId, diagnosis), /DIAGNOSIS_RELEASE_CHECK_UNSUPPORTED/);
+    current = { ...current, stateRevision: (await loadImport(root, record.importId)).stateRevision, updatedAt: new Date(Date.parse(unrelatedFailure.updatedAt) + 1).toISOString() };
+    await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
+    await submitImportDiagnosis(root, record.importId, diagnosis);
     let calls = 0;
     await executePendingImport(root, record.importId, async ({ record: pending }) => { calls++; return pending; });
     assert.equal(calls, 1);
@@ -455,7 +461,7 @@ test("measurement changes require justification and separate independent verific
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("tracking threshold correction uses the pinned craft-floor authority and distinct computed values", async () => {
+test("tracking threshold correction rejects legacy proof without real runtime measurements", async () => {
   const { root, record } = await fixture();
   try {
     let current = { ...record, stage: "REFINING" as const, format: "direct-review" as const };
@@ -464,27 +470,27 @@ test("tracking threshold correction uses the pinned craft-floor authority and di
     current = await advanceImport(root, current, "Synthetic editorial approval complete.");
     current = await refreshPresentationFixture(root, current);
     current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
-    for (let attempt = 0; attempt < 3; attempt++) current = await recordImportRepair(root, { ...current, transformation: { ...current.transformation!, title: `Tracking attempt ${attempt}` } }, { strategy: "design-repair", message: `Incorrect tracking checker threshold ${attempt}.` });
+    for (let attempt = 0; attempt < 3; attempt++) current = await recordImportRepair(root, { ...current, transformation: { ...current.transformation!, title: `Tracking attempt ${attempt}` } }, { strategy: "design-repair", message: `Incorrect tracking checker threshold ${attempt}.`, failedCheck: { code: "TYPOGRAPHY_TRACKING_FLOOR", criterionId: "typography.heading.letterSpacing", criterionRevision: WORKFLOW_REVISION, settings: { criterionFloor: "-0.4em" } } });
     assert.ok(current.continuation?.kind === "repair");
     const previousPresentationRef = current.evidenceRefs!.presentation!;
     const previous = workflowEvidenceSchema.parse(await readEvidence(root, previousPresentationRef));
     const previousObservationRef = previous.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
     const justification = "The checker threshold is corrected to the pinned craft-floor floor while the computed heading tracking remains a separate observed value.";
-    const refreshed = await refreshPresentationFixtureWithTrackingReview(root, { ...current, transformation: { ...current.transformation!, title: "Tracking threshold replacement" } }, { trackingOverride: "-0.03em", remedyTrackingReview: { previousObservationRef, sourceComputedValue: "-0.04em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", justification, limitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."] } });
+    const refreshed = await refreshPresentationFixtureWithTrackingReview(root, { ...current, transformation: { ...current.transformation!, title: "Tracking threshold replacement" } }, { trackingOverride: "-0.03em", remedyTrackingReview: { previousObservationRef, sourceComputedValue: "-0.03125em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", justification, limitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."] } });
     current = refreshed.record;
     current = await withImportLease(root, record.importId, async () => { await saveImport(root, current); return current; });
     const replacement = workflowEvidenceSchema.parse(await readEvidence(root, current.evidenceRefs!.presentation!));
     const currentObservationRef = replacement.ruleResults.find((result) => result.ruleId === "desktop")!.evidenceRefs[0];
     const currentObservation = await validateExecutionEvidence(root, currentObservationRef);
     assert.equal(currentObservation.kind, "browser");
-    const measurement = await readEvidence(root, currentObservation.outputRefs[0]) as { authorityInstructionRef: { path: string; sha256: string } };
+    const authorityInstructionRef = await evidenceReference(root, ".agents/skills/impeccable/reference/craft-floor.md");
     const failedSubmissionDigest = current.continuation!.kind === "repair" ? current.continuation.submittedFingerprint! : "";
     const replacementSubmissionDigest = await canonicalSubmissionFingerprint(current, root);
     const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "presentation-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef: current.evidenceRefs!.presentation!, checkedAt: new Date().toISOString() });
     const change = { aspect: "threshold" as const, from: "-0.4em", to: "-0.04em", justification };
-    const independent = await storeEvidence(root, record.importId, { schemaVersion: "RemedyMeasurementVerificationV1", verificationKind: "typography-tracking-threshold", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "typography.heading.letterSpacing", stableAuthorityId: "D04-S-a2bbcd69b901", observationRule: "desktop", reviewRule: "critique", revision: WORKFLOW_REVISION }, authorityInstructionRef: measurement.authorityInstructionRef, previousPresentationRef, currentPresentationRef: current.evidenceRefs!.presentation!, previousObservationRef, currentObservationRef, reviewExecutionRef: refreshed.measurementReviewRef, sourceComputedValue: "-0.04em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", criterionFloor: "-0.04em", reviewLimitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."], measurementChange: change, checkedAt: new Date().toISOString() });
+    const independent = await storeEvidence(root, record.importId, { schemaVersion: "RemedyMeasurementVerificationV1", verificationKind: "typography-tracking-threshold", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "typography.heading.letterSpacing", stableAuthorityId: "D04-S-a2bbcd69b901", observationRule: "desktop", reviewRule: "critique", revision: WORKFLOW_REVISION }, authorityInstructionRef, previousPresentationRef, currentPresentationRef: current.evidenceRefs!.presentation!, previousObservationRef, currentObservationRef, reviewExecutionRef: refreshed.measurementReviewRef, sourceComputedValue: "-0.03125em", targetComputedValue: "-0.03em", sourceCriterionFloor: "-0.4em", criterionFloor: "-0.04em", reviewLimitations: ["The judgment covers the bound heading tracking observation and does not relax other typography criteria."], measurementChange: change, checkedAt: new Date().toISOString() });
     const supporting = await storeEvidence(root, record.importId, { observation: "The old checker used -0.4em while the computed style was independently retained." });
-    await submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "TRACKING_THRESHOLD_INCORRECT", cause: "The checker threshold did not match the pinned craft-floor authority.", predictedObservation: "The approved floor and computed style are evaluated separately.", disproofCheck: "Reject if the authority hash, computed observations or independent review do not bind.", attemptedRecoveryRefs: [previousPresentationRef, supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "measurement-change", ...change, independentVerificationRef: independent }, createdAt: new Date().toISOString() });
+    await assert.rejects(submitImportDiagnosis(root, record.importId, { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: current.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "TRACKING_THRESHOLD_INCORRECT", cause: "The checker threshold did not match the pinned craft-floor authority.", predictedObservation: "The approved floor and computed style are evaluated separately.", disproofCheck: "Reject if the authority hash, computed observations or independent review do not bind.", attemptedRecoveryRefs: [previousPresentationRef, supporting], remedyEvidenceRefs: [remedy], repairChange: { kind: "measurement-change", ...change, independentVerificationRef: independent }, createdAt: new Date().toISOString() }), /DIAGNOSIS_MEASUREMENT_COMPUTED_VALUE_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

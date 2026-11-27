@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { ensureImportContentApproval, loadImport, recordImportFailure, recordImportRelease, saveImport, verifyImportRelease, withRecordLease } from "./engine";
+import { WORKFLOW_REVISION } from "./workflow-requirements";
 import type { ExternalArticleImportV1, ImportFormat, ImportStage } from "./contracts";
 import { fingerprintEditorialArtifact } from "../editorial/refinement";
 import { blogPostSchema, type BlogPost } from "../blog/contracts";
@@ -559,7 +560,9 @@ async function assessImportReleaseImpl(input: {
     return { status: "WAITING_EXTERNAL", reasons: ["AUTOMATION_KILL_SWITCH_ENABLED"] };
   }
   if (input.execute && reasons.length) {
-    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: reasons.join("; ") });
+    const declarationCodes = new Set(["DISALLOWED_RELEASE_PATHS", "DIRECT_REVIEW_SLUG_REQUIRED", "DIRECT_REVIEW_ARTIFACT_MISMATCH", "DIRECT_REVIEW_ARTIFACT_NOT_CHANGED", "ARTIFACT_NOT_IN_RELEASE", "PUBLICATION_AUTHORITY_NOT_IN_RELEASE", "ARTICLE_HERO_NOT_IN_RELEASE", "ARTICLE_HERO_PATH_NOT_BOUND"]);
+    const declarationFailure = reasons.every((reason) => declarationCodes.has(reason.split(":", 1)[0]));
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: reasons.join("; "), failedCheck: { code: declarationFailure ? "RELEASE_DECLARATION" : "RELEASE_PRECONDITION", criterionId: "release-result", criterionRevision: WORKFLOW_REVISION } });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons };
   }
   if (input.execute) {
@@ -582,12 +585,12 @@ async function assessImportReleaseImpl(input: {
   const approved = await ensureImportContentApproval(input.repositoryRoot, input.record, input.artifactPath);
   if (!approved.contentApproval) return { status: "REFINING", reasons: ["CONTENT_APPROVAL_INVALID"] };
   if (!validationCommands) {
-    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `No configured validation gate for ${input.record.format}.` });
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: `No configured validation gate for ${input.record.format}.`, failedCheck: { code: "FORMAT_VALIDATION_CONFIGURATION", criterionId: "release-result", criterionRevision: WORKFLOW_REVISION } });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: ["MISSING_FORMAT_VALIDATION_GATE"] };
   }
   const validation = await input.operations.runValidation(validationCommands);
   if (!validation.ok) {
-    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: validation.summary });
+    const updated = await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "deterministic", message: validation.summary, failedCheck: { code: "FORMAT_VALIDATION", criterionId: "release-result", criterionRevision: WORKFLOW_REVISION, settings: { commands: JSON.stringify(validationCommands) } } });
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [validation.summary] };
   }
   input.record = approved;
