@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "boundary": "isolated synthetic fixture; no real article or release operation",
+  "runtimeRoot": ".scratch/article-recovery-123-runtime",
+  "importId": "article-36de3bfc-9a4e-4bdc-8bb6-dc9c0cc3f28c",
+  "controller": {
+    "entryPoint": "executePendingImport",
+    "stage": "REFINING",
+    "sourceFingerprint": "9c980dfb56c2019d85509742d25f34db8c18f99f55e340357083773dd942065a",
+    "testedRevision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99"
+  },
+  "artifact": {
+    "path": "src/generated/landing-pages/example.json",
+    "sha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+    "fingerprint": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de"
+  },
+  "targetUrl": "http://127.0.0.1:60529/landing-page-builders/example",
+  "controlUrl": "http://127.0.0.1:60529/landing-page-builders/synthetic-readiness-control",
+  "controlSha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4"
+}

@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "boundary": "isolated synthetic controller exercise; no real article or release operation",
+  "testedRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
+  "controllerEntryPoint": "executePendingImport",
+  "target": {
+    "label": "target",
+    "importId": "article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189",
+    "artifactSha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+    "browserEvidenceSha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
+    "activity": {
+      "stage": "REFINING",
+      "id": "purpose-and-structure",
+      "criteria": [
+        {
+          "id": "refining.purpose-and-structure",
+          "revision": "article-workflow:2"
+        }
+      ],
+      "dependencyRefs": [
+        {
+          "path": "src/generated/landing-pages/example.json",
+          "sha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de"
+        },
+        {
+          "path": ".automation/article-imports/evidence/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3.json",
+          "sha256": "115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3"
+        }
+      ],
+      "inputFingerprint": "6b4d49c6dc60e8372455bcf4f4386695cf7ddab96e703a954b313fc3fd305c2b",
+      "attemptId": "activity-attempt-d81602b64f9a64b9917f1cc2"
+    },
+    "suppliedOutcome": "rejected",
+    "resultingStage": "REFINING",
+    "nextAction": "Complete purpose-and-structure again; the attributable rejected review remains retained but does not approve the activity.",
+    "activityAttempts": [
+      {
+        "schemaVersion": "ImportActivityAttemptV1",
+        "attemptId": "activity-attempt-d81602b64f9a64b9917f1cc2",
+        "stage": "REFINING",
+        "activityId": "purpose-and-structure",
+        "sequence": 1,
+        "inputFingerprint": "6b4d49c6dc60e8372455bcf4f4386695cf7ddab96e703a954b313fc3fd305c2b",
+        "criteria": [
+          {
+            "id": "refining.purpose-and-structure",
+            "revision": "article-workflow:2"
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "path": "src/generated/landing-pages/example.json",
+            "sha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de"
+          },
+          {
+            "path": ".automation/article-imports/evidence/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3.json",
+            "sha256": "115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3"
+          }
+        ],
+        "idempotencyKey": "38b8c642dcb87b9975ee3503ac5fcbcc9c5d0bca3a97c5507e1ff99600c592cc",
+        "workPath": ".automation/article-imports/work/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/38b8c642dcb87b9975ee3503ac5fcbcc9c5d0bca3a97c5507e1ff99600c592cc.purpose-and-structure.1.work.json",
+        "resultPath": ".automation/article-imports/work/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/38b8c642dcb87b9975ee3503ac5fcbcc9c5d0bca3a97c5507e1ff99600c592cc.purpose-and-structure.1.result.json",
+        "reason": "initial",
+        "status": "completed",
+        "issuingLeaseOwnerToken": "0059dd46-dc37-4ae7-9085-61637565dadc",
+        "issuedAt": "2026-11-27T21:14:15.792Z",
+        "completedAt": "2026-11-27T21:14:16.642Z"
+      }
+    ]
+  },
+  "control": {
+    "label": "control",
+    "importId": "article-f88e1f3c-42c5-496c-800b-91a8475fd134",
+    "artifactSha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+    "browserEvidenceSha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
+    "activity": {
+      "stage": "REFINING",
+      "id": "purpose-and-structure",
+      "criteria": [
+        {
+          "id": "refining.purpose-and-structure",
+          "revision": "article-workflow:2"
+        }
+      ],
+      "dependencyRefs": [
+        {
+          "path": "src/generated/landing-pages/example.json",
+          "sha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4"
+        },
+        {
+          "path": ".automation/article-imports/evidence/article-f88e1f3c-42c5-496c-800b-91a8475fd134/c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786.json",
+          "sha256": "c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786"
+        }
+      ],
+      "inputFingerprint": "6ee4708a62672f7177d1266e37b3a5eb8abf5c85f9d5f118db306a158f5e3b6f",
+      "attemptId": "activity-attempt-7685889d223b25a09b9e9a2e"
+    },
+    "suppliedOutcome": "unverified",
+    "resultingStage": "REFINING",
+    "nextAction": "Complete purpose-and-structure again; the attributable unverified review remains retained but does not approve the activity.",
+    "activityAttempts": [
+      {
+        "schemaVersion": "ImportActivityAttemptV1",
+        "attemptId": "activity-attempt-7685889d223b25a09b9e9a2e",
+        "stage": "REFINING",
+        "activityId": "purpose-and-structure",
+        "sequence": 1,
+        "inputFingerprint": "6ee4708a62672f7177d1266e37b3a5eb8abf5c85f9d5f118db306a158f5e3b6f",
+        "criteria": [
+          {
+            "id": "refining.purpose-and-structure",
+            "revision": "article-workflow:2"
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "path": "src/generated/landing-pages/example.json",
+            "sha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4"
+          },
+          {
+            "path": ".automation/article-imports/evidence/article-f88e1f3c-42c5-496c-800b-91a8475fd134/c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786.json",
+            "sha256": "c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786"
+          }
+        ],
+        "idempotencyKey": "2c29537970ca3e5f1e2fea6948c3832b82d9553140c823103c065f44f69163b3",
+        "workPath": ".automation/article-imports/work/article-f88e1f3c-42c5-496c-800b-91a8475fd134/2c29537970ca3e5f1e2fea6948c3832b82d9553140c823103c065f44f69163b3.purpose-and-structure.1.work.json",
+        "resultPath": ".automation/article-imports/work/article-f88e1f3c-42c5-496c-800b-91a8475fd134/2c29537970ca3e5f1e2fea6948c3832b82d9553140c823103c065f44f69163b3.purpose-and-structure.1.result.json",
+        "reason": "initial",
+        "status": "completed",
+        "issuingLeaseOwnerToken": "28e3361c-43b3-42ea-8e85-3fcaff40720c",
+        "issuedAt": "2026-11-27T21:14:26.682Z",
+        "completedAt": "2026-11-27T21:14:29.344Z"
+      }
+    ]
+  }
+}

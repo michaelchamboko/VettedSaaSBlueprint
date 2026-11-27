@@ -1,0 +1,16 @@
+{
+  "target": {
+    "artifactSha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+    "browserEvidenceSha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
+    "outcome": "rejected",
+    "observation": "The exact target renders 2,078 visible tokens, including 2,005 literal repetitions of 'decision'. The count is in range, but the repeated copy does not establish substantive purpose or structure.",
+    "reviewer": "issue-123-independent-browser-observer"
+  },
+  "control": {
+    "artifactSha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+    "browserEvidenceSha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
+    "outcome": "unverified",
+    "observation": "The exact synthetic control exercises image, FAQ, CTA, keyboard, normal motion, and reduced-motion behavior, but its 4,588 visible tokens and 144 templated sentences do not provide an adequate positive content-depth control.",
+    "reviewer": "issue-123-independent-browser-observer"
+  }
+}

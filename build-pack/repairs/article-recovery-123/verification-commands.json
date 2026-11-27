@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "productRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
+  "productTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077",
+  "runtime": {
+    "declared": "Node 24.x, npm >=12 <13",
+    "verified": "Node v24.22.3, npm 12.2.3"
+  },
+  "checks": [
+    {
+      "command": "node --test tests/article-recovery-readiness.test.mjs && node scripts/verify-article-recovery-readiness.mjs",
+      "status": "pass",
+      "result": "2/2 readiness tests; strict counts 38 findings, 28 stories, 11 testing decisions and 52 interview labels; Q40 open; tamper exits nonzero"
+    },
+    {
+      "command": "node --import tsx --test tests/article-rendering-inputs.test.ts",
+      "status": "pass",
+      "result": "6/6 including frozen historical replay and route-scoped transitive dependencies"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='changed candidate before refining dispatch|dispatch rechecks handoff bytes' tests/article-import-gate-handoff.test.ts",
+      "status": "pass",
+      "result": "2/2; changed candidate rebound before normal activity dispatch and bytes rechecked"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='changed input reruns affected work|replacement review cannot omit|independent review closes a finding|rejection, missing observation' tests/article-import-activity-recovery.test.ts",
+      "status": "pass",
+      "result": "4/4; affected rerun, attributable rejection, omission prevention and independent resolution"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='post-deploy approval write failure|rollback verification failure|rolled back imports resume' tests/article-import-release.test.ts",
+      "status": "pass",
+      "result": "3/3 at final product revision; rollback reconciliation waits, verification fails closed and productive-stage resume works"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='direct-review target and control reconcile five serving mutations' tests/article-publication-http.test.ts",
+      "status": "pass-promoted",
+      "result": "content, renderer, style, asset and rule changed one at a time with an unaffected control; final product delta does not touch served paths"
+    },
+    {
+      "command": "npm run verify:agent-workflow",
+      "status": "pass",
+      "result": "agent workflow contract intact"
+    },
+    {
+      "command": "npm run lint",
+      "status": "pass-with-existing-warnings",
+      "result": "0 errors, 19 pre-existing warnings"
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "pass",
+      "result": "Next route types generated and TypeScript passed"
+    }
+  ],
+  "historicalRegression": {
+    "revision": "e14ece1ae645a00a1d09cd63e8140a0bbabbfa5f",
+    "observation": "Three direct-review rollback tests stopped before their intended branch because their shared synthetic fixture named an unresolvable reviewed tree. The final product revision fixes the fixture boundary; the complete directly affected release file passed 94/94, and the three focused cases above passed independently."
+  },
+  "boundary": "All commands use synthetic or retained evidence. No real article, deployment, provider mutation or production operation ran."
+}
