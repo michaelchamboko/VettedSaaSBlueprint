@@ -102,7 +102,7 @@ export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsS
   const subtree = core.slice(0, core.lastIndexOf("/") + 1);
   return manifest.files.filter((ref) => {
     const file = ref.path;
-    if (required.includes(file) || globalInput(file)) return true;
+    if (required.includes(file)) return true;
     if (!RENDERABLE.test(file)) return false;
     if (file.startsWith(subtree) || file.startsWith("src/styles/") || (target.format !== "direct-review" && file.startsWith("src/components/public/"))) return true;
     if (!file.startsWith("src/app/")) return false;

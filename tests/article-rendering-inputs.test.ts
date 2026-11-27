@@ -130,7 +130,7 @@ test("target-bound current rendering tracks global build inputs but ignores unre
 
 test("route-scoped serving dependencies include reachable helpers without widening the historical detector contract", () => {
   const paths = [...new Set(["direct-review", "blog", "visibility", "decision-set"].flatMap(publicationServingInputPaths))];
-  const manifest = { schemaVersion: "RenderingInputsV1", inventoryVersion: 1, files: paths.map((path) => ({ path, sha256: "a".repeat(64) })), digest: "b".repeat(64) } as const;
+  const manifest = { schemaVersion: "RenderingInputsV1", inventoryVersion: 1, files: [...paths, "package-lock.json"].map((path) => ({ path, sha256: "a".repeat(64) })), digest: "b".repeat(64) } as const;
   const visibility = { format: "visibility", renderedRoutes: ["/guides/how-to-evaluate-ai-voice-quality"] };
   const selected = publicationServingInputs(manifest, visibility).map((ref) => ref.path);
   assert.ok(selected.includes("src/app/guides/how-to-evaluate-ai-voice-quality/page.tsx"));
@@ -139,4 +139,6 @@ test("route-scoped serving dependencies include reachable helpers without wideni
   const decisionDetector = requiredDetectorInputs(manifest, { format: "decision-set", renderedRoutes: ["/decision-hub/example"] }).map((ref) => ref.path);
   assert.equal(blogDetector.includes("src/lib/blog/structured-data.ts"), false);
   assert.equal(decisionDetector.includes("src/lib/decision-journey/presentation.ts"), false);
+  assert.equal(blogDetector.includes("package-lock.json"), false);
+  assert.equal(decisionDetector.includes("package-lock.json"), false);
 });
