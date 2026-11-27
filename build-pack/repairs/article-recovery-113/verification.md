@@ -6,6 +6,7 @@
 - Ticket authority: GitHub issue #113, with parent #96.
 - Investigation evidence: issues #99 and #104 at commit `bebb4fe644b3d97e9a21f46a6e06938ed35684cb`.
 - Starting integration revision: `67ec474a1ce07fa00f77f11354806e20dd92c029`.
+- Merged integration tip: `e7d670fc72d71d515d394335a19ddde02eb0bc44`.
 - Dependency check: issue #112 commit `26965abedd2b1c71b207ecb9f1b38d22fb853c6a` is an ancestor of the starting revision.
 - Test boundary: isolated synthetic article, review, evidence, release, and IMPROVE fixtures. No real article, worker model, database, GitHub mutation, deployment, or publication operation ran.
 
@@ -54,7 +55,7 @@ The combined full supervised and recovery command passed the eight recovery case
 - `npm run verify:agent-workflow`: passed.
 - `npm run lint`: passed with 16 existing warnings and no errors.
 - `npm run typecheck`: passed.
-- `git diff --check`: pending final diff.
+- `git diff --check`: passed.
 
 The available runtime was Node 26.13.0 with npm 11.20.0, not the repository's Node 24.x and npm 12 contract. The focused checks passed under the available runtime.
 
