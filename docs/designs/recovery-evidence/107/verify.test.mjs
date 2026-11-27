@@ -26,7 +26,6 @@ test("publishes six neutral reviewer packets without answer leakage", () => {
     assert.match(packet, /Explanation/);
   }
 });
-
 test("keeps the answer key separate and covers each responsibility twice", () => {
   const key = readJson("evaluation", "answer-key.json");
   assert.equal(key.cases.length, 6);
@@ -60,3 +59,27 @@ test("retains rendered interaction evidence for both keyboard cases", () => {
   }
 });
 
+test("freezes six independent results before scoring and reports no misses or false alarms", () => {
+  const manifest = readJson("reviewer-manifest.json");
+  const results = manifest.cases.map(({ id }) => readJson("results", `${id}.json`));
+  assert.equal(new Set(results.map(({ reviewerId }) => reviewerId)).size, 6);
+  assert.deepEqual(new Set(results.map(({ reviewedRevision }) => reviewedRevision)), new Set(["1ce0442"]));
+  for (const result of results) {
+    assert.equal(result.caseId.length > 0, true);
+    assert.match(result.observedEvidence, /\S/);
+    assert.match(result.explanation, /\S/);
+    assert.match(result.rawResponse, /\S/);
+    assert.match(result.verdict, /^(meets|does_not_meet)$/);
+  }
+
+  const comparison = readJson("evaluation", "comparison.json");
+  assert.equal(comparison.results.length, 6);
+  assert.equal(comparison.summary.accurate, 6);
+  assert.equal(comparison.summary.misses, 0);
+  assert.equal(comparison.summary.falseAlarms, 0);
+  assert.equal(comparison.summary.passed, true);
+  for (const result of comparison.results) {
+    assert.equal(result.verdictAccurate, true);
+    assert.equal(result.explanationAccurate, true);
+  }
+});
