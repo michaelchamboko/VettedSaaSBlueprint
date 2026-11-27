@@ -25,13 +25,14 @@ The normal CLI uses the Neon adapter. The migration creates `article_research.re
 Observed synthetic outcomes:
 
 - An accepted editorial result registered exact evidence and advanced to `VALIDATING`. A restart at the same examined revision reused it without another work packet.
+- The integrated activity protocol completed every attributable editorial checkpoint through the normal controller before final registration; accepted checkpoints were not bypassed or repeated.
 - Invalid browser evidence failed validation before registration. Valid desktop, mobile and reduced-motion observations registered and later advanced the same revision to `RELEASING` by reuse.
 - Expiring only the browser record dispatched `VALIDATING` work. The editorial approval and research evidence reference survived.
 - Relevance, support, integrity and freshness each failed independently while the other control values remained valid.
 
 ## Checks
 
-- `npx --yes --package=node@24 -- node --import tsx --test --test-concurrency=1 tests/article-review-evidence-registry.test.ts tests/article-import-research-recovery.test.ts tests/article-research-registry.test.ts tests/article-import-recovery.test.ts`: 29 passed, 0 failed on Node 24.22.3.
+- `npx --yes --package=node@24 -- node --import tsx --test --test-concurrency=1 tests/article-review-evidence-registry.test.ts tests/article-import-activity-recovery.test.ts tests/article-import-research-recovery.test.ts tests/article-research-registry.test.ts tests/article-import-recovery.test.ts`: 36 passed, 0 failed on Node 24.22.3.
 - `npm run typecheck`: passed.
 - `npm run lint`: passed with 16 pre-existing warnings and no warnings in ticket-owned files.
 - `npm run verify:agent-workflow`: passed.
