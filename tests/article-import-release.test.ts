@@ -91,6 +91,7 @@ function operations(root: string, overrides: Partial<ReleaseOperations> = {}): R
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
     mergePullRequest: async () => ({ mergeCommitSha: "d".repeat(40) }),
+    reconcileDeployment: async () => ({ status: "not-found", evidence: ["production alias still resolves to the rollback target"] }),
     deploy: async (commitSha) => ({ deploymentId: "dpl-new", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }),
     verifyProduction: async (deployment) => {
       const identity = fixtureImports.get(root);
@@ -354,6 +355,134 @@ test("receipt failure after deployment rolls back exactly once", async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("a lost deployment response reconciles the original production assignment without another deploy", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-reconcile-"));
+  try {
+    const record = await releasingRecord(root);
+    const deployment = { deploymentId: "dpl-original", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha: "c".repeat(40) };
+    let lookups = 0;
+    let deploys = 0;
+    let rollbacks = 0;
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles: releaseFiles, execute: true,
+      artifactPath: "src/generated/landing-pages/example.json", slug: "example",
+      operations: operations(root, {
+        reconcileDeployment: async () => ++lookups === 1
+          ? { status: "not-found", evidence: ["production alias still resolves to the rollback target"] }
+          : { status: "confirmed", productionAssignment: "https://vettedsaasblueprint.online", deployment },
+        deploy: async () => {
+          deploys += 1;
+          const journal = (await loadImport(root, record.importId)).pendingRelease?.operations?.deployment;
+          assert.equal(journal?.phase, "invoking");
+          assert.equal(journal?.commitSha, "c".repeat(40));
+          assert.equal(journal?.productionAssignment, "https://vettedsaasblueprint.online");
+          assert.equal(journal?.rollbackDeploymentId, "dpl-previous");
+          throw new Error("SYNTHETIC_DEPLOYMENT_RESPONSE_LOST");
+        },
+        rollback: async () => { rollbacks += 1; return { ok: true, summary: "unexpected rollback" }; },
+      }),
+    });
+    assert.equal(result.status, "LIVE", result.reasons.join(", "));
+    assert.equal(deploys, 1);
+    assert.equal(rollbacks, 0);
+    assert.equal(lookups, 2);
+    const persisted = await loadImport(root, record.importId);
+    assert.equal(persisted.release?.deploymentId, "dpl-original");
+    assert.ok(persisted.evidenceRefs?.production);
+    assert.ok(persisted.terminalRef);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a hard-exit deployment intent remains fenced and then resumes the original deployment", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-hard-exit-"));
+  try {
+    const base = await releasingRecord(root);
+    const record = await persistFixture(root, {
+      ...base,
+      pendingRelease: {
+        ...base.pendingRelease!,
+        mergeCommitSha: "c".repeat(40),
+        rollbackDeploymentId: "dpl-previous",
+        rollbackCommitSha: "b".repeat(40),
+        operations: {
+          ...base.pendingRelease?.operations,
+          deployment: {
+            commitSha: "c".repeat(40), operationKey: `deployment:${"c".repeat(40)}`,
+            productionAssignment: "https://vettedsaasblueprint.online", rollbackDeploymentId: "dpl-previous",
+            rollbackCommitSha: "b".repeat(40), phase: "invoking", attemptedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+    let lookups = 0;
+    let deploys = 0;
+    const adapter = operations(root, {
+      reconcileDeployment: async () => {
+        lookups += 1;
+        return { status: "confirmed", productionAssignment: "https://vettedsaasblueprint.online", deployment: { deploymentId: "dpl-original", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha: "c".repeat(40) } };
+      },
+      deploy: async () => { deploys += 1; throw new Error("duplicate deploy"); },
+    });
+    const owner = await claimImportLease(root, record.importId);
+    assert.ok(owner);
+    await assert.rejects(assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: adapter }), /IMPORT_LEASE_BUSY/);
+    assert.equal(lookups, 0);
+    await owner.release();
+    const result = await assessImportRelease({ repositoryRoot: root, record: await loadImport(root, record.importId), changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: adapter });
+    assert.equal(result.status, "LIVE", result.reasons.join(", "));
+    assert.equal(deploys, 0);
+    assert.equal(lookups, 1);
+    const recovered = await loadImport(root, record.importId);
+    assert.equal(recovered.pendingRelease?.operations?.deployment?.operationKey, `deployment:${"c".repeat(40)}`);
+    assert.equal(recovered.pendingRelease?.rollbackDeploymentId, "dpl-previous");
+    assert.ok(recovered.terminalRef);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("indeterminate deployment lookup holds release and records the missing evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-indeterminate-"));
+  try {
+    const base = await releasingRecord(root);
+    const record = await persistFixture(root, {
+      ...base,
+      pendingRelease: {
+        ...base.pendingRelease!,
+        mergeCommitSha: "c".repeat(40),
+        rollbackDeploymentId: "dpl-previous",
+        rollbackCommitSha: "b".repeat(40),
+        operations: {
+          ...base.pendingRelease?.operations,
+          deployment: {
+            commitSha: "c".repeat(40), operationKey: `deployment:${base.importId}:${"c".repeat(40)}`,
+            productionAssignment: "https://vettedsaasblueprint.online", rollbackDeploymentId: "dpl-previous",
+            rollbackCommitSha: "b".repeat(40), phase: "invoking", attemptedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+    let deploys = 0;
+    let rollbacks = 0;
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles: releaseFiles, execute: true,
+      artifactPath: "src/generated/landing-pages/example.json", slug: "example",
+      operations: operations(root, {
+        reconcileDeployment: async () => ({ status: "indeterminate", missingEvidence: ["provider deployment identity", "production alias assignment"] }),
+        deploy: async () => { deploys += 1; throw new Error("must not deploy"); },
+        rollback: async () => { rollbacks += 1; return { ok: true, summary: "must not rollback" }; },
+      }),
+    });
+    assert.equal(result.status, "WAITING_EXTERNAL");
+    assert.equal(deploys, 0);
+    assert.equal(rollbacks, 0);
+    const held = await loadImport(root, record.importId);
+    assert.equal(held.pendingRelease?.operations?.deployment?.phase, "held");
+    assert.deepEqual(held.pendingRelease?.operations?.deployment?.missingEvidence, ["provider deployment identity", "production alias assignment"]);
+    assert.match(held.nextAction, /provider deployment identity/);
+    assert.equal(held.release, undefined);
+    assert.equal(held.terminalRef, undefined);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("an unverified merge commit waits without deployment", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-release-"));
   try {
@@ -493,6 +622,36 @@ test("local adapter resolves the current production deployment from the canonica
     assert.deepEqual(previous, { deploymentId: "dpl_current", commitSha: "b".repeat(40), verified: true });
     assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://vettedsaasblueprint.online", "--json"]);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("local adapter reconciles the intended commit and production alias as one deployment identity", async () => {
+  const artifactPath = "src/generated/landing-pages/elevenlabs-ai-voice-generator.json";
+  const calls: string[][] = [];
+  const runner: ReleaseCommandRunner = async (command, args) => {
+    calls.push([command, ...args]);
+    if (command === "vercel" && args[0] === "inspect") return { stdout: JSON.stringify({ id: "dpl_original", gitCommitSha: "c".repeat(40), target: "production", readyState: "READY" }), stderr: "" };
+    return { stdout: "", stderr: "" };
+  };
+  const adapter = createLocalReleaseOperations(process.cwd(), {
+    runner,
+    fetchJson: async () => ({ commitSha: "c".repeat(40), environment: "production" }),
+    format: "direct-review",
+    artifactPath,
+    slug: "elevenlabs-ai-voice-generator",
+  });
+  const result = await adapter.reconcileDeployment({
+    operationKey: `deployment:${"c".repeat(40)}`,
+    commitSha: "c".repeat(40),
+    productionAssignment: "https://vettedsaasblueprint.online",
+    rollbackTarget: { deploymentId: "dpl_previous", commitSha: "b".repeat(40) },
+  });
+  assert.equal(result.status, "confirmed");
+  if (result.status === "confirmed") {
+    assert.equal(result.deployment.deploymentId, "dpl_original");
+    assert.equal(result.deployment.commitSha, "c".repeat(40));
+    assert.equal(result.productionAssignment, "https://vettedsaasblueprint.online");
+  }
+  assert.deepEqual(calls.find((call) => call[0] === "vercel" && call[1] === "inspect"), ["vercel", "inspect", "https://vettedsaasblueprint.online", "--json"]);
 });
 
 test("local adapter falls back to the deployment API commit when inspect omits gitCommitSha", async () => {

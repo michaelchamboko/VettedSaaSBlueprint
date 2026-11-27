@@ -244,6 +244,7 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     inspectPullRequest: async () => ({ merged, ownerApproved: merged, headRefOid: commit, mergeCommitSha: merged ? commit : undefined }),
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
+    reconcileDeployment: async () => ({ status: "not-found", evidence: ["production alias still resolves to the rollback target"] }),
     deploy: async (commitSha) => { deployments++; return { deploymentId: "dpl-current", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
     verifyProduction: async (deployment) => { if (failRollback) throw new Error("synthetic production verification failure"); return productionFixture(root, importId, importArtifactTarget("direct-review", JSON.parse(await readFile(path.join(root, artifactPath), "utf8"))), deployment, (await loadImport(root, importId)).sourceFingerprint); },
     rollback: async () => ({ ok: true, summary: "Mocked rollback." }),

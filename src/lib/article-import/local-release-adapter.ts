@@ -188,6 +188,27 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (!snapshot.clean || snapshot.changedFiles.length) throw new Error("MERGED_RELEASE_WORKTREE_DIRTY");
       await runner("git", ["checkout", "--detach", mergeCommitSha]);
     },
+    async reconcileDeployment(intent) {
+      if (intent.productionAssignment !== origin) return { status: "inconsistent", missingEvidence: ["recorded production assignment does not match the canonical origin"] };
+      try {
+        const assigned = await verifiedDeployment(origin);
+        if (assigned.commitSha === intent.commitSha) {
+          const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
+          const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
+          return {
+            status: "confirmed",
+            productionAssignment: origin,
+            deployment: { deploymentId: assigned.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: assigned.commitSha },
+          };
+        }
+        if (assigned.id === intent.rollbackTarget.deploymentId && assigned.commitSha === intent.rollbackTarget.commitSha) {
+          return { status: "not-found", evidence: ["production alias still resolves to the recorded rollback target"] };
+        }
+        return { status: "inconsistent", missingEvidence: ["production alias resolves to neither the intended commit nor the rollback target"] };
+      } catch (error) {
+        return { status: "indeterminate", missingEvidence: [`provider deployment or production alias lookup failed: ${error instanceof Error ? error.message : String(error)}`] };
+      }
+    },
     async deploy(commitSha): Promise<ReleaseDeployment> {
       const result = await runner("vercel", withToken(["deploy", "--prod", "--yes"], token));
       const url = result.stdout.match(/https:\/\/[^\s]+/)?.[0];

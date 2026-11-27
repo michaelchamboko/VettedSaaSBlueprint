@@ -17,6 +17,7 @@ import { evaluateWorkflowEvidence } from "./workflow-evidence";
 import { articleHeroFormatSchema, articleHeroPaths } from "../article-heroes";
 import { validateArticleHeroBinding } from "./hero-image";
 import { readEvidence } from "./execution-evidence";
+import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 
 async function requiresArticleHero(root: string, record: ExternalArticleImportV1): Promise<boolean> {
   if (record.heroImage || record.evidenceRefs?.hero) return true;
@@ -69,6 +70,18 @@ export type ReleaseDeployment = {
   commitSha: string;
 };
 
+export type ReleaseDeploymentIntent = {
+  operationKey: string;
+  commitSha: string;
+  productionAssignment: string;
+  rollbackTarget: { deploymentId: string; commitSha: string };
+};
+
+export type ReleaseDeploymentLookup =
+  | { status: "confirmed"; deployment: ReleaseDeployment; productionAssignment: string }
+  | { status: "not-found"; evidence: string[] }
+  | { status: "indeterminate" | "inconsistent"; missingEvidence: string[] };
+
 export type ReleaseOperations = {
   preflight(): Promise<{ ok: boolean; reasons: string[] }>;
   inspectGit(): Promise<ReleaseGitSnapshot>;
@@ -81,7 +94,8 @@ export type ReleaseOperations = {
   verifyCodeReview(pullRequestUrl: string, evidenceUrl: string, reviewedCommitSha: string): Promise<void>;
   mergePullRequest(pullRequestUrl: string, reviewedCommitSha: string): Promise<{ mergeCommitSha: string }>;
   checkoutMergedCommit(reviewedCommitSha: string, mergeCommitSha: string): Promise<void>;
-  deploy(commitSha: string): Promise<ReleaseDeployment>;
+  reconcileDeployment(intent: ReleaseDeploymentIntent): Promise<ReleaseDeploymentLookup>;
+  deploy(commitSha: string, operationKey: string): Promise<ReleaseDeployment>;
   verifyProduction(deployment: ReleaseDeployment): Promise<FullProductionChecks>;
   rollback(deploymentId: string): Promise<{ ok: boolean; summary: string }>;
   verifyRollback(deploymentId: string, expectedCommitSha?: string): Promise<boolean>;
@@ -648,10 +662,94 @@ async function assessImportReleaseImpl(input: {
     pendingRelease = { ...pendingRelease, mergeCommitSha: commitSha, operations: { ...pendingRelease.operations, review: { reviewedHeadSha: pullRequest.headRefOid, evidenceUrl: codeReview.evidenceUrl }, merge: { reviewedHeadSha: pullRequest.headRefOid, mergeCommitSha: commitSha } } };
     input.record = { ...input.record, pendingRelease };
     await saveImport(input.repositoryRoot, input.record);
-    // The adapter can fail after its production side effect, so every attempt needs rollback.
+    const currentOperationKey = `deployment:${input.record.importId}:${commitSha}`;
+    const legacyOperationKey = `deployment:${commitSha}`;
+    const productionAssignment = REPOSITORY_CANONICAL_ORIGIN;
+    const existingOperation = pendingRelease.operations?.deployment;
+    const operationKey = existingOperation?.operationKey ?? currentOperationKey;
+    if (existingOperation && (existingOperation.commitSha !== commitSha
+      || ![currentOperationKey, legacyOperationKey].includes(existingOperation.operationKey)
+      || (existingOperation.productionAssignment && existingOperation.productionAssignment !== productionAssignment)
+      || (existingOperation.rollbackDeploymentId && existingOperation.rollbackDeploymentId !== previous.deploymentId)
+      || (existingOperation.rollbackCommitSha && existingOperation.rollbackCommitSha !== previous.commitSha))) {
+      throw new Error("DEPLOYMENT_OPERATION_IDENTITY_MISMATCH");
+    }
+    let deploymentOperation = existingOperation ?? {
+      commitSha,
+      operationKey,
+      productionAssignment,
+      rollbackDeploymentId: previous.deploymentId,
+      rollbackCommitSha: previous.commitSha,
+      phase: "prepared" as const,
+    };
+    if (!existingOperation) {
+      pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deployment: deploymentOperation } };
+      input.record = { ...input.record, pendingRelease };
+      await saveImport(input.repositoryRoot, input.record);
+    }
+    const intent: ReleaseDeploymentIntent = {
+      operationKey,
+      commitSha,
+      productionAssignment,
+      rollbackTarget: { deploymentId: previous.deploymentId, commitSha: previous.commitSha },
+    };
+    const holdForReconciliation = async (missingEvidence: string[]): Promise<ReleaseAssessment> => {
+      const evidence = [...new Set(missingEvidence)];
+      deploymentOperation = { ...deploymentOperation, productionAssignment, rollbackDeploymentId: previous.deploymentId, rollbackCommitSha: previous.commitSha, phase: "held", reconciledAt: new Date().toISOString(), missingEvidence: evidence };
+      const currentPendingRelease = pendingRelease;
+      if (!currentPendingRelease) throw new Error("PENDING_RELEASE_REQUIRED");
+      pendingRelease = { ...currentPendingRelease, operations: { ...currentPendingRelease.operations, deployment: deploymentOperation } };
+      input.record = {
+        ...input.record,
+        pendingRelease,
+        stage: "WAITING_EXTERNAL",
+        resumeStage: productiveStage(input.record),
+        updatedAt: new Date().toISOString(),
+        nextAction: `Reconcile the original deployment before another release mutation. Missing evidence: ${evidence.join(", ")}.`,
+        stageReceipts: [...input.record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at: new Date().toISOString(), message: `Deployment reconciliation held: ${evidence.join(", ")}.` }],
+      };
+      await saveImport(input.repositoryRoot, input.record);
+      return { status: "WAITING_EXTERNAL", reasons: ["DEPLOYMENT_RECONCILIATION_REQUIRED", ...evidence], previousDeploymentId: previous.deploymentId };
+    };
+    const reconcile = async (): Promise<ReleaseDeploymentLookup> => {
+      try { return await input.operations.reconcileDeployment(intent); }
+      catch (error) { return { status: "indeterminate", missingEvidence: [`provider lookup failed: ${error instanceof Error ? error.message : String(error)}`] }; }
+    };
+    let deployment: ReleaseDeployment | undefined;
+    const lookup = await reconcile();
+    if (lookup.status === "confirmed") {
+      if (lookup.productionAssignment !== productionAssignment || lookup.deployment.commitSha !== commitSha
+        || (existingOperation?.deploymentId && existingOperation.deploymentId !== lookup.deployment.deploymentId)
+        || (existingOperation?.url && existingOperation.url !== lookup.deployment.canonicalUrl)) {
+        return holdForReconciliation(["provider deployment identity and production alias do not match the recorded intent"]);
+      }
+      deployment = lookup.deployment;
+    } else if (lookup.status !== "not-found" || deploymentOperation.phase !== "prepared") {
+      return holdForReconciliation(lookup.status === "not-found" ? lookup.evidence : lookup.missingEvidence);
+    }
+    if (!deployment) {
+      deploymentOperation = { ...deploymentOperation, phase: "invoking", attemptedAt: new Date().toISOString(), missingEvidence: undefined };
+      pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deployment: deploymentOperation } };
+      input.record = { ...input.record, pendingRelease };
+      await saveImport(input.repositoryRoot, input.record);
+      deploymentStarted = true;
+      try {
+        deployment = await input.operations.deploy(commitSha, operationKey);
+      } catch (error) {
+        const lookup = await reconcile();
+        if (lookup.status !== "confirmed") {
+          const missing = lookup.status === "not-found" ? lookup.evidence : lookup.missingEvidence;
+          return holdForReconciliation([`deployment call did not return: ${error instanceof Error ? error.message : String(error)}`, ...missing]);
+        }
+        if (lookup.productionAssignment !== productionAssignment || lookup.deployment.commitSha !== commitSha) {
+          return holdForReconciliation(["provider deployment identity and production alias do not match the recorded intent"]);
+        }
+        deployment = lookup.deployment;
+      }
+    }
     deploymentStarted = true;
-    const deployment = await input.operations.deploy(commitSha);
-    pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deployment: { commitSha, operationKey: `deployment:${commitSha}`, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl } } };
+    deploymentOperation = { ...deploymentOperation, phase: "confirmed", reconciledAt: new Date().toISOString(), missingEvidence: undefined, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl };
+    pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deployment: deploymentOperation } };
     input.record = { ...input.record, pendingRelease };
     await saveImport(input.repositoryRoot, input.record);
     if (deployment.commitSha !== commitSha) {
