@@ -9,6 +9,7 @@ import { createSupervisedImportExecutor } from "../src/lib/article-import/superv
 import { inspectImportCompletion } from "../src/lib/article-import/completion";
 import { clearIntakeBlocker, clearSharedIntakeBlocker, createIntakeRun, loadIntakeRun, markIntakeEntry, nextIntakeEntry, setIntakeBlocker, upgradeIntakeRun, reconcileIntakeEntry, checkIntakeRun, claimNextIntakeEntry } from "../src/lib/article-import/intake";
 import { createSupervisedImproveExecutor, type ImproveExecutor } from "../src/lib/article-import/improve-supervisor";
+import { NeonArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry-neon";
 
 export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence"; importId: string } | { kind: "submit-diagnosis"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
 
@@ -79,7 +80,8 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "upgrade-intake") return upgradeIntakeRun(root, command.runId);
   if (command.kind === "reconcile-intake-entry") return reconcileIntakeEntry(root, command.runId, command.entry);
   if (command.kind === "submit-diagnosis") return submitImportDiagnosis(root, command.importId, JSON.parse(await readFile(command.file, "utf8")));
-  const execute = executor ?? createSupervisedImportExecutor(root);
+  const reviewEvidenceRegistry = dispatchOptions?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry();
+  const execute = executor ?? createSupervisedImportExecutor(root, undefined, { reviewEvidenceRegistry });
   const improveExecutor = createDispatchingImproveExecutor(root, createSupervisedImproveExecutor(root), dispatchOptions);
   const continueImprove = async (imported: ExternalArticleImportV1, importId: string) => {
     for (let step = 0; improvePending(imported) && !imported.improve?.pendingReview && step < 3; step += 1) {
@@ -95,8 +97,8 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "check-completion") return inspectImportCompletion(root, command.importId);
   if (command.kind === "intake") return createIntakeRun(root, command.directory);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
-  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
-  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: executor ?? dispatchOptions?.executor, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
+  if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: execute, reviewEvidenceRegistry, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
+  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: execute, reviewEvidenceRegistry, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
   if (command.kind === "intake-retry") {
     const run = await loadIntakeRun(root, command.runId);
     if (!command.importId) throw new Error("INTAKE_RETRY_IMPORT_REQUIRED");
