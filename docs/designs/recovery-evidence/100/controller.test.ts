@@ -34,6 +34,12 @@ async function dispose(root: string) {
   await rm(root, { recursive: true, force: true });
 }
 
+function requireTransformation(record: { transformation?: { title: string } }) {
+  const transformation = record.transformation;
+  assert.ok(transformation, "synthetic fixture must have a transformation after ingest");
+  return transformation;
+}
+
 test("failure routing records stop decisions and external calls across wording variants", async () => {
   const cases = [
     { category: "content-rejection", wording: "coded", message: "PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS", expectedKind: "repair", expectedScope: "article" },
@@ -93,7 +99,7 @@ test("repair totals survive reload and diagnosis does not enforce prediction or 
       current = await loadImport(root, current.importId);
       if (index < failures.length - 1) {
         current = await withImportLease(root, current.importId, async (leased) => {
-          leased.transformation.title = `Changed repair input ${index + 1}`;
+          requireTransformation(leased).title = `Changed repair input ${index + 1}`;
           await saveImport(root, leased);
           return leased;
         });
@@ -105,7 +111,7 @@ test("repair totals survive reload and diagnosis does not enforce prediction or 
     assert.equal(executorCalls, 3);
 
     current = await withImportLease(root, current.importId, async (leased) => {
-      leased.transformation.title = "Replacement after diagnosis gate";
+      requireTransformation(leased).title = "Replacement after diagnosis gate";
       await saveImport(root, leased);
       return leased;
     });
@@ -189,7 +195,7 @@ test("threshold, viewport and article changes independently alter one generic su
     assert.notEqual(afterViewportChange, before);
     assert.notEqual(afterViewportChange, afterThresholdChange);
 
-    record.transformation.title = "Synthetic article text changed";
+    requireTransformation(record).title = "Synthetic article text changed";
     const afterArticleChange = await canonicalSubmissionFingerprint(record, root);
     assert.notEqual(afterArticleChange, afterViewportChange);
 

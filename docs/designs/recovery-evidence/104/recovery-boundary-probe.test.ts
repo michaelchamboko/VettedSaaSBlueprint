@@ -19,7 +19,7 @@ import {
   resolveImproveFindings,
   retainImproveMeasurement,
 } from "../../../../src/lib/article-import/improve-checklist";
-import { evidenceReference, readEvidence, storeEvidence } from "../../../../src/lib/article-import/execution-evidence";
+import { evidenceReference, storeEvidence } from "../../../../src/lib/article-import/execution-evidence";
 import { importArtifactTarget } from "../../../../src/lib/article-import/format-validation";
 import { fingerprintEditorialArtifact } from "../../../../src/lib/editorial/refinement";
 import { approveFixture, presentFixture } from "../../../../tests/fixtures/article-content-approval";

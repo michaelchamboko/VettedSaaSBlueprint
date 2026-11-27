@@ -223,14 +223,17 @@ function canonicalRegistrationExercise(matrix: ReturnType<typeof registryMatrix>
     }])) as Record<string, { status: "observed" | "failed" | "unreachable"; boundary: string | null; evidence: string }>;
 }
 
-async function writePlanningResult(root: string, continuation: { workPath: string; resultPath: string; idempotencyKey: string; sourceFingerprint: string }, gapReason: GapReason) {
+async function writePlanningResult(root: string, continuation: { workPath: string; resultPath: string; idempotencyKey?: string; sourceFingerprint?: string }, gapReason: GapReason) {
+  const { idempotencyKey, sourceFingerprint } = continuation;
+  assert.ok(idempotencyKey, "research planning continuation must have an idempotency key");
+  assert.ok(sourceFingerprint, "research planning continuation must have a source fingerprint");
   const packet = JSON.parse(await readFile(path.join(root, continuation.workPath), "utf8"));
-  const decisionPath = path.posix.join(path.posix.dirname(continuation.resultPath), `${continuation.idempotencyKey}.registry-decision.json`);
+  const decisionPath = path.posix.join(path.posix.dirname(continuation.resultPath), `${idempotencyKey}.registry-decision.json`);
   const decision = gapDecision(packet.researchRegistry, gapReason);
   await writeJsonAtomically(path.join(root, decisionPath), decision);
   await writeJsonAtomically(path.join(root, continuation.resultPath), {
-    idempotencyKey: continuation.idempotencyKey,
-    sourceFingerprint: continuation.sourceFingerprint,
+    idempotencyKey,
+    sourceFingerprint,
     summary: `Recorded a synthetic ${gapReason} registry gap.`,
     work: { stage: "RESEARCHING", researchAction: "acquire", registryDecisionPath: decisionPath },
   });

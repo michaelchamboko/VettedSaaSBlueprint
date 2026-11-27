@@ -281,7 +281,7 @@ async function probeRetryCounts() {
 async function probeSharedFailureStop() {
   const { root, record } = await fixture();
   try {
-    const researching = await advanceImport(root, record, "Synthetic ingest passed.");
+    await advanceImport(root, record, "Synthetic ingest passed.");
     let stageExecutorCalls = 0;
     const fail = async () => {
       stageExecutorCalls += 1;
