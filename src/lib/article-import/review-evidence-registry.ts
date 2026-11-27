@@ -328,8 +328,10 @@ function rethrowRegistryFailure(error: unknown): void {
 }
 
 function reopenFinding(finding: ActivityFinding): ActivityFinding {
-  const { resolutionReviewId: _resolutionReviewId, resolvedAt: _resolvedAt, ...retained } = finding;
-  return { ...retained, status: "open" };
+  const reopened = { ...finding };
+  delete reopened.resolutionReviewId;
+  delete reopened.resolvedAt;
+  return { ...reopened, status: "open" };
 }
 
 async function freezeActivityReferences(root: string, importId: string, refs: EvidenceRef[]): Promise<EvidenceRef[]> {
