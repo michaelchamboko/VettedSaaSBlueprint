@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-orbit",
+  "reviewerId": "/root/ticket122/r122_orbit_b",
+  "route": "native-codex-subagent",
+  "genuineIndependentJudgment": true,
+  "reviewedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "observedEvidence": "The label reads 'Review WebCatalog.' The supporting text reads 'Use one of your own workflows to decide.' An affiliate disclosure appears above the action. The link opens https://vendor.example/products/webcatalog in the current tab. Clicking creates no purchase or account commitment.",
+  "verdict": "does_not_meet",
+  "explanation": "'Review WebCatalog' could lead to a review on the current site. The supporting text suggests how to evaluate WebCatalog, but leaves unclear what the vendor page provides and whether the click carries a commitment. The affiliate disclosure identifies the commercial relationship without telling the visitor that this click takes them to the vendor.",
+  "rawResponse": "Observed evidence: The label reads “Review WebCatalog.” The supporting text reads “Use one of your own workflows to decide.” An affiliate disclosure appears above the action. The link opens `https://vendor.example/products/webcatalog` in the current tab. Clicking creates no purchase or account commitment.\n\nVerdict: does_not_meet\n\nExplanation: “Review WebCatalog” could lead to a review on the current site. The supporting text suggests how to evaluate WebCatalog, but leaves unclear what the vendor page provides and whether the click carries a commitment. The affiliate disclosure identifies the commercial relationship without telling the visitor that this click takes them to the vendor."
+}

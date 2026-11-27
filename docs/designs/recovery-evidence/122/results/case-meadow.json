@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-meadow",
+  "reviewerId": "/root/ticket122/r122_meadow",
+  "route": "native-codex-subagent",
+  "genuineIndependentJudgment": true,
+  "reviewedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "observedEvidence": "One Tab moved the visible focus outline from 'Read limitations' directly to 'Continue to common objections.' Pressing ArrowRight left focus on that link and the region's horizontal scroll offset at 0.",
+  "verdict": "does_not_meet",
+  "explanation": "Tab skipped the scrollable region. With focus on the following link, ArrowRight did not bring the second limitation's text into view, so the keyboard user could not read it.",
+  "rawResponse": "Observed evidence: One Tab moved the visible focus outline from \"Read limitations\" directly to \"Continue to common objections.\" Pressing ArrowRight left focus on that link and the region's horizontal scroll offset at 0.\n\nVerdict: does_not_meet\n\nExplanation: Tab skipped the scrollable region. With focus on the following link, ArrowRight did not bring the second limitation's text into view, so the keyboard user could not read it."
+}

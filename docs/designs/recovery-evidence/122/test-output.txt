@@ -1,0 +1,12 @@
+Command: node --test docs/designs/recovery-evidence/122/verify.test.mjs
+Exit code: 0
+
+PASS binds six neutral packets and the reviewer configuration to the examined revision
+PASS freezes three unchanged pairs with exact criteria and evidence objects
+PASS retains six genuine independent results and accurate miss accounting
+
+Tests: 3
+Passed: 3
+Failed: 0
+
+The final test also flips one retained verdict in memory and requires the verifier to reject the mutation.

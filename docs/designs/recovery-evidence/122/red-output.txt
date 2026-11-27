@@ -1,0 +1,14 @@
+Command: node --test docs/designs/recovery-evidence/122/verify.test.mjs
+Exit code: 1
+
+PASS binds six neutral packets and the reviewer configuration to the examined revision
+PASS freezes three unchanged pairs with exact criteria and evidence objects
+FAIL retains six genuine independent results and accurate miss accounting
+
+Error: ENOENT: no such file or directory, open 'docs/designs/recovery-evidence/122/results/case-lantern.json'
+
+Tests: 3
+Passed: 2
+Failed: 1
+
+This is the expected red state. No reviewer result existed when the test ran.

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "investigation": "github-issue-122",
+  "examinedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "reviewerConfig": "reviewer-config.json",
+  "reviewInstructions": "Assign one packet to one fresh native Codex reviewer. Do not show evaluation files, sibling packets, previous judgments, labels, expectations, or pair mapping before the response is frozen.",
+  "cases": [
+    { "id": "case-lantern", "packet": "reviewer-packets/case-lantern/packet.md" },
+    { "id": "case-orbit", "packet": "reviewer-packets/case-orbit/packet.md" },
+    { "id": "case-river", "packet": "reviewer-packets/case-river/packet.md" },
+    { "id": "case-summit", "packet": "reviewer-packets/case-summit/packet.md" },
+    { "id": "case-meadow", "packet": "reviewer-packets/case-meadow/packet.md" },
+    { "id": "case-quartz", "packet": "reviewer-packets/case-quartz/packet.md" }
+  ]
+}

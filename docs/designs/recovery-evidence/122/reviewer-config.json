@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "examinedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "route": {
+    "provider": "native-codex-subagent",
+    "access": "existing-local-entitlement",
+    "paidExternalService": false,
+    "contextPolicy": "fresh-context-per-case",
+    "assignmentPolicy": "one-case-per-reviewer"
+  },
+  "withheld": [
+    "case labels",
+    "expected verdicts",
+    "pair mapping",
+    "answer key",
+    "other packets",
+    "other results",
+    "issue 107 results"
+  ],
+  "requiredResponseFields": ["observedEvidence", "verdict", "explanation"]
+}
