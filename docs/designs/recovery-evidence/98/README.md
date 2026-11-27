@@ -44,11 +44,13 @@ Test file: `docs/designs/recovery-evidence/98/controller-recovery.test.ts`
 The run used cached Node `v24.22.3` from npm cache key `7c49414caf231b7c`. `TEMP` and `TMP` pointed to the worktree's `.scratch/temp`. Dependencies came from the existing `webcatalog-issues-1127` worktree through an untracked local junction.
 
 ```powershell
+$nodeVersion = node --version
+if ($nodeVersion -notmatch '^v24\.') { throw "Node 24 is required; found $nodeVersion" }
+New-Item -ItemType Directory -Force -Path '.scratch\temp' | Out-Null
 $env:TEMP = (Resolve-Path '.scratch\temp').Path
 $env:TMP = $env:TEMP
 $env:RECOVERY_EVIDENCE_REVISION = (git rev-parse HEAD)
-& 'C:\Users\micha\AppData\Local\npm-cache\_npx\7c49414caf231b7c\node_modules\node\bin\node.exe' `
-  'node_modules\tsx\dist\cli.mjs' --test `
+node --import tsx --test `
   'docs\designs\recovery-evidence\98\controller-recovery.test.ts'
 ```
 

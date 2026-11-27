@@ -18,6 +18,7 @@ import { fixtureProbe, persistFixture, prepareCommandCheckout } from "../../../.
 import { productionFixture } from "../../../../tests/fixtures/article-production-evidence";
 
 const evidenceDirectory = path.dirname(fileURLToPath(import.meta.url));
+let runOutputDirectory = evidenceDirectory;
 const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
 const intendedCommit = "c".repeat(40);
 const rollbackCommit = "b".repeat(40);
@@ -207,7 +208,10 @@ async function snapshot(root: string, remotePath: string, importId: string) {
     aliasAssignment: remote.aliasDeploymentId ?? null,
     rollbackTarget: remote.rollbackTarget,
     journal: record.pendingRelease ?? null,
-    outstandingChecks: record.stage === "LIVE" ? [] : requiredChecks,
+    inferredOutstandingChecks: record.stage === "LIVE" ? [] : requiredChecks,
+    outstandingChecksInference: record.stage === "LIVE"
+      ? "No checks remain after the controller reaches LIVE."
+      : "The record has no persisted outstanding-check list; these are the probe's required checks inferred from the non-LIVE stage.",
     remoteCallCount: remote.calls.length,
     retainedProductionProof: Boolean(record.evidenceRefs?.production && record.terminalRef),
   };
@@ -276,7 +280,15 @@ async function main() {
     await childExit(process.argv[3], process.argv[4], process.argv[5]);
     return;
   }
-  const scenarios = process.argv.includes("--assert-required")
+  const assertRequired = process.argv.includes("--assert-required");
+  const refreshSnapshots = process.argv.includes("--refresh-snapshots");
+  if (assertRequired || !refreshSnapshots) {
+    const runsDirectory = path.join(process.cwd(), ".scratch", "recovery-evidence-97-runs");
+    await mkdir(runsDirectory, { recursive: true });
+    runOutputDirectory = await mkdtemp(path.join(runsDirectory, "run-"));
+  }
+  assert.equal(assertRequired && refreshSnapshots, false, "snapshot refresh is allowed only for a complete observational run");
+  const scenarios = assertRequired
     ? [await runLostOrIndeterminate("lost-response")]
     : [
       await runLostOrIndeterminate("lost-response"),
@@ -294,8 +306,7 @@ async function main() {
     },
     scenarios,
   };
-  await writeFile(path.join(evidenceDirectory, "observations.json"), JSON.stringify(observations, null, 2) + "\n");
-  if (process.argv.includes("--assert-required")) {
+  if (assertRequired) {
     for (const scenario of observations.scenarios) {
       assert.equal(scenario.remote.calls.length, 1, `${scenario.scenario} must not repeat deployment before reconciliation`);
       const finalSnapshot = "afterDueRestart" in scenario ? scenario.afterDueRestart : scenario.afterRecoveredRestart;
@@ -308,13 +319,16 @@ async function main() {
     const finalSnapshot = "afterDueRestart" in scenario ? scenario.afterDueRestart : scenario.afterRecoveredRestart;
     if (finalSnapshot.stage === "LIVE") assert.equal(finalSnapshot.retainedProductionProof, true);
   }
-  process.stdout.write(JSON.stringify({ ok: true, observations: path.join(evidenceDirectory, "observations.json") }) + "\n");
+  const observationsPath = path.join(runOutputDirectory, "observations.json");
+  await writeFile(observationsPath, JSON.stringify(observations, null, 2) + "\n");
+  process.stdout.write(JSON.stringify({ ok: true, observations: observationsPath, refreshedSnapshot: refreshSnapshots }) + "\n");
 }
 
 main().catch(async (error) => {
   const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
   if (process.argv.includes("--assert-required")) {
-    await writeFile(path.join(evidenceDirectory, "red-output.txt"), message + "\n");
+    await mkdir(runOutputDirectory, { recursive: true });
+    await writeFile(path.join(runOutputDirectory, "red-output.txt"), message + "\n");
   }
   console.error(message);
   process.exitCode = 1;

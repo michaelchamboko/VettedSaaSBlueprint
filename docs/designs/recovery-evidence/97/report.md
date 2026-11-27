@@ -34,11 +34,11 @@ The exact checkout does not contain `GLOSSARY.md`, `docs/adr/0003-unify-publicat
 
 | Scenario | Remote state after incident | Durable state after incident | Restart observation |
 | --- | --- | --- | --- |
-| Success, response lost | 1 call; `dpl-lost-response-1`; alias assigned; rollback target `dpl-previous` at `bbbb...bbbb` | `WAITING_EXTERNAL`; intended commit `cccc...cccc`; review and merge journal retained; deployment identity absent; 9 checks outstanding; no production proof | Immediate and due restart stayed `WAITING_EXTERNAL`; call count remained 1 |
-| Controller exit before local save | Initial call created `dpl-controller-exit-1` and assigned the alias; no rollback attempt | `RELEASING`; intended commit and prior journal retained; deployment identity absent; 9 checks outstanding; no production proof | Immediate reload stayed `RELEASING` at 1 call. Explicit recovery verified killed PID 24552, released the lease, then normal restart created `dpl-controller-exit-2`; call count 2; LIVE with retained proof for the second deployment |
-| Indeterminate remote result | 1 call; deployment identity and alias assignment unknown; rollback target retained | `WAITING_EXTERNAL`; deployment identity absent; 9 checks outstanding; no production proof | Immediate and due restart stayed `WAITING_EXTERNAL`; call count remained 1 |
+| Success, response lost | 1 call; `dpl-lost-response-1`; alias assigned; rollback target `dpl-previous` at `bbbb...bbbb` | `WAITING_EXTERNAL`; intended commit `cccc...cccc`; review and merge journal retained; deployment identity absent; no production proof. The probe infers 9 required checks from the non-LIVE stage; the record has no persisted outstanding-check list. | Immediate and due restart stayed `WAITING_EXTERNAL`; call count remained 1 |
+| Controller exit before local save | Initial call created `dpl-controller-exit-1` and assigned the alias; no rollback attempt | `RELEASING`; intended commit and prior journal retained; deployment identity absent; no production proof. The probe infers the same 9 checks from stage rather than reading observed check state. | Immediate reload stayed `RELEASING` at 1 call. Explicit recovery verified killed PID 24552, released the lease, then normal restart created `dpl-controller-exit-2`; call count 2; LIVE with retained proof for the second deployment |
+| Indeterminate remote result | 1 call; deployment identity and alias assignment unknown; rollback target retained | `WAITING_EXTERNAL`; deployment identity absent; no production proof. The 9 listed checks are a probe inference from stage, not a controller observation. | Immediate and due restart stayed `WAITING_EXTERNAL`; call count remained 1 |
 
-The machine-readable record is [observations.json](./observations.json). It includes each journal, next action, alias assignment, rollback target, outstanding checks, and call count before and after restart.
+The machine-readable record is [observations.json](./observations.json). It includes each journal, next action, alias assignment, rollback target, stage-derived check inference, and call count before and after restart.
 
 ## TDD evidence
 
@@ -64,9 +64,10 @@ $env:TMP = $env:TEMP
 New-Item -ItemType Directory -Force -Path $env:TEMP | Out-Null
 node --import tsx docs/designs/recovery-evidence/97/release-recovery-probe.ts --assert-required
 node --import tsx docs/designs/recovery-evidence/97/release-recovery-probe.ts
+node --import tsx docs/designs/recovery-evidence/97/release-recovery-probe.ts --refresh-snapshots
 ```
 
-The first command is expected to exit 1 at the missing verification-resume assertion. The second command writes `observations.json` and exits 0 after recording current behavior.
+The first command is expected to exit 1 at the missing verification-resume assertion. The first two commands write only to a new `.scratch/recovery-evidence-97-runs/run-*` directory, so an expected failure cannot overwrite tracked evidence. The third command explicitly refreshes the tracked observation snapshot and succeeds only after the complete observational run passes its checks.
 
 ## Revision and source checks
 

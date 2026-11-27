@@ -24,7 +24,7 @@ No product code, live article, database, external worker, release, deployment, o
 | Relevant input change | Changing the evidence referenced by a cached invalid result changed repeat eligibility. The cached result was selected with zero new worker calls, then the validator rejected it. |
 | Unrelated historical change | Adding an unrelated historical `.result.json` also changed repeat eligibility. The same cached current result was selected with zero new worker calls, then the validator rejected it. |
 | Open finding | An earlier synthetic independent review failed with an unresolved finding. Switching the selected presentation reference to a separate synthetic passing review let the controller advance while retaining the earlier rejection bytes and without an explicit finding resolution. |
-| Owner exit | Recovery was rejected while the lease owner process was alive. After verified process exit, recovery succeeded and a replacement owner received a new token. |
+| Owner exit | Recovery was rejected while the lease owner process was alive. After verified process exit, recovery succeeded and a replacement owner received a new token. The probe read the journal and verified that both the prior unreleased claim and its later recovery-release entry retained the original owner token in generation order. |
 
 The evidence for exact tokens, call counts, validator output, and retained findings is in `observations.json`. `test-output.txt` records the four passing probe cases.
 

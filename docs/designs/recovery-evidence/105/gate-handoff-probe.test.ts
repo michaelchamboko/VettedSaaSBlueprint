@@ -124,7 +124,7 @@ test("normal controller dispatch exposes the current full-record handoff and ign
   }
 });
 
-test("test-only oracle exercises controlled-time archive, re-claim, and both cleanup triggers", () => {
+test("test-only classifier exercises controlled-time archive and re-claim rules", () => {
   const protectedKinds = [
     "active-work", "rejected-evidence", "resolution", "diagnosis", "registered-evidence",
     "publication-proof", "rollback", "improve",
@@ -150,49 +150,36 @@ test("test-only oracle exercises controlled-time archive, re-claim, and both cle
   const unknown: Artifact = {
     id: "unknown-sidecar", kind: "unknown", bytes: Buffer.from("unclassified bytes remain readable"), dependencies: [],
   };
-  const priorHousekeepingState = {
-    retryIdentity: "repair-identity-7",
-    articleRepairTotals: { REFINING: 2, VALIDATING: 1 },
-  };
-
-  for (const trigger of ["later-gate", "manual"] as const) {
-    const baseline = [
-      ...protectedArtifacts.map((artifact) => classify(artifact, controlledNow, new Set())),
-      classify(temporary, controlledNow, new Set()),
-      classify(draftAt29Days, controlledNow, new Set()),
-      classify(captureAtExpiry, controlledNow, new Set()),
-      classify(unknown, controlledNow, new Set()),
-    ];
-    assert.equal(baseline.find((item) => item.artifactId === temporary.id)?.disposition, "dispose");
-    assert.equal(baseline.find((item) => item.artifactId === draftAt29Days.id)?.disposition, "retain");
-    assert.equal(baseline.find((item) => item.artifactId === captureAtExpiry.id)?.disposition, "dispose");
-    assert.equal(baseline.find((item) => item.artifactId === unknown.id)?.disposition, "unclassified");
-    assert.ok(protectedArtifacts.every((artifact) => baseline.find((item) => item.artifactId === artifact.id)?.disposition === "retain"));
-    const reclaimed = classify(captureAtExpiry, controlledNow, new Set([captureAtExpiry.id]));
-    assert.equal(reclaimed.disposition, "retain");
-    assert.match(reclaimed.reason, /newly-claimed/);
-    for (const artifact of [...protectedArtifacts, draftAt29Days, captureAtExpiry, unknown]) {
-      assert.equal(sha256(artifact.bytes).length, 64);
-      assert.ok(artifact.bytes.length > 0);
-    }
-    assert.deepEqual(priorHousekeepingState, {
-      retryIdentity: "repair-identity-7",
-      articleRepairTotals: { REFINING: 2, VALIDATING: 1 },
-    });
-    observations.push({
-      case: `retention-oracle-${trigger}`,
-      controlledNow: new Date(controlledNow).toISOString(),
-      immediateTemporaryDisposal: true,
-      archiveRecoverableAt29Days: true,
-      expiredCaptureEligibleAt30Days: true,
-      newlyClaimedDependencyRetained: true,
-      unclassifiedPreserved: true,
-      protectedKinds,
-      retryIdentityPreserved: true,
-      repairTotalsPreserved: true,
-      dispositions: baseline,
-    });
+  const baseline = [
+    ...protectedArtifacts.map((artifact) => classify(artifact, controlledNow, new Set())),
+    classify(temporary, controlledNow, new Set()),
+    classify(draftAt29Days, controlledNow, new Set()),
+    classify(captureAtExpiry, controlledNow, new Set()),
+    classify(unknown, controlledNow, new Set()),
+  ];
+  assert.equal(baseline.find((item) => item.artifactId === temporary.id)?.disposition, "dispose");
+  assert.equal(baseline.find((item) => item.artifactId === draftAt29Days.id)?.disposition, "retain");
+  assert.equal(baseline.find((item) => item.artifactId === captureAtExpiry.id)?.disposition, "dispose");
+  assert.equal(baseline.find((item) => item.artifactId === unknown.id)?.disposition, "unclassified");
+  assert.ok(protectedArtifacts.every((artifact) => baseline.find((item) => item.artifactId === artifact.id)?.disposition === "retain"));
+  const reclaimed = classify(captureAtExpiry, controlledNow, new Set([captureAtExpiry.id]));
+  assert.equal(reclaimed.disposition, "retain");
+  assert.match(reclaimed.reason, /newly-claimed/);
+  for (const artifact of [...protectedArtifacts, draftAt29Days, captureAtExpiry, unknown]) {
+    assert.equal(sha256(artifact.bytes).length, 64);
+    assert.ok(artifact.bytes.length > 0);
   }
+  observations.push({
+    case: "retention-classifier",
+    controlledNow: new Date(controlledNow).toISOString(),
+    immediateTemporaryDisposal: true,
+    archiveRecoverableAt29Days: true,
+    expiredCaptureEligibleAt30Days: true,
+    newlyClaimedDependencyRetained: true,
+    unclassifiedPreserved: true,
+    protectedKinds,
+    dispositions: baseline,
+  });
 });
 
 test.skip("future acceptance: later-gate cleanup rechecks persisted references, mutates bytes, and resumes after interruption", () => {});

@@ -44,6 +44,15 @@ const passage = `${JSON.stringify({ text: claimText }, null, 2)}\n`;
 type GapReason = "missing" | "stale" | "conflicting";
 type Dimension = "control" | "relevance" | "support" | "integrity" | "freshness";
 
+const canonicalRegistrationInventory = [
+  { evidenceClass: "research", boundary: "ArticleResearchRegistry", availability: "present" },
+  { evidenceClass: "rejected-finding", boundary: null, availability: "absent" },
+  { evidenceClass: "resolution", boundary: null, availability: "absent" },
+  { evidenceClass: "editorial-judgment", boundary: null, availability: "absent" },
+  { evidenceClass: "browser-observation", boundary: null, availability: "absent" },
+  { evidenceClass: "production-proof", boundary: null, availability: "absent" },
+] as const;
+
 function candidate(overrides: Partial<ResearchRegistryCandidate> = {}): ResearchRegistryCandidate {
   return {
     claimId: "11111111-1111-4111-8111-111111111111",
@@ -197,6 +206,21 @@ function registryMatrix() {
     assert.equal(item.gapAccepted, true, `${item.dimension} must classify a recoverable gap`);
   }
   return observations;
+}
+
+function canonicalRegistrationExercise(matrix: ReturnType<typeof registryMatrix>) {
+  const researchObserved = matrix.some((item) => item.dimension === "control" && item.reuseAccepted);
+  return Object.fromEntries(canonicalRegistrationInventory.map((item) => [item.evidenceClass, item.evidenceClass === "research"
+    ? {
+      status: researchObserved ? "observed" : "failed",
+      boundary: item.boundary,
+      evidence: "The valid control traversed the research registry plan and evidence validators.",
+    }
+    : {
+      status: "unreachable",
+      boundary: null,
+      evidence: `No first-class ${item.evidenceClass} registration boundary exists in the investigated revision.`,
+    }])) as Record<string, { status: "observed" | "failed" | "unreachable"; boundary: string | null; evidence: string }>;
 }
 
 async function writePlanningResult(root: string, continuation: { workPath: string; resultPath: string; idempotencyKey: string; sourceFingerprint: string }, gapReason: GapReason) {
@@ -360,15 +384,7 @@ async function retentionGraph() {
       resolvedCategories: Object.keys(resolved),
       frozenFileCount: frozen.length,
       allExactRevisions: Object.values(resolved).every((value) => (value as { examinedRevision?: string }).examinedRevision === sourceFingerprint),
-      registration: {
-        research: true,
-        rejectedFinding: false,
-        resolution: false,
-        editorialJudgment: false,
-        browserObservation: false,
-        productionProof: false,
-      },
-      registrationNote: "The generic frozen graph retains exact bytes, but only research has a first-class canonical register interface in the investigated revision.",
+      retentionNote: "The generic frozen graph retains exact bytes. Canonical registration is evaluated separately at exercised product boundaries.",
     };
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -376,6 +392,7 @@ async function retentionGraph() {
 }
 
 async function main() {
+  const matrix = registryMatrix();
   const observations = {
     schemaVersion: "RegisteredEvidenceRecovery102V1",
     investigatedRevision,
@@ -389,7 +406,9 @@ async function main() {
       freshJudgmentBoundToExaminedRevision: true,
       unknownHistoricalProvenanceRetained: true,
     },
-    registryMatrix: registryMatrix(),
+    canonicalRegistrationInventory,
+    canonicalRegistrationExercise: canonicalRegistrationExercise(matrix),
+    registryMatrix: matrix,
     controllerRecovery: await controllerRecovery(),
     retentionGraph: await retentionGraph(),
     unreachable: [
@@ -405,7 +424,7 @@ async function main() {
   assert.equal(observations.retentionGraph.allExactRevisions, true);
   if (process.argv.includes("--assert-required")) {
     assert.equal(
-      Object.values(observations.retentionGraph.registration).every(Boolean),
+      Object.values(observations.canonicalRegistrationExercise).every((item) => item.status === "observed"),
       true,
       "every retained evidence class must have a first-class canonical register record",
     );
@@ -419,7 +438,7 @@ async function main() {
 
 main().catch(async (error) => {
   const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-  if (process.argv.includes("--assert-required")) await writeFile(path.join(evidenceDirectory, "red-output.txt"), `${message}\n`);
+  if (process.argv.includes("--assert-required")) await writeFile(path.join(evidenceDirectory, "red-output.txt"), `${message.trimEnd()}\n`);
   console.error(message);
   process.exitCode = 1;
 });

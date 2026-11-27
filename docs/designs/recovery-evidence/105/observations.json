@@ -15,7 +15,7 @@
       "temporaryCopyRemoved": false
     },
     {
-      "case": "retention-oracle-later-gate",
+      "case": "retention-classifier",
       "controlledNow": "2026-11-27T12:00:00.000Z",
       "immediateTemporaryDisposal": true,
       "archiveRecoverableAt29Days": true,
@@ -32,91 +32,6 @@
         "rollback",
         "improve"
       ],
-      "retryIdentityPreserved": true,
-      "repairTotalsPreserved": true,
-      "dispositions": [
-        {
-          "artifactId": "active-work",
-          "disposition": "retain",
-          "reason": "protected dependency: active-work"
-        },
-        {
-          "artifactId": "rejected-evidence",
-          "disposition": "retain",
-          "reason": "protected dependency: rejected-evidence"
-        },
-        {
-          "artifactId": "resolution",
-          "disposition": "retain",
-          "reason": "protected dependency: resolution"
-        },
-        {
-          "artifactId": "diagnosis",
-          "disposition": "retain",
-          "reason": "protected dependency: diagnosis"
-        },
-        {
-          "artifactId": "registered-evidence",
-          "disposition": "retain",
-          "reason": "protected dependency: registered-evidence"
-        },
-        {
-          "artifactId": "publication-proof",
-          "disposition": "retain",
-          "reason": "protected dependency: publication-proof"
-        },
-        {
-          "artifactId": "rollback",
-          "disposition": "retain",
-          "reason": "protected dependency: rollback"
-        },
-        {
-          "artifactId": "improve",
-          "disposition": "retain",
-          "reason": "protected dependency: improve"
-        },
-        {
-          "artifactId": "temporary-copy",
-          "disposition": "dispose",
-          "reason": "verified disposable temporary copy"
-        },
-        {
-          "artifactId": "superseded-draft",
-          "disposition": "retain",
-          "reason": "recoverable archive has not reached 30 days"
-        },
-        {
-          "artifactId": "superseded-capture",
-          "disposition": "dispose",
-          "reason": "30-day archive expired and eligibility was rechecked"
-        },
-        {
-          "artifactId": "unknown-sidecar",
-          "disposition": "unclassified",
-          "reason": "no declared disposal rule"
-        }
-      ]
-    },
-    {
-      "case": "retention-oracle-manual",
-      "controlledNow": "2026-11-27T12:00:00.000Z",
-      "immediateTemporaryDisposal": true,
-      "archiveRecoverableAt29Days": true,
-      "expiredCaptureEligibleAt30Days": true,
-      "newlyClaimedDependencyRetained": true,
-      "unclassifiedPreserved": true,
-      "protectedKinds": [
-        "active-work",
-        "rejected-evidence",
-        "resolution",
-        "diagnosis",
-        "registered-evidence",
-        "publication-proof",
-        "rollback",
-        "improve"
-      ],
-      "retryIdentityPreserved": true,
-      "repairTotalsPreserved": true,
       "dispositions": [
         {
           "artifactId": "active-work",

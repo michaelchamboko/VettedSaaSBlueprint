@@ -60,9 +60,10 @@
       "case": "lease-owner-exit-before-recovery",
       "recoveryWhileOwnerLive": "rejected",
       "recoveryAfterOwnerExit": "accepted",
-      "priorOwnerTokenRetained": true,
-      "replacementOwnerTokenChanged": true,
-      "leaseJournalEntries": 5
+      "priorClaimJournalRetained": true,
+      "recoveryReleaseJournalRetained": true,
+      "recoveryReleaseFollowsClaim": true,
+      "replacementOwnerTokenChanged": true
     }
   ]
 }

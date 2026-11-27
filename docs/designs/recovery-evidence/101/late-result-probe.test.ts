@@ -279,13 +279,27 @@ test("lease recovery refuses a live owner and succeeds only after that process e
     assert.ok(replacement);
     assert.notEqual(replacement.ownerToken, priorOwnerToken);
     const leaseFiles = await readdir(path.join(root, ".automation/article-imports/leases/import", record.importId));
+    const leaseJournal = await Promise.all(leaseFiles
+      .filter((name) => /^\d+\.json$/.test(name))
+      .sort((left, right) => Number(left.slice(0, -5)) - Number(right.slice(0, -5)))
+      .map(async (name) => JSON.parse(await readFile(path.join(root, ".automation/article-imports/leases/import", record.importId, name), "utf8")) as {
+        generation: number;
+        ownerToken: string;
+        released: boolean;
+      }));
+    const priorClaim = leaseJournal.find((entry) => entry.ownerToken === priorOwnerToken && !entry.released);
+    const recoveredRelease = leaseJournal.find((entry) => entry.ownerToken === priorOwnerToken && entry.released);
+    assert.ok(priorClaim);
+    assert.ok(recoveredRelease);
+    assert.ok(recoveredRelease.generation > priorClaim.generation);
     observations.push({
       case: "lease-owner-exit-before-recovery",
       recoveryWhileOwnerLive: "rejected",
       recoveryAfterOwnerExit: "accepted",
-      priorOwnerTokenRetained: true,
+      priorClaimJournalRetained: Boolean(priorClaim),
+      recoveryReleaseJournalRetained: Boolean(recoveredRelease),
+      recoveryReleaseFollowsClaim: recoveredRelease.generation > priorClaim.generation,
       replacementOwnerTokenChanged: true,
-      leaseJournalEntries: leaseFiles.filter((name) => /^\d+\.json$/.test(name)).length,
     });
     await replacement.release();
   } finally {
