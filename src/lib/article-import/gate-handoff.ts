@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, realpath, unlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, realpath, unlink, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import {
@@ -11,6 +11,7 @@ import {
 } from "./contracts";
 import {
   evidenceReference,
+  readEvidenceBytes,
   readVerifiedEvidenceBytes,
   storeEvidenceBytes,
   verifyEvidenceRef,
@@ -216,7 +217,12 @@ async function literalCleanupEvidence(root: string, importId: string, relative: 
   const canonicalRoot = await realpath(root);
   const canonicalTarget = await realpath(target);
   if (normalized(path.relative(canonicalRoot, canonicalTarget)) !== file) throw new Error("CLEANUP_OUTPUT_REDIRECTED");
-  return { path: file, sha256: createHash("sha256").update(await readFile(target)).digest("hex") };
+  return { path: file, sha256: createHash("sha256").update(await readEvidenceBytes(root, file)).digest("hex") };
+}
+
+async function verifyLiteralCleanupEvidence(root: string, importId: string, reference: EvidenceRef): Promise<void> {
+  const current = await literalCleanupEvidence(root, importId, reference.path);
+  if (current.sha256 !== reference.sha256) throw new Error("CLEANUP_OUTPUT_CHANGED");
 }
 
 async function writeCleanupReceipt(root: string, importId: string, relative: string, receipt: Record<string, unknown>): Promise<EvidenceRef> {
@@ -225,7 +231,7 @@ async function writeCleanupReceipt(root: string, importId: string, relative: str
   catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
     const existing = await literalCleanupEvidence(root, importId, relative);
-    const parsed = JSON.parse((await readFile(path.resolve(root, existing.path))).toString("utf8")) as Record<string, unknown>;
+    const parsed = JSON.parse((await readVerifiedEvidenceBytes(root, existing)).toString("utf8")) as Record<string, unknown>;
     const expected = { ...receipt };
     delete parsed.observedAt;
     delete expected.observedAt;
@@ -266,6 +272,7 @@ async function removeVerifiedOriginal(root: string, importId: string, reference:
 async function restoreVerifiedOriginal(root: string, importId: string, original: EvidenceRef, archive: EvidenceRef): Promise<void> {
   assertAuthorizedCandidatePath(importId, original);
   assertAuthorizedCandidatePath(importId, archive);
+  await verifyLiteralCleanupEvidence(root, importId, archive);
   const bytes = await readVerifiedEvidenceBytes(root, archive);
   if (archive.sha256 !== original.sha256) throw new Error("CLEANUP_RESTORE_INTEGRITY_UNCERTAIN");
   await writeCleanupFile(root, importId, original.path, bytes);
@@ -396,7 +403,7 @@ async function verifyMutationInputs(root: string, importId: string, operation: C
   for (const disposition of operation.dispositions) {
     if (disposition.removedAt || disposition.disposition === "retain" || disposition.disposition === "unclassified") continue;
     if (disposition.disposition === "archive" && disposition.archiveRef) {
-      await verifyEvidenceRef(root, disposition.archiveRef);
+      await verifyLiteralCleanupEvidence(root, importId, disposition.archiveRef);
       continue;
     }
     assertAuthorizedCandidatePath(importId, disposition.original.reference);
@@ -602,7 +609,7 @@ export async function reconcileGateCleanup(
       if (!disposition.archiveRef) throw new Error("CLEANUP_ARCHIVE_REGISTRATION_MISSING");
       let removal: "removed" | "missing";
       try {
-        await verifyEvidenceRef(root, disposition.archiveRef);
+        await verifyLiteralCleanupEvidence(root, current.importId, disposition.archiveRef);
         removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);
       } catch (error) {
         const held = await holdMutationFailure(root, current, operation, "uncertain-mutation", error, at);
@@ -628,7 +635,7 @@ export async function reconcileGateCleanup(
             const archivedTarget = dispositions.find((item) =>
               sameArtifact(item.original.reference, redundantWith) && item.archiveRef);
             if (!archivedTarget?.archiveRef) throw new Error("CLEANUP_TEMPORARY_REDUNDANCY_UNVERIFIED");
-            await verifyEvidenceRef(root, archivedTarget.archiveRef);
+            await verifyLiteralCleanupEvidence(root, current.importId, archivedTarget.archiveRef);
           }
         }
         removal = await removeVerifiedOriginal(root, current.importId, disposition.original.reference);

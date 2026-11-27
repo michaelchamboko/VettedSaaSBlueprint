@@ -474,6 +474,26 @@ test("cleanup refuses an existing archive leaf that redirects to unrelated stora
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("restart will not unlink an original after its registered archive leaf is redirected", async () => {
+  const { root, record, candidate } = await fixture();
+  try {
+    await assert.rejects(() => cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:00:00.000Z", (boundary) => {
+      if (boundary === "archive-registered") throw new Error("CRASH:archive-registered");
+    })), /CRASH:archive-registered/);
+    const interrupted = await loadImport(root, record.importId);
+    const archiveRef = interrupted.gateHandoffs!.at(-1)!.cleanup.operations!.at(-1)!.dispositions[0].archiveRef!;
+    const archive = path.join(root, archiveRef.path);
+    const outside = path.join(root, "outside-registered-archive");
+    await rm(archive);
+    await mkdir(outside, { recursive: true });
+    await symlink(outside, archive, "junction");
+    const held = await cleanupImportGateHandoff(root, record.importId, cleanupOptions("2026-11-27T12:01:00.000Z"));
+    assert.equal(held.gateHandoffs!.at(-1)!.cleanup.status, "held");
+    assert.equal(await readFile(path.join(root, candidate.path), "utf8"), "superseded draft bytes\n");
+    assert.deepEqual(await readdir(outside), []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("the manual cleanup command selects the same controller operation", () => {
   assert.deepEqual(parseImportCommand(["--cleanup", "article-123"]), { kind: "cleanup", importId: "article-123" });
   assert.deepEqual(parseImportCommand(["--cleanup-remedy", "article-123", "--file", "remedy.json"]), {
