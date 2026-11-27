@@ -12,6 +12,8 @@ import { storeEvidence, verifyEvidenceRef } from "../src/lib/article-import/exec
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
+import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
+import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
 
 const parent = path.resolve(".scratch/article-activity-recovery");
 
@@ -592,6 +594,65 @@ test("an independent review closes a finding only after a relevant changed input
     assert.deepEqual(current.activityFindings?.[0].originalEvidenceRef, finding.originalEvidenceRef);
     current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
     assert.equal(current.continuation?.activityId, "meaning-and-evidence");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a wording repair after the transforming handoff creates a replacement attempt bound to changed candidate bytes", async () => {
+  await mkdir(parent, { recursive: true });
+  const root = await mkdtemp(path.join(parent, "changed-candidate-"));
+  try {
+    await writeFile(path.join(root, "approved-urls.md"), "- https://example.test/affiliate\n");
+    await writeFile(path.join(root, "article.md"), "# Synthetic changed candidate\n");
+    const created = await createArticleImport(root, "article.md");
+    const prepared = await prepareApprovalFixture(root, { ...created, stage: "TRANSFORMING", format: "direct-review" }, { currentPolicy: true });
+    const transformedArtifact = JSON.parse(await readFile(path.join(root, prepared.artifactPath), "utf8"));
+    const evidenceRefs = await buildWorkflowFixture(root, created, { format: "direct-review", artifactPath: prepared.artifactPath, before: samplePageBlueprint, after: transformedArtifact, editorialEvidencePath: prepared.editorialEvidencePath, currentPolicy: true, assessmentStage: "TRANSFORMING" });
+    const transforming = await persistFixture(root, {
+      ...created,
+      stage: "TRANSFORMING",
+      format: "direct-review",
+      artifactPath: prepared.artifactPath,
+      evidenceRefs,
+    });
+    let current = await advanceImport(root, transforming, "Synthetic transform gate passed.");
+    const handoff = current.gateHandoffs?.at(-1);
+    const acceptedCandidate = handoff?.acceptedOutputs.find((input) => input.name === "candidate-artifact")?.reference;
+    const mutableCandidate = handoff?.requiredNextInputs.find((input) => input.name === "candidate-artifact")?.reference;
+    assert.ok(acceptedCandidate);
+    assert.ok(mutableCandidate);
+    assert.notEqual(acceptedCandidate.path, mutableCandidate.path);
+    await verifyEvidenceRef(root, acceptedCandidate);
+
+    for (const expected of ["purpose-and-structure", "meaning-and-evidence"] as const) {
+      current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+      assert.equal(current.continuation?.activityId, expected);
+      current = (await acceptCurrentActivity(root, current, "accepted")).record;
+    }
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.continuation?.activityId, "wording-and-rhythm");
+    const rejectedAttempt = current.activityAttempts?.at(-1);
+    current = (await acceptCurrentActivity(root, current, "rejected")).record;
+
+    const artifact = JSON.parse(await readFile(path.join(root, prepared.artifactPath), "utf8"));
+    await writeJsonAtomically(path.join(root, prepared.artifactPath), { ...artifact, hero: { ...artifact.hero, headline: `${artifact.hero.headline} repaired` } });
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    for (const invalidated of ["purpose-and-structure", "meaning-and-evidence"] as const) {
+      assert.equal(current.continuation?.activityId, invalidated);
+      current = (await acceptCurrentActivity(root, current, "accepted")).record;
+      current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    }
+    assert.equal(current.continuation?.activityId, "wording-and-rhythm");
+    if (current.continuation?.kind !== "work") throw new Error("Expected replacement wording activity.");
+    const packet = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+    const replacementAttempt = current.activityAttempts?.at(-1);
+    assert.equal(replacementAttempt?.predecessorAttemptId, rejectedAttempt?.attemptId);
+    assert.equal(replacementAttempt?.reason, "dependency-change");
+    assert.notEqual(replacementAttempt?.inputFingerprint, rejectedAttempt?.inputFingerprint);
+    assert.equal(packet.activity.dependencyRefs[0].sha256, replacementAttempt?.dependencyRefs[0].sha256);
+    assert.equal(packet.gateHandoffVerification.verifiedInputs.some((input: { name: string; reference: { sha256: string } }) => input.name === "candidate-artifact" && input.reference.sha256 === replacementAttempt?.dependencyRefs[0].sha256), true);
+    await verifyEvidenceRef(root, acceptedCandidate);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

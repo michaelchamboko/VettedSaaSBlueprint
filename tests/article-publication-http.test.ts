@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn, type ChildProcess } from "node:child_process";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createServer } from "node:net";
 import { cp, mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
@@ -164,8 +164,18 @@ test("direct-review target and control reconcile five serving mutations through 
   let server: ChildProcess | undefined;
   try {
     await copyRuntimeFixture(repositoryRoot, root);
-    const reviewedCommitSha = "a".repeat(40);
-    const catalogue = await syntheticDirectCatalogue(root, reviewedCommitSha);
+    execFileSync("git", ["init", "--quiet", root], { windowsHide: true });
+    execFileSync("git", ["-C", root, "config", "user.email", "fixture@example.test"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "config", "user.name", "Fixture"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "config", "core.longpaths", "true"], { windowsHide: true });
+    await writeFile(path.join(root, "README.fixture.md"), "base\n");
+    execFileSync("git", ["-C", root, "add", "README.fixture.md"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "commit", "--quiet", "-m", "base"], { windowsHide: true });
+    const wrongReviewedCommitSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim();
+    const catalogue = await syntheticDirectCatalogue(root, "b".repeat(40));
+    execFileSync("git", ["-C", root, "add", "src/generated/landing-pages/index.json", "src/generated/landing-pages/synthetic-direct-target.json", "src/generated/landing-pages/synthetic-direct-control.json", "src/generated/landing-pages/releases/synthetic-direct-target/release-receipt.json", "src/generated/landing-pages/releases/synthetic-direct-control/release-receipt.json"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "commit", "--quiet", "-m", "reviewed catalogue"], { windowsHide: true });
+    const reviewedCommitSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim();
     const targetRoute = "/landing-page-builders/synthetic-direct-target";
     const controlRoute = "/landing-page-builders/synthetic-direct-control";
     const target = { format: "direct-review", renderedRoutes: [targetRoute] };
@@ -178,7 +188,7 @@ test("direct-review target and control reconcile five serving mutations through 
     await rename(indexPath, `${indexPath}.missing`);
     await assert.rejects(() => assertPublicationAuthorityBinding(root, "direct-review", catalogue.approved.target, { reviewedCommitSha }), /DIRECT_REVIEW_AUTHORITY_UNREADABLE/);
     await rename(`${indexPath}.missing`, indexPath);
-    await assert.rejects(() => assertPublicationAuthorityBinding(root, "direct-review", catalogue.approved.target, { reviewedCommitSha: "b".repeat(40) }), /DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH/);
+    await assert.rejects(() => assertPublicationAuthorityBinding(root, "direct-review", catalogue.approved.target, { reviewedCommitSha: wrongReviewedCommitSha }), /DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH/);
     await assertPublicationAuthorityBinding(root, "direct-review", catalogue.approved.target, { reviewedCommitSha });
     await assertPublicationAuthorityBinding(root, "direct-review", catalogue.approved.control, { reviewedCommitSha });
 

@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { captureRenderingInputs, renderingInputPaths, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
+import { captureRenderingInputs, publicationServingInputPaths, publicationServingInputs, renderingInputPaths, requiredDetectorInputs, validateRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 import { freezeEvidenceGraph, withEvidenceSnapshot } from "../src/lib/article-import/execution-evidence";
 import { contentApprovalMatches, createContentApproval } from "../src/lib/article-import/content-approval";
 import { createEditorialEvidence, fingerprintEditorialArtifact } from "../src/lib/editorial/refinement";
@@ -90,4 +90,31 @@ test("renderer data and dependencies are included; importer state and non-render
     await put(root, "package-lock.json", "{\"lockfileVersion\":4}");
     await assert.rejects(() => validateRenderingInputs(root, ref), /RENDER_INPUT_CHANGED:package-lock.json/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("publication serving inputs include transitive format helpers without widening to unrelated helpers", async () => {
+  const direct = publicationServingInputPaths("direct-review");
+  const blog = publicationServingInputPaths("blog");
+  const visibility = publicationServingInputPaths("visibility");
+  const decision = publicationServingInputPaths("decision-set");
+  for (const path of ["src/lib/blog/structured-data.ts", "src/components/public/PublicPageShell.tsx", "src/lib/design-references/fingerprint.ts"]) assert.ok(blog.includes(path));
+  for (const path of ["src/lib/decision-journey/presentation.ts", "src/components/public/DecisionJourneyMotion.tsx", "src/app/scenarios/[setSlug]/page.tsx"]) assert.ok(decision.includes(path));
+  for (const path of ["src/lib/visibility-pages/calculator.ts", "src/components/visibility/EmailCostCalculator.tsx", "src/app/guides/how-to-evaluate-ai-voice-quality/page.tsx"]) assert.ok(visibility.includes(path));
+  for (const path of ["src/lib/affiliate/approved-urls.ts", "src/lib/landing/reference-composed.ts", "src/components/landing/LandingPageMotion.tsx"]) assert.ok(direct.includes(path));
+  assert.equal(blog.includes("src/lib/decision-journey/presentation.ts"), false);
+  assert.equal(decision.includes("src/lib/blog/structured-data.ts"), false);
+  assert.equal(visibility.includes("src/lib/blog/structured-data.ts"), false);
+});
+
+test("route-scoped serving dependencies include reachable helpers without widening the historical detector contract", () => {
+  const paths = [...new Set(["direct-review", "blog", "visibility", "decision-set"].flatMap(publicationServingInputPaths))];
+  const manifest = { schemaVersion: "RenderingInputsV1", inventoryVersion: 1, files: paths.map((path) => ({ path, sha256: "a".repeat(64) })), digest: "b".repeat(64) } as const;
+  const visibility = { format: "visibility", renderedRoutes: ["/guides/how-to-evaluate-ai-voice-quality"] };
+  const selected = publicationServingInputs(manifest, visibility).map((ref) => ref.path);
+  assert.ok(selected.includes("src/app/guides/how-to-evaluate-ai-voice-quality/page.tsx"));
+  assert.equal(selected.includes("src/app/comparisons/moosend-vs-mailchimp/page.tsx"), false);
+  const blogDetector = requiredDetectorInputs(manifest, { format: "blog", renderedRoutes: ["/blog/example"] }).map((ref) => ref.path);
+  const decisionDetector = requiredDetectorInputs(manifest, { format: "decision-set", renderedRoutes: ["/decision-hub/example"] }).map((ref) => ref.path);
+  assert.equal(blogDetector.includes("src/lib/blog/structured-data.ts"), false);
+  assert.equal(decisionDetector.includes("src/lib/decision-journey/presentation.ts"), false);
 });

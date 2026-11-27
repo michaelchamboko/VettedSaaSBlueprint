@@ -27,6 +27,16 @@ export type PublicationApprovalStatus = {
   evidenceRef: EvidenceRef;
 };
 
+export async function validatePublicationReviewApprovals(
+  root: string,
+  registry: ArticleReviewEvidenceRegistry,
+  record: ExternalArticleImportV1,
+  now = new Date().toISOString(),
+): Promise<void> {
+  await acceptedRegistration(root, registry, record, "editorial-judgment", await editorialReviewRevision(root, record), now);
+  await acceptedRegistration(root, registry, record, "browser-observation", browserReviewRevision(record), now);
+}
+
 function sha256(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }

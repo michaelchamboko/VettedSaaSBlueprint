@@ -1,6 +1,7 @@
-import { fixtureProbe, persistFixture, prepareCommandCheckout } from "./fixtures/article-command";
+import { fixtureProbe, fixtureReviewEvidenceRegistry, persistFixture, prepareCommandCheckout } from "./fixtures/article-command";
 import { recordArticlePresentation } from "../scripts/record-article-presentation";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
@@ -20,11 +21,18 @@ import { visibilityPageSchema } from "../src/lib/visibility-pages/contracts";
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
+import { registerBrowserReviewEvidence, registerEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry";
 
 const checks: FullProductionChecks = { routeOk: true, contentOk: true, disclosureOk: true, exactCtaOk: true, desktopOk: true, mobileOk: true, robotsOk: true, sitemapOk: true, browserErrorsOk: true };
 const releaseFiles = ["src/generated/landing-pages/example.json", "src/generated/landing-pages/index.json"];
 const fixtureImports = new Map<string, { importId: string; sourceFingerprint: string; format: ExternalArticleImportV1["format"]; artifactPath: string }>();
 const source = "---\ntitle: Imported guide\naffiliate_name: Switcher Studio\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\n\nThis is a sufficiently long article body for the release coordinator test and its deterministic validation path.\n";
+
+async function releaseScratch(prefix: string): Promise<string> {
+  const parent = path.join(process.cwd(), ".scratch");
+  await mkdir(parent, { recursive: true });
+  return mkdtemp(path.join(parent, prefix));
+}
 
 test("merged rendering changes stop release before deployment or rollback", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-merged-rendering-"));
@@ -199,6 +207,90 @@ test("successful release records and verifies the full production receipt", asyn
     const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root) });
     assert.equal(result.status, "LIVE", JSON.stringify(result));
     assert.equal((await loadImport(root, record.importId)).stage, "LIVE");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("release validates reusable review registrations before any deployment mutation", async () => {
+  const root = await releaseScratch("article-release-empty-registry-");
+  let deployments = 0;
+  try {
+    const { record: base, post, artifactPath, changedFiles } = await blogReleasingRecord(root);
+    const record = await persistFixture(root, { ...base, artifactPath });
+    const empty: ArticleReviewEvidenceRegistry = {
+      list: async () => [],
+      listAll: async () => [],
+      commit: async (registration) => ({ registrationId: registration.registrationId, replayed: false }),
+    };
+    const result = await assessImportRelease({
+      repositoryRoot: root, record, changedFiles, execute: true, artifactPath, slug: String(post.slug), reviewEvidenceRegistry: empty,
+      operations: operations(root, { deploy: async (commitSha) => { deployments += 1; return { deploymentId: "unexpected", canonicalUrl: "https://vettedsaasblueprint.online/blog/example", commitSha }; } }),
+    });
+    assert.equal(result.status, "WAITING_EXTERNAL");
+    assert.match(result.reasons.join(" "), /PUBLICATION_CONTENT_APPROVAL_MISSING_OR_STALE/);
+    assert.equal(deployments, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a post-deploy approval write failure records rollback and resumes only after rollback reconciliation", async () => {
+  const root = await releaseScratch("article-release-approval-rollback-");
+  let deployments = 0;
+  let rollbacks = 0;
+  let registryFailure = true;
+  let providerOutage = false;
+  let rollbackAssigned = false;
+  try {
+    const fixture = await blogReleasingRecord(root);
+    fixture.record = await persistFixture(root, { ...fixture.record, artifactPath: fixture.artifactPath });
+    const baseRegistry = fixtureReviewEvidenceRegistry(root);
+    await registerEditorialReviewEvidence(root, baseRegistry, fixture.record);
+    await registerBrowserReviewEvidence(root, baseRegistry, fixture.record);
+    const registry: ArticleReviewEvidenceRegistry = {
+      list: (input) => baseRegistry.list(input),
+      listAll: (input) => baseRegistry.listAll(input),
+      commit: async (registration) => {
+        if (registration.evidenceClass === "production-proof" && registryFailure) {
+          registryFailure = false;
+          throw new Error("synthetic registry outage");
+        }
+        return baseRegistry.commit(registration);
+      },
+    };
+    const ops = operations(root, {
+      inspectGit: async () => ({ clean: true, changedFiles: fixture.changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+      refreshMain: async () => ({ clean: true, changedFiles: fixture.changedFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
+      reconcileDeployment: async () => ({ status: "not-found", evidence: ["no deployment for this fresh operation"] }),
+      deploy: async (commitSha) => {
+        deployments += 1;
+        rollbackAssigned = false;
+        return { deploymentId: `dpl-new-${deployments}`, canonicalUrl: `https://vettedsaasblueprint.online/blog/${fixture.post.slug}`, commitSha };
+      },
+      rollback: async () => { rollbacks += 1; rollbackAssigned = true; return { ok: true, summary: "restored" }; },
+      verifyRollback: async () => !providerOutage && rollbackAssigned,
+    });
+    const input = { repositoryRoot: root, changedFiles: fixture.changedFiles, execute: true, artifactPath: fixture.artifactPath, slug: String(fixture.post.slug), operations: ops, reviewEvidenceRegistry: registry };
+    const rolledBack = await assessImportRelease({ ...input, record: fixture.record });
+    assert.equal(rolledBack.status, "ROLLED_BACK", JSON.stringify(rolledBack));
+    let persisted = await loadImport(root, fixture.record.importId);
+    assert.equal(persisted.pendingRelease?.operations?.deployment?.phase, "rolled-back");
+    assert.equal(persisted.pendingRelease?.operations?.rollback?.deploymentId, "dpl-previous");
+    assert.equal(persisted.release, undefined);
+    assert.equal(persisted.evidenceRefs?.production, undefined);
+
+    providerOutage = true;
+    const waiting = await assessImportRelease({ ...input, record: persisted });
+    assert.equal(waiting.status, "WAITING_EXTERNAL");
+    assert.deepEqual(waiting.reasons, ["ROLLBACK_RECONCILIATION_REQUIRED"]);
+    assert.equal(deployments, 1);
+
+    providerOutage = false;
+    persisted = await loadImport(root, fixture.record.importId);
+    const recovered = await assessImportRelease({ ...input, record: persisted });
+    const live = await loadImport(root, fixture.record.importId);
+    assert.equal(recovered.status, "LIVE", JSON.stringify({ recovered, lastReceipt: live.stageReceipts.at(-1) }));
+    assert.equal(live.pendingRelease?.operations?.deploymentHistory?.at(-1)?.phase, "rolled-back");
+    assert.equal(live.pendingRelease?.operations?.deployment?.deploymentId, "dpl-new-2");
+    assert.equal(deployments, 2);
+    assert.equal(rollbacks, 1);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -1350,20 +1442,28 @@ test("publication authority binding fails closed on blog mismatches and unsuppor
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("direct-review publication authority requires the manifest-selected artifact and reviewed commit", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "article-direct-authority-"));
-  const reviewedCommitSha = "c".repeat(40);
+test("direct-review publication authority binds the manifest, receipt, and served artifact to the actual reviewed Git tree", async () => {
+  await mkdir(path.join(process.cwd(), ".scratch"), { recursive: true });
+  const root = await mkdtemp(path.join(process.cwd(), ".scratch/article-direct-authority-"));
   const artifact = structuredClone(samplePageBlueprint);
   const slug = artifact.metadata.url_slug;
   const directory = path.join(root, "src/generated/landing-pages");
   const artifactPath = `src/generated/landing-pages/${slug}.json`;
   const receiptPath = `releases/${slug}/release-receipt.json`;
   try {
+    execFileSync("git", ["init", "--quiet", root], { windowsHide: true });
+    execFileSync("git", ["-C", root, "config", "user.email", "fixture@example.test"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "config", "user.name", "Fixture"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "config", "core.longpaths", "true"], { windowsHide: true });
+    await writeFile(path.join(root, "README.md"), "base\n");
+    execFileSync("git", ["-C", root, "add", "README.md"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "commit", "--quiet", "-m", "base"], { windowsHide: true });
+    const wrongReviewedCommitSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim();
     await mkdir(path.join(directory, "releases", slug), { recursive: true });
     const artifactBytes = Buffer.from(JSON.stringify(artifact));
     await writeFile(path.join(root, artifactPath), artifactBytes);
     await assert.rejects(
-      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha }),
+      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha: wrongReviewedCommitSha }),
       /DIRECT_REVIEW_AUTHORITY_UNREADABLE/,
     );
     await writeFile(path.join(directory, "index.json"), JSON.stringify({ pages: [{
@@ -1373,13 +1473,21 @@ test("direct-review publication authority requires the manifest-selected artifac
     await writeFile(path.join(directory, receiptPath), JSON.stringify({
       slug, path: `/landing-page-builders/${slug}`,
       artifacts: { page: { path: `${slug}.json`, sha256: createHash("sha256").update(artifactBytes).digest("hex") } },
-      release: { reviewed_commit: reviewedCommitSha },
+      release: { reviewed_commit: wrongReviewedCommitSha },
     }));
+    execFileSync("git", ["-C", root, "add", "src/generated/landing-pages"], { windowsHide: true });
+    execFileSync("git", ["-C", root, "commit", "--quiet", "-m", "catalogue authority"], { windowsHide: true });
+    const reviewedCommitSha = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim();
     const binding = await assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha });
     assert.equal(binding?.reviewedCommitSha, reviewedCommitSha);
     assert.equal(binding?.retentionDependencies.length, 3);
     await assert.rejects(
-      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha: "d".repeat(40) }),
+      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha: wrongReviewedCommitSha }),
+      /DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH/,
+    );
+    await writeFile(path.join(directory, "index.json"), `${await readFile(path.join(directory, "index.json"), "utf8")}\n`);
+    await assert.rejects(
+      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha }),
       /DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH/,
     );
   } finally { await rm(root, { recursive: true, force: true }); }

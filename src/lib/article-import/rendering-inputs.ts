@@ -40,12 +40,43 @@ const SERVING_INPUTS: Record<string, readonly string[]> = {
     "src/components/landing/AffiliateDisclosure.tsx", "src/components/landing/EditorialReviewPage.tsx",
     "src/components/landing/LandingPageMotion.tsx", "src/components/landing/LegalTrustLinks.tsx",
     "src/components/landing/ReferenceComposedReviewPage.tsx", "src/components/public/ReviewedArticleHero.tsx",
-    "src/lib/generated/landing-pages.ts", "src/lib/schemas/contracts.ts", "src/lib/landing/reference-composed.ts",
-    "src/lib/article-heroes.ts", "src/lib/site/public-site.ts", "approved-urls.md",
+    "src/lib/affiliate/approved-urls.ts", "src/lib/article-heroes.ts", "src/lib/blog/contracts.ts",
+    "src/lib/decision-journey/presentation-options.ts", "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts",
+    "src/lib/design-references/contracts.ts", "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts",
+    "src/lib/generated/landing-pages.ts", "src/lib/landing/reference-composed.ts", "src/lib/schemas/contracts.ts",
+    "src/lib/site/public-site.ts", "src/lib/visibility-pages/contracts.ts", "approved-urls.md",
   ],
-  blog: ["src/app/blog/[slug]/page.tsx", "src/lib/blog/catalogue.ts", "src/lib/blog/contracts.ts", "src/lib/article-heroes.ts", "src/lib/site/public-site.ts"],
-  visibility: ["src/components/visibility/VisibilityPage.tsx", "src/lib/visibility-pages/catalogue.ts", "src/lib/visibility-pages/contracts.ts", "src/lib/site/public-site.ts"],
-  "decision-set": ["src/components/public/DecisionJourneyPage.tsx", "src/lib/site/public-site.ts"],
+  blog: [
+    "src/app/blog/[slug]/page.tsx", "src/components/public/PublicFooter.tsx", "src/components/public/PublicHeader.tsx",
+    "src/components/public/PublicPageShell.tsx", "src/components/public/ReviewedArticleHero.tsx", "src/lib/article-heroes.ts",
+    "src/lib/blog/catalogue.ts", "src/lib/blog/contracts.ts", "src/lib/blog/structured-data.ts",
+    "src/lib/decision-journey/presentation-options.ts", "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts",
+    "src/lib/design-references/contracts.ts", "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts",
+    "src/lib/schemas/contracts.ts", "src/lib/site/public-site.ts", "src/lib/visibility-pages/contracts.ts",
+  ],
+  visibility: [
+    "src/app/ai-voice-generators/elevenlabs-alternatives/page.tsx", "src/app/ai-voice-generators/page.tsx",
+    "src/app/comparisons/elevenlabs-vs-murf/page.tsx", "src/app/comparisons/moosend-vs-mailchimp/page.tsx",
+    "src/app/email-marketing-software/moosend-alternatives/page.tsx", "src/app/email-marketing-software/page.tsx",
+    "src/app/guides/ai-voice-generators-for-youtube/page.tsx", "src/app/guides/first-email-automation-workflow/page.tsx",
+    "src/app/guides/how-to-evaluate-ai-voice-quality/page.tsx", "src/app/tools/email-marketing-cost-calculator/page.tsx",
+    "src/components/public/ReviewedArticleHero.tsx", "src/components/visibility/EmailCostCalculator.tsx", "src/components/visibility/VisibilityPage.tsx",
+    "src/lib/article-heroes.ts", "src/lib/blog/contracts.ts", "src/lib/decision-journey/presentation-options.ts",
+    "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts", "src/lib/design-references/contracts.ts",
+    "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts", "src/lib/schemas/contracts.ts",
+    "src/lib/site/public-site.ts", "src/lib/visibility-pages/calculator.ts", "src/lib/visibility-pages/catalogue.ts", "src/lib/visibility-pages/contracts.ts",
+  ],
+  "decision-set": [
+    "src/app/decision-hub/[setSlug]/page.tsx", "src/app/decision-hub/page.tsx", "src/app/scenarios/[setSlug]/page.tsx",
+    "src/app/scenarios/page.tsx", "src/app/solution-hub/[setSlug]/page.tsx", "src/app/solution-hub/page.tsx",
+    "src/components/public/DecisionJourneyMotion.tsx", "src/components/public/DecisionJourneyPage.tsx", "src/components/public/PublicFooter.tsx",
+    "src/components/public/PublicHeader.tsx", "src/components/public/PublicPageShell.tsx", "src/components/public/ReviewedArticleHero.tsx",
+    "src/content/decision-journeys/catalogue.json", "src/lib/article-heroes.ts", "src/lib/blog/contracts.ts",
+    "src/lib/decision-journey/catalogue.ts", "src/lib/decision-journey/presentation-options.ts", "src/lib/decision-journey/presentation.ts",
+    "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts", "src/lib/design-references/contracts.ts",
+    "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts", "src/lib/schemas/contracts.ts",
+    "src/lib/site/public-site.ts", "src/lib/visibility-pages/contracts.ts",
+  ],
 };
 function routeDirectoryMatches(directory: string, route: string, prefix: boolean): boolean {
   const pattern = directory.split("/").filter((part) => part && !/^\(.*\)$/.test(part));
@@ -85,7 +116,13 @@ export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsS
 export function publicationServingInputs(manifest: z.infer<typeof renderingInputsSchema>, target: { format: string; renderedRoutes: string[] }): EvidenceRef[] {
   const declared = publicationServingInputPaths(target.format);
   if (!target.renderedRoutes.length || !SERVING_INPUTS[target.format]) throw new Error("PUBLICATION_SERVING_TARGET_UNSUPPORTED");
-  return declared.map((file) => {
+  const selected = declared.filter((file) => {
+    if (!file.startsWith("src/app/") || !PAGE_ENTRY.test(path.posix.basename(file))) return true;
+    const relative = file.slice("src/app/".length), slash = relative.lastIndexOf("/");
+    const directory = slash < 0 ? "" : relative.slice(0, slash);
+    return target.renderedRoutes.some((route) => routeDirectoryMatches(directory, route, false));
+  });
+  return selected.map((file) => {
     const ref = manifest.files.find((candidate) => candidate.path === file);
     if (!ref) throw new Error(`PUBLICATION_SERVING_INPUT_MISSING:${file}`);
     return ref;

@@ -12,6 +12,7 @@ import {
 import {
   evidenceReference,
   readVerifiedEvidenceBytes,
+  storeEvidenceBytes,
   verifyEvidenceRef,
   type EvidenceRef,
 } from "./execution-evidence";
@@ -768,7 +769,15 @@ export async function declareGateHandoff(
   nextStage: ImportStage,
 ): Promise<ImportGateHandoff> {
   const refs = await availableReferences(root, record);
-  const acceptedOutputs = acceptedFor(passedGate, refs);
+  const acceptedRefs = { ...refs };
+  if (passedGate === "TRANSFORMING" && refs.artifact) {
+    acceptedRefs.artifact = {
+      ...refs.artifact,
+      reference: await storeEvidenceBytes(root, record.importId, await readVerifiedEvidenceBytes(root, refs.artifact.reference)),
+      reason: "Immutable accepted transform output retained independently of later candidate repairs.",
+    };
+  }
+  const acceptedOutputs = acceptedFor(passedGate, acceptedRefs);
   const requiredNextInputs = requiredFor(nextStage, refs);
   if (!requiredNextInputs.length) throw new Error(`GATE_HANDOFF_INPUTS_MISSING:${passedGate}:${nextStage}`);
   for (const input of requiredNextInputs) await verifyEvidenceRef(root, input.reference);
@@ -813,7 +822,18 @@ export async function verifyGateHandoffForDispatch(root: string, record: Externa
   const verifiedInputs: NamedReference[] = [];
   for (const input of handoff.requiredNextInputs) {
     try { await verifyEvidenceRef(root, input.reference); verifiedInputs.push(input); }
-    catch { return { status: "held" as const, reason: `Required handoff input ${input.name} is unreadable.`, handoff }; }
+    catch {
+      const replaceableCandidate = record.stage === "REFINING" && handoff.passedGate === "TRANSFORMING" &&
+        input.name === "candidate-artifact" && record.artifactPath && normalized(input.reference.path) === normalized(record.artifactPath);
+      if (!replaceableCandidate) return { status: "held" as const, reason: `Required handoff input ${input.name} is unreadable.`, handoff };
+      try {
+        const reference = await evidenceReference(root, record.artifactPath!);
+        await verifyEvidenceRef(root, reference);
+        verifiedInputs.push({ ...input, reference, reason: "Current candidate bytes were independently rebound for refining activity invalidation and review." });
+      } catch {
+        return { status: "held" as const, reason: `Required handoff input ${input.name} is unreadable.`, handoff };
+      }
+    }
   }
   return { status: "verified" as const, handoff, verifiedInputs };
 }

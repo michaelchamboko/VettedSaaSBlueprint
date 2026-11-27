@@ -105,7 +105,8 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
         packet.resultPath !== resultPath) throw new Error("STATE_INTEGRITY: work packet binding mismatch");
     if (handoffVerification?.status === "verified" &&
         (JSON.stringify(packet.gateHandoff) !== JSON.stringify(handoffVerification.handoff) ||
-         (packet.gateHandoffVerification as { status?: unknown } | undefined)?.status !== "verified")) {
+         (packet.gateHandoffVerification as { status?: unknown } | undefined)?.status !== "verified" ||
+         JSON.stringify((packet.gateHandoffVerification as { verifiedInputs?: unknown } | undefined)?.verifiedInputs) !== JSON.stringify(handoffVerification.verifiedInputs))) {
       throw new Error("STATE_INTEGRITY: gate handoff packet binding mismatch");
     }
     // The local candidate renderer independently verifies the persisted work packet.

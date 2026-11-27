@@ -21,6 +21,8 @@ import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { evidenceReference, readEvidence, type EvidenceRef } from "./execution-evidence";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 import { pageBlueprintSchema } from "../schemas/contracts";
+import { reviewedTreeFile } from "./reviewed-tree";
+import { validatePublicationReviewApprovals } from "./publication-approval";
 
 async function requiresArticleHero(root: string, record: ExternalArticleImportV1): Promise<boolean> {
   if (record.heroImage || record.evidenceRefs?.hero) return true;
@@ -381,7 +383,7 @@ export async function assertPublicationAuthorityBinding(
       servedArtifact = pageBlueprintSchema.parse(JSON.parse(servedBytes.toString("utf8")));
     } catch { throw new Error("DIRECT_REVIEW_AUTHORITY_UNREADABLE"); }
     if (receipt.slug !== slug || receipt.path !== entry.path || receipt.artifacts?.page?.path !== entry.artifact) throw new Error("DIRECT_REVIEW_AUTHORITY_RECEIPT_MISMATCH");
-    if (receipt.release?.reviewed_commit !== reviewedCommitSha) throw new Error("DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH");
+    if (typeof receipt.release?.reviewed_commit !== "string" || !/^[a-f0-9]{40}$/.test(receipt.release.reviewed_commit)) throw new Error("DIRECT_REVIEW_AUTHORITY_RECEIPT_MISMATCH");
     const acceptedFingerprints = new Set([
       createHash("sha256").update(servedBytes).digest("hex"),
       createHash("sha256").update(servedBytes.toString("utf8").replace(/\r\n/g, "\n")).digest("hex"),
@@ -389,6 +391,18 @@ export async function assertPublicationAuthorityBinding(
     ]);
     if (typeof receipt.artifacts.page.sha256 !== "string" || !acceptedFingerprints.has(receipt.artifacts.page.sha256)) throw new Error("DIRECT_REVIEW_AUTHORITY_RECEIPT_MISMATCH");
     if (fingerprintEditorialArtifact(servedArtifact) !== fingerprintEditorialArtifact(approved)) throw new Error("DIRECT_REVIEW_AUTHORITY_ARTIFACT_MISMATCH");
+    try {
+      for (const file of [manifestPath, receiptPath, servedArtifactPath]) {
+        const relativeFile = path.relative(repository, file).replaceAll("\\", "/");
+        const reviewedBytes = await reviewedTreeFile(repository, reviewedCommitSha, relativeFile);
+        const currentBytes = await readFile(file);
+        const sameCheckoutText = reviewedBytes.toString("utf8").replace(/\r\n/g, "\n") === currentBytes.toString("utf8").replace(/\r\n/g, "\n");
+        if (!reviewedBytes.equals(currentBytes) && !sameCheckoutText) throw new Error("DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === "DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH") throw error;
+      throw new Error("DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH", { cause: error });
+    }
     return {
       reviewedCommitSha,
       retentionDependencies: await Promise.all([manifestPath, receiptPath, servedArtifactPath].map((file) => evidenceReference(repository, path.relative(repository, file).replaceAll("\\", "/")))),
@@ -579,6 +593,14 @@ async function assessImportReleaseImpl(input: {
       if (input.execute && reasons.length) await recordImportFailure(input.repositoryRoot, input.record, { strategy: "release", classification: "transient", message: reasons.join("; ") });
       return { status: input.execute ? "WAITING_EXTERNAL" : "DRY_RUN", reasons };
     }
+    const rollbackJournal = input.record.pendingRelease?.operations;
+    const retryingVerifiedRollback = rollbackJournal?.deployment?.phase === "rolled-back" &&
+      rollbackJournal.rollback?.deploymentId === input.record.pendingRelease?.rollbackDeploymentId &&
+      rollbackJournal.rollback?.restoredCommitSha === input.record.pendingRelease?.rollbackCommitSha;
+    if ((input.record.stage === "ROLLED_BACK" || (input.record.stage === "WAITING_EXTERNAL" && retryingVerifiedRollback)) && input.record.resumeStage === "RELEASING") {
+      input.record = { ...input.record, stage: "RELEASING", resumeStage: undefined, continuation: undefined, blockerScope: undefined, updatedAt: new Date().toISOString(), nextAction: "Reconcile the prior release operation before any new deployment mutation." };
+      await saveImport(input.repositoryRoot, input.record);
+    }
 
   const validationArtifactPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : input.artifactPath;
   const validationCommands = validationCommandsForFormat(input.record.format, validationArtifactPath);
@@ -601,6 +623,9 @@ async function assessImportReleaseImpl(input: {
     return { status: updated.stage === "QUARANTINED" ? "QUARANTINED" : "REPAIRING", reasons: [message] };
   }
   const presentation = input.record.presentation!;
+  if (input.reviewEvidenceRegistry) {
+    await validatePublicationReviewApprovals(input.repositoryRoot, input.reviewEvidenceRegistry, input.record);
+  }
 
   const initialGit = await input.operations.inspectGit();
   const inspectedFiles = normalizedPathSet(initialGit.changedFiles);
@@ -734,10 +759,42 @@ async function assessImportReleaseImpl(input: {
     const currentOperationKey = `deployment:${input.record.importId}:${commitSha}`;
     const legacyOperationKey = `deployment:${commitSha}`;
     const productionAssignment = REPOSITORY_CANONICAL_ORIGIN;
-    const existingOperation = pendingRelease.operations?.deployment;
+    let existingOperation = pendingRelease.operations?.deployment;
+    if (existingOperation?.phase === "rolled-back") {
+      const rollback = pendingRelease.operations?.rollback;
+      const rollbackVerified = rollback?.deploymentId === previous.deploymentId && rollback.restoredCommitSha === previous.commitSha &&
+        await input.operations.verifyRollback(previous.deploymentId, previous.commitSha).catch(() => false);
+      if (!rollbackVerified) {
+        const at = new Date().toISOString();
+        input.record = {
+          ...input.record,
+          stage: "WAITING_EXTERNAL",
+          resumeStage: "RELEASING",
+          blockerScope: "shared",
+          continuation: { kind: "blocked", scope: "shared", failureCategory: "uncertain-external-outcome", cause: "The recorded rollback is not currently observable at the production assignment.", attemptedRecovery: `Rechecked restoration of ${previous.deploymentId}.`, resumptionRequirement: "Restore provider visibility and verify the recorded rollback before another deployment." },
+          updatedAt: at,
+          nextAction: "Verify the recorded rollback at the production assignment before retrying release.",
+          stageReceipts: [...input.record.stageReceipts, { stage: "WAITING_EXTERNAL", status: "waiting", at, message: "Recorded rollback could not be reconciled before retry." }],
+        };
+        await saveImport(input.repositoryRoot, input.record);
+        return { status: "WAITING_EXTERNAL", reasons: ["ROLLBACK_RECONCILIATION_REQUIRED"], previousDeploymentId: previous.deploymentId };
+      }
+      const history = [...(pendingRelease.operations?.deploymentHistory ?? []), existingOperation];
+      existingOperation = {
+        commitSha,
+        operationKey: `${currentOperationKey}:retry:${history.length + 1}`,
+        productionAssignment,
+        rollbackDeploymentId: previous.deploymentId,
+        rollbackCommitSha: previous.commitSha,
+        phase: "prepared",
+      };
+      pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deploymentHistory: history, deployment: existingOperation } };
+      input.record = { ...input.record, pendingRelease, release: undefined, evidenceRefs: { ...input.record.evidenceRefs, production: undefined } };
+      await saveImport(input.repositoryRoot, input.record);
+    }
     const operationKey = existingOperation?.operationKey ?? currentOperationKey;
     if (existingOperation && (existingOperation.commitSha !== commitSha
-      || ![currentOperationKey, legacyOperationKey].includes(existingOperation.operationKey)
+      || (![currentOperationKey, legacyOperationKey].includes(existingOperation.operationKey) && !existingOperation.operationKey.startsWith(`${currentOperationKey}:retry:`))
       || (existingOperation.productionAssignment && existingOperation.productionAssignment !== productionAssignment)
       || (existingOperation.rollbackDeploymentId && existingOperation.rollbackDeploymentId !== previous.deploymentId)
       || (existingOperation.rollbackCommitSha && existingOperation.rollbackCommitSha !== previous.commitSha))) {
@@ -856,7 +913,8 @@ async function assessImportReleaseImpl(input: {
         const rollback = await input.operations.rollback(previous.deploymentId);
         restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
         if (restored) {
-          pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, rollback: { deploymentId: previous.deploymentId, restoredCommitSha: previous.commitSha } } };
+          deploymentOperation = { ...deploymentOperation, phase: "rolled-back", reconciledAt: new Date().toISOString() };
+          pendingRelease = { ...pendingRelease, operations: { ...pendingRelease.operations, deployment: deploymentOperation, rollback: { deploymentId: previous.deploymentId, restoredCommitSha: previous.commitSha } } };
           input.record = { ...input.record, pendingRelease };
           await saveImport(input.repositoryRoot, input.record);
         }
@@ -892,7 +950,12 @@ async function assessImportReleaseImpl(input: {
       restored = rollback.ok && await input.operations.verifyRollback(previous.deploymentId, previous.commitSha);
     } catch { restored = false; }
     const recoveryStage = restored ? "ROLLED_BACK" as const : "WAITING_EXTERNAL" as const;
-    const updated = { ...input.record, stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), ...(restored ? { nextAction: "Repair the failed release layer and retry once." } : failedRollback(previous.deploymentId)), stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
+    const pending = input.record.pendingRelease;
+    const deploymentJournal = pending?.operations?.deployment;
+    const pendingRelease = restored && pending && deploymentJournal
+      ? { ...pending, operations: { ...pending.operations, deployment: { ...deploymentJournal, phase: "rolled-back" as const, reconciledAt: new Date().toISOString() }, rollback: { deploymentId: previous.deploymentId, restoredCommitSha: previous.commitSha } } }
+      : pending;
+    const updated = { ...input.record, ...(restored ? { release: undefined, evidenceRefs: { ...input.record.evidenceRefs, production: undefined }, pendingRelease } : {}), stage: recoveryStage, resumeStage: productiveStage(input.record), updatedAt: new Date().toISOString(), ...(restored ? { nextAction: "Repair the failed release layer and retry once." } : failedRollback(previous.deploymentId)), stageReceipts: [...input.record.stageReceipts, { stage: recoveryStage, status: restored ? "failed" as const : "waiting" as const, at: new Date().toISOString(), message: restored ? `${message}; previous deployment restored.` : `${message}; rollback did not verify.` }] };
     await saveImport(input.repositoryRoot, updated);
     return { status: recoveryStage, reasons: [message, ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])], previousDeploymentId: previous.deploymentId };
   }

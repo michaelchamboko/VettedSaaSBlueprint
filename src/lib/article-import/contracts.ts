@@ -480,6 +480,20 @@ export const importGateHandoffSchema = z.object({
 }).strict();
 export type ImportGateHandoff = z.infer<typeof importGateHandoffSchema>;
 
+const releaseDeploymentOperationSchema = z.object({
+  commitSha: z.string().regex(/^[a-f0-9]{40}$/),
+  operationKey: z.string().min(1),
+  productionAssignment: z.string().url().optional(),
+  rollbackDeploymentId: z.string().min(1).optional(),
+  rollbackCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
+  phase: z.enum(["prepared", "invoking", "confirmed", "held", "rolled-back"]).optional(),
+  attemptedAt: z.string().datetime({ offset: true }).optional(),
+  reconciledAt: z.string().datetime({ offset: true }).optional(),
+  missingEvidence: z.array(z.string().min(1)).optional(),
+  deploymentId: z.string().min(1).optional(),
+  url: z.string().url().optional(),
+}).strict();
+
 export const importPendingReleaseSchema = z.object({
   schemaVersion: z.literal("ImportPendingReleaseV1"),
   reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
@@ -494,19 +508,8 @@ export const importPendingReleaseSchema = z.object({
     push: z.object({ branch: z.string().min(1), pullRequestUrl: z.string().url() }).strict().optional(),
     review: z.object({ reviewedHeadSha: z.string().regex(/^[a-f0-9]{40}$/), evidenceUrl: z.string().url() }).strict().optional(),
     merge: z.object({ reviewedHeadSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict().optional(),
-    deployment: z.object({
-      commitSha: z.string().regex(/^[a-f0-9]{40}$/),
-      operationKey: z.string().min(1),
-      productionAssignment: z.string().url().optional(),
-      rollbackDeploymentId: z.string().min(1).optional(),
-      rollbackCommitSha: z.string().regex(/^[a-f0-9]{40}$/).optional(),
-      phase: z.enum(["prepared", "invoking", "confirmed", "held"]).optional(),
-      attemptedAt: z.string().datetime({ offset: true }).optional(),
-      reconciledAt: z.string().datetime({ offset: true }).optional(),
-      missingEvidence: z.array(z.string().min(1)).optional(),
-      deploymentId: z.string().min(1).optional(),
-      url: z.string().url().optional(),
-    }).strict().optional(),
+    deployment: releaseDeploymentOperationSchema.optional(),
+    deploymentHistory: z.array(releaseDeploymentOperationSchema).optional(),
     rollback: z.object({ deploymentId: z.string().min(1), restoredCommitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict().optional(),
   }).strict().optional(),
   codeReview: importCodeReviewSchema.optional(),

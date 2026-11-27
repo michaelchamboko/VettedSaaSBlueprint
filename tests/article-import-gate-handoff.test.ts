@@ -12,8 +12,8 @@ import { createSupervisedImportExecutor } from "../src/lib/article-import/superv
 import { executeFixtureCommand, fixtureResearchRegistry, persistFixture } from "./fixtures/article-command";
 import type { WorkerRunner } from "../src/lib/article-import/worker-runner";
 import { declareGateHandoff } from "../src/lib/article-import/gate-handoff";
-import { storeEvidence } from "../src/lib/article-import/execution-evidence";
-import { approveFixture } from "./fixtures/article-content-approval";
+import { evidenceReference, storeEvidence } from "../src/lib/article-import/execution-evidence";
+import { approveFixture, prepareApprovalFixture } from "./fixtures/article-content-approval";
 
 const parent = path.resolve(".scratch/article-gate-handoff");
 
@@ -187,6 +187,72 @@ test("dispatch rechecks handoff bytes after packet creation and before invoking 
     assert.equal(calls, 0);
     assert.equal(result.continuation, undefined);
     assert.match(result.nextAction, /handoff/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a changed candidate before refining dispatch is rebound for the normal activity controller", async () => {
+  const { root, researching } = await fixture();
+  try {
+    const prepared = await prepareApprovalFixture(root, { ...researching, stage: "REFINING", format: "direct-review" }, { currentPolicy: true, structuredEditorial: true });
+    const artifactPath = prepared.artifactPath;
+    const transforming = {
+      ...researching,
+      stage: "TRANSFORMING",
+      format: "direct-review",
+      artifactPath,
+      activityProtocolVersion: 1,
+      evidenceRefs: prepared.evidenceRefs,
+    } as const;
+    const handoff = await declareGateHandoff(root, transforming, "TRANSFORMING", "REFINING");
+    const refining = await persistFixture(root, { ...transforming, stage: "REFINING", gateHandoffs: [...(transforming.gateHandoffs ?? []), handoff] });
+    const original = refining.gateHandoffs?.at(-1)?.requiredNextInputs.find((input) => input.name === "candidate-artifact")?.reference;
+    assert.ok(original);
+
+    const candidate = JSON.parse(await readFile(path.join(root, artifactPath), "utf8"));
+    await writeFile(path.join(root, artifactPath), JSON.stringify({ ...candidate, hero: { ...candidate.hero, headline: `${candidate.hero.headline} repaired` } }));
+    const replacement = await evidenceReference(root, artifactPath);
+    assert.notEqual(replacement.sha256, original.sha256);
+
+    const resumed = await executePendingImport(root, refining.importId, createSupervisedImportExecutor(root));
+    assert.equal(resumed.stage, "REFINING");
+    assert.equal(resumed.continuation?.activityId, "purpose-and-structure");
+    if (resumed.continuation?.kind !== "work") throw new Error("Expected refining activity work.");
+    const packet = JSON.parse(await readFile(path.join(root, resumed.continuation.workPath), "utf8"));
+    const verified = packet.gateHandoffVerification.verifiedInputs.find((input: { name: string }) => input.name === "candidate-artifact");
+    assert.deepEqual(verified.reference, replacement);
+    assert.deepEqual(packet.gateHandoff.requiredNextInputs.find((input: { name: string }) => input.name === "candidate-artifact").reference, original);
+    assert.equal(packet.activity.dependencyRefs.some((ref: { path: string; sha256: string }) => ref.path === replacement.path && ref.sha256 === replacement.sha256), true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("dispatch rejects a candidate rebind that changes after the refining packet is written", async () => {
+  const { root, researching } = await fixture();
+  try {
+    const prepared = await prepareApprovalFixture(root, { ...researching, stage: "REFINING", format: "direct-review" }, { currentPolicy: true, structuredEditorial: true });
+    const transforming = { ...researching, stage: "TRANSFORMING", format: "direct-review", artifactPath: prepared.artifactPath, activityProtocolVersion: 1, evidenceRefs: prepared.evidenceRefs } as const;
+    const handoff = await declareGateHandoff(root, transforming, "TRANSFORMING", "REFINING");
+    const refining = await persistFixture(root, { ...transforming, stage: "REFINING", gateHandoffs: [...(transforming.gateHandoffs ?? []), handoff] });
+    const first = JSON.parse(await readFile(path.join(root, prepared.artifactPath), "utf8"));
+    await writeFile(path.join(root, prepared.artifactPath), JSON.stringify({ ...first, hero: { ...first.hero, headline: `${first.hero.headline} first repair` } }));
+
+    const supervised = createSupervisedImportExecutor(root);
+    const mutateAfterPacket: typeof supervised = async (context) => {
+      const result = await supervised(context);
+      if (result.continuation?.kind === "work") {
+        const current = JSON.parse(await readFile(path.join(root, prepared.artifactPath), "utf8"));
+        await writeFile(path.join(root, prepared.artifactPath), JSON.stringify({ ...current, hero: { ...current.hero, headline: `${current.hero.headline} second repair` } }));
+      }
+      return result;
+    };
+    let calls = 0;
+    const workerRunner: WorkerRunner = async () => { calls += 1; throw new Error("worker must not receive a stale verifiedInputs binding"); };
+    const result = await executeFixtureCommand(root, { kind: "dispatch", importId: refining.importId }, mutateAfterPacket, { maxSteps: 1, workerModel: "fixture/model", workerRunner });
+    assert.equal(calls, 0);
+    assert.match(JSON.stringify(result), /gate handoff packet binding mismatch/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
