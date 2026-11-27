@@ -146,8 +146,12 @@ class AppServerRpc {
   }
 }
 
+export function codexAppServerExecutable(platform: NodeJS.Platform = process.platform): string {
+  return platform === "win32" ? "codex.exe" : "codex";
+}
+
 function startCodexAppServer(): ArticleRegistryAppServerProcess {
-  return spawn("codex.exe", ["app-server"], { stdio: ["pipe", "pipe", "ignore"], windowsHide: true });
+  return spawn(codexAppServerExecutable(), ["app-server"], { stdio: ["pipe", "pipe", "ignore"], windowsHide: true });
 }
 
 async function acquireConnectionString(rpc: AppServerRpc): Promise<string> {

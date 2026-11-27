@@ -5,6 +5,7 @@ import test from "node:test";
 
 import type { ArticleResearchRegistry } from "../src/lib/article-import/research-registry";
 import {
+  codexAppServerExecutable,
   createArticleResearchRegistryTransport,
   createPoolResearchRegistryDatabase,
   withArticleResearchRegistryTransport,
@@ -19,6 +20,12 @@ const prepareInput = {
   sourceText: "synthetic source",
   now: "2026-11-27T00:00:00.000Z",
 };
+
+test("Codex app-server executable is platform-correct", () => {
+  assert.equal(codexAppServerExecutable("win32"), "codex.exe");
+  assert.equal(codexAppServerExecutable("linux"), "codex");
+  assert.equal(codexAppServerExecutable("darwin"), "codex");
+});
 
 function directRegistry(): ArticleResearchRegistry {
   return {
