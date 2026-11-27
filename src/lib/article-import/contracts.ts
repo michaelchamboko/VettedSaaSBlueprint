@@ -235,7 +235,7 @@ const continuationBase = {
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 };
 export const importContinuationSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), activityId: z.string().min(1).optional(), inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), ...continuationBase }).strict(),
+  z.object({ kind: z.literal("work"), stage: importStageSchema, workPath: z.string().min(1), resultPath: z.string().min(1), activityId: z.string().min(1).optional(), attemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/).optional(), inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), ...continuationBase }).strict(),
   z.object({ kind: z.literal("repair"), stage: importStageSchema, failureCategory: importFailureCategorySchema.optional(), failureFingerprint: z.string().regex(/^[a-f0-9]{64}$/), submittedFingerprint: z.string().regex(/^[a-f0-9]{64}$/).optional(), failedEvidenceRefs: z.array(stateEvidenceRef).optional(), failedWork: z.object({ workPath: z.string().min(1), resultPath: z.string().min(1), idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), activityId: z.string().min(1).optional() }).strict().optional(), diagnosisRequired: z.boolean(), requiredChange: z.string().min(1), ...continuationBase }).strict(),
   z.object({ kind: z.literal("wait"), resumeStage: importStageSchema, dependency: z.string().min(1), externalId: z.string().min(1).optional(), waitStartedAt: z.string().datetime({ offset: true }), lastProgressAt: z.string().datetime({ offset: true }), nextCheckAt: z.string().datetime({ offset: true }), timeoutAt: z.string().datetime({ offset: true }) }).strict(),
   z.object({ kind: z.literal("blocked"), scope: z.enum(["article", "shared"]), failureCategory: importFailureCategorySchema.optional(), cause: z.string().min(1), attemptedRecovery: z.string().min(1), resumptionRequirement: z.string().min(1) }).strict(),
@@ -300,6 +300,7 @@ export const importActivityFindingSchema = z.object({
 });
 export const importActivityReceiptSchema = z.object({
   schemaVersion: z.literal("ImportActivityReceiptV1"),
+  attemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/).optional(),
   stage: z.enum(["REFINING", "VALIDATING"]),
   activityId: z.string().min(1),
   inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
@@ -316,6 +317,86 @@ export const importActivityReceiptSchema = z.object({
   if (["accepted", "rejected"].includes(value.outcome) && !value.observation) context.addIssue({ code: "custom", path: ["observation"], message: "Accepted and rejected activity reviews require an observation." });
   if (value.outcome === "not-applicable" && !value.applicabilityReason) context.addIssue({ code: "custom", path: ["applicabilityReason"], message: "Inapplicability requires a reason." });
 });
+
+export const importActivityAttemptSchema = z.object({
+  schemaVersion: z.literal("ImportActivityAttemptV1"),
+  attemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/),
+  stage: z.enum(["REFINING", "VALIDATING"]),
+  activityId: z.string().min(1),
+  sequence: z.number().int().positive(),
+  inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  criteria: z.array(activityCriterionSchema).min(1),
+  dependencyRefs: z.array(stateEvidenceRef).min(1),
+  idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/),
+  workPath: z.string().min(1),
+  resultPath: z.string().min(1),
+  predecessorAttemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/).optional(),
+  reason: z.enum(["initial", "intentional-repair", "dependency-change", "legacy-adoption"]),
+  status: z.enum(["active", "completed", "superseded"]),
+  issuingLeaseOwnerToken: z.string().uuid(),
+  issuedAt: z.string().datetime({ offset: true }),
+  completedAt: z.string().datetime({ offset: true }).optional(),
+}).strict().superRefine((value, context) => {
+  if (["initial", "legacy-adoption"].includes(value.reason) && value.predecessorAttemptId) context.addIssue({ code: "custom", path: ["predecessorAttemptId"], message: "An initial or adopted attempt cannot have a predecessor." });
+  if (!["initial", "legacy-adoption"].includes(value.reason) && !value.predecessorAttemptId) context.addIssue({ code: "custom", path: ["predecessorAttemptId"], message: "A replacement attempt must identify its predecessor." });
+  if (value.status === "active" && value.completedAt) context.addIssue({ code: "custom", path: ["completedAt"], message: "An active attempt cannot be completed." });
+  if (value.status === "completed" && !value.completedAt) context.addIssue({ code: "custom", path: ["completedAt"], message: "A completed attempt requires a completion time." });
+});
+
+export const importActivitySelectionSchema = z.object({
+  schemaVersion: z.literal("ImportActivitySelectionV1"),
+  selectionId: z.string().regex(/^activity-selection-[a-f0-9]{24}$/),
+  stage: z.enum(["REFINING", "VALIDATING"]),
+  activityId: z.string().min(1),
+  candidateAttemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/),
+  replacementAttemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/),
+  candidateResultRef: stateEvidenceRef,
+  comparedInputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  openFindingIds: z.array(z.string().regex(/^finding-[a-f0-9]{24}$/)),
+  decision: z.enum(["selected", "historical"]),
+  reason: z.enum(["eligible-current-dependencies-and-review", "dependencies-changed", "invalid-result", "open-findings-unresolved", "independent-review-required", "non-approving-result", "replacement-delivered"]),
+  validator: z.enum(["passed", "failed", "not-run"]),
+  independentReview: z.enum(["passed", "failed", "not-run"]),
+  selectedAt: z.string().datetime({ offset: true }),
+}).strict();
+
+export const importStageAttemptSchema = z.object({
+  schemaVersion: z.literal("ImportStageAttemptV1"),
+  attemptId: z.string().regex(/^stage-attempt-[a-f0-9]{24}$/),
+  stage: z.literal("RESEARCHING"),
+  operation: z.literal("research-plan"),
+  sequence: z.number().int().positive(),
+  inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/),
+  workPath: z.string().min(1),
+  resultPath: z.string().min(1),
+  resultRef: stateEvidenceRef.optional(),
+  decisionRef: stateEvidenceRef.optional(),
+  predecessorAttemptId: z.string().regex(/^stage-attempt-[a-f0-9]{24}$/).optional(),
+  reason: z.enum(["initial", "intentional-repair", "dependency-change", "legacy-adoption"]),
+  status: z.enum(["active", "completed", "superseded"]),
+  repairTotalAtIssue: z.number().int().nonnegative(),
+  issuingLeaseOwnerToken: z.string().uuid(),
+  issuedAt: z.string().datetime({ offset: true }),
+  completedAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
+
+export const importStageSelectionSchema = z.object({
+  schemaVersion: z.literal("ImportStageSelectionV1"),
+  selectionId: z.string().regex(/^stage-selection-[a-f0-9]{24}$/),
+  stage: z.literal("RESEARCHING"),
+  operation: z.literal("research-plan"),
+  candidateAttemptId: z.string().regex(/^stage-attempt-[a-f0-9]{24}$/),
+  replacementAttemptId: z.string().regex(/^stage-attempt-[a-f0-9]{24}$/),
+  candidateResultRef: stateEvidenceRef,
+  candidateDecisionRef: stateEvidenceRef.optional(),
+  comparedInputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  decision: z.enum(["selected", "historical"]),
+  reason: z.enum(["eligible-current-inputs-and-validation", "replacement-delivered", "dependencies-changed", "invalid-result", "validation-ambiguous"]),
+  validator: z.enum(["passed", "failed", "not-run"]),
+  independentReview: z.literal("not-applicable"),
+  selectedAt: z.string().datetime({ offset: true }),
+}).strict();
 
 const gateHandoffReferenceSchema = z.object({
   name: z.string().min(1),
@@ -408,10 +489,14 @@ export const externalArticleImportSchema = z.object({
   }).strict().optional(),
   activityProtocolVersion: z.literal(1).optional(),
   activityReceipts: z.array(importActivityReceiptSchema).optional(),
+  activityAttempts: z.array(importActivityAttemptSchema).optional(),
+  activitySelections: z.array(importActivitySelectionSchema).optional(),
   handoffProtocolVersion: z.literal(1).optional(),
   gateHandoffs: z.array(importGateHandoffSchema).optional(),
   activityFindings: z.array(importActivityFindingSchema).optional(),
   activityFindingReviews: z.array(importActivityFindingReviewSchema).optional(),
+  stageAttempts: z.array(importStageAttemptSchema).optional(),
+  stageSelections: z.array(importStageSelectionSchema).optional(),
   legacyDiagnostics: z.array(z.string()).optional(),
   importId: z.string().regex(/^article-[0-9a-f-]{36}$/),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),

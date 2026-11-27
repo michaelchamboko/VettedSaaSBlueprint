@@ -16,7 +16,9 @@ import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { reconcileActivityFindingEvidence, registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
-import { activityAttempt, activityResultSchema, nextArticleActivity, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
+import { activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
+import { completeResearchPlanAttempt, prepareResearchPlanAttempt, reconcileLateResearchPlanResults } from "./stage-attempts";
+import { readEvidenceBytes, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { verifyGateHandoffForDispatch } from "./gate-handoff";
 
 const file = z.string().min(1);
@@ -92,8 +94,8 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     await assertIgnoredImportStatePath(root, resultPath);
     if (stage === "RESEARCHING") {
       const registry = options?.researchRegistry ?? new NeonArticleResearchRegistry();
-      const planWorkPath = `${directory}/${context.idempotencyKey}.research-plan.work.json`;
-      const planResultPath = `${directory}/${context.idempotencyKey}.research-plan.result.json`;
+      let planWorkPath = `${directory}/${context.idempotencyKey}.research-plan.work.json`;
+      let planResultPath = `${directory}/${context.idempotencyKey}.research-plan.result.json`;
       const acquisitionWorkPath = `${directory}/${context.idempotencyKey}.research-acquisition.work.json`;
       const acquisitionResultPath = `${directory}/${context.idempotencyKey}.research-acquisition.result.json`;
       for (const registryPath of [planWorkPath, planResultPath, acquisitionWorkPath, acquisitionResultPath]) await assertIgnoredImportStatePath(root, registryPath);
@@ -108,6 +110,33 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         plan = await registry.prepare({ importId: record.importId, sourceFingerprint: record.sourceFingerprint, sourceText, now: new Date().toISOString() });
       }
       const phase = record.continuation?.kind === "work" && record.continuation.workPath === acquisitionWorkPath ? "acquisition" : "plan";
+      let planAttempt: NonNullable<ExternalArticleImportV1["stageAttempts"]>[number];
+      if (phase === "acquisition") {
+        const completed = (record.stageAttempts ?? []).filter((attempt) => attempt.operation === "research-plan" && attempt.status === "completed").sort((left, right) => right.sequence - left.sequence)[0];
+        if (completed) planAttempt = completed;
+        else {
+          const adopted = prepareResearchPlanAttempt(record, { directory, idempotencyKey: context.idempotencyKey, inputFingerprint: plan.planFingerprint, leaseOwnerToken: context.leaseToken });
+          const legacyResultBytes = await readEvidenceBytes(root, adopted.attempt.resultPath);
+          const legacyResult = researchPlanResultSchema.parse(JSON.parse(legacyResultBytes.toString("utf8")));
+          const legacyDecisionBytes = await readEvidenceBytes(root, legacyResult.work.registryDecisionPath);
+          const legacyDecision = researchRegistryDecisionSchema.parse(JSON.parse(legacyDecisionBytes.toString("utf8")));
+          validateRegistryDecisionPlan(plan, legacyDecision, plan.generatedAt);
+          record = completeResearchPlanAttempt(adopted.record, adopted.attempt.attemptId, {
+            resultRef: await storeEvidenceBytes(root, record.importId, legacyResultBytes),
+            decisionRef: await storeEvidenceBytes(root, record.importId, legacyDecisionBytes),
+          });
+          const adoptedCompleted = (record.stageAttempts ?? []).find((attempt) => attempt.attemptId === adopted.attempt.attemptId);
+          if (!adoptedCompleted) throw new Error("RESEARCH_PLAN_ATTEMPT_MISSING");
+          planAttempt = adoptedCompleted;
+        }
+      } else {
+        const preparedPlanAttempt = prepareResearchPlanAttempt(record, { directory, idempotencyKey: context.idempotencyKey, inputFingerprint: plan.planFingerprint, leaseOwnerToken: context.leaseToken });
+        record = preparedPlanAttempt.record;
+        planAttempt = preparedPlanAttempt.attempt;
+      }
+      planWorkPath = planAttempt.workPath;
+      planResultPath = planAttempt.resultPath;
+      for (const attemptPath of [planWorkPath, planResultPath]) await assertIgnoredImportStatePath(root, attemptPath);
       const basePacket = {
         schemaVersion: "ImportSupervisedWorkV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
         stage, strategy: context.strategy, attempt: context.attempt, idempotencyKey: context.idempotencyKey,
@@ -116,23 +145,22 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, researchRegistry: plan,
         resumeCommand: `npm run import:article -- --resume ${record.importId}`,
       };
-      const ensureAcquisitionPacket = async (decision: ResearchRegistryDecision, decisionPath: string) => {
+      const ensureAcquisitionPacket = async (decision: ResearchRegistryDecision, decisionPath: string, decisionSha256: string) => {
         try {
           const existing = await readRepositoryJson(root, acquisitionWorkPath) as { registryDecisionPath?: string; registryDecisionSha256?: string; researchRegistry?: { planFingerprint?: string } };
-          if (existing.registryDecisionPath !== decisionPath || existing.researchRegistry?.planFingerprint !== plan.planFingerprint || !/^[a-f0-9]{64}$/.test(existing.registryDecisionSha256 ?? "")) throw new Error("RESEARCH_REGISTRY_ACQUISITION_PACKET_MISMATCH");
+          if (existing.registryDecisionPath !== decisionPath || existing.researchRegistry?.planFingerprint !== plan.planFingerprint || existing.registryDecisionSha256 !== decisionSha256) throw new Error("RESEARCH_REGISTRY_ACQUISITION_PACKET_MISMATCH");
           return existing.registryDecisionSha256!;
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
         }
-        const decisionRef = await evidenceReference(root, decisionPath);
         await writeJsonAtomically(path.join(root, acquisitionWorkPath), {
-          ...basePacket, researchPhase: "acquisition", registryDecision: decision, registryDecisionPath: decisionPath, registryDecisionSha256: decisionRef.sha256,
+          ...basePacket, researchPhase: "acquisition", registryDecision: decision, registryDecisionPath: decisionPath, registryDecisionSha256: decisionSha256,
           registryWritebackSchema: z.toJSONSchema(researchRegistryWritebackSchema), approvedGaps: decision.claims.filter((claim) => claim.action === "researched_gap"), resultSchema: z.toJSONSchema(resultSchema),
           instructions: `${instructionsForStage(stage)} Web acquisition is approved only for approvedGaps. Reuse current claims and retained bytes without fetching them again. Research each approved gap, then produce one ResearchEvidenceV2 covering all planned claims. Preserve the original registry decision unchanged.`,
           resultPath: acquisitionResultPath,
           resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Complete only approved research gaps.", work: { stage, evidencePath: "build-pack/article-import/.../research.json", registryDecisionPath: decisionPath, registryWritebackPath: "build-pack/article-import/.../registry-writeback.json" } },
         });
-        return decisionRef.sha256;
+        return decisionSha256;
       };
       if (phase === "plan") {
         await writeJsonAtomically(path.join(root, planWorkPath), {
@@ -142,30 +170,64 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
           resultContract: { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Record the pre-acquisition registry decision.", work: { stage, researchAction: "reuse-or-acquire", registryDecisionPath: "build-pack/article-import/.../registry-decision.json" } },
         });
         let raw: unknown;
-        try { raw = await readRepositoryJson(root, planResultPath); }
-        catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-          return { ...record, continuation: { kind: "work", stage, workPath: planWorkPath, resultPath: planResultPath, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Supervising agent: execute ${planWorkPath}, write its result to ${planResultPath}, then explicitly resume this import.` };
+        let currentResultRef: EvidenceRef | undefined;
+        let replacementDelivered = false;
+        try {
+          const resultBytes = await readEvidenceBytes(root, planResultPath);
+          currentResultRef = await storeEvidenceBytes(root, record.importId, resultBytes);
+          raw = JSON.parse(resultBytes.toString("utf8"));
+          replacementDelivered = true;
         }
-        const result = researchPlanResultSchema.parse(raw);
-        if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("STAGE_RESULT_BINDING_MISMATCH");
-        const decision = researchRegistryDecisionSchema.parse(await readRepositoryJson(root, result.work.registryDecisionPath));
-        validateRegistryDecisionPlan(plan, decision, plan.generatedAt);
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+        const validatePlanResult = async (candidateRaw: unknown, candidate: typeof planAttempt) => {
+          const parsed = researchPlanResultSchema.parse(candidateRaw);
+          if (parsed.idempotencyKey !== candidate.idempotencyKey || parsed.sourceFingerprint !== record.sourceFingerprint) throw new Error("STAGE_RESULT_BINDING_MISMATCH");
+          const decisionBytes = await readEvidenceBytes(root, parsed.work.registryDecisionPath);
+          const decisionRef = await storeEvidenceBytes(root, record.importId, decisionBytes);
+          const candidateDecision = researchRegistryDecisionSchema.parse(JSON.parse(decisionBytes.toString("utf8")));
+          validateRegistryDecisionPlan(plan, candidateDecision, plan.generatedAt);
+          const required = candidateDecision.claims.some((claim) => claim.action === "researched_gap");
+          if ((parsed.work.researchAction === "acquire") !== required) throw new Error("RESEARCH_REGISTRY_ACTION_MISMATCH");
+          if (!required) {
+            if (!parsed.work.evidencePath) throw new Error("RESEARCH_REGISTRY_REUSE_EVIDENCE_REQUIRED");
+            const research = await evidenceReference(root, parsed.work.evidencePath);
+            const checked = await validateResearchEvidenceForRegistry(root, research, record);
+            validateRegistryDecisionAgainstEvidence(plan, candidateDecision, { evidenceRef: research, evidencePath: parsed.work.evidencePath, evidenceSha256: research.sha256, evidence: checked.evidence, snapshotBytes: checked.snapshotBytes }, candidateDecision.createdAt, undefined);
+          }
+          return { parsed, decisionRef };
+        };
+        const reconciliation = await reconcileLateResearchPlanResults(root, record, planAttempt, { replacementDelivered, validate: validatePlanResult });
+        record = reconciliation.record;
+        if (reconciliation.selected) raw = reconciliation.selected.raw;
+        else if (!replacementDelivered) return { ...record, continuation: { kind: "work", stage, workPath: planWorkPath, resultPath: planResultPath, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Supervising agent: execute ${planWorkPath}, write its result to ${planResultPath}, then explicitly resume this import.` };
+        const consumedAttempt = reconciliation.selected?.attempt ?? planAttempt;
+        const validated = reconciliation.selected
+          ? { parsed: researchPlanResultSchema.parse(reconciliation.selected.raw), decisionRef: reconciliation.selected.decisionRef }
+          : await validatePlanResult(raw, consumedAttempt);
+        const result = validated.parsed;
+        const selectedDecisionPath = validated.decisionRef.path;
+        const decision = researchRegistryDecisionSchema.parse(await readRepositoryJson(root, selectedDecisionPath));
+        const consumedResultRef = reconciliation.selected?.resultRef ?? currentResultRef;
+        if (!consumedResultRef) throw new Error("RESEARCH_PLAN_RESULT_REFERENCE_MISSING");
+        record = completeResearchPlanAttempt(record, consumedAttempt.attemptId, { resultRef: consumedResultRef, decisionRef: validated.decisionRef });
         const acquisitionRequired = decision.claims.some((claim) => claim.action === "researched_gap");
-        if ((result.work.researchAction === "acquire") !== acquisitionRequired) throw new Error("RESEARCH_REGISTRY_ACTION_MISMATCH");
         if (acquisitionRequired) {
-          await ensureAcquisitionPacket(decision, result.work.registryDecisionPath);
+          await ensureAcquisitionPacket(decision, result.work.registryDecisionPath, validated.decisionRef.sha256);
           return { ...record, continuation: { kind: "work", stage, workPath: acquisitionWorkPath, resultPath: acquisitionResultPath, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: `Research only the approved gaps in ${acquisitionWorkPath}; write the bound result to ${acquisitionResultPath}.` };
         }
         if (!result.work.evidencePath) throw new Error("RESEARCH_REGISTRY_REUSE_EVIDENCE_REQUIRED");
-        return finishRegistryResearch(root, record, context.idempotencyKey, result.summary, result.work.evidencePath, result.work.registryDecisionPath, undefined, plan, decision, registry);
+        return finishRegistryResearch(root, record, context.idempotencyKey, result.summary, result.work.evidencePath, selectedDecisionPath, undefined, plan, decision, registry);
       }
-      const planResult = researchPlanResultSchema.parse(await readRepositoryJson(root, planResultPath));
-      const decision = researchRegistryDecisionSchema.parse(await readRepositoryJson(root, planResult.work.registryDecisionPath));
+      const retainedPlanResultPath = planAttempt.resultRef?.path ?? planResultPath;
+      const planResult = researchPlanResultSchema.parse(await readRepositoryJson(root, retainedPlanResultPath));
+      const retainedDecisionPath = planAttempt.decisionRef?.path ?? planResult.work.registryDecisionPath;
+      const contractedDecisionPath = planResult.work.registryDecisionPath;
+      const decision = researchRegistryDecisionSchema.parse(await readRepositoryJson(root, retainedDecisionPath));
       validateRegistryDecisionPlan(plan, decision, plan.generatedAt);
       if (!decision.claims.some((claim) => claim.action === "researched_gap")) throw new Error("RESEARCH_REGISTRY_ACQUISITION_NOT_REQUIRED");
-      const frozenDecisionSha256 = await ensureAcquisitionPacket(decision, planResult.work.registryDecisionPath);
-      if ((await evidenceReference(root, planResult.work.registryDecisionPath)).sha256 !== frozenDecisionSha256) throw new Error("RESEARCH_REGISTRY_DECISION_CHANGED_AFTER_ACQUISITION");
+      const retainedDecisionSha256 = planAttempt.decisionRef?.sha256 ?? (await evidenceReference(root, contractedDecisionPath)).sha256;
+      const frozenDecisionSha256 = await ensureAcquisitionPacket(decision, contractedDecisionPath, retainedDecisionSha256);
+      if (planAttempt.decisionRef && planAttempt.decisionRef.sha256 !== frozenDecisionSha256) throw new Error("RESEARCH_REGISTRY_DECISION_CHANGED_AFTER_ACQUISITION");
       let raw: unknown;
       try { raw = await readRepositoryJson(root, acquisitionResultPath); }
       catch (error) {
@@ -174,10 +236,9 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       }
       const result = resultSchema.parse(raw);
       if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work.stage !== stage) throw new Error("STAGE_RESULT_BINDING_MISMATCH");
-      if (result.work.registryDecisionPath !== planResult.work.registryDecisionPath) throw new Error("RESEARCH_REGISTRY_DECISION_CHANGED_AFTER_ACQUISITION");
-      if ((await evidenceReference(root, result.work.registryDecisionPath)).sha256 !== frozenDecisionSha256) throw new Error("RESEARCH_REGISTRY_DECISION_CHANGED_AFTER_ACQUISITION");
+      if (result.work.registryDecisionPath !== contractedDecisionPath) throw new Error("RESEARCH_REGISTRY_DECISION_CHANGED_AFTER_ACQUISITION");
       if (!result.work.registryWritebackPath) throw new Error("RESEARCH_REGISTRY_WRITEBACK_REQUIRED");
-      return finishRegistryResearch(root, record, context.idempotencyKey, result.summary, result.work.evidencePath, result.work.registryDecisionPath, result.work.registryWritebackPath, plan, decision, registry);
+      return finishRegistryResearch(root, record, context.idempotencyKey, result.summary, result.work.evidencePath, retainedDecisionPath, result.work.registryWritebackPath, plan, decision, registry);
     }
     let renderingInputs;
     let requiredReleaseFiles: string[] | undefined;
@@ -233,6 +294,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       }).all;
     }
     let activity: ActivityBinding | undefined;
+    let adoptedLegacyActivity = false;
     if (stage === "REFINING" || stage === "VALIDATING") {
       let historicalStageResult = false;
       if (record.activityProtocolVersion !== 1) {
@@ -244,11 +306,22 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       if (!historicalStageResult) {
         activity = await nextArticleActivity(root, record, renderingInputs?.reference);
         if (activity) {
-          const attempt = activityAttempt(record, activity);
-          workPath = `${directory}/${context.idempotencyKey}.${activity.id}.${attempt}.work.json`;
-          resultPath = `${directory}/${context.idempotencyKey}.${activity.id}.${attempt}.result.json`;
+          const prepared = prepareActivityAttempt(record, activity, { directory, idempotencyKey: context.idempotencyKey, leaseOwnerToken: context.leaseToken });
+          record = prepared.record;
+          activity = prepared.binding;
+          adoptedLegacyActivity = prepared.attempt.reason === "legacy-adoption";
+          workPath = prepared.attempt.workPath;
+          resultPath = prepared.attempt.resultPath;
           await assertIgnoredImportStatePath(root, workPath);
           await assertIgnoredImportStatePath(root, resultPath);
+          let activeResultPresent = false;
+          try { await readFile(path.resolve(root, resultPath)); activeResultPresent = true; }
+          catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+          await context.assertLease();
+          const reconciliation = await reconcileLateActivityResults(root, record, activity, { replacementDelivered: activeResultPresent, registry: options?.reviewEvidenceRegistry });
+          await context.assertLease();
+          record = reconciliation.record;
+          if (reconciliation.selected) return record;
         }
       }
     }
@@ -266,17 +339,30 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,
     });
     let raw: unknown;
-    try { raw = await readRepositoryJson(root, resultPath); }
+    let immutableResultRef: EvidenceRef | undefined;
+    try {
+      if (activity) {
+        const bytes = await readEvidenceBytes(root, resultPath);
+        immutableResultRef = await storeEvidenceBytes(root, record.importId, bytes);
+        raw = JSON.parse(bytes.toString("utf8"));
+      } else raw = await readRepositoryJson(root, resultPath);
+    }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      return { ...record, ...(activity && { activityProtocolVersion: 1 as const }), continuation: { kind: "work", stage, workPath, resultPath, ...(activity && { activityId: activity.id, inputFingerprint: activity.inputFingerprint }), idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: activity?.openFindings?.length
+      return { ...record, ...(activity && { activityProtocolVersion: 1 as const }), continuation: { kind: "work", stage, workPath, resultPath, ...(activity && { activityId: activity.id, attemptId: activity.attemptId, inputFingerprint: activity.inputFingerprint }), idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint }, nextAction: activity?.openFindings?.length
         ? `Repair ${activity.id} through ${workPath}. Objections: ${activity.openFindings.map((finding) => `${finding.findingId}: ${finding.observation}`).join("; ")} Expected checks: ${activity.openFindings.map((finding) => finding.expectedCheck).join("; ")} Write the independent result to ${resultPath}, then resume this import.`
         : `Supervising agent: execute ${workPath}, write its result to ${resultPath}, then explicitly resume this import.` };
     }
     if (activity) {
+      if (adoptedLegacyActivity && raw && typeof raw === "object" && "activity" in raw) {
+        const legacyActivity = (raw as { activity?: unknown }).activity;
+        if (legacyActivity && typeof legacyActivity === "object" && !("attemptId" in legacyActivity)) {
+          raw = { ...(raw as Record<string, unknown>), activity: { ...(legacyActivity as Record<string, unknown>), attemptId: activity.attemptId } };
+        }
+      }
       const activityResult = activityResultSchema.parse(raw);
       if (activityResult.idempotencyKey !== context.idempotencyKey) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
-      return recordArticleActivity(root, record, resultPath, activity, activityResult, options?.reviewEvidenceRegistry);
+      return recordArticleActivity(root, record, resultPath, activity, activityResult, { resultRef: immutableResultRef, trustProvidedRaw: true, registry: options?.reviewEvidenceRegistry });
     }
     const result = resultSchema.parse(raw);
     if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work.stage !== stage) throw new Error("STAGE_RESULT_BINDING_MISMATCH");

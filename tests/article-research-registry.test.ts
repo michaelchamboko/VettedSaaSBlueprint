@@ -204,6 +204,10 @@ for (const reason of ["stale", "conflicting", "missing"] as const) {
     const fx = await fixture(existing);
     try {
       await submitResearch(fx, "researched_gap", reason);
+      if (reason === "missing") {
+        const legacyPending = await loadImport(fx.root, fx.record.importId);
+        await persistFixture(fx.root, { ...legacyPending, stageAttempts: undefined, stageSelections: undefined });
+      }
       await executeImportCommand(fx.root, { kind: "resume", importId: fx.record.importId }, fx.executor);
       assert.equal((await loadImport(fx.root, fx.record.importId)).stage, "TRANSFORMING");
       assert.equal(fx.registry.commits[0].input.decision.claims[0].gapReason, reason);

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { evidenceReference, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
-import { activityFindingReviewSubmissionSchema, externalArticleImportSchema, importActivityFindingReviewSchema, importActivityFindingSchema, importActivityReceiptSchema, type ExternalArticleImportV1 } from "./contracts";
+import { evidenceReference, readEvidenceBytes, storeEvidenceBytes, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import { activityFindingReviewSubmissionSchema, externalArticleImportSchema, importActivityAttemptSchema, importActivityFindingReviewSchema, importActivityFindingSchema, importActivityReceiptSchema, importActivitySelectionSchema, type ExternalArticleImportV1 } from "./contracts";
 import { WORKFLOW_REVISION } from "./workflow-requirements";
 import { registerActivityFindingEvidence, registerActivityFindingResolutionEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 
@@ -26,6 +26,8 @@ export const activityResultSchema = z.object({
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
   summary: z.string().min(1),
   activity: z.object({
+    attemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/).optional(),
+    predecessorAttemptId: z.string().regex(/^activity-attempt-[a-f0-9]{24}$/).optional(),
     stage: z.enum(activityStages),
     id: z.string().min(1),
     inputFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
@@ -45,6 +47,8 @@ export const activityResultSchema = z.object({
 }).strict();
 
 export type ActivityBinding = {
+  attemptId?: string;
+  predecessorAttemptId?: string;
   stage: ActivityStage;
   id: string;
   inputFingerprint: string;
@@ -100,18 +104,22 @@ export async function nextArticleActivity(root: string, record: ExternalArticleI
   return undefined;
 }
 
-export async function recordArticleActivity(root: string, record: ExternalArticleImportV1, resultPath: string, expected: ActivityBinding, raw: unknown, registry?: ArticleReviewEvidenceRegistry) {
-  const result = activityResultSchema.parse(raw);
+export async function recordArticleActivity(root: string, record: ExternalArticleImportV1, resultPath: string, expected: ActivityBinding, raw: unknown, options?: { resultRef?: EvidenceRef; trustProvidedRaw?: boolean; registry?: ArticleReviewEvidenceRegistry }) {
+  const bytes = options?.resultRef ? undefined : await readEvidenceBytes(root, resultPath);
+  const resultRef = options?.resultRef ?? await storeEvidenceBytes(root, record.importId, bytes!);
+  const retainedRaw = options?.trustProvidedRaw ? raw : JSON.parse((bytes ?? await readEvidenceBytes(root, resultRef.path)).toString("utf8"));
+  const result = activityResultSchema.parse(retainedRaw);
   const submitted = result.activity;
-  if (result.sourceFingerprint !== record.sourceFingerprint || submitted.stage !== expected.stage || submitted.id !== expected.id || submitted.inputFingerprint !== expected.inputFingerprint || JSON.stringify(submitted.criteria) !== JSON.stringify(expected.criteria) || JSON.stringify(submitted.dependencyRefs) !== JSON.stringify(expected.dependencyRefs)) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
+  if (result.sourceFingerprint !== record.sourceFingerprint || submitted.stage !== expected.stage || submitted.id !== expected.id || submitted.attemptId !== expected.attemptId || submitted.predecessorAttemptId !== expected.predecessorAttemptId || submitted.inputFingerprint !== expected.inputFingerprint || JSON.stringify(submitted.criteria) !== JSON.stringify(expected.criteria) || JSON.stringify(submitted.dependencyRefs) !== JSON.stringify(expected.dependencyRefs)) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
   const receipt = importActivityReceiptSchema.parse({
     schemaVersion: "ImportActivityReceiptV1",
+    attemptId: submitted.attemptId,
     stage: submitted.stage,
     activityId: submitted.id,
     inputFingerprint: submitted.inputFingerprint,
     criteria: submitted.criteria,
     dependencyRefs: submitted.dependencyRefs,
-    resultRef: await evidenceReference(root, resultPath),
+    resultRef,
     reviewer: submitted.reviewer,
     executionId: submitted.executionId,
     outcome: submitted.outcome,
@@ -139,7 +147,6 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
       status: "open",
       openedAt: receipt.completedAt,
     })];
-  const resultRef = receipt.resultRef;
   const findingReviews = [...(record.activityFindingReviews ?? [])];
   const reviewedFindings = [...activityFindings];
   const conclusiveReviewIds: string[] = [];
@@ -172,15 +179,18 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
   }
   const updated = externalArticleImportSchema.parse({
     ...record,
+    activityAttempts: (record.activityAttempts ?? []).map((attempt) => attempt.attemptId === submitted.attemptId
+      ? importActivityAttemptSchema.parse({ ...attempt, status: "completed", completedAt: new Date().toISOString() })
+      : attempt),
     activityReceipts: [...(record.activityReceipts ?? []), receipt],
     activityFindings: reviewedFindings,
     activityFindingReviews: findingReviews,
     continuation: undefined,
     nextAction: ["accepted", "not-applicable"].includes(receipt.outcome) ? `Resume ${receipt.stage.toLowerCase()} at the earliest unfinished activity.` : `Complete ${receipt.activityId} again; the attributable ${receipt.outcome} review remains retained but does not approve the activity.`,
   });
-  if (registry && receipt.outcome === "rejected") {
+  if (options?.registry && receipt.outcome === "rejected") {
     const finding = updated.activityFindings?.find((candidate) => candidate.findingId === findingId);
-    if (finding) await registerActivityFindingEvidence(root, registry, updated, {
+    if (finding) await registerActivityFindingEvidence(root, options.registry, updated, {
       ...finding,
       dependencyRefs: receipt.dependencyRefs,
       originalEvidenceRef: receipt.resultRef,
@@ -189,16 +199,136 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
       openedAt: receipt.completedAt,
     });
   }
-  if (registry) {
+  if (options?.registry) {
     for (const reviewId of conclusiveReviewIds) {
       const review = updated.activityFindingReviews?.find((candidate) => candidate.reviewId === reviewId);
       const finding = review && updated.activityFindings?.find((candidate) => candidate.findingId === review.findingId);
-      if (review && finding) await registerActivityFindingResolutionEvidence(root, registry, updated, finding, review);
+      if (review && finding) await registerActivityFindingResolutionEvidence(root, options.registry, updated, finding, review);
     }
   }
   return updated;
 }
 
-export function activityAttempt(record: ExternalArticleImportV1, binding: ActivityBinding) {
-  return (record.activityReceipts ?? []).filter((receipt) => receipt.stage === binding.stage && receipt.activityId === binding.id).length + 1;
+export function prepareActivityAttempt(record: ExternalArticleImportV1, binding: ActivityBinding, input: { directory: string; idempotencyKey: string; leaseOwnerToken: string }) {
+  const attempts = record.activityAttempts ?? [];
+  const active = attempts.find((attempt) => attempt.stage === binding.stage && attempt.activityId === binding.id && attempt.inputFingerprint === binding.inputFingerprint && attempt.status === "active");
+  if (active) {
+    return { record, binding: { ...binding, attemptId: active.attemptId, predecessorAttemptId: active.predecessorAttemptId }, attempt: active };
+  }
+  const related = attempts.filter((attempt) => attempt.stage === binding.stage && attempt.activityId === binding.id);
+  const predecessor = related.at(-1);
+  const sequence = Math.max(0, ...related.map((attempt) => attempt.sequence)) + 1;
+  const attemptId = `activity-attempt-${digest({ importId: record.importId, stage: binding.stage, activityId: binding.id, sequence, inputFingerprint: binding.inputFingerprint }).slice(0, 24)}`;
+  const legacyContinuation = record.continuation?.kind === "work" && record.continuation.activityId === binding.id && record.continuation.inputFingerprint === binding.inputFingerprint && record.continuation.idempotencyKey ? record.continuation : undefined;
+  const legacy = attempts.length === 0 && legacyContinuation;
+  const idempotencyKey = legacy ? legacy.idempotencyKey! : input.idempotencyKey;
+  const workPath = legacy ? legacy.workPath : `${input.directory}/${idempotencyKey}.${binding.id}.${sequence}.work.json`;
+  const resultPath = legacy ? legacy.resultPath : `${input.directory}/${idempotencyKey}.${binding.id}.${sequence}.result.json`;
+  const predecessorReceipt = predecessor && (record.activityReceipts ?? []).find((receipt) => receipt.attemptId === predecessor.attemptId);
+  const reason = legacy ? "legacy-adoption" : !predecessor ? "initial" : predecessor.inputFingerprint === binding.inputFingerprint && ["rejected", "unverified"].includes(predecessorReceipt?.outcome ?? "") ? "intentional-repair" : "dependency-change";
+  const attempt = importActivityAttemptSchema.parse({
+    schemaVersion: "ImportActivityAttemptV1", attemptId, stage: binding.stage, activityId: binding.id, sequence,
+    inputFingerprint: binding.inputFingerprint, criteria: binding.criteria, dependencyRefs: binding.dependencyRefs, idempotencyKey,
+    workPath, resultPath, predecessorAttemptId: predecessor?.attemptId, reason, status: "active",
+    issuingLeaseOwnerToken: input.leaseOwnerToken, issuedAt: new Date().toISOString(),
+  });
+  const updatedAttempts = attempts.map((item) => item.attemptId === predecessor?.attemptId ? importActivityAttemptSchema.parse({ ...item, status: "superseded" }) : item);
+  const updated = externalArticleImportSchema.parse({ ...record, activityAttempts: [...updatedAttempts, attempt] });
+  return { record: updated, binding: { ...binding, attemptId, predecessorAttemptId: predecessor?.attemptId }, attempt };
+}
+
+export async function reconcileLateActivityResults(root: string, record: ExternalArticleImportV1, current: ActivityBinding, options?: { replacementDelivered?: boolean; registry?: ArticleReviewEvidenceRegistry }) {
+  if (!current.attemptId) return { record, selected: false };
+  let updated = record;
+  const candidates = (record.activityAttempts ?? [])
+    .filter((attempt) => attempt.stage === current.stage && attempt.activityId === current.id && attempt.status === "superseded" && attempt.attemptId !== current.attemptId)
+    .sort((left, right) => left.sequence - right.sequence);
+  for (const candidate of candidates) {
+    let candidateResultRef: EvidenceRef;
+    let raw: unknown;
+    try {
+      const bytes = await readEvidenceBytes(root, candidate.resultPath);
+      candidateResultRef = await storeEvidenceBytes(root, record.importId, bytes);
+      try { raw = JSON.parse(bytes.toString("utf8")); }
+      catch { raw = undefined; }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      if (error instanceof Error && error.message === "EVIDENCE_FILE_INVALID") continue;
+      throw error;
+    }
+    const priorReceiptRefs = (updated.activityReceipts ?? []).filter((receipt) => receipt.attemptId === candidate.attemptId).map((receipt) => receipt.resultRef);
+    if (priorReceiptRefs.some((ref) => ref.sha256 === candidateResultRef.sha256)) continue;
+    if ((updated.activitySelections ?? []).some((selection) => selection.candidateAttemptId === candidate.attemptId && selection.replacementAttemptId === current.attemptId && selection.comparedInputFingerprint === current.inputFingerprint && selection.candidateResultRef.sha256 === candidateResultRef.sha256)) continue;
+
+    const openFindingIds = (current.openFindings ?? []).map((finding) => finding.findingId);
+    let decision: "selected" | "historical" = "historical";
+    let reason: "eligible-current-dependencies-and-review" | "dependencies-changed" | "invalid-result" | "open-findings-unresolved" | "independent-review-required" | "non-approving-result" | "replacement-delivered" = "invalid-result";
+    let validator: "passed" | "failed" | "not-run" = "failed";
+    let independentReview: "passed" | "failed" | "not-run" = "not-run";
+    let parsed: z.infer<typeof activityResultSchema> | undefined;
+    if (candidate.inputFingerprint !== current.inputFingerprint || JSON.stringify(candidate.dependencyRefs) !== JSON.stringify(current.dependencyRefs)) {
+      reason = "dependencies-changed";
+      validator = "not-run";
+    } else {
+      const result = activityResultSchema.safeParse(raw);
+      if (result.success) {
+        parsed = result.data;
+        const submitted = parsed.activity;
+        const bindingMatches = parsed.idempotencyKey === candidate.idempotencyKey && parsed.sourceFingerprint === updated.sourceFingerprint && submitted.stage === current.stage && submitted.id === current.id && submitted.attemptId === candidate.attemptId && submitted.predecessorAttemptId === candidate.predecessorAttemptId && submitted.inputFingerprint === current.inputFingerprint && JSON.stringify(submitted.criteria) === JSON.stringify(current.criteria) && JSON.stringify(submitted.dependencyRefs) === JSON.stringify(current.dependencyRefs);
+        if (bindingMatches) {
+          validator = "passed";
+          const reviewedFindingIds = new Set((submitted.findingReviews ?? []).map((review) => review.findingId));
+          const conclusiveFindingIds = new Set((submitted.findingReviews ?? []).filter((review) => ["verified-repair", "appropriate-removal", "evidenced-dismissal"].includes(review.disposition)).map((review) => review.findingId));
+          if (!["accepted", "not-applicable"].includes(submitted.outcome)) {
+            reason = "non-approving-result";
+            independentReview = "failed";
+          } else if (openFindingIds.some((findingId) => !reviewedFindingIds.has(findingId) || !conclusiveFindingIds.has(findingId))) {
+            reason = "open-findings-unresolved";
+            independentReview = "failed";
+          } else {
+            const priorReceipts = (updated.activityReceipts ?? []).filter((receipt) => receipt.attemptId === candidate.attemptId);
+            const independent = priorReceipts.length > 0 && priorReceipts.every((receipt) => receipt.reviewer !== submitted.reviewer && receipt.executionId !== submitted.executionId);
+            if (!independent) {
+              reason = "independent-review-required";
+              independentReview = "failed";
+            } else {
+              reason = "eligible-current-dependencies-and-review";
+              independentReview = "passed";
+              decision = "selected";
+            }
+          }
+        }
+      }
+    }
+    if (options?.replacementDelivered && decision === "selected") {
+      decision = "historical";
+      reason = "replacement-delivered";
+    }
+    const selection = importActivitySelectionSchema.parse({
+      schemaVersion: "ImportActivitySelectionV1",
+      selectionId: `activity-selection-${digest({ candidateAttemptId: candidate.attemptId, replacementAttemptId: current.attemptId, candidateResultRef }).slice(0, 24)}`,
+      stage: current.stage, activityId: current.id, candidateAttemptId: candidate.attemptId, replacementAttemptId: current.attemptId,
+      candidateResultRef, comparedInputFingerprint: current.inputFingerprint, openFindingIds, decision, reason, validator, independentReview,
+      selectedAt: new Date().toISOString(),
+    });
+    if (decision === "selected" && parsed) {
+      let accepted: ExternalArticleImportV1;
+      try {
+        accepted = await recordArticleActivity(root, updated, candidateResultRef.path, { ...current, attemptId: candidate.attemptId, predecessorAttemptId: candidate.predecessorAttemptId }, parsed, { resultRef: candidateResultRef, registry: options?.registry });
+      } catch (error) {
+        if (["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes((error as NodeJS.ErrnoException).code ?? "") || (error instanceof Error && /CAPABILITY|registry|database|postgres|PGlite/i.test(error.message))) throw error;
+        const rejectedSelection = importActivitySelectionSchema.parse({ ...selection, decision: "historical", reason: "invalid-result", validator: "failed", independentReview: "failed" });
+        updated = externalArticleImportSchema.parse({ ...updated, activitySelections: [...(updated.activitySelections ?? []), rejectedSelection] });
+        continue;
+      }
+      updated = externalArticleImportSchema.parse({
+        ...accepted,
+        activityAttempts: (accepted.activityAttempts ?? []).map((attempt) => attempt.attemptId === current.attemptId ? importActivityAttemptSchema.parse({ ...attempt, status: "superseded" }) : attempt),
+        activitySelections: [...(accepted.activitySelections ?? []), selection],
+      });
+      return { record: updated, selected: true };
+    }
+    updated = externalArticleImportSchema.parse({ ...updated, activitySelections: [...(updated.activitySelections ?? []), selection] });
+  }
+  return { record: updated, selected: false };
 }

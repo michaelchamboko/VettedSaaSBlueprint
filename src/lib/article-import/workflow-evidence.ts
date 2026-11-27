@@ -550,7 +550,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   assertPacket(value.packetId, binding, "VALIDATING");
   const artifact = await artifactFor(root, binding);
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
-  const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
+  const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive(), target });
   const designInput = await designInputFromManifest(root, artifact, value.renderInputsRef, rendering, target);
   const currentDesign = value.schemaVersion === "WorkflowEvidenceV2" || value.schemaVersion === "WorkflowEvidenceV3";
   const currentHeroPolicy = value.schemaVersion === "WorkflowEvidenceV3";

@@ -17,8 +17,9 @@ import { evaluateWorkflowEvidence } from "./workflow-evidence";
 import { articleHeroFormatSchema, articleHeroPaths } from "../article-heroes";
 import { validateArticleHeroBinding } from "./hero-image";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
-import { readEvidence } from "./execution-evidence";
+import { evidenceReference, readEvidence, type EvidenceRef } from "./execution-evidence";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
+import { pageBlueprintSchema } from "../schemas/contracts";
 
 async function requiresArticleHero(root: string, record: ExternalArticleImportV1): Promise<boolean> {
   if (record.heroImage || record.evidenceRefs?.hero) return true;
@@ -323,12 +324,20 @@ export async function assertReleaseReceiptAffiliateBinding(repositoryRoot: strin
  * manifest and projection) can move between review and merge, so a concurrent main
  * change could select different content under the approved artifact; the post-deploy
  * verifiers would only detect that mismatch after the wrong content shipped. Fail
- * closed before deploy instead. Direct-review authority is bound by
- * `assertReleaseReceiptAffiliateBinding`; decision-set routes are discovered from the
- * artifact itself; agent_review_required never releases.
+ * closed before deploy instead. Direct-review binds the manifest-selected artifact,
+ * release receipt, and reviewed head here in addition to its affiliate URL binding;
+ * decision-set routes are discovered from the artifact itself and
+ * agent_review_required never releases.
  */
-export async function assertPublicationAuthorityBinding(repositoryRoot: string, format: ImportFormat, artifactPath: string | undefined): Promise<void> {
-  if (format !== "blog" && format !== "visibility") return;
+export type PublicationAuthorityBinding = { reviewedCommitSha?: string; retentionDependencies: EvidenceRef[] };
+
+export async function assertPublicationAuthorityBinding(
+  repositoryRoot: string,
+  format: ImportFormat,
+  artifactPath: string | undefined,
+  expectation: { reviewedCommitSha?: string } = {},
+): Promise<PublicationAuthorityBinding | undefined> {
+  if (format !== "direct-review" && format !== "blog" && format !== "visibility") return;
   if (!artifactPath) throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_MISSING");
   const repository = path.resolve(repositoryRoot);
   const artifactFile = path.resolve(repository, artifactPath);
@@ -339,6 +348,50 @@ export async function assertPublicationAuthorityBinding(repositoryRoot: string, 
     artifactValue = JSON.parse(await readFile(artifactFile, "utf8"));
   } catch {
     throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE");
+  }
+  if (format === "direct-review") {
+    const reviewedCommitSha = expectation.reviewedCommitSha;
+    if (!reviewedCommitSha) throw new Error("DIRECT_REVIEW_AUTHORITY_REVIEW_REQUIRED");
+    let approved;
+    try { approved = pageBlueprintSchema.parse(artifactValue); }
+    catch { throw new Error("PUBLICATION_AUTHORITY_ARTIFACT_UNREADABLE"); }
+    const slug = approved.metadata.url_slug;
+    const directory = path.join(repository, "src/generated/landing-pages");
+    const manifestPath = path.join(directory, "index.json");
+    let manifest: { pages?: Array<{ slug?: unknown; artifact?: unknown; path?: unknown; release_receipt?: unknown }> };
+    try { manifest = JSON.parse(await readFile(manifestPath, "utf8")); }
+    catch { throw new Error("DIRECT_REVIEW_AUTHORITY_UNREADABLE"); }
+    const matches = (manifest.pages ?? []).filter((entry) => entry.slug === slug);
+    if (matches.length !== 1) throw new Error(matches.length ? "DIRECT_REVIEW_AUTHORITY_DUPLICATE_SLUG" : `DIRECT_REVIEW_AUTHORITY_ENTRY_MISSING:${slug}`);
+    const entry = matches[0];
+    if (entry.path !== `/landing-page-builders/${slug}` || typeof entry.artifact !== "string" || typeof entry.release_receipt !== "string") throw new Error("DIRECT_REVIEW_AUTHORITY_ENTRY_INVALID");
+    let receiptPath: string;
+    let servedArtifactPath: string;
+    try {
+      receiptPath = safeCatalogueReceiptPath(directory, entry.release_receipt);
+      servedArtifactPath = safeCatalogueReceiptPath(directory, entry.artifact);
+    } catch { throw new Error("DIRECT_REVIEW_AUTHORITY_ENTRY_INVALID"); }
+    let receipt: { slug?: unknown; path?: unknown; artifacts?: { page?: { path?: unknown; sha256?: unknown } }; release?: { reviewed_commit?: unknown } };
+    let servedBytes: Buffer;
+    let servedArtifact: unknown;
+    try {
+      receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+      servedBytes = await readFile(servedArtifactPath);
+      servedArtifact = pageBlueprintSchema.parse(JSON.parse(servedBytes.toString("utf8")));
+    } catch { throw new Error("DIRECT_REVIEW_AUTHORITY_UNREADABLE"); }
+    if (receipt.slug !== slug || receipt.path !== entry.path || receipt.artifacts?.page?.path !== entry.artifact) throw new Error("DIRECT_REVIEW_AUTHORITY_RECEIPT_MISMATCH");
+    if (receipt.release?.reviewed_commit !== reviewedCommitSha) throw new Error("DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH");
+    const acceptedFingerprints = new Set([
+      createHash("sha256").update(servedBytes).digest("hex"),
+      createHash("sha256").update(servedBytes.toString("utf8").replace(/\r\n/g, "\n")).digest("hex"),
+      createHash("sha256").update(servedBytes.toString("utf8").replace(/\r\n/g, "\n").replace(/\n/g, "\r\n")).digest("hex"),
+    ]);
+    if (typeof receipt.artifacts.page.sha256 !== "string" || !acceptedFingerprints.has(receipt.artifacts.page.sha256)) throw new Error("DIRECT_REVIEW_AUTHORITY_RECEIPT_MISMATCH");
+    if (fingerprintEditorialArtifact(servedArtifact) !== fingerprintEditorialArtifact(approved)) throw new Error("DIRECT_REVIEW_AUTHORITY_ARTIFACT_MISMATCH");
+    return {
+      reviewedCommitSha,
+      retentionDependencies: await Promise.all([manifestPath, receiptPath, servedArtifactPath].map((file) => evidenceReference(repository, path.relative(repository, file).replaceAll("\\", "/")))),
+    };
   }
   if (format === "blog") {
     let approved: BlogPost;
@@ -359,7 +412,10 @@ export async function assertPublicationAuthorityBinding(repositoryRoot: string, 
     if (matches.length > 1) throw new Error("BLOG_AUTHORITY_DUPLICATE_SLUG");
     // Both sides are schema-parsed, so stringify comparison is key-order normalised.
     if (JSON.stringify(matches[0]) !== JSON.stringify(approved)) throw new Error("BLOG_AUTHORITY_ARTIFACT_MISMATCH");
-    return;
+    return { retentionDependencies: [
+      await evidenceReference(repository, artifactPath),
+      await evidenceReference(repository, "src/generated/blog-posts/posts.json"),
+    ] };
   }
   let approvedPage: VisibilityPageV1;
   try {
@@ -377,6 +433,11 @@ export async function assertPublicationAuthorityBinding(repositoryRoot: string, 
   const match = published.find((entry) => entry.page.path === approvedPage.path);
   if (!match) throw new Error(`VISIBILITY_AUTHORITY_ENTRY_MISSING:${approvedPage.path}`);
   if (JSON.stringify(match.page) !== JSON.stringify(approvedPage)) throw new Error("VISIBILITY_AUTHORITY_ARTIFACT_MISMATCH");
+  return { retentionDependencies: [
+    await evidenceReference(repository, artifactPath),
+    await evidenceReference(repository, "src/generated/visibility-pages/index.json"),
+    await evidenceReference(repository, "src/generated/visibility-pages/publications.json"),
+  ] };
 }
 
 function parseProductionChecks(value: unknown): FullProductionChecks | undefined {
@@ -634,7 +695,9 @@ async function assessImportReleaseImpl(input: {
     // the approved artifact on the merged checkout before anything deploys.
     const mergedPublicationPath = input.record.format === "direct-review" && input.slug ? `src/generated/landing-pages/${input.slug}.json` : (input.record.contentApproval?.artifactPath ?? input.artifactPath);
     try {
-      await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!);
+      await assertPublicationAuthorityBinding(input.repositoryRoot, input.record.format, mergedPublicationPath!, {
+        reviewedCommitSha: input.record.pendingRelease?.reviewedCommitSha,
+      });
       if (await requiresArticleHero(input.repositoryRoot, input.record)) {
         if (!input.record.heroImage || !input.record.contentApproval || input.record.format === "agent_review_required") throw new Error("ARTICLE_HERO_EVIDENCE_REQUIRED");
         await validateArticleHeroBinding(input.repositoryRoot, input.record.heroImage, {

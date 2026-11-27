@@ -65,13 +65,13 @@ async function releasingRecord(root: string): Promise<ExternalArticleImportV1> {
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), source);
   await mkdir(path.join(root, "src/generated/landing-pages/releases/example"), { recursive: true });
-  await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] }));
+  await writeFile(path.join(root, "src/generated/landing-pages/index.json"), JSON.stringify({ pages: [{ slug: "example", artifact: "example.json", path: "/landing-page-builders/example", release_receipt: "releases/example/release-receipt.json" }] }));
   let record = await createArticleImport(root, "article.md");
   fixtureImports.set(root, { ...record, format: "direct-review", artifactPath: "src/generated/landing-pages/example.json" });
   record = await approveFixture(root, { ...record, stage: "REFINING" });
   // The receipt binds the approved artefact fingerprint (LF-normalised, matching the loader).
   const artifactBytes = await readFile(path.join(root, "src/generated/landing-pages/example.json"));
-  await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: createHash("sha256").update(artifactBytes.toString("utf8").replace(/\r\n/g, "\n")).digest("hex") } } }));
+  await writeFile(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), JSON.stringify({ slug: "example", path: "/landing-page-builders/example", exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: createHash("sha256").update(artifactBytes.toString("utf8").replace(/\r\n/g, "\n")).digest("hex") } }, release: { reviewed_commit: "c".repeat(40) } }));
   record = await advanceImport(root, record, "editorial complete");
   record = await presentFixture(root, record);
   record = await advanceImport(root, record, "presentation complete");
@@ -1320,7 +1320,7 @@ test("release rebinds the affiliate receipt on the merged checkout before deploy
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("publication authority binding fails closed on blog mismatches and no-ops for other formats", async () => {
+test("publication authority binding fails closed on blog mismatches and unsupported formats", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "article-authority-binding-"));
   const post = await repoBlogPost();
   const slug = String(post.slug);
@@ -1328,8 +1328,7 @@ test("publication authority binding fails closed on blog mismatches and no-ops f
   try {
     await mkdir(path.join(root, "src/generated/blog-posts"), { recursive: true });
     await writeFile(path.join(root, artifactPath), JSON.stringify(post));
-    // Formats outside blog/visibility are bound elsewhere and stay no-ops.
-    await assertPublicationAuthorityBinding(root, "direct-review", undefined);
+    // Formats without a public catalogue remain no-ops.
     await assertPublicationAuthorityBinding(root, "decision-set", undefined);
     await assertPublicationAuthorityBinding(root, "agent_review_required", undefined);
     // Matching authority entry passes.
@@ -1348,6 +1347,41 @@ test("publication authority binding fails closed on blog mismatches and no-ops f
     await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", artifactPath), /BLOG_AUTHORITY_UNREADABLE/);
     await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", undefined), /PUBLICATION_AUTHORITY_ARTIFACT_MISSING/);
     await assert.rejects(() => assertPublicationAuthorityBinding(root, "blog", "../outside.json"), /PUBLICATION_AUTHORITY_ARTIFACT_MISSING/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("direct-review publication authority requires the manifest-selected artifact and reviewed commit", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-direct-authority-"));
+  const reviewedCommitSha = "c".repeat(40);
+  const artifact = structuredClone(samplePageBlueprint);
+  const slug = artifact.metadata.url_slug;
+  const directory = path.join(root, "src/generated/landing-pages");
+  const artifactPath = `src/generated/landing-pages/${slug}.json`;
+  const receiptPath = `releases/${slug}/release-receipt.json`;
+  try {
+    await mkdir(path.join(directory, "releases", slug), { recursive: true });
+    const artifactBytes = Buffer.from(JSON.stringify(artifact));
+    await writeFile(path.join(root, artifactPath), artifactBytes);
+    await assert.rejects(
+      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha }),
+      /DIRECT_REVIEW_AUTHORITY_UNREADABLE/,
+    );
+    await writeFile(path.join(directory, "index.json"), JSON.stringify({ pages: [{
+      slug, artifact: `${slug}.json`, path: `/landing-page-builders/${slug}`,
+      release_receipt: receiptPath,
+    }] }));
+    await writeFile(path.join(directory, receiptPath), JSON.stringify({
+      slug, path: `/landing-page-builders/${slug}`,
+      artifacts: { page: { path: `${slug}.json`, sha256: createHash("sha256").update(artifactBytes).digest("hex") } },
+      release: { reviewed_commit: reviewedCommitSha },
+    }));
+    const binding = await assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha });
+    assert.equal(binding?.reviewedCommitSha, reviewedCommitSha);
+    assert.equal(binding?.retentionDependencies.length, 3);
+    await assert.rejects(
+      () => assertPublicationAuthorityBinding(root, "direct-review", artifactPath, { reviewedCommitSha: "d".repeat(40) }),
+      /DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH/,
+    );
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
