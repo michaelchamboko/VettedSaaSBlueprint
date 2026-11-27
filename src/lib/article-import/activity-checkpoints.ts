@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { evidenceReference, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
-import { externalArticleImportSchema, importActivityReceiptSchema, type ExternalArticleImportV1 } from "./contracts";
+import { activityFindingReviewSubmissionSchema, externalArticleImportSchema, importActivityFindingReviewSchema, importActivityFindingSchema, importActivityReceiptSchema, type ExternalArticleImportV1 } from "./contracts";
 import { WORKFLOW_REVISION } from "./workflow-requirements";
 
 const activityStages = ["REFINING", "VALIDATING"] as const;
@@ -13,6 +13,13 @@ const activities: Record<ActivityStage, readonly string[]> = {
 };
 
 const criterionSchema = z.object({ id: z.string().min(1), revision: z.string().min(1) }).strict();
+const openFindingSchema = z.object({
+  findingId: z.string().regex(/^finding-[a-f0-9]{24}$/), criterion: criterionSchema,
+  revision: z.string().regex(/^[a-f0-9]{64}$/), observation: z.string().min(1), expectedCheck: z.string().min(1),
+  dependencyRefs: z.array(z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1),
+  originalEvidenceRef: z.object({ path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
+  status: z.enum(["open", "owner-referral"]),
+}).strip();
 export const activityResultSchema = z.object({
   idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/),
   sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
@@ -28,6 +35,8 @@ export const activityResultSchema = z.object({
     outcome: z.enum(["accepted", "rejected", "unverified", "not-applicable"]),
     observation: z.string().min(1).optional(),
     applicabilityReason: z.string().min(1).optional(),
+    openFindings: z.array(openFindingSchema).optional(),
+    findingReviews: z.array(activityFindingReviewSubmissionSchema).optional(),
   }).strict().superRefine((value, context) => {
     if (["accepted", "rejected"].includes(value.outcome) && !value.observation) context.addIssue({ code: "custom", path: ["observation"], message: "Accepted and rejected activity reviews require an observation." });
     if (value.outcome === "not-applicable" && !value.applicabilityReason) context.addIssue({ code: "custom", path: ["applicabilityReason"], message: "Inapplicability requires a reason." });
@@ -40,6 +49,7 @@ export type ActivityBinding = {
   inputFingerprint: string;
   criteria: Array<{ id: string; revision: string }>;
   dependencyRefs: EvidenceRef[];
+  openFindings?: Array<z.infer<typeof openFindingSchema>>;
 };
 
 function digest(value: unknown) {
@@ -76,6 +86,8 @@ export async function nextArticleActivity(root: string, record: ExternalArticleI
   if (!activityStages.includes(record.stage as ActivityStage)) return undefined;
   const stage = record.stage as ActivityStage;
   for (const binding of await bindings(root, record, stage, renderingRef)) {
+    const openFindings = (record.activityFindings ?? []).filter((finding) => finding.stage === stage && finding.activityId === binding.id && finding.status !== "resolved");
+    if (openFindings.length > 0) return { ...binding, openFindings: openFindings.map((finding) => openFindingSchema.parse(finding)) };
     const candidates = (record.activityReceipts ?? []).filter((receipt) => receipt.stage === stage && receipt.activityId === binding.id && ["accepted", "not-applicable"].includes(receipt.outcome) && receipt.inputFingerprint === binding.inputFingerprint);
     let accepted = false;
     for (const receipt of candidates) {
@@ -106,9 +118,60 @@ export async function recordArticleActivity(root: string, record: ExternalArticl
     applicabilityReason: submitted.applicabilityReason,
     completedAt: new Date().toISOString(),
   });
+  const findingId = `finding-${digest({ stage: receipt.stage, activityId: receipt.activityId, criterion: receipt.criteria[0], revision: receipt.inputFingerprint, observation: receipt.observation }).slice(0, 24)}`;
+  const existingFindings = record.activityFindings ?? [];
+  const activityFindings = receipt.outcome !== "rejected" || existingFindings.some((finding) => finding.findingId === findingId)
+    ? existingFindings
+    : [...existingFindings, importActivityFindingSchema.parse({
+      schemaVersion: "ImportActivityFindingV1",
+      findingId,
+      stage: receipt.stage,
+      activityId: receipt.activityId,
+      criterion: receipt.criteria[0],
+      revision: receipt.inputFingerprint,
+      observation: receipt.observation,
+      expectedCheck: `Recheck ${receipt.criteria[0].id} at ${receipt.criteria[0].revision} against the changed activity inputs.`,
+      dependencyRefs: receipt.dependencyRefs,
+      originalEvidenceRef: receipt.resultRef,
+      reviewer: receipt.reviewer,
+      executionId: receipt.executionId,
+      status: "open",
+      openedAt: receipt.completedAt,
+    })];
+  const resultRef = receipt.resultRef;
+  const findingReviews = [...(record.activityFindingReviews ?? [])];
+  const reviewedFindings = [...activityFindings];
+  for (const submittedReview of submitted.findingReviews ?? []) {
+    const review = activityFindingReviewSubmissionSchema.parse(submittedReview);
+    const findingIndex = reviewedFindings.findIndex((finding) => finding.findingId === review.findingId && finding.stage === receipt.stage && finding.activityId === receipt.activityId && finding.status !== "resolved");
+    if (findingIndex < 0) throw new Error("ACTIVITY_FINDING_NOT_OPEN");
+    const finding = reviewedFindings[findingIndex];
+    if (review.expectedCheck !== finding.expectedCheck) throw new Error("ACTIVITY_FINDING_EXPECTED_CHECK_MISMATCH");
+    if (receipt.reviewer === finding.reviewer || receipt.executionId === finding.executionId) throw new Error("ACTIVITY_FINDING_REVIEW_NOT_INDEPENDENT");
+    await verifyEvidenceRef(root, finding.originalEvidenceRef);
+    for (const ref of [...review.evidenceRefs, ...(review.changedInputRefs ?? []), ...(review.regressionChecks ?? []).flatMap((check) => check.evidenceRefs)]) await verifyEvidenceRef(root, ref);
+    if (review.changedInputRefs) {
+      for (const changed of review.changedInputRefs) {
+        const before = finding.dependencyRefs.find((ref) => ref.path === changed.path);
+        const current = expected.dependencyRefs.find((ref) => ref.path === changed.path);
+        if (!before || !current || current.sha256 !== changed.sha256 || before.sha256 === current.sha256) throw new Error("ACTIVITY_FINDING_CHANGED_INPUT_MISMATCH");
+      }
+    }
+    const conclusive = ["verified-repair", "appropriate-removal", "evidenced-dismissal"].includes(review.disposition);
+    if (conclusive && !["accepted", "not-applicable"].includes(receipt.outcome)) throw new Error("ACTIVITY_FINDING_REVIEW_NOT_APPROVED");
+    if (review.disposition === "appropriate-removal" && receipt.outcome !== "not-applicable") throw new Error("ACTIVITY_FINDING_REMOVAL_NOT_APPLICABLE");
+    if (["verified-repair", "evidenced-dismissal"].includes(review.disposition) && receipt.outcome !== "accepted") throw new Error("ACTIVITY_FINDING_RESOLUTION_NOT_ACCEPTED");
+    if (conclusive && review.regressionChecks?.some((check) => check.outcome !== "passed")) throw new Error("ACTIVITY_FINDING_REGRESSION_NOT_PASSED");
+    const reviewedAt = new Date().toISOString();
+    const reviewId = `finding-review-${digest({ findingId: finding.findingId, reviewer: receipt.reviewer, executionId: receipt.executionId, resultRef }).slice(0, 24)}`;
+    findingReviews.push(importActivityFindingReviewSchema.parse({ schemaVersion: "ImportActivityFindingReviewV1", reviewId, ...review, inputFingerprint: receipt.inputFingerprint, resultRef, reviewer: receipt.reviewer, executionId: receipt.executionId, reviewedAt }));
+    reviewedFindings[findingIndex] = importActivityFindingSchema.parse({ ...finding, status: conclusive ? "resolved" : review.disposition === "owner-referral" ? "owner-referral" : "open", ...(conclusive && { resolutionReviewId: reviewId, resolvedAt: reviewedAt }) });
+  }
   return externalArticleImportSchema.parse({
     ...record,
     activityReceipts: [...(record.activityReceipts ?? []), receipt],
+    activityFindings: reviewedFindings,
+    activityFindingReviews: findingReviews,
     continuation: undefined,
     nextAction: ["accepted", "not-applicable"].includes(receipt.outcome) ? `Resume ${receipt.stage.toLowerCase()} at the earliest unfinished activity.` : `Complete ${receipt.activityId} again; the attributable ${receipt.outcome} review remains retained but does not approve the activity.`,
   });
