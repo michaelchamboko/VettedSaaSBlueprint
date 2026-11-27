@@ -15,7 +15,7 @@ import { researchRegistryDecisionSchema, researchRegistryPlanSchema, researchReg
 import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
-import { registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { reconcileActivityFindingEvidence, registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { activityAttempt, activityResultSchema, nextArticleActivity, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
 import { verifyGateHandoffForDispatch } from "./gate-handoff";
 
@@ -72,12 +72,14 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       ? gateHandoffVerification.verifiedInputs.find((input) => input.name === "captured-source")?.reference.path
       : undefined;
     const workerSourcePath = sourcePath ?? record.sourceRef?.path ?? `.automation/article-imports/${record.importId}.source.md`;
-    if (options?.reviewEvidenceRegistry && stage === "REFINING") {
+    if (options?.reviewEvidenceRegistry && record.activityFindings?.length) record = await reconcileActivityFindingEvidence(root, options.reviewEvidenceRegistry, record);
+    const hasOpenActivityFinding = record.activityFindings?.some((finding) => finding.stage === stage && finding.status !== "resolved") ?? false;
+    if (options?.reviewEvidenceRegistry && stage === "REFINING" && !hasOpenActivityFinding) {
       const reuse = await reuseEditorialReviewEvidence(root, options.reviewEvidenceRegistry, record);
       record = { ...(reuse.record ?? record), reviewEvidence: { ...record.reviewEvidence, editorial: reuse.status } };
       if (reuse.record) return advanceImport(root, record, "Reused registered editorial judgment for the unchanged examined revision.");
     }
-    if (options?.reviewEvidenceRegistry && stage === "VALIDATING") {
+    if (options?.reviewEvidenceRegistry && stage === "VALIDATING" && !hasOpenActivityFinding) {
       const reuse = await reuseBrowserReviewEvidence(root, options.reviewEvidenceRegistry, record);
       record = { ...(reuse.record ?? record), reviewEvidence: { ...record.reviewEvidence, browser: reuse.status } };
       if (reuse.record) return advanceImport(root, record, "Reused registered browser observations for the unchanged examined revision.");
@@ -274,7 +276,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
     if (activity) {
       const activityResult = activityResultSchema.parse(raw);
       if (activityResult.idempotencyKey !== context.idempotencyKey) throw new Error("ACTIVITY_RESULT_BINDING_MISMATCH");
-      return recordArticleActivity(root, record, resultPath, activity, activityResult);
+      return recordArticleActivity(root, record, resultPath, activity, activityResult, options?.reviewEvidenceRegistry);
     }
     const result = resultSchema.parse(raw);
     if (result.idempotencyKey !== context.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work.stage !== stage) throw new Error("STAGE_RESULT_BINDING_MISMATCH");
