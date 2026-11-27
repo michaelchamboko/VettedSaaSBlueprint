@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-quartz",
+  "reviewerId": "/root/quartz_review",
+  "reviewedRevision": "1ce0442",
+  "observedEvidence": "One Tab press moved focus from 'Read limitations' to the horizontal region. An orange outline marked the focused region. ArrowRight kept focus there and moved its scroll position from 0 to 298 pixels, revealing the full second card, 'A browser may already be sufficient.'",
+  "verdict": "meets",
+  "explanation": "A keyboard user can reach the region, see where focus is, and read the previously hidden limitation. The recorded 298-pixel movement covers the full overflow of the 656-pixel content inside the 358-pixel region.",
+  "rawResponse": "Observed evidence: One Tab press moved focus from 'Read limitations' to the horizontal region. An orange outline marked the focused region. ArrowRight kept focus there and moved its scroll position from 0 to 298 pixels, revealing the full second card, 'A browser may already be sufficient.' Verdict meets. Explanation: A keyboard user can reach the region, see where focus is, and read the previously hidden limitation. The recorded 298-pixel movement covers the full overflow of the 656-pixel content inside the 358-pixel region."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-meadow",
+  "reviewerId": "/root/meadow_review",
+  "reviewedRevision": "1ce0442",
+  "observedEvidence": "Tab moved the visible focus outline from 'Read limitations' directly to 'Continue to common objections,' skipping the horizontal region. After ArrowRight, focus stayed on the link and scrollLeft remained 0. The region showed 358 pixels of its 656-pixel content.",
+  "verdict": "does_not_meet",
+  "explanation": "The region never received keyboard focus. ArrowRight left the second limitation's text outside the visible area, so a keyboard user could not read it through the demonstrated interaction.",
+  "rawResponse": "Observed evidence: Tab moved the visible focus outline from 'Read limitations' directly to 'Continue to common objections,' skipping the horizontal region. After ArrowRight, focus stayed on the link and scrollLeft remained 0. The region showed 358 pixels of its 656-pixel content. Verdict does_not_meet. Explanation: The region never received keyboard focus. ArrowRight left the second limitation's text outside the visible area, so a keyboard user could not read it through the demonstrated interaction."
+}

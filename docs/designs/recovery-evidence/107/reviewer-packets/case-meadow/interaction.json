@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-meadow",
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "capturedAt": "2026-11-27T08:19:44.802Z",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "158.0.8127.38"
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "fixture": "fixture.html",
+  "steps": [
+    {
+      "action": "Focus the control before the region",
+      "observation": {
+        "activeElement": "before",
+        "scrollLeft": 0,
+        "clientWidth": 358,
+        "scrollWidth": 656
+      }
+    },
+    {
+      "action": "Press Tab once",
+      "observation": {
+        "activeElement": "after",
+        "scrollLeft": 0,
+        "clientWidth": 358,
+        "scrollWidth": 656
+      }
+    },
+    {
+      "action": "Press ArrowRight",
+      "observation": {
+        "activeElement": "after",
+        "scrollLeft": 0,
+        "clientWidth": 358,
+        "scrollWidth": 656
+      }
+    }
+  ],
+  "before": {
+    "activeElement": "before",
+    "scrollLeft": 0,
+    "clientWidth": 358,
+    "scrollWidth": 656
+  },
+  "after": {
+    "activeElement": "after",
+    "scrollLeft": 0,
+    "clientWidth": 358,
+    "scrollWidth": 656
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-orbit",
+  "reviewerId": "/root/orbit_review",
+  "reviewedRevision": "1ce0442",
+  "observedEvidence": "The CTA reads 'Review WebCatalog.' Its supporting text reads 'Use one of your own workflows to decide.' The page displays an affiliate disclosure above the CTA. Clicking opens https://vendor.example/products/webcatalog in the current tab and creates no purchase or account commitment.",
+  "verdict": "does_not_meet",
+  "explanation": "The supporting text gives visitors a reason to click: they can assess whether WebCatalog fits their workflow. 'Review WebCatalog' could also describe an internal editorial review. Neither the label nor the supporting text tells visitors they will leave for the provider's product page or that they can visit without buying or creating an account. The affiliate disclosure explains the commercial relationship.",
+  "rawResponse": "Observed evidence. The CTA reads 'Review WebCatalog.' Its supporting text reads 'Use one of your own workflows to decide.' The page displays an affiliate disclosure above the CTA. Clicking opens https://vendor.example/products/webcatalog in the current tab and creates no purchase or account commitment. Verdict does_not_meet. Explanation. The supporting text gives visitors a reason to click: they can assess whether WebCatalog fits their workflow. 'Review WebCatalog' could also describe an internal editorial review. Neither the label nor the supporting text tells visitors they will leave for the provider's product page or that they can visit without buying or creating an account. The affiliate disclosure explains the commercial relationship."
+}

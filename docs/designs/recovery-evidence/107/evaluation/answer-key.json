@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "warning": "Withhold this file and all labels below from reviewers until all six independent results are frozen.",
+  "cases": [
+    {
+      "caseId": "case-lantern",
+      "responsibility": "cta-destination",
+      "expectedVerdict": "meets",
+      "expectedObservation": "The label explicitly says the click opens WebCatalog's external vendor site and the evidence identifies an affiliate destination.",
+      "explanationRequirement": "The reviewer must connect the label and destination, not merely praise clarity."
+    },
+    {
+      "caseId": "case-orbit",
+      "responsibility": "cta-destination",
+      "expectedVerdict": "does_not_meet",
+      "expectedObservation": "The label 'Review WebCatalog' suggests an on-site review while the click opens an external affiliate vendor page.",
+      "explanationRequirement": "The reviewer must identify the destination mismatch or missing external-visit disclosure."
+    },
+    {
+      "caseId": "case-river",
+      "responsibility": "rewrite-fidelity",
+      "expectedVerdict": "meets",
+      "expectedObservation": "The rewrite preserves the question about which account and project should be open in the current working context.",
+      "explanationRequirement": "The reviewer must compare meaning, not grammar alone."
+    },
+    {
+      "caseId": "case-summit",
+      "responsibility": "rewrite-fidelity",
+      "expectedVerdict": "does_not_meet",
+      "expectedObservation": "The rewrite changes current account/project context into a question of priority or attention.",
+      "explanationRequirement": "The reviewer must name the semantic shift, not merely say the wording differs."
+    },
+    {
+      "caseId": "case-meadow",
+      "responsibility": "keyboard-scroll",
+      "expectedVerdict": "does_not_meet",
+      "expectedObservation": "Tab skips the internally scrolling region, focus lands after it, ArrowRight leaves scrollLeft at 0, and the second limitation remains outside the visible region.",
+      "explanationRequirement": "The reviewer must use the rendered keyboard evidence rather than page-wide overflow or visual appearance."
+    },
+    {
+      "caseId": "case-quartz",
+      "responsibility": "keyboard-scroll",
+      "expectedVerdict": "meets",
+      "expectedObservation": "Tab focuses the named scroll region and ArrowRight moves it from scrollLeft 0 to a positive value, exposing the second limitation.",
+      "explanationRequirement": "The reviewer must mention both keyboard focus and access to the offscreen content."
+    }
+  ]
+}
