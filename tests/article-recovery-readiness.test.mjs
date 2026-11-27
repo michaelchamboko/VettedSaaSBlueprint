@@ -44,4 +44,3 @@ test("strict verifier rejects a tampered readiness disposition", async () => {
     await rm(directory, { recursive: true, force: true });
   }
 });
-

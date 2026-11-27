@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -9,6 +8,8 @@ const baselineTraceabilityPath = "docs/designs/recovery-evidence/123/historical/
 const findingInventoryPath = "docs/designs/recovery-evidence/123/historical/webcatalog-finding-traceability-108.md";
 const baselineTraceabilityBlob = "4f970bdb1b227d415b8be8cb3782d85c54914dfa";
 const findingInventoryBlob = "c8b8a3d69b5496a685e3c8c49f256e6a293e2a5d";
+const testedProductRevision = "29bf7f229849bce0029a07807ce140dc07ccf033";
+const testedProductTree = "c175f3afd8c707c85e9db2efc65a23dcac5b4077";
 
 const sourceLegend = {
   Hero: ["Vetted SaaS Blueprint - Design System and Experience Standards", "9.1 Hero as a complete pitch", "D04-S-039819730d12"],
@@ -63,10 +64,6 @@ function interviewPurpose(question) {
   return `Preserve the accepted issue-96 decision boundary for ${question}.`;
 }
 
-function git(...args) {
-  return execFileSync("git", args, { encoding: "utf8" }).trim();
-}
-
 function markdownRows(markdown) {
   return markdown.split(/\r?\n/).filter((line) => /^\|\s*\d+\s*\|/.test(line)).map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
 }
@@ -99,8 +96,8 @@ function common(kind, id, source, purpose, format, owner, observation, dispositi
     fingerprint: {
       historicalRevision: baselineRevision,
       historicalTraceabilityBlob: baselineTraceabilityBlob,
-      testedBaseRevision: git("rev-parse", "HEAD"),
-      testedBaseTree: git("rev-parse", "HEAD^{tree}"),
+      testedBaseRevision: testedProductRevision,
+      testedBaseTree: testedProductTree,
     },
     reviewer: { historical: "issue-109-fresh-context-reconciler", current: "issue-123-dedicated-fresh-context-agent" },
     disposition,
@@ -156,7 +153,9 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
         sourcePurposeFormat,
         owner,
         { historical: observed, currentCoverage: laterEvidence, freshIssue123: "pending exact-head synthetic observation" },
-        entry.finding >= 36 ? "later-directive-current-proof-required" : "historical-unknown-fresh-proof-required",
+        entry.finding === 36 || entry.finding === 38
+          ? "later-directive-current-proof-required"
+          : "historical-unknown-fresh-proof-required",
       ),
       title,
       expected: ownerExpected,
@@ -297,8 +296,8 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
       planning: { document: "planning.md", heading: "Article recovery remediation (ARTICLE-RECOVERY-1127)", stableId: "ARTICLE-RECOVERY-1127" },
       ticket: { repository: "michaelchamboko/VettedSaaSBlueprint", issue: 123 },
       baselineRevision,
-      testedBaseRevision: git("rev-parse", "HEAD"),
-      testedBaseTree: git("rev-parse", "HEAD^{tree}"),
+      testedBaseRevision: testedProductRevision,
+      testedBaseTree: testedProductTree,
     },
     stories,
     testingDecisions,
@@ -327,9 +326,9 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
     browserEvidence: {
       status: browserObservation ? "independent-exact-artifact-capture-retained" : "missing-exact-artifact-controller-bound-capture",
       observedRevision: browserObservation?.revision,
-      promotedToRevision: git("rev-parse", "HEAD"),
+      promotedToRevision: testedProductRevision,
       promotionBasis: "The 1625b26..29bf7f2 delta changes historical rendering-input replay and synthetic release-test reviewed-tree injection. The served route, components, styles, assets and frozen target/control bytes are unchanged.",
-      reviewer: "independent browser observer",
+      reviewer: "/root/browser_observer (independent)",
       sourceBindings: browserObservation ? { target: browserObservation.target, control: browserObservation.control } : undefined,
       requiredViewports: ["390x844", "320x800", "1440x900"],
       requiredChecks: ["first-screen-cta", "keyboard-focus-and-scroll", "normal-motion", "reduced-motion", "imagery", "applicable-content"],
@@ -351,4 +350,3 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const ledger = await buildReadinessLedger();
   process.stdout.write(`${ledger.digest}\n`);
 }
-

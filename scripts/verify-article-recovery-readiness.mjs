@@ -112,7 +112,12 @@ export async function verifyReadinessLedger({ root = process.cwd(), ledgerPath =
   const q41Rows = ledger.interviewQuestions.filter((row) => ["Original Q41", "Q41", "Q41a", "Q41b", "Q41c"].includes(row.id));
   assert.equal(new Set(q41Rows.map((row) => row.purpose)).size, 5, "Q41 purposes must remain distinct");
   assert.equal(new Set(ledger.testingDecisions.map((row) => row.purpose)).size, 11, "testing-decision purposes must remain specific");
-  assert.deepEqual(ledger.findings.filter((row) => row.id >= 36).map((row) => row.disposition), Array(3).fill("later-directive-current-proof-required"));
+  assert.deepEqual(
+    ledger.findings.filter((row) => row.disposition === "later-directive-current-proof-required").map((row) => row.id),
+    [36, 38],
+    "only findings 36 and 38 are later owner directives",
+  );
+  assert.equal(ledger.findings.find((row) => row.id === 37)?.disposition, "historical-unknown-fresh-proof-required");
   for (const id of [36, 38]) {
     const source = ledger.findings.find((row) => row.id === id)?.source;
     assert.equal(source?.heading, "Owner-added P1 criteria");
@@ -126,6 +131,11 @@ export async function verifyReadinessLedger({ root = process.cwd(), ledgerPath =
   const independentRoot = path.join(root, "build-pack/repairs/article-recovery-123/browser/independent");
   const summaryBytes = await readFile(path.join(independentRoot, "independent-summary.json"));
   const summary = JSON.parse(summaryBytes);
+  const observerProvenance = JSON.parse(await readFile(path.join(root, "build-pack/repairs/article-recovery-123/browser/observer-provenance.json"), "utf8"));
+  assert.equal(observerProvenance.summarySha256, sha256(summaryBytes));
+  assert.equal(observerProvenance.observedRevision, summary.revision);
+  assert.equal(observerProvenance.capturedAt, summary.date);
+  assert.equal(observerProvenance.browser, summary.browser);
   const controllerInput = JSON.parse(await readFile(path.join(root, "build-pack/repairs/article-recovery-123/browser/controller-review-input.json"), "utf8"));
   assert.equal(sha256(summaryBytes), controllerInput.target.browserEvidenceSha256);
   assert.equal(controllerInput.target.browserEvidenceSha256, controllerInput.control.browserEvidenceSha256);
@@ -146,7 +156,7 @@ export async function verifyReadinessLedger({ root = process.cwd(), ledgerPath =
     assert.equal(sha256(bytes), screen.sha256, `FAQ screenshot ${screen.filename}`);
   }
   const viewports = [...new Set(summary.runs.map((entry) => `${entry.width}x${entry.height}`))].sort();
-  const browser = { viewports, status: ledger.browserEvidence.status, reviewer: summary.reviewer };
+  const browser = { viewports, status: ledger.browserEvidence.status, reviewer: observerProvenance.observerTask };
   assert.equal(summary.revision, ledger.browserEvidence.observedRevision);
   assert.equal(ledger.browserEvidence.promotedToRevision, ledger.authority.testedBaseRevision);
   const promotion = JSON.parse(await readFile(path.join(root, "build-pack/repairs/article-recovery-123/browser/browser-promotion.json"), "utf8"));
@@ -200,4 +210,3 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const ledgerPath = ledgerFlag >= 0 ? path.resolve(process.argv[ledgerFlag + 1] ?? "") : undefined;
   process.stdout.write(`${JSON.stringify(await verifyReadinessLedger(ledgerPath ? { ledgerPath } : undefined), null, 2)}\n`);
 }
-

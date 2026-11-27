@@ -14,6 +14,7 @@ The strict ledger contains 38 findings, 28 stories, 11 testing decisions and 52 
 - The target has no decoded image, FAQ, internal scroll region or purposeful motion. Those absences are observations, not controller catches.
 - The frozen synthetic control decodes a 1600x900 diagram, shows normal motion with 2, 3 and 2 distinct sampled states at 390, 320 and desktop, stays static under reduced motion with unchanged text, and exposes a keyboard-operable native FAQ indicator. The diagram has deterministic fixture provenance only. It is not ImageGen evidence.
 - Content, renderer, style, asset and rule mutations were exercised one at a time through the public catalogue test. The unaffected control remained reusable for each scoped change.
+- That mutation test has a separate positive synthetic control, `synthetic-direct-control`. Its publication authority binding and normal public route stayed valid for every target-only mutation. This proves affected-scope and approval-reuse behavior only. It is not the malformed browser control, an editorial-depth judgment or an accepted article-activity review.
 - Final-head controller probes pass candidate rebind, handoff byte recheck, finding preservation, changed-input rerun, independent resolution, rollback reconciliation, fail-closed rollback verification and productive-stage resume.
 - The six genuine blinded judgments remain 6/6 only for issue 122's frozen packets, examined revision `cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e` and recorded reviewer configuration. Issue 123 did not run six new blind judgments.
 

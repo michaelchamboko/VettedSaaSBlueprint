@@ -4982,7 +4982,7 @@
         "historical": "issue-109-fresh-context-reconciler",
         "current": "issue-123-dedicated-fresh-context-agent"
       },
-      "disposition": "later-directive-current-proof-required",
+      "disposition": "historical-unknown-fresh-proof-required",
       "title": "No visible purposeful motion",
       "expected": "VALIDATING. Expected now: sampled change in a declared purposeful property under normal motion; reduced mode removes/simplifies non-essential movement while preserving meaning. A declaration alone does not pass.",
       "historicalAttribution": "Current observed absence **medium-high**; release-era absence **uncertain**; historical cause **low**.",
@@ -5114,7 +5114,7 @@
     "observedRevision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99",
     "promotedToRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
     "promotionBasis": "The 1625b26..29bf7f2 delta changes historical rendering-input replay and synthetic release-test reviewed-tree injection. The served route, components, styles, assets and frozen target/control bytes are unchanged.",
-    "reviewer": "independent browser observer",
+    "reviewer": "/root/browser_observer (independent)",
     "sourceBindings": {
       "target": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
       "control": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4"
@@ -5138,5 +5138,5 @@
     "ImageGen original PNG, deterministic derivative, provenance, independent no-people/brand judgment, integration, and truthful alternative text remain unproven for the issue-123 target.",
     "Only finding 36 received a finding-specific normal-controller rejection. Browser observations for the other findings do not by themselves prove a supervisor catch."
   ],
-  "digest": "4637be8b08d35b6514a6e3c07e6c2975bfe9080182192fc68d51b4a22af8c306"
+  "digest": "ae043fb0679252eeacd5391f57eb662432c1c89ef8e910cc1dbc8a0dff590b64"
 }
