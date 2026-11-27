@@ -202,6 +202,36 @@ test("successful release records and verifies the full production receipt", asyn
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("verified publication and later IMPROVE preserve the original finding history", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "article-release-finding-history-"));
+  try {
+    const base = await releasingRecord(root);
+    const evidenceRef = base.evidenceRefs!.editorial!;
+    const openedAt = new Date().toISOString();
+    const findingId = `finding-${"a".repeat(24)}`;
+    const reviewId = `finding-review-${"b".repeat(24)}`;
+    const expectedCheck = "Recheck refining.independent-review against the changed article revision.";
+    const activityFindings = [{ schemaVersion: "ImportActivityFindingV1" as const, findingId, stage: "REFINING" as const, activityId: "independent-review", criterion: { id: "refining.independent-review", revision: "article-workflow:2" }, revision: "c".repeat(64), observation: "The original review found a synthetic defect.", expectedCheck, dependencyRefs: [evidenceRef], originalEvidenceRef: evidenceRef, reviewer: "original-reviewer", executionId: "original-execution", status: "resolved" as const, resolutionReviewId: reviewId, resolvedAt: openedAt, openedAt }];
+    const activityFindingReviews = [{ schemaVersion: "ImportActivityFindingReviewV1" as const, reviewId, findingId, disposition: "evidenced-dismissal" as const, expectedCheck, observation: "Independent evidence disproved the original observation.", evidenceRefs: [evidenceRef], regressionChecks: [{ criterion: { id: "refining.meaning-and-evidence", revision: "article-workflow:2" }, observation: "The affected evidence criterion still passes.", outcome: "passed" as const, evidenceRefs: [evidenceRef] }], inputFingerprint: "d".repeat(64), resultRef: evidenceRef, reviewer: "independent-reviewer", executionId: "independent-execution", reviewedAt: openedAt }];
+    const record = await persistFixture(root, { ...base, activityFindings, activityFindingReviews });
+
+    const result = await assessImportRelease({ repositoryRoot: root, record, changedFiles: releaseFiles, execute: true, artifactPath: "src/generated/landing-pages/example.json", slug: "example", operations: operations(root) });
+    assert.equal(result.status, "LIVE", JSON.stringify(result));
+    const live = await loadImport(root, record.importId);
+    const originalTerminalRef = live.terminalRef;
+    const originalRelease = live.release;
+    assert.deepEqual(live.activityFindings, activityFindings);
+    assert.deepEqual(live.activityFindingReviews, activityFindingReviews);
+
+    const improved = await executePendingImport(root, live.importId, async () => { throw new Error("stage executor must not run for LIVE IMPROVE"); }, { improveExecutor: async ({ record: published, assignment }) => ({ ...published, improve: { ...assignment, phase: "COMPLETE", completedAt: new Date().toISOString() } }) });
+    assert.equal(improved.improve?.phase, "COMPLETE");
+    assert.deepEqual(improved.terminalRef, originalTerminalRef);
+    assert.deepEqual(improved.release, originalRelease);
+    assert.deepEqual(improved.activityFindings, activityFindings);
+    assert.deepEqual(improved.activityFindingReviews, activityFindingReviews);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("direct-review projection binding skips the identical path and rejects an altered projection", async () => {
   const parent = path.join(process.cwd(), ".scratch");
   await mkdir(parent, { recursive: true });

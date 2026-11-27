@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-lantern",
+  "reviewerId": "/root/ticket122/r122_lantern",
+  "route": "native-codex-subagent",
+  "genuineIndependentJudgment": true,
+  "reviewedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "observedEvidence": "The label reads 'Visit WebCatalog's vendor site.' The supporting text reads 'Compare current plans and product details before deciding.' The link opens https://vendor.example/products/webcatalog in the current tab. It creates no purchase or account commitment.",
+  "verdict": "meets",
+  "explanation": "'Visit' names the action, and 'vendor site' tells the visitor they will leave for an external page. The destination matches that promise. The supporting text explains what the visitor can compare and makes clear that the decision comes after the click.",
+  "rawResponse": "Observed evidence: The label reads “Visit WebCatalog's vendor site.” The supporting text reads “Compare current plans and product details before deciding.” The link opens `https://vendor.example/products/webcatalog` in the current tab. It creates no purchase or account commitment.\n\nVerdict: meets\n\nExplanation: “Visit” names the action, and “vendor site” tells the visitor they will leave for an external page. The destination matches that promise. The supporting text explains what the visitor can compare and makes clear that the decision comes after the click."
+}

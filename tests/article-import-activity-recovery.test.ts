@@ -52,6 +52,27 @@ async function acceptCurrentActivity(root: string, record: Awaited<ReturnType<ty
   return { packet, record: await executePendingImport(root, record.importId, createSupervisedImportExecutor(root)) };
 }
 
+async function submitFindingReview(root: string, record: Awaited<ReturnType<typeof loadImport>>, findingReview: Record<string, unknown>, outcome: "accepted" | "unverified" | "not-applicable" = "accepted") {
+  assert.equal(record.continuation?.kind, "work");
+  if (record.continuation?.kind !== "work") throw new Error("Expected finding-bound activity work.");
+  const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
+  await writeJsonAtomically(path.join(root, record.continuation.resultPath), {
+    idempotencyKey: record.continuation.idempotencyKey,
+    sourceFingerprint: record.sourceFingerprint,
+    summary: `Synthetic ${outcome} independent finding review.`,
+    activity: {
+      ...packet.activity,
+      reviewer: "independent-reviewer",
+      executionId: `independent-${packet.activity.id}-${Date.now()}`,
+      outcome,
+      ...(outcome === "accepted" && { observation: "The independent review checked the original defect and affected regressions." }),
+      ...(outcome === "not-applicable" && { applicabilityReason: "The independent review verified that the non-required capability was appropriately removed." }),
+      findingReviews: [findingReview],
+    },
+  });
+  return executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+}
+
 async function completeHeroHandoff(root: string, record: Awaited<ReturnType<typeof loadImport>>) {
   if (record.continuation?.kind !== "work") throw new Error("Missing supervised hero handoff.");
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
@@ -170,7 +191,7 @@ test("a changed input reruns affected work while independent accepted activities
   }
 });
 
-test("rejection, missing observation, and justified inapplicability remain attributable completed review work", async () => {
+test("rejection, missing observation, and justified inapplicability remain attributable without erasing an open finding", async () => {
   const { root, record } = await refiningFixture();
   try {
     let current = record;
@@ -184,8 +205,9 @@ test("rejection, missing observation, and justified inapplicability remain attri
     assert.equal(current.activityReceipts?.[0].observation, "The bound criterion has an attributable defect.");
     assert.equal(current.activityReceipts?.[1].observation, undefined);
     assert.match(current.activityReceipts?.[2].applicabilityReason ?? "", /does not apply/);
+    assert.equal(current.activityFindings?.[0].status, "open");
     current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
-    assert.equal(current.continuation?.activityId, "meaning-and-evidence");
+    assert.equal(current.continuation?.activityId, "purpose-and-structure");
     if (current.continuation?.kind !== "work") throw new Error("Expected another bound activity attempt.");
     const packet = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
     await writeJsonAtomically(path.join(root, current.continuation.resultPath), {
@@ -198,6 +220,155 @@ test("rejection, missing observation, and justified inapplicability remain attri
     assert.equal(invalid.stage, "REFINING");
     assert.equal(invalid.continuation?.kind, "repair");
     assert.equal(invalid.activityReceipts?.length, 3);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a replacement review cannot omit an earlier rejected finding", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    let current = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    current = (await acceptCurrentActivity(root, current, "rejected")).record;
+
+    assert.equal(current.activityFindings?.length, 1);
+    assert.equal(current.activityFindings?.[0].status, "open");
+    assert.equal(current.activityFindings?.[0].activityId, "purpose-and-structure");
+    assert.equal(current.activityFindings?.[0].observation, "The bound criterion has an attributable defect.");
+
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.continuation?.activityId, "purpose-and-structure");
+    if (current.continuation?.kind !== "work") throw new Error("Expected finding-bound repair work.");
+    const repairPacket = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+    assert.equal(repairPacket.activity.openFindings.length, 1);
+    assert.equal(repairPacket.activity.openFindings[0].findingId, current.activityFindings?.[0].findingId);
+    assert.match(repairPacket.instructions, /expected check/i);
+
+    current = (await acceptCurrentActivity(root, current, "accepted")).record;
+    assert.equal(current.activityFindings?.[0].status, "open");
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.continuation?.activityId, "purpose-and-structure");
+    if (current.continuation?.kind !== "work") throw new Error("Expected finding-bound repair work.");
+    const barePacket = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+    await writeJsonAtomically(path.join(root, current.continuation.resultPath), {
+      idempotencyKey: current.continuation.idempotencyKey,
+      sourceFingerprint: current.sourceFingerprint,
+      summary: "Bare resolved claim without finding evidence.",
+      activity: { ...barePacket.activity, reviewer: "replacement-reviewer", executionId: "bare-resolved-claim", outcome: "accepted", observation: "Resolved." },
+    });
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.activityFindings?.[0].status, "open");
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.continuation?.activityId, "purpose-and-structure");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an independent review closes a finding only after a relevant changed input and fresh regression evidence", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    let current = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    current = (await acceptCurrentActivity(root, current, "rejected")).record;
+    const finding = current.activityFindings?.[0];
+    assert.ok(finding);
+
+    const assessmentPath = current.evidenceRefs!.assessment!.path;
+    const assessment = JSON.parse(await readFile(path.join(root, assessmentPath), "utf8"));
+    await writeJsonAtomically(path.join(root, assessmentPath), { ...assessment, syntheticFindingRepair: "changed relevant input" });
+
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.continuation?.activityId, "purpose-and-structure");
+    if (current.continuation?.kind !== "work") throw new Error("Expected finding-bound activity work.");
+    const packet = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+    const changedInput = packet.activity.dependencyRefs.find((ref: { path: string }) => ref.path === assessmentPath);
+    assert.ok(changedInput);
+    const freshObservation = await storeEvidence(root, current.importId, { kind: "fresh-finding-observation", findingId: finding.findingId, result: "passed" });
+    const regressionEvidence = await storeEvidence(root, current.importId, { kind: "affected-regression", criterion: "refining.meaning-and-evidence", result: "passed" });
+
+    current = await submitFindingReview(root, current, {
+      findingId: finding.findingId,
+      disposition: "verified-repair",
+      expectedCheck: finding.expectedCheck,
+      observation: "The changed assessment now satisfies the original criterion.",
+      evidenceRefs: [freshObservation],
+      changedInputRefs: [changedInput],
+      regressionChecks: [{ criterion: { id: "refining.meaning-and-evidence", revision: "article-workflow:2" }, observation: "The evidence meaning remains intact after the repair.", outcome: "passed", evidenceRefs: [regressionEvidence] }],
+    });
+
+    assert.equal(current.activityFindings?.[0].status, "resolved");
+    assert.equal(current.activityFindingReviews?.[0].disposition, "verified-repair");
+    assert.equal(current.activityFindingReviews?.[0].reviewer, "independent-reviewer");
+    assert.deepEqual(current.activityFindings?.[0].originalEvidenceRef, finding.originalEvidenceRef);
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    assert.equal(current.continuation?.activityId, "meaning-and-evidence");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("finding review records appropriate removal, evidenced dismissal, inconclusive review, and owner referral", async () => {
+  for (const scenario of ["appropriate-removal", "evidenced-dismissal", "inconclusive", "owner-referral"] as const) {
+    const { root, record } = await refiningFixture();
+    try {
+      let current = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+      current = (await acceptCurrentActivity(root, current, "rejected")).record;
+      const finding = current.activityFindings?.[0];
+      assert.ok(finding);
+
+      if (scenario === "appropriate-removal") {
+        const assessmentPath = current.evidenceRefs!.assessment!.path;
+        const assessment = JSON.parse(await readFile(path.join(root, assessmentPath), "utf8"));
+        await writeJsonAtomically(path.join(root, assessmentPath), { ...assessment, syntheticOptionalCapability: "removed" });
+      }
+      current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+      if (current.continuation?.kind !== "work") throw new Error("Expected finding-bound activity work.");
+      const packet = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+      const freshObservation = await storeEvidence(root, current.importId, { kind: "finding-review", scenario, findingId: finding.findingId });
+      const regressionEvidence = await storeEvidence(root, current.importId, { kind: "finding-regression", scenario, result: scenario === "inconclusive" ? "inconclusive" : "passed" });
+      const changedInput = packet.activity.dependencyRefs.find((ref: { path: string; sha256: string }) => finding.dependencyRefs.some((before) => before.path === ref.path && before.sha256 !== ref.sha256));
+      current = await submitFindingReview(root, current, {
+        findingId: finding.findingId,
+        disposition: scenario,
+        expectedCheck: finding.expectedCheck,
+        observation: scenario === "owner-referral" ? "The criterion meaning requires an owner decision." : `Independent ${scenario} observation.`,
+        evidenceRefs: [freshObservation],
+        ...(scenario === "appropriate-removal" && { changedInputRefs: [changedInput] }),
+        ...(["appropriate-removal", "evidenced-dismissal"].includes(scenario) && { regressionChecks: [{ criterion: { id: "refining.meaning-and-evidence", revision: "article-workflow:2" }, observation: "The affected evidence criterion remains satisfied.", outcome: "passed", evidenceRefs: [regressionEvidence] }] }),
+        ...(scenario === "inconclusive" && { regressionChecks: [{ criterion: finding.criterion, observation: "The available observation cannot establish closure.", outcome: "inconclusive", evidenceRefs: [regressionEvidence] }] }),
+        ...(scenario === "owner-referral" && { ownerReferral: { kind: "required-capability-removal", reason: "The proposed repair removes a capability marked required by the current criterion." } }),
+      }, scenario === "appropriate-removal" ? "not-applicable" : scenario === "inconclusive" || scenario === "owner-referral" ? "unverified" : "accepted");
+
+      assert.equal(current.activityFindings?.[0].status, ["appropriate-removal", "evidenced-dismissal"].includes(scenario) ? "resolved" : scenario === "owner-referral" ? "owner-referral" : "open");
+      assert.equal(current.activityFindingReviews?.[0].disposition, scenario);
+      if (["inconclusive", "owner-referral"].includes(scenario)) {
+        current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+        assert.equal(current.continuation?.activityId, "purpose-and-structure");
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }
+});
+
+test("an unsupported finding resolution remains pre-publication repair work", async () => {
+  const { root, record } = await refiningFixture();
+  try {
+    let current = await executePendingImport(root, record.importId, createSupervisedImportExecutor(root));
+    current = (await acceptCurrentActivity(root, current, "rejected")).record;
+    const finding = current.activityFindings?.[0];
+    assert.ok(finding);
+    current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
+    current = await submitFindingReview(root, current, {
+      findingId: finding.findingId,
+      disposition: "evidenced-dismissal",
+      expectedCheck: finding.expectedCheck,
+      observation: "Bare dismissal without fresh evidence or regression checks.",
+    });
+    assert.equal(current.stage, "REFINING");
+    assert.equal(current.continuation?.kind, "repair");
+    assert.equal(current.activityFindings?.[0].status, "open");
+    assert.equal(current.activityFindingReviews?.length ?? 0, 0);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

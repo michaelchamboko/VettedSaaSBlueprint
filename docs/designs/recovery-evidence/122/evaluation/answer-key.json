@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "warning": "Withhold this file and all labels below until all six independent results are frozen.",
+  "cases": [
+    { "caseId": "case-lantern", "responsibility": "cta-destination", "expectedVerdict": "meets", "explanationRequirement": "Connect the external-visit label to the external affiliate destination and the absence of commitment." },
+    { "caseId": "case-orbit", "responsibility": "cta-destination", "expectedVerdict": "does_not_meet", "explanationRequirement": "Identify that the label can mean an on-site review and does not disclose the external vendor visit." },
+    { "caseId": "case-river", "responsibility": "rewrite-fidelity", "expectedVerdict": "meets", "explanationRequirement": "Explain that the rewrite preserves the account and project workspace-context question." },
+    { "caseId": "case-summit", "responsibility": "rewrite-fidelity", "expectedVerdict": "does_not_meet", "explanationRequirement": "Name the shift from current workspace context to priority or attention." },
+    { "caseId": "case-meadow", "responsibility": "keyboard-scroll", "expectedVerdict": "does_not_meet", "explanationRequirement": "Use the rendered focus and scroll evidence showing the region is skipped and hidden content remains unreachable." },
+    { "caseId": "case-quartz", "responsibility": "keyboard-scroll", "expectedVerdict": "meets", "explanationRequirement": "Use the rendered evidence showing region focus and keyboard scrolling to the hidden content." }
+  ]
+}
