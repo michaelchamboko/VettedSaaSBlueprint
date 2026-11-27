@@ -121,6 +121,25 @@ export interface ArticleReviewEvidenceRegistry {
   commit(input: ReviewEvidenceRegistration): Promise<{ registrationId: string; replayed: boolean }>;
 }
 
+export function reviewRetentionDependencyResolver(registry: ArticleReviewEvidenceRegistry) {
+  return async (record: ExternalArticleImportV1): Promise<{ status: "verified"; references: EvidenceRef[] }> => {
+    const classes: ReviewEvidenceClass[] = ["editorial-judgment", "browser-observation", "rejected-finding", "finding-resolution", "production-proof"];
+    const references: EvidenceRef[] = [];
+    for (const evidenceClass of classes) {
+      const registrations = await registry.list({ importId: record.importId, evidenceClass });
+      for (const raw of registrations) {
+        const registration = reviewEvidenceRegistrationSchema.parse(raw);
+        references.push(registration.evidenceRef, ...registration.retentionDependencies);
+        if (registration.evidenceClass === "rejected-finding" || registration.evidenceClass === "finding-resolution") {
+          references.push(...registration.payload.protectedReferences);
+        }
+      }
+    }
+    const unique = new Map(references.map((reference) => [`${reference.path}:${reference.sha256}`, reference]));
+    return { status: "verified", references: [...unique.values()] };
+  };
+}
+
 export function reviewExaminedRevision(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }

@@ -18,7 +18,7 @@ import { recoveryEvidenceSchema } from "./contracts";
 import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
-import { declareGateHandoff } from "./gate-handoff";
+import { declareGateHandoff, reconcileGateCleanup, type GateCleanupOptions } from "./gate-handoff";
 import { registerPublicationApproval } from "./publication-approval";
 import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 
@@ -384,7 +384,26 @@ export async function clearImportBlocker(root: string, importId: string, recover
   });
 }
 
-export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean; executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1>; improveExecutor?: ImproveExecutor }): Promise<ExternalArticleImportV1> {
+export type PendingImportOptions = {
+  rejectBusy?: boolean;
+  executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1>;
+  improveExecutor?: ImproveExecutor;
+  cleanup?: GateCleanupOptions;
+};
+
+async function persistCleanupRecord(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  await saveImport(repositoryRoot, externalArticleImportSchema.parse(record));
+  return loadImport(repositoryRoot, record.importId);
+}
+
+export async function cleanupImportGateHandoff(repositoryRoot: string, importId: string, options?: GateCleanupOptions): Promise<ExternalArticleImportV1> {
+  return withImportLease(repositoryRoot, importId, async (record) => {
+    const result = await reconcileGateCleanup(repositoryRoot, record, "manual", (updated) => persistCleanupRecord(repositoryRoot, updated), options);
+    return result.record;
+  });
+}
+
+export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: PendingImportOptions): Promise<ExternalArticleImportV1> {
   const lease = await claimImportLease(repositoryRoot, importId);
   if (!lease && options?.rejectBusy) throw new Error("IMPORT_LEASE_BUSY");
   if (!lease) return loadImport(repositoryRoot, importId);
@@ -392,6 +411,9 @@ export async function executePendingImport(repositoryRoot: string, importId: str
     return await activeLease.run({ lease, importId, root: await realpath(repositoryRoot) }, async () => {
       let current = await loadImport(repositoryRoot, importId);
       assertCurrentImport(current);
+      const cleanup = await reconcileGateCleanup(repositoryRoot, current, "gate", (updated) => persistCleanupRecord(repositoryRoot, updated), options?.cleanup);
+      current = cleanup.record;
+      if (cleanup.handled) return current;
       if (["LIVE", "QUARANTINED"].includes(current.stage)) {
         if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
         if (!current.sourceDeletedAt) current = await deleteRawSource(repositoryRoot, importId, current, now());

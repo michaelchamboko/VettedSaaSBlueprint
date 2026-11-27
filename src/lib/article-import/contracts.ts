@@ -351,6 +351,29 @@ const gateHandoffReferenceSchema = z.object({
   reference: stateEvidenceRef,
   reason: z.string().min(1),
 }).strict();
+const gateHandoffDisposalCandidateSchema = z.object({
+  reference: stateEvidenceRef,
+  kind: z.enum(["verified-temporary", "superseded-draft", "superseded-capture"]),
+  reason: z.string().min(1),
+  archivedAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
+const gateCleanupDispositionSchema = z.object({
+  original: gateHandoffDisposalCandidateSchema,
+  disposition: z.enum(["retain", "archive", "dispose", "unclassified"]),
+  reason: z.string().min(1),
+  archiveRef: stateEvidenceRef.optional(),
+  retainUntil: z.string().datetime({ offset: true }).optional(),
+  removedAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
+const gateCleanupOperationSchema = z.object({
+  schemaVersion: z.literal("ImportGateCleanupOperationV1"),
+  operationId: z.string().regex(/^cleanup-[a-f0-9]{24}$/),
+  phase: z.enum(["intended", "registered", "completed", "held"]),
+  eligibilityFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  dispositions: z.array(gateCleanupDispositionSchema).min(1),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+}).strict();
 export const importGateHandoffSchema = z.object({
   schemaVersion: z.literal("ImportGateHandoffV1"),
   passedGate: importStageSchema,
@@ -358,12 +381,13 @@ export const importGateHandoffSchema = z.object({
   acceptedOutputs: z.array(gateHandoffReferenceSchema),
   requiredNextInputs: z.array(gateHandoffReferenceSchema).min(1),
   retainedEvidence: z.array(gateHandoffReferenceSchema),
-  disposalCandidates: z.array(z.object({ path: z.string().min(1), reason: z.string().min(1) }).strict()),
+  disposalCandidates: z.array(gateHandoffDisposalCandidateSchema),
   unclassifiedMaterial: z.array(z.object({ reference: stateEvidenceRef, reason: z.string().min(1) }).strict()),
   constraints: z.record(z.string(), z.string()),
   cleanup: z.object({
-    status: z.enum(["not-required", "pending", "verified"]),
+    status: z.enum(["not-required", "pending", "verified", "held"]),
     operationId: z.string().min(1).optional(),
+    operations: z.array(gateCleanupOperationSchema).optional(),
   }).strict(),
   declaredAt: z.string().datetime({ offset: true }),
 }).strict();
