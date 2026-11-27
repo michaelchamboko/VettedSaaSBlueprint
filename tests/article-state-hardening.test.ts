@@ -262,8 +262,9 @@ test("diagnosis permits only the bound changed submission once and preserves tot
     const failedSubmissionDigest = record.continuation.submittedFingerprint!;
     record = { ...record, transformation: { ...record.transformation!, title: "Verified repair" } };
     await persistFixture(root, record);
-    const evidence = await storeEvidence(root, record.importId, { observed: "synthetic failing input inspected and replacement validated" });
-    const input = { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: record.stage, failedSubmissionDigest, replacementSubmissionDigest: await canonicalSubmissionFingerprint(record, root), failureCode: "FIXTURE_FAILURE", cause: "Incorrect synthetic input", attemptedRecoveryRefs: [evidence], remedyEvidenceRefs: [evidence], createdAt: new Date().toISOString() };
+    const evidence = await storeEvidence(root, record.importId, { observed: "synthetic failing input inspected" });
+    const remedy = await storeEvidence(root, record.importId, { observed: "replacement passed the original deterministic check" });
+    const input = { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: record.stage, failedSubmissionDigest, replacementSubmissionDigest: await canonicalSubmissionFingerprint(record, root), failureCode: "FIXTURE_FAILURE", cause: "Incorrect synthetic input", predictedObservation: "The corrected input passes the original check.", disproofCheck: "Repeat the original check and reject this diagnosis if it fails.", attemptedRecoveryRefs: [evidence], remedyEvidenceRefs: [remedy], remedyCheck: { method: "deterministic", result: "verified", observation: "The corrected input passed." }, repairChange: { kind: "product-repair", changedInputs: ["transformation.title"] }, createdAt: new Date().toISOString() };
     await assert.rejects(submitImportDiagnosis(root, record.importId, { ...input, failedSubmissionDigest: "0".repeat(64) }), /DIAGNOSIS_BINDING_MISMATCH/);
     await submitImportDiagnosis(root, record.importId, input);
     let executions = 0;
