@@ -70,7 +70,7 @@ export function createDispatchingImproveExecutor(root: string, baseExecutor: Imp
         packet.boundCommitSha !== assignment.boundCommitSha || packet.resultPath !== assignment.resultPath) throw new Error("STATE_INTEGRITY: IMPROVE work packet binding mismatch");
     await context.assertLease();
     await saveImport(root, first);
-    await invokeWorker(root, assignment.workPath, assignment.resultPath, packet, context.leaseToken, context.assertLease, options);
+    await invokeWorker(root, assignment.workPath, assignment.resultPath, packet, context.leaseToken, context.assertLease, options, context.record);
     return baseExecutor({ ...context, record: first, assignment });
   };
 }
@@ -104,7 +104,13 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
         packet.idempotencyKey !== context.idempotencyKey || packet.sourceFingerprint !== context.record.sourceFingerprint ||
         packet.resultPath !== resultPath) throw new Error("STATE_INTEGRITY: work packet binding mismatch");
     if (handoffVerification?.status === "verified" &&
-        (JSON.stringify(packet.gateHandoff) !== JSON.stringify(handoffVerification.handoff) ||
+        (JSON.stringify(packet.gateHandoff) !== JSON.stringify({
+          schemaVersion: handoffVerification.handoff.schemaVersion,
+          passedGate: handoffVerification.handoff.passedGate,
+          nextStage: handoffVerification.handoff.nextStage,
+          requiredNextInputs: handoffVerification.handoff.requiredNextInputs,
+          constraints: handoffVerification.handoff.constraints,
+        }) ||
          (packet.gateHandoffVerification as { status?: unknown } | undefined)?.status !== "verified" ||
          JSON.stringify((packet.gateHandoffVerification as { verifiedInputs?: unknown } | undefined)?.verifiedInputs) !== JSON.stringify(handoffVerification.verifiedInputs))) {
       throw new Error("STATE_INTEGRITY: gate handoff packet binding mismatch");
@@ -114,7 +120,7 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
     await saveImport(root, first);
     if (packet.supervisedHandoff === "chatgpt-imagegen") return first;
     try {
-      await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options);
+      await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options, first);
     } catch (error) {
       const rejected = await consumeHeroRejection();
       if (rejected) return rejected;

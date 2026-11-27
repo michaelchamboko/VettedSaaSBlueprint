@@ -16,10 +16,11 @@ import { NeonArticleResearchRegistry } from "./research-registry-neon";
 import { articleHeroBindingSchema, articleHeroGenerationEvidenceSchema, articleHeroHandoff, articleHeroProviderOutputSchema, bindGeneratedArticleHero, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { reconcileActivityFindingEvidence, registerBrowserReviewEvidence, registerEditorialReviewEvidence, registeredReviewStatus, reuseBrowserReviewEvidence, reuseEditorialReviewEvidence, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
-import { activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
+import { acceptedArticleActivityOutputs, activityResultSchema, nextArticleActivity, prepareActivityAttempt, reconcileLateActivityResults, recordArticleActivity, type ActivityBinding } from "./activity-checkpoints";
 import { completeResearchPlanAttempt, prepareResearchPlanAttempt, reconcileLateResearchPlanResults } from "./stage-attempts";
 import { readEvidenceBytes, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { verifyGateHandoffForDispatch } from "./gate-handoff";
+import { projectWorkerPacket } from "./worker-packet";
 
 const file = z.string().min(1);
 const resultBase = { idempotencyKey: z.string().regex(/^[a-f0-9]{64}$/), sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/), summary: z.string().min(1) };
@@ -137,14 +138,14 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       planWorkPath = planAttempt.workPath;
       planResultPath = planAttempt.resultPath;
       for (const attemptPath of [planWorkPath, planResultPath]) await assertIgnoredImportStatePath(root, attemptPath);
-      const basePacket = {
+      const basePacket = projectWorkerPacket({
         schemaVersion: "ImportSupervisedWorkV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint,
         stage, strategy: context.strategy, attempt: context.attempt, idempotencyKey: context.idempotencyKey,
         sourcePath: workerSourcePath, record,
         ...gateHandoffPacket,
         requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, researchRegistry: plan,
         resumeCommand: `npm run import:article -- --resume ${record.importId}`,
-      };
+      }, record);
       const ensureAcquisitionPacket = async (decision: ResearchRegistryDecision, decisionPath: string, decisionSha256: string) => {
         try {
           const existing = await readRepositoryJson(root, acquisitionWorkPath) as { registryDecisionPath?: string; registryDecisionSha256?: string; researchRegistry?: { planFingerprint?: string } };
@@ -252,7 +253,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         for (const heroPath of [heroWorkPath, heroResultPath]) await assertIgnoredImportStatePath(root, heroPath);
         const handoff = articleHeroHandoff(root, { importId: record.importId, sourceFingerprint: record.sourceFingerprint, format: articleHeroFormatSchema.parse(record.format),
           contentApproval: record.contentApproval }, target, artifact, heroGeneration);
-        await writeJsonAtomically(path.join(root, heroWorkPath), {
+        await writeJsonAtomically(path.join(root, heroWorkPath), projectWorkerPacket({
           ...handoff, stage, idempotencyKey: context.idempotencyKey, supervisedHandoff: "chatgpt-imagegen",
           ...gateHandoffPacket,
           instructions: "Use built-in ChatGPT ImageGen with the exact prompt. Do not call a paid API or alternate image provider. Save the original returned PNG bytes at originalFile. Retain the tool's generated-image path/output hint in byte-bound ArticleHeroProviderOutputV1, reference it from genuine ArticleHeroGenerationEvidenceV1, and bind both records to the original PNG digest. The controller creates the deterministic WebP derivative. The provider record is retained tool-output provenance, not a signed OpenAI receipt. Missing ImageGen access is a shared capability blocker, not permission to substitute another provider.",
@@ -261,7 +262,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
           providerOutputSchema: z.toJSONSchema(articleHeroProviderOutputSchema),
           resultContract: { schemaVersion: "ArticleHeroImagegenResultV1", handoffFingerprint: handoff.handoffFingerprint, idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Generated the bound VettedSaaSBlueprint hero with built-in ChatGPT ImageGen.", work: { stage, heroGenerationEvidencePath: "build-pack/article-import/.../hero-generation.json" } },
           resumeCommand: `npm run import:article -- --resume ${record.importId}`,
-        });
+        }, record));
         let raw: unknown;
         try { raw = await readRepositoryJson(root, heroResultPath); }
         catch (error) {
@@ -325,11 +326,12 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
         }
       }
     }
-    await writeJsonAtomically(path.join(root, workPath), {
+    const acceptedActivityOutputs = await acceptedArticleActivityOutputs(root, record, renderingInputs?.reference);
+    await writeJsonAtomically(path.join(root, workPath), projectWorkerPacket({
       schemaVersion: "ImportSupervisedWorkV1", importId: record.importId,
       sourceFingerprint: record.sourceFingerprint, stage, strategy: context.strategy, attempt: context.attempt,
       idempotencyKey: context.idempotencyKey, sourcePath: workerSourcePath,
-      record, ...gateHandoffPacket, resultSchema: z.toJSONSchema(activity ? activityResultSchema : resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs,
+      record, ...gateHandoffPacket, resultSchema: z.toJSONSchema(activity ? activityResultSchema : resultSchema), requirementRevision: WORKFLOW_REVISION, requirements: workflowRequirements, renderingInputs, acceptedActivityOutputs,
       ...(activity && { activity }),
       ...(stage === "RELEASING" && { releaseSteps }),
       ...(requiredReleaseFiles && { requiredReleaseFiles }),
@@ -337,7 +339,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       instructions: activity ? `${instructionsForStage(stage)} Complete only activity ${activity.id}. Record an attributable accepted, rejected, unverified, or justified not-applicable review against the bound inputs and criterion.${activity.openFindings?.length ? " Repair the listed open findings against a relevant changed input, perform each expected check, and retain fresh independent observations for the original defect and affected regressions." : ""}` : instructionsForStage(stage), resultPath,
       resultContract: activity ? { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe the completed activity review.", activity: { ...activity, reviewer: "reviewer identity", executionId: "execution identity", outcome: "accepted|rejected|unverified|not-applicable", observation: "required for accepted or rejected", applicabilityReason: "required for not-applicable" } } : { idempotencyKey: context.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Describe completed work and evidence.", work: { stage } },
       resumeCommand: `npm run import:article -- --resume ${record.importId}`,
-    });
+    }, record));
     let raw: unknown;
     let immutableResultRef: EvidenceRef | undefined;
     try {

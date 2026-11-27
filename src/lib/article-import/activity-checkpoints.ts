@@ -10,7 +10,7 @@ type ActivityStage = typeof activityStages[number];
 
 const activities: Record<ActivityStage, readonly string[]> = {
   REFINING: ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm", "independent-review", "final-fidelity-review"],
-  VALIDATING: ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion", "visual-quality"],
+  VALIDATING: ["hero-image", "design-read", "context", "shape", "detect", "desktop", "mobile", "reduced-motion", "critique", "audit", "polish", "visual-quality", "owner-verifier"],
 };
 
 const criterionSchema = z.object({ id: z.string().min(1), revision: z.string().min(1) }).strict();
@@ -78,7 +78,7 @@ async function bindings(root: string, record: ExternalArticleImportV1, stage: Ac
       if (["meaning-and-evidence", "independent-review"].includes(id)) return [artifact, research].filter((ref): ref is EvidenceRef => Boolean(ref));
       return [artifact];
     }
-    return [artifact, renderingRef, ...(id === "visual-quality" ? [hero] : [])].filter((ref): ref is EvidenceRef => Boolean(ref));
+    return [artifact, renderingRef, ...(["hero-image", "visual-quality"].includes(id) ? [hero] : [])].filter((ref): ref is EvidenceRef => Boolean(ref));
   };
   return activities[stage].map((id) => {
     const criteria = [{ id: `${stage.toLowerCase()}.${id}`, revision: WORKFLOW_REVISION }];
@@ -102,6 +102,30 @@ export async function nextArticleActivity(root: string, record: ExternalArticleI
     if (!accepted) return binding;
   }
   return undefined;
+}
+
+export async function acceptedArticleActivityOutputs(root: string, record: ExternalArticleImportV1, renderingRef?: EvidenceRef) {
+  if (!activityStages.includes(record.stage as ActivityStage)) return [];
+  const stage = record.stage as ActivityStage;
+  const outputs = [];
+  for (const binding of await bindings(root, record, stage, renderingRef)) {
+    if ((record.activityFindings ?? []).some((finding) => finding.stage === stage && finding.activityId === binding.id && finding.status !== "resolved")) continue;
+    const receipts = (record.activityReceipts ?? []).filter((receipt) => receipt.stage === stage && receipt.activityId === binding.id && receipt.inputFingerprint === binding.inputFingerprint);
+    let current;
+    for (const receipt of receipts.toReversed()) {
+      try { await verifyEvidenceRef(root, receipt.resultRef); current = receipt; break; }
+      catch { /* Ignore stale bytes and keep looking for the latest verified result. */ }
+    }
+    if (!current || !["accepted", "not-applicable"].includes(current.outcome)) continue;
+    outputs.push({
+      activityId: current.activityId,
+      outcome: current.outcome,
+      ...(current.observation && { observation: current.observation }),
+      ...(current.applicabilityReason && { applicabilityReason: current.applicabilityReason }),
+      resultRef: current.resultRef,
+    });
+  }
+  return outputs;
 }
 
 export async function recordArticleActivity(root: string, record: ExternalArticleImportV1, resultPath: string, expected: ActivityBinding, raw: unknown, options?: { resultRef?: EvidenceRef; trustProvidedRaw?: boolean; registry?: ArticleReviewEvidenceRegistry }) {

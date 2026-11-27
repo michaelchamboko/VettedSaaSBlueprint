@@ -90,7 +90,10 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     resolveRetentionDependencies: reviewRetentionDependencyResolver(reviewEvidenceRegistry),
     remedyRef: await evidenceReference(root, command.file),
   });
-  const execute = executor ?? createSupervisedImportExecutor(root, undefined, { reviewEvidenceRegistry });
+  const execute = executor ?? dispatchOptions?.executor ?? createSupervisedImportExecutor(root, undefined, {
+    researchRegistry: dispatchOptions?.researchRegistry,
+    reviewEvidenceRegistry,
+  });
   const improveExecutor = createDispatchingImproveExecutor(root, createSupervisedImproveExecutor(root), dispatchOptions);
   const resumeAfterGateCleanup = async (importId: string) => {
     const before = await loadImport(root, importId);

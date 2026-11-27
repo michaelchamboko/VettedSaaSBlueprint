@@ -438,11 +438,14 @@ test("editorial and presentation reload after every accepted activity and call e
       }
       const expected = stage === "REFINING"
         ? ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm", "independent-review", "final-fidelity-review"]
-        : ["design-read", "context", "shape", "critique", "audit", "detect", "polish", "desktop", "mobile", "reduced-motion", "visual-quality"];
+        : ["hero-image", "design-read", "context", "shape", "detect", "desktop", "mobile", "reduced-motion", "critique", "audit", "polish", "visual-quality", "owner-verifier"];
       const calls: string[] = [];
-      for (const activityId of expected) {
+      for (const [index, activityId] of expected.entries()) {
         current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
         assert.equal(current.continuation?.activityId, activityId);
+        if (current.continuation?.kind !== "work") throw new Error("Expected activity work packet.");
+        const packet = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+        assert.equal(packet.acceptedActivityOutputs.length, index);
         calls.push(activityId);
         current = (await acceptCurrentActivity(root, current)).record;
         current = await loadImport(root, current.importId);
@@ -452,6 +455,15 @@ test("editorial and presentation reload after every accepted activity and call e
       const finalization = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
       assert.equal(finalization.continuation?.kind, "work");
       assert.equal(finalization.continuation?.activityId, undefined);
+      if (finalization.continuation?.kind !== "work") throw new Error("Expected final stage assembly packet.");
+      const finalPacket = JSON.parse(await readFile(path.join(root, finalization.continuation.workPath), "utf8"));
+      assert.equal(finalPacket.acceptedActivityOutputs.length, expected.length);
+      assert.equal(finalPacket.record.stageReceipts, undefined);
+      if (finalPacket.gateHandoff) {
+        assert.equal(finalPacket.gateHandoff.cleanup, undefined);
+        assert.equal(finalPacket.gateHandoff.disposalCandidates, undefined);
+        assert.ok(Array.isArray(finalPacket.gateHandoff.requiredNextInputs));
+      }
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -467,6 +479,7 @@ test("a changed input reruns affected work while independent accepted activities
       assert.equal(current.continuation?.activityId, activityId);
       current = (await acceptCurrentActivity(root, current)).record;
     }
+    const originalPurposeRef = current.activityReceipts?.find((receipt) => receipt.activityId === "purpose-and-structure")?.resultRef;
     const assessmentPath = current.evidenceRefs!.assessment!.path;
     const assessment = JSON.parse(await readFile(path.join(root, assessmentPath), "utf8"));
     await writeFile(path.join(root, assessmentPath), JSON.stringify({ ...assessment, syntheticRevision: "changed-input" }));
@@ -476,6 +489,10 @@ test("a changed input reruns affected work while independent accepted activities
     current = (await acceptCurrentActivity(root, current)).record;
     current = await executePendingImport(root, current.importId, createSupervisedImportExecutor(root));
     assert.equal(current.continuation?.activityId, "independent-review");
+    if (current.continuation?.kind !== "work") throw new Error("Expected independent review work.");
+    const packet = JSON.parse(await readFile(path.join(root, current.continuation.workPath), "utf8"));
+    assert.deepEqual(packet.acceptedActivityOutputs.map((output: { activityId: string }) => output.activityId), ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm"]);
+    assert.notDeepEqual(packet.acceptedActivityOutputs.find((output: { activityId: string }) => output.activityId === "purpose-and-structure")?.resultRef, originalPurposeRef);
     assert.equal(current.activityReceipts?.filter((receipt) => receipt.activityId === "meaning-and-evidence" && receipt.outcome === "accepted").length, 1);
     assert.equal(current.activityReceipts?.filter((receipt) => receipt.activityId === "wording-and-rhythm" && receipt.outcome === "accepted").length, 1);
   } finally {

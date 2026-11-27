@@ -175,6 +175,14 @@ test("activity workers receive one current activity and only accepted current-st
   const activeFinding = { findingId: `finding-${"f".repeat(24)}`, stage: "VALIDATING", activityId: "mobile", status: "open", observation: "Mobile spacing is clipped." };
   const invocation = await prepareWorkerInvocation(root, "packet.json", {
     ...packet("VALIDATING"),
+    acceptedActivityOutputs: [{ activityId: "desktop", outcome: "accepted", observation: "Desktop passed.", resultRef: desktopRef }],
+    gateHandoff: {
+      schemaVersion: "ImportGateHandoffV1", passedGate: "REFINING", nextStage: "VALIDATING",
+      requiredNextInputs: [{ name: "candidate-artifact", reference: desktopRef }], constraints: { artifact: "current" },
+      acceptedOutputs: [{ name: "old-output", reference: staleRef }], retainedEvidence: [{ name: "old-evidence", reference: staleRef }],
+      disposalCandidates: [{ reference: staleRef, reason: "superseded" }], unclassifiedMaterial: [{ reference: staleRef, reason: "historical" }],
+      cleanup: { status: "verified", operations: [{ operationId: "cleanup-secret-history" }] }, declaredAt: "2026-01-01T00:00:00.000Z",
+    },
     activity: { stage: "VALIDATING", id: "mobile", attemptId: `activity-attempt-${"a".repeat(24)}`, inputFingerprint: "1".repeat(64), criteria: [{ id: "validating.mobile", revision: "fixture" }], dependencyRefs: [], openFindings: [activeFinding] },
     record: {
       importId, format: "agent_review_required", stage: "VALIDATING", stageReceipts: [{ stage: "REFINING", status: "passed", at: "2026-01-01T00:00:00.000Z", message: "historical" }],
@@ -193,7 +201,13 @@ test("activity workers receive one current activity and only accepted current-st
   assert.equal(projected.record.activityAttempts, undefined);
   assert.deepEqual(projected.activeFindings, [activeFinding]);
   assert.deepEqual(projected.acceptedActivityOutputs, [{ activityId: "desktop", outcome: "accepted", observation: "Desktop passed.", resultRef: desktopRef }]);
+  assert.deepEqual(projected.gateHandoff, { schemaVersion: "ImportGateHandoffV1", passedGate: "REFINING", nextStage: "VALIDATING", requiredNextInputs: [{ name: "candidate-artifact", reference: desktopRef }], constraints: { artifact: "current" } });
   assert.doesNotMatch(JSON.stringify(projected), /old\.result\.json|stale\.json/);
+  assert.doesNotMatch(JSON.stringify(projected), /cleanup-secret-history|disposalCandidates|retainedEvidence|unclassifiedMaterial/);
+  const config = JSON.parse(await readFile(path.join(invocation.cwd, "opencode.json"), "utf8"));
+  const canonical = (await realpath(root)).replaceAll("\\", "/");
+  assert.ok(config.agents["article-worker"].permissions.some((rule: { action: string; resource: string; effect: string }) =>
+    rule.effect === "allow" && rule.action === "read" && rule.resource === `${canonical}/${desktopRef.path}`));
   const prompt = invocation.args.at(-1)!;
   assert.match(prompt, /current activity only: mobile/i);
   assert.doesNotMatch(prompt, /then every required design/);
