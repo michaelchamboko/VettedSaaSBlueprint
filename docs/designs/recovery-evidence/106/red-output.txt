@@ -1,0 +1,5 @@
+AssertionError [ERR_ASSERTION]: durable pre-mutation cleanup intent must block next-gate dispatch
+
+1 !== 0
+
+    at main (docs/designs/recovery-evidence/106/cleanup-recovery-probe.ts:294:12)
