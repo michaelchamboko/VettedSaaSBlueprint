@@ -16,7 +16,7 @@ import { invokeWorker, type WorkerOptions } from "./worker-runner";
 import type { ArticleResearchRegistry } from "./research-registry";
 import { createSupervisedImproveExecutor, type ImproveExecutor } from "./improve-supervisor";
 import { readCurrentArticleHeroRejection } from "./hero-image";
-import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { reviewRetentionDependencyResolver, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
 import { NeonArticleReviewEvidenceRegistry } from "./review-evidence-registry-neon";
 import { verifyGateHandoffForDispatch } from "./gate-handoff";
 
@@ -50,10 +50,11 @@ async function intakeExecutionStage(repositoryRoot: string, runId: string): Prom
   } catch { return undefined; }
 }
 
-function pendingExecutionOptions(repositoryRoot: string, options: DispatchOptions | undefined, improveExecutor: ImproveExecutor) {
+function pendingExecutionOptions(repositoryRoot: string, options: DispatchOptions | undefined, improveExecutor: ImproveExecutor, reviewEvidenceRegistry: ArticleReviewEvidenceRegistry) {
   return {
     rejectBusy: true,
     improveExecutor,
+    cleanup: { resolveRetentionDependencies: reviewRetentionDependencyResolver(reviewEvidenceRegistry) },
     executeStage: (stage: ExternalArticleImportV1["stage"], action: () => Promise<ExternalArticleImportV1>) =>
       withArticleExecution(repositoryRoot, action, options?.capabilityProbe, stage),
   };
@@ -139,7 +140,8 @@ async function runImportSteps(
   importId: string,
   options?: DispatchOptions,
 ): Promise<ExternalArticleImportV1 & { dispatchOutcome?: "STEP_LIMIT" }> {
-  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry, reviewEvidenceRegistry: options?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry() });
+  const reviewEvidenceRegistry = options?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry();
+  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry, reviewEvidenceRegistry });
   const execute = createDispatchingExecutor(repositoryRoot, baseExecutor, options);
   const improveExecutor = createDispatchingImproveExecutor(repositoryRoot, createSupervisedImproveExecutor(repositoryRoot), options);
   const now = options?.now ?? (() => Date.now());
@@ -147,7 +149,7 @@ async function runImportSteps(
   const maxSteps = dispatchLimit(options);
   let current = await loadImport(repositoryRoot, importId);
   for (let step = 0; step < maxSteps; step += 1) {
-    if (isTerminalStage(current.stage) && !improvePending(current)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor));
+    if (isTerminalStage(current.stage) && !improvePending(current)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor, reviewEvidenceRegistry));
     if (current.stage === "ROLLED_BACK" || current.continuation?.kind === "blocked") return current;
     if (current.continuation?.kind === "wait") {
       const due = Math.min(Date.parse(current.continuation.nextCheckAt), Date.parse(current.continuation.timeoutAt));
@@ -155,7 +157,7 @@ async function runImportSteps(
       if (now() < due) return current;
     }
     const previous = current;
-    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor));
+    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor, reviewEvidenceRegistry));
     if (current.improve?.pendingReview) return current;
     if ((isTerminalStage(current.stage) && !improvePending(current)) || current.continuation?.kind === "blocked" || current.continuation?.kind === "repair" ||
         JSON.stringify(current) === JSON.stringify(previous)) return current;
