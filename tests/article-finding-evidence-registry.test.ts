@@ -20,6 +20,19 @@ test("the canonical SQL register persists rejected findings through the Neon ada
   const root = await mkdtemp(path.join(parent, "sql-"));
   try {
     await db.exec("create schema article_research;");
+    await db.exec(`
+      create table article_research.review_evidence_registrations (
+        registration_id uuid primary key,
+        import_id text not null check (import_id ~ '^article-[0-9a-f-]{36}$'),
+        evidence_class text not null check (evidence_class in ('editorial-judgment', 'browser-observation', 'production-proof')),
+        source_fingerprint text not null check (source_fingerprint ~ '^[a-f0-9]{64}$'),
+        examined_revision text not null check (examined_revision ~ '^[a-f0-9]{64}$'),
+        evidence_sha256 text not null check (evidence_sha256 ~ '^[a-f0-9]{64}$'),
+        registration jsonb not null,
+        created_at timestamptz not null default current_timestamp,
+        unique (import_id, evidence_class, examined_revision, evidence_sha256)
+      );
+    `);
     await db.exec(await readFile(path.join(process.cwd(), "db/article-review-evidence-v001.sql"), "utf8"));
     const registry = new NeonArticleReviewEvidenceRegistry(async (sql, params) => db.query(sql, params) as never);
     const evidencePath = "finding-registry-original.json";
@@ -53,6 +66,33 @@ test("the canonical SQL register persists rejected findings through the Neon ada
 
     assert.deepEqual(await registry.commit(registration as never), { registrationId: registration.registrationId, replayed: false });
     assert.deepEqual(await registry.list({ importId: registration.importId, evidenceClass: registration.evidenceClass as never }), [registration]);
+
+    const productionProof = {
+      schemaVersion: "ArticleReviewEvidenceRegistrationV1",
+      registrationId: "44444444-4444-4444-8444-444444444448",
+      evidenceClass: "production-proof",
+      importId: registration.importId,
+      sourceFingerprint: registration.sourceFingerprint,
+      examinedRevision: "c".repeat(64),
+      reviewer: { id: "independent-production-verifier", independent: true },
+      criteria: [{ id: "production:identity-agreement", revision: "2026-11-27" }],
+      evidenceRef: originalEvidenceRef,
+      retentionDependencies: [originalEvidenceRef],
+      support: "accepted",
+      registeredAt: "2026-11-27T12:05:00.000Z",
+      payload: {
+        kind: "production-proof",
+        publicationPath: "import",
+        artifactFingerprint: "d".repeat(64),
+        intendedCommitSha: "e".repeat(40),
+        deployment: { deploymentId: "deployment-118-control", canonicalUrl: "https://example.test/article", commitSha: "e".repeat(40) },
+        editorialRegistrationId: "55555555-5555-4555-8555-555555555555",
+        browserRegistrationId: "66666666-6666-4666-8666-666666666666",
+        approvalIdentity: "f".repeat(64),
+      },
+    } as const;
+    assert.deepEqual(await registry.commit(productionProof), { registrationId: productionProof.registrationId, replayed: false });
+    assert.deepEqual(await registry.list({ importId: registration.importId, evidenceClass: "production-proof" }), [productionProof]);
   } finally {
     await Promise.all([db.close(), rm(root, { recursive: true, force: true })]);
   }

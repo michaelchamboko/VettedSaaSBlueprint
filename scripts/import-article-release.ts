@@ -6,6 +6,7 @@ import { createLocalReleaseOperations } from "../src/lib/article-import/local-re
 import { assertPrimaryArticleCheckout, assertArticleCapabilities } from "../src/lib/article-import/preflight";
 import { runCliMain } from "./lib/run-cli-main";
 import { dispatchArticleImport } from "../src/lib/article-import/dispatch";
+import { NeonArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry-neon";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -60,6 +61,7 @@ async function main(): Promise<void> {
     artifactPath,
     slug,
     operations,
+    reviewEvidenceRegistry: new NeonArticleReviewEvidenceRegistry(),
   });
   };
   let result: unknown = process.argv.includes("--execute")

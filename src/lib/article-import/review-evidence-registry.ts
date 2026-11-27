@@ -86,6 +86,24 @@ export const reviewEvidenceRegistrationSchema = z.discriminatedUnion("evidenceCl
       protectedReferences: z.array(evidenceRefSchema).min(1),
     }).strict(),
   }).strict(),
+  z.object({
+    ...registrationBase,
+    evidenceClass: z.literal("production-proof"),
+    payload: z.object({
+      kind: z.literal("production-proof"),
+      publicationPath: z.enum(["catalogue", "import"]),
+      artifactFingerprint: hashSchema,
+      intendedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
+      deployment: z.object({
+        deploymentId: z.string().min(1),
+        canonicalUrl: z.string().url(),
+        commitSha: z.string().regex(/^[a-f0-9]{40}$/),
+      }).strict(),
+      editorialRegistrationId: z.string().uuid(),
+      browserRegistrationId: z.string().uuid(),
+      approvalIdentity: hashSchema,
+    }).strict(),
+  }).strict(),
 ]);
 
 export type ReviewEvidenceRegistration = z.infer<typeof reviewEvidenceRegistrationSchema>;

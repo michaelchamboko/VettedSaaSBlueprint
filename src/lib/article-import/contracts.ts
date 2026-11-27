@@ -265,6 +265,29 @@ export const importActivityReceiptSchema = z.object({
   if (value.outcome === "not-applicable" && !value.applicabilityReason) context.addIssue({ code: "custom", path: ["applicabilityReason"], message: "Inapplicability requires a reason." });
 });
 
+const gateHandoffReferenceSchema = z.object({
+  name: z.string().min(1),
+  reference: stateEvidenceRef,
+  reason: z.string().min(1),
+}).strict();
+export const importGateHandoffSchema = z.object({
+  schemaVersion: z.literal("ImportGateHandoffV1"),
+  passedGate: importStageSchema,
+  nextStage: importStageSchema,
+  acceptedOutputs: z.array(gateHandoffReferenceSchema),
+  requiredNextInputs: z.array(gateHandoffReferenceSchema).min(1),
+  retainedEvidence: z.array(gateHandoffReferenceSchema),
+  disposalCandidates: z.array(z.object({ path: z.string().min(1), reason: z.string().min(1) }).strict()),
+  unclassifiedMaterial: z.array(z.object({ reference: stateEvidenceRef, reason: z.string().min(1) }).strict()),
+  constraints: z.record(z.string(), z.string()),
+  cleanup: z.object({
+    status: z.enum(["not-required", "pending", "verified"]),
+    operationId: z.string().min(1).optional(),
+  }).strict(),
+  declaredAt: z.string().datetime({ offset: true }),
+}).strict();
+export type ImportGateHandoff = z.infer<typeof importGateHandoffSchema>;
+
 export const importPendingReleaseSchema = z.object({
   schemaVersion: z.literal("ImportPendingReleaseV1"),
   reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/),
@@ -297,6 +320,13 @@ export const importPendingReleaseSchema = z.object({
   codeReview: importCodeReviewSchema.optional(),
 }).strict();
 
+const publicationApprovalStatusSchema = z.object({
+  registrationId: z.string().uuid(),
+  examinedRevision: z.string().regex(/^[a-f0-9]{64}$/),
+  approvalIdentity: z.string().regex(/^[a-f0-9]{64}$/),
+  evidenceRef: stateEvidenceRef,
+}).strict();
+
 export const externalArticleImportSchema = z.object({
   schemaVersion: z.enum(["ExternalArticleImportV1", "ExternalArticleImportV2"]),
   workflowVersion: z.literal(2).optional(),
@@ -320,8 +350,14 @@ export const externalArticleImportSchema = z.object({
       action: z.enum(["reused", "registered", "reacquire"]), checkedAt: z.string().datetime({ offset: true }),
     }).strict().optional(),
   }).strict().optional(),
+  publicationApproval: z.object({
+    catalogue: publicationApprovalStatusSchema,
+    import: publicationApprovalStatusSchema,
+  }).strict().optional(),
   activityProtocolVersion: z.literal(1).optional(),
   activityReceipts: z.array(importActivityReceiptSchema).optional(),
+  handoffProtocolVersion: z.literal(1).optional(),
+  gateHandoffs: z.array(importGateHandoffSchema).optional(),
   activityFindings: z.array(importActivityFindingSchema).optional(),
   activityFindingReviews: z.array(importActivityFindingReviewSchema).optional(),
   legacyDiagnostics: z.array(z.string()).optional(),
