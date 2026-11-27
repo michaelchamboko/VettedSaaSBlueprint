@@ -24,6 +24,25 @@ import { pageBlueprintSchema } from "../schemas/contracts";
 import { reviewedTreeFile } from "./reviewed-tree";
 import { validatePublicationReviewApprovals } from "./publication-approval";
 
+function safeReleaseDiagnostic(error: unknown, fallback: string): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return /^(?:[A-Z][A-Z0-9_]{2,80})(?:: [A-Z][A-Z0-9_]{2,80})?$/.test(message) ? message : fallback;
+}
+
+function lookupEvidence(lookup: Exclude<ReleaseDeploymentLookup, { status: "confirmed" }>): string[] {
+  const allowed = new Set([
+    "ROLLBACK_TARGET_CONFIRMED", "PRODUCTION_ASSIGNMENT_MISMATCH", "LEGACY_DEPLOYMENT_IDENTITY_MISSING",
+    "LEGACY_PROVIDER_IDENTITY_MISMATCH", "DUPLICATE_OPERATION_DEPLOYMENTS", "PROVIDER_IDENTITY_MISMATCH",
+    "PRODUCTION_ALIAS_COMMIT_WITHOUT_OPERATION", "PRODUCTION_ALIAS_UNKNOWN", "PROVIDER_LOOKUP_FAILED",
+  ]);
+  const supplied = lookup.status === "not-found" ? lookup.evidence : lookup.missingEvidence;
+  const safe = supplied.filter((value) => allowed.has(value));
+  if (safe.length) return [...new Set(safe)];
+  if (lookup.status === "not-found") return ["DEPLOYMENT_OPERATION_NOT_FOUND"];
+  if (lookup.status === "inconsistent") return ["PROVIDER_IDENTITY_INCONSISTENT"];
+  return ["PROVIDER_LOOKUP_INDETERMINATE"];
+}
+
 async function requiresArticleHero(root: string, record: ExternalArticleImportV1): Promise<boolean> {
   if (record.heroImage || record.evidenceRefs?.hero) return true;
   const presentationRef = record.evidenceRefs?.presentation;
@@ -850,7 +869,7 @@ async function assessImportReleaseImpl(input: {
     };
     const reconcile = async (): Promise<ReleaseDeploymentLookup> => {
       try { return await input.operations.reconcileDeployment(intent); }
-      catch (error) { return { status: "indeterminate", missingEvidence: [`provider lookup failed: ${error instanceof Error ? error.message : String(error)}`] }; }
+      catch { return { status: "indeterminate", missingEvidence: ["PROVIDER_LOOKUP_FAILED"] }; }
     };
     let deployment: ReleaseDeployment | undefined;
     const lookup = await reconcile();
@@ -862,7 +881,7 @@ async function assessImportReleaseImpl(input: {
       }
       deployment = lookup.deployment;
     } else if (lookup.status !== "not-found" || deploymentOperation.phase !== "prepared") {
-      return holdForReconciliation(lookup.status === "not-found" ? lookup.evidence : lookup.missingEvidence);
+      return holdForReconciliation(lookupEvidence(lookup));
     }
     if (!deployment) {
       deploymentOperation = { ...deploymentOperation, phase: "invoking", attemptedAt: new Date().toISOString(), missingEvidence: undefined };
@@ -872,11 +891,10 @@ async function assessImportReleaseImpl(input: {
       deploymentStarted = true;
       try {
         deployment = await input.operations.deploy(commitSha, operationKey);
-      } catch (error) {
+      } catch {
         const lookup = await reconcile();
         if (lookup.status !== "confirmed") {
-          const missing = lookup.status === "not-found" ? lookup.evidence : lookup.missingEvidence;
-          return holdForReconciliation([`deployment call did not return: ${error instanceof Error ? error.message : String(error)}`, ...missing]);
+          return holdForReconciliation(["DEPLOYMENT_CALL_OUTCOME_UNCERTAIN", ...lookupEvidence(lookup)]);
         }
         if (lookup.productionAssignment !== productionAssignment || lookup.deployment.commitSha !== commitSha) {
           return holdForReconciliation(["provider deployment identity and production alias do not match the recorded intent"]);
@@ -909,7 +927,7 @@ async function assessImportReleaseImpl(input: {
         checks = verifiedChecks;
       }
     } catch (error) {
-      verificationFailure = error instanceof Error ? error.message : String(error);
+      verificationFailure = safeReleaseDiagnostic(error, "PRODUCTION_VERIFICATION_FAILED");
     }
     if (verificationFailure || !checks) {
       let restored = false;
@@ -939,7 +957,7 @@ async function assessImportReleaseImpl(input: {
     if (verified.stage !== "LIVE") throw new Error("TERMINAL_PUBLICATION_UNVERIFIED");
     return { status: "LIVE", reasons: [], previousDeploymentId: previous.deploymentId, deploymentId: deployment.deploymentId, canonicalUrl: deployment.canonicalUrl };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = safeReleaseDiagnostic(error, "RELEASE_OPERATION_FAILED");
     input.record = await loadImport(input.repositoryRoot, input.record.importId);
     if (input.record.stage === "LIVE" && input.record.terminalRef && input.record.release) {
       return { status: "LIVE", reasons: [message], previousDeploymentId: previous.deploymentId, deploymentId: input.record.release.deploymentId, canonicalUrl: input.record.release.canonicalUrl };
@@ -964,7 +982,7 @@ async function assessImportReleaseImpl(input: {
     return { status: recoveryStage, reasons: [message, ...(restored ? [] : ["ROLLBACK_VERIFICATION_FAILED"])], previousDeploymentId: previous.deploymentId };
   }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = safeReleaseDiagnostic(error, "RELEASE_OPERATION_FAILED");
     if (!input.execute) return { status: "DRY_RUN", reasons: [message] };
     const latest = await loadImport(input.repositoryRoot, input.record.importId);
     await recordImportFailure(input.repositoryRoot, latest, { strategy: "release", classification: "transient", message });
