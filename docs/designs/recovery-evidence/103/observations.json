@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "RecoveryCatalogueEvidenceV1",
+  "issue": 103,
+  "authority": {
+    "ticket": "GitHub issue #103, acceptance criteria",
+    "parent": "GitHub issue #96, user stories 16 and 25; testing decisions 1 and 9",
+    "scope": "investigation and synthetic testing only"
+  },
+  "publicRoute": {
+    "route": "/blog/synthetic-catalogue-target",
+    "renderer": "src/app/blog/[slug]/page.tsx",
+    "renderMode": "public-route-component",
+    "httpObserved": false,
+    "servedApprovedRevision": true,
+    "independentOfMutableImport": true,
+    "artifact": "docs/designs/recovery-evidence/103/served-catalogue.html"
+  },
+  "httpServing": {
+    "route": "/blog/synthetic-catalogue-target",
+    "controlRoute": "/blog/synthetic-catalogue-control",
+    "status": 200,
+    "controlStatus": 200,
+    "canonicalPath": "/blog/synthetic-catalogue-target",
+    "canonicalUrl": "https://vettedsaasblueprint.online/blog/synthetic-catalogue-target",
+    "controlCanonicalPath": "/blog/synthetic-catalogue-control",
+    "controlCanonicalUrl": "https://vettedsaasblueprint.online/blog/synthetic-catalogue-control",
+    "bodyEvidenceSha256": "5738dd62cbafdbcf67d308c0a1bde92394e803114cb804bbb3c55651baa9a88b",
+    "independentOfMutableImport": true,
+    "artifact": "docs/designs/recovery-evidence/103/http-observations.json"
+  },
+  "scope": [
+    { "change": "content", "path": "src/generated/blog-posts/target.json", "targetContent": "revalidate", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "BLOG_AUTHORITY_ARTIFACT_MISMATCH; RENDER_INPUT_CHANGED:src/generated/blog-posts/target.json" },
+    { "change": "shared-renderer", "path": "src/app/blog/[slug]/page.tsx", "targetContent": "reuse", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "RENDER_INPUT_CHANGED:src/app/blog/[slug]/page.tsx" },
+    { "change": "shared-styles", "path": "src/app/globals.css", "targetContent": "reuse", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "RENDER_INPUT_CHANGED:src/app/globals.css" },
+    { "change": "target-asset", "path": "public/blog/images/voice-cloning-production-test-hero.webp", "targetContent": "reuse", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "RENDER_INPUT_CHANGED:public/blog/images/voice-cloning-production-test-hero.webp" },
+    { "change": "shared-rule", "path": "src/lib/blog/contracts.ts", "targetContent": "reuse", "controlContent": "reuse", "targetPresentation": "revalidate", "controlPresentation": "revalidate", "reason": "RENDER_INPUT_CHANGED:src/lib/blog/contracts.ts" }
+  ],
+  "reconciliation": {
+    "syntheticDisagreement": {
+      "servedRevision": "served-a",
+      "approvedRevision": "approved-b",
+      "intendedCommit": "commit-c",
+      "observationIdentity": "observation-d",
+      "terminalIdentity": "terminal-e"
+    },
+    "liveJustified": false,
+    "requiredAgreement": ["served article", "approved revision", "intended commit", "retained production observations", "terminal record"],
+    "runtimeValidatorResults": ["BLOG_AUTHORITY_ARTIFACT_MISMATCH", "DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED", "PRODUCTION_DEPLOYMENT_MISMATCH"],
+    "deploymentCommitProbe": { "operation": "deploy", "expectedCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "observedCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "result": { "ok": false, "error": "DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED" } },
+    "terminalCheck": "static-unreachable: inspectImportCompletion validates frozen terminal evidence but does not read the served catalogue route",
+    "observedLimitation": "Current checks are separate; no unified after-the-fact reconciler compares all five identities."
+  }
+}

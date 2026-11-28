@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-river",
+  "reviewerId": "/root/river_review",
+  "reviewedRevision": "1ce0442",
+  "observedEvidence": "Both sentences ask which account and project should be open right now. The rewrite makes the reader explicit with 'you.'",
+  "verdict": "meets",
+  "explanation": "A reader returning after an interruption would answer both questions by naming the same intended account and project. The rewrite preserves the terminology, timing, and decision question without adding a factual claim.",
+  "rawResponse": "Observed evidence: Both sentences ask which account and project should be open right now. The rewrite makes the reader explicit with 'you.' Verdict meets. Explanation: A reader returning after an interruption would answer both questions by naming the same intended account and project. The rewrite preserves the terminology, timing, and decision question without adding a factual claim."
+}

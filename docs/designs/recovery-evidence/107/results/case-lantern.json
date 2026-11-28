@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-lantern",
+  "reviewerId": "/root/lantern_review",
+  "reviewedRevision": "1ce0442",
+  "observedEvidence": "CTA 'Visit WebCatalog's vendor site.' Supporting text 'Compare current plans and product details before deciding.' Destination https://vendor.example/products/webcatalog in current tab, affiliate disclosure above CTA, no purchase or account commitment.",
+  "verdict": "meets",
+  "explanation": "'Visit' describes the action, and 'vendor site' tells the visitor they will leave for an external provider. The destination matches that label. The supporting text identifies the value of the visit and places the decision afterward, making clear that the click itself carries no commitment.",
+  "rawResponse": "Observed evidence: CTA 'Visit WebCatalog's vendor site.' Supporting text 'Compare current plans and product details before deciding.' Destination https://vendor.example/products/webcatalog in current tab, affiliate disclosure above CTA, no purchase or account commitment. Verdict: meets. Explanation: 'Visit' describes the action, and 'vendor site' tells the visitor they will leave for an external provider. The destination matches that label. The supporting text identifies the value of the visit and places the decision afterward, making clear that the click itself carries no commitment."
+}

@@ -1,0 +1,12 @@
+node --import tsx --test docs/designs/recovery-evidence/105/gate-handoff-probe.test.ts
+
+PASS normal controller dispatch exposes the current full-record handoff and ignores an incomplete cleanup marker
+PASS test-only classifier exercises controlled-time archive and re-claim rules
+SKIP future acceptance: later-gate cleanup rechecks persisted references, mutates bytes, and resumes after interruption
+SKIP future acceptance: explicit manual cleanup uses the same durable operation and retry identity
+SKIP future acceptance: archived evidence remains resolvable after reference registration and original removal
+
+Tests: 5; pass: 2; fail: 0; skipped future acceptance: 3.
+Duration: 12.84 seconds.
+
+The passing observational test describes current behavior. It does not claim that the missing cleanup barrier is correct. The expected barrier failure is retained in red-output.txt.

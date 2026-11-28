@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "RecoveryHttpServingEvidenceV1",
+  "route": "/blog/synthetic-catalogue-target",
+  "controlRoute": "/blog/synthetic-catalogue-control",
+  "status": 200,
+  "controlStatus": 200,
+  "canonicalPath": "/blog/synthetic-catalogue-target",
+  "canonicalUrl": "https://vettedsaasblueprint.online/blog/synthetic-catalogue-target",
+  "controlCanonicalPath": "/blog/synthetic-catalogue-control",
+  "controlCanonicalUrl": "https://vettedsaasblueprint.online/blog/synthetic-catalogue-control",
+  "title": "A Production Test for AI Voice Cloning Revised.",
+  "answerSummary": "Treat a voice clone as a controlled production asset, not a novelty. Confirm the speaker's informed consent, restrict who can create and export audio, test the voice against the actual scripts and languages you use, document approval and takedown paths, and keep a human reviewer responsible for every release. A convincing demo is only the start of the evaluation. Revised.",
+  "bodyEvidenceSha256": "5738dd62cbafdbcf67d308c0a1bde92394e803114cb804bbb3c55651baa9a88b",
+  "independentOfMutableImport": true
+}

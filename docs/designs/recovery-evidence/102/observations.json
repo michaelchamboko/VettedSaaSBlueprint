@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "RegisteredEvidenceRecovery102V1",
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "generatedAt": "2026-11-27T10:01:51.997Z",
+  "expected": {
+    "reuseDimensions": [
+      "relevance",
+      "support",
+      "integrity",
+      "freshness"
+    ],
+    "invalidDimensionsRequireResearch": true,
+    "dependentApprovalsInvalidated": true,
+    "independentApprovalsRetainedWithReason": true,
+    "everyEvidenceClassHasCanonicalRegistration": true,
+    "freshJudgmentBoundToExaminedRevision": true,
+    "unknownHistoricalProvenanceRetained": true
+  },
+  "canonicalRegistrationInventory": [
+    {
+      "evidenceClass": "research",
+      "boundary": "ArticleResearchRegistry",
+      "availability": "present"
+    },
+    {
+      "evidenceClass": "rejected-finding",
+      "boundary": null,
+      "availability": "absent"
+    },
+    {
+      "evidenceClass": "resolution",
+      "boundary": null,
+      "availability": "absent"
+    },
+    {
+      "evidenceClass": "editorial-judgment",
+      "boundary": null,
+      "availability": "absent"
+    },
+    {
+      "evidenceClass": "browser-observation",
+      "boundary": null,
+      "availability": "absent"
+    },
+    {
+      "evidenceClass": "production-proof",
+      "boundary": null,
+      "availability": "absent"
+    }
+  ],
+  "canonicalRegistrationExercise": {
+    "research": {
+      "status": "observed",
+      "boundary": "ArticleResearchRegistry",
+      "evidence": "The valid control traversed the research registry plan and evidence validators."
+    },
+    "rejected-finding": {
+      "status": "unreachable",
+      "boundary": null,
+      "evidence": "No first-class rejected-finding registration boundary exists in the investigated revision."
+    },
+    "resolution": {
+      "status": "unreachable",
+      "boundary": null,
+      "evidence": "No first-class resolution registration boundary exists in the investigated revision."
+    },
+    "editorial-judgment": {
+      "status": "unreachable",
+      "boundary": null,
+      "evidence": "No first-class editorial-judgment registration boundary exists in the investigated revision."
+    },
+    "browser-observation": {
+      "status": "unreachable",
+      "boundary": null,
+      "evidence": "No first-class browser-observation registration boundary exists in the investigated revision."
+    },
+    "production-proof": {
+      "status": "unreachable",
+      "boundary": null,
+      "evidence": "No first-class production-proof registration boundary exists in the investigated revision."
+    }
+  },
+  "registryMatrix": [
+    {
+      "dimension": "control",
+      "reuseAccepted": true,
+      "reuseError": null,
+      "gapReason": null,
+      "gapAccepted": null,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": [
+        {
+          "sourceId": "99999999-9999-4999-8999-999999999999",
+          "productId": null,
+          "sourceUrl": "https://example.test/historical",
+          "sourceType": "historical-review",
+          "sourceHash": null,
+          "retrievedAt": null,
+          "usageAllowed": false,
+          "claimId": null,
+          "claimText": null,
+          "claimUpdatedAt": null
+        }
+      ]
+    },
+    {
+      "dimension": "relevance",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_NOT_CURRENT",
+      "gapReason": "missing",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    },
+    {
+      "dimension": "support",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_CONFLICTING",
+      "gapReason": "conflicting",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    },
+    {
+      "dimension": "integrity",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_NOT_CURRENT",
+      "gapReason": "missing",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    },
+    {
+      "dimension": "freshness",
+      "reuseAccepted": false,
+      "reuseError": "RESEARCH_REGISTRY_REUSE_NOT_CURRENT",
+      "gapReason": "stale",
+      "gapAccepted": true,
+      "gapError": null,
+      "sourceFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "unknownHistoricalProvenance": []
+    }
+  ],
+  "controllerRecovery": {
+    "missing": {
+      "stage": "TRANSFORMING",
+      "gapReason": "missing"
+    },
+    "stale": {
+      "stage": "TRANSFORMING",
+      "gapReason": "stale"
+    },
+    "invalidResearch": {
+      "stageAfterInvalidation": "RESEARCHING",
+      "invalidatedApprovalKeys": [
+        "assessment",
+        "editorial",
+        "presentation",
+        "production"
+      ],
+      "retainedApprovalKeys": [],
+      "invalidationReason": "RESEARCH_RECOVERY_REQUIRED: ASSESSMENT_RULE_FAILED:claims. Invalidated dependent evidence: {\"stage\":\"VALIDATING\",\"evidenceRefs\":{\"research\":{\"path\":\"research-missing.json\",\"sha256\":\"78f96c801faea3811cd26060826611129fcaea498560c10619d6199e41eaafb4\"},\"assessment\":{\"path\":\".automation/article-imports/evidence/article-7eb9bc43-e5ae-4f3a-9923-9fe9205c9b33/210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2.json\",\"sha256\":\"210a2f4aedca9573522a0b92d76b73999d265e94bdb131cc62665b3a28917ee2\"},\"editorial\":{\"path\":\".automation/article-imports/evidence/article-7eb9bc43-e5ae-4f3a-9923-9fe9205c9b33/b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928.json\",\"sha256\":\"b2bbcc2b996b1de1de6b1edadccb5edc296cae2f2dfd57509b40e431b675b928\"},\"presentation\":{\"path\":\".automation/article-imports/evidence/article-7eb9bc43-e5ae-4f3a-9923-9fe9205c9b33/973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a.json\",\"sha256\":\"973678b4581eeda9f6baff773876fc708a89edd4489a73c57c3fdb123d6fa87a\"},\"production\":{\"path\":\".automation/article-imports/evidence/article-7eb9bc43-e5ae-4f3a-9923-9fe9205c9b33/f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f.json\",\"sha256\":\"f89c4eccf0e8ef176f77bba8549bc8618037185822afbd74583e799cd39ea78f\"}}}",
+      "priorReadable": {
+        "research": true,
+        "assessment": true,
+        "editorial": true,
+        "presentation": true,
+        "production": true
+      },
+      "recoveredStage": "TRANSFORMING",
+      "freshResearchRef": {
+        "path": "research-reacquired.json",
+        "sha256": "86699642b7b932b5cedb8072e6970237324f64705e2325074ed102c40a8b45cb"
+      },
+      "examinedRevision": "5084ac4d30a42ec9ccd6a5eaaba7b06224f1c5c6d963f4b7750d0f0f2323900a"
+    },
+    "externalWorkerCalls": 0
+  },
+  "retentionGraph": {
+    "resolvedCategories": [
+      "research",
+      "rejected-finding",
+      "resolution",
+      "editorial-judgment",
+      "browser-observation",
+      "production-proof"
+    ],
+    "frozenFileCount": 8,
+    "allExactRevisions": true,
+    "retentionNote": "The generic frozen graph retains exact bytes. Canonical registration is evaluated separately at exercised product boundaries."
+  },
+  "unreachable": [
+    "No first-class canonical register schema exists for rejected findings, resolutions, editorial judgments, browser observations, or production proof.",
+    "No approval in the active assessment/editorial/presentation/production chain is independent of research, so a surviving independent approval case cannot be constructed through the current controller contract.",
+    "A rejected finding has a disposition and evidence refs, but the active schema has no separate integrity-bound resolution record."
+  ]
+}
