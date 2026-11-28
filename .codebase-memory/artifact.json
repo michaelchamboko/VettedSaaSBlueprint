@@ -1,12 +1,12 @@
 {
     "schema_version": 2,
-    "commit": "8c3f9fa2939c441e16db6b54fbe9ba45c43b42f1",
-    "indexed_at": "2026-11-24T21:37:07Z",
+    "commit": "98746cb134487e30f55c7e9c02a0e4500dfc220f",
+    "indexed_at": "2026-11-28T10:34:35Z",
     "project": "VettedSaaSBlueprint",
-    "nodes": 20571,
-    "edges": 35427,
-    "original_size": 72941568,
-    "compressed_size": 6025258,
+    "nodes": 22557,
+    "edges": 41435,
+    "original_size": 81002496,
+    "compressed_size": 6673814,
     "compression_level": 9,
     "reconcile_basis": "git-clean-head"
 }
