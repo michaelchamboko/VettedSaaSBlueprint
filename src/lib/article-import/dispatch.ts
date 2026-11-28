@@ -92,11 +92,11 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
     const priorRejection = await consumeHeroRejection();
     if (priorRejection) return priorRejection;
     const first = await baseExecutor(context);
+    if (!first.continuation || first.continuation.kind !== "work") return first;
     const handoffVerification = await verifyGateHandoffForDispatch(root, first);
     if (handoffVerification?.status === "held") {
       return { ...first, continuation: undefined, nextAction: `Gate handoff held before dispatch: ${handoffVerification.reason}` };
     }
-    if (!first.continuation || first.continuation.kind !== "work") return first;
     const workPath = first.continuation.workPath;
     const resultPath = first.continuation.resultPath;
     const packet = JSON.parse(await readFile(path.resolve(root, workPath), "utf8")) as Record<string, unknown>;
