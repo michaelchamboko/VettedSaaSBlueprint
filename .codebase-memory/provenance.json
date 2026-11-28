@@ -1,14 +1,14 @@
 {
   "toolVersion": "0.12.1",
-  "sourceSha": "f026bca8b53aecca829262e9a27820ac6d078892",
-  "sourceDigest": "5b7301283f401a30874f73e96446cdcfbb27165687890f06bac0063ae9616c16",
+  "sourceSha": "98746cb134487e30f55c7e9c02a0e4500dfc220f",
+  "sourceDigest": "e7ea68fa02ecfadbded33a76312233e71f77358a41fb3554faccc682cc9b0c97",
   "hashes": {
-    "graph.db.zst": "3dc93bfba25772af089ff99a5bc04444698856549fb234768b81c57cd642101f",
-    "artifact.json": "c9aefe373b3c295d37eedcfa18f269fa0121b047a9c9803eae427f6eb2574599",
+    "graph.db.zst": "f6afd2c4271c6e46c108030b1e75404244b78dd14e6e70b48fe111d68cf8e7c4",
+    "artifact.json": "de7f87998049e5ef61c9ddd435f5c12d87530464c4d89b75fe40af72629f1b4d",
     ".gitattributes": "e9ccd7b5d343bd2ceb7268d460c3215b10511d11988ec76624abfa0cca46bd44"
   },
-  "durationMs": 8250,
-  "indexedFiles": 1397,
+  "durationMs": 8992,
+  "indexedFiles": 1475,
   "excluded": [
     ".codebase-memory/.gitattributes",
     ".codebase-memory/artifact.json",
@@ -124,44 +124,44 @@
     "excluded": {
       "dirs": [
         ".codebase-memory",
-        "gate-a-evidence",
-        ".git",
         "gate-b-evidence",
-        ".opencode"
+        ".opencode",
+        ".git",
+        "gate-a-evidence"
       ],
       "count": 6,
       "truncated": true
     },
-    "not_indexed_files_count": 522,
+    "not_indexed_files_count": 570,
     "not_indexed_files": {
       "files": [
         {
-          "path": "src/app/icon.svg",
+          "path": "public/generated/getresponse-studio-journey.png",
           "reason": "ignored-suffix"
         },
         {
-          "path": "docs/design-references/landing-pages/captures/lp-ref-0018/desktop.webp",
+          "path": "public/generated/affiliate-catalogue-hero.png",
           "reason": "ignored-suffix"
         },
         {
-          "path": "docs/design-references/landing-pages/captures/lp-ref-0018/mobile.webp",
+          "path": "public/generated/getresponse-marketing-automation-workflow-v1.png",
           "reason": "ignored-suffix"
         },
         {
-          "path": "docs/design-references/landing-pages/captures/lp-ref-0062/desktop.webp",
+          "path": "public/blog/images/practice-migration-hero.webp",
           "reason": "ignored-suffix"
         },
         {
-          "path": "docs/design-references/landing-pages/captures/lp-ref-0062/mobile.webp",
+          "path": "public/blog/images/ai-dubbing-language-package.webp",
           "reason": "ignored-suffix"
         }
       ],
-      "count": 522,
+      "count": 570,
       "truncated": true,
       "note": "Excluded by design (gitignore/.cbmignore/skip-lists); examples only — full list in 'logfile'."
     },
     "skipped_count": 0,
-    "logfile": "/home/runner/.cache/codebase-memory-mcp/logs/VettedSaaSBlueprint-1795777090.log",
+    "logfile": "/home/runner/.cache/codebase-memory-mcp/logs/VettedSaaSBlueprint-1795862075.log",
     "parse_partial_count": 3,
     "parse_partial": {
       "files": [
@@ -183,10 +183,10 @@
       "note": "Indexed, but constructs in these line ranges may be missing (best-effort signal); examples only — full list via index_status or 'logfile'."
     },
     "parse_unusable_count": 0,
-    "nodes": 21191,
-    "edges": 38352,
-    "expected_nodes": 21191,
-    "expected_edges": 38352,
+    "nodes": 22557,
+    "edges": 41435,
+    "expected_nodes": 22557,
+    "expected_edges": 41435,
     "adr_present": false,
     "adr_hint": "Project indexed. Consider creating an Architecture Decision Record: explore the codebase with get_architecture(aspects=['all']), then use manage_adr(mode='update') to persist architectural insights across sessions.",
     "artifact_present": true,

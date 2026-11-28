@@ -10,6 +10,7 @@ const CONFIG = /^(next|postcss|tailwind)\.config\.(?:js|cjs|mjs|ts|cts|mts)$/;
 const ENTRY = /^src\/(?:middleware|proxy|instrumentation|instrumentation-client)\.(?:js|ts)$/;
 const excluded = (file: string) => file === "src/lib/article-import" || file.startsWith("src/lib/article-import/");
 const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+const globalInput = (file: string) => ROOT_FILES.has(file) || CONFIG.test(file) || ENTRY.test(file);
 function included(file: string): boolean {
   return !excluded(file) && !file.includes("\\") && !file.split("/").some((part) => part === ".." || part === "." || !part)
     && (ROOT_FILES.has(file) || CONFIG.test(file) || ENTRY.test(file) || ROOTS.some((root) => file.startsWith(`${root}/`)));
@@ -34,6 +35,50 @@ export const detectorCoreFiles = {
 const RENDERABLE = /\.(?:tsx?|jsx?|css|scss|sass|less|html|vue|svelte)$/;
 const PAGE_ENTRY = /^(?:page|layout|template)\.(?:tsx?|jsx?)$/;
 const STYLE = /\.(?:css|scss|sass|less)$/;
+const SERVING_INPUTS: Record<string, readonly string[]> = {
+  "direct-review": [
+    "src/app/landing-page-builders/[slug]/page.tsx", "src/components/landing/DirectReviewPage.tsx",
+    "src/components/landing/AffiliateDisclosure.tsx", "src/components/landing/EditorialReviewPage.tsx",
+    "src/components/landing/LandingPageMotion.tsx", "src/components/landing/LegalTrustLinks.tsx",
+    "src/components/landing/ReferenceComposedReviewPage.tsx", "src/components/public/ReviewedArticleHero.tsx",
+    "src/lib/affiliate/approved-urls.ts", "src/lib/article-heroes.ts", "src/lib/blog/contracts.ts",
+    "src/lib/decision-journey/presentation-options.ts", "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts",
+    "src/lib/design-references/contracts.ts", "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts",
+    "src/lib/generated/landing-pages.ts", "src/lib/landing/reference-composed.ts", "src/lib/schemas/contracts.ts",
+    "src/lib/site/public-site.ts", "src/lib/visibility-pages/contracts.ts", "approved-urls.md",
+  ],
+  blog: [
+    "src/app/blog/[slug]/page.tsx", "src/components/public/PublicFooter.tsx", "src/components/public/PublicHeader.tsx",
+    "src/components/public/PublicPageShell.tsx", "src/components/public/ReviewedArticleHero.tsx", "src/lib/article-heroes.ts",
+    "src/lib/blog/catalogue.ts", "src/lib/blog/contracts.ts", "src/lib/blog/structured-data.ts",
+    "src/lib/decision-journey/presentation-options.ts", "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts",
+    "src/lib/design-references/contracts.ts", "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts",
+    "src/lib/schemas/contracts.ts", "src/lib/site/public-site.ts", "src/lib/visibility-pages/contracts.ts",
+  ],
+  visibility: [
+    "src/app/ai-voice-generators/elevenlabs-alternatives/page.tsx", "src/app/ai-voice-generators/page.tsx",
+    "src/app/comparisons/elevenlabs-vs-murf/page.tsx", "src/app/comparisons/moosend-vs-mailchimp/page.tsx",
+    "src/app/email-marketing-software/moosend-alternatives/page.tsx", "src/app/email-marketing-software/page.tsx",
+    "src/app/guides/ai-voice-generators-for-youtube/page.tsx", "src/app/guides/first-email-automation-workflow/page.tsx",
+    "src/app/guides/how-to-evaluate-ai-voice-quality/page.tsx", "src/app/tools/email-marketing-cost-calculator/page.tsx",
+    "src/components/public/ReviewedArticleHero.tsx", "src/components/visibility/EmailCostCalculator.tsx", "src/components/visibility/VisibilityPage.tsx",
+    "src/lib/article-heroes.ts", "src/lib/blog/contracts.ts", "src/lib/decision-journey/presentation-options.ts",
+    "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts", "src/lib/design-references/contracts.ts",
+    "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts", "src/lib/schemas/contracts.ts",
+    "src/lib/site/public-site.ts", "src/lib/visibility-pages/calculator.ts", "src/lib/visibility-pages/catalogue.ts", "src/lib/visibility-pages/contracts.ts",
+  ],
+  "decision-set": [
+    "src/app/decision-hub/[setSlug]/page.tsx", "src/app/decision-hub/page.tsx", "src/app/scenarios/[setSlug]/page.tsx",
+    "src/app/scenarios/page.tsx", "src/app/solution-hub/[setSlug]/page.tsx", "src/app/solution-hub/page.tsx",
+    "src/components/public/DecisionJourneyMotion.tsx", "src/components/public/DecisionJourneyPage.tsx", "src/components/public/PublicFooter.tsx",
+    "src/components/public/PublicHeader.tsx", "src/components/public/PublicPageShell.tsx", "src/components/public/ReviewedArticleHero.tsx",
+    "src/content/decision-journeys/catalogue.json", "src/lib/article-heroes.ts", "src/lib/blog/contracts.ts",
+    "src/lib/decision-journey/catalogue.ts", "src/lib/decision-journey/presentation-options.ts", "src/lib/decision-journey/presentation.ts",
+    "src/lib/decision-journey/sets.ts", "src/lib/decision-journey/shared-schemas.ts", "src/lib/design-references/contracts.ts",
+    "src/lib/design-references/fingerprint.ts", "src/lib/editorial/refinement.ts", "src/lib/schemas/contracts.ts",
+    "src/lib/site/public-site.ts", "src/lib/visibility-pages/contracts.ts",
+  ],
+};
 function routeDirectoryMatches(directory: string, route: string, prefix: boolean): boolean {
   const pattern = directory.split("/").filter((part) => part && !/^\(.*\)$/.test(part));
   const segments = route.split("/").filter(Boolean);
@@ -66,6 +111,31 @@ export function requiredDetectorInputs(manifest: z.infer<typeof renderingInputsS
     if (!PAGE_ENTRY.test(name) && !STYLE.test(name)) return false;
     return target.renderedRoutes.some((route) => routeDirectoryMatches(directory, route, name.startsWith("layout.") || name.startsWith("template.") || STYLE.test(name)));
   });
+}
+
+/** Runtime approval dependencies shared by every route for a format. Target content and assets are validated by their format owner. */
+export function publicationServingInputs(manifest: z.infer<typeof renderingInputsSchema>, target: { format: string; renderedRoutes: string[] }): EvidenceRef[] {
+  const declared = publicationServingInputPaths(target.format);
+  if (!target.renderedRoutes.length || !SERVING_INPUTS[target.format]) throw new Error("PUBLICATION_SERVING_TARGET_UNSUPPORTED");
+  const selected = declared.filter((file) => {
+    if (!file.startsWith("src/app/") || !PAGE_ENTRY.test(path.posix.basename(file))) return true;
+    const relative = file.slice("src/app/".length), slash = relative.lastIndexOf("/");
+    const directory = slash < 0 ? "" : relative.slice(0, slash);
+    return target.renderedRoutes.some((route) => routeDirectoryMatches(directory, route, false));
+  });
+  const selectedRefs = selected.map((file) => {
+    const ref = manifest.files.find((candidate) => candidate.path === file);
+    if (!ref) throw new Error(`PUBLICATION_SERVING_INPUT_MISSING:${file}`);
+    return ref;
+  });
+  const globals = manifest.files.filter((ref) => globalInput(ref.path));
+  return [...new Map([...selectedRefs, ...globals].map((ref) => [ref.path, ref])).values()];
+}
+
+export function publicationServingInputPaths(format: string): string[] {
+  const declared = SERVING_INPUTS[format];
+  if (!declared) throw new Error("PUBLICATION_SERVING_TARGET_UNSUPPORTED");
+  return ["src/app/layout.tsx", "src/app/globals.css", ...declared];
 }
 
 /** Deterministic, read-only inventory; symlinks cannot hide external or omitted inputs. */
@@ -120,14 +190,20 @@ export async function captureRenderingInputs(root: string, importId: string): Pr
 }
 
 /** Historical mode reads only the terminal's frozen references, never current inventory. */
-export async function validateRenderingInputs(root: string, ref: EvidenceRef, options: { historical?: boolean } = {}) {
+export async function validateRenderingInputs(root: string, ref: EvidenceRef, options: { historical?: boolean; target?: { format: string; renderedRoutes: string[] } } = {}) {
   if (options.historical && !isEvidenceSnapshotActive()) throw new Error("RENDER_INPUT_FROZEN_SNAPSHOT_REQUIRED");
   const manifest = renderingInputsSchema.parse(await readEvidence(root, ref));
-  if (!options.historical) {
+  if (!options.historical && options.target) {
+    const currentGlobals = (await renderingInputPaths(root)).filter(globalInput);
+    const recordedGlobals = manifest.files.map((file) => file.path).filter(globalInput);
+    if (JSON.stringify(currentGlobals) !== JSON.stringify(recordedGlobals)) throw new Error("RENDER_INPUT_GLOBAL_INVENTORY_CHANGED");
+  }
+  if (!options.historical && !options.target) {
     const current = await renderingInputPaths(root);
     if (JSON.stringify(current) !== JSON.stringify(manifest.files.map((file) => file.path))) throw new Error("RENDER_INPUT_INVENTORY_CHANGED");
   }
-  for (const file of manifest.files) {
+  const selected = options.target && !options.historical ? publicationServingInputs(manifest, options.target) : manifest.files;
+  for (const file of selected) {
     try { await verifyEvidenceRef(root, file); }
     catch (error) { throw new Error(`RENDER_INPUT_CHANGED:${file.path}`, { cause: error }); }
   }

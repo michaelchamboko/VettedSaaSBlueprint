@@ -11,8 +11,14 @@ import { advanceImport, createArticleImport, loadImport, saveImport, withImportL
 import { createIntakeRun } from "../src/lib/article-import/intake";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
+import { articleHeroHandoff, bindGeneratedArticleHero } from "../src/lib/article-import/hero-image";
+import { sha256 } from "../src/lib/article-import/execution-evidence";
+import { importArtifactTarget } from "../src/lib/article-import/format-validation";
+import { captureRenderingInputs } from "../src/lib/article-import/rendering-inputs";
+import { nextArticleActivity, recordArticleActivity } from "../src/lib/article-import/activity-checkpoints";
 import { approveFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
 import { fixtureProbe, prepareCommandCheckout } from "./fixtures/article-command";
+import sharp from "sharp";
 
 test("a callable recovery command rejects a secondary checkout before accessing leases", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "orch02-preflight-"));
@@ -25,21 +31,52 @@ test("a callable recovery command rejects a secondary checkout before accessing 
 
 async function candidate(root: string) {
   await prepareCommandCheckout(root);
+  for (const file of ["src/components/landing/DirectReviewPage.tsx", "src/app/layout.tsx", "src/app/globals.css", "src/app/landing-page-previews/[slug]/page.tsx"]) {
+    await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+    await writeFile(path.join(root, file), await readFile(file));
+  }
   await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
   await writeFile(path.join(root, "article.md"), "---\ntitle: Example\naffiliate_name: Example\naffiliate_url: https://start.switcherstudio.com/anme6fqvgdx9\n---\nAn article with enough text to qualify as useful source content for the import pipeline and its approval tests.");
   const source = await createArticleImport(root, "article.md");
-  const approved = await approveFixture(root, { ...source, stage: "REFINING" });
-  const validating = await advanceImport(root, approved, "fixture approved");
+  const approved = await approveFixture(root, { ...source, stage: "REFINING" }, { currentPolicy: true });
+  const artifact = JSON.parse(await readFile(path.join(root, approved.contentApproval!.artifactPath), "utf8"));
+  const target = importArtifactTarget("direct-review", artifact);
+  const handoff = articleHeroHandoff(root, approved, target, artifact, 0);
+  const png = await sharp({ create: { width: 1600, height: 900, channels: 3, background: "#d9c7a8" } }).png().toBuffer();
+  await mkdir(path.dirname(path.join(root, handoff.originalFile)), { recursive: true });
+  await writeFile(path.join(root, handoff.originalFile), png);
+  const providerOutputPath = `build-pack/article-import/${approved.importId}/hero-provider-output-0.json`;
+  const providerOutput = { schemaVersion: "ArticleHeroProviderOutputV1", provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "ownership-fixture", generatedAt: "2026-11-27T00:00:00.000Z", generatedImage: { providerAssetPath: "generated_images/ownership-fixture.png", originalSha256: sha256(png), outputHint: "Synthetic ownership fixture." } };
+  await writeFile(path.join(root, providerOutputPath), JSON.stringify(providerOutput));
+  const generationPath = `build-pack/article-import/${approved.importId}/hero-generation-0.json`;
+  const generation = { schemaVersion: "ArticleHeroGenerationEvidenceV1", importId: approved.importId, sourceFingerprint: approved.sourceFingerprint, format: approved.format, slug: target.slug, artifactFingerprint: approved.contentApproval!.artifactFingerprint, originalRef: { path: handoff.originalFile, sha256: sha256(png) }, alt: handoff.alt, generation: { provider: "openai", tool: "chatgpt-imagegen", interface: "built-in", toolCallId: "ownership-fixture", generatedAt: "2026-11-27T00:00:00.000Z", prompt: handoff.prompt, promptSha256: handoff.promptSha256, outputSha256: sha256(png), providerOutputRef: { path: providerOutputPath, sha256: sha256(await readFile(path.join(root, providerOutputPath))) } } };
+  await writeFile(path.join(root, generationPath), JSON.stringify(generation));
+  const hero = await bindGeneratedArticleHero(root, handoff, generationPath);
+  let validating = await advanceImport(root, { ...approved, heroImage: hero.binding, evidenceRefs: { ...approved.evidenceRefs, hero: hero.evidenceRef } }, "fixture approved");
+  const renderingRef = await captureRenderingInputs(root, validating.importId);
+  await mkdir(path.join(root, ".automation/article-imports/work", validating.importId), { recursive: true });
+  for (;;) {
+    const activity = await nextArticleActivity(root, validating, renderingRef);
+    if (!activity) break;
+    const resultPath = `.automation/article-imports/work/${validating.importId}/ownership-${activity.id}.result.json`;
+    await writeFile(path.join(root, resultPath), JSON.stringify({
+      idempotencyKey: importPacketId(validating, "VALIDATING", "targeted-repair"),
+      sourceFingerprint: validating.sourceFingerprint,
+      summary: `Accepted synthetic ownership checkpoint ${activity.id}.`,
+      activity: { ...activity, reviewer: "ownership-fixture", executionId: `ownership-${activity.id}`, outcome: "accepted", observation: "The synthetic bound activity passed before the ownership race." },
+    }));
+    validating = await recordArticleActivity(root, validating, resultPath, activity, JSON.parse(await readFile(path.join(root, resultPath), "utf8")));
+  }
   const rendered = await presentFixture(root, validating);
   assert.ok(rendered.presentation);
   const prepared = { ...rendered, presentation: undefined };
   await withImportLease(root, prepared.importId, () => saveImport(root, prepared));
+  await writeFile(path.join(root, "page-design.json"), JSON.stringify(validPageDesignReceipt));
+  await writeFile(path.join(root, "validation-receipt.json"), JSON.stringify(rendered.presentation.validation));
   const key = importPacketId(prepared, "VALIDATING", "targeted-repair");
   const work = path.join(root, ".automation/article-imports/work", prepared.importId);
   await mkdir(work, { recursive: true });
-  await writeFile(path.join(root, "page-design.json"), JSON.stringify(validPageDesignReceipt));
-  await writeFile(path.join(root, "validation-receipt.json"), JSON.stringify(rendered.presentation.validation));
-  await writeFile(path.join(work, key + ".result.json"), JSON.stringify({
+  await writeFile(path.join(work, `${key}.${prepared.heroImage!.assetRef.sha256}.result.json`), JSON.stringify({
     idempotencyKey: key, sourceFingerprint: source.sourceFingerprint, summary: "resume accepted",
     work: { stage: "VALIDATING", validationGate: "fixture:resume", validationReceiptPath: "validation-receipt.json", presentationEvidencePath: prepared.evidenceRefs!.presentation!.path },
   }));

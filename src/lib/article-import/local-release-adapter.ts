@@ -1,29 +1,53 @@
-import { execFile as execFileCallback } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { promisify } from "node:util";
 import type { ReleaseOperations, ReleaseDeployment, ReleaseGitSnapshot, FullProductionChecks } from "./release";
 import type { ImportFormat } from "./contracts";
 import { validateReleasePaths } from "./release";
 import { readImportArtifactTarget } from "./format-validation";
 import { assertVerifierResult, requireVerificationMode, storeProductionVerifierEvidence } from "./verification-evidence";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
+import { ImportFailure } from "./failure-routing";
 
-const execFile = promisify(execFileCallback);
+export function deploymentOutcomeUncertain(code = "PROVIDER_DEPLOY_FAILED"): never {
+  if (!/^[A-Z][A-Z0-9_]{2,80}$/.test(code)) code = "PROVIDER_DEPLOY_FAILED";
+  throw new ImportFailure("uncertain-external-outcome", `DEPLOYMENT_OUTCOME_UNCERTAIN: ${code}`);
+}
+
+const RELEASE_OPERATION_META_KEY = "vettedArticleReleaseOperation";
+const RELEASE_COMMIT_META_KEY = "vettedArticleReleaseCommit";
+const spawn = createRequire(import.meta.url)("cross-spawn") as typeof import("node:child_process").spawn;
 export type ReleaseCommandRunner = (command: string, args: readonly string[]) => Promise<{ stdout: string; stderr: string }>;
 export type ReleaseJsonFetcher = (url: string) => Promise<Record<string, unknown>>;
 
-function defaultRunner(repositoryRoot: string): ReleaseCommandRunner {
-  return async (command, args) => execFile(command, [...args], { cwd: repositoryRoot, windowsHide: true, maxBuffer: 2_000_000, shell: true });
+export function createReleaseCommandRunner(repositoryRoot: string): ReleaseCommandRunner {
+  return (command, args) => new Promise((resolve, reject) => {
+    const child = spawn(command, [...args], { cwd: repositoryRoot, windowsHide: true, shell: false });
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    let size = 0;
+    child.stdout?.on("data", (chunk: Buffer) => { size += chunk.length; if (size <= 2_000_000) stdout.push(chunk); });
+    child.stderr?.on("data", (chunk: Buffer) => { size += chunk.length; if (size <= 2_000_000) stderr.push(chunk); });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      const result = { stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") };
+      if (size > 2_000_000) return reject(new Error("COMMAND_OUTPUT_LIMIT"));
+      if (code !== 0) return reject(new Error(`COMMAND_FAILED_${code ?? "UNKNOWN"}`));
+      resolve(result);
+    });
+  });
 }
 
 function sha(value: string): string { return value.trim().split(/\s+/)[0] ?? ""; }
 function withToken(args: readonly string[], token: string | undefined): string[] { return token ? [...args, "--token", token] : [...args]; }
-async function linkedProjectId(repositoryRoot: string): Promise<string | undefined> {
+async function linkedProject(repositoryRoot: string): Promise<{ projectId?: string; orgId?: string }> {
   try {
-    const parsed = JSON.parse(await readFile(path.join(repositoryRoot, ".vercel", "project.json"), "utf8")) as { projectId?: unknown };
-    return typeof parsed.projectId === "string" && parsed.projectId.length > 0 ? parsed.projectId : undefined;
-  } catch { return undefined; }
+    const parsed = JSON.parse(await readFile(path.join(repositoryRoot, ".vercel", "project.json"), "utf8")) as { projectId?: unknown; orgId?: unknown };
+    return {
+      ...(typeof parsed.projectId === "string" && parsed.projectId.length > 0 && { projectId: parsed.projectId }),
+      ...(typeof parsed.orgId === "string" && parsed.orgId.length > 0 && { orgId: parsed.orgId }),
+    };
+  } catch { return {}; }
 }
 async function git(runner: ReleaseCommandRunner, args: readonly string[]): Promise<string> { return (await runner("git", args)).stdout.trim(); }
 async function inspect(runner: ReleaseCommandRunner): Promise<ReleaseGitSnapshot> {
@@ -74,8 +98,8 @@ async function resolveReleaseArtifactPath(repositoryRoot: string, format: Import
   throw new Error("ARTIFACT_PATH_REQUIRED");
 }
 
-export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string; importId?: string; sourceFingerprint?: string }): ReleaseOperations {
-  const runner = options.runner ?? defaultRunner(repositoryRoot);
+export function createLocalReleaseOperations(repositoryRoot: string, options: { runner?: ReleaseCommandRunner; fetchJson?: ReleaseJsonFetcher; providerRead?: ReleaseJsonFetcher; projectId?: string; teamId?: string; format: ImportFormat; slug?: string; origin?: string; artifactPath?: string; importId?: string; sourceFingerprint?: string }): ReleaseOperations {
+  const runner = options.runner ?? createReleaseCommandRunner(repositoryRoot);
   const defaultFetchJson: ReleaseJsonFetcher = async (url) => {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP_${response.status}`);
@@ -85,7 +109,9 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
   };
   const fetchJson = options.fetchJson ?? defaultFetchJson;
   const token = process.env.VERCEL_TOKEN;
-  const configuredProjectId = process.env.VERCEL_PROJECT_ID;
+  const linked = linkedProject(repositoryRoot);
+  const projectId = linked.then((value) => options.projectId ?? process.env.VERCEL_PROJECT_ID ?? value.projectId);
+  const teamId = linked.then((value) => options.teamId ?? process.env.VERCEL_ORG_ID ?? value.orgId);
   const previousId = process.env.VERCEL_PREVIOUS_DEPLOYMENT_ID;
   // Production verification is pinned to the trusted repository origin; a caller-supplied
   // origin (for example a different reachable Vercel project) must never redirect release checks.
@@ -93,23 +119,79 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
   if (requestedOrigin !== undefined && requestedOrigin !== REPOSITORY_CANONICAL_ORIGIN) throw new Error("ORIGIN_NOT_CANONICAL");
   const origin = REPOSITORY_CANONICAL_ORIGIN;
   const deploymentApi = `${origin.replace(/\/$/, "")}/api/deployment`;
-  const inspectArgs = (target: string) => withToken(["inspect", target, "--json"], token);
-  async function verifiedDeployment(target: string): Promise<{ id: string; target: string; readyState: string; commitSha: string }> {
-    const inspected = JSON.parse((await runner("vercel", inspectArgs(target))).stdout) as { id?: unknown; target?: unknown; readyState?: unknown; gitCommitSha?: unknown };
-    if (typeof inspected.id !== "string" || inspected.target !== "production" || inspected.readyState !== "READY") throw new Error("DEPLOYMENT_IDENTITY_UNVERIFIED");
-    const api = await fetchJson(deploymentApi);
-    if (typeof api.commitSha !== "string" || api.environment !== "production") throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED");
-    if (typeof inspected.gitCommitSha === "string" && inspected.gitCommitSha !== api.commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
-    return { id: inspected.id, target: "production", readyState: "READY", commitSha: typeof inspected.gitCommitSha === "string" ? inspected.gitCommitSha : api.commitSha };
+  function providerTarget(target: string): string {
+    try { return new URL(target).hostname; } catch { return target; }
+  }
+  async function providerPath(pathname: string, query: Record<string, string>): Promise<string> {
+    const params = new URLSearchParams(query);
+    const team = await teamId;
+    if (team) params.set("teamId", team);
+    return `${pathname}?${params.toString()}`;
+  }
+  async function providerJson(endpoint: string, failureCode: string): Promise<Record<string, unknown>> {
+    try {
+      const parsed: unknown = options.providerRead ? await options.providerRead(endpoint) : JSON.parse((await runner("vercel", withToken(["api", endpoint], token))).stdout);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid");
+      return parsed as Record<string, unknown>;
+    } catch { throw new Error(failureCode); }
+  }
+  type ProviderDeployment = { id: string; projectId: string; target: "production"; readyState: "READY"; operationKey?: string; claimedCommitSha?: string; gitCommitSha?: string };
+  async function readProviderDeployment(target: string): Promise<ProviderDeployment> {
+    const expectedProjectId = await projectId;
+    if (!expectedProjectId) throw new Error("VERCEL_PROJECT_ID_MISSING");
+    const endpoint = await providerPath(`/v13/deployments/${encodeURIComponent(providerTarget(target))}`, { withGitRepoInfo: "true" });
+    const value = await providerJson(endpoint, "PROVIDER_DEPLOYMENT_READ_FAILED");
+    if (typeof value.id !== "string" || value.projectId !== expectedProjectId || value.target !== "production" || value.readyState !== "READY") throw new Error("DEPLOYMENT_IDENTITY_UNVERIFIED");
+    const meta = value.meta && typeof value.meta === "object" && !Array.isArray(value.meta) ? value.meta as Record<string, unknown> : {};
+    const gitSource = value.gitSource && typeof value.gitSource === "object" && !Array.isArray(value.gitSource) ? value.gitSource as Record<string, unknown> : {};
+    const gitCommitSha = typeof gitSource.sha === "string" ? gitSource.sha : undefined;
+    const claimedCommitSha = typeof meta[RELEASE_COMMIT_META_KEY] === "string" ? meta[RELEASE_COMMIT_META_KEY] : undefined;
+    if ((gitCommitSha && !/^[a-f0-9]{40}$/.test(gitCommitSha)) || (claimedCommitSha && !/^[a-f0-9]{40}$/.test(claimedCommitSha))) throw new Error("DEPLOYMENT_COMMIT_METADATA_INVALID");
+    if (gitCommitSha && claimedCommitSha && gitCommitSha !== claimedCommitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
+    return {
+      id: value.id, projectId: expectedProjectId, target: "production", readyState: "READY",
+      ...(typeof meta[RELEASE_OPERATION_META_KEY] === "string" && { operationKey: meta[RELEASE_OPERATION_META_KEY] }),
+      ...(claimedCommitSha && { claimedCommitSha }), ...(gitCommitSha && { gitCommitSha }),
+    };
+  }
+  async function canonicalDeployment(): Promise<{ id: string; target: "production"; readyState: "READY"; commitSha: string }> {
+    const expectedProjectId = await projectId;
+    if (!expectedProjectId) throw new Error("VERCEL_PROJECT_ID_MISSING");
+    const hostname = new URL(origin).hostname;
+    const provider = await readProviderDeployment(hostname);
+    const aliasEndpoint = await providerPath(`/v4/aliases/${encodeURIComponent(hostname)}`, { projectId: expectedProjectId });
+    const alias = await providerJson(aliasEndpoint, "PROVIDER_ALIAS_READ_FAILED");
+    if (alias.deploymentId !== provider.id) throw new Error("DEPLOYMENT_ALIAS_IDENTITY_UNVERIFIED");
+    let served: Record<string, unknown>;
+    try { served = await fetchJson(deploymentApi); } catch { throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNAVAILABLE"); }
+    if (typeof served.commitSha !== "string" || !/^[a-f0-9]{40}$/.test(served.commitSha) || served.environment !== "production") throw new Error("DEPLOYMENT_COMMIT_ENDPOINT_UNVERIFIED");
+    if (provider.gitCommitSha && provider.gitCommitSha !== served.commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
+    if (provider.claimedCommitSha && provider.claimedCommitSha !== served.commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISMATCHED");
+    return { id: provider.id, target: "production", readyState: "READY", commitSha: served.commitSha };
+  }
+  async function operationDeployments(operationKey: string): Promise<string[]> {
+    const expectedProjectId = await projectId;
+    if (!expectedProjectId) throw new Error("VERCEL_PROJECT_ID_MISSING");
+    const endpoint = await providerPath("/v6/deployments", { projectId: expectedProjectId, target: "production", [`meta-${RELEASE_OPERATION_META_KEY}`]: operationKey, limit: "100" });
+    const parsed = await providerJson(endpoint, "DEPLOYMENT_OPERATION_LOOKUP_FAILED");
+    const deployments = Array.isArray(parsed.deployments) ? parsed.deployments : undefined;
+    const pagination = parsed.pagination && typeof parsed.pagination === "object" && !Array.isArray(parsed.pagination) ? parsed.pagination as Record<string, unknown> : undefined;
+    if (!deployments || !pagination || pagination.next !== null) throw new Error("DEPLOYMENT_OPERATION_LOOKUP_INCOMPLETE");
+    return deployments.map((deployment) => {
+      if (!deployment || typeof deployment !== "object") throw new Error("DEPLOYMENT_OPERATION_LOOKUP_INVALID");
+      const item = deployment as { uid?: unknown; id?: unknown; url?: unknown };
+      const identity = [item.uid, item.id, item.url].find((value): value is string => typeof value === "string" && value.length > 0);
+      if (!identity) throw new Error("DEPLOYMENT_OPERATION_LOOKUP_INVALID");
+      return identity;
+    });
   }
   return {
     async preflight() {
       const reasons: string[] = [];
-      const projectId = configuredProjectId ?? await linkedProjectId(repositoryRoot);
-      if (!projectId) reasons.push("VERCEL_PROJECT_ID_MISSING");
+      if (!await projectId) reasons.push("VERCEL_PROJECT_ID_MISSING");
       try { await runner("vercel", withToken(["whoami"], token)); } catch { reasons.push("VERCEL_AUTH_MISSING"); }
       try {
-        await verifiedDeployment(previousId ?? origin);
+        await canonicalDeployment();
       } catch { reasons.push("PREVIOUS_DEPLOYMENT_UNVERIFIED"); }
       if (options.format === "direct-review" && !options.slug && !options.artifactPath) reasons.push("DIRECT_REVIEW_SLUG_MISSING");
       if (options.format === "direct-review" && !options.artifactPath) reasons.push("DIRECT_REVIEW_ARTIFACT_MISSING");
@@ -127,8 +209,8 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       return { ok: true, summary: "all configured validation commands passed" };
     },
     async capturePreviousDeployment() {
-      const target = previousId ?? origin;
-      const parsed = await verifiedDeployment(target);
+      const parsed = await canonicalDeployment();
+      if (previousId && parsed.id !== previousId) throw new Error("PREVIOUS_DEPLOYMENT_ID_MISMATCH");
       return { deploymentId: parsed.id, commitSha: parsed.commitSha, verified: true };
     },
     async commit(message, files) {
@@ -188,15 +270,74 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (!snapshot.clean || snapshot.changedFiles.length) throw new Error("MERGED_RELEASE_WORKTREE_DIRTY");
       await runner("git", ["checkout", "--detach", mergeCommitSha]);
     },
-    async deploy(commitSha): Promise<ReleaseDeployment> {
-      const result = await runner("vercel", withToken(["deploy", "--prod", "--yes"], token));
+    async reconcileDeployment(intent) {
+      if (intent.productionAssignment !== origin) return { status: "inconsistent", missingEvidence: ["PRODUCTION_ASSIGNMENT_MISMATCH"] };
+      try {
+        const legacyOperationKey = `deployment:${intent.commitSha}`;
+        if (intent.operationKey === legacyOperationKey) {
+          if (!intent.recordedDeployment?.deploymentId) {
+            return { status: "inconsistent", missingEvidence: ["LEGACY_DEPLOYMENT_IDENTITY_MISSING"] };
+          }
+          const recorded = await readProviderDeployment(intent.recordedDeployment.deploymentId);
+          const assigned = await canonicalDeployment();
+          if (recorded.id !== intent.recordedDeployment.deploymentId || (recorded.gitCommitSha ?? recorded.claimedCommitSha) !== intent.commitSha
+            || assigned.id !== recorded.id || assigned.commitSha !== intent.commitSha) {
+            return { status: "inconsistent", missingEvidence: ["LEGACY_PROVIDER_IDENTITY_MISMATCH"] };
+          }
+          const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
+          const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
+          return {
+            status: "confirmed",
+            productionAssignment: origin,
+            deployment: { deploymentId: recorded.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: intent.commitSha },
+          };
+        }
+        const candidates = await operationDeployments(intent.operationKey);
+        if (candidates.length > 1) return { status: "inconsistent", missingEvidence: ["DUPLICATE_OPERATION_DEPLOYMENTS"] };
+        const assigned = await canonicalDeployment();
+        if (candidates.length === 1) {
+          const candidate = await readProviderDeployment(candidates[0]);
+          if (candidate.operationKey !== intent.operationKey || candidate.claimedCommitSha !== intent.commitSha
+            || (candidate.gitCommitSha && candidate.gitCommitSha !== intent.commitSha)
+            || assigned.id !== candidate.id || assigned.commitSha !== intent.commitSha) {
+            return { status: "inconsistent", missingEvidence: ["PROVIDER_IDENTITY_MISMATCH"] };
+          }
+          const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
+          const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
+          return {
+            status: "confirmed",
+            productionAssignment: origin,
+            deployment: { deploymentId: candidate.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: intent.commitSha },
+          };
+        }
+        if (assigned.id === intent.rollbackTarget.deploymentId && assigned.commitSha === intent.rollbackTarget.commitSha) {
+          return { status: "not-found", evidence: ["ROLLBACK_TARGET_CONFIRMED"] };
+        }
+        if (assigned.commitSha === intent.commitSha) {
+          return { status: "inconsistent", missingEvidence: ["PRODUCTION_ALIAS_COMMIT_WITHOUT_OPERATION"] };
+        }
+        return { status: "inconsistent", missingEvidence: ["PRODUCTION_ALIAS_UNKNOWN"] };
+      } catch (error) {
+        const code = error instanceof Error && /^[A-Z][A-Z0-9_]{2,80}$/.test(error.message) ? error.message : "PROVIDER_RECONCILIATION_FAILED";
+        return { status: "indeterminate", missingEvidence: [`provider deployment or production alias lookup failed (${code})`] };
+      }
+    },
+    async deploy(commitSha, operationKey): Promise<ReleaseDeployment> {
+      let result;
+      try {
+        result = await runner("vercel", withToken(["deploy", "--prod", "--yes", "--meta", `${RELEASE_OPERATION_META_KEY}=${operationKey}`, "--meta", `${RELEASE_COMMIT_META_KEY}=${commitSha}`], token));
+      } catch {
+        deploymentOutcomeUncertain();
+      }
       const url = result.stdout.match(/https:\/\/[^\s]+/)?.[0];
       if (!url) throw new Error("VERCEL_DEPLOYMENT_URL_MISSING");
-      const inspected = await verifiedDeployment(url);
-      if (inspected.commitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
+      const inspected = await readProviderDeployment(url);
+      const assigned = await canonicalDeployment();
+      if (inspected.operationKey !== operationKey || inspected.claimedCommitSha !== commitSha || (inspected.gitCommitSha && inspected.gitCommitSha !== commitSha)
+        || assigned.id !== inspected.id || assigned.commitSha !== commitSha) throw new Error("DEPLOYMENT_COMMIT_METADATA_MISSING_OR_MISMATCHED");
       const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
       const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
-      return { deploymentId: inspected.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha: inspected.commitSha };
+      return { deploymentId: inspected.id, canonicalUrl: new URL(target.renderedRoutes[0], origin).href, commitSha };
     },
     async verifyProduction(deployment): Promise<FullProductionChecks> {
       if (!options.importId) throw new Error("PRODUCTION_IMPORT_ID_REQUIRED");
@@ -204,12 +345,12 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       const resolvedArtifactPath = await resolveReleaseArtifactPath(repositoryRoot, options.format, options.artifactPath, options.slug);
       const { target } = await readImportArtifactTarget(repositoryRoot, options.format, resolvedArtifactPath, options.slug);
       if (deployment.canonicalUrl !== new URL(target.renderedRoutes[0], origin).href) throw new Error("DEPLOYMENT_CANONICAL_MISMATCH");
-      const deploymentBefore = await verifiedDeployment(origin);
+      const deploymentBefore = await canonicalDeployment();
       if (deploymentBefore.id !== deployment.deploymentId || deploymentBefore.commitSha !== deployment.commitSha) throw new Error("PRODUCTION_DEPLOYMENT_MISMATCH");
       async function capture(command: string, args: string[]) {
         const output = await runner(command, args);
         const result = JSON.parse(output.stdout) as Record<string, unknown>;
-        const deploymentAfter = await verifiedDeployment(origin);
+        const deploymentAfter = await canonicalDeployment();
         const productionVerifierRef = await storeProductionVerifierEvidence(repositoryRoot, options.importId!, {
           schemaVersion: "ImportProductionVerifierEvidenceV1", importId: options.importId!, sourceFingerprint: options.sourceFingerprint!, target, deployment,
           deploymentBefore: { ...deploymentBefore, target: "production", readyState: "READY" },
@@ -243,10 +384,10 @@ export function createLocalReleaseOperations(repositoryRoot: string, options: { 
       if (result.status !== "pass" || pages.length === 0) throw new Error("LANDING_VERIFIER_FAILED");
       return { routeOk: snapshots.every((page) => page.httpOk === true), contentOk: snapshots.every((page) => page.allRevealSectionsVisible === true), disclosureOk: snapshots.every((page) => page.disclosureOk === true), exactCtaOk: snapshots.every((page) => page.allCtasExact === true), desktopOk: pages.every((page) => page.desktop?.httpOk === true), mobileOk: pages.every((page) => page.mobile?.httpOk === true), robotsOk: result.robots_ok === true, sitemapOk: result.sitemap_ok === true, browserErrorsOk: snapshots.every((page) => (page.browserErrors?.length ?? 1) === 0), productionVerifierRef: captured.productionVerifierRef };
     },
-    async rollback(deploymentId) { try { await runner("vercel", withToken(["rollback", deploymentId, "--yes"], token)); return { ok: true, summary: "rollback completed" }; } catch (error) { return { ok: false, summary: String(error) }; } },
+    async rollback(deploymentId) { try { await runner("vercel", withToken(["rollback", deploymentId, "--yes"], token)); return { ok: true, summary: "rollback completed" }; } catch { return { ok: false, summary: "PROVIDER_ROLLBACK_FAILED" }; } },
     async verifyRollback(deploymentId, expectedCommitSha) {
       try {
-        const parsed = await verifiedDeployment(origin);
+        const parsed = await canonicalDeployment();
         return parsed.id === deploymentId && (!expectedCommitSha || parsed.commitSha === expectedCommitSha);
       } catch { return false; }
     },

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-quartz",
+  "reviewerId": "/root/ticket122/r122_quartz",
+  "route": "native-codex-subagent",
+  "genuineIndependentJudgment": true,
+  "reviewedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "observedEvidence": "Pressing Tab once moved focus from 'Read limitations' to the horizontal region, which showed an orange focus outline. Pressing ArrowRight scrolled the region from 0 to 298 pixels while the outline remained visible.",
+  "verdict": "meets",
+  "explanation": "The keyboard interaction brought the entire second limitation, 'A browser may already be sufficient,' into view, including its explanatory text.",
+  "rawResponse": "Observed evidence: Pressing Tab once moved focus from \"Read limitations\" to the horizontal region, which showed an orange focus outline. Pressing ArrowRight scrolled the region from 0 to 298 pixels while the outline remained visible.\n\nVerdict: meets\n\nExplanation: The keyboard interaction brought the entire second limitation, \"A browser may already be sufficient,\" into view, including its explanatory text."
+}

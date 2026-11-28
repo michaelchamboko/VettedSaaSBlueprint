@@ -1,0 +1,1200 @@
+{
+  "date": "2026-11-27T20:40:43.422Z",
+  "browser": "149.0.7827.55",
+  "revision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99",
+  "fixtureServerSha256": "28372bfc0641d21fc83537b82e0544f373313a29e90d1ebfdfd48fdc1f6de0be",
+  "probeSha256": "2842a59e7abf64cc3da3c9f97276fe34290a325a1b617ca74f05c0e6679c1dfb",
+  "rawSha256": "597913d0e225664f52e9edecbda2ab2fc24e548192bb5e54ac04177bf5e3d24b",
+  "target": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+  "control": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+  "runs": [
+    {
+      "role": "target",
+      "width": 390,
+      "height": 844,
+      "motion": "no-preference",
+      "status": 200,
+      "htmlSha": "33d25a184c529fd416fd1aa5d8b8645a30cef089ceac22deb60db1cc05e05ef5",
+      "documentHeight": 11015,
+      "documentWidth": 390,
+      "content": {
+        "tokens": 2078,
+        "decisionTokens": 2005,
+        "controlBoilerplateSentences": 0,
+        "sha256": "8f232aa3b736edf444755bf3e353d28c3817746aa7c4a415156f8256ea2044d0",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Check the offer Revised.",
+        "href": "https://example.invalid/synthetic-target-offer",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 368,
+          "width": 236.703125,
+          "height": 48,
+          "top": 368,
+          "right": 256.703125,
+          "bottom": 416,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Check the offer Revised.",
+          "href": "https://example.invalid/synthetic-target-offer",
+          "requested": [
+            "https://example.invalid/synthetic-target-offer"
+          ]
+        }
+      },
+      "media": [],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 0,
+      "accordion": [],
+      "elapsedMs": [
+        364,
+        639,
+        971,
+        1461,
+        2319
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "target-390-844-no-preference-early.png",
+          "sha256": "6ba25634e9493b669d5a3b53cee7036d292655239fbc94a456be3ebe31d56464"
+        },
+        {
+          "filename": "target-390-844-no-preference-settled.png",
+          "sha256": "203bd6af4d858330bb5183f1099540851957984f41dccf444aa4cad4237615c3"
+        },
+        {
+          "filename": "target-390-844-no-preference-full.png",
+          "sha256": "eadb06326d971c276411f2127e55ed7dfd4ee4c22b326d15d258118203f957f9"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "target",
+      "width": 390,
+      "height": 844,
+      "motion": "reduce",
+      "status": 200,
+      "htmlSha": "a1777ae4cc1921b73887a0fc56c3ff5e101bb0010477ecd66ec134e920ef0214",
+      "documentHeight": 11015,
+      "documentWidth": 390,
+      "content": {
+        "tokens": 2078,
+        "decisionTokens": 2005,
+        "controlBoilerplateSentences": 0,
+        "sha256": "8f232aa3b736edf444755bf3e353d28c3817746aa7c4a415156f8256ea2044d0",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Check the offer Revised.",
+        "href": "https://example.invalid/synthetic-target-offer",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 368,
+          "width": 236.703125,
+          "height": 48,
+          "top": 368,
+          "right": 256.703125,
+          "bottom": 416,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Check the offer Revised.",
+          "href": "https://example.invalid/synthetic-target-offer",
+          "requested": [
+            "https://example.invalid/synthetic-target-offer"
+          ]
+        }
+      },
+      "media": [],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 0,
+      "accordion": [],
+      "elapsedMs": [
+        268,
+        526,
+        861,
+        1719,
+        2535
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "target-390-844-reduce-early.png",
+          "sha256": "6ba25634e9493b669d5a3b53cee7036d292655239fbc94a456be3ebe31d56464"
+        },
+        {
+          "filename": "target-390-844-reduce-settled.png",
+          "sha256": "203bd6af4d858330bb5183f1099540851957984f41dccf444aa4cad4237615c3"
+        },
+        {
+          "filename": "target-390-844-reduce-full.png",
+          "sha256": "eadb06326d971c276411f2127e55ed7dfd4ee4c22b326d15d258118203f957f9"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "target",
+      "width": 320,
+      "height": 800,
+      "motion": "no-preference",
+      "status": 200,
+      "htmlSha": "83e2a4fc253b9ee29cde5856cb93c30a02612d2678159d80bdf589d65c9aaa7f",
+      "documentHeight": 13643,
+      "documentWidth": 320,
+      "content": {
+        "tokens": 2078,
+        "decisionTokens": 2005,
+        "controlBoilerplateSentences": 0,
+        "sha256": "8f232aa3b736edf444755bf3e353d28c3817746aa7c4a415156f8256ea2044d0",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Check the offer Revised.",
+        "href": "https://example.invalid/synthetic-target-offer",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 460,
+          "width": 236.703125,
+          "height": 48,
+          "top": 460,
+          "right": 256.703125,
+          "bottom": 508,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Check the offer Revised.",
+          "href": "https://example.invalid/synthetic-target-offer",
+          "requested": [
+            "https://example.invalid/synthetic-target-offer"
+          ]
+        }
+      },
+      "media": [],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 0,
+      "accordion": [],
+      "elapsedMs": [
+        269,
+        527,
+        856,
+        1478,
+        2294
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "target-320-800-no-preference-early.png",
+          "sha256": "853830c4b5512e790611803da9589bfc61d05d6a75b6ff015d896f7ab784ccc4"
+        },
+        {
+          "filename": "target-320-800-no-preference-settled.png",
+          "sha256": "afb274922568cbebb2d264a6ea9720f8aba851fc0b43b771ed32ee77f8838465"
+        },
+        {
+          "filename": "target-320-800-no-preference-full.png",
+          "sha256": "e333fc109372b98b95c5d1271507556d9e0344e5b7a5909f74f52e9be1f90004"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "target",
+      "width": 320,
+      "height": 800,
+      "motion": "reduce",
+      "status": 200,
+      "htmlSha": "e4265257dc1caddb375137868a8d161321453231471713b9631281973c721505",
+      "documentHeight": 13643,
+      "documentWidth": 320,
+      "content": {
+        "tokens": 2078,
+        "decisionTokens": 2005,
+        "controlBoilerplateSentences": 0,
+        "sha256": "8f232aa3b736edf444755bf3e353d28c3817746aa7c4a415156f8256ea2044d0",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Check the offer Revised.",
+        "href": "https://example.invalid/synthetic-target-offer",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 460,
+          "width": 236.703125,
+          "height": 48,
+          "top": 460,
+          "right": 256.703125,
+          "bottom": 508,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Check the offer Revised.",
+          "href": "https://example.invalid/synthetic-target-offer",
+          "requested": [
+            "https://example.invalid/synthetic-target-offer"
+          ]
+        }
+      },
+      "media": [],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 0,
+      "accordion": [],
+      "elapsedMs": [
+        251,
+        516,
+        850,
+        1746,
+        2559
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "target-320-800-reduce-early.png",
+          "sha256": "853830c4b5512e790611803da9589bfc61d05d6a75b6ff015d896f7ab784ccc4"
+        },
+        {
+          "filename": "target-320-800-reduce-settled.png",
+          "sha256": "afb274922568cbebb2d264a6ea9720f8aba851fc0b43b771ed32ee77f8838465"
+        },
+        {
+          "filename": "target-320-800-reduce-full.png",
+          "sha256": "e333fc109372b98b95c5d1271507556d9e0344e5b7a5909f74f52e9be1f90004"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "target",
+      "width": 1440,
+      "height": 900,
+      "motion": "no-preference",
+      "status": 200,
+      "htmlSha": "d65d522b27e8ca625a055f011b2d2faaf20975ea819aebdecd30465b36860ee9",
+      "documentHeight": 5989,
+      "documentWidth": 1440,
+      "content": {
+        "tokens": 2078,
+        "decisionTokens": 2005,
+        "controlBoilerplateSentences": 0,
+        "sha256": "8f232aa3b736edf444755bf3e353d28c3817746aa7c4a415156f8256ea2044d0",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Check the offer Revised.",
+        "href": "https://example.invalid/synthetic-target-offer",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 176,
+          "y": 452,
+          "width": 236.703125,
+          "height": 48,
+          "top": 452,
+          "right": 412.703125,
+          "bottom": 500,
+          "left": 176
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Check the offer Revised.",
+          "href": "https://example.invalid/synthetic-target-offer",
+          "requested": [
+            "https://example.invalid/synthetic-target-offer"
+          ]
+        }
+      },
+      "media": [],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 0,
+      "accordion": [],
+      "elapsedMs": [
+        261,
+        575,
+        1401,
+        1891,
+        2708
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "target-1440-900-no-preference-early.png",
+          "sha256": "65bf56f9b554bbe04075ae0b0acc38c4e2506788251d49b16fe28a09f9f66e98"
+        },
+        {
+          "filename": "target-1440-900-no-preference-settled.png",
+          "sha256": "123d519947ab7ddecf1f69078f2eafd852c4ebe9aa5fa87e84629e3bfe5acbda"
+        },
+        {
+          "filename": "target-1440-900-no-preference-full.png",
+          "sha256": "158b84920527b77119c5a80173efa0a7353a6eb79e11ca81316f685cb18ed8e5"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "target",
+      "width": 1440,
+      "height": 900,
+      "motion": "reduce",
+      "status": 200,
+      "htmlSha": "4f6bb6ed0a977cfe5e2bd520cef09e448b3c957d7cf0c9ded8ec496a61f86f32",
+      "documentHeight": 5989,
+      "documentWidth": 1440,
+      "content": {
+        "tokens": 2078,
+        "decisionTokens": 2005,
+        "controlBoilerplateSentences": 0,
+        "sha256": "8f232aa3b736edf444755bf3e353d28c3817746aa7c4a415156f8256ea2044d0",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Check the offer Revised.",
+        "href": "https://example.invalid/synthetic-target-offer",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 176,
+          "y": 452,
+          "width": 236.703125,
+          "height": 48,
+          "top": 452,
+          "right": 412.703125,
+          "bottom": 500,
+          "left": 176
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Check the offer Revised.",
+          "href": "https://example.invalid/synthetic-target-offer",
+          "requested": [
+            "https://example.invalid/synthetic-target-offer"
+          ]
+        }
+      },
+      "media": [],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 0,
+      "accordion": [],
+      "elapsedMs": [
+        232,
+        543,
+        873,
+        1588,
+        2398
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "target-1440-900-reduce-early.png",
+          "sha256": "65bf56f9b554bbe04075ae0b0acc38c4e2506788251d49b16fe28a09f9f66e98"
+        },
+        {
+          "filename": "target-1440-900-reduce-settled.png",
+          "sha256": "123d519947ab7ddecf1f69078f2eafd852c4ebe9aa5fa87e84629e3bfe5acbda"
+        },
+        {
+          "filename": "target-1440-900-reduce-full.png",
+          "sha256": "158b84920527b77119c5a80173efa0a7353a6eb79e11ca81316f685cb18ed8e5"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "control",
+      "width": 390,
+      "height": 844,
+      "motion": "no-preference",
+      "status": 200,
+      "htmlSha": "07ac9abe79c68f3b984f24761306b5516417864462377393935730d3bc28f24a",
+      "documentHeight": 20511,
+      "documentWidth": 390,
+      "content": {
+        "tokens": 4588,
+        "decisionTokens": 0,
+        "controlBoilerplateSentences": 144,
+        "sha256": "f4380b4a1e374ab5072002c5990e44e0531bf3bd5b232449b56f407e23028e2f",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Open synthetic workflow notes",
+        "href": "https://example.invalid/synthetic-workflow-notes",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 465.42279052734375,
+          "width": 288.734375,
+          "height": 48,
+          "top": 465.42279052734375,
+          "right": 308.734375,
+          "bottom": 513.4227905273438,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Open synthetic workflow notes",
+          "href": "https://example.invalid/synthetic-workflow-notes",
+          "requested": [
+            "https://example.invalid/synthetic-workflow-notes"
+          ]
+        }
+      },
+      "media": [
+        {
+          "src": "http://127.0.0.1:60529/images/direct-review-synthetic-readiness-control-hero.webp",
+          "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note.",
+          "decoded": true,
+          "width": 1600,
+          "height": 900,
+          "box": {
+            "x": 20.983753204345703,
+            "y": 635.1729736328125,
+            "width": 348.032470703125,
+            "height": 195.8924560546875,
+            "top": 635.1729736328125,
+            "right": 369.0162239074707,
+            "bottom": 831.0654296875,
+            "left": 20.983753204345703
+          }
+        }
+      ],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 3,
+      "accordion": [
+        {
+          "before": {
+            "tag": "SUMMARY",
+            "id": "",
+            "class": "cursor-pointer font-semibold",
+            "href": null,
+            "text": "Why is this control synthetic?",
+            "focus": true,
+            "outline": [
+              "auto",
+              "1px"
+            ],
+            "rail": false,
+            "left": 0,
+            "open": false,
+            "transform": null
+          },
+          "after": {
+            "expanded": null,
+            "open": true,
+            "transform": null
+          }
+        }
+      ],
+      "elapsedMs": [
+        310,
+        573,
+        900,
+        1556,
+        2371
+      ],
+      "sampleStates": 2,
+      "animationCounts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "screenshots": [
+        {
+          "filename": "control-390-844-no-preference-early.png",
+          "sha256": "629e8ca7b7416cd74dd00f94bec92f932dff0b1a51890420ae6641a3b72d75fe"
+        },
+        {
+          "filename": "control-390-844-no-preference-settled.png",
+          "sha256": "8a8827412527f6668008b4a35112dbe049fe88d7f10fc5bf8589311525a25813"
+        },
+        {
+          "filename": "control-390-844-no-preference-full.png",
+          "sha256": "505cf1e741725dffb88dc402f8f40fd38e2f84a3856a8b6ffa8f3f8d9fa9a640"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "control",
+      "width": 390,
+      "height": 844,
+      "motion": "reduce",
+      "status": 200,
+      "htmlSha": "2bf46d378c6cee7ce5f6f88edcaf37ee368841b1b4688368527fb99ccc97cab5",
+      "documentHeight": 20511,
+      "documentWidth": 390,
+      "content": {
+        "tokens": 4588,
+        "decisionTokens": 0,
+        "controlBoilerplateSentences": 144,
+        "sha256": "f4380b4a1e374ab5072002c5990e44e0531bf3bd5b232449b56f407e23028e2f",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Open synthetic workflow notes",
+        "href": "https://example.invalid/synthetic-workflow-notes",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 464,
+          "width": 288.734375,
+          "height": 48,
+          "top": 464,
+          "right": 308.734375,
+          "bottom": 512,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Open synthetic workflow notes",
+          "href": "https://example.invalid/synthetic-workflow-notes",
+          "requested": [
+            "https://example.invalid/synthetic-workflow-notes"
+          ]
+        }
+      },
+      "media": [
+        {
+          "src": "http://127.0.0.1:60529/images/direct-review-synthetic-readiness-control-hero.webp",
+          "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note.",
+          "decoded": true,
+          "width": 1600,
+          "height": 900,
+          "box": {
+            "x": 21,
+            "y": 605,
+            "width": 348,
+            "height": 195.75,
+            "top": 605,
+            "right": 369,
+            "bottom": 800.75,
+            "left": 21
+          }
+        }
+      ],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 3,
+      "accordion": [
+        {
+          "before": {
+            "tag": "SUMMARY",
+            "id": "",
+            "class": "cursor-pointer font-semibold",
+            "href": null,
+            "text": "Why is this control synthetic?",
+            "focus": true,
+            "outline": [
+              "auto",
+              "3px"
+            ],
+            "rail": false,
+            "left": 0,
+            "open": false,
+            "transform": null
+          },
+          "after": {
+            "expanded": null,
+            "open": true,
+            "transform": null
+          }
+        }
+      ],
+      "elapsedMs": [
+        276,
+        582,
+        1450,
+        1939,
+        2752
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "control-390-844-reduce-early.png",
+          "sha256": "11c1ee3577c8ed3b954ca2dd5a924828a341573832cc7c80bdc8efe024968a25"
+        },
+        {
+          "filename": "control-390-844-reduce-settled.png",
+          "sha256": "35e0af0e66845e872c7f38a2b16239027b30e0d8f8a9816397cebc686383ee6f"
+        },
+        {
+          "filename": "control-390-844-reduce-full.png",
+          "sha256": "9ac35e3d41fbf35865de3205f8fee32cf7dc22dabd7085e38c7827dd6357a473"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "control",
+      "width": 320,
+      "height": 800,
+      "motion": "no-preference",
+      "status": 200,
+      "htmlSha": "e8d183c3e37a80eee09d9889d937d012778e30c92d0fd3575e84d82e25773903",
+      "documentHeight": 26503,
+      "documentWidth": 320,
+      "content": {
+        "tokens": 4588,
+        "decisionTokens": 0,
+        "controlBoilerplateSentences": 144,
+        "sha256": "f4380b4a1e374ab5072002c5990e44e0531bf3bd5b232449b56f407e23028e2f",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Open synthetic workflow notes",
+        "href": "https://example.invalid/synthetic-workflow-notes",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 556,
+          "width": 280,
+          "height": 48,
+          "top": 556,
+          "right": 300,
+          "bottom": 604,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Open synthetic workflow notes",
+          "href": "https://example.invalid/synthetic-workflow-notes",
+          "requested": [
+            "https://example.invalid/synthetic-workflow-notes"
+          ]
+        }
+      },
+      "media": [
+        {
+          "src": "http://127.0.0.1:60529/images/direct-review-synthetic-readiness-control-hero.webp",
+          "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note.",
+          "decoded": true,
+          "width": 1600,
+          "height": 900,
+          "box": {
+            "x": 20.907848358154297,
+            "y": 722.3427734375,
+            "width": 278.184326171875,
+            "height": 156.702880859375,
+            "top": 722.3427734375,
+            "right": 299.0921745300293,
+            "bottom": 879.045654296875,
+            "left": 20.907848358154297
+          }
+        }
+      ],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 3,
+      "accordion": [
+        {
+          "before": {
+            "tag": "SUMMARY",
+            "id": "",
+            "class": "cursor-pointer font-semibold",
+            "href": null,
+            "text": "Why is this control synthetic?",
+            "focus": true,
+            "outline": [
+              "auto",
+              "1px"
+            ],
+            "rail": false,
+            "left": 0,
+            "open": false,
+            "transform": null
+          },
+          "after": {
+            "expanded": null,
+            "open": true,
+            "transform": null
+          }
+        }
+      ],
+      "elapsedMs": [
+        282,
+        540,
+        1390,
+        1885,
+        2703
+      ],
+      "sampleStates": 3,
+      "animationCounts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "screenshots": [
+        {
+          "filename": "control-320-800-no-preference-early.png",
+          "sha256": "6e5bdc68d6ecd9382e7a94f21e04963ca3e70fd5d1b06fa9a3ab1a532ee35ff1"
+        },
+        {
+          "filename": "control-320-800-no-preference-settled.png",
+          "sha256": "d942d606386244e105ca6cb2bc2371f663c5105a4641d74b6a6715a554eca4ff"
+        },
+        {
+          "filename": "control-320-800-no-preference-full.png",
+          "sha256": "340b62f3860a4069d5ed929ee1c9099f220af79fed9cf83c73ad0a609246da39"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "control",
+      "width": 320,
+      "height": 800,
+      "motion": "reduce",
+      "status": 200,
+      "htmlSha": "ea2470f37781351551abf8fc031e91bfa0145df073d9bc7b7190c162d34a3790",
+      "documentHeight": 26503,
+      "documentWidth": 320,
+      "content": {
+        "tokens": 4588,
+        "decisionTokens": 0,
+        "controlBoilerplateSentences": 144,
+        "sha256": "f4380b4a1e374ab5072002c5990e44e0531bf3bd5b232449b56f407e23028e2f",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Open synthetic workflow notes",
+        "href": "https://example.invalid/synthetic-workflow-notes",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 20,
+          "y": 556,
+          "width": 280,
+          "height": 48,
+          "top": 556,
+          "right": 300,
+          "bottom": 604,
+          "left": 20
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Open synthetic workflow notes",
+          "href": "https://example.invalid/synthetic-workflow-notes",
+          "requested": [
+            "https://example.invalid/synthetic-workflow-notes"
+          ]
+        }
+      },
+      "media": [
+        {
+          "src": "http://127.0.0.1:60529/images/direct-review-synthetic-readiness-control-hero.webp",
+          "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note.",
+          "decoded": true,
+          "width": 1600,
+          "height": 900,
+          "box": {
+            "x": 21,
+            "y": 697,
+            "width": 278,
+            "height": 156.375,
+            "top": 697,
+            "right": 299,
+            "bottom": 853.375,
+            "left": 21
+          }
+        }
+      ],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 3,
+      "accordion": [
+        {
+          "before": {
+            "tag": "SUMMARY",
+            "id": "",
+            "class": "cursor-pointer font-semibold",
+            "href": null,
+            "text": "Why is this control synthetic?",
+            "focus": true,
+            "outline": [
+              "auto",
+              "3px"
+            ],
+            "rail": false,
+            "left": 0,
+            "open": false,
+            "transform": null
+          },
+          "after": {
+            "expanded": null,
+            "open": true,
+            "transform": null
+          }
+        }
+      ],
+      "elapsedMs": [
+        254,
+        534,
+        1358,
+        1846,
+        2661
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "control-320-800-reduce-early.png",
+          "sha256": "e41dfb42a94bbfc08d06ea5b5a46e9356dcbc64d4f6d752dec09841fc4d0c5a5"
+        },
+        {
+          "filename": "control-320-800-reduce-settled.png",
+          "sha256": "4e9c11cf45849cd5ea711ee80bfe69a0f1d0a92445886392393e9201ea2be494"
+        },
+        {
+          "filename": "control-320-800-reduce-full.png",
+          "sha256": "f7ea34b68e3be1e36cbed3307d9fc257f7136fdbfffe83cbb4f3e814a66a9d99"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "control",
+      "width": 1440,
+      "height": 900,
+      "motion": "no-preference",
+      "status": 200,
+      "htmlSha": "c5cc05dec19d6b59b689adaf5b14a44ff6dc272fb0b050cd98e45d8c32f9c2bc",
+      "documentHeight": 8313,
+      "documentWidth": 1440,
+      "content": {
+        "tokens": 4588,
+        "decisionTokens": 0,
+        "controlBoilerplateSentences": 144,
+        "sha256": "f4380b4a1e374ab5072002c5990e44e0531bf3bd5b232449b56f407e23028e2f",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Open synthetic workflow notes",
+        "href": "https://example.invalid/synthetic-workflow-notes",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 176,
+          "y": 516.0223999023438,
+          "width": 288.734375,
+          "height": 48,
+          "top": 516.0223999023438,
+          "right": 464.734375,
+          "bottom": 564.0223999023438,
+          "left": 176
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Open synthetic workflow notes",
+          "href": "https://example.invalid/synthetic-workflow-notes",
+          "requested": [
+            "https://example.invalid/synthetic-workflow-notes"
+          ]
+        }
+      },
+      "media": [
+        {
+          "src": "http://127.0.0.1:60529/images/direct-review-synthetic-readiness-control-hero.webp",
+          "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note.",
+          "decoded": true,
+          "width": 1600,
+          "height": 900,
+          "box": {
+            "x": 789.688720703125,
+            "y": 259.8747863769531,
+            "width": 473.40380859375,
+            "height": 266.5409851074219,
+            "top": 259.8747863769531,
+            "right": 1263.092529296875,
+            "bottom": 526.415771484375,
+            "left": 789.688720703125
+          }
+        }
+      ],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 3,
+      "accordion": [
+        {
+          "before": {
+            "tag": "SUMMARY",
+            "id": "",
+            "class": "cursor-pointer font-semibold",
+            "href": null,
+            "text": "Why is this control synthetic?",
+            "focus": true,
+            "outline": [
+              "auto",
+              "1px"
+            ],
+            "rail": false,
+            "left": 0,
+            "open": false,
+            "transform": null
+          },
+          "after": {
+            "expanded": null,
+            "open": true,
+            "transform": null
+          }
+        }
+      ],
+      "elapsedMs": [
+        279,
+        651,
+        976,
+        2062,
+        2876
+      ],
+      "sampleStates": 2,
+      "animationCounts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "screenshots": [
+        {
+          "filename": "control-1440-900-no-preference-early.png",
+          "sha256": "a53f873fb104198ed20274bb3b411e62feb85d145b5f01196e7204bc471cba76"
+        },
+        {
+          "filename": "control-1440-900-no-preference-settled.png",
+          "sha256": "0f2de587daaec5955f8adbf21bec0e29bb914cc813f6619c4438883078f19245"
+        },
+        {
+          "filename": "control-1440-900-no-preference-full.png",
+          "sha256": "231c564db9c7426ff1c65a7d64ffa851e8e3315fdf71f81a0dea05cbe69b5452"
+        }
+      ],
+      "responseErrors": []
+    },
+    {
+      "role": "control",
+      "width": 1440,
+      "height": 900,
+      "motion": "reduce",
+      "status": 200,
+      "htmlSha": "166100035418f472583c311e4822eaa09fd7aa5a9b2b5dabe236c54dfb5f0620",
+      "documentHeight": 8313,
+      "documentWidth": 1440,
+      "content": {
+        "tokens": 4588,
+        "decisionTokens": 0,
+        "controlBoilerplateSentences": 144,
+        "sha256": "f4380b4a1e374ab5072002c5990e44e0531bf3bd5b232449b56f407e23028e2f",
+        "sameTextAsNormal": true
+      },
+      "cta": {
+        "label": "Open synthetic workflow notes",
+        "href": "https://example.invalid/synthetic-workflow-notes",
+        "fullyWithin": true,
+        "centerHit": true,
+        "box": {
+          "x": 176,
+          "y": 516,
+          "width": 288.734375,
+          "height": 48,
+          "top": 516,
+          "right": 464.734375,
+          "bottom": 564,
+          "left": 176
+        },
+        "type": "16px",
+        "keyboard": {
+          "reachedByTab": true,
+          "text": "Open synthetic workflow notes",
+          "href": "https://example.invalid/synthetic-workflow-notes",
+          "requested": [
+            "https://example.invalid/synthetic-workflow-notes"
+          ]
+        }
+      },
+      "media": [
+        {
+          "src": "http://127.0.0.1:60529/images/direct-review-synthetic-readiness-control-hero.webp",
+          "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note.",
+          "decoded": true,
+          "width": 1600,
+          "height": 900,
+          "box": {
+            "x": 789.796875,
+            "y": 231.921875,
+            "width": 473.1875,
+            "height": 266.15625,
+            "top": 231.921875,
+            "right": 1262.984375,
+            "bottom": 498.078125,
+            "left": 789.796875
+          }
+        }
+      ],
+      "otherVisuals": [],
+      "rails": [],
+      "railInteraction": [],
+      "detailsCount": 3,
+      "accordion": [
+        {
+          "before": {
+            "tag": "SUMMARY",
+            "id": "",
+            "class": "cursor-pointer font-semibold",
+            "href": null,
+            "text": "Why is this control synthetic?",
+            "focus": true,
+            "outline": [
+              "auto",
+              "3px"
+            ],
+            "rail": false,
+            "left": 0,
+            "open": false,
+            "transform": null
+          },
+          "after": {
+            "expanded": null,
+            "open": true,
+            "transform": null
+          }
+        }
+      ],
+      "elapsedMs": [
+        443,
+        700,
+        1026,
+        1749,
+        2558
+      ],
+      "sampleStates": 1,
+      "animationCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "screenshots": [
+        {
+          "filename": "control-1440-900-reduce-early.png",
+          "sha256": "2979c99fd9a841d92b4ba66a089c090cecef9b06c73e1d9a967952f6f8b8f6d7"
+        },
+        {
+          "filename": "control-1440-900-reduce-settled.png",
+          "sha256": "e34ed9eeacb75aa7551e929ce11b605764cad62bba95cda890832709a3e5a6b1"
+        },
+        {
+          "filename": "control-1440-900-reduce-full.png",
+          "sha256": "e256c34ea0b903e2e0380c7d89a9f6b0517d0cf8a98121b313d6065214b5c7e9"
+        }
+      ],
+      "responseErrors": []
+    }
+  ]
+}

@@ -267,3 +267,27 @@ Scope: present RELEASING as exactly three actionable steps—validate the candid
 Classification: explicit user directive (narrow corrective maintenance for the existing local VERIFYING transition).
 
 Scope: present and execute VERIFYING as four actions: validate the release receipt and approved presentation; check retained evidence for all nine production checks; match review, merge and deployment identity; freeze and revalidate terminal proof before persisting LIVE. Reuse the single parsed production artifact and target within one verification pass, while separately checking the approved artifact when paths differ. Preserve valid historical and in-flight records without the newer optional deployment operation journal, current-versus-historical evidence policy, rollback behavior, mandatory article-hero evidence, terminal hero retention and the post-LIVE IMPROVE handoff. Owned files: `src/lib/article-import/{engine,workflow-evidence,workflow-requirements}.ts`; `scripts/import-article.ts`; `.agents/skills/external-article-import/SKILL.md`; focused assertions in `tests/{article-import,article-import-supervised}.test.ts`; `planning.md`; `build-pack/execution-state.json`; `build-pack/repairs/verifying-four-1127/verification.md`. Synthetic verification cannot run, deploy or publish a real article. The code change still follows the repository PR, review, merge and deployment workflow.
+
+### Article recovery remediation (ARTICLE-RECOVERY-1127)
+
+Owner directive, 27 November 2026. Implement the recovery decisions in [issue #96](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/96) through the existing manual or API article workflow. The owner approved the thirteen slices below and their dependencies. Start with remote deployment reconciliation. Use one fresh-context implementation agent per ticket. The evidence baseline is the [#109 reconciliation, Mechanism evidence and Traceability](https://github.com/michaelchamboko/VettedSaaSBlueprint/blob/bebb4fe644b3d97e9a21f46a6e06938ed35684cb/docs/designs/recovery-evidence/109/reconciliation.md). It reports observations at product revision f026bca8 and preserves historical unknowns.
+
+| Slice | Deliverable | Blocked by slice | Investigation |
+| --- | --- | --- | --- |
+| 1 | [#111 Recover the original deployment after an interrupted release](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/111) | None | #97 |
+| 2 | [#112 Resume the earliest unfinished editorial or presentation activity](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/112) | None | #98 |
+| 3 | [#113 Carry rejected findings through repair and independent closure](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/113) | 2 | #99, #104 |
+| 4 | [#114 Reconcile late output from superseded worker attempts](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/114) | 2, 3 | #101 |
+| 5 | [#115 Route failures by category and verify remedies after three repairs](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/115) | None | #100 |
+| 6 | [#116 Register findings and independently verified resolutions](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/116) | 3 | #99, #102 |
+| 7 | [#117 Register editorial judgments and browser observations](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/117) | None | #98, #102 |
+| 8 | [#118 Reconcile catalogue and import publication approval before LIVE](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/118) | 1, 7 | #102, #103, #104 |
+| 9 | [#119 Verify the next worker’s handoff after each passed gate](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/119) | 2 | #105 |
+| 10 | [#120 Recover interrupted archive and disposal operations](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/120) | 4, 6, 7, 8, 9 | #105, #106 |
+| 11 | [#121 Bound cleanup retries across restarts](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/121) | 10 | #106 |
+| 12 | [#122 Recheck the six blinded reviewer cases](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/122) | None | #107, #108 |
+| 13 | [#123 Verify corrected workflow readiness against the 38 WebCatalog findings](https://github.com/michaelchamboko/VettedSaaSBlueprint/issues/123) | 5, 8, 11, 12 | #108, #109 |
+
+Acceptance uses synthetic workers, isolated evidence storage and release adapters through the normal supervised controller. Record the next activity, calls, operation identity, retained evidence and retry counts across restart. Use genuine blinded judgments for reviewer effectiveness and public HTTP for catalogue behavior. Preserve prior records and existing release gates. The final ledger covers all 38 findings, 28 stories, 11 testing decisions and interview decisions through Q48 including Q41a–c. Q40 remains open pending a concrete legacy-routing decision.
+
+This amendment covers product corrections and isolated verification. A real WebCatalog run requires separate authorization for its exact revision, primary-checkout trigger, external mutations and release boundary. Production data migration, cleanup of real evidence, schedules and live article publication fall outside this packet. Ticket closure requires the evidence stated in each ticket. Real demonstration results must identify their own revision and source observations.

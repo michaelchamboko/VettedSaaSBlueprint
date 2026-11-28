@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "observationRevision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99",
+  "observationTree": "0038ea51ab628d1be8edd4be4765a430b115640b",
+  "promotedRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+  "promotedTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d",
+  "targetArtifactSha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
+  "controlArtifactSha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+  "servedPathScope": [
+    "src/app/landing-page-builders",
+    "src/components/landing",
+    "src/components/public",
+    "src/lib/article-heroes.ts",
+    "src/lib/generated/landing-pages.ts",
+    "src/app/globals.css",
+    "public"
+  ],
+  "servedPathChanges": [],
+  "nonServingChanges": [
+    {
+      "path": "src/lib/article-import/rendering-inputs.ts",
+      "observation": "Current target-bound validation now includes global build inputs and excludes unrelated article files. This changes controller input custody, not the bytes served by either captured route."
+    },
+    {
+      "path": "src/lib/article-import/release.ts",
+      "observation": "Release reconciliation now verifies provider project, alias and served commit identity and redacts unsafe diagnostics. Neither captured public route imports this module."
+    },
+    {
+      "path": "src/lib/article-import/activity-checkpoints.ts",
+      "observation": "Activity acceptance now retains concrete output evidence and escalates repeated unsuccessful repairs. The captured public route does not import the controller."
+    },
+    {
+      "path": "src/lib/article-import/gate-handoff.ts",
+      "observation": "Cleanup mutation paths now fail closed on redirected parents and leaves. This is recovery-state behavior outside the captured route."
+    },
+    {
+      "path": "src/lib/article-import/worker-packet.ts",
+      "observation": "Worker packets now expose only the current activity and accepted current-stage handoffs. This is controller dispatch data outside the captured route."
+    },
+    {
+      "path": "package.json",
+      "observation": "The release adapter uses the pinned cross-spawn dependency for shell-free commands. The captured route, component, style, asset and artifact files remain unchanged."
+    }
+  ],
+  "disposition": "Browser observations promoted because both artifact bindings and every served route, component, style and asset path are unchanged. Rendering-input replay was retested separately at the promoted revision."
+}

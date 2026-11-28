@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "observerTask": "/root/browser_observer",
+  "role": "independent browser observer",
+  "summaryPath": "build-pack/repairs/article-recovery-123/browser/independent/independent-summary.json",
+  "summarySha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
+  "observedRevision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99",
+  "capturedAt": "2026-11-27T20:40:43.422Z",
+  "browser": "149.0.7827.55"
+}

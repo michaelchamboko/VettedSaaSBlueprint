@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { importPacketId, researchRecoveryGeneration } from "./packet-binding";
 import { isDeepStrictEqual } from "node:util";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -7,17 +7,26 @@ import path from "node:path";
 
 import { parseApprovedUrls } from "../affiliate/approved-urls";
 import { contentApprovalMatches, createContentApproval, formatQualityApprovalMatches, type ApprovalFiles } from "./content-approval";
-import { externalArticleImportSchema, type ExternalArticleImportV1, type FailureClass, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
+import { actionableDiagnosisSchema, activityOwnerDecisionSchema, externalArticleImportSchema, remedyMeasurementVerificationSchema, remedyVerificationEvidenceSchema, type ExternalArticleImportV1, type FailureClass, type ImportFailureCategory, type ImportFormat, type ImportStage, type ImportTransformationV1 } from "./contracts";
 import { createImportPresentation, requireImportPresentationBinding, verifyImportPresentationEvidence } from "./presentation";
 import { approvedAffiliateUrl, longFormAffiliateAssessmentSchema } from "./long-form-affiliate";
 import { claimWorkflowLease, type WorkflowLease } from "./workflow-lease";
 export { recoverWorkflowLease } from "./workflow-lease";
 import { instructionsForStage, RESEARCH_RECOVERY_INSTRUCTION, WORKFLOW_REVISION } from "./workflow-requirements";
-import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateProductionWorkflowEvidence, validateResearchEvidence } from "./workflow-evidence";
-import { diagnosisSchema, recoveryEvidenceSchema } from "./contracts";
-import { evidenceRefSchema, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
+import { contentAssessmentSchema, evaluateWorkflowEvidence, freezeEvidenceGraph, readEvidence, storeEvidence, validateContentAssessment, validateEditorialExecution, validatePresentationEvidence, validateProductionWorkflowEvidence, validateResearchEvidence, workflowEvidenceSchema } from "./workflow-evidence";
+import { recoveryEvidenceSchema } from "./contracts";
+import { evidenceRefSchema, evidenceReference, readEvidenceBytes, validateExecutionEvidence, verifyEvidenceRef, type EvidenceRef } from "./execution-evidence";
 import type { ImproveExecutor } from "./improve-supervisor";
 import { articleHeroBindingSchema } from "./hero-image";
+import { readImportArtifactTarget } from "./format-validation";
+import { validateArticleVisualRuntime } from "./article-visual-quality";
+import { classifyImportFailure, ImportFailure } from "./failure-routing";
+export { ImportFailure } from "./failure-routing";
+import { declareGateHandoff, reconcileGateCleanup, type GateCleanupOptions } from "./gate-handoff";
+import { registerPublicationApproval } from "./publication-approval";
+import type { ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { validateActivityRemedyEvidence } from "./activity-checkpoints";
+import { captureRenderingInputs } from "./rendering-inputs";
 
 const ROOT = ".automation/article-imports";
 type ActiveImportLease = { lease: WorkflowLease; importId: string; root: string; writing?: boolean };
@@ -157,7 +166,7 @@ export function prepareTransformation(parsed: ReturnType<typeof parseExternalArt
 function initialRecord(input: { importId: string; sourceFile: string; sourceFingerprint: string; parsed: ReturnType<typeof parseExternalArticle>; transformation: ImportTransformationV1 }): ExternalArticleImportV1 {
   const at = now();
   return {
-    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], importId: input.importId, sourceFingerprint: input.sourceFingerprint,
+    schemaVersion: "ExternalArticleImportV2", workflowVersion: 2, requirementRevision: WORKFLOW_REVISION, evidenceRefs: {}, repairStageTotals: {}, diagnoses: [], activityProtocolVersion: 1, handoffProtocolVersion: 1, gateHandoffs: [], importId: input.importId, sourceFingerprint: input.sourceFingerprint,
     sourceFile: input.sourceFile, stage: "INGESTING", createdAt: at, updatedAt: at,
     title: input.parsed.title, primaryQuestion: input.parsed.primaryQuestion, format: input.transformation.format,
     promptInjectionDetected: input.parsed.promptInjectionDetected, ...(input.parsed.unusableReason ? { unusableReason: input.parsed.unusableReason } : {}),
@@ -364,7 +373,26 @@ export async function clearImportBlocker(root: string, importId: string, recover
   });
 }
 
-export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: { rejectBusy?: boolean; executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1>; improveExecutor?: ImproveExecutor }): Promise<ExternalArticleImportV1> {
+export type PendingImportOptions = {
+  rejectBusy?: boolean;
+  executeStage?: (stage: ImportStage, action: () => Promise<ExternalArticleImportV1>) => Promise<ExternalArticleImportV1>;
+  improveExecutor?: ImproveExecutor;
+  cleanup?: GateCleanupOptions;
+};
+
+async function persistCleanupRecord(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+  await saveImport(repositoryRoot, externalArticleImportSchema.parse(record));
+  return loadImport(repositoryRoot, record.importId);
+}
+
+export async function cleanupImportGateHandoff(repositoryRoot: string, importId: string, options?: GateCleanupOptions): Promise<ExternalArticleImportV1> {
+  return withImportLease(repositoryRoot, importId, async (record) => {
+    const result = await reconcileGateCleanup(repositoryRoot, record, "manual", (updated) => persistCleanupRecord(repositoryRoot, updated), options);
+    return result.record;
+  });
+}
+
+export async function executePendingImport(repositoryRoot: string, importId: string, execute: ImportStageExecutor, options?: PendingImportOptions): Promise<ExternalArticleImportV1> {
   const lease = await claimImportLease(repositoryRoot, importId);
   if (!lease && options?.rejectBusy) throw new Error("IMPORT_LEASE_BUSY");
   if (!lease) return loadImport(repositoryRoot, importId);
@@ -372,6 +400,9 @@ export async function executePendingImport(repositoryRoot: string, importId: str
     return await activeLease.run({ lease, importId, root: await realpath(repositoryRoot) }, async () => {
       let current = await loadImport(repositoryRoot, importId);
       assertCurrentImport(current);
+      const cleanup = await reconcileGateCleanup(repositoryRoot, current, "gate", (updated) => persistCleanupRecord(repositoryRoot, updated), options?.cleanup);
+      current = cleanup.record;
+      if (cleanup.handled) return current;
       if (["LIVE", "QUARANTINED"].includes(current.stage)) {
         if (!(await evaluateWorkflowEvidence(current, { root: repositoryRoot }, "historical-terminal")).ok) throw new Error("TERMINAL_PROOF_INVALID");
         if (!current.sourceDeletedAt) current = await deleteRawSource(repositoryRoot, importId, current, now());
@@ -384,7 +415,8 @@ export async function executePendingImport(repositoryRoot: string, importId: str
           if (!current.improve) throw new Error("IMPROVE_ASSIGNMENT_MISSING");
           try {
             const improved = await options.improveExecutor({ record: current, assignment: current.improve, leaseToken: lease.ownerToken, assertLease: lease.assertOwned });
-            if (improved.stage !== "LIVE" || improved.terminalRef?.sha256 !== current.terminalRef?.sha256 || improved.release?.commitSha !== current.release?.commitSha || improved.continuation?.kind !== "complete") throw new Error("IMPROVE_MUTATED_PUBLICATION");
+            if (improved.stage !== "LIVE" || improved.terminalRef?.sha256 !== current.terminalRef?.sha256 || improved.release?.commitSha !== current.release?.commitSha ||
+                !isDeepStrictEqual(improved.publicationApproval, current.publicationApproval) || improved.continuation?.kind !== "complete") throw new Error("IMPROVE_MUTATED_PUBLICATION");
             await lease.assertOwned();
             await saveImport(repositoryRoot, improved);
             return improved;
@@ -405,9 +437,11 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       if (current.continuation?.kind === "repair") {
         const repair = current.continuation;
         const digest = await canonicalSubmissionFingerprint(current, repositoryRoot);
-        if (digest === current.continuation.submittedFingerprint) throw new Error("UNCHANGED_SUBMISSION");
+        const findingBoundActivityReview = !!repair.failedWork?.activityId && !repair.diagnosisRequired
+          && current.activityFindings?.some((finding) => finding.stage === current.stage && finding.activityId === repair.failedWork?.activityId && finding.status === "open");
+        if (digest === current.continuation.submittedFingerprint && !findingBoundActivityReview) throw new Error("UNCHANGED_SUBMISSION");
         if (current.continuation.diagnosisRequired) {
-          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
+          const diagnosis = current.diagnoses?.find((d) => !d.consumedAt && d.remedyVerifiedAt && d.remedyCheck?.result === "verified" && d.stage === current.stage && d.failedSubmissionDigest === repair.submittedFingerprint && d.replacementSubmissionDigest === digest);
           if (!diagnosis) return current;
           diagnosis.consumedAt = now();
           await saveImport(repositoryRoot, current);
@@ -433,6 +467,8 @@ export async function executePendingImport(repositoryRoot: string, importId: str
       } catch (error) {
         await lease.assertOwned();
         const message = error instanceof Error ? error.message : String(error);
+        const failureCategory = classifyImportFailure(error);
+        const failedCheck = error instanceof ImportFailure ? error.failedCheck : undefined;
         const persisted = await loadImport(repositoryRoot, importId);
         if (persisted.stage === "LIVE" || persisted.stage === "QUARANTINED") throw error;
         const code = (error as NodeJS.ErrnoException).code;
@@ -440,10 +476,16 @@ export async function executePendingImport(repositoryRoot: string, importId: str
           const refreshed = externalArticleImportSchema.parse({ ...persisted, stageReceipts: [...persisted.stageReceipts, { stage: "RESEARCHING", status: "failed", at: now(), message: "RESEARCH_RECOVERY_REQUIRED: registry plan changed before writeback; preserve the prior packet and retrieve a fresh plan." }] });
           return recordImportFailure(repositoryRoot, refreshed, { strategy: group, classification: "transient", message });
         }
-        if (message === "PUBLICATION_CATALOGUE_BUSY" || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /CAPABILITY_UNAVAILABLE|MODEL_ACCESS|EDITORIAL_TOOL|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED|STATE_INTEGRITY/i.test(message) || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
+        if (failureCategory === "unavailable-capability" || failureCategory === "uncertain-external-outcome") {
+          return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", failureCategory, message });
+        }
+        if (failureCategory === "content-rejection" || failureCategory === "invalid-evidence") {
+          return recordImportRepair(repositoryRoot, persisted, { strategy: group, failureCategory, message, failedCheck });
+        }
+        if (message === "PUBLICATION_CATALOGUE_BUSY" || message === "RESEARCH_REGISTRY_SERIALIZATION_RETRY_EXHAUSTED" || ["EACCES", "EPERM", "EBUSY", "ENOSPC"].includes(code ?? "") || /^(network unavailable|credentials missing|rate limit|git unavailable|vercel timeout)$/i.test(message.trim())) {
           return recordImportFailure(repositoryRoot, persisted, { strategy: group, classification: "transient", message });
         }
-        return recordImportRepair(repositoryRoot, persisted, { strategy: group, message });
+        return recordImportRepair(repositoryRoot, persisted, { strategy: group, message, failedCheck });
       }
       if (result.importId !== importId || result.sourceFingerprint !== record.sourceFingerprint) throw new Error("Stage executor changed import identity.");
       await lease.assertOwned();
@@ -457,7 +499,7 @@ export async function executePendingImport(repositoryRoot: string, importId: str
 /** Executor output is repair work, not an external outage or an automatic quarantine. */
 export async function recordImportRepair(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; message: string; verifiedHeroRejection?: {
   decisionRef: EvidenceRef; heroEvidenceRef: EvidenceRef; assetRef: EvidenceRef; generationRef: EvidenceRef;
-} }): Promise<ExternalArticleImportV1> {
+}; failureCategory?: ImportFailureCategory; failedCheck?: { code: string; criterionId?: string; criterionRevision?: string; settings?: Record<string, string> } }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     const attemptKey = `repair:${input.strategy}:${fingerprint(input.message)}`;
@@ -469,6 +511,7 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
     const researchRecovery = record.stage === "RESEARCHING" || input.message.includes("ASSESSMENT_RULE_FAILED:claims") ? ` ${RESEARCH_RECOVERY_INSTRUCTION}` : "";
     const message = diagnostic ? `Three unchanged repair failures; diagnose before retrying. ${input.message}` : input.message;
     const submittedFingerprint = await canonicalSubmissionFingerprint(record, repositoryRoot);
+    const failedWork = record.continuation?.kind === "work" && record.continuation.idempotencyKey ? { workPath: record.continuation.workPath, resultPath: record.continuation.resultPath, idempotencyKey: record.continuation.idempotencyKey, ...(record.continuation.activityId && { activityId: record.continuation.activityId }) } : record.continuation?.kind === "repair" ? record.continuation.failedWork : undefined;
     if (record.continuation?.kind === "repair" && record.continuation.submittedFingerprint === submittedFingerprint) return record;
     const verifiedHeroRejection = input.message === "ARTICLE_HERO_VISUAL_INSPECTION_FAILED" && record.heroImage && record.evidenceRefs?.hero && input.verifiedHeroRejection &&
       isDeepStrictEqual(input.verifiedHeroRejection.heroEvidenceRef, record.evidenceRefs.hero) &&
@@ -481,11 +524,16 @@ export async function recordImportRepair(repositoryRoot: string, record: Externa
     if (rejectedHero) {
       attempts["hero-generation"] = (record.strategyAttempts["hero-generation"] ?? 0) + 1;
     }
+    const categoryAction = input.failureCategory === "invalid-evidence"
+      ? "Repair and revalidate the rejected evidence."
+      : input.failureCategory === "content-rejection"
+        ? "Repair the rejected content and repeat its criterion check."
+        : `Repair ${record.stage.toLowerCase()} output.`;
     const updated = externalArticleImportSchema.parse({ ...record,
       ...(rejectedHero && { heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined }),
-      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis receipt before changing this stage again." : `Repair ${record.stage.toLowerCase()} output.`) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
+      repairStageTotals: { ...record.repairStageTotals, [record.resumeStage ?? record.stage]: stageTotal }, strategyAttempts: attempts, stage: record.stage, resumeStage: record.stage, blockerScope: "article", continuation: { kind: "repair", stage: record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint, failedCheck: input.failedCheck, failedEvidenceRefs: Object.values(record.evidenceRefs ?? {}).filter((ref): ref is EvidenceRef => ref !== undefined), failedWork, diagnosisRequired: diagnostic, requiredChange: rejectedHero ? "Generate a fresh hero through the next built-in ChatGPT ImageGen handoff and repeat exact-pixel visual inspection." : (diagnostic ? "Record a diagnosis with supporting evidence, a predicted observation, a disproof check and a separate verified remedy before retrying." : categoryAction) + researchRecovery, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint }, updatedAt: at,
       stageReceipts: [...record.stageReceipts, { stage: record.stage, status: "failed", at, message }],
-      nextAction: rejectedHero ? `The rejected hero remains preserved in the failed receipt (${JSON.stringify(rejectedHero)}). Resume to generate and inspect a fresh image.` : (diagnostic ? "Record or resolve the diagnosed blocker, then retry the same productive stage." : `Repair ${record.stage.toLowerCase()} output and resume this import.`) + researchRecovery,
+      nextAction: rejectedHero ? `The rejected hero remains preserved in the failed receipt (${JSON.stringify(rejectedHero)}). Resume to generate and inspect a fresh image.` : (diagnostic ? "Record a falsifiable diagnosis and verify its remedy before retrying the same productive stage." : categoryAction) + researchRecovery,
     });
     await saveImport(repositoryRoot, updated);
     return updated;
@@ -741,7 +789,8 @@ export async function advanceImport(repositoryRoot: string, record: ExternalArti
       record = checked;
     }
     const at = now();
-    const updated = externalArticleImportSchema.parse({ ...record, continuation: undefined, resumeStage: undefined, blockerScope: undefined, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
+    const handoff = await declareGateHandoff(repositoryRoot, record, record.stage, stage);
+    const updated = externalArticleImportSchema.parse({ ...record, gateHandoffs: [...(record.gateHandoffs ?? []), handoff], continuation: undefined, resumeStage: undefined, blockerScope: undefined, stage, updatedAt: at, stageReceipts: [...record.stageReceipts, { stage, status: "passed", at, message }], nextAction: "Complete " + stage.toLowerCase() + " and record its receipt." });
     await saveImport(repositoryRoot, updated);
     return updated;
   });
@@ -773,13 +822,15 @@ export async function recordImportRelease(repositoryRoot: string, record: Extern
     const presented = await ensureImportPresentationBinding(repositoryRoot, { ...checked, release });
     if (!presented.presentation) return presented;
     const at = now();
-    const updated = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, stage: "VERIFYING", release, updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: instructionsForStage("VERIFYING") });
+    const released = externalArticleImportSchema.parse({ ...presented, evidenceRefs: { ...presented.evidenceRefs, production: release.productionVerifierRef }, release });
+    const handoff = await declareGateHandoff(repositoryRoot, released, "RELEASING", "VERIFYING");
+    const updated = externalArticleImportSchema.parse({ ...released, gateHandoffs: [...(released.gateHandoffs ?? []), handoff], stage: "VERIFYING", updatedAt: at, stageReceipts: [...released.stageReceipts, { stage: "VERIFYING", status: "started", at, message: "Release receipt recorded; production verification is required." }], nextAction: instructionsForStage("VERIFYING") });
     await saveImport(repositoryRoot, updated);
     return updated;
   });
 }
 
-export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+export async function verifyImportRelease(repositoryRoot: string, record: ExternalArticleImportV1, options?: { reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     if (record.stage !== "VERIFYING" || !record.release) throw new Error("A validated release receipt is required before production verification.");
@@ -798,15 +849,22 @@ export async function verifyImportRelease(repositoryRoot: string, record: Extern
     if (!merge || !review || merge.reviewedHeadSha !== review.reviewedHeadSha || merge.mergeCommitSha !== release.commitSha ||
         record.pendingRelease?.reviewedCommitSha !== review.reviewedHeadSha || !record.pendingRelease.pullRequestUrl) throw new Error("TERMINAL_MERGE_PROOF_INVALID");
     if (deployment && (deployment.commitSha !== merge.mergeCommitSha || deployment.deploymentId !== release.deploymentId || deployment.url !== release.canonicalUrl)) throw new Error("TERMINAL_DEPLOYMENT_PROOF_INVALID");
+    if (record.reviewEvidence && !options?.reviewEvidenceRegistry) throw new Error("PUBLICATION_APPROVAL_REGISTRY_REQUIRED");
+    const publicationApproval = options?.reviewEvidenceRegistry ? {
+      catalogue: await registerPublicationApproval(repositoryRoot, options.reviewEvidenceRegistry, record, "catalogue", at),
+      import: await registerPublicationApproval(repositoryRoot, options.reviewEvidenceRegistry, record, "import", at),
+    } : record.publicationApproval;
     const artifactRef = await storeEvidence(repositoryRoot, record.importId, production.artifact);
     const mergeEvidenceRef = await storeEvidence(repositoryRoot, record.importId, { reviewedCommitSha: merge.reviewedHeadSha, mergeCommitSha: merge.mergeCommitSha, pullRequestUrl: record.pendingRelease.pullRequestUrl, evidenceUrl: review.evidenceUrl });
     const frozenFiles = await freezeEvidenceGraph(repositoryRoot, record.importId, [record.sourceRef, artifactRef, mergeEvidenceRef, ...Object.values(record.evidenceRefs ?? {}).filter((ref): ref is { path: string; sha256: string } => ref !== undefined)]);
     const retainedHero = record.heroImage ?? (record.evidenceRefs?.hero ? articleHeroBindingSchema.parse(await readEvidence(repositoryRoot, record.evidenceRefs.hero)) : undefined);
-    const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, ...(retainedHero && { heroImage: retainedHero }), frozenFiles, format: record.format, commercialMode: record.transformation?.commercialMode ?? "none", ...(record.transformation?.resolvedAffiliateUrl && { approvedAffiliateUrl: record.transformation.resolvedAffiliateUrl }), reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
+    const terminalRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "TerminalEvidenceV1", id: randomUUID(), createdAt: at, importId: record.importId, originImportId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: record.requirementRevision, sourceRef: record.sourceRef, completedAt: at, kind: "live", researchGeneration: researchRecoveryGeneration(record), artifactRef, evidenceRefs: record.evidenceRefs, ...(retainedHero && { heroImage: retainedHero }), ...(publicationApproval && { publicationApproval }), frozenFiles, format: record.format, commercialMode: record.transformation?.commercialMode ?? "none", ...(record.transformation?.resolvedAffiliateUrl && { approvedAffiliateUrl: record.transformation.resolvedAffiliateUrl }), reviewedCommitSha: record.pendingRelease.reviewedCommitSha, mergeCommitSha: merge.mergeCommitSha, mergeEvidenceRef, deployment: { deploymentId: release.deploymentId, canonicalUrl: release.canonicalUrl, commitSha: release.commitSha } });
     const publicationKey = fingerprint(`${record.importId}:${release.commitSha}`);
     const runRef = await storeEvidence(repositoryRoot, record.importId, { schemaVersion: "ImproveRunSnapshotV1", publicationKey, importId: record.importId, sourceFingerprint: record.sourceFingerprint, stageReceipts: record.stageReceipts, repairStageTotals: record.repairStageTotals, strategyAttempts: record.strategyAttempts, pendingRelease: record.pendingRelease, release, terminalRef });
     const improve = { schemaVersion: "ImportImproveV1" as const, publicationKey, boundCommitSha: release.commitSha, runRef, phase: "ASSESSING" as const, attempt: 0, issueKeys: [], resolvedKeys: [], openKeys: [], handoffRefs: [] };
-    const updated = externalArticleImportSchema.parse({ ...presented, terminalRef, improve, continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...presented.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
+    const verified = externalArticleImportSchema.parse({ ...presented, ...(publicationApproval && { publicationApproval }), terminalRef, improve });
+    const handoff = await declareGateHandoff(repositoryRoot, verified, "VERIFYING", "LIVE");
+    const updated = externalArticleImportSchema.parse({ ...verified, gateHandoffs: [...(verified.gateHandoffs ?? []), handoff], continuation: { kind: "complete", result: "LIVE", receiptPaths: [terminalRef.path] }, stage: "LIVE", updatedAt: at, stageReceipts: [...verified.stageReceipts, { stage: "LIVE", status: "passed", at, message: "All production checks passed." }], nextAction: "none" });
     const historical = await evaluateWorkflowEvidence(updated, { root: repositoryRoot }, "historical-terminal");
     if (!historical.ok) throw new Error(`TERMINAL_PROOF_INVALID:${JSON.stringify(historical.diagnostics)}`);
     await saveImport(repositoryRoot, updated);
@@ -881,7 +939,7 @@ export async function resumeImport(repositoryRoot: string, record: ExternalArtic
     return updated;
   });
 }
-export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; message: string }): Promise<ExternalArticleImportV1> {
+export async function recordImportFailure(repositoryRoot: string, record: ExternalArticleImportV1, input: { strategy: string; classification: FailureClass; failureCategory?: ImportFailureCategory; message: string; failedCheck?: { code: string; criterionId?: string; criterionRevision?: string; settings?: Record<string, string> } }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     if (input.classification !== "transient") return recordImportRepair(repositoryRoot, record, input);
     const attemptKey = input.classification === "transient" ? `transient:${input.strategy}` : input.strategy;
@@ -893,10 +951,13 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
     const exhausted = next === "quarantine";
     const stage: ImportStage = input.classification === "transient" ? "WAITING_EXTERNAL" : exhausted ? "QUARANTINED" : "REPAIRING";
     const resumeStage = stage === "REPAIRING" || stage === "WAITING_EXTERNAL" ? (record.stage === "REPAIRING" || record.stage === "WAITING_EXTERNAL" ? record.resumeStage : record.stage) : record.resumeStage;
-    const capabilityBlock = input.classification === "transient" && /credentials missing|git unavailable|model[ _]access|editorial[ _]tool|integrity|vercel timeout|CAPABILITY_UNAVAILABLE|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED/i.test(input.message);
+    const capabilityBlock = input.classification === "transient" && (input.failureCategory === "unavailable-capability" || input.failureCategory === "uncertain-external-outcome" || /credentials missing|git unavailable|model[ _]access|editorial[ _]tool|integrity|vercel timeout|CAPABILITY_UNAVAILABLE|SOURCE_IDENTITY_CONFLICT|LEASE_OWNER_CHANGED/i.test(input.message));
     const previousWait = record.continuation?.kind === "wait" ? record.continuation : undefined;
-    const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: "Restore the shared capability, then resume this same import." } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
-    const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: capabilityBlock ? "Restore the shared capability and provide verified recovery evidence." : stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
+    const blockedAction = input.failureCategory === "uncertain-external-outcome"
+      ? { requirement: "Reconcile the external operation identity and observed outcome before any retry.", next: "Reconcile the uncertain external outcome before retrying this operation." }
+      : { requirement: "Restore the shared capability and verify it independently before resuming.", next: "Restore the unavailable shared capability and verify the remedy before resuming." };
+    const continuation = capabilityBlock ? { kind: "blocked" as const, scope: "shared" as const, failureCategory: input.failureCategory, cause: input.message, attemptedRecovery: "Recorded the failed operation and preserved the import state.", resumptionRequirement: blockedAction.requirement } : stage === "WAITING_EXTERNAL" ? { kind: "wait" as const, resumeStage: resumeStage ?? record.stage, dependency: input.message, waitStartedAt: previousWait?.waitStartedAt ?? at, lastProgressAt: at, nextCheckAt: new Date(Date.now() + (previousWait ? ARTICLE_WAIT_POLICY.subsequentCheckMs : ARTICLE_WAIT_POLICY.firstCheckMs)).toISOString(), timeoutAt: previousWait?.timeoutAt ?? new Date(Date.now() + ARTICLE_WAIT_POLICY.timeoutMs).toISOString() } : stage === "REPAIRING" ? { kind: "repair" as const, stage: resumeStage ?? record.stage, failureCategory: input.failureCategory, failureFingerprint: fingerprint(input.message), submittedFingerprint: await canonicalSubmissionFingerprint(record, repositoryRoot), failedEvidenceRefs: Object.values(record.evidenceRefs ?? {}).filter((ref): ref is EvidenceRef => ref !== undefined), diagnosisRequired: attempt >= 3, requiredChange: attempt >= 3 ? "Record a diagnosis receipt before retrying." : `Repair ${record.stage.toLowerCase()} output.`, idempotencyKey: fingerprint(`${record.importId}:${record.sourceFingerprint}:${record.stage}`), sourceFingerprint: record.sourceFingerprint } : undefined;
+    const updated = externalArticleImportSchema.parse({ ...record, stage, ...(resumeStage ? { resumeStage } : {}), blockerScope: input.classification === "transient" ? "shared" : "article", continuation, updatedAt: at, strategyAttempts: attempts, stageReceipts: [...record.stageReceipts, { stage, status: stage === "WAITING_EXTERNAL" ? "waiting" : stage === "QUARANTINED" ? "quarantined" : "failed", at, message: input.message }], nextAction: capabilityBlock ? blockedAction.next : stage === "WAITING_EXTERNAL" ? "Heartbeat: retry after external dependency recovers." : stage === "QUARANTINED" ? "none" : `Apply strategy ${next}.` });
     await saveImport(repositoryRoot, updated);
     if (stage === "QUARANTINED") return deleteRawSource(repositoryRoot, updated.importId, updated, at);
     return updated;
@@ -904,7 +965,7 @@ export async function recordImportFailure(repositoryRoot: string, record: Extern
 }
 
 async function deleteRawSource(repositoryRoot: string, importId: string, record: ExternalArticleImportV1, at: string): Promise<ExternalArticleImportV1> {
-  try { await unlink(sourcePath(repositoryRoot, importId)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+  try { await unlink(sourcePath(repositoryRoot, importId)); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw new Error("SOURCE_CLEANUP_UNLINK_FAILED"); }
   const updated = externalArticleImportSchema.parse({ ...record, sourceDeletedAt: at });
   await saveImport(repositoryRoot, updated);
   return updated;
@@ -938,12 +999,210 @@ export async function upgradeImportEvidence(root: string, importId: string): Pro
   }); } finally { await lease.release(); }
 }
 
+async function verifiedRemedyEvidence(root: string, ref: EvidenceRef, diagnosis: ReturnType<typeof actionableDiagnosisSchema.parse>, record: ExternalArticleImportV1) {
+  const evidence = remedyVerificationEvidenceSchema.parse(await readEvidence(root, ref));
+  if (evidence.importId !== diagnosis.importId || evidence.sourceFingerprint !== diagnosis.sourceFingerprint || evidence.stage !== diagnosis.stage || evidence.failedSubmissionDigest !== diagnosis.failedSubmissionDigest || evidence.replacementSubmissionDigest !== diagnosis.replacementSubmissionDigest) throw new Error("DIAGNOSIS_REMEDY_BINDING_MISMATCH");
+  let pendingArtifactPath: string | undefined;
+  let pendingEditorialRef: EvidenceRef | undefined;
+  let pendingReleaseWork: { artifactPath: string; changedFiles: string[]; slug?: string } | undefined;
+  let actualEvidenceRef: EvidenceRef | undefined;
+  const activityRepair = record.continuation?.kind === "repair" ? record.continuation.failedWork?.activityId : undefined;
+  if (record.continuation?.kind === "repair" && record.continuation.failedWork) {
+    if (activityRepair) {
+      if (evidence.criterion.id !== "activity-result" || evidence.criterion.revision !== WORKFLOW_REVISION) throw new Error("DIAGNOSIS_ACTIVITY_CRITERION_MISMATCH");
+      const workPacket = JSON.parse(await readFile(path.resolve(root, record.continuation.failedWork.workPath), "utf8")) as { importId?: unknown; sourceFingerprint?: unknown; activity?: { id?: unknown }; renderingInputs?: { reference?: EvidenceRef } };
+      if (workPacket.importId !== record.importId || workPacket.sourceFingerprint !== record.sourceFingerprint || workPacket.activity?.id !== activityRepair) throw new Error("DIAGNOSIS_ACTIVITY_WORK_BINDING_MISMATCH");
+      const failedRenderingRef = workPacket.renderingInputs?.reference;
+      if (record.stage === "VALIDATING" && !failedRenderingRef) throw new Error("DIAGNOSIS_ACTIVITY_RENDER_INPUTS_MISSING");
+      if (failedRenderingRef) await verifyEvidenceRef(root, failedRenderingRef);
+      const renderingRef = record.stage === "VALIDATING" ? await captureRenderingInputs(root, record.importId) : undefined;
+      await validateActivityRemedyEvidence(root, record, activityRepair, evidence.validatedEvidenceRef, renderingRef);
+      actualEvidenceRef = evidence.validatedEvidenceRef;
+    } else {
+    const resultFile = path.resolve(root, record.continuation.failedWork.resultPath);
+    const relative = path.relative(await realpath(root), await realpath(resultFile));
+    if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("DIAGNOSIS_REMEDY_RESULT_PATH_INVALID");
+    const result = JSON.parse(await readFile(resultFile, "utf8")) as { idempotencyKey?: unknown; sourceFingerprint?: unknown; work?: { stage?: unknown; evidencePath?: unknown; artifactPath?: unknown; assessmentPath?: unknown; editorialExecutionPath?: unknown; presentationEvidencePath?: unknown; changedFiles?: unknown; slug?: unknown } };
+    if (result.idempotencyKey !== record.continuation.failedWork.idempotencyKey || result.sourceFingerprint !== record.sourceFingerprint || result.work?.stage !== diagnosis.stage) throw new Error("DIAGNOSIS_REMEDY_RESULT_BINDING_MISMATCH");
+    const evidencePath = diagnosis.stage === "RESEARCHING" ? result.work.evidencePath : diagnosis.stage === "TRANSFORMING" || diagnosis.stage === "REFINING" ? result.work.assessmentPath : diagnosis.stage === "VALIDATING" ? result.work.presentationEvidencePath : undefined;
+    if (typeof evidencePath === "string") actualEvidenceRef = await evidenceReference(root, evidencePath);
+    if (typeof result.work.artifactPath === "string") pendingArtifactPath = result.work.artifactPath;
+    if (diagnosis.stage === "REFINING" && typeof result.work.editorialExecutionPath === "string") pendingEditorialRef = await evidenceReference(root, result.work.editorialExecutionPath);
+    if (diagnosis.stage === "RELEASING" && typeof result.work.artifactPath === "string" && Array.isArray(result.work.changedFiles) && result.work.changedFiles.every((file) => typeof file === "string")) {
+      pendingReleaseWork = { artifactPath: result.work.artifactPath, changedFiles: result.work.changedFiles as string[], ...(typeof result.work.slug === "string" && { slug: result.work.slug }) };
+      actualEvidenceRef = await evidenceReference(root, record.continuation.failedWork.resultPath);
+    }
+    }
+  }
+  const binding = { ...record, artifactPath: pendingArtifactPath ?? record.artifactPath ?? record.contentApproval?.artifactPath, requirementRevision: WORKFLOW_REVISION };
+  actualEvidenceRef ??= diagnosis.stage === "RESEARCHING" ? record.evidenceRefs?.research
+    : diagnosis.stage === "TRANSFORMING" ? record.evidenceRefs?.transformAssessment
+      : diagnosis.stage === "REFINING" ? record.evidenceRefs?.assessment
+        : diagnosis.stage === "VALIDATING" ? record.evidenceRefs?.presentation : undefined;
+  if (!actualEvidenceRef || !isDeepStrictEqual(actualEvidenceRef, evidence.validatedEvidenceRef)) throw new Error("DIAGNOSIS_REMEDY_REPLACEMENT_EVIDENCE_MISMATCH");
+  if (activityRepair && evidence.criterion.id === "activity-result" && evidence.criterion.revision === WORKFLOW_REVISION) {
+    if (!record.activityFindings?.some((finding) => finding.stage === diagnosis.stage && finding.activityId === activityRepair && finding.status !== "resolved")) throw new Error("DIAGNOSIS_ACTIVITY_FINDING_MISSING");
+  }
+  else if (diagnosis.stage === "RESEARCHING" && evidence.criterion.id === "research-evidence" && evidence.criterion.revision === WORKFLOW_REVISION) await validateResearchEvidence(root, actualEvidenceRef, binding);
+  else if (["TRANSFORMING", "REFINING"].includes(diagnosis.stage) && evidence.criterion.id === "content-assessment" && evidence.criterion.revision === WORKFLOW_REVISION) {
+    await validateContentAssessment(root, actualEvidenceRef, binding);
+    if (diagnosis.stage === "REFINING") {
+      if (!pendingEditorialRef || !evidence.relatedEvidenceRefs?.some((candidate) => isDeepStrictEqual(candidate, pendingEditorialRef))) throw new Error("DIAGNOSIS_REMEDY_EDITORIAL_EVIDENCE_MISMATCH");
+      await validateEditorialExecution(root, pendingEditorialRef, binding);
+    }
+  }
+  else if (diagnosis.stage === "VALIDATING" && evidence.criterion.id === "presentation-evidence" && evidence.criterion.revision === WORKFLOW_REVISION) await validatePresentationEvidence(root, actualEvidenceRef, binding);
+  else if (diagnosis.stage === "RELEASING" && evidence.criterion.id === "release-result" && evidence.criterion.revision === WORKFLOW_REVISION && pendingReleaseWork) {
+    if (record.continuation?.kind !== "repair" || record.continuation.failedCheck?.code !== "RELEASE_DECLARATION") throw new Error("DIAGNOSIS_RELEASE_CHECK_UNSUPPORTED");
+    const target = await readImportArtifactTarget(root, record.format, pendingReleaseWork.artifactPath, pendingReleaseWork.slug);
+    const release = await import("./release");
+    if (release.validateReleasePaths(pendingReleaseWork.changedFiles, record.format).length) throw new Error("DIAGNOSIS_RELEASE_PATHS_INVALID");
+    if (record.format === "agent_review_required") throw new Error("DIAGNOSIS_RELEASE_FORMAT_UNSUPPORTED");
+    const required = release.requiredImportReleaseFiles({ format: record.format, approvedArtifactPath: pendingReleaseWork.artifactPath, slug: target.target.slug, includeHero: Boolean(record.heroImage) });
+    if (required.all.some((file) => !pendingReleaseWork!.changedFiles.includes(file))) throw new Error("DIAGNOSIS_RELEASE_REQUIRED_PATH_MISSING");
+  }
+  else throw new Error("DIAGNOSIS_REMEDY_CRITERION_NOT_ALLOWED");
+  return { evidence, actualEvidenceRef, check: { method: "deterministic" as const, result: "verified" as const, observation: `Controller ${evidence.criterion.id} validator passed revision ${evidence.criterion.revision}.` } };
+}
+
+async function verifiedMeasurementChange(root: string, ref: EvidenceRef, diagnosis: ReturnType<typeof actionableDiagnosisSchema.parse>, record: ExternalArticleImportV1, replacementPresentationRef?: EvidenceRef) {
+  const evidence = remedyMeasurementVerificationSchema.parse(await readEvidence(root, ref));
+  if (evidence.importId !== diagnosis.importId || evidence.sourceFingerprint !== diagnosis.sourceFingerprint || evidence.stage !== diagnosis.stage || evidence.failedSubmissionDigest !== diagnosis.failedSubmissionDigest || evidence.replacementSubmissionDigest !== diagnosis.replacementSubmissionDigest) throw new Error("DIAGNOSIS_MEASUREMENT_BINDING_MISMATCH");
+  if (evidence.criterion.revision !== WORKFLOW_REVISION) throw new Error("DIAGNOSIS_MEASUREMENT_CRITERION_MISMATCH");
+  if (record.continuation?.kind !== "repair" || !record.continuation.failedEvidenceRefs?.some((failed) => isDeepStrictEqual(failed, evidence.previousPresentationRef))) throw new Error("DIAGNOSIS_MEASUREMENT_PRIOR_EVIDENCE_MISMATCH");
+  if (!replacementPresentationRef || !isDeepStrictEqual(replacementPresentationRef, evidence.currentPresentationRef)) throw new Error("DIAGNOSIS_MEASUREMENT_REPLACEMENT_EVIDENCE_MISMATCH");
+  const previous = workflowEvidenceSchema.parse(await readEvidence(root, evidence.previousPresentationRef));
+  const current = await validatePresentationEvidence(root, evidence.currentPresentationRef, { ...record, artifactPath: record.artifactPath ?? record.contentApproval?.artifactPath, requirementRevision: WORKFLOW_REVISION });
+  if (previous.importId !== record.importId || previous.sourceFingerprint !== record.sourceFingerprint || previous.stage !== "VALIDATING") throw new Error("DIAGNOSIS_MEASUREMENT_PRIOR_BINDING_MISMATCH");
+  const ruleEvidence = (presentation: typeof previous, rule: string, expected: EvidenceRef) => {
+    const refs = presentation.ruleResults.find((result) => result.ruleId === rule)?.evidenceRefs;
+    if (!refs?.some((candidate) => isDeepStrictEqual(candidate, expected))) throw new Error("DIAGNOSIS_MEASUREMENT_RULE_EVIDENCE_MISMATCH");
+  };
+  const observationRule = evidence.verificationKind === "presentation-viewport" ? evidence.criterion.id : evidence.criterion.observationRule;
+  ruleEvidence(previous, observationRule, evidence.previousObservationRef);
+  ruleEvidence(current, observationRule, evidence.currentObservationRef);
+  const previousObservation = await validateExecutionEvidence(root, evidence.previousObservationRef);
+  const currentObservation = await validateExecutionEvidence(root, evidence.currentObservationRef);
+  if (previousObservation.kind !== "browser" || currentObservation.kind !== "browser") throw new Error("DIAGNOSIS_MEASUREMENT_OBSERVATION_REQUIRED");
+  const ordinaryReviewRef = current.ruleResults.find((result) => result.ruleId === evidence.criterion.reviewRule)?.evidenceRefs[0];
+  if (!ordinaryReviewRef) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_REQUIRED");
+  const ordinaryReview = await validateExecutionEvidence(root, ordinaryReviewRef);
+  const reviewExecution = await validateExecutionEvidence(root, evidence.reviewExecutionRef);
+  if ((reviewExecution.kind !== "opencode" && reviewExecution.kind !== "structured") || reviewExecution.pass !== "remedy:measurement-change" || reviewExecution.packetId !== importPacketId(record, "VALIDATING", "targeted-repair") || !reviewExecution.inputRefs.some((item) => isDeepStrictEqual(item, evidence.previousObservationRef)) || !reviewExecution.inputRefs.some((item) => isDeepStrictEqual(item, evidence.currentObservationRef))) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_REQUIRED");
+  const context = (execution: typeof reviewExecution | typeof ordinaryReview) => execution.kind === "opencode" ? execution.sessionId : execution.kind === "structured" ? execution.contextId : "";
+  if (context(reviewExecution) === context(ordinaryReview)) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_NOT_INDEPENDENT");
+  let expectedInput: Record<string, string>;
+  let expectedReview: Record<string, unknown>;
+  if (evidence.verificationKind === "presentation-viewport") {
+    if (evidence.measurementChange.aspect !== "viewport" || !isDeepStrictEqual(previousObservation.viewport, evidence.sourceViewport) || !isDeepStrictEqual(currentObservation.viewport, evidence.targetViewport)) throw new Error("DIAGNOSIS_MEASUREMENT_VIEWPORT_CONTRADICTED");
+    expectedInput = { criterion: JSON.stringify({ id: evidence.criterion.id, revision: evidence.criterion.revision }), previousObservationRef: JSON.stringify(evidence.previousObservationRef), currentObservationRef: JSON.stringify(evidence.currentObservationRef), sourceViewport: JSON.stringify(evidence.sourceViewport), targetViewport: JSON.stringify(evidence.targetViewport) };
+    expectedReview = { schemaVersion: "RemedyMeasurementReviewV1", verdict: "pass", criterion: { id: evidence.criterion.id, revision: evidence.criterion.revision }, previousObservationRef: evidence.previousObservationRef, currentObservationRef: evidence.currentObservationRef, sourceViewport: evidence.sourceViewport, targetViewport: evidence.targetViewport, justification: evidence.measurementChange.justification, limitations: evidence.reviewLimitations };
+    if (evidence.measurementChange.from !== JSON.stringify(evidence.sourceViewport) || evidence.measurementChange.to !== JSON.stringify(evidence.targetViewport)) throw new Error("DIAGNOSIS_MEASUREMENT_CHANGE_MISMATCH");
+  } else {
+    if (record.continuation?.kind !== "repair" || record.continuation.failedCheck?.code !== "TYPOGRAPHY_TRACKING_FLOOR" || record.continuation.failedCheck.criterionId !== evidence.criterion.id || record.continuation.failedCheck.criterionRevision !== evidence.criterion.revision || record.continuation.failedCheck.settings?.criterionFloor !== evidence.sourceCriterionFloor) throw new Error("DIAGNOSIS_MEASUREMENT_PRIOR_CHECK_MISMATCH");
+    if (!['threshold', 'criterion', 'measurement'].includes(evidence.measurementChange.aspect)) throw new Error("DIAGNOSIS_MEASUREMENT_KIND_UNSUPPORTED");
+    const authority = await evidenceReference(root, ".agents/skills/impeccable/reference/craft-floor.md");
+    if (!isDeepStrictEqual(authority, evidence.authorityInstructionRef) || !(await readEvidenceBytes(root, authority.path)).toString("utf8").includes("-0.04em")) throw new Error("DIAGNOSIS_MEASUREMENT_AUTHORITY_MISMATCH");
+    const observed = async (execution: typeof previousObservation, expected: string) => {
+      const observedValues: string[] = [];
+      for (const outputRef of execution.outputRefs) {
+        const value = await readEvidence(root, outputRef).catch(() => undefined);
+        const runtime = (() => { try { return validateArticleVisualRuntime(value); } catch { return undefined; } })();
+        if (!runtime) continue;
+        const spacing = runtime.typography.heading.letterSpacing;
+        const fontSize = runtime.typography.heading.fontSize;
+        const spacingPx = /^(-?\d+(?:\.\d+)?)px$/.exec(spacing);
+        const sizePx = /^(\d+(?:\.\d+)?)px$/.exec(fontSize);
+        const normalized = spacingPx && sizePx ? `${Number(spacingPx[1]) / Number(sizePx[1])}em` : spacing;
+        observedValues.push(normalized);
+        if (normalized === expected) return;
+      }
+      throw new Error(`DIAGNOSIS_MEASUREMENT_COMPUTED_VALUE_MISMATCH:${expected}:${observedValues.join(",")}`);
+    };
+    await observed(previousObservation, evidence.sourceComputedValue); await observed(currentObservation, evidence.targetComputedValue);
+    if (!reviewExecution.instructions.some((instruction) => instruction.path === authority.path && instruction.sha256 === authority.sha256)) throw new Error("DIAGNOSIS_MEASUREMENT_AUTHORITY_NOT_PINNED");
+    expectedInput = { criterion: JSON.stringify(evidence.criterion), previousObservationRef: JSON.stringify(evidence.previousObservationRef), currentObservationRef: JSON.stringify(evidence.currentObservationRef), sourceComputedValue: evidence.sourceComputedValue, targetComputedValue: evidence.targetComputedValue, sourceCriterionFloor: evidence.sourceCriterionFloor, criterionFloor: evidence.criterionFloor, authorityInstructionRef: JSON.stringify(authority) };
+    expectedReview = { schemaVersion: "RemedyMeasurementReviewV1", verdict: "pass", criterion: evidence.criterion, previousObservationRef: evidence.previousObservationRef, currentObservationRef: evidence.currentObservationRef, sourceComputedValue: evidence.sourceComputedValue, targetComputedValue: evidence.targetComputedValue, sourceCriterionFloor: evidence.sourceCriterionFloor, criterionFloor: evidence.criterionFloor, authorityInstructionRef: authority, justification: evidence.measurementChange.justification, limitations: evidence.reviewLimitations };
+    if (evidence.measurementChange.from !== evidence.sourceCriterionFloor || evidence.measurementChange.to !== evidence.criterionFloor) throw new Error("DIAGNOSIS_MEASUREMENT_CHANGE_MISMATCH");
+  }
+  if (!isDeepStrictEqual(reviewExecution.input, expectedInput)) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_INPUT_MISMATCH");
+  const review = JSON.parse(reviewExecution.output.measurementReview ?? "null") as Record<string, unknown>;
+  if (!isDeepStrictEqual(review, expectedReview)) throw new Error("DIAGNOSIS_MEASUREMENT_REVIEW_CONTRADICTED");
+  return evidence;
+}
+
+async function presentationMeasurementChanged(root: string, record: ExternalArticleImportV1, replacementPresentationRef?: EvidenceRef): Promise<boolean> {
+  if (record.continuation?.kind !== "repair" || !replacementPresentationRef) return false;
+  const failedCheck = record.continuation.failedCheck;
+  if (failedCheck?.code === "TYPOGRAPHY_TRACKING_FLOOR" && failedCheck.criterionId === "typography.heading.letterSpacing" && failedCheck.criterionRevision === WORKFLOW_REVISION) {
+    const authority = await evidenceReference(root, ".agents/skills/impeccable/reference/craft-floor.md");
+    const currentFloor = (await readEvidenceBytes(root, authority.path)).toString("utf8").includes("-0.04em") ? "-0.04em" : undefined;
+    if (!currentFloor || failedCheck.settings?.criterionFloor !== currentFloor) return true;
+  }
+  const current = workflowEvidenceSchema.safeParse(await readEvidence(root, replacementPresentationRef));
+  if (!current.success) return false;
+  for (const failedRef of record.continuation.failedEvidenceRefs ?? []) {
+    const failed = workflowEvidenceSchema.safeParse(await readEvidence(root, failedRef).catch(() => undefined));
+    if (!failed.success || failed.data.stage !== "VALIDATING") continue;
+    for (const rule of ["desktop", "mobile", "reduced-motion"]) {
+      const priorRef = failed.data.ruleResults.find((result) => result.ruleId === rule)?.evidenceRefs[0];
+      const currentRef = current.data.ruleResults.find((result) => result.ruleId === rule)?.evidenceRefs[0];
+      if (!priorRef || !currentRef) continue;
+      const [prior, replacement] = await Promise.all([validateExecutionEvidence(root, priorRef), validateExecutionEvidence(root, currentRef)]);
+      if (prior.kind === "browser" && replacement.kind === "browser" && !isDeepStrictEqual(prior.viewport, replacement.viewport)) return true;
+    }
+  }
+  return false;
+}
+
 export async function submitImportDiagnosis(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
   return withImportLease(root, importId, async (record) => {
-    const diagnosis = diagnosisSchema.parse(input);
+    const diagnosis = actionableDiagnosisSchema.parse(input);
     if (diagnosis.consumedAt || diagnosis.importId !== importId || diagnosis.sourceFingerprint !== record.sourceFingerprint || diagnosis.stage !== record.stage || record.continuation?.kind !== "repair" || diagnosis.failedSubmissionDigest !== record.continuation.submittedFingerprint || diagnosis.replacementSubmissionDigest !== await canonicalSubmissionFingerprint(record, root)) throw new Error("DIAGNOSIS_BINDING_MISMATCH");
-    for (const ref of [...diagnosis.attemptedRecoveryRefs, ...diagnosis.remedyEvidenceRefs]) await readEvidence(root, ref);
-    const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), diagnosis] };
+    for (const ref of diagnosis.attemptedRecoveryRefs) await readEvidence(root, ref);
+    const remedies = await Promise.all(diagnosis.remedyEvidenceRefs.map((ref) => verifiedRemedyEvidence(root, ref, diagnosis, record)));
+    const derivedCheck = remedies[0].check;
+    const replacementPresentationRef = diagnosis.stage === "VALIDATING" ? remedies[0].actualEvidenceRef : undefined;
+    if (diagnosis.repairChange.kind === "product-repair" && await presentationMeasurementChanged(root, record, replacementPresentationRef)) throw new Error("DIAGNOSIS_MEASUREMENT_CHANGE_UNDECLARED");
+    if (diagnosis.repairChange.kind === "measurement-change") {
+      const repairChange = diagnosis.repairChange;
+      if (diagnosis.remedyEvidenceRefs.some((ref) => isDeepStrictEqual(ref, repairChange.independentVerificationRef))) throw new Error("DIAGNOSIS_MEASUREMENT_VERIFICATION_NOT_INDEPENDENT");
+      const measurement = await verifiedMeasurementChange(root, repairChange.independentVerificationRef, diagnosis, record, replacementPresentationRef);
+      const expectedChange = { aspect: repairChange.aspect, from: repairChange.from, to: repairChange.to, justification: repairChange.justification };
+      if (!isDeepStrictEqual(measurement.measurementChange, expectedChange)) throw new Error("DIAGNOSIS_MEASUREMENT_VERIFICATION_MISMATCH");
+    }
+    const verified = { ...diagnosis, remedyCheck: derivedCheck, remedyVerifiedAt: now() };
+    const updated = { ...record, diagnoses: [...(record.diagnoses ?? []), verified] };
     await saveImport(root, updated); return updated;
+  });
+}
+
+export async function submitActivityOwnerDecision(root: string, importId: string, input: unknown): Promise<ExternalArticleImportV1> {
+  return withImportLease(root, importId, async (record) => {
+    const decision = activityOwnerDecisionSchema.parse(input);
+    const existing = record.activityOwnerDecisions?.find((item) => item.operationId === decision.operationId);
+    if (existing) {
+      if (!isDeepStrictEqual(existing, decision)) throw new Error("OWNER_DECISION_OPERATION_REPLAY_MISMATCH");
+      return record;
+    }
+    const findingIndex = record.activityFindings?.findIndex((finding) => finding.findingId === decision.findingId && finding.revision === decision.revision && finding.status === "owner-referral") ?? -1;
+    if (findingIndex < 0) throw new Error("OWNER_DECISION_FINDING_BINDING_MISMATCH");
+    const secret = process.env.ARTICLE_OWNER_DECISION_SECRET;
+    if (!secret || secret.length < 32) throw new Error("OWNER_DECISION_AUTHENTICATION_UNAVAILABLE");
+    const payload = JSON.stringify({ importId, sourceFingerprint: record.sourceFingerprint, operationId: decision.operationId, findingId: decision.findingId, revision: decision.revision, decision: decision.decision, decidedBy: decision.decidedBy, reason: decision.reason, decidedAt: decision.decidedAt });
+    const expectedMac = createHmac("sha256", secret).update(payload).digest();
+    const suppliedMac = Buffer.from(decision.authorizationMac, "hex");
+    if (suppliedMac.length !== expectedMac.length || !timingSafeEqual(suppliedMac, expectedMac)) throw new Error("OWNER_DECISION_AUTHORIZATION_MISMATCH");
+    const findings = [...record.activityFindings!];
+    if (decision.decision === "authorize-worker-review") findings[findingIndex] = { ...findings[findingIndex], status: "open" };
+    const updated = externalArticleImportSchema.parse({
+      ...record,
+      activityFindings: findings,
+      activityOwnerDecisions: [...(record.activityOwnerDecisions ?? []), decision],
+      continuation: undefined,
+      nextAction: decision.decision === "authorize-worker-review" ? `Resume ${findings[findingIndex].stage.toLowerCase()} with the exact owner-authorized finding review.` : `Owner upheld referral ${decision.findingId}; no worker may clear it.`,
+    });
+    await saveImport(root, updated);
+    return updated;
   });
 }

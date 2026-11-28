@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "testedRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+  "testedTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d",
+  "provisional": false,
+  "boundary": "Synthetic controller, filesystem and provider-adapter tests only. No real article, provider, deployment or production operation ran.",
+  "finalDelta": {
+    "fromRevision": "62e7aac4f8f80b19f946083c8358883107c12415",
+    "changedProductFiles": [
+      "src/lib/article-import/worker-runner.ts"
+    ],
+    "directlyRerunObservationIds": [
+      "worker-packet-scope"
+    ],
+    "promotedObservationIds": [
+      "activity-output-and-repair-escalation",
+      "cleanup-path-containment",
+      "provider-and-release-verification",
+      "rendering-input-scope"
+    ],
+    "promotionBasis": "The final delta only filters the owner-decision secret from worker child environments case-insensitively. The affected worker packet test and normal target/control controller were rerun at the final revision; the other probe implementations and their product dependencies are unchanged."
+  },
+  "observations": [
+    {
+      "id": "activity-output-and-repair-escalation",
+      "command": "node --import tsx --test --test-name-pattern='tampered concrete activity output|three distinct unsuccessful finding repairs' tests/article-import-activity-recovery.test.ts",
+      "status": "pass",
+      "tests": 2,
+      "establishes": "A changed accepted output reopens its producing activity, and three distinct unsuccessful finding repairs require bound diagnosis before a fourth worker.",
+      "limitations": "This does not establish a successful editorial repair, an adequate content-depth control, or a finding-specific controller catch beyond finding 36."
+    },
+    {
+      "id": "cleanup-path-containment",
+      "command": "node --import tsx --test --test-name-pattern='cleanup refuses redirected archive|cleanup refuses an existing archive leaf|restart will not unlink|restart refuses to restore' tests/article-import-cleanup-recovery.test.ts",
+      "status": "pass",
+      "tests": 4,
+      "establishes": "Synthetic cleanup and restart refuse redirected archive, failure-receipt and work paths without mutating unrelated storage.",
+      "limitations": "No real article state or user file was deleted, restored or moved."
+    },
+    {
+      "id": "provider-and-release-verification",
+      "command": "node --import tsx --test --test-name-pattern='release journal redacts raw provider|indeterminate deployment lookup|release command runner preserves|local adapter binds provider identity|local adapter rejects disagreement|local adapter fails closed|local adapter reports authentication' tests/article-import-release.test.ts",
+      "status": "pass",
+      "tests": 8,
+      "establishes": "Synthetic provider reads bind project, alias and served commit identity; indeterminate lookup stays held; shell metacharacters remain literal; retained diagnostics omit raw credentials and provider errors.",
+      "limitations": "Provider responses are synthetic. No deployment, alias change, rollback or production verification ran."
+    },
+    {
+      "id": "rendering-input-scope",
+      "command": "node --import tsx --test --test-name-pattern='target-bound current rendering tracks global build inputs' tests/article-rendering-inputs.test.ts",
+      "status": "pass",
+      "tests": 1,
+      "establishes": "Current target-bound rendering evidence includes global build inputs while ignoring an unrelated article file.",
+      "limitations": "This is input-custody evidence, not a fresh browser rendering or visual-quality judgment."
+    },
+    {
+      "id": "worker-packet-scope",
+      "command": "node --import tsx --test --test-name-pattern='activity workers receive one current activity' tests/article-worker-runner.test.ts",
+      "status": "pass",
+      "tests": 1,
+      "establishes": "The synthetic worker packet exposes one current activity and only accepted current-stage handoffs.",
+      "limitations": "This does not establish worker judgment quality, independent-review effectiveness or owner adjudication."
+    }
+  ]
+}

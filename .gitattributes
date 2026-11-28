@@ -8,6 +8,13 @@
 /docs/document-intelligence/*.json text eol=lf
 /docs/document-intelligence/*.md text eol=lf
 /build-pack/*.json text eol=lf
+# Issue 123's offline verifier binds these retained text bytes across Windows checkout settings.
+/build-pack/repairs/article-recovery-123/**/*.json text eol=lf
+/build-pack/repairs/article-recovery-123/**/*.md text eol=lf
+/docs/designs/recovery-evidence/122/**/*.json text eol=lf
+/docs/designs/recovery-evidence/122/**/*.md text eol=lf
+/docs/designs/recovery-evidence/123/**/*.json text eol=lf
+/docs/designs/recovery-evidence/123/**/*.md text eol=lf
 # Preserve vendored Build Faster skill bytes: 9 files CRLF, 5 Bash scripts LF.
 .agents/skills/before-and-after/LICENSE text eol=crlf
 .agents/skills/before-and-after/scripts/adapters/0x0st.sh text eol=lf
