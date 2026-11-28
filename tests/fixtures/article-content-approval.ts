@@ -7,7 +7,7 @@ import { samplePageBlueprint as baseBlueprint } from "./sample-page-blueprint";
 import { importArtifactTarget } from "../../src/lib/article-import/format-validation";
 import { candidatePreviewPath } from "../../src/lib/article-import/candidate-route";
 import { buildWorkflowFixture } from "./article-workflow-evidence";
-import { editorialExecutionSchema, readEvidence } from "../../src/lib/article-import/workflow-evidence";
+import { editorialExecutionSchema, readEvidence, type EvidenceRef } from "../../src/lib/article-import/workflow-evidence";
 import { countVisibleArticleWords } from "../../src/lib/editorial/article-visible-word-count";
 const samplePageBlueprint = { ...baseBlueprint, metadata: { ...baseBlueprint.metadata, url_slug: "example", canonical_url: "https://vettedsaasblueprint.online/imported-guide" } };
 
@@ -44,7 +44,7 @@ export function rewriteAllProse<T>(format: EditorialFormat, value: T): T {
   return revised;
 }
 
-export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean } = {}) {
+export async function prepareApprovalFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING"; initialArtifactPath?: string; researchRef?: EvidenceRef; transformAssessmentRef?: EvidenceRef } = {}) {
   const artifactPath = "src/generated/landing-pages/example.json";
   const editorialEvidencePath = "build-pack/editorial/example.json";
   const formatQualityPath = "build-pack/article-import/quality.json";
@@ -53,17 +53,24 @@ export async function prepareApprovalFixture(root: string, record: ExternalArtic
   if (initialWordCount < 2050) rewritten.benefits[0].benefit_description += ` ${Array(2050 - initialWordCount).fill("decision").join(" ")}`;
   const independentReview = options.structuredEditorial || record.transformation?.commercialMode === "approved";
   const notes = independentReview ? { ...fullRewriteNotes, writerModelFamily: undefined, cleanseModelFamily: undefined, passes: { purposeAndStructure: true, meaningAndEvidence: true, wordingAndRhythm: true, independentReview: true, finalFidelityReview: true } } : fullRewriteNotes;
-  const evidence = createEditorialEvidence("landing", samplePageBlueprint, rewritten, notes,
+  const editorialInitial = structuredClone(samplePageBlueprint);
+  if (options.initialArtifactPath) {
+    const editorialInitialWordCount = countVisibleArticleWords("direct-review", editorialInitial).wordCount;
+    if (editorialInitialWordCount < 2050) editorialInitial.benefits[0].benefit_description += ` ${Array(2050 - editorialInitialWordCount).fill("draft").join(" ")}`;
+    await mkdir(path.dirname(path.join(root, options.initialArtifactPath)), { recursive: true });
+    await writeFile(path.join(root, options.initialArtifactPath), JSON.stringify(editorialInitial));
+  }
+  const evidence = createEditorialEvidence("landing", editorialInitial, rewritten, notes,
     { before: "score 4/5 needs a cleanse", after: "score 5/5 CLEAN" });
   for (const [file, value] of [[artifactPath, rewritten], [editorialEvidencePath, evidence], [formatQualityPath, { format: "direct-review", artifactFingerprint: fingerprintEditorialArtifact(rewritten), passed: true, gate: "landing:quality:candidate" }]] as const) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await writeFile(path.join(root, file), JSON.stringify(value));
   }
-  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: samplePageBlueprint, after: rewritten, editorialEvidencePath, structuredEditorial: options.structuredEditorial, currentPolicy: options.currentPolicy });
+  const evidenceRefs = await buildWorkflowFixture(root, record, { format: "direct-review", artifactPath, before: editorialInitial, after: rewritten, editorialEvidencePath, structuredEditorial: options.structuredEditorial, currentPolicy: options.currentPolicy, assessmentStage: options.assessmentStage, editorialInputArtifactPath: options.initialArtifactPath, researchRef: options.researchRef, transformAssessmentRef: options.transformAssessmentRef });
   return { artifactPath, editorialEvidencePath, formatQualityPath, evidenceRefs };
 }
 
-export async function approveFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean } = {}) {
+export async function approveFixture(root: string, record: ExternalArticleImportV1, options: { structuredEditorial?: boolean; currentPolicy?: boolean; assessmentStage?: "TRANSFORMING" | "REFINING"; initialArtifactPath?: string; researchRef?: EvidenceRef; transformAssessmentRef?: EvidenceRef } = {}) {
   const { evidenceRefs, ...files } = await prepareApprovalFixture(root, record, options);
   return approveImportContent(root, { ...record, evidenceRefs }, files);
 }
@@ -73,8 +80,8 @@ export async function presentFixture(root: string, record: ExternalArticleImport
   return recordImportPresentation(root, prepared.record, prepared.input);
 }
 
-export async function preparePresentationFixture(root: string, record: ExternalArticleImportV1, viewportOverrides?: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"]) {
-  record = await refreshPresentationFixture(root, record, viewportOverrides);
+export async function preparePresentationFixture(root: string, record: ExternalArticleImportV1, viewportOverrides?: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"], preserveCurrentEvidence = false) {
+  record = await refreshPresentationFixture(root, record, viewportOverrides, preserveCurrentEvidence);
   if (!record.contentApproval) throw new Error("Fixture content approval is required.");
   const evidencePath = "build-pack/article-import/verifier.json";
   const approvedArtifact = JSON.parse(await readFile(path.join(root, record.contentApproval.artifactPath), "utf8"));
@@ -100,14 +107,16 @@ export async function preparePresentationFixture(root: string, record: ExternalA
 }
 
 /** Explicit synthetic re-render after fixture publication inputs have been prepared. */
-export async function refreshPresentationFixture(root: string, record: ExternalArticleImportV1, viewportOverrides?: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"]): Promise<ExternalArticleImportV1> {
+export async function refreshPresentationFixture(root: string, record: ExternalArticleImportV1, viewportOverrides?: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"], preserveCurrentEvidence = false): Promise<ExternalArticleImportV1> {
   if (!record.contentApproval || !record.evidenceRefs?.editorial || record.format === "agent_review_required") throw new Error("Fixture approved editorial inputs are required.");
   const approval = record.contentApproval;
   const after = JSON.parse(await readFile(path.join(root, approval.artifactPath), "utf8"));
   if (fingerprintEditorialArtifact(after) !== approval.artifactFingerprint) throw new Error("Fixture content changed; editorial approval must be renewed before presentation.");
   const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs.editorial));
   const before = await readEvidence(root, editorial.passes[0].inputRef);
-  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath, viewportOverrides });
+  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath, viewportOverrides,
+    ...(preserveCurrentEvidence && { currentPolicy: true, structuredEditorial: true, editorialInputArtifactPath: editorial.passes[0].inputRef.path,
+      researchRef: record.evidenceRefs.research, transformAssessmentRef: record.evidenceRefs.transformAssessment }) });
   for (const key of ["research", "assessment", "editorial"] as const) {
     if (fresh[key].sha256 !== record.evidenceRefs[key]?.sha256) throw new Error(`Fixture presentation refresh changed ${key} evidence.`);
   }

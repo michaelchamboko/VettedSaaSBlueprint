@@ -12,11 +12,11 @@ import { createIntakeRun } from "../src/lib/article-import/intake";
 import { claimWorkflowLease } from "../src/lib/article-import/workflow-lease";
 import { importPacketId } from "../src/lib/article-import/packet-binding";
 import { articleHeroHandoff, bindGeneratedArticleHero } from "../src/lib/article-import/hero-image";
-import { sha256 } from "../src/lib/article-import/execution-evidence";
+import { evidenceReference, sha256 } from "../src/lib/article-import/execution-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { captureRenderingInputs } from "../src/lib/article-import/rendering-inputs";
 import { nextArticleActivity, recordArticleActivity } from "../src/lib/article-import/activity-checkpoints";
-import { approveFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
+import { approveFixture, preparePresentationFixture, presentFixture, validPageDesignReceipt } from "./fixtures/article-content-approval";
 import { fixtureProbe, prepareCommandCheckout } from "./fixtures/article-command";
 import sharp from "sharp";
 
@@ -53,17 +53,22 @@ async function candidate(root: string) {
   await writeFile(path.join(root, generationPath), JSON.stringify(generation));
   const hero = await bindGeneratedArticleHero(root, handoff, generationPath);
   let validating = await advanceImport(root, { ...approved, heroImage: hero.binding, evidenceRefs: { ...approved.evidenceRefs, hero: hero.evidenceRef } }, "fixture approved");
+  validating = (await preparePresentationFixture(root, validating)).record;
   const renderingRef = await captureRenderingInputs(root, validating.importId);
   await mkdir(path.join(root, ".automation/article-imports/work", validating.importId), { recursive: true });
   for (;;) {
     const activity = await nextArticleActivity(root, validating, renderingRef);
     if (!activity) break;
+    const outputRefs = activity.id === "owner-verifier"
+      ? [await evidenceReference(root, "build-pack/article-import/verifier.json")]
+      : (JSON.parse(await readFile(path.join(root, validating.evidenceRefs!.presentation!.path), "utf8"))
+          .ruleResults.find((rule: { ruleId: string }) => rule.ruleId === activity.id)?.evidenceRefs ?? []);
     const resultPath = `.automation/article-imports/work/${validating.importId}/ownership-${activity.id}.result.json`;
     await writeFile(path.join(root, resultPath), JSON.stringify({
       idempotencyKey: importPacketId(validating, "VALIDATING", "targeted-repair"),
       sourceFingerprint: validating.sourceFingerprint,
       summary: `Accepted synthetic ownership checkpoint ${activity.id}.`,
-      activity: { ...activity, reviewer: "ownership-fixture", executionId: `ownership-${activity.id}`, outcome: "accepted", observation: "The synthetic bound activity passed before the ownership race." },
+      activity: { ...activity, reviewer: "ownership-fixture", executionId: `ownership-${activity.id}`, outcome: "accepted", observation: "The synthetic bound activity passed before the ownership race.", outputRefs },
     }));
     validating = await recordArticleActivity(root, validating, resultPath, activity, JSON.parse(await readFile(path.join(root, resultPath), "utf8")));
   }

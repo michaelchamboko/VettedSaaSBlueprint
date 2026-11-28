@@ -39,6 +39,9 @@
     "node_modules",
     "scripts/**/*.ts",
     "tests/**/*.ts",
+    "docs/designs/recovery-evidence/97/release-recovery-probe.ts",
+    "docs/designs/recovery-evidence/103/catalogue-import-probe.test.ts",
+    "docs/designs/recovery-evidence/104/recovery-boundary-probe.test.ts",
     "build-pack/**"
   ]
 }

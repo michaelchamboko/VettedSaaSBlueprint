@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "CleanupRecoveryEvidence106V1",
+  "investigatedRevision": "f026bca8b53aecca829262e9a27820ac6d078892",
+  "generatedAt": "2026-11-27T09:41:37.438Z",
+  "syntheticOnly": true,
+  "normalControllerSeam": "executePendingImport",
+  "expectedSource": "ADR-0004, Decision, Q44 and Q48 paragraphs",
+  "crashPoints": [
+    {
+      "point": "before-mutation",
+      "operationIdInControllerState": null,
+      "cleanupCounterInControllerState": null,
+      "stageExecutorCalls": 1,
+      "nextStage": "RESEARCHING",
+      "originalReadable": true,
+      "archiveReadable": null,
+      "markerRetained": true,
+      "dependencyClaimedDuringCleanup": false,
+      "durableRegistrationAccepted": null,
+      "durableRegistrationError": null,
+      "observedLimit": "The controller does not read the synthetic cleanup intent marker."
+    },
+    {
+      "point": "after-archive-copy",
+      "operationIdInControllerState": null,
+      "cleanupCounterInControllerState": null,
+      "stageExecutorCalls": 1,
+      "nextStage": "RESEARCHING",
+      "originalReadable": true,
+      "archiveReadable": true,
+      "markerRetained": true,
+      "dependencyClaimedDuringCleanup": true,
+      "durableRegistrationAccepted": null,
+      "durableRegistrationError": null,
+      "observedLimit": "The controller does not read the synthetic cleanup intent marker."
+    },
+    {
+      "point": "after-reference-registration",
+      "operationIdInControllerState": null,
+      "cleanupCounterInControllerState": null,
+      "stageExecutorCalls": 1,
+      "nextStage": "RESEARCHING",
+      "originalReadable": true,
+      "archiveReadable": true,
+      "markerRetained": true,
+      "dependencyClaimedDuringCleanup": false,
+      "durableRegistrationAccepted": false,
+      "durableRegistrationError": "[\n  {\n    \"code\": \"unrecognized_keys\",\n    \"keys\": [\n      \"cleanupOperation\"\n    ],\n    \"path\": [],\n    \"message\": \"Unrecognized key: \\\"cleanupOperation\\\"\"\n  }\n]",
+      "observedLimit": "The strict import schema rejects cleanupOperation; the marker's claimed registration is not a controller registration."
+    }
+  ],
+  "normalHandoff": {
+    "operationId": "cleanup:article-4bdf4db2-69d5-4052-8c39-95d08cad4aa7:INGESTING:synthetic-output",
+    "nextStage": "RESEARCHING",
+    "continuationKind": "work",
+    "nextGateWorkPacketCreated": true,
+    "externalArticleWorkerCalls": 0,
+    "reasonExternalWorkerCallsAreZero": "The probe stopped at the controller's supervised work handoff and did not invoke a worker subprocess.",
+    "markerRetained": true
+  },
+  "unreadableDownstreamInput": {
+    "requiredInput": "src/generated/landing-pages/example.json",
+    "archivedBytesReadable": true,
+    "automaticArchiveDiscovery": false,
+    "contentApprovalRetained": false,
+    "stageAfterIntegrityCheck": "REFINING",
+    "stageAfterControllerResume": "REFINING",
+    "stageExecutorCalls": 1,
+    "articleAuthoringMayRepeat": true,
+    "externalArticleWorkerCalls": 0
+  },
+  "uncertainFilesystemOutcome": {
+    "operationId": "cleanup:article-02f27434-bf45-43f5-9b15-c80eb36bccb4:INGESTING:synthetic-output",
+    "originalRecoverable": true,
+    "archiveRecoverable": true,
+    "archiveIntegrityMatchesOriginal": false,
+    "stageExecutorCalls": 1,
+    "nextStage": "RESEARCHING",
+    "dispatchHeldForReconciliation": false,
+    "externalArticleWorkerCalls": 0
+  },
+  "retryCounts": {
+    "operationId": "cleanup:article-a6a47098-7fb5-4a24-b2bf-c8e4991a2859:INGESTING:synthetic-output",
+    "stageExecutorCalls": 3,
+    "invocations": [
+      {
+        "invocation": 1,
+        "stage": "WAITING_EXTERNAL",
+        "continuationKind": "wait",
+        "transientResearchAttempts": 1,
+        "articleRepairTotal": 0,
+        "cleanupOperationAttempts": null
+      },
+      {
+        "invocation": 2,
+        "stage": "WAITING_EXTERNAL",
+        "continuationKind": "wait",
+        "transientResearchAttempts": 2,
+        "articleRepairTotal": 0,
+        "cleanupOperationAttempts": null
+      },
+      {
+        "invocation": 3,
+        "stage": "WAITING_EXTERNAL",
+        "continuationKind": "wait",
+        "transientResearchAttempts": 3,
+        "articleRepairTotal": 0,
+        "cleanupOperationAttempts": null
+      }
+    ],
+    "exhaustedAfterThree": false,
+    "verifiedCleanupRemedyRequired": false,
+    "markerAttemptValueAfterThree": 0,
+    "counterMeaning": "transient:research is a stage-strategy counter, not a cleanup-operation counter."
+  },
+  "sharedFailureStop": {
+    "firstStage": "WAITING_EXTERNAL",
+    "firstContinuationKind": "blocked",
+    "firstBlockerScope": "shared",
+    "secondStage": "WAITING_EXTERNAL",
+    "stageExecutorCalls": 1,
+    "immediateStopObserved": true,
+    "cleanupOperationIdentity": null
+  }
+}

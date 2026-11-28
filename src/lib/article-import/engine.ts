@@ -691,7 +691,7 @@ async function reconcileLegacyTransformingRequirements(repositoryRoot: string, r
   return updated;
 }
 
-export async function approveImportContent(repositoryRoot: string, record: ExternalArticleImportV1, files: ApprovalFiles): Promise<ExternalArticleImportV1> {
+export async function approveImportContent(repositoryRoot: string, record: ExternalArticleImportV1, files: ApprovalFiles, options?: { persist?: boolean }): Promise<ExternalArticleImportV1> {
   return withRecordLease(repositoryRoot, record, async () => {
     assertCurrentImport(record);
     const reconciled = await reconcileLegacyTransformingRequirements(repositoryRoot, record);
@@ -701,7 +701,7 @@ export async function approveImportContent(repositoryRoot: string, record: Exter
     if (record.stage !== "REFINING") throw new Error("Content approval requires REFINING.");
     const contentApproval = await createContentApproval(repositoryRoot, { ...files, format: record.format, sourceFingerprint: record.sourceFingerprint, approvedAffiliateUrl: record.transformation?.resolvedAffiliateUrl });
     const updated = externalArticleImportSchema.parse({ ...record, contentApproval, heroImage: undefined, evidenceRefs: { ...record.evidenceRefs, hero: undefined, presentation: undefined }, presentation: undefined, pendingRelease: undefined, release: undefined, updatedAt: now() });
-    await saveImport(repositoryRoot, updated);
+    if (options?.persist !== false) await saveImport(repositoryRoot, updated);
     return updated;
   });
 }

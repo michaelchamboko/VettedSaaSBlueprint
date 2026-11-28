@@ -44,12 +44,18 @@ test("the next worker packet receives an explicit verified gate handoff", async 
     assert.equal(packet.gateHandoff.schemaVersion, "ImportGateHandoffV1");
     assert.equal(packet.gateHandoff.passedGate, "INGESTING");
     assert.equal(packet.gateHandoff.nextStage, "RESEARCHING");
-    assert.ok(packet.gateHandoff.acceptedOutputs.some((item: { name: string }) => item.name === "captured-source"));
     assert.ok(packet.gateHandoff.requiredNextInputs.some((item: { name: string }) => item.name === "captured-source"));
-    assert.ok(packet.gateHandoff.retainedEvidence.some((item: { name: string }) => item.name === "captured-source"));
-    assert.deepEqual(packet.gateHandoff.disposalCandidates, []);
-    assert.ok(packet.gateHandoff.unclassifiedMaterial.some((item: { reference: { path: string } }) => item.reference.path.endsWith("unknown-sidecar.json")));
-    assert.equal(packet.gateHandoff.cleanup.status, "not-required");
+    assert.equal(packet.gateHandoff.acceptedOutputs, undefined);
+    assert.equal(packet.gateHandoff.retainedEvidence, undefined);
+    assert.equal(packet.gateHandoff.disposalCandidates, undefined);
+    assert.equal(packet.gateHandoff.unclassifiedMaterial, undefined);
+    assert.equal(packet.gateHandoff.cleanup, undefined);
+    const retained = researching.gateHandoffs?.at(-1);
+    assert.ok(retained?.acceptedOutputs.some((item) => item.name === "captured-source"));
+    assert.ok(retained?.retainedEvidence.some((item) => item.name === "captured-source"));
+    assert.deepEqual(retained?.disposalCandidates, []);
+    assert.ok(retained?.unclassifiedMaterial.some((item) => item.reference.path.endsWith("unknown-sidecar.json")));
+    assert.equal(retained?.cleanup.status, "not-required");
     assert.equal(packet.gateHandoffVerification.status, "verified");
     assert.equal(packet.sourcePath, packet.gateHandoff.requiredNextInputs.find((item: { name: string }) => item.name === "captured-source").reference.path);
   } finally {

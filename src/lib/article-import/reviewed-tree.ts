@@ -9,7 +9,7 @@ export async function reviewedTreeFile(root: string, commitSha: string, file: st
   if (!/^[a-f0-9]{40}$/.test(commitSha) || normalized.startsWith("/") || normalized.split("/").includes("..")) {
     throw new Error("REVIEWED_TREE_REFERENCE_INVALID");
   }
-  const result = await execute("git", ["show", `${commitSha}:${normalized}`], {
+  const result = await execute("git", ["cat-file", "blob", `${commitSha}:${normalized}`], {
     cwd: path.resolve(root),
     encoding: "buffer",
     windowsHide: true,

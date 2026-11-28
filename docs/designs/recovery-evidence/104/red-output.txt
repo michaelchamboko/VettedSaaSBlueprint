@@ -1,0 +1,12 @@
+Command:
+$env:RECOVERY_ASSERT_REQUIRED='1'; node --import tsx --test docs/designs/recovery-evidence/104/recovery-boundary-probe.test.ts
+
+Result: exit 1
+
+FAIL a failed acceptance check remains pre-publication repair
+AssertionError [ERR_ASSERTION]: pre-publication repair should record an explicit repair owner
+false !== true
+
+PASS a verified publication defect uses IMPROVE and preserves acceptance history
+
+Summary: 2 tests, 1 passed, 1 failed. The failing assertion is the expected red state. The current repair continuation records the owning RELEASING stage and generic next work, but it has no explicit repair-owner field.

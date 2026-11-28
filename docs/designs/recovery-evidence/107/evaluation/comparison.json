@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "packetRevision": "1ce0442",
+  "resultsFrozenCommit": "e2ece252ab2d7b7b2ee1c7dad884684fb2e6a0bf",
+  "comparisonOrder": "All six independent responses were committed before the answer key was opened for comparison.",
+  "results": [
+    {
+      "caseId": "case-lantern",
+      "responsibility": "cta-destination",
+      "expectedVerdict": "meets",
+      "observedVerdict": "meets",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "classification": "adequate_accepted",
+      "assessment": "The reviewer tied 'Visit' and 'vendor site' to the external destination, and identified the value and absence of click-time commitment."
+    },
+    {
+      "caseId": "case-orbit",
+      "responsibility": "cta-destination",
+      "expectedVerdict": "does_not_meet",
+      "observedVerdict": "does_not_meet",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "classification": "defect_detected",
+      "assessment": "The reviewer identified that 'Review WebCatalog' could mean an internal review and does not disclose the external provider visit, despite the separate affiliate disclosure."
+    },
+    {
+      "caseId": "case-river",
+      "responsibility": "rewrite-fidelity",
+      "expectedVerdict": "meets",
+      "observedVerdict": "meets",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "classification": "adequate_accepted",
+      "assessment": "The reviewer explained that both sentences lead a reader to identify the same account and project after an interruption."
+    },
+    {
+      "caseId": "case-summit",
+      "responsibility": "rewrite-fidelity",
+      "expectedVerdict": "does_not_meet",
+      "observedVerdict": "does_not_meet",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "classification": "defect_detected",
+      "assessment": "The reviewer distinguished current workspace context from work priority and gave a concrete counterexample in which the answers differ."
+    },
+    {
+      "caseId": "case-meadow",
+      "responsibility": "keyboard-scroll",
+      "expectedVerdict": "does_not_meet",
+      "observedVerdict": "does_not_meet",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "classification": "defect_detected",
+      "assessment": "The reviewer used the rendered interaction: Tab skipped the region, focus remained on the following link, and ArrowRight left scrollLeft at 0."
+    },
+    {
+      "caseId": "case-quartz",
+      "responsibility": "keyboard-scroll",
+      "expectedVerdict": "meets",
+      "observedVerdict": "meets",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "classification": "adequate_accepted",
+      "assessment": "The reviewer used the visible focus and the measured move from scrollLeft 0 to 298 to show that the second limitation became keyboard-accessible."
+    }
+  ],
+  "summary": {
+    "accurate": 6,
+    "misses": 0,
+    "falseAlarms": 0,
+    "passed": true,
+    "threshold": "All six verdicts and explanations must match the retained evidence."
+  }
+}

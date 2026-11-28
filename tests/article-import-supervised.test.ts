@@ -20,10 +20,11 @@ import { instructionsForStage, releaseSteps, verificationSteps, WORKFLOW_REVISIO
 import { productionFixture } from "./fixtures/article-production-evidence";
 import { importArtifactTarget } from "../src/lib/article-import/format-validation";
 import { samplePageBlueprint } from "./fixtures/sample-page-blueprint";
-import { evaluateWorkflowEvidence, readEvidence } from "../src/lib/article-import/workflow-evidence";
+import { buildWorkflowFixture } from "./fixtures/article-workflow-evidence";
+import { evaluateWorkflowEvidence, evidenceReference, readEvidence } from "../src/lib/article-import/workflow-evidence";
 
 async function completeHeroHandoff(root: string, record: Awaited<ReturnType<typeof loadImport>>): Promise<void> {
-  if (record.continuation?.kind !== "work") throw new Error("Missing supervised hero handoff");
+  if (record.continuation?.kind !== "work") throw new Error(`Missing supervised hero handoff: ${JSON.stringify({ stage: record.stage, continuation: record.continuation, nextAction: record.nextAction, recentReceipts: record.stageReceipts.slice(-5) })}`);
   const packet = JSON.parse(await readFile(path.join(root, record.continuation.workPath), "utf8"));
   if (packet.supervisedHandoff !== "chatgpt-imagegen") throw new Error("Expected supervised hero handoff");
   const bytes = await sharp({ create: { width: 1600, height: 900, channels: 4, background: { r: 232, g: 221, b: 202, alpha: 1 } } }).png().toBuffer();
@@ -41,6 +42,25 @@ async function completeHeroHandoff(root: string, record: Awaited<ReturnType<type
   await writeJsonAtomically(path.join(root, record.continuation.resultPath), { schemaVersion: "ArticleHeroImagegenResultV1", handoffFingerprint: packet.handoffFingerprint,
     idempotencyKey: record.continuation.idempotencyKey, sourceFingerprint: record.sourceFingerprint, summary: "Generated the bound synthetic hero through the supervised ImageGen fixture.",
     work: { stage: "VALIDATING", heroGenerationEvidencePath: generationPath } });
+}
+
+const refiningActivities = ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm", "independent-review", "final-fidelity-review"];
+
+async function concreteActivityOutputs(root: string, record: Awaited<ReturnType<typeof loadImport>>, activity: { stage: string; id: string }, editorialRef = record.evidenceRefs?.editorial) {
+  if (activity.stage === "REFINING") {
+    if (!editorialRef) throw new Error("Missing fixture editorial execution.");
+    const execution = JSON.parse(await readFile(path.join(root, editorialRef.path), "utf8"));
+    const pass = execution.passes[refiningActivities.indexOf(activity.id)];
+    if (!pass) throw new Error("Missing fixture editorial pass.");
+    return [pass.inputRef, pass.outputRef, pass.executionRef, pass.judgmentRef];
+  }
+  if (activity.id === "owner-verifier") {
+    return [await evidenceReference(root, "build-pack/article-import/verifier.json")];
+  }
+  const presentation = JSON.parse(await readFile(path.join(root, record.evidenceRefs!.presentation!.path), "utf8"));
+  const rule = presentation.ruleResults.find((item: { ruleId: string }) => item.ruleId === activity.id);
+  if (!rule) throw new Error("Missing fixture presentation rule.");
+  return rule.evidenceRefs;
 }
 
 test("describe-workflow exposes exactly the three actionable release steps", async () => {
@@ -337,23 +357,44 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
   const pr = "https://github.com/example/repository/pull/1";
   const artifactPath = "src/generated/landing-pages/example.json";
   const authorityPath = "src/generated/landing-pages/index.json";
+  const releaseReceiptPath = "src/generated/landing-pages/releases/example/release-receipt.json";
+  const cataloguePath = "/landing-page-builders/example";
   let releaseFiles = [artifactPath, authorityPath];
+  const reviewedFiles = new Map<string, Buffer>();
   const operations: ReleaseOperations = {
     preflight: async () => ({ ok: true, reasons: [] }),
     inspectGit: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     refreshMain: async () => ({ clean: true, changedFiles: releaseFiles, headSha: "a".repeat(40), originMainSha: "a".repeat(40), fastForwardable: true }),
     runValidation: async () => ({ ok: true, summary: "Mocked repository checks passed." }),
     capturePreviousDeployment: async () => ({ deploymentId: "dpl-previous", commitSha: "b".repeat(40), verified: true }),
-    commit: async () => { commits++; return commit; },
+    commit: async () => {
+      commits++;
+      for (const file of releaseFiles) {
+        reviewedFiles.set(file.replaceAll("\\", "/"), await readFile(path.join(root, file)));
+      }
+      return commit;
+    },
     preparePullRequest: async () => ({ url: pr, branch: `codex/article-import/${importId}`, reviewedCommitSha: commit }),
     inspectPullRequest: async () => ({ merged, ownerApproved: merged, headRefOid: commit, mergeCommitSha: merged ? commit : undefined }),
     checkoutMergedCommit: async () => {},
     verifyCodeReview: async () => {},
+    mergePullRequest: async (pullRequestUrl, reviewedCommitSha) => {
+      assert.equal(pullRequestUrl, pr);
+      assert.equal(reviewedCommitSha, commit);
+      merged = true;
+      return { mergeCommitSha: commit };
+    },
     reconcileDeployment: async () => ({ status: "not-found", evidence: ["production alias still resolves to the rollback target"] }),
     deploy: async (commitSha) => { deployments++; return { deploymentId: "dpl-current", canonicalUrl: "https://vettedsaasblueprint.online/imported-guide", commitSha }; },
     verifyProduction: async (deployment) => { if (failRollback) throw new Error("synthetic production verification failure"); return productionFixture(root, importId, importArtifactTarget("direct-review", JSON.parse(await readFile(path.join(root, artifactPath), "utf8"))), deployment, (await loadImport(root, importId)).sourceFingerprint); },
     rollback: async () => ({ ok: true, summary: "Mocked rollback." }),
     verifyRollback: async () => !failRollback,
+    readReviewedTreeFile: async (commitSha, file) => {
+      assert.equal(commitSha, commit);
+      const bytes = reviewedFiles.get(file.replaceAll("\\", "/"));
+      if (!bytes) throw new Error(`SYNTHETIC_REVIEW_FILE_MISSING:${file}`);
+      return Buffer.from(bytes);
+    },
   };
   try {
     await writeFile(path.join(root, "approved-urls.md"), "- https://start.switcherstudio.com/anme6fqvgdx9\n");
@@ -361,7 +402,11 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     await writeFile(path.join(root, "Article Intake/article.md"), `---\naffiliate_name: "Switcher Studio"\naffiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9"\n---\n\n# Imported workflow guide\n\nA practical guide describing operating choices and trade-offs for teams preparing a production with several mobile devices.`);
     const created = await createArticleImport(root, "Article Intake/article.md");
     importId = created.importId;
-    const prepared = await prepareApprovalFixture(root, { ...created, format: "direct-review" }, { currentPolicy: true });
+    const transformingArtifactPath = "src/generated/landing-pages/example-draft.json";
+    const refinedSeed = await prepareApprovalFixture(root, { ...created, format: "direct-review" }, { currentPolicy: true, structuredEditorial: true, initialArtifactPath: transformingArtifactPath });
+    const transformingArtifact = JSON.parse(await readFile(path.join(root, transformingArtifactPath), "utf8"));
+    const transformingEvidenceRefs = await buildWorkflowFixture(root, created, { format: "direct-review", artifactPath: transformingArtifactPath, before: transformingArtifact, after: transformingArtifact,
+      editorialEvidencePath: refinedSeed.editorialEvidencePath, currentPolicy: true, assessmentStage: "TRANSFORMING" });
     await mkdir(path.join(root, ".agents/skills/improve"), { recursive: true });
     await writeFile(path.join(root, ".agents/skills/improve/SKILL.md"), await readFile(".agents/skills/improve/SKILL.md"));
     await writeFile(path.join(root, "skills-lock.json"), await readFile("skills-lock.json"));
@@ -369,17 +414,27 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     await writeJsonAtomically(path.join(root, authorityPath), { generated_at: "preserve-me", pages: [existing] });
     const executor = createSupervisedImportExecutor(root, operations, { researchRegistry: fixtureResearchRegistry(root) });
     const current = () => loadImport(root, importId);
+    let refined: Awaited<ReturnType<typeof prepareApprovalFixture>> | undefined;
+    let presented: Awaited<ReturnType<typeof preparePresentationFixture>> | undefined;
+    const ensureRefined = async () => {
+      if (refined) return refined;
+      const transforming = await current();
+      refined = await prepareApprovalFixture(root, transforming, { currentPolicy: true, structuredEditorial: true, initialArtifactPath: transformingArtifactPath,
+        researchRef: transforming.evidenceRefs?.research, transformAssessmentRef: transforming.evidenceRefs?.transformAssessment });
+      return refined;
+    };
+    const ensurePresented = async () => presented ??= await preparePresentationFixture(root, await current(), undefined, true);
     await executeImportCommand(root, { kind: "resume", importId }, executor);
     await executeImportCommand(root, { kind: "resume", importId }, executor);
     const research = (await current()).continuation;
     assert.ok(research?.kind === "work");
     if (research?.kind !== "work") throw new Error("Missing research plan work");
-    const researchEvidence = JSON.parse(await readFile(path.join(root, prepared.evidenceRefs.research.path), "utf8"));
+    const researchEvidence = JSON.parse(await readFile(path.join(root, transformingEvidenceRefs.research.path), "utf8"));
     await writeGapPlanResult(root, research, { claimId: researchEvidence.claims[0].id, claimText: researchEvidence.claims[0].text });
     await executeImportCommand(root, { kind: "resume", importId }, executor);
     const acquisition = (await current()).continuation;
     if (acquisition?.kind !== "work") throw new Error("Missing research acquisition work");
-    await writeAcquisitionResult(root, acquisition, prepared.evidenceRefs.research.path);
+    await writeAcquisitionResult(root, acquisition, transformingEvidenceRefs.research.path);
     const calls: string[] = [];
     const validationReceiptPath = "build-pack/article-import/presentation.json";
     let releaseResultPath = "";
@@ -387,8 +442,13 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     const workerRunner: WorkerRunner = async ({ args }) => {
       const packet = JSON.parse(await readFile(args[args.indexOf("--file") + 1], "utf8"));
       if (packet.activity) {
+        const refinedFixture = packet.activity.stage === "REFINING" ? await ensureRefined() : undefined;
+        const currentRecord = await current();
+        const presentedFixture = packet.activity.stage === "VALIDATING" ? await ensurePresented() : undefined;
+        const activityRecord = presentedFixture ? { ...currentRecord, evidenceRefs: { ...currentRecord.evidenceRefs, presentation: presentedFixture.record.evidenceRefs!.presentation } } : currentRecord;
+        const outputRefs = await concreteActivityOutputs(root, activityRecord, packet.activity, refinedFixture?.evidenceRefs.editorial);
         const result = { idempotencyKey: packet.idempotencyKey, sourceFingerprint: packet.sourceFingerprint, summary: "Completed synthetic activity checkpoint",
-          activity: { ...packet.activity, reviewer: "fixture-reviewer", executionId: `${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 12)}`, outcome: "accepted", observation: "The bound synthetic activity criterion passed." } };
+          activity: { ...packet.activity, reviewer: "fixture-reviewer", executionId: `${packet.activity.id}-${packet.activity.inputFingerprint.slice(0, 12)}`, outcome: "accepted", outputRefs, observation: "The bound synthetic activity criterion passed." } };
         const events = (await readFile("tests/fixtures/opencode-jsonl-fixture.jsonl", "utf8")).trim().split(/\r?\n/).map(line => JSON.parse(line));
         events.find(event => event.type === "text").part.text = JSON.stringify(result);
         return { stdout: events.map(event => JSON.stringify(event)).join("\n"), stderr: "", exitCode: 0, timedOut: false };
@@ -397,30 +457,32 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
       let work;
       switch (packet.stage) {
         case "TRANSFORMING":
-          work = { stage: packet.stage, artifactPath, format: "direct-review", assessmentPath: prepared.evidenceRefs.assessment.path };
+          work = { stage: packet.stage, artifactPath: transformingArtifactPath, format: "direct-review", assessmentPath: transformingEvidenceRefs.assessment.path };
           break;
         case "REFINING": {
+          const refinedFixture = await ensureRefined();
           assert.match(packet.instructions, /eleanor-editorial/i);
           assert.match(packet.instructions, /independent review in a distinct verified execution context/i);
           assert.doesNotMatch(packet.instructions, /Beam review/i);
           assert.match(packet.instructions, /5\/5 CLEAN/i);
           const fingerprint = createHash("sha256").update((await readFile(path.join(root, artifactPath), "utf8")).replace(/\r\n/g, "\n")).digest("hex");
           proposalFile = path.join(root, packet.publicationProposals[0].proposalPath);
-          await writeJsonAtomically(proposalFile, { pages: [{ slug: repairCatalogue ? "wrong" : "example", artifact: "example.json", release_receipt: "releases/example/release-receipt.json" }] });
-          await writeJsonAtomically(path.join(root, "src/generated/landing-pages/releases/example/release-receipt.json"), { exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: fingerprint } } });
-          work = { stage: packet.stage, artifactPath, editorialEvidencePath: prepared.editorialEvidencePath, formatQualityPath: prepared.formatQualityPath,
-            editorialExecutionPath: prepared.evidenceRefs.editorial.path, assessmentPath: prepared.evidenceRefs.assessment.path };
+          await writeJsonAtomically(proposalFile, { pages: [{ slug: repairCatalogue ? "wrong" : "example", artifact: "example.json", path: cataloguePath, release_receipt: "releases/example/release-receipt.json" }] });
+          await writeJsonAtomically(path.join(root, releaseReceiptPath), { slug: "example", path: cataloguePath,
+            exact_affiliate_url: "https://start.switcherstudio.com/anme6fqvgdx9", artifacts: { page: { path: "example.json", sha256: fingerprint } }, release: { reviewed_commit: commit } });
+          work = { stage: packet.stage, artifactPath, editorialEvidencePath: refinedFixture.editorialEvidencePath, formatQualityPath: refinedFixture.formatQualityPath,
+            editorialExecutionPath: refinedFixture.evidenceRefs.editorial.path, assessmentPath: refinedFixture.evidenceRefs.assessment.path };
           break;
         }
         case "VALIDATING": {
-          const presented = await preparePresentationFixture(root, await current());
-          await writeJsonAtomically(path.join(root, validationReceiptPath), presented.input.validationReceipt);
-          work = { stage: packet.stage, validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presented.record.evidenceRefs!.presentation!.path };
+          const presentedFixture = await ensurePresented();
+          await writeJsonAtomically(path.join(root, validationReceiptPath), presentedFixture.input.validationReceipt);
+          work = { stage: packet.stage, validationReceiptPath, validationGate: "fixture:rendered-layout", presentationEvidencePath: presentedFixture.record.evidenceRefs!.presentation!.path };
           break;
         }
         case "RELEASING":
           releaseResultPath = packet.resultPath;
-          releaseFiles = packet.requiredReleaseFiles;
+          releaseFiles = [...new Set([...packet.requiredReleaseFiles, releaseReceiptPath])];
           work = { stage: packet.stage, artifactPath, changedFiles: releaseFiles, slug: "example" };
           break;
         case "IMPROVE": {
@@ -441,16 +503,15 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
     const sleep = async (delay: number) => {
       assert.equal(deployments, 0);
       assert.ok(delay > 0);
-      assert.ok(++waits <= 2, "unexpected additional release wait");
+      assert.equal(++waits, 1, "unexpected additional release wait");
       t.mock.timers.setTime(Date.now() + delay);
-      if (waits === 2) { merged = true; return; }
       const codeReviewPath = ".automation/article-imports/reviews/review.json";
       await writeJsonAtomically(path.join(root, codeReviewPath), { schemaVersion: "ImportCodeReviewV1", reviewer: "codex", independent: true, passed: true,
         reviewedCommitSha: commit, pullRequestUrl: pr, evidenceUrl: pr + "#issuecomment-review", reviewedAt: new Date().toISOString() });
       const release = JSON.parse(await readFile(path.join(root, releaseResultPath), "utf8"));
       await writeJsonAtomically(path.join(root, releaseResultPath), { ...release, work: { ...release.work, codeReviewPath } });
     };
-    const heartbeat = () => executeImportCommand(root, { kind: "dispatch", importId }, executor, { workerModel: "fixture/model", workerRunner, sleep });
+    const heartbeat = () => executeImportCommand(root, { kind: "dispatch", importId }, executor, { maxSteps: 100, workerModel: "fixture/model", workerRunner, sleep });
     if (repairCatalogue) {
       await heartbeat();
       const repaired = await current();
@@ -463,11 +524,12 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
       const holder = await claimWorkflowLease(root, "publication", "direct-review");
       assert.ok(holder);
       const oneStep = () => executeImportCommand(root, { kind: "dispatch", importId }, executor, { maxSteps: 1,
+        workerModel: "fixture/model",
         workerRunner: async () => { throw new Error("Corrected proposal must reuse the saved worker result"); } });
       try {
         await oneStep();
         const waiting = (await current()).continuation;
-        assert.ok(waiting?.kind === "wait");
+        assert.ok(waiting?.kind === "wait", JSON.stringify({ continuation: waiting, recentReceipts: (await current()).stageReceipts.slice(-5), nextAction: (await current()).nextAction }));
         assert.equal(waiting.dependency, "PUBLICATION_CATALOGUE_BUSY");
         t.mock.timers.setTime(Date.parse(waiting.nextCheckAt));
       } finally { await holder.release(); }
@@ -489,18 +551,19 @@ for (const scenario of ["verified LIVE", "failed rollback", "catalogue repair an
       await completeHeroHandoff(root, await current());
       const intake = await createIntakeRun(root);
       const completed = await executeImportCommand(root, { kind: "dispatch-intake", runId: intake.runId }, executor, { workerModel: "fixture/model", workerRunner, sleep }) as IntakeRun;
-      assert.equal(completed.outcome, "ALL_PUBLISHED", (await current()).nextAction);
+      const completedRecord = await current();
+      assert.equal(completed.outcome, "ALL_PUBLISHED", JSON.stringify({ nextAction: completedRecord.nextAction, stage: completedRecord.stage, continuation: completedRecord.continuation, recentReceipts: completedRecord.stageReceipts.slice(-5) }));
       assert.equal(completed.entries[0].importId, importId);
     }
     assert.deepEqual(calls, failRollback ? ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING"] : ["TRANSFORMING", "REFINING", "VALIDATING", "RELEASING", "IMPROVE"]);
-    assert.equal(waits, 2);
+    assert.equal(waits, 1);
     const published = JSON.parse(await readFile(path.join(root, authorityPath), "utf8"));
     assert.deepEqual(published.pages[0], existing);
     assert.equal(published.generated_at, "preserve-me");
     assert.equal(published.pages.length, 2);
     if (failRollback) {
       const failed = await current();
-      assert.equal(failed.stage, "WAITING_EXTERNAL");
+      assert.equal(failed.stage, "WAITING_EXTERNAL", JSON.stringify({ dispatchOutcome: (failed as typeof failed & { dispatchOutcome?: string }).dispatchOutcome, continuation: failed.continuation, nextAction: failed.nextAction, recentReceipts: failed.stageReceipts.slice(-8), pendingOperations: failed.pendingRelease?.operations }));
       assert.ok(failed.continuation?.kind === "blocked");
       assert.match(failed.continuation.resumptionRequirement, /dpl-previous/);
       assert.equal(failed.pendingRelease?.operations?.deployment?.deploymentId, "dpl-current");
