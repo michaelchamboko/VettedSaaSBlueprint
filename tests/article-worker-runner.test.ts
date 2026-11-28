@@ -31,7 +31,7 @@ test("trusted REFINING command receives the exact packet and returns the bound c
   const worker = path.join(root, "worker.cjs");
   await writeFile(worker, `
     const fs = require("node:fs");
-    if (process.env.ARTICLE_OWNER_DECISION_SECRET) throw new Error("owner credential reached worker");
+    if (Object.keys(process.env).some(key => key.toUpperCase() === "ARTICLE_OWNER_DECISION_SECRET")) throw new Error("owner credential reached worker");
     const packetPath = process.argv[2];
     const packet = JSON.parse(fs.readFileSync(packetPath, "utf8"));
     process.stdout.write(JSON.stringify({
@@ -41,11 +41,12 @@ test("trusted REFINING command receives the exact packet and returns the bound c
       work: { stage: packet.stage }
     }));
   `);
-  const previousOwnerSecret = process.env.ARTICLE_OWNER_DECISION_SECRET;
-  process.env.ARTICLE_OWNER_DECISION_SECRET = "synthetic-owner-only-secret-never-forwarded";
+  const previousOwnerSecrets = Object.entries(process.env).filter(([key]) => key.toUpperCase() === "ARTICLE_OWNER_DECISION_SECRET");
+  for (const [key] of previousOwnerSecrets) delete process.env[key];
+  process.env.Article_Owner_Decision_Secret = "synthetic-owner-only-secret-never-forwarded";
   t.after(() => {
-    if (previousOwnerSecret === undefined) delete process.env.ARTICLE_OWNER_DECISION_SECRET;
-    else process.env.ARTICLE_OWNER_DECISION_SECRET = previousOwnerSecret;
+    for (const key of Object.keys(process.env).filter(key => key.toUpperCase() === "ARTICLE_OWNER_DECISION_SECRET")) delete process.env[key];
+    for (const [key, value] of previousOwnerSecrets) process.env[key] = value;
   });
 
   await invokeWorker(root, workPath, resultPath, scopedPacket, "11111111-1111-1111-1111-111111111111", async () => {}, {

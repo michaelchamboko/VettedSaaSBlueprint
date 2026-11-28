@@ -161,8 +161,8 @@ export const defaultWorkerRunner: WorkerRunner = async (input) => {
     return JSON.parse(await readFile(receipt, "utf8")) as WorkerProcessResult;
   }
   writeWorkerMarker(input.ownershipFile, "host-v1");
-  const workerEnvironment = { ...process.env };
-  delete workerEnvironment.ARTICLE_OWNER_DECISION_SECRET;
+  const workerEnvironment = Object.fromEntries(Object.entries(process.env)
+    .filter(([key]) => key.toUpperCase() !== "ARTICLE_OWNER_DECISION_SECRET")) as NodeJS.ProcessEnv;
   const host = spawn(process.execPath, [path.join(__dirname, "worker-host.mjs")], {
     detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"], env: workerEnvironment,
   });
