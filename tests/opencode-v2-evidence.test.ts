@@ -56,14 +56,39 @@ test("runtime resolves explicit executable and only exact supported version outp
   const previous = process.env.OPENCODE_EXECUTABLE;
   try { process.env.OPENCODE_EXECUTABLE = "C:/tools/opencode-cli.exe"; assert.equal(openCodeExecutable(), "C:/tools/opencode-cli.exe"); }
   finally { if (previous === undefined) delete process.env.OPENCODE_EXECUTABLE; else process.env.OPENCODE_EXECUTABLE = previous; }
+  assert.equal(openCodeExecutable({ env: { OPENCODE_EXECUTABLE: "D:/trusted/custom.exe" }, execPath: "C:/node.exe", platform: "win32", exists: () => false }), "D:/trusted/custom.exe");
+  assert.equal(openCodeExecutable({ env: {}, execPath: "D:/tools/opencode.exe", platform: "win32", exists: () => false }), "D:/tools/opencode.exe");
+  assert.equal(openCodeExecutable({ env: { APPDATA: "C:/Users/test/AppData/Roaming" }, execPath: "C:/node.exe", platform: "win32", exists: () => true }), path.normalize("C:/Users/test/AppData/Roaming/npm/node_modules/@opencode/cli/bin/opencode.exe"));
+  assert.equal(openCodeExecutable({ env: {}, execPath: "/usr/bin/node", platform: "linux", exists: () => false }), "opencode");
   assert.equal(normalizeOpenCodeVersion("opencode v2.2.5\n"), "2.2.5");
   assert.equal(normalizeOpenCodeVersion("1.19.4"), "1.19.4");
   assert.equal(normalizeOpenCodeVersion("opencode v2.2.6"), "2.2.6");
   assert.equal(normalizeOpenCodeVersion("2.2.6"), "2.2.6");
-  for (const version of ["2.2.5-preview", "prefix 2.2.5", "opencode v1.19.4", "opencode v2.2.7", "3.0.0"]) assert.throws(() => normalizeOpenCodeVersion(version));
+  assert.equal(normalizeOpenCodeVersion("opencode v2.3.0"), "2.3.0");
+  assert.equal(normalizeOpenCodeVersion("2.3.0"), "2.3.0");
+  for (const version of ["2.2.5-preview", "prefix 2.2.5", "opencode v1.19.4", "opencode v2.2.7", "opencode v2.3.1", "3.0.0"]) assert.throws(() => normalizeOpenCodeVersion(version));
   assert.deepEqual(openCodeExportArgs("2.2.5", "session"), ["session", "export", "session"]);
   assert.deepEqual(openCodeExportArgs("2.2.6", "session"), ["session", "export", "session"]);
+  assert.deepEqual(openCodeExportArgs("2.3.0", "session"), ["session", "export", "session"]);
   assert.deepEqual(openCodeExportArgs("1.19.4", "session"), ["export", "session"]);
+});
+
+test("genuine 2.3.0 dedicated export is accepted and excludes reasoning", async () => {
+  const source = JSON.parse(await readFile("tests/fixtures/opencode-2.3.0-dedicated-export.json", "utf8"));
+  const selection = {
+    version: "2.3.0" as const,
+    sessionId: "ses_ddd62413fffe3A5i5Q0p1nhYZ6",
+    userMessageId: "msg_2229dcc7c001pAnrOPz7gP6iUX",
+    assistantMessageId: "msg_2229de296001P5r72TZim2jw9s",
+    packetId: "a".repeat(64),
+    pass: "review",
+    input: { artifact: "genuine OpenCode 2.3 synthetic fixture" },
+    output: { judgment: "genuine OpenCode 2.3 synthetic fixture" },
+    families: { "opencode-go/beam-free": "reflection-beam" },
+  };
+  const result = extractOpenCodeExecution(source, selection);
+  assert.equal(result.toolVersion, "2.3.0");
+  assert.equal(JSON.stringify(result).includes("Synthetic reasoning"), false);
 });
 
 test("2.2.6 synthetic export shape is accepted and reasoning is excluded", () => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "ArticleWorkflowCapabilitiesV1",
-  "openCodeVersion": "2.2.6",
+  "openCodeVersion": "2.3.0",
   "designEvidenceVersion": 2,
   "visualReviewModel": "opencode/nemotron-3.5-super-vl-free",
   "assessmentModel": "opencode-go/beam-free",

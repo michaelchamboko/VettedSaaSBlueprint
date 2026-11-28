@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [
+    "./plugins/article-research-neon"
+  ],
+  "mcp": {
+    "servers": {
+      "article-research-neon": {
+        "type": "remote",
+        "url": "https://mcp.neon.tech/mcp?projectId=winter-truth-98410571&roleName=article_research_worker&category=querying&secrets=none"
+      }
+    }
+  }
+}

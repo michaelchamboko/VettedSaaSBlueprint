@@ -6,6 +6,7 @@ import { z } from "zod";
 import { chromium } from "playwright";
 import { REPOSITORY_CANONICAL_ORIGIN } from "../site/public-site";
 import { candidatePreviewPath, candidateRequestPath } from "./candidate-route";
+import { nodeExecutable } from "./node-runtime";
 import { captureCommandExecution, evidenceReference, readEvidence, readEvidenceBytes, storeEvidence, storeEvidenceBytes, type EvidenceRef } from "./execution-evidence";
 import { readImportArtifactTarget } from "./format-validation";
 import { requiredDetectorInputs, validateRenderingInputs } from "./rendering-inputs";
@@ -136,7 +137,7 @@ export async function presentationOperation(packet: Packet, {rule, observations}
     try {
       const receipt = path.join(temp,"verifier.json");
       const script = "verify-" + (packet.format === "direct-review" ? "landing" : packet.format) + "-deployment.ts";
-      await promisify(execFile)(process.execPath,[require.resolve("tsx/cli"),"--tsconfig",path.resolve(__dirname,"../../../tsconfig.json"),
+      await promisify(execFile)(nodeExecutable(),[require.resolve("tsx/cli"),"--tsconfig",path.resolve(__dirname,"../../../tsconfig.json"),
         path.resolve(__dirname,"../../../scripts",script),"--mode","candidate","--origin",origin,"--canonical-origin",canonicalOrigin,
         "--artifact",packet.artifactPath,...(packet.format === "direct-review" ? ["--import-id",importId,...(packet.affiliateUrl ? ["--exact-url",packet.affiliateUrl] : [])] : []),"--screenshot-dir",temp,"--attempts","1","--receipt",receipt],{cwd:root,timeout:150000,windowsHide:true,maxBuffer:16*1024*1024});
       const saved = await storeEvidence(root,importId,JSON.parse(await readFile(receipt,"utf8")));

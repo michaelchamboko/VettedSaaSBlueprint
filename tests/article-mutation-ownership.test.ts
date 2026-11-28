@@ -218,7 +218,7 @@ test("inspection can read a busy import and intake without changing their record
         const before = await snapshot();
         const commands: ImportCommand[] = [{ kind: "describe-workflow" }, { kind: "preflight" }, { kind: "check-intake", runId: run.runId }, { kind: "intake-status", runId: run.runId }, { kind: "check-completion", importId: quarantined.importId }];
         for (const command of commands) {
-          const result = await executeImportCommand(root, command, undefined, undefined, async tool => tool === "opencode" ? "2.2.6" : "Python 3.13.0");
+          const result = await executeImportCommand(root, command, undefined, undefined, async tool => tool === "opencode" ? "2.3.0" : "Python 3.13.0");
           assert.ok(result, command.kind);
         }
         assert.deepEqual(await snapshot(), before);

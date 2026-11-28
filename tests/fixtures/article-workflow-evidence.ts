@@ -37,7 +37,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
   const exportDirectory = path.join(root, ".fixture-structured-exports");
   const exporter = path.resolve("tests/fixtures/structured-execution-exporter.mjs");
   if (input.structuredEditorial) await mkdir(exportDirectory, { recursive: true });
-  await writeFile(path.join(root, "config/article-workflow-capabilities.json"), JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: currentPolicy ? "2.2.6" : "1.19.4", modelFamilies: families, files: pinFiles.map(pinRef),
+  await writeFile(path.join(root, "config/article-workflow-capabilities.json"), JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: currentPolicy ? "2.3.0" : "1.19.4", modelFamilies: families, files: pinFiles.map(pinRef),
     ...(input.structuredEditorial && { executionExporters: {
       writer: { executable: process.execPath, versionArgs: [exporter, "--version"], toolName: "writer-tool", toolVersion: "fixture-exporter 1", exportArgs: [exporter, "export-map", exportDirectory, "{contextId}", "{exchangeId}"] },
       reviewer: { executable: process.execPath, versionArgs: [exporter, "--version"], toolName: "review-tool", toolVersion: "fixture-exporter 1", exportArgs: [exporter, "export-map", exportDirectory, "{contextId}", "{exchangeId}"] },
@@ -72,7 +72,7 @@ export async function buildWorkflowFixture(root: string, record: RecordIdentity,
         { id: "fixture-assistant", type: "assistant", model: { providerID, id, variant: "default" }, time: { created: 2, streamed: 3, completed: 4 }, finish: "stop", content: [{ type: "reasoning", text: "private" }, { type: "text", text: JSON.stringify(result) }] },
         { id: "fixture-idle", type: "idle", outcome: "succeeded", time: { created: 5 } },
       ] };
-      return save(extractOpenCodeExecution(raw, { version: "2.2.6", sessionId, userMessageId: "fixture-user", assistantMessageId: "fixture-assistant", packetId, pass, input: projection, output: result, families, instructions, inputRefs, outputRefs: [outputRef], imageRefs }));
+      return save(extractOpenCodeExecution(raw, { version: "2.3.0", sessionId, userMessageId: "fixture-user", assistantMessageId: "fixture-assistant", packetId, pass, input: projection, output: result, families, instructions, inputRefs, outputRefs: [outputRef], imageRefs }));
     }
     return save(extractOpenCodeExecution({ info: { id: sessionId }, messages: [
       { info: { id: "fixture-user", role: "user", sessionID: sessionId }, parts: [{ type: "text", text: JSON.stringify({ packetId, pass, prose: projection, digest: proseProjectionDigest(projection), instructions }) }] },

@@ -28,6 +28,7 @@ export type DispatchOptions = WorkerOptions & {
   sleep?: (ms: number) => Promise<void>;
   researchRegistry?: ArticleResearchRegistry;
   reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry;
+  resolveIntakeSnapshot?: (runId: string, capturedPath: string) => Promise<string>;
 };
 
 function isTerminalStage(stage: string): boolean {
@@ -198,7 +199,10 @@ async function runIntakeSteps(
     if (!entry) return run;
     if (!entry.importId) {
       if (!entry.capturedPath || !entry.sourceFingerprint) throw new Error("INTAKE_SOURCE_MISSING");
-      const record = await createArticleImport(repositoryRoot, entry.capturedPath, undefined, entry.sourceFingerprint);
+      const capturedPath = options?.resolveIntakeSnapshot
+        ? await options.resolveIntakeSnapshot(runId, entry.capturedPath)
+        : entry.capturedPath;
+      const record = await createArticleImport(repositoryRoot, capturedPath, undefined, entry.sourceFingerprint);
       await markIntakeEntry(repositoryRoot, run, entry.relativePath, "PROCESSING", { importId: record.importId });
       continue;
     }

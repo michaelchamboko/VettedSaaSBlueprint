@@ -22,7 +22,7 @@ test("V3 present tool exposes complete collector receipts only to observed visua
   assert.throws(() => presentationTool.parse({rule:"hero-image",observations}));
 
   const capabilities = JSON.parse(await readFile("config/article-workflow-capabilities.json","utf8"));
-  assert.equal(capabilities.openCodeVersion,"2.2.6");
+  assert.equal(capabilities.openCodeVersion,"2.3.0");
   assert.equal(typeof capabilities.visualReviewModel,"string");
   assert.equal(typeof capabilities.modelFamilies[capabilities.visualReviewModel],"string");
 });

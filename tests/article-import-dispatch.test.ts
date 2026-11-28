@@ -123,6 +123,30 @@ test("tracked: missing worker result reports blocked", async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("dispatch intake resolves persisted snapshots before reading them", async () => {
+  const root = await rootWithArticle();
+  try {
+    const rejectedRun = await createIntakeRun(root);
+    await assert.rejects(dispatchIntakeRun(root, rejectedRun.runId, {
+      maxSteps: 1,
+      resolveIntakeSnapshot: async () => { throw new Error("SNAPSHOT_REJECTED_BEFORE_ACCESS"); },
+    }), /SNAPSHOT_REJECTED_BEFORE_ACCESS/);
+
+    const acceptedRun = await createIntakeRun(root);
+    const resolved: string[] = [];
+    await dispatchIntakeRun(root, acceptedRun.runId, {
+      maxSteps: 1,
+      resolveIntakeSnapshot: async (runId, capturedPath) => {
+        assert.equal(runId, acceptedRun.runId);
+        resolved.push(capturedPath);
+        return path.resolve(root, capturedPath);
+      },
+    });
+    assert.deepEqual(resolved, [acceptedRun.entries[0].capturedPath]);
+    assert.ok((await loadIntakeRun(root, acceptedRun.runId)).entries[0].importId);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("intake resume reuses the claimed entry and executes it once", async () => {
   const root = await rootWithArticle();
   try {

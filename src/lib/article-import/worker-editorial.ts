@@ -11,6 +11,7 @@ import { contentAssessmentReviewInput, contentAssessmentSchema, validateContentA
 import { captureStructuredExecution, readEvidenceBytes, evidenceRefSchema, evidenceReference, extractOpenCodeExecution, proseProjectionDigest, storeEvidence, structuredCaptureSelectionSchema, validateExecutionEvidence } from "./execution-evidence";
 import { workflowRequirements } from "./workflow-requirements";
 import { normalizeOpenCodeVersion, openCodeExportArgs } from "./opencode-runtime";
+import { nodeExecutable } from "./node-runtime";
 import { countVisibleArticleWords, isLongFormAffiliateArticle } from "../editorial/article-visible-word-count";
 import { LONG_FORM_AFFILIATE_INSTRUCTION, longFormAffiliateReviewSchema } from "./long-form-affiliate";
 
@@ -153,7 +154,7 @@ export async function editorialOperation(packet: Packet, name: string, args: unk
     }
     const files = await Promise.all([input.before, input.after, input.notes, input.manifest].map(scoped));
     const receipt = path.join(base, "receipt-" + crypto.randomUUID() + ".json");
-    const stdout = await run(process.execPath, [require.resolve("tsx/cli"), "--tsconfig", path.resolve(__dirname, "../../../tsconfig.json"), path.resolve(__dirname, "../../../scripts/compare-editorial-artifacts.ts"),
+    const stdout = await run(nodeExecutable(), [require.resolve("tsx/cli"), "--tsconfig", path.resolve(__dirname, "../../../tsconfig.json"), path.resolve(__dirname, "../../../scripts/compare-editorial-artifacts.ts"),
       format, files[0], files[1], files[2], receipt, files[3], String(packet.researchGeneration ?? 0), packet.affiliateUrl ?? "", packet.research ? JSON.stringify(packet.research) : "", packet.assessment ? JSON.stringify(packet.assessment) : ""], root);
     return { ...JSON.parse(stdout.trim().split(/\r?\n/).at(-1)!), receipt: await evidenceReference(root, receipt) };
   }

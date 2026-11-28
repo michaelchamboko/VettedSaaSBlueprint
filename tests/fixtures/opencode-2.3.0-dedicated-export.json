@@ -1,0 +1,101 @@
+{
+  "info": {
+    "id": "ses_ddd62413fffe3A5i5Q0p1nhYZ6",
+    "projectID": "ee6ed0637ed85408d57bce4bf97dc818bfc1f2cd",
+    "model": {
+      "id": "beam-free",
+      "providerID": "opencode-go",
+      "variant": "default"
+    },
+    "cost": 0,
+    "tokens": {
+      "input": 4701,
+      "output": 28,
+      "reasoning": 118,
+      "cache": {
+        "read": 0,
+        "write": 0
+      }
+    },
+    "outcome": "succeeded",
+    "time": {
+      "created": 1795877095785,
+      "updated": 1795877104939,
+      "idle": 1795877104980,
+      "archived": 1795877096412
+    },
+    "title": "OpenCode 2.3 synthetic fixture",
+    "subpath": ".scratch/opencode-23-evidence",
+    "location": {
+      "directory": "synthetic-opencode-2.3-fixture"
+    }
+  },
+  "messages": [
+    {
+      "id": "msg_2229dcc7c001pAnrOPz7gP6iUX",
+      "time": {
+        "created": 1795877102123
+      },
+      "text": "{\"packetId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"pass\":\"review\",\"prose\":{\"artifact\":\"genuine OpenCode 2.3 synthetic fixture\"},\"digest\":\"79ae063dd2f3f182d5a448443f2b067f64503b560e78339da2ab8549ec8c15c4\",\"instructions\":[]}",
+      "files": [],
+      "type": "user"
+    },
+    {
+      "id": "msg_2229de296001P5r72TZim2jw9s",
+      "time": {
+        "created": 1795877102248,
+        "streamed": 1795877104655,
+        "completed": 1795877104939
+      },
+      "type": "assistant",
+      "agent": "fixture",
+      "model": {
+        "id": "beam-free",
+        "providerID": "opencode-go",
+        "variant": "default"
+      },
+      "content": [
+        {
+          "type": "reasoning",
+          "text": "Synthetic reasoning excluded by the evidence projection.",
+          "native": {
+            "reasoningField": "reasoning_content"
+          },
+          "time": {
+            "created": 1795877103830,
+            "completed": 1795877104644
+          }
+        },
+        {
+          "type": "text",
+          "text": "{\"judgment\":\"genuine OpenCode 2.3 synthetic fixture\"}"
+        }
+      ],
+      "snapshot": {
+        "start": "3578a392e04e7f44912b79f8b50eea6c3f3b0ea1",
+        "end": "3578a392e04e7f44912b79f8b50eea6c3f3b0ea1",
+        "files": []
+      },
+      "finish": "stop",
+      "rawFinish": "stop",
+      "cost": 0,
+      "tokens": {
+        "input": 4189,
+        "output": 16,
+        "reasoning": 118,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      }
+    },
+    {
+      "id": "msg_2229ded54001cuSbQrioIILO5o",
+      "time": {
+        "created": 1795877104980
+      },
+      "type": "idle",
+      "outcome": "succeeded"
+    }
+  ]
+}

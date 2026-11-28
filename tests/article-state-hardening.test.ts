@@ -226,7 +226,14 @@ test("explicit legacy upgrade preserves history and terminal mismatch cannot ski
     await writeFile(path.join(root, ".automation/article-imports", `${record.importId}.json`), JSON.stringify(legacy));
     const runFile = path.join(root, ".automation/article-imports/intake", run.runId, "run.json");
     await writeFile(runFile, JSON.stringify({ ...run, schemaVersion: "ArticleIntakeRunV1", entries: [{ ...entry, status: "LIVE", importId: record.importId }] }));
-    await upgradeImportEvidence(root, record.importId); await upgradeIntakeRun(root, run.runId);
+    await upgradeImportEvidence(root, record.importId);
+    await assert.rejects(upgradeIntakeRun(root, run.runId, async () => { throw new Error("SNAPSHOT_REJECTED_BEFORE_ACCESS"); }), /SNAPSHOT_REJECTED_BEFORE_ACCESS/);
+    const resolved: string[] = [];
+    await upgradeIntakeRun(root, run.runId, async (capturedPath) => {
+      resolved.push(capturedPath);
+      return path.resolve(root, capturedPath);
+    });
+    assert.deepEqual(resolved, [entry.capturedPath]);
     assert.equal((await checkIntakeRun(root, run.runId)).ok, false);
     await assert.rejects(claimNextIntakeEntry(root, run.runId), /INTAKE_TERMINAL_PROOF_INVALID/);
     const reconciled = await reconcileIntakeEntry(root, run.runId, entry.relativePath);

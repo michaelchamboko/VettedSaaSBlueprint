@@ -63,7 +63,7 @@ export async function checkIntakeRun(root: string, runId: string): Promise<{ ok:
   return { ok: diagnostics.length === 0, diagnostics };
 }
 
-export async function createIntakeRun(root: string, sourceDirectory = "Article Intake"): Promise<IntakeRun> {
+export async function createIntakeRun(root: string, sourceDirectory = "Article Intake", authorizeEntry?: (file: string) => Promise<string>): Promise<IntakeRun> {
   const absolute = path.resolve(root, sourceDirectory);
   const names = (await readdir(absolute, { withFileTypes: true })).filter((entry) => entry.isFile()).map((entry) => entry.name).sort((a, b) => a.localeCompare(b));
   const runId = `intake-${randomUUID()}`;
@@ -73,7 +73,8 @@ export async function createIntakeRun(root: string, sourceDirectory = "Article I
   for (const name of names) {
     const relativePath = path.relative(root, path.join(absolute, name)).replaceAll("\\", "/");
     if (!eligible.test(name)) { entries.push({ relativePath, status: "SKIPPED", reason: "Unsupported file type." }); continue; }
-    const source = await readFile(path.join(absolute, name));
+    const candidate = path.join(absolute, name);
+    const source = await readFile(authorizeEntry ? await authorizeEntry(candidate) : candidate);
     const sourceFingerprint = createHash("sha256").update(source).digest("hex");
     const capturedPath = path.join(INTAKE_ROOT, runId, "sources", `${sourceFingerprint}.source`);
     await writeFile(path.join(root, capturedPath), source, { flag: "wx" }).catch(async (error: unknown) => { if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error; });
@@ -165,7 +166,7 @@ export async function claimNextIntakeEntry(root: string, runId: string): Promise
   return { run, entry: selected };
 }
 
-export async function upgradeIntakeRun(root: string, runId: string): Promise<IntakeRun> {
+export async function upgradeIntakeRun(root: string, runId: string, resolveSnapshot?: (capturedPath: string) => Promise<string>): Promise<IntakeRun> {
   const lease = await claimWorkflowLease(root, "intake", runId);
   if (!lease) throw new Error("INTAKE_BUSY");
   try {
@@ -173,7 +174,8 @@ export async function upgradeIntakeRun(root: string, runId: string): Promise<Int
     if (run.schemaVersion === "ArticleIntakeRunV2") return run;
     for (const entry of run.entries.filter((e) => e.status !== "SKIPPED")) {
       if (!entry.capturedPath || !entry.sourceFingerprint) throw new Error("INTAKE_SOURCE_MISSING");
-      const source = await readFile(path.resolve(root, entry.capturedPath));
+      const sourcePath = resolveSnapshot ? await resolveSnapshot(entry.capturedPath) : path.resolve(root, entry.capturedPath);
+      const source = await readFile(sourcePath);
       if (createHash("sha256").update(source).digest("hex") !== entry.sourceFingerprint) throw new Error("INTAKE_SOURCE_MISMATCH");
     }
     await writeFile(`${runPath(root, runId)}.v1.archive`, await readFile(runPath(root, runId)), { flag: "wx" }).catch((e: NodeJS.ErrnoException) => { if (e.code !== "EEXIST") throw e; });

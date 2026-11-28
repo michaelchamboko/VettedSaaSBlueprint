@@ -259,7 +259,7 @@ function minimalV1Export(raw: unknown, selected: ExportSelection): unknown {
 /** Core extraction without replay; public wrapper adds replay. */
 function extractOpenCodeExecutionCore(raw: unknown, selected: ExportSelection): ExecutionEvidence {
   if (!openCodeVersionSchema.safeParse(selected.version).success) throw new Error("EVIDENCE_UNSUPPORTED");
-  if (selected.version === "2.2.5" || selected.version === "2.2.6") raw = dedicatedV2Exchange(raw, selected);
+  if (selected.version === "2.2.5" || selected.version === "2.2.6" || selected.version === "2.3.0") raw = dedicatedV2Exchange(raw, selected);
   const envelope = z.object({ info: z.object({ id: z.string() }).passthrough(), messages: z.array(z.object({ info: z.record(z.string(), z.unknown()), parts: z.array(z.record(z.string(), z.unknown())) }).passthrough()) }).passthrough().parse(raw);
   if (envelope.info.id !== selected.sessionId) throw new Error("EXECUTION_SESSION_MISMATCH");
   const users = envelope.messages.filter((m) => m.info.id === selected.userMessageId);
@@ -290,7 +290,7 @@ function extractOpenCodeExecutionCore(raw: unknown, selected: ExportSelection): 
 export function extractOpenCodeExecution(raw: unknown, selected: ExportSelection): ExecutionEvidence {
   if (!openCodeVersionSchema.safeParse(selected.version).success) throw new Error("EVIDENCE_UNSUPPORTED");
   if (selected.imageRefs?.length && selected.version === "1.19.4") throw new Error("EXECUTION_IMAGE_BINDING");
-  const isV2 = selected.version === "2.2.5" || selected.version === "2.2.6";
+  const isV2 = selected.version === "2.2.5" || selected.version === "2.2.6" || selected.version === "2.3.0";
   // Validate the full source export before projection (v2 dedicated exchange).
   const evidence = extractOpenCodeExecutionCore(raw, selected);
   const minimalExport = isV2 ? minimalV2Export(raw) : minimalV1Export(raw, selected);
