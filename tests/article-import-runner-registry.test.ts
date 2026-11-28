@@ -76,16 +76,14 @@ test("runner injects research and review registries through normal dispatch opti
       async listAll() { return []; },
       async commit() { throw new Error("review registration is outside this regression"); },
     };
-    await assert.rejects(
-      executeImportRunnerCommand(
-        researchRoot,
-        { kind: "resume", importId: created.importId },
-        transport(researchRegistry, () => { closes += 1; }),
-        { reviewEvidenceRegistry },
-        fixtureProbe(researchRoot),
-      ),
-      /REVIEW_REGISTRY_REACHED/,
+    const reviewResult = await executeImportRunnerCommand(
+      researchRoot,
+      { kind: "resume", importId: created.importId },
+      transport(researchRegistry, () => { closes += 1; }),
+      { reviewEvidenceRegistry },
+      fixtureProbe(researchRoot),
     );
+    assert.match(JSON.stringify(reviewResult), /REVIEW_REGISTRY_REACHED/);
     assert.equal(closes, 3);
   } finally {
     await rm(researchRoot, { recursive: true, force: true });
