@@ -29,8 +29,8 @@ async function main() {
   const { openCodeVersion } = JSON.parse(await fs.readFile(path.join(root, "config/article-workflow-capabilities.json"), "utf8"));
   const probe = async (tool: string) => tool === "opencode" ? openCodeVersion : "Python 3.13.0";
   if (command === "resume") {
-    const { executeImportCommand } = await import("../../scripts/import-article");
-    return executeImportCommand(root, { kind: "resume", importId: id }, undefined, undefined, probe);
+    const { executeFixtureCommand } = await import("./article-command");
+    return executeFixtureCommand(root, { kind: "resume", importId: id });
   }
   const { recordArticlePresentation } = await import("../../scripts/record-article-presentation");
   return recordArticlePresentation(root, id, "build-pack/article-import/verifier.json", path.join(root, "page-design.json"), probe);

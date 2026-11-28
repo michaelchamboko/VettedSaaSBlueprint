@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "caseId": "case-summit",
+  "reviewerId": "/root/ticket122/r122_summit",
+  "route": "native-codex-subagent",
+  "genuineIndependentJudgment": true,
+  "reviewedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "packetRevision": "150dd9ee522b246a39f439ef1dc0a834b548011b",
+  "observedEvidence": "Both questions name the account and project. The original asks which should be open now. The rewrite asks which need attention now.",
+  "verdict": "does_not_meet",
+  "explanation": "A reader could identify an urgent project and still be unsure which project should be open after the interruption. The rewrite changes a workspace check into a priority decision.",
+  "rawResponse": "Observed evidence: Both questions name the account and project. The original asks which should be open now. The rewrite asks which need attention now.\n\nVerdict: does_not_meet\n\nExplanation: A reader could identify an urgent project and still be unsure which project should be open after the interruption. The rewrite changes a workspace check into a priority decision."
+}

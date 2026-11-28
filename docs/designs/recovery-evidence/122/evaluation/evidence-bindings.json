@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "examinedRevision": "cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e",
+  "sourceEvidenceRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
+  "cases": [
+    {
+      "caseId": "case-lantern",
+      "criterion": { "document": "Vetted SaaS Blueprint - Design System and Experience Standards", "heading": "21.4 CTA language", "stableId": "D04-S-1497bdd3519d" },
+      "sourcePacket": "docs/designs/recovery-evidence/107/reviewer-packets/case-lantern/packet.md",
+      "sourcePacketBlob": "d63d5877bef5555cfe45fd1f570d04b24807eb96"
+    },
+    {
+      "caseId": "case-orbit",
+      "criterion": { "document": "Vetted SaaS Blueprint - Design System and Experience Standards", "heading": "21.4 CTA language", "stableId": "D04-S-1497bdd3519d" },
+      "sourcePacket": "docs/designs/recovery-evidence/107/reviewer-packets/case-orbit/packet.md",
+      "sourcePacketBlob": "678841d4b8d25a7bcc28f505c9809316be49b045"
+    },
+    {
+      "caseId": "case-river",
+      "criterion": { "document": "Vetted SaaS Blueprint - Master Product Requirements Document", "heading": "29.8 Editorial Quality", "stableId": "D05-S-92035809db89" },
+      "sourcePacket": "docs/designs/recovery-evidence/107/reviewer-packets/case-river/packet.md",
+      "sourcePacketBlob": "176e9d327bab3ebf1d3178813e57f03823171fc8"
+    },
+    {
+      "caseId": "case-summit",
+      "criterion": { "document": "Vetted SaaS Blueprint - Master Product Requirements Document", "heading": "29.8 Editorial Quality", "stableId": "D05-S-92035809db89" },
+      "sourcePacket": "docs/designs/recovery-evidence/107/reviewer-packets/case-summit/packet.md",
+      "sourcePacketBlob": "4ed5b619fd43a445e931636c2741a94edc2d912c"
+    },
+    {
+      "caseId": "case-meadow",
+      "criterion": { "document": "Vetted SaaS Blueprint - Agent Technology, Implementation and Narrative Interaction Standards", "heading": "27 Accessibility Standards", "stableId": "D06-S-cab36a11f0f9" },
+      "sourcePacket": "docs/designs/recovery-evidence/107/reviewer-packets/case-meadow/packet.md",
+      "sourcePacketBlob": "bacf2d56cdd4638fd27de3f6b14c1a5d9b476383",
+      "interaction": {
+        "json": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-meadow/interaction.json", "blob": "ecf64ccc79d4544ca1d44acd18e51fc990da683e" },
+        "video": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-meadow/interaction.webm", "blob": "57c9c784d5779c75a8cb4b027c769a42fec7ee3d" },
+        "before": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-meadow/01-before.png", "blob": "aee55b56cfbc4c7d4d5195a666ba032cf9037a59" },
+        "after": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-meadow/02-after.png", "blob": "60883080caa5f2c91c2b6eb70cfaffc3cabaf51c" }
+      }
+    },
+    {
+      "caseId": "case-quartz",
+      "criterion": { "document": "Vetted SaaS Blueprint - Agent Technology, Implementation and Narrative Interaction Standards", "heading": "27 Accessibility Standards", "stableId": "D06-S-cab36a11f0f9" },
+      "sourcePacket": "docs/designs/recovery-evidence/107/reviewer-packets/case-quartz/packet.md",
+      "sourcePacketBlob": "b854bd27297dc67df16aa11c192c8dc10580e96f",
+      "interaction": {
+        "json": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-quartz/interaction.json", "blob": "b27899e6dfcc22b49681932ca92d9982267930e7" },
+        "video": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-quartz/interaction.webm", "blob": "1dfa927b6d05d3891584f92e134020079821614e" },
+        "before": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-quartz/01-before.png", "blob": "aee55b56cfbc4c7d4d5195a666ba032cf9037a59" },
+        "focused": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-quartz/02-focused.png", "blob": "133e1ad6adfb9062eb50f0edf8bc96e9639f089c" },
+        "after": { "path": "docs/designs/recovery-evidence/107/reviewer-packets/case-quartz/03-after.png", "blob": "0f60f4eece92777cc35e1ba14aa7dfda49fb195b" }
+      }
+    }
+  ]
+}

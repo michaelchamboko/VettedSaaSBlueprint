@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "productRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+  "productTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d",
+  "runtime": {
+    "declared": "Node 24.x, npm >=12 <13",
+    "verified": "Node v24.22.3, npm 12.2.3"
+  },
+  "checks": [
+    {
+      "command": "node --test tests/article-recovery-readiness.test.mjs && node scripts/verify-article-recovery-readiness.mjs",
+      "status": "pass",
+      "result": "2/2 readiness tests; strict counts 38 findings, 28 stories, 11 testing decisions and 52 interview labels; Q40 open; tamper exits nonzero"
+    },
+    {
+      "command": "node --import tsx --test tests/article-rendering-inputs.test.ts",
+      "status": "pass",
+      "result": "7/7 at the provisional product revision, including current target-bound global inputs, unrelated-article exclusion, frozen historical replay and route-scoped transitive dependencies"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='changed candidate before refining dispatch|dispatch rechecks handoff bytes' tests/article-import-gate-handoff.test.ts",
+      "status": "pass",
+      "result": "2/2; changed candidate rebound before normal activity dispatch and bytes rechecked"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='changed input reruns affected work|replacement review cannot omit|independent review closes a finding|rejection, missing observation' tests/article-import-activity-recovery.test.ts",
+      "status": "pass",
+      "result": "4/4 at the final product revision; affected rerun, attributable rejection, omission prevention and independent resolution all pass"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='post-deploy approval write failure|rollback verification failure|rolled back imports resume' tests/article-import-release.test.ts",
+      "status": "pass",
+      "result": "3/3 at final product revision; rollback reconciliation waits, verification fails closed and productive-stage resume works"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='direct-review target and control reconcile five serving mutations' tests/article-publication-http.test.ts",
+      "status": "pass",
+      "result": "1/1 rerun at the provisional product revision; content, renderer, style, asset and rule changed one at a time with an unaffected control"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='tampered concrete activity output|three distinct unsuccessful finding repairs' tests/article-import-activity-recovery.test.ts",
+      "status": "pass",
+      "result": "2/2; changed accepted output reopens its activity and three distinct unsuccessful repairs require diagnosis before a fourth worker"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='cleanup refuses redirected archive|cleanup refuses an existing archive leaf|restart will not unlink|restart refuses to restore' tests/article-import-cleanup-recovery.test.ts",
+      "status": "pass",
+      "result": "4/4; redirected cleanup parents and leaves fail closed without mutating unrelated storage"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='release journal redacts raw provider|indeterminate deployment lookup|release command runner preserves|local adapter binds provider identity|local adapter rejects disagreement|local adapter fails closed|local adapter reports authentication' tests/article-import-release.test.ts",
+      "status": "pass",
+      "result": "8/8 synthetic provider/release cases; identity, indeterminate lookup, shell-free arguments and redacted diagnostics passed"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='target-bound current rendering tracks global build inputs' tests/article-rendering-inputs.test.ts",
+      "status": "pass",
+      "result": "1/1; current target-bound evidence includes global build inputs and excludes an unrelated article"
+    },
+    {
+      "command": "node --import tsx --test --test-name-pattern='activity workers receive one current activity' tests/article-worker-runner.test.ts",
+      "status": "pass",
+      "result": "1/1; worker packet contains one current activity and accepted current-stage handoffs only"
+    },
+    {
+      "command": "npm run verify:agent-workflow",
+      "status": "pass",
+      "result": "agent workflow contract intact"
+    },
+    {
+      "command": "npm run lint",
+      "status": "pass-with-existing-warnings",
+      "result": "0 errors, 16 pre-existing warnings"
+    },
+    {
+      "command": "npm run typecheck",
+      "status": "pass",
+      "result": "Next route types generated and TypeScript passed"
+    }
+  ],
+  "historicalRegression": {
+    "revision": "e14ece1ae645a00a1d09cd63e8140a0bbabbfa5f",
+    "observation": "The earlier e14ece1 fixture-bound rollback failures were corrected before this snapshot. The later provisional UNCHANGED_SUBMISSION stop in the omission-prevention activity case is also corrected; the exact final-product case passes."
+  },
+  "finalDelta": {
+    "fromRevision": "62e7aac4f8f80b19f946083c8358883107c12415",
+    "changedProductFiles": [
+      "src/lib/article-import/worker-runner.ts"
+    ],
+    "affectedChecksRerun": [
+      "isolated synthetic target/control normal controller",
+      "trusted REFINING command receives the exact packet and returns the bound controller result",
+      "activity workers receive one current activity and only accepted current-stage handoffs"
+    ],
+    "result": "3/3 affected final-delta checks passed; the trusted worker received no owner-decision secret even when the parent used mixed-case Windows-style environment casing."
+  },
+  "boundary": "All commands use synthetic or retained evidence. No real article, deployment, provider mutation or production operation ran."
+}

@@ -16,6 +16,9 @@ import { invokeWorker, type WorkerOptions } from "./worker-runner";
 import type { ArticleResearchRegistry } from "./research-registry";
 import { createSupervisedImproveExecutor, type ImproveExecutor } from "./improve-supervisor";
 import { readCurrentArticleHeroRejection } from "./hero-image";
+import { reviewRetentionDependencyResolver, type ArticleReviewEvidenceRegistry } from "./review-evidence-registry";
+import { NeonArticleReviewEvidenceRegistry } from "./review-evidence-registry-neon";
+import { verifyGateHandoffForDispatch } from "./gate-handoff";
 
 export type DispatchOptions = WorkerOptions & {
   maxSteps?: number;
@@ -24,6 +27,7 @@ export type DispatchOptions = WorkerOptions & {
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   researchRegistry?: ArticleResearchRegistry;
+  reviewEvidenceRegistry?: ArticleReviewEvidenceRegistry;
 };
 
 function isTerminalStage(stage: string): boolean {
@@ -46,10 +50,11 @@ async function intakeExecutionStage(repositoryRoot: string, runId: string): Prom
   } catch { return undefined; }
 }
 
-function pendingExecutionOptions(repositoryRoot: string, options: DispatchOptions | undefined, improveExecutor: ImproveExecutor) {
+function pendingExecutionOptions(repositoryRoot: string, options: DispatchOptions | undefined, improveExecutor: ImproveExecutor, reviewEvidenceRegistry: ArticleReviewEvidenceRegistry) {
   return {
     rejectBusy: true,
     improveExecutor,
+    cleanup: { resolveRetentionDependencies: reviewRetentionDependencyResolver(reviewEvidenceRegistry) },
     executeStage: (stage: ExternalArticleImportV1["stage"], action: () => Promise<ExternalArticleImportV1>) =>
       withArticleExecution(repositoryRoot, action, options?.capabilityProbe, stage),
   };
@@ -65,7 +70,7 @@ export function createDispatchingImproveExecutor(root: string, baseExecutor: Imp
         packet.boundCommitSha !== assignment.boundCommitSha || packet.resultPath !== assignment.resultPath) throw new Error("STATE_INTEGRITY: IMPROVE work packet binding mismatch");
     await context.assertLease();
     await saveImport(root, first);
-    await invokeWorker(root, assignment.workPath, assignment.resultPath, packet, context.leaseToken, context.assertLease, options);
+    await invokeWorker(root, assignment.workPath, assignment.resultPath, packet, context.leaseToken, context.assertLease, options, context.record);
     return baseExecutor({ ...context, record: first, assignment });
   };
 }
@@ -87,6 +92,10 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
     const priorRejection = await consumeHeroRejection();
     if (priorRejection) return priorRejection;
     const first = await baseExecutor(context);
+    const handoffVerification = await verifyGateHandoffForDispatch(root, first);
+    if (handoffVerification?.status === "held") {
+      return { ...first, continuation: undefined, nextAction: `Gate handoff held before dispatch: ${handoffVerification.reason}` };
+    }
     if (!first.continuation || first.continuation.kind !== "work") return first;
     const workPath = first.continuation.workPath;
     const resultPath = first.continuation.resultPath;
@@ -94,12 +103,24 @@ export function createDispatchingExecutor(root: string, baseExecutor: ImportStag
     if (packet.importId !== context.record.importId || packet.stage !== context.stage ||
         packet.idempotencyKey !== context.idempotencyKey || packet.sourceFingerprint !== context.record.sourceFingerprint ||
         packet.resultPath !== resultPath) throw new Error("STATE_INTEGRITY: work packet binding mismatch");
+    if (handoffVerification?.status === "verified" &&
+        (JSON.stringify(packet.gateHandoff) !== JSON.stringify({
+          schemaVersion: handoffVerification.handoff.schemaVersion,
+          passedGate: handoffVerification.handoff.passedGate,
+          nextStage: handoffVerification.handoff.nextStage,
+          requiredNextInputs: handoffVerification.handoff.requiredNextInputs,
+          constraints: handoffVerification.handoff.constraints,
+        }) ||
+         (packet.gateHandoffVerification as { status?: unknown } | undefined)?.status !== "verified" ||
+         JSON.stringify((packet.gateHandoffVerification as { verifiedInputs?: unknown } | undefined)?.verifiedInputs) !== JSON.stringify(handoffVerification.verifiedInputs))) {
+      throw new Error("STATE_INTEGRITY: gate handoff packet binding mismatch");
+    }
     // The local candidate renderer independently verifies the persisted work packet.
     await context.assertLease();
     await saveImport(root, first);
     if (packet.supervisedHandoff === "chatgpt-imagegen") return first;
     try {
-      await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options);
+      await invokeWorker(root, workPath, resultPath, packet, context.leaseToken, context.assertLease, options, first);
     } catch (error) {
       const rejected = await consumeHeroRejection();
       if (rejected) return rejected;
@@ -126,7 +147,8 @@ async function runImportSteps(
   importId: string,
   options?: DispatchOptions,
 ): Promise<ExternalArticleImportV1 & { dispatchOutcome?: "STEP_LIMIT" }> {
-  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry });
+  const reviewEvidenceRegistry = options?.reviewEvidenceRegistry ?? new NeonArticleReviewEvidenceRegistry();
+  const baseExecutor = options?.executor ?? createSupervisedImportExecutor(repositoryRoot, undefined, { researchRegistry: options?.researchRegistry, reviewEvidenceRegistry });
   const execute = createDispatchingExecutor(repositoryRoot, baseExecutor, options);
   const improveExecutor = createDispatchingImproveExecutor(repositoryRoot, createSupervisedImproveExecutor(repositoryRoot), options);
   const now = options?.now ?? (() => Date.now());
@@ -134,7 +156,7 @@ async function runImportSteps(
   const maxSteps = dispatchLimit(options);
   let current = await loadImport(repositoryRoot, importId);
   for (let step = 0; step < maxSteps; step += 1) {
-    if (isTerminalStage(current.stage) && !improvePending(current)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor));
+    if (isTerminalStage(current.stage) && !improvePending(current)) return executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor, reviewEvidenceRegistry));
     if (current.stage === "ROLLED_BACK" || current.continuation?.kind === "blocked") return current;
     if (current.continuation?.kind === "wait") {
       const due = Math.min(Date.parse(current.continuation.nextCheckAt), Date.parse(current.continuation.timeoutAt));
@@ -142,7 +164,7 @@ async function runImportSteps(
       if (now() < due) return current;
     }
     const previous = current;
-    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor));
+    current = await executePendingImport(repositoryRoot, importId, execute, pendingExecutionOptions(repositoryRoot, options, improveExecutor, reviewEvidenceRegistry));
     if (current.improve?.pendingReview) return current;
     if ((isTerminalStage(current.stage) && !improvePending(current)) || current.continuation?.kind === "blocked" || current.continuation?.kind === "repair" ||
         JSON.stringify(current) === JSON.stringify(previous)) return current;

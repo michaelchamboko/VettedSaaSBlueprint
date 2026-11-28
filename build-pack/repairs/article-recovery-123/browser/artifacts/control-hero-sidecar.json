@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "ArticleHeroPublicationV1",
+  "format": "direct-review",
+  "slug": "synthetic-readiness-control",
+  "artifactFingerprint": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+  "rendererFingerprint": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
+  "asset": {
+    "filePath": "public/images/direct-review-synthetic-readiness-control-hero.webp",
+    "publicPath": "/images/direct-review-synthetic-readiness-control-hero.webp",
+    "sha256": "87854236588d4066234226328afb19030ecea29d2595700ea819fac2fb40a4f3",
+    "width": 1600,
+    "height": 900,
+    "alt": "Synthetic diagram linking an input checklist, observed workflow state, and recorded recovery note."
+  }
+}

@@ -1,0 +1,164 @@
+[
+  {
+    "width": 320,
+    "before": {
+      "open": false,
+      "visibleFocus": true,
+      "display": "list-item",
+      "listStyle": "disclosure-closed",
+      "marker": "normal",
+      "button": "Why is this control synthetic?",
+      "answer": false,
+      "box": {
+        "x": 41,
+        "y": 376.375,
+        "width": 238,
+        "height": 48,
+        "top": 376.375,
+        "right": 279,
+        "bottom": 424.375,
+        "left": 41
+      },
+      "outline": "auto"
+    },
+    "after": {
+      "open": true,
+      "visibleFocus": true,
+      "display": "list-item",
+      "listStyle": "disclosure-open",
+      "marker": "normal",
+      "button": "Why is this control synthetic?",
+      "answer": true,
+      "box": {
+        "x": 41,
+        "y": 376.375,
+        "width": 238,
+        "height": 48,
+        "top": 376.375,
+        "right": 279,
+        "bottom": 424.375,
+        "left": 41
+      },
+      "outline": "auto"
+    },
+    "leading25By24ChangedPixels": 59,
+    "screenshots": [
+      {
+        "filename": "control-faq-320-closed.png",
+        "sha256": "f7d07e4bebb25504d1d499896120509c48f4dd88bd5d43147180330fb4132339"
+      },
+      {
+        "filename": "control-faq-320-open.png",
+        "sha256": "e5d2ce9c316303c4fd11ac76e8e880d00a1f051443b5547dd22ec48c1a3cefc7"
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "before": {
+      "open": false,
+      "visibleFocus": true,
+      "display": "list-item",
+      "listStyle": "disclosure-closed",
+      "marker": "normal",
+      "button": "Why is this control synthetic?",
+      "answer": false,
+      "box": {
+        "x": 41,
+        "y": 489.75,
+        "width": 308,
+        "height": 24,
+        "top": 489.75,
+        "right": 349,
+        "bottom": 513.75,
+        "left": 41
+      },
+      "outline": "auto"
+    },
+    "after": {
+      "open": true,
+      "visibleFocus": true,
+      "display": "list-item",
+      "listStyle": "disclosure-open",
+      "marker": "normal",
+      "button": "Why is this control synthetic?",
+      "answer": true,
+      "box": {
+        "x": 41,
+        "y": 489.75,
+        "width": 308,
+        "height": 24,
+        "top": 489.75,
+        "right": 349,
+        "bottom": 513.75,
+        "left": 41
+      },
+      "outline": "auto"
+    },
+    "leading25By24ChangedPixels": 59,
+    "screenshots": [
+      {
+        "filename": "control-faq-390-closed.png",
+        "sha256": "2abede085a02d210fb8bcde6158093895239ac557fa1feca8f2e4dc6a1faeff0"
+      },
+      {
+        "filename": "control-faq-390-open.png",
+        "sha256": "35f56cddeee6db42ac3c4217f9dbad7663c840c248617c8aa3e298995b30c702"
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "before": {
+      "open": false,
+      "visibleFocus": true,
+      "display": "list-item",
+      "listStyle": "disclosure-closed",
+      "marker": "normal",
+      "button": "Why is this control synthetic?",
+      "answer": false,
+      "box": {
+        "x": 197,
+        "y": 574,
+        "width": 1046,
+        "height": 24,
+        "top": 574,
+        "right": 1243,
+        "bottom": 598,
+        "left": 197
+      },
+      "outline": "auto"
+    },
+    "after": {
+      "open": true,
+      "visibleFocus": true,
+      "display": "list-item",
+      "listStyle": "disclosure-open",
+      "marker": "normal",
+      "button": "Why is this control synthetic?",
+      "answer": true,
+      "box": {
+        "x": 197,
+        "y": 574,
+        "width": 1046,
+        "height": 24,
+        "top": 574,
+        "right": 1243,
+        "bottom": 598,
+        "left": 197
+      },
+      "outline": "auto"
+    },
+    "leading25By24ChangedPixels": 59,
+    "screenshots": [
+      {
+        "filename": "control-faq-1440-closed.png",
+        "sha256": "7aa876c600b657c7d4498dde11ba3fd37a0649c515dd19a725f4ffe67c429bb4"
+      },
+      {
+        "filename": "control-faq-1440-open.png",
+        "sha256": "fb0b1b14ea46061766f528390ceaed75c5c7042d4ef6fe5827d73e1fff14ea68"
+      }
+    ]
+  }
+]

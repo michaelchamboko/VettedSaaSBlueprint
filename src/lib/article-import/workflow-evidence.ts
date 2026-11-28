@@ -13,9 +13,18 @@ import { approvedAffiliateUrl, assertLongFormAffiliateAssessment, assertLongForm
 import { articleHeroBindingSchema, validateArticleHeroBinding } from "./hero-image";
 import { articleHeroFormatSchema } from "../article-heroes";
 import { ARTICLE_VISUAL_QUALITY_INSTRUCTIONS, MOTION_SITES_REVIEW_SOURCE, validateArticleVisualQualityReview, validateArticleVisualRuntime } from "./article-visual-quality";
+import { ImportFailure } from "./failure-routing";
 export { evidenceRefSchema, evidenceReference, readEvidence, readVerifiedEvidenceBytes, storeEvidence } from "./execution-evidence";
 export { freezeEvidenceGraph } from "./execution-evidence";
 export type { EvidenceRef } from "./execution-evidence";
+
+export function presentationDesignRejected(detail: string): never {
+  throw new ImportFailure("content-rejection", `PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS: ${detail}`);
+}
+
+export function workflowEvidenceRejected(detail: string): never {
+  throw new ImportFailure("invalid-evidence", `WORKFLOW_EVIDENCE_INVALID: ${detail}`);
+}
 
 const nonempty = z.string().trim().min(1);
 export function createDesignReviewSchema(input: { rule: string; artifactFingerprint: string; renderInputsRef: { path: string; sha256: string }; renderingDigest: string; allowedRoutes: string[] }) {
@@ -39,8 +48,10 @@ export const contentAssessmentSchema = z.object({ ...common, schemaVersion: z.li
 const passes = ["purposeAndStructure", "meaningAndEvidence", "wordingAndRhythm", "rivalFamilyCleanse", "finalFidelityReview", "beamReview", "independentReview"] as const;
 export const editorialExecutionSchema = z.object({ ...common, schemaVersion: z.literal("EditorialExecutionV1"), format: formatSchema, editorialEvidenceRef: evidenceRefSchema, schemaRevision: nonempty, eligibleProsePaths: z.array(nonempty).min(1), passes: z.array(z.object({ name: z.enum(passes), inputRef: evidenceRefSchema, outputRef: evidenceRefSchema, instructionRefs: z.array(evidenceRefSchema).min(1), executionRef: evidenceRefSchema, judgmentRef: evidenceRefSchema }).strict()).length(5), checkerExecutionRef: evidenceRefSchema }).strict();
 export const evidenceRefsSchema = z.object({ research: evidenceRefSchema.optional(), transformAssessment: evidenceRefSchema.optional(), assessment: evidenceRefSchema.optional(), editorial: evidenceRefSchema.optional(), hero: evidenceRefSchema.optional(), presentation: evidenceRefSchema.optional(), production: evidenceRefSchema.optional() }).strict();
+const publicationApprovalStatusSchema = z.object({ registrationId: z.string().uuid(), examinedRevision: hashSchema, approvalIdentity: hashSchema, evidenceRef: evidenceRefSchema }).strict();
+const publicationApprovalSchema = z.object({ catalogue: publicationApprovalStatusSchema, import: publicationApprovalStatusSchema }).strict();
 export const terminalEvidenceSchema = z.discriminatedUnion("kind", [
-  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, commercialMode: z.enum(["approved", "decommercialized", "none"]).optional(), approvedAffiliateUrl: z.string().url().optional(), evidenceRefs: evidenceRefsSchema, heroImage: z.lazy(() => articleHeroBindingSchema).optional(), frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
+  z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("live"), researchGeneration: z.number().int().nonnegative().optional(), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), artifactRef: evidenceRefSchema, format: formatSchema, commercialMode: z.enum(["approved", "decommercialized", "none"]).optional(), approvedAffiliateUrl: z.string().url().optional(), evidenceRefs: evidenceRefsSchema, heroImage: z.lazy(() => articleHeroBindingSchema).optional(), publicationApproval: publicationApprovalSchema.optional(), frozenFiles: z.array(frozenFileSchema).min(1), reviewedCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeCommitSha: z.string().regex(/^[a-f0-9]{40}$/), mergeEvidenceRef: evidenceRefSchema, deployment: z.object({ deploymentId: nonempty, canonicalUrl: z.string().url(), commitSha: z.string().regex(/^[a-f0-9]{40}$/) }).strict() }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("quarantine"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), reasonCode: z.enum(["empty", "unusable", "unsupported-format"]), dispositionEvidenceRef: evidenceRefSchema }).strict(),
   z.object({ ...common, schemaVersion: z.literal("TerminalEvidenceV1"), kind: z.literal("duplicate"), originImportId: nonempty, sourceRef: evidenceRefSchema, completedAt: z.string().datetime({ offset: true }), originTerminalRef: evidenceRefSchema }).strict(),
 ]);
@@ -539,7 +550,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   assertPacket(value.packetId, binding, "VALIDATING");
   const artifact = await artifactFor(root, binding);
   const target = importArtifactTarget(formatSchema.parse(binding.format), artifact);
-  const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive() });
+  const rendering = await validateRenderingInputs(root, value.renderInputsRef, { historical: isEvidenceSnapshotActive(), target });
   const designInput = await designInputFromManifest(root, artifact, value.renderInputsRef, rendering, target);
   const currentDesign = value.schemaVersion === "WorkflowEvidenceV2" || value.schemaVersion === "WorkflowEvidenceV3";
   const currentHeroPolicy = value.schemaVersion === "WorkflowEvidenceV3";
@@ -562,7 +573,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
   if (value.ruleResults.length !== rules.length) throw new Error("PRESENTATION_RULE_MISSING");
   for (const rule of rules) {
     const result = value.ruleResults.find((r) => r.ruleId === rule);
-    if (!result || result.status !== "pass") throw new Error(`PRESENTATION_RULE_FAILED:${rule}`);
+    if (!result || result.status !== "pass") workflowEvidenceRejected(`PRESENTATION_RULE_FAILED:${rule}`);
     for (const evidence of result.evidenceRefs) {
       const execution = await validateExecutionEvidence(root, evidence);
       if (!execution.inputRefs.some((ref) => ref.path === value.renderInputsRef.path && ref.sha256 === value.renderInputsRef.sha256)) throw new Error("PRESENTATION_RENDER_INPUT_BINDING_MISMATCH");
@@ -608,7 +619,7 @@ export async function validatePresentationEvidence(root: string, ref: EvidenceRe
         await pinnedInstructions(root, execution, [reference, IMPECCABLE_ROOT + "reference/craft-floor.md", ...(currentDesign ? [designJudgmentInstruction] : [])]);
         const allowedJudgmentRoutes = target.format === "direct-review" ? [JSON.stringify(target.renderedRoutes), JSON.stringify([candidatePreviewPath(target.slug)])] : [JSON.stringify(target.renderedRoutes)];
 const designReview = createDesignReviewSchema({ rule, artifactFingerprint: fingerprintEditorialArtifact(artifact), renderInputsRef: value.renderInputsRef, renderingDigest: rendering.digest, allowedRoutes: allowedJudgmentRoutes }).parse(JSON.parse(execution.output.designReview ?? "null"));
-if (designReview.verdict !== "pass") throw new Error("PRESENTATION_DESIGN_REVIEW_VERDICT_NOT_PASS");
+if (designReview.verdict !== "pass") presentationDesignRejected(designReview.notes);
 if (designReview.findings.some((finding) => finding.disposition !== "resolved")) throw new Error("PRESENTATION_DESIGN_REVIEW_UNRESOLVED_FINDING");
       }
       if (rule === "visual-quality") {
@@ -642,6 +653,15 @@ export async function validateTerminalEvidence(root: string, ref: EvidenceRef, b
     return validateTerminalEvidence(root, value.originTerminalRef, { ...binding, importId: origin.importId }, seen);
   }
   if (value.mergeCommitSha !== value.deployment.commitSha) throw new Error("TERMINAL_COMMIT_MISMATCH");
+  if (value.publicationApproval) {
+    if (!value.evidenceRefs.production || value.publicationApproval.catalogue.evidenceRef.path !== value.evidenceRefs.production.path ||
+        value.publicationApproval.catalogue.evidenceRef.sha256 !== value.evidenceRefs.production.sha256 ||
+        value.publicationApproval.import.evidenceRef.path !== value.evidenceRefs.production.path ||
+        value.publicationApproval.import.evidenceRef.sha256 !== value.evidenceRefs.production.sha256 ||
+        value.publicationApproval.catalogue.approvalIdentity === value.publicationApproval.import.approvalIdentity) {
+      throw new Error("TERMINAL_PUBLICATION_APPROVAL_MISMATCH");
+    }
+  }
   z.object({ reviewedCommitSha: z.literal(value.reviewedCommitSha), mergeCommitSha: z.literal(value.mergeCommitSha), pullRequestUrl: z.string().url(), evidenceUrl: z.string().url() }).strict().parse(await readEvidence(root, value.mergeEvidenceRef));
   const result = await withTerminalEvidenceSnapshot(value.frozenFiles, async () => {
     const manifest = z.object({ files: z.array(evidenceRefSchema) }).passthrough().parse(JSON.parse((await readEvidenceBytes(root, "config/article-workflow-capabilities.json")).toString("utf8")));

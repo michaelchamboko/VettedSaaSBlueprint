@@ -11,6 +11,7 @@ import { evidenceReference, storeEvidence } from "../src/lib/article-import/exec
 import { WORKFLOW_REVISION, workflowRequirements } from "../src/lib/article-import/workflow-requirements";
 import { fullRewriteNotes, rewriteAllProse } from "./fixtures/article-content-approval";
 import { samplePageBlueprint as blueprint } from "./fixtures/sample-page-blueprint";
+import { validateEditorialActivityOutputRefs } from "../src/lib/article-import/activity-checkpoints";
 
 test("fresh packet produces five independently replayable editorial passes and checker receipts", async t => {
   const samplePageBlueprint = {...blueprint, metadata:{...blueprint.metadata,canonical_url:"https://vettedsaasblueprint.online/workflow-tools-review"}};
@@ -35,6 +36,8 @@ test("fresh packet produces five independently replayable editorial passes and c
   const base = path.join(root, "build-pack/editorial", importId, key);
   await mkdir(base, { recursive: true });
   await writeFile(path.join(base, "before.json"), JSON.stringify(samplePageBlueprint));
+  await writeFile(path.join(root, "draft.json"), await readFile(path.join(base, "before.json")));
+  const controllerDraftRef = await evidenceReference(root, "draft.json");
   const revised = rewriteAllProse("landing", samplePageBlueprint);
   await writeFile(path.join(base, "after.json"), JSON.stringify(revised));
   const paths = editorialProsePaths("landing", revised);
@@ -90,8 +93,9 @@ test("fresh packet produces five independently replayable editorial passes and c
     }));
   };
   const passes = [];
+  const activityIds = ["purpose-and-structure", "meaning-and-evidence", "wording-and-rhythm", "independent-review", "final-fidelity-review"];
   let before = "before.json";
-  for (const name of ["purposeAndStructure","meaningAndEvidence","wordingAndRhythm","independentReview","finalFidelityReview"]) {
+  for (const [index, name] of ["purposeAndStructure","meaningAndEvidence","wordingAndRhythm","independentReview","finalFidelityReview"].entries()) {
     let rewriteArgs: Record<string,unknown> = {pass:name,before};
     let judgmentArgs: Record<string,unknown> = {pass:name,before,after:"after.json"};
     if (name === "independentReview") {
@@ -107,10 +111,16 @@ test("fresh packet produces five independently replayable editorial passes and c
     }
     const rewrite = await call("exchange", rewriteArgs) as Record<string,unknown>;
     const judgment = await call("exchange", judgmentArgs) as Record<string,unknown>;
-    passes.push({name, inputRef:rewrite.inputRef,outputRef:judgment.outputRef, instructionRefs:rewrite.instructionRefs,executionRef:rewrite.executionRef,judgmentRef:judgment.judgmentRef});
+    const pass = {name, inputRef:rewrite.inputRef,outputRef:judgment.outputRef, instructionRefs:rewrite.instructionRefs,executionRef:rewrite.executionRef,judgmentRef:judgment.judgmentRef};
+    passes.push(pass);
+    const dependencies = index === 0 ? [controllerDraftRef] : [controllerDraftRef, passes[index - 1].inputRef, passes[index - 1].outputRef, passes[index - 1].executionRef, passes[index - 1].judgmentRef] as {path:string;sha256:string}[];
+    await validateEditorialActivityOutputRefs(root, activityIds[index], [pass.inputRef, pass.outputRef, pass.executionRef, pass.judgmentRef] as {path:string;sha256:string}[], dependencies);
     before = "after.json";
   }
   assert.equal(exports, 8);
+  const revertedRewrite = await call("exchange", {pass:"meaningAndEvidence",before:"before.json"}) as Record<string,unknown>;
+  const revertedJudgment = await call("exchange", {pass:"meaningAndEvidence",before:"before.json",after:"after.json"}) as Record<string,unknown>;
+  await assert.rejects(validateEditorialActivityOutputRefs(root, "meaning-and-evidence", [revertedRewrite.inputRef, revertedJudgment.outputRef, revertedRewrite.executionRef, revertedJudgment.judgmentRef] as {path:string;sha256:string}[], [controllerDraftRef, passes[0].inputRef, passes[0].outputRef, passes[0].executionRef, passes[0].judgmentRef] as {path:string;sha256:string}[]), /ACTIVITY_EDITORIAL_OUTPUTS_INVALID/);
   await assert.rejects(editorialOperation({...packet,research,stage:"TRANSFORMING"},"assess",
     {artifact:"after.json",format:packet.format,capture:{exporterId:"fixture",contextId:"assessment",exchangeId:"transforming"}},native), /ASSESSMENT_CAPTURE_STAGE_REQUIRED/);
   const assessed = await editorialOperation({...packet, research},"assess",{artifact:"after.json",format:packet.format},native) as {path:string};

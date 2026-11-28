@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  advanceImport, createArticleImport, loadImport, parseExternalArticle, prepareTransformation,
+  advanceImport, createArticleImport, executePendingImport, loadImport, parseExternalArticle, prepareTransformation,
   recordImportFailure, recordImportRelease, resolveAffiliateUrl, resumeImport, verifyImportRelease,
 } from "../src/lib/article-import/engine";
 import { parseImportCommand } from "../scripts/import-article";
@@ -21,6 +21,33 @@ import { withEvidenceSnapshot, withTerminalEvidenceSnapshot, validateExecutionEv
 import { instructionsForStage, WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 import { createHash } from "node:crypto";
 import { verifyImportPresentationEvidence } from "../src/lib/article-import/presentation";
+import {
+  registerBrowserReviewEvidence,
+  registerEditorialReviewEvidence,
+  registeredReviewStatus,
+  reviewEvidenceRegistrationSchema,
+  type ArticleReviewEvidenceRegistry,
+  type ReviewEvidenceRegistration,
+} from "../src/lib/article-import/review-evidence-registry";
+import { registerPublicationApproval } from "../src/lib/article-import/publication-approval";
+
+function isolatedReviewRegistry(initial: ReviewEvidenceRegistration[] = []) {
+  const records = [...initial];
+  return {
+    records,
+    async list(input) {
+      return records.filter((record) => record.importId === input.importId && record.evidenceClass === input.evidenceClass);
+    },
+    async listAll(input) {
+      return records.filter((record) => record.evidenceClass === input.evidenceClass);
+    },
+    async commit(input) {
+      const existing = records.find((record) => record.registrationId === input.registrationId);
+      if (!existing) records.push(reviewEvidenceRegistrationSchema.parse(input));
+      return { registrationId: existing?.registrationId ?? input.registrationId, replayed: Boolean(existing) };
+    },
+  } satisfies ArticleReviewEvidenceRegistry & { records: ReviewEvidenceRegistration[] };
+}
 
 async function releaseFixture(root: string, recovered = false, beforeReceipt?: (record: Awaited<ReturnType<typeof advanceImport>>) => Promise<void>) {
   await writeFile(path.join(root, "approved-urls.md"), allowlist);
@@ -34,6 +61,17 @@ async function releaseFixture(root: string, recovered = false, beforeReceipt?: (
   const artifact = JSON.parse(await readFile(path.resolve(root, record.contentApproval!.artifactPath), "utf8"));
   const target = importArtifactTarget(record.format as "direct-review", artifact);
   const commitSha = "b".repeat(40), reviewedCommitSha = "a".repeat(40);
+  const catalogueDirectory = path.join(root, "src/generated/landing-pages");
+  const catalogueArtifact = `${target.slug}.json`;
+  const catalogueReceipt = `releases/${target.slug}/release-receipt.json`;
+  await mkdir(path.join(catalogueDirectory, "releases", target.slug), { recursive: true });
+  const catalogueBytes = await readFile(path.resolve(root, record.contentApproval!.artifactPath));
+  const catalogueRoute = `/landing-page-builders/${target.slug}`;
+  await writeFile(path.join(catalogueDirectory, "index.json"), JSON.stringify({ pages: [{ slug: target.slug, artifact: catalogueArtifact, path: catalogueRoute, release_receipt: catalogueReceipt }] }));
+  await writeFile(path.join(catalogueDirectory, catalogueReceipt), JSON.stringify({
+    slug: target.slug, path: catalogueRoute, artifacts: { page: { path: catalogueArtifact, sha256: createHash("sha256").update(catalogueBytes).digest("hex") } },
+    release: { reviewed_commit: reviewedCommitSha },
+  }));
   const deployment = { commitSha, deploymentId: "dpl_fixture", canonicalUrl: new URL(target.renderedRoutes[0], "https://vettedsaasblueprint.online").href };
   const checks = await productionFixture(root, record.importId, target, deployment, record.sourceFingerprint);
   record.pendingRelease = { schemaVersion: "ImportPendingReleaseV1", branch: `codex/article-import/${record.importId}`, reviewedCommitSha, mergeCommitSha: commitSha, pullRequestUrl: "https://github.com/example/repo/pull/1", createdAt: new Date().toISOString(), operations: { review: { reviewedHeadSha: reviewedCommitSha, evidenceUrl: "https://github.com/example/repo/pull/1#review" }, merge: { reviewedHeadSha: reviewedCommitSha, mergeCommitSha: commitSha }, deployment: { commitSha, operationKey: `deployment:${commitSha}`, deploymentId: deployment.deploymentId, url: deployment.canonicalUrl } } };
@@ -62,6 +100,78 @@ test("verified synthetic completion freezes proof before deleting disposable sou
     assert.equal((await inspectImportCompletion(root, record.importId)).status, "COMPLETE", "historical proof uses frozen bytes");
     await assert.rejects(createArticleImport(root, "article.md"), /DUPLICATE_REVALIDATION_REQUIRED/);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("catalogue and import publication approval must agree before LIVE", async () => {
+  const root = await testRoot("article-publication-approval-");
+  try {
+    const released = await releaseFixture(root);
+    let verifying = await persistFixture(root, { ...released, artifactPath: released.contentApproval!.artifactPath });
+    const registry = isolatedReviewRegistry();
+    const editorial = await registerEditorialReviewEvidence(root, registry, verifying);
+    const browserReview = await registerBrowserReviewEvidence(root, registry, verifying);
+    verifying = await persistFixture(root, {
+      ...verifying,
+      reviewEvidence: {
+        editorial: registeredReviewStatus(editorial),
+        browser: registeredReviewStatus(browserReview),
+      },
+    });
+
+    const catalogue = await registerPublicationApproval(root, registry, verifying, "catalogue", "2026-11-27T12:00:00.000Z");
+    const imported = await registerPublicationApproval(root, registry, verifying, "import", "2026-11-27T12:00:00.000Z");
+    assert.notEqual(catalogue.registrationId, imported.registrationId);
+    assert.equal(catalogue.evidenceRef.sha256, verifying.evidenceRefs?.production?.sha256);
+    assert.equal(imported.evidenceRef.sha256, verifying.evidenceRefs?.production?.sha256);
+
+    await assert.rejects(
+      registerPublicationApproval(root, registry, { ...verifying, release: { ...verifying.release!, commitSha: "c".repeat(40) } }, "import"),
+      /PRODUCTION_DEPLOYMENT_MISMATCH|PUBLICATION_INTENDED_COMMIT_MISMATCH/,
+    );
+    await assert.rejects(
+      registerPublicationApproval(root, registry, { ...verifying, evidenceRefs: { ...verifying.evidenceRefs, production: undefined } }, "import"),
+      /PUBLICATION_PRODUCTION_OBSERVATION_REQUIRED/,
+    );
+
+    const browser = registry.records.find((entry) => entry.evidenceClass === "browser-observation");
+    assert.ok(browser);
+    browser.expiresAt = "2026-11-27T11:00:00.000Z";
+    await assert.rejects(
+      registerPublicationApproval(root, registry, verifying, "import", "2026-11-27T12:00:00.000Z"),
+      /PUBLICATION_PRESENTATION_APPROVAL_MISSING_OR_STALE/,
+    );
+    delete browser.expiresAt;
+
+    await assert.rejects(
+      verifyImportRelease(root, verifying),
+      /PUBLICATION_APPROVAL_REGISTRY_REQUIRED/,
+    );
+    const live = await verifyImportRelease(root, verifying, { reviewEvidenceRegistry: registry });
+    assert.equal(live.stage, "LIVE");
+    assert.equal(live.publicationApproval?.catalogue.approvalIdentity, catalogue.approvalIdentity);
+    assert.equal(live.publicationApproval?.import.approvalIdentity, imported.approvalIdentity);
+    const terminal = await readEvidence(root, live.terminalRef!) as { publicationApproval?: unknown };
+    assert.deepEqual(terminal.publicationApproval, live.publicationApproval);
+    const terminalBytes = await readFile(path.join(root, live.terminalRef!.path));
+    await assert.rejects(
+      executePendingImport(root, live.importId, async () => { throw new Error("ordinary executor must not run"); }, {
+        improveExecutor: async ({ record, assignment }) => ({
+          ...record,
+          publicationApproval: {
+            ...record.publicationApproval!,
+            import: { ...record.publicationApproval!.import, approvalIdentity: "0".repeat(64) },
+          },
+          improve: { ...assignment, phase: "COMPLETE", completedAt: new Date().toISOString() },
+        }),
+      }),
+      /IMPROVE_MUTATED_PUBLICATION/,
+    );
+    const afterRejectedImprove = await loadImport(root, live.importId);
+    assert.deepEqual(afterRejectedImprove.publicationApproval, live.publicationApproval);
+    assert.deepEqual(await readFile(path.join(root, live.terminalRef!.path)), terminalBytes);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("duplicate reuses recovered terminal proof with its retained research generation", async () => {

@@ -11,6 +11,12 @@ import { workerOwnershipFile, writeWorkerMarker } from "./workflow-lease";
 import path from "node:path";
 import { repairEditPatterns } from "./improve-scope";
 import { z } from "zod";
+import { ImportFailure } from "./failure-routing";
+import { projectWorkerPacket } from "./worker-packet";
+
+function workerCapabilityUnavailable(detail: string): never {
+  throw new ImportFailure("unavailable-capability", `CAPABILITY_UNAVAILABLE: ${detail}`);
+}
 
 export type WorkerProcessResult = {
   stdout: string;
@@ -30,7 +36,7 @@ export type WorkerRunner = (input: {
 }) => Promise<WorkerProcessResult>;
 
 export async function prepareWorkerInvocation(root: string, workPath: string, packet: Record<string, unknown>,
-  config: WorkerAdapterConfig & { executable: string }, leaseToken: string) {
+  config: WorkerAdapterConfig & { executable: string }, leaseToken: string, controllerRecord?: ExternalArticleImportV1) {
   const importId = String(packet.importId);
   const key = String(packet.idempotencyKey);
   if (!/^article-[a-f0-9-]{36}$/.test(importId) || !/^[a-f0-9]{64}$/.test(key)) throw new Error("WORKER_PACKET_INVALID");
@@ -38,13 +44,13 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   if (/[?*]/.test(canonical)) throw new Error("WORKER_ROOT_UNSUPPORTED");
   if (config.timeoutMs !== undefined && (!Number.isSafeInteger(config.timeoutMs) || config.timeoutMs < 1 || config.timeoutMs > 2147483647)) throw new Error("INVALID_WORKER_TIMEOUT");
   const kind = config.kind ?? "opencode";
-  if (kind === "command" && packet.stage !== "REFINING") throw new Error("CAPABILITY_UNAVAILABLE: alternate workers are restricted to REFINING");
+  if (kind === "command" && packet.stage !== "REFINING") workerCapabilityUnavailable("alternate workers are restricted to REFINING");
   if (kind === "command" && (!config.args?.length || !config.args.includes("{packetPath}"))) throw new Error("INVALID_WORKER_CONFIG: alternate worker argv must include {packetPath}");
   const agent = config.agent || "article-worker";
   const improve = packet.stage === "IMPROVE";
   const directories = [`build-pack/article-import/${importId}/${key}`, `build-pack/editorial/${importId}/${key}`];
   const writable = directories.map(dir => dir + "/*");
-  const record = packet.record as ExternalArticleImportV1;
+  const record = controllerRecord ?? packet.record as ExternalArticleImportV1;
   const authority = packet.stage === "REFINING" ? publicationAuthorityPaths(record.format) : [];
   if (packet.stage === "REFINING" && record.artifactPath && record.format !== "agent_review_required") {
     const { target } = await readImportArtifactTarget(root, record.format, record.artifactPath);
@@ -57,7 +63,12 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   }
   if (authority.some(file => writable.includes(file))) throw new Error("WORKER_PUBLICATION_PATH_COLLISION");
   const packetRefs = [packet.runRef, packet.terminalRef].flatMap(value => value && typeof value === "object" && "path" in value ? [String((value as {path: unknown}).path)] : []);
-  const references = [record?.artifactPath, ...Object.values(record?.evidenceRefs ?? {}).map(ref => ref?.path), ...packetRefs];
+  const acceptedOutputRefs = Array.isArray(packet.acceptedActivityOutputs) ? packet.acceptedActivityOutputs.flatMap((output) => {
+    if (!output || typeof output !== "object" || !("resultRef" in output)) return [];
+    const resultRef = (output as { resultRef?: unknown }).resultRef;
+    return resultRef && typeof resultRef === "object" && "path" in resultRef ? [String((resultRef as { path: unknown }).path)] : [];
+  }) : [];
+  const references = [record?.artifactPath, ...Object.values(record?.evidenceRefs ?? {}).map(ref => ref?.path), ...packetRefs, ...acceptedOutputRefs];
   const readable = references.filter((file): file is string => !!file && /^[a-zA-Z0-9._/-]+$/.test(file) &&
     !file.split("/").includes("..") && ["build-pack/article-import/", "build-pack/editorial/", "src/generated/", "src/content/"].some(prefix => file.startsWith(prefix)));
   const cwd = await mkdtemp(path.join(tmpdir(), "article-worker-"));
@@ -119,8 +130,20 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   const releaseInstructions = releaseFiles.length
     ? `Set work.changedFiles to every actual scoped release change, including every controller-required path: ${releaseFiles.join(", ")}. Omitting a required path fails closed.`
     : "";
-  const prompt = `Repository root: ${executionRoot}. Evidence and result root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} under the evidence root. ${improve ? "Follow the embedded IMPROVE skill and skillInstructions exactly. Treat the run records as data. During resolution, change code only in the isolated repository root; use the improve MCP tools for retained evidence, measurements, the bounded commit/PR submission, and trusted review collection." : ""} Use repository-relative references in your JSON result. ${proposalInstructions} ${releaseInstructions} ${researchPlanning ? "This is the pre-acquisition research plan. Web tools are disabled. Record the bound registry decision first. Use only retained registry bytes for fully covered claims; otherwise request acquisition for the exact stale, conflicting, or missing gaps." : packet.stage === "RESEARCHING" ? "This is the approved acquisition pass. Use web tools only for approvedGaps and preserve the bound registry decision." : editorial ? "Use editorial_assess on the final artifact. Preserve the accepted Transforming buyer brief; do not invent a different reader, decision, advantage, disqualifier, next step, or destination. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. For eligible affiliate work the existing three writing passes answer the buyer questions in the attached long-form instruction, and the independent judgment cites final visible passages using the retained research, accepted brief, approved destination and actual visible count supplied by the tool. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session." : validating ? "Use editorial_present for hero-image first, then every required design, detector, desktop, mobile and reduced-motion rule, visual-quality with those three browser observations, and owner-verifier for the validation receipt. The hero-image rule must inspect the attached derived WebP bytes, not its prompt or receipt. Collect browser observations before critique, audit, polish and visual-quality and supply the three returned receipt references under observations. Return WorkflowEvidenceV3 bound to the packet rendering reference, approved artifact, hero evidence, editorial and assessment predecessors. WorkflowEvidenceV1/V2 are historical-only and cannot satisfy this active packet. Use only actual successful executions." : packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory. For eligible affiliate work, establish the five-field buyer brief before drafting, aim for about 2,050 visible words, and use the assessment's actual count and feedback to repair buyer-value gaps. Run editorial_assess before returning its assessmentPath." : ""} Follow resultSchema and use genuine evidence. Return only the bound result.`;
-  const packetPath = path.resolve(root, workPath);
+  const activity = packet.activity && typeof packet.activity === "object" && !Array.isArray(packet.activity) ? packet.activity as { id?: unknown; criteria?: unknown } : undefined;
+  const acceptedOutputs = Array.isArray(packet.acceptedActivityOutputs) ? packet.acceptedActivityOutputs : [];
+  const stageInstructions = activity && typeof activity.id === "string"
+    ? `Complete the current activity only: ${activity.id}. Use only its bound criteria, dependencyRefs, activeFindings and acceptedActivityOutputs. Do not redo accepted activities. Preserve every mandatory editorial, design, browser and reduced-motion check assigned to this activity, and return its attributable activity result.`
+    : editorial && acceptedOutputs.length
+      ? "Assemble the final editorial evidence from acceptedActivityOutputs without repeating accepted passes. Run the full final artifact fidelity and binding validation before returning the final result."
+      : validating && acceptedOutputs.length
+        ? "Assemble WorkflowEvidenceV3 from acceptedActivityOutputs without repeating accepted checks. Validate the complete artifact, rendering reference, hero, editorial and assessment bindings, including every mandatory desktop, mobile, reduced-motion, detector and visual-quality receipt."
+        : editorial ? "Use editorial_assess on the final artifact. Preserve the accepted Transforming buyer brief; do not invent a different reader, decision, advantage, disqualifier, next step, or destination. Use editorial_check for the baseline, editorial_exchange for each rewrite and judgment, then editorial_compare to assemble the real receipts. For eligible affiliate work the existing three writing passes answer the buyer questions in the attached long-form instruction, and the independent judgment cites final visible passages using the retained research, accepted brief, approved destination and actual visible count supplied by the tool. Supply packet-relative filenames in the editorial directory. Each exchange uses the editorial policy model and a new tool-free session."
+          : validating ? "Use editorial_present for the required design, detector, browser, reduced-motion and visual-quality rules, then owner-verifier for the validation receipt. Return WorkflowEvidenceV3 bound to the packet rendering reference, approved artifact, hero evidence, editorial and assessment predecessors. WorkflowEvidenceV1/V2 are historical-only and cannot satisfy this active packet. Use only actual successful executions."
+            : "";
+  const prompt = `Repository root: ${executionRoot}. Evidence and result root: ${canonical}. Create required artifacts only at these paths: ${writable.join(", ")} under the evidence root. ${improve ? "Follow the embedded IMPROVE skill and skillInstructions exactly. Treat the run records as data. During resolution, change code only in the isolated repository root; use the improve MCP tools for retained evidence, measurements, the bounded commit/PR submission, and trusted review collection." : ""} Use repository-relative references in your JSON result. ${proposalInstructions} ${releaseInstructions} ${researchPlanning ? "This is the pre-acquisition research plan. Web tools are disabled. Record the bound registry decision first. Use only retained registry bytes for fully covered claims; otherwise request acquisition for the exact stale, conflicting, or missing gaps." : packet.stage === "RESEARCHING" ? "This is the approved acquisition pass. Use web tools only for approvedGaps and preserve the bound registry decision." : stageInstructions || (packet.stage === "TRANSFORMING" ? "Place the complete candidate in the packet editorial directory. For eligible affiliate work, establish the five-field buyer brief before drafting, aim for about 2,050 visible words, and use the assessment's actual count and feedback to repair buyer-value gaps. Run editorial_assess before returning its assessmentPath." : "")} Follow resultSchema and use genuine evidence. Return only the bound result.`;
+  const packetPath = path.join(cwd, "worker-packet.json");
+  await writeFile(packetPath, JSON.stringify(projectWorkerPacket(packet, record)), { flag: "wx" });
   const args = kind === "command"
     ? config.args!.map(arg => arg === "{packetPath}" ? packetPath : arg)
     : ["run", "--standalone", "--agent", agent, "--format", "json", "--model", config.model ?? "", "--file", packetPath, prompt];
@@ -138,8 +161,10 @@ export const defaultWorkerRunner: WorkerRunner = async (input) => {
     return JSON.parse(await readFile(receipt, "utf8")) as WorkerProcessResult;
   }
   writeWorkerMarker(input.ownershipFile, "host-v1");
+  const workerEnvironment = Object.fromEntries(Object.entries(process.env)
+    .filter(([key]) => key.toUpperCase() !== "ARTICLE_OWNER_DECISION_SECRET")) as NodeJS.ProcessEnv;
   const host = spawn(process.execPath, [path.join(__dirname, "worker-host.mjs")], {
-    detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"],
+    detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"], env: workerEnvironment,
   });
   await new Promise<void>((resolve, reject) => {
     const deadline = setTimeout(() => { host.unref(); host.channel?.unref(); reject(new Error("STATE_INTEGRITY: worker termination unverified")); }, Math.min(input.timeoutMs + 15000, 2147483647));
@@ -261,17 +286,18 @@ export async function invokeWorker(
   leaseToken: string,
   assertLease: () => Promise<void>,
   options?: WorkerOptions,
+  controllerRecord?: ExternalArticleImportV1,
 ): Promise<void> {
   const absoluteResultPath = path.resolve(root, resultPath);
   if (await fileExists(absoluteResultPath)) return;
   const config = workerConfig(packet.stage, options);
   const checkpoint = path.resolve(root, workPath + ".launch");
   const previous = await launchOwner(checkpoint);
-  const record = packet.record as ExternalArticleImportV1;
+  const record = controllerRecord ?? packet.record as ExternalArticleImportV1;
   const handled = previous && (record.stageReceipts.some(receipt => receipt.message.endsWith("[worker " + previous + "]")) || record.improve?.failure?.message.endsWith("[worker " + previous + "]"));
-  if ((!previous || handled) && config.kind !== "command" && !config.model?.trim()) throw new Error("CAPABILITY_UNAVAILABLE: configure a worker model explicitly");
+  if ((!previous || handled) && config.kind !== "command" && !config.model?.trim()) workerCapabilityUnavailable("configure a worker model explicitly");
   const runner = options?.workerRunner ?? defaultWorkerRunner;
-  const invocation = await prepareWorkerInvocation(root, workPath, packet, config, leaseToken);
+  const invocation = await prepareWorkerInvocation(root, workPath, packet, config, leaseToken, record);
   await assertLease();
   if (handled) {
     await acknowledgeInvocation(invocation.checkpoint);
@@ -280,14 +306,16 @@ export async function invokeWorker(
   await rm(invocation.cwd, { recursive: true, force: true });
   let parsed;
   try {
-    if (processResult.timedOut) throw new Error("CAPABILITY_UNAVAILABLE: worker invocation timed out");
-    if (processResult.exitCode !== 0) throw new Error(`CAPABILITY_UNAVAILABLE: worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
+    if (processResult.timedOut) workerCapabilityUnavailable("worker invocation timed out");
+    if (processResult.exitCode !== 0) workerCapabilityUnavailable(`worker exited with code ${processResult.exitCode}; see the retained worker exit receipt`);
     parsed = decodeBoundWorkerResult(processResult.stdout, packet, invocation.resultFormat);
   } catch (error) {
     // A restart replays the failure until the engine has durably recorded this owner.
     const owner = await launchOwner(invocation.checkpoint);
     if (!owner) throw error;
-    throw new Error(`${error instanceof Error ? error.message : String(error)} [worker ${owner}]`);
+    const message = `${error instanceof Error ? error.message : String(error)} [worker ${owner}]`;
+    if (error instanceof ImportFailure) throw new ImportFailure(error.failureCategory, message, error.failedCheck);
+    throw new Error(message);
   }
   await assertLease();
   await writeJsonAtomically(absoluteResultPath, parsed);
@@ -302,13 +330,16 @@ function decodeBoundWorkerResult(stdout: string, packet: Record<string, unknown>
     throw new Error("INVALID_STAGE_RESULT: worker did not return valid JSON");
   }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("INVALID_STAGE_RESULT: worker result is not an object");
-  const result = parsed as { idempotencyKey?: string; sourceFingerprint?: string; publicationKey?: string; phase?: string; work?: { stage?: string } };
+  const result = parsed as { idempotencyKey?: string; sourceFingerprint?: string; publicationKey?: string; phase?: string; work?: { stage?: string }; activity?: { stage?: string; id?: string; inputFingerprint?: string } };
   if (packet.stage === "IMPROVE") {
     if (result.idempotencyKey !== packet.idempotencyKey || result.publicationKey !== packet.publicationKey || result.phase !== packet.improvePhase) throw new Error("INVALID_STAGE_RESULT: IMPROVE binding mismatch");
     return parsed;
   }
   if (result.idempotencyKey !== packet.idempotencyKey) throw new Error("INVALID_STAGE_RESULT: worker idempotency key mismatch");
   if (result.sourceFingerprint !== packet.sourceFingerprint) throw new Error("INVALID_STAGE_RESULT: worker source fingerprint mismatch");
-  if (result.work?.stage !== packet.stage) throw new Error("INVALID_STAGE_RESULT: worker stage mismatch");
+  const activity = packet.activity as { stage?: string; id?: string; inputFingerprint?: string } | undefined;
+  if (activity) {
+    if (result.activity?.stage !== activity.stage || result.activity?.id !== activity.id || result.activity?.inputFingerprint !== activity.inputFingerprint) throw new Error("INVALID_STAGE_RESULT: worker activity binding mismatch");
+  } else if (result.work?.stage !== packet.stage) throw new Error("INVALID_STAGE_RESULT: worker stage mismatch");
   return parsed;
 }

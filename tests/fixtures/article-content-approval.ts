@@ -73,8 +73,8 @@ export async function presentFixture(root: string, record: ExternalArticleImport
   return recordImportPresentation(root, prepared.record, prepared.input);
 }
 
-export async function preparePresentationFixture(root: string, record: ExternalArticleImportV1) {
-  record = await refreshPresentationFixture(root, record);
+export async function preparePresentationFixture(root: string, record: ExternalArticleImportV1, viewportOverrides?: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"]) {
+  record = await refreshPresentationFixture(root, record, viewportOverrides);
   if (!record.contentApproval) throw new Error("Fixture content approval is required.");
   const evidencePath = "build-pack/article-import/verifier.json";
   const approvedArtifact = JSON.parse(await readFile(path.join(root, record.contentApproval.artifactPath), "utf8"));
@@ -100,16 +100,40 @@ export async function preparePresentationFixture(root: string, record: ExternalA
 }
 
 /** Explicit synthetic re-render after fixture publication inputs have been prepared. */
-export async function refreshPresentationFixture(root: string, record: ExternalArticleImportV1): Promise<ExternalArticleImportV1> {
+export async function refreshPresentationFixture(root: string, record: ExternalArticleImportV1, viewportOverrides?: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"]): Promise<ExternalArticleImportV1> {
   if (!record.contentApproval || !record.evidenceRefs?.editorial || record.format === "agent_review_required") throw new Error("Fixture approved editorial inputs are required.");
   const approval = record.contentApproval;
   const after = JSON.parse(await readFile(path.join(root, approval.artifactPath), "utf8"));
   if (fingerprintEditorialArtifact(after) !== approval.artifactFingerprint) throw new Error("Fixture content changed; editorial approval must be renewed before presentation.");
   const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs.editorial));
   const before = await readEvidence(root, editorial.passes[0].inputRef);
-  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath });
+  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath, viewportOverrides });
   for (const key of ["research", "assessment", "editorial"] as const) {
     if (fresh[key].sha256 !== record.evidenceRefs[key]?.sha256) throw new Error(`Fixture presentation refresh changed ${key} evidence.`);
   }
   return { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: fresh.presentation } };
+}
+
+export async function refreshPresentationFixtureWithMeasurementReview(root: string, record: ExternalArticleImportV1, input: { viewportOverrides: Parameters<typeof buildWorkflowFixture>[2]["viewportOverrides"]; remedyMeasurementReview: NonNullable<Parameters<typeof buildWorkflowFixture>[2]["remedyMeasurementReview"]> }) {
+  if (!record.contentApproval || !record.evidenceRefs?.editorial || record.format === "agent_review_required") throw new Error("Fixture approved editorial inputs are required.");
+  const approval = record.contentApproval;
+  const after = JSON.parse(await readFile(path.join(root, approval.artifactPath), "utf8"));
+  const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs.editorial));
+  const before = await readEvidence(root, editorial.passes[0].inputRef);
+  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath, viewportOverrides: input.viewportOverrides, remedyMeasurementReview: input.remedyMeasurementReview });
+  for (const key of ["research", "assessment", "editorial"] as const) if (fresh[key].sha256 !== record.evidenceRefs[key]?.sha256) throw new Error(`Fixture presentation refresh changed ${key} evidence.`);
+  if (!fresh.remedyMeasurementReview) throw new Error("Fixture measurement review was not captured.");
+  return { record: { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: fresh.presentation } }, measurementReviewRef: fresh.remedyMeasurementReview };
+}
+
+export async function refreshPresentationFixtureWithTrackingReview(root: string, record: ExternalArticleImportV1, input: { trackingOverride: string; remedyTrackingReview: NonNullable<Parameters<typeof buildWorkflowFixture>[2]["remedyTrackingReview"]> }) {
+  if (!record.contentApproval || !record.evidenceRefs?.editorial || record.format === "agent_review_required") throw new Error("Fixture approved editorial inputs are required.");
+  const approval = record.contentApproval;
+  const after = JSON.parse(await readFile(path.join(root, approval.artifactPath), "utf8"));
+  const editorial = editorialExecutionSchema.parse(await readEvidence(root, record.evidenceRefs.editorial));
+  const before = await readEvidence(root, editorial.passes[0].inputRef);
+  const fresh = await buildWorkflowFixture(root, record, { format: record.format, artifactPath: approval.artifactPath, before, after, editorialEvidencePath: approval.editorialEvidencePath, trackingOverride: input.trackingOverride, remedyTrackingReview: input.remedyTrackingReview });
+  for (const key of ["research", "assessment", "editorial"] as const) if (fresh[key].sha256 !== record.evidenceRefs[key]?.sha256) throw new Error(`Fixture presentation refresh changed ${key} evidence.`);
+  if (!fresh.remedyTrackingReview) throw new Error("Fixture tracking review was not captured.");
+  return { record: { ...record, evidenceRefs: { ...record.evidenceRefs, presentation: fresh.presentation } }, measurementReviewRef: fresh.remedyTrackingReview };
 }

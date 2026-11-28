@@ -31,6 +31,7 @@ test("trusted REFINING command receives the exact packet and returns the bound c
   const worker = path.join(root, "worker.cjs");
   await writeFile(worker, `
     const fs = require("node:fs");
+    if (Object.keys(process.env).some(key => key.toUpperCase() === "ARTICLE_OWNER_DECISION_SECRET")) throw new Error("owner credential reached worker");
     const packetPath = process.argv[2];
     const packet = JSON.parse(fs.readFileSync(packetPath, "utf8"));
     process.stdout.write(JSON.stringify({
@@ -40,6 +41,13 @@ test("trusted REFINING command receives the exact packet and returns the bound c
       work: { stage: packet.stage }
     }));
   `);
+  const previousOwnerSecrets = Object.entries(process.env).filter(([key]) => key.toUpperCase() === "ARTICLE_OWNER_DECISION_SECRET");
+  for (const [key] of previousOwnerSecrets) delete process.env[key];
+  process.env.Article_Owner_Decision_Secret = "synthetic-owner-only-secret-never-forwarded";
+  t.after(() => {
+    for (const key of Object.keys(process.env).filter(key => key.toUpperCase() === "ARTICLE_OWNER_DECISION_SECRET")) delete process.env[key];
+    for (const [key, value] of previousOwnerSecrets) process.env[key] = value;
+  });
 
   await invokeWorker(root, workPath, resultPath, scopedPacket, "11111111-1111-1111-1111-111111111111", async () => {}, {
     worker: { kind: "command", executable: process.execPath, args: [worker, "{packetPath}"], timeoutMs: 30_000 },
@@ -165,4 +173,50 @@ test("explicit OpenCode selection remains available for REFINING", async t => {
   });
   assert.equal(invocation?.executable, process.env.OPENCODE_EXECUTABLE ?? "opencode");
   assert.equal(invocation?.args[invocation.args.indexOf("--model") + 1], "fixture/chosen-model");
+});
+
+test("activity workers receive one current activity and only accepted current-stage handoffs", async t => {
+  const root = await mkdtemp(path.join(process.cwd(), ".tmp-article-worker-activity-projection-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const desktopRef = { path: `build-pack/article-import/${importId}/desktop.json`, sha256: "d".repeat(64) };
+  const staleRef = { path: `build-pack/article-import/${importId}/stale.json`, sha256: "e".repeat(64) };
+  const activeFinding = { findingId: `finding-${"f".repeat(24)}`, stage: "VALIDATING", activityId: "mobile", status: "open", observation: "Mobile spacing is clipped." };
+  const invocation = await prepareWorkerInvocation(root, "packet.json", {
+    ...packet("VALIDATING"),
+    acceptedActivityOutputs: [{ activityId: "desktop", outcome: "accepted", observation: "Desktop passed.", resultRef: desktopRef }],
+    gateHandoff: {
+      schemaVersion: "ImportGateHandoffV1", passedGate: "REFINING", nextStage: "VALIDATING",
+      requiredNextInputs: [{ name: "candidate-artifact", reference: desktopRef }], constraints: { artifact: "current" },
+      acceptedOutputs: [{ name: "old-output", reference: staleRef }], retainedEvidence: [{ name: "old-evidence", reference: staleRef }],
+      disposalCandidates: [{ reference: staleRef, reason: "superseded" }], unclassifiedMaterial: [{ reference: staleRef, reason: "historical" }],
+      cleanup: { status: "verified", operations: [{ operationId: "cleanup-secret-history" }] }, declaredAt: "2026-01-01T00:00:00.000Z",
+    },
+    activity: { stage: "VALIDATING", id: "mobile", attemptId: `activity-attempt-${"a".repeat(24)}`, inputFingerprint: "1".repeat(64), criteria: [{ id: "validating.mobile", revision: "fixture" }], dependencyRefs: [], openFindings: [activeFinding] },
+    record: {
+      importId, format: "agent_review_required", stage: "VALIDATING", stageReceipts: [{ stage: "REFINING", status: "passed", at: "2026-01-01T00:00:00.000Z", message: "historical" }],
+      activityAttempts: [{ attemptId: `activity-attempt-${"b".repeat(24)}`, resultPath: "old.result.json", status: "superseded" }],
+      activityFindings: [activeFinding, { ...activeFinding, findingId: `finding-${"c".repeat(24)}`, activityId: "desktop", status: "resolved" }],
+      activityReceipts: [
+        { stage: "VALIDATING", activityId: "desktop", outcome: "accepted", resultRef: desktopRef, observation: "Desktop passed." },
+        { stage: "REFINING", activityId: "wording-and-rhythm", outcome: "accepted", resultRef: staleRef, observation: "Old stage output." },
+      ],
+    },
+  }, { kind: "opencode", executable: "opencode", model: "fixture/model" }, "11111111-1111-1111-1111-111111111111");
+
+  const packetPath = invocation.args[invocation.args.indexOf("--file") + 1];
+  const projected = JSON.parse(await readFile(packetPath, "utf8"));
+  assert.equal(projected.record.stageReceipts, undefined);
+  assert.equal(projected.record.activityAttempts, undefined);
+  assert.deepEqual(projected.activeFindings, [activeFinding]);
+  assert.deepEqual(projected.acceptedActivityOutputs, [{ activityId: "desktop", outcome: "accepted", observation: "Desktop passed.", resultRef: desktopRef }]);
+  assert.deepEqual(projected.gateHandoff, { schemaVersion: "ImportGateHandoffV1", passedGate: "REFINING", nextStage: "VALIDATING", requiredNextInputs: [{ name: "candidate-artifact", reference: desktopRef }], constraints: { artifact: "current" } });
+  assert.doesNotMatch(JSON.stringify(projected), /old\.result\.json|stale\.json/);
+  assert.doesNotMatch(JSON.stringify(projected), /cleanup-secret-history|disposalCandidates|retainedEvidence|unclassifiedMaterial/);
+  const config = JSON.parse(await readFile(path.join(invocation.cwd, "opencode.json"), "utf8"));
+  const canonical = (await realpath(root)).replaceAll("\\", "/");
+  assert.ok(config.agents["article-worker"].permissions.some((rule: { action: string; resource: string; effect: string }) =>
+    rule.effect === "allow" && rule.action === "read" && rule.resource === `${canonical}/${desktopRef.path}`));
+  const prompt = invocation.args.at(-1)!;
+  assert.match(prompt, /current activity only: mobile/i);
+  assert.doesNotMatch(prompt, /then every required design/);
 });

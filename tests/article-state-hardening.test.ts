@@ -12,6 +12,7 @@ import { claimWorkflowLease, recoverWorkflowLease } from "../src/lib/article-imp
 import { storeEvidence } from "../src/lib/article-import/workflow-evidence";
 import { captureCommandExecution } from "../src/lib/article-import/execution-evidence";
 import { createSupervisedImportExecutor } from "../src/lib/article-import/supervised-executor";
+import { WORKFLOW_REVISION } from "../src/lib/article-import/workflow-requirements";
 
 async function fixture() {
   const parent = path.join(process.cwd(), ".scratch"); await mkdir(parent, { recursive: true });
@@ -262,8 +263,15 @@ test("diagnosis permits only the bound changed submission once and preserves tot
     const failedSubmissionDigest = record.continuation.submittedFingerprint!;
     record = { ...record, transformation: { ...record.transformation!, title: "Verified repair" } };
     await persistFixture(root, record);
-    const evidence = await storeEvidence(root, record.importId, { observed: "synthetic failing input inspected and replacement validated" });
-    const input = { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: record.stage, failedSubmissionDigest, replacementSubmissionDigest: await canonicalSubmissionFingerprint(record, root), failureCode: "FIXTURE_FAILURE", cause: "Incorrect synthetic input", attemptedRecoveryRefs: [evidence], remedyEvidenceRefs: [evidence], createdAt: new Date().toISOString() };
+    const evidence = await storeEvidence(root, record.importId, { observed: "synthetic failing input inspected" });
+    const checkedAt = new Date().toISOString();
+    const snapshot = await storeEvidence(root, record.importId, { text: "The corrected fixture has retained support." });
+    const validatedEvidenceRef = await storeEvidence(root, record.importId, { schemaVersion: "ResearchEvidenceV2", id: "fixture-remedy-research", createdAt: checkedAt, importId: record.importId, sourceFingerprint: record.sourceFingerprint, requirementRevision: WORKFLOW_REVISION, sources: [{ id: "source-1", url: "https://example.com/source", retrievedAt: checkedAt, snapshotRef: snapshot }], claims: [{ id: "claim-1", text: "The corrected fixture has support.", sourceIds: ["source-1"], excerptLocations: [{ sourceId: "source-1", quote: "corrected fixture has retained support" }], limitations: ["Synthetic fixture only."] }], freshness: "Current synthetic fixture." });
+    record = { ...record, evidenceRefs: { ...(record.evidenceRefs ?? {}), research: validatedEvidenceRef } };
+    await persistFixture(root, record);
+    const replacementSubmissionDigest = await canonicalSubmissionFingerprint(record, root);
+    const remedy = await storeEvidence(root, record.importId, { schemaVersion: "RemedyVerificationEvidenceV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: record.stage, failedSubmissionDigest, replacementSubmissionDigest, criterion: { id: "research-evidence", revision: WORKFLOW_REVISION }, validatedEvidenceRef, checkedAt });
+    const input = { schemaVersion: "DiagnosisV1", importId: record.importId, sourceFingerprint: record.sourceFingerprint, stage: record.stage, failedSubmissionDigest, replacementSubmissionDigest, failureCode: "FIXTURE_FAILURE", cause: "Incorrect synthetic input", predictedObservation: "The corrected input passes the original check.", disproofCheck: "Repeat the original check and reject this diagnosis if it fails.", attemptedRecoveryRefs: [evidence], remedyEvidenceRefs: [remedy], repairChange: { kind: "product-repair", changedInputs: ["transformation.title"] }, createdAt: new Date().toISOString() };
     await assert.rejects(submitImportDiagnosis(root, record.importId, { ...input, failedSubmissionDigest: "0".repeat(64) }), /DIAGNOSIS_BINDING_MISMATCH/);
     await submitImportDiagnosis(root, record.importId, input);
     let executions = 0;

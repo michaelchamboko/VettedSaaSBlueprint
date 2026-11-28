@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "comparisonPolicy": "Compare only after all six genuine judgments are frozen at result revision 4597dc9249346cb4f5899dd3e11a3f8c8f5a7d12. Check the observation and explanation independently against the case evidence before counting an accurate verdict.",
+  "results": [
+    {
+      "caseId": "case-lantern",
+      "expectedVerdict": "meets",
+      "observedVerdict": "meets",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "assessment": "The observation names the external-vendor label, comparison value, matching external destination, and absence of commitment. The explanation connects those facts to the criterion."
+    },
+    {
+      "caseId": "case-orbit",
+      "expectedVerdict": "does_not_meet",
+      "observedVerdict": "does_not_meet",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "assessment": "The observation preserves the label, supporting text, affiliate disclosure, destination, and commitment evidence. The explanation identifies the unresolved on-site-review meaning and missing external-visit disclosure."
+    },
+    {
+      "caseId": "case-river",
+      "expectedVerdict": "meets",
+      "observedVerdict": "meets",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "assessment": "The observation compares the two questions directly. The explanation states that both accept the same answer and preserve the account, project, and current-time decision."
+    },
+    {
+      "caseId": "case-summit",
+      "expectedVerdict": "does_not_meet",
+      "observedVerdict": "does_not_meet",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "assessment": "The observation distinguishes what should be open from what needs attention. The explanation names the semantic change from workspace context to priority."
+    },
+    {
+      "caseId": "case-meadow",
+      "expectedVerdict": "does_not_meet",
+      "observedVerdict": "does_not_meet",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "assessment": "The observation uses the rendered focus sequence and unchanged scroll offset. The explanation correctly states that Tab skipped the region and ArrowRight left the hidden limitation unreachable."
+    },
+    {
+      "caseId": "case-quartz",
+      "expectedVerdict": "meets",
+      "observedVerdict": "meets",
+      "verdictAccurate": true,
+      "explanationAccurate": true,
+      "assessment": "The observation uses visible region focus and the 0-to-298 scroll movement. The explanation identifies the previously hidden second limitation that became readable."
+    }
+  ],
+  "summary": {
+    "accurate": 6,
+    "misses": 0,
+    "falseAlarms": 0,
+    "passed": true,
+    "threshold": "6/6 accurate verdicts with evidence-matching explanations"
+  }
+}
