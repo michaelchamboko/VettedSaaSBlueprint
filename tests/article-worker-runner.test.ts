@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { invokeWorker, prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
+import { defaultWorkerRunner, invokeWorker, prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
 import { openCodeExecutable } from "../src/lib/article-import/opencode-runtime";
+import { nodeExecutable } from "../src/lib/article-import/node-runtime";
 
 const importId = "article-11223344-abcd-abcd-abcd-0123456789ab";
 const key = "a".repeat(64);
@@ -98,6 +100,7 @@ test("IMPROVE may read only its import's immutable work history", async t => {
     record: { importId, format: "agent_review_required", stage: "LIVE", stageReceipts: [] },
   }, { kind: "opencode", executable: "opencode", model: "fixture/model" }, "11111111-1111-1111-1111-111111111111");
   const config = JSON.parse(await readFile(path.join(invocation.cwd, "opencode.json"), "utf8"));
+  assert.equal(config.mcp.servers.improve.command[0], nodeExecutable());
   const permissions = config.agents["article-worker"].permissions as Array<{ action: string; resource: string; effect: string }>;
   const canonical = (await realpath(root)).replaceAll("\\", "/");
   const workRoot = `${canonical}/.automation/article-imports/work`;
@@ -105,6 +108,56 @@ test("IMPROVE may read only its import's immutable work history", async t => {
   assert.equal(permissions.some(rule => rule.effect === "allow" && rule.action === "read" && rule.resource === `${workRoot}/article-ffffffff-ffff-4fff-8fff-ffffffffffff/*`), false);
   assert.equal(permissions.some(rule => rule.effect === "allow" && rule.action === "read" && rule.resource === `${workRoot}/*`), false);
   assert.equal(permissions.some(rule => rule.effect === "allow" && rule.action === "edit" && rule.resource.startsWith(workRoot + "/")), false);
+});
+
+test("native OpenCode resolves Node and its detached IPC host returns a harmless synthetic receipt", async t => {
+  const nodeDirectory = path.dirname(process.execPath);
+  const delimiter = process.platform === "win32" ? ";" : ":";
+  const nativeName = process.platform === "win32" ? "C:\\tools\\opencode.exe" : "/tools/opencode";
+  assert.equal(nodeExecutable({
+    env: { [process.platform === "win32" ? "Path" : "PATH"]: [nodeDirectory, "unused"].join(delimiter) },
+    execPath: nativeName,
+    platform: process.platform,
+    access: (candidate: string) => { if (path.resolve(candidate) !== path.resolve(process.execPath)) throw new Error("missing"); },
+  }), process.execPath);
+
+  const root = await mkdtemp(path.join(process.cwd(), ".tmp-native-node-host-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const result = await defaultWorkerRunner({
+    executable: process.execPath,
+    args: ["-e", "process.stdout.write(JSON.stringify({ok:true,source:'synthetic-node-worker'}))"],
+    cwd: root,
+    resultFormat: "json",
+    timeoutMs: 30_000,
+    checkpoint: path.join(root, "launch.marker"),
+    ownershipFile: path.join(root, "11111111-1111-1111-1111-111111111111.worker"),
+  });
+  assert.equal(result.exitCode, 0);
+  assert.deepEqual(JSON.parse(result.stdout), { ok: true, source: "synthetic-node-worker" });
+});
+
+test("worker host still accepts the legacy object IPC payload", async t => {
+  const root = await mkdtemp(path.join(process.cwd(), ".tmp-legacy-node-host-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const ownershipFile = path.join(root, "22222222-2222-2222-2222-222222222222.worker");
+  const host = spawn(nodeExecutable(), [path.resolve("src/lib/article-import/worker-host.mjs")], {
+    windowsHide: true,
+    stdio: ["ignore", "ignore", "ignore", "ipc"],
+  });
+  await new Promise<void>((resolve, reject) => {
+    host.once("error", reject);
+    host.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`worker host exited ${code}`)));
+    host.once("spawn", () => host.send({
+      executable: nodeExecutable(),
+      args: ["-e", "process.stdout.write('legacy-object-ok')"],
+      cwd: root,
+      timeoutMs: 30_000,
+      ownershipFile,
+    }));
+  });
+  const receipt = JSON.parse(await readFile(ownershipFile + ".out", "utf8"));
+  assert.equal(receipt.exitCode, 0);
+  assert.equal(receipt.stdout, "legacy-object-ok");
 });
 
 test("REFINING environment adapter never overrides another stage", async t => {

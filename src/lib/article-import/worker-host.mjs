@@ -3,7 +3,9 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { writeFileSync, renameSync } from "node:fs";
 
-process.once("message", input => {
+process.once("message", message => {
+  const input = typeof message === "string" ? JSON.parse(message) : message;
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("STATE_INTEGRITY: invalid worker host message");
   if (process.connected) process.disconnect();
   const marker = (suffix, value) => writeFileSync(input.ownershipFile + suffix, value, { flag: "wx", flush: true });
   marker(".start", "launch");

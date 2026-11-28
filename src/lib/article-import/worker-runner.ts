@@ -14,6 +14,7 @@ import { z } from "zod";
 import { ImportFailure } from "./failure-routing";
 import { projectWorkerPacket } from "./worker-packet";
 import { openCodeExecutable } from "./opencode-runtime";
+import { nodeExecutable } from "./node-runtime";
 
 function workerCapabilityUnavailable(detail: string): never {
   throw new ImportFailure("unavailable-capability", `CAPABILITY_UNAVAILABLE: ${detail}`);
@@ -106,7 +107,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
   if (improve) {
     const operations = packet.improvePhase === "RESOLVING" ? ["retain", "measure", "submit", "review"] : ["retain"];
     for (const operation of operations) permissions.push(allow("improve_" + operation, "*"));
-    mcp = { servers: { improve: { type: "local", command: [process.execPath,
+    mcp = { servers: { improve: { type: "local", command: [nodeExecutable(),
       require.resolve("tsx/cli"), path.join(__dirname, "improve-tools.ts"), canonical, workPath],
       cwd: canonical, codemode: false, pool: false, timeout: { execution: 1800000 } } } };
   } else if (validating || editorial || packet.stage === "TRANSFORMING") {
@@ -120,7 +121,7 @@ export async function prepareWorkerInvocation(root: string, workPath: string, pa
       executable: config.executable, model: config.model ?? "", executionExporterId: config.executionExporterId,
       independentReviewModel: config.independentReviewModel, research: record.evidenceRefs?.research,
       researchGeneration: researchRecoveryGeneration(record), stage: packet.stage }), { flag: "wx" });
-    mcp = { servers: { editorial: { type: "local", command: [process.execPath,
+    mcp = { servers: { editorial: { type: "local", command: [nodeExecutable(),
       require.resolve("tsx/cli"), path.join(__dirname, "worker-editorial.ts"), descriptor],
       cwd: canonical, codemode: false, pool: false, timeout: { execution: 180000 } } } };
   }
@@ -164,7 +165,7 @@ export const defaultWorkerRunner: WorkerRunner = async (input) => {
   writeWorkerMarker(input.ownershipFile, "host-v1");
   const workerEnvironment = Object.fromEntries(Object.entries(process.env)
     .filter(([key]) => key.toUpperCase() !== "ARTICLE_OWNER_DECISION_SECRET")) as NodeJS.ProcessEnv;
-  const host = spawn(process.execPath, [path.join(__dirname, "worker-host.mjs")], {
+  const host = spawn(nodeExecutable(), [path.join(__dirname, "worker-host.mjs")], {
     detached: true, windowsHide: true, stdio: ["ignore", "ignore", "ignore", "ipc"], env: workerEnvironment,
   });
   await new Promise<void>((resolve, reject) => {
@@ -178,7 +179,7 @@ export const defaultWorkerRunner: WorkerRunner = async (input) => {
       try {
         writeWorkerMarker(input.ownershipFile + ".host", String(host.pid));
         writeWorkerMarker(input.checkpoint, path.basename(input.ownershipFile));
-        host.send(input);
+        host.send(JSON.stringify(input));
       } catch (error) { host.disconnect(); reject(error); }
     });
   });
