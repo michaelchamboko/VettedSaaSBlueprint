@@ -128,13 +128,17 @@ test("supervised work-to-repair transition preserves digest and rejects unchange
     await writeFile(path.join(root, "research.json"), JSON.stringify({ sources: [{ url: "https://example.com/source" }] }));
     assert.notEqual(await canonicalSubmissionFingerprint(failed, root), failed.continuation.submittedFingerprint);
     const requeued = await executePendingImport(root, record.importId, execute);
-    assert.ok(requeued.continuation?.kind === "work");
+    if (requeued.continuation?.kind !== "work") throw new Error("Missing replacement research plan work");
+    await writeGapPlanResult(root, requeued.continuation, { claimText: "Synthetic invalid research submission" });
+    const reacquiring = await executePendingImport(root, record.importId, execute);
+    if (reacquiring.continuation?.kind !== "work") throw new Error("Missing replacement research acquisition work");
+    await writeAcquisitionResult(root, reacquiring.continuation, "research.json");
     const retried = await executePendingImport(root, record.importId, execute);
-    assert.equal(executions, 5, "changed evidence reaches validation without granting passage");
+    assert.equal(executions, 6, "changed evidence reaches validation without granting passage");
     assert.ok(retried.continuation?.kind === "repair");
     assert.equal(await canonicalSubmissionFingerprint(retried, root), retried.continuation.submittedFingerprint);
     await assert.rejects(executePendingImport(root, record.importId, execute), /UNCHANGED_SUBMISSION/);
-    assert.equal(executions, 5);
+    assert.equal(executions, 6);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

@@ -103,7 +103,10 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       for (const registryPath of [planWorkPath, planResultPath, acquisitionWorkPath, acquisitionResultPath]) await assertIgnoredImportStatePath(root, registryPath);
       let plan: ResearchRegistryPlan;
       try {
-        const saved = await readRepositoryJson(root, planWorkPath) as { researchRegistry?: unknown };
+        const retainedPlanAttempt = record.stageAttempts
+          ?.filter((attempt) => attempt.operation === "research-plan" && attempt.idempotencyKey === context.idempotencyKey && attempt.status !== "superseded")
+          .sort((left, right) => right.sequence - left.sequence)[0];
+        const saved = await readRepositoryJson(root, retainedPlanAttempt?.workPath ?? planWorkPath) as { researchRegistry?: unknown };
         plan = researchRegistryPlanSchema.parse(saved.researchRegistry);
         if (plan.importId !== record.importId || plan.sourceFingerprint !== record.sourceFingerprint) throw new Error("RESEARCH_REGISTRY_BINDING_MISMATCH");
       } catch (error) {
@@ -400,7 +403,7 @@ export function createSupervisedImportExecutor(root: string, releaseOperations?:
       case "REFINING":
         record = { ...record, artifactPath: work.artifactPath, evidenceRefs: { ...record.evidenceRefs, assessment: await evidenceReference(root, work.assessmentPath), editorial: await evidenceReference(root, work.editorialExecutionPath) } };
         await validateEditorialActivityOutputs(root, record, acceptedActivityOutputs);
-        record = await approveImportContent(root, record, work);
+        record = await approveImportContent(root, record, work, { persist: false });
         await applyPublicationProposals(root, record, context.idempotencyKey, context.assertLease);
         if (options?.reviewEvidenceRegistry) {
           const registration = await registerEditorialReviewEvidence(root, options.reviewEvidenceRegistry, record);

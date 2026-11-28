@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import {
   advanceImport, createArticleImport, executePendingImport, loadImport, parseExternalArticle, prepareTransformation,
@@ -30,6 +32,8 @@ import {
   type ReviewEvidenceRegistration,
 } from "../src/lib/article-import/review-evidence-registry";
 import { registerPublicationApproval } from "../src/lib/article-import/publication-approval";
+
+const execFileAsync = promisify(execFile);
 
 function isolatedReviewRegistry(initial: ReviewEvidenceRegistration[] = []) {
   const records = [...initial];
@@ -106,7 +110,36 @@ test("catalogue and import publication approval must agree before LIVE", async (
   const root = await testRoot("article-publication-approval-");
   try {
     const released = await releaseFixture(root);
-    let verifying = await persistFixture(root, { ...released, artifactPath: released.contentApproval!.artifactPath });
+    await execFileAsync("git", ["init", "--quiet"], { cwd: root });
+    await execFileAsync("git", ["add", "src/generated/landing-pages"], { cwd: root });
+    await execFileAsync("git", ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "--quiet", "-m", "reviewed catalogue fixture"], { cwd: root });
+    const { stdout: reviewedHead } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root });
+    const reviewedCommitSha = reviewedHead.trim();
+    const { stdout: fixtureRoot } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], { cwd: root });
+    assert.equal(path.resolve(fixtureRoot.trim()), path.resolve(root));
+    await execFileAsync("git", ["cat-file", "-e", `${reviewedCommitSha}^{commit}`], { cwd: root });
+    const fixtureManifest = JSON.parse(await readFile(path.join(root, "src/generated/landing-pages/index.json"), "utf8")) as {
+      pages: Array<{ artifact: string; release_receipt: string }>;
+    };
+    const fixtureEntry = fixtureManifest.pages[0];
+    assert.ok(fixtureEntry);
+    for (const file of ["src/generated/landing-pages/index.json", `src/generated/landing-pages/${fixtureEntry.artifact}`, `src/generated/landing-pages/${fixtureEntry.release_receipt}`]) {
+      const { stdout: reviewedBytes } = await execFileAsync("git", ["cat-file", "blob", `${reviewedCommitSha}:${file}`], { cwd: root, encoding: "buffer" });
+      assert.deepEqual(Buffer.from(reviewedBytes), await readFile(path.join(root, file)));
+    }
+    let verifying = await persistFixture(root, {
+      ...released,
+      artifactPath: released.contentApproval!.artifactPath,
+      pendingRelease: {
+        ...released.pendingRelease!,
+        reviewedCommitSha,
+        operations: {
+          ...released.pendingRelease!.operations!,
+          review: { ...released.pendingRelease!.operations!.review!, reviewedHeadSha: reviewedCommitSha },
+          merge: { ...released.pendingRelease!.operations!.merge!, reviewedHeadSha: reviewedCommitSha },
+        },
+      },
+    });
     const registry = isolatedReviewRegistry();
     const editorial = await registerEditorialReviewEvidence(root, registry, verifying);
     const browserReview = await registerBrowserReviewEvidence(root, registry, verifying);
