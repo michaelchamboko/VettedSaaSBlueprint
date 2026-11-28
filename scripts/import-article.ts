@@ -81,9 +81,11 @@ export async function executeImportRunnerCommand(
   root: string,
   command: ImportCommand,
   transport: ArticleResearchRegistryTransport = createArticleResearchRegistryTransport(),
+  dispatchOptions: DispatchOptions = {},
+  probe?: CapabilityProbe,
 ): Promise<unknown> {
   try {
-    return await executeImportCommand(root, command, createSupervisedImportExecutor(root, undefined, { researchRegistry: transport.registry }));
+    return await executeImportCommand(root, command, undefined, { ...dispatchOptions, researchRegistry: transport.registry }, probe);
   } finally {
     await transport.close();
   }

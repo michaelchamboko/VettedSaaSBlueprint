@@ -13,6 +13,7 @@ import { repairEditPatterns } from "./improve-scope";
 import { z } from "zod";
 import { ImportFailure } from "./failure-routing";
 import { projectWorkerPacket } from "./worker-packet";
+import { openCodeExecutable } from "./opencode-runtime";
 
 function workerCapabilityUnavailable(detail: string): never {
   throw new ImportFailure("unavailable-capability", `CAPABILITY_UNAVAILABLE: ${detail}`);
@@ -268,7 +269,7 @@ function workerConfig(stage: unknown, options?: WorkerOptions): WorkerAdapterCon
   const kind = fromWorker.kind ?? (alternateExecutable ? "command" : "opencode");
   return {
     kind,
-    executable: options?.workerExecutable ?? fromWorker.executable ?? (kind === "command" ? alternateExecutable : process.env.OPENCODE_EXECUTABLE) ?? "opencode",
+    executable: options?.workerExecutable ?? fromWorker.executable ?? (kind === "command" ? alternateExecutable ?? "opencode" : openCodeExecutable()),
     model: options?.workerModel ?? fromWorker.model ?? process.env.OPENCODE_MODEL ?? "",
     agent: options?.workerAgent ?? fromWorker.agent ?? process.env.OPENCODE_AGENT ?? "article-worker",
     args: fromWorker.args ?? (kind === "command" ? configuredCommandArgs() : undefined),

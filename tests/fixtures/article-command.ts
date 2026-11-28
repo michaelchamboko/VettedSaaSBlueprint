@@ -72,7 +72,7 @@ export async function prepareCommandCheckout(root: string) {
     files.push({ path: file, sha256 });
   }
   await mkdir(path.dirname(manifest), { recursive: true });
-  await writeFile(manifest, JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "2.2.6", modelFamilies: { "opencode-go/beam-free": "beam" }, files }));
+  await writeFile(manifest, JSON.stringify({ schemaVersion: "ArticleWorkflowCapabilitiesV1", openCodeVersion: "2.3.0", modelFamilies: { "opencode-go/beam-free": "beam" }, files }));
 }
 
 export function fixtureProbe(root: string) {

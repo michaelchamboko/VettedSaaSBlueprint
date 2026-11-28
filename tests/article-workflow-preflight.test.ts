@@ -33,6 +33,9 @@ test("preflight is read-only, checks pinned bytes and requires the exact Beam mo
   assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.2.5" : "Python 3.13.0")).ok, true);
   assert.equal((await inspectArticlePreflight(root, probe)).ok, false);
   assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.2.6" : "Python 3.13.0")).ok, false);
+  await writeFile(manifestPath, JSON.stringify({ ...manifest, openCodeVersion: "2.3.0", modelFamilies: { "opencode-go/beam-free": "reflection-beam" } }));
+  assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.3.0" : "Python 3.13.0")).ok, true);
+  assert.equal((await inspectArticlePreflight(root, async tool => tool === "opencode" ? "opencode v2.3.1" : "Python 3.13.0")).ok, false);
   await writeFile(path.join(root, files[0].path), "changed");
   assert.equal((await inspectArticlePreflight(root, probe)).ok, false);
 });

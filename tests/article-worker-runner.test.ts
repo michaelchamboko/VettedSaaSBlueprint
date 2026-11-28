@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { invokeWorker, prepareWorkerInvocation } from "../src/lib/article-import/worker-runner";
+import { openCodeExecutable } from "../src/lib/article-import/opencode-runtime";
 
 const importId = "article-11223344-abcd-abcd-abcd-0123456789ab";
 const key = "a".repeat(64);
@@ -137,7 +138,7 @@ test("REFINING environment adapter never overrides another stage", async t => {
       ].join("\n"), stderr: "", exitCode: 0, timedOut: false };
     },
   });
-  assert.equal(executable, process.env.OPENCODE_EXECUTABLE ?? "opencode");
+  assert.equal(executable, openCodeExecutable());
 });
 
 test("explicit OpenCode selection remains available for REFINING", async t => {
@@ -171,7 +172,7 @@ test("explicit OpenCode selection remains available for REFINING", async t => {
       ].join("\n"), stderr: "", exitCode: 0, timedOut: false };
     },
   });
-  assert.equal(invocation?.executable, process.env.OPENCODE_EXECUTABLE ?? "opencode");
+  assert.equal(invocation?.executable, openCodeExecutable());
   assert.equal(invocation?.args[invocation.args.indexOf("--model") + 1], "fixture/chosen-model");
 });
 

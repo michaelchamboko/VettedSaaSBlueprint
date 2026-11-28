@@ -52,7 +52,7 @@ test("fresh packet produces five independently replayable editorial passes and c
   let exports = 0, raw = {};
   const native = async (exe: string, argv: string[], cwd: string, stdin?: string) => {
     assert.equal(exe, packet.executable);
-    if (argv[0] === "--version") return "opencode v2.2.6";
+    if (argv[0] === "--version") return `opencode v${capabilities.openCodeVersion}`;
     if (argv[0] === "session") return JSON.stringify(raw);
     const profile = JSON.parse(await readFile(path.join(cwd, "opencode.json"), "utf8"));
     assert.equal(profile.default_agent, "editorial");
