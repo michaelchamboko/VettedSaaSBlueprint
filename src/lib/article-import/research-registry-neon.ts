@@ -18,7 +18,7 @@ type Query = (sql: string, binds?: unknown[]) => Promise<{ rows: Record<string, 
 function text(value: unknown): string { return value instanceof Date ? value.toISOString() : String(value); }
 function nullableText(value: unknown): string | null { return value === null || value === undefined ? null : text(value); }
 
-function candidate(row: Record<string, unknown>): ResearchRegistryCandidate {
+export function researchRegistryCandidateFromRow(row: Record<string, unknown>): ResearchRegistryCandidate {
   return researchRegistryCandidateSchema.parse({
     claimId: row.claim_id,
     claimSha256: row.claim_sha256,
@@ -44,7 +44,7 @@ function candidate(row: Record<string, unknown>): ResearchRegistryCandidate {
   });
 }
 
-function legacyLead(row: Record<string, unknown>) {
+export function researchRegistryLegacyLeadFromRow(row: Record<string, unknown>) {
   return researchRegistryLegacyLeadSchema.parse({
     sourceId: row.source_id,
     productId: row.product_id,
@@ -302,7 +302,7 @@ export class NeonArticleResearchRegistry implements ArticleResearchRegistry {
       }
       return createResearchRegistryPlan({
         importId: input.importId, sourceFingerprint: input.sourceFingerprint, generatedAt: text(databaseClock.rows[0].database_now),
-        candidates: [...currentRows.values()].map(candidate), legacyLeads: [...legacyRows.values()].map(legacyLead),
+        candidates: [...currentRows.values()].map(researchRegistryCandidateFromRow), legacyLeads: [...legacyRows.values()].map(researchRegistryLegacyLeadFromRow),
       });
     } catch (error) {
       throw new Error(`CAPABILITY_UNAVAILABLE: article research registry read failed: ${error instanceof Error ? error.message : String(error)}`);

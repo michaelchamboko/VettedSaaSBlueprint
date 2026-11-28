@@ -194,8 +194,10 @@ export function createArticleResearchRegistryTransport(options: TransportOptions
 
   const getBackend = () => {
     if (closed) throw new Error("ARTICLE_RESEARCH_REGISTRY_TRANSPORT_CLOSED");
-    if (!backend) backend = databaseUrl
-      ? Promise.resolve({ registry: options.directRegistry ?? new NeonArticleResearchRegistry(), close: options.directRegistry ? async () => undefined : closePool })
+    if (!backend) backend = options.directRegistry
+      ? Promise.resolve({ registry: options.directRegistry, close: async () => undefined })
+      : databaseUrl
+      ? Promise.resolve({ registry: new NeonArticleResearchRegistry(), close: closePool })
       : (async () => {
           const rpc = new AppServerRpc((options.startAppServer ?? startCodexAppServer)(), timeoutMs);
           try {

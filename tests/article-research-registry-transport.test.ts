@@ -98,6 +98,19 @@ test("direct DATABASE_URL mode preserves the injected registry without starting 
   await transport.close();
 });
 
+test("injected registry mode needs no DATABASE_URL and never starts Codex app-server", async () => {
+  let starts = 0;
+  const registry = directRegistry();
+  const transport = createArticleResearchRegistryTransport({
+    databaseUrl: "",
+    directRegistry: registry,
+    startAppServer: () => { starts += 1; return oauthServer(); },
+  });
+  assert.deepEqual(await transport.prepare(prepareInput), await registry.prepare(prepareInput));
+  assert.equal(starts, 0);
+  await transport.close();
+});
+
 test("OAuth mode sends the bound request sequence and exact fixed Neon scope while ignoring notifications", async () => {
   const server = oauthServer(undefined, true);
   const events: string[] = [];
