@@ -36,11 +36,19 @@ test("native project authorization permits only canonical project-scoped inputs"
   assert.equal(intakeCommand.directory, await realpath(intake));
   const remedy = await authorization.authorizeCommand(root, { kind: "cleanup-remedy", importId: `article-${"a".repeat(36)}`, file: "build-pack/evidence.json" });
   assert.equal(remedy.file, await realpath(evidence));
+  const runId = `intake-${"b".repeat(36)}`;
+  const snapshot = path.join(root, ".automation", "article-imports", "intake", runId, "sources", `${"d".repeat(64)}.source`);
+  await mkdir(path.dirname(snapshot), { recursive: true });
+  await writeFile(snapshot, "safe snapshot fixture");
+  assert.equal(await authorization.authorizeSnapshot(root, runId, snapshot), await realpath(snapshot));
+  const misplacedSnapshot = path.join(root, "build-pack", `${"d".repeat(64)}.source`);
+  await writeFile(misplacedSnapshot, "misplaced snapshot fixture");
+  await assert.rejects(authorization.authorizeSnapshot(root, runId, misplacedSnapshot), /PATH_OUTSIDE_PROJECT/);
   await assert.rejects(authorization.authorizeCommand(root, { kind: "source", source: outside }), /PATH_OUTSIDE_PROJECT/);
   await assert.rejects(authorization.authorizeCommand(root, { kind: "source", source: "build-pack/not-intake.md" }), /PATH_OUTSIDE_PROJECT/);
   await assert.rejects(authorization.authorizeCommand(root, { kind: "intake", directory: "build-pack" }), /INTAKE_DIRECTORY_INVALID/);
   await assert.rejects(authorization.authorizeCommand(root, { kind: "resume", importId: "../../outside" }), /IMPORT_ID_INVALID/);
-  await assert.rejects(authorization.authorizeCommand(root, { kind: "reconcile-intake-entry", runId: `intake-${"b".repeat(36)}`, entry: "../outside.md" }), /ENTRY_INVALID/);
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "reconcile-intake-entry", runId, entry: "../outside.md" }), /ENTRY_INVALID/);
 });
 
 test("native project authorization rejects linked files and intake junctions", async (context) => {

@@ -103,7 +103,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "preflight") return inspectArticlePreflight(root, probe);
   if (command.kind === "check-intake") return checkIntakeRun(root, command.runId);
   if (command.kind === "upgrade-evidence") return upgradeImportEvidence(root, command.importId);
-  if (command.kind === "upgrade-intake") return upgradeIntakeRun(root, command.runId);
+  if (command.kind === "upgrade-intake") return upgradeIntakeRun(root, command.runId, authorization ? (file) => authorization.authorizeSnapshot(root, command.runId, file) : undefined);
   if (command.kind === "reconcile-intake-entry") return reconcileIntakeEntry(root, command.runId, command.entry);
   if (command.kind === "submit-diagnosis") return submitImportDiagnosis(root, command.importId, JSON.parse(await readFile(command.file, "utf8")));
   if (command.kind === "submit-owner-decision") return submitActivityOwnerDecision(root, command.importId, JSON.parse(await readFile(command.file, "utf8")));
@@ -143,7 +143,13 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
   if (command.kind === "intake") return createIntakeRun(root, command.directory, authorization ? (file) => authorization.authorizeIntakeEntry(root, file) : undefined);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
   if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: execute, reviewEvidenceRegistry, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
-  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: execute, reviewEvidenceRegistry, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
+  if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, {
+    ...dispatchOptions,
+    executor: execute,
+    reviewEvidenceRegistry,
+    capabilityProbe: probe ?? dispatchOptions?.capabilityProbe,
+    resolveIntakeSnapshot: authorization ? (runId, file) => authorization.authorizeSnapshot(root, runId, file) : dispatchOptions?.resolveIntakeSnapshot,
+  });
   if (command.kind === "intake-retry") {
     const run = await loadIntakeRun(root, command.runId);
     if (!command.importId) throw new Error("INTAKE_RETRY_IMPORT_REQUIRED");

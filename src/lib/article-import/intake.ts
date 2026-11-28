@@ -166,7 +166,7 @@ export async function claimNextIntakeEntry(root: string, runId: string): Promise
   return { run, entry: selected };
 }
 
-export async function upgradeIntakeRun(root: string, runId: string): Promise<IntakeRun> {
+export async function upgradeIntakeRun(root: string, runId: string, resolveSnapshot?: (capturedPath: string) => Promise<string>): Promise<IntakeRun> {
   const lease = await claimWorkflowLease(root, "intake", runId);
   if (!lease) throw new Error("INTAKE_BUSY");
   try {
@@ -174,7 +174,8 @@ export async function upgradeIntakeRun(root: string, runId: string): Promise<Int
     if (run.schemaVersion === "ArticleIntakeRunV2") return run;
     for (const entry of run.entries.filter((e) => e.status !== "SKIPPED")) {
       if (!entry.capturedPath || !entry.sourceFingerprint) throw new Error("INTAKE_SOURCE_MISSING");
-      const source = await readFile(path.resolve(root, entry.capturedPath));
+      const sourcePath = resolveSnapshot ? await resolveSnapshot(entry.capturedPath) : path.resolve(root, entry.capturedPath);
+      const source = await readFile(sourcePath);
       if (createHash("sha256").update(source).digest("hex") !== entry.sourceFingerprint) throw new Error("INTAKE_SOURCE_MISMATCH");
     }
     await writeFile(`${runPath(root, runId)}.v1.archive`, await readFile(runPath(root, runId)), { flag: "wx" }).catch((e: NodeJS.ErrnoException) => { if (e.code !== "EEXIST") throw e; });
