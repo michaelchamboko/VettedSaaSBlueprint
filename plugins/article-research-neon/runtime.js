@@ -1,3 +1,6 @@
+import { lstat, realpath } from "node:fs/promises";
+import path from "node:path";
+
 export const ARTICLE_RESEARCH_SCOPE = Object.freeze({
   project_id: "winter-truth-98410571",
   branch_id: "br-spring-smoke-a65esjkh",
@@ -7,6 +10,87 @@ export const ARTICLE_RESEARCH_SCOPE = Object.freeze({
 
 export const RUN_SQL_TOOL_ID = "article-research-neon_run_sql";
 export const RUN_SQL_TRANSACTION_TOOL_ID = "article-research-neon_run_sql_transaction";
+
+const ARTICLE_ID = /^article-[0-9a-f-]{36}$/;
+const INTAKE_ID = /^intake-[0-9a-f-]{36}$/;
+const LEASE_KEY = /^[a-zA-Z0-9-]{1,100}$/;
+const SOURCE_EXTENSION = /\.(md|markdown|txt)$/i;
+
+function containedBy(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative === "" || (!path.isAbsolute(relative) && relative !== ".." && !relative.startsWith(`..${path.sep}`));
+}
+
+function samePath(left, right) {
+  return process.platform === "win32" ? left.toLowerCase() === right.toLowerCase() : left === right;
+}
+
+async function canonicalRoot(root) {
+  return realpath(path.resolve(root));
+}
+
+async function authorizeExistingPath(root, candidate, { directory = false, within = root } = {}) {
+  const lexical = path.resolve(root, candidate);
+  if (!containedBy(root, lexical)) throw new Error("ARTICLE_RESEARCH_OPENCODE_PATH_OUTSIDE_PROJECT");
+  const metadata = await lstat(lexical);
+  if (metadata.isSymbolicLink()) throw new Error("ARTICLE_RESEARCH_OPENCODE_LINKED_PATH_FORBIDDEN");
+  const canonical = await realpath(lexical);
+  if (!containedBy(within, canonical)) throw new Error("ARTICLE_RESEARCH_OPENCODE_PATH_OUTSIDE_PROJECT");
+  if (!samePath(lexical, canonical)) throw new Error("ARTICLE_RESEARCH_OPENCODE_LINKED_PATH_FORBIDDEN");
+  if (directory ? !metadata.isDirectory() : !metadata.isFile()) throw new Error("ARTICLE_RESEARCH_OPENCODE_PATH_TYPE_INVALID");
+  return canonical;
+}
+
+function assertImportId(value) {
+  if (!ARTICLE_ID.test(value)) throw new Error("ARTICLE_RESEARCH_OPENCODE_IMPORT_ID_INVALID");
+}
+
+function assertIntakeId(value) {
+  if (!INTAKE_ID.test(value)) throw new Error("ARTICLE_RESEARCH_OPENCODE_INTAKE_ID_INVALID");
+}
+
+export async function createProjectImportAuthorization(repositoryDirectory) {
+  const root = await canonicalRoot(repositoryDirectory);
+  const intakeLexical = path.join(root, "Article Intake");
+  const authorizedIntake = async () => {
+    const intake = await authorizeExistingPath(root, intakeLexical, { directory: true });
+    if (!samePath(intake, intakeLexical)) throw new Error("ARTICLE_RESEARCH_OPENCODE_LINKED_PATH_FORBIDDEN");
+    return intake;
+  };
+
+  const authorizeSource = async (candidate) => {
+    if (!SOURCE_EXTENSION.test(candidate)) throw new Error("ARTICLE_RESEARCH_OPENCODE_SOURCE_TYPE_INVALID");
+    return authorizeExistingPath(root, candidate, { within: await authorizedIntake() });
+  };
+  const authorizeEvidence = (candidate) => authorizeExistingPath(root, candidate);
+  const authorizeSnapshot = async (runId, candidate) => {
+    assertIntakeId(runId);
+    const snapshotRoot = path.join(root, ".automation", "article-imports", "intake", runId, "sources");
+    if (!/^[a-f0-9]{64}\.source$/.test(path.basename(candidate))) throw new Error("ARTICLE_RESEARCH_OPENCODE_SNAPSHOT_INVALID");
+    return authorizeExistingPath(root, candidate, { within: snapshotRoot });
+  };
+
+  return {
+    async authorizeCommand(_root, command) {
+      if ("importId" in command && command.importId !== undefined) assertImportId(command.importId);
+      if ("runId" in command) assertIntakeId(command.runId);
+      if (command.kind === "recover-lease" && !LEASE_KEY.test(command.key)) throw new Error("ARTICLE_RESEARCH_OPENCODE_LEASE_KEY_INVALID");
+      if (command.kind === "reconcile-intake-entry" && (path.isAbsolute(command.entry) || command.entry.split(/[\\/]/).includes("..") || command.entry.includes("\0"))) throw new Error("ARTICLE_RESEARCH_OPENCODE_ENTRY_INVALID");
+      if (command.kind === "source") return { ...command, source: await authorizeSource(command.source) };
+      if (command.kind === "intake") {
+        const intake = await authorizedIntake();
+        const selected = await authorizeExistingPath(root, command.directory ?? "Article Intake", { directory: true });
+        if (selected !== intake) throw new Error("ARTICLE_RESEARCH_OPENCODE_INTAKE_DIRECTORY_INVALID");
+        return { ...command, directory: intake };
+      }
+      if (["cleanup-remedy", "submit-diagnosis", "submit-owner-decision"].includes(command.kind)) return { ...command, file: await authorizeEvidence(command.file) };
+      if (command.kind === "intake-retry" && command.recovery) return { ...command, recovery: await authorizeEvidence(command.recovery) };
+      return command;
+    },
+    authorizeIntakeEntry: (_root, candidate) => authorizeSource(candidate),
+    authorizeSnapshot: (_root, runId, candidate) => authorizeSnapshot(runId, candidate),
+  };
+}
 
 const VERIFY_ROLE_SQL = [
   "select current_user as current_user,",

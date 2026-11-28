@@ -7,3 +7,5 @@ In OpenCode, ask the `vetted_article_import` tool to run `{"action":"verify-role
 The registry migration in `db/article-research-registry-functions-v001.sql` must be applied before the research stage can read or save evidence through this connector. The identity check works before migration. The two functions run with the caller's existing table grants. The write runs in a serializable transaction. Production migration is a separate database change.
 
 Use the same tool with `{"action":"run","argv":["--describe-workflow"]}` to inspect the manual workflow. For an authorized run, pass the normal article command arguments in `argv`. This entry point supplies OpenCode’s signed-in Neon connection to the research registry. The usual primary-checkout, intake, editorial and release checks still apply.
+
+Place Markdown or text source files in the checkout's `Article Intake` directory before using `--source` or `--intake` through OpenCode. Supply evidence files from the same checkout. The tool checks the resolved paths before handing them to the importer.

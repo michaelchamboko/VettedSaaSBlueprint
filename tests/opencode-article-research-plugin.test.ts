@@ -1,15 +1,89 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
   ARTICLE_RESEARCH_SCOPE,
   assertArticleToolInput,
   assertSupportedOpenCodePlatform,
+  createProjectImportAuthorization,
   invokeTransformedTool,
   requireTransformedTool,
   unwrapTransformedToolResult,
   verifyArticleResearchRole,
 } from "../plugins/article-research-neon/runtime.js";
+
+test("native project authorization permits only canonical project-scoped inputs", async (context) => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), "vetted-opencode-paths-"));
+  context.after(() => rm(fixture, { recursive: true, force: true }));
+  const root = path.join(fixture, "checkout");
+  const intake = path.join(root, "Article Intake");
+  const evidence = path.join(root, "build-pack", "evidence.json");
+  const outside = path.join(fixture, "outside.md");
+  await mkdir(intake, { recursive: true });
+  await mkdir(path.dirname(evidence), { recursive: true });
+  await writeFile(path.join(intake, "inside.md"), "safe fixture");
+  await writeFile(evidence, "{}");
+  await writeFile(path.join(root, "build-pack", "not-intake.md"), "safe fixture");
+  await writeFile(outside, "outside fixture");
+
+  const authorization = await createProjectImportAuthorization(root);
+  const source = await authorization.authorizeCommand(root, { kind: "source", source: "Article Intake/inside.md" });
+  assert.equal(source.source, await realpath(path.join(intake, "inside.md")));
+  const intakeCommand = await authorization.authorizeCommand(root, { kind: "intake" });
+  assert.equal(intakeCommand.directory, await realpath(intake));
+  const remedy = await authorization.authorizeCommand(root, { kind: "cleanup-remedy", importId: `article-${"a".repeat(36)}`, file: "build-pack/evidence.json" });
+  assert.equal(remedy.file, await realpath(evidence));
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "source", source: outside }), /PATH_OUTSIDE_PROJECT/);
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "source", source: "build-pack/not-intake.md" }), /PATH_OUTSIDE_PROJECT/);
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "intake", directory: "build-pack" }), /INTAKE_DIRECTORY_INVALID/);
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "resume", importId: "../../outside" }), /IMPORT_ID_INVALID/);
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "reconcile-intake-entry", runId: `intake-${"b".repeat(36)}`, entry: "../outside.md" }), /ENTRY_INVALID/);
+});
+
+test("native project authorization rejects linked files and intake junctions", async (context) => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), "vetted-opencode-links-"));
+  context.after(() => rm(fixture, { recursive: true, force: true }));
+  const root = path.join(fixture, "checkout");
+  const intake = path.join(root, "Article Intake");
+  const outside = path.join(fixture, "outside.md");
+  await mkdir(intake, { recursive: true });
+  await writeFile(outside, "outside fixture");
+  const link = path.join(intake, "linked.md");
+  const authorization = await createProjectImportAuthorization(root);
+  try {
+    await symlink(outside, link, "file");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EPERM") {
+      const outsideDirectory = path.join(fixture, "outside-directory");
+      const junction = path.join(intake, "linked-directory");
+      await mkdir(outsideDirectory);
+      await writeFile(path.join(outsideDirectory, "linked.md"), "outside fixture");
+      try {
+        await symlink(outsideDirectory, junction, "junction");
+      } catch (junctionError) {
+        if ((junctionError as NodeJS.ErrnoException).code === "EPERM") { context.skip("Host does not permit fixture links"); return; }
+        throw junctionError;
+      }
+      await assert.rejects(authorization.authorizeCommand(root, { kind: "source", source: path.join(junction, "linked.md") }), /PATH_OUTSIDE_PROJECT/);
+      return;
+    }
+    throw error;
+  }
+  await assert.rejects(authorization.authorizeCommand(root, { kind: "source", source: link }), /LINKED_PATH_FORBIDDEN/);
+  await assert.rejects(authorization.authorizeIntakeEntry(root, link), /LINKED_PATH_FORBIDDEN/);
+});
+
+test("read-only native commands do not require an Article Intake directory", async (context) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "vetted-opencode-empty-"));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const authorization = await createProjectImportAuthorization(root);
+  assert.deepEqual(await authorization.authorizeCommand(root, { kind: "describe-workflow" }), { kind: "describe-workflow" });
+  assert.deepEqual(await authorization.authorizeCommand(root, { kind: "preflight" }), { kind: "preflight" });
+  assert.deepEqual(await authorization.authorizeCommand(root, { kind: "resume", importId: `article-${"c".repeat(36)}` }), { kind: "resume", importId: `article-${"c".repeat(36)}` });
+});
 
 test("OpenCode article research plugin supports Windows and Linux only", () => {
   assert.doesNotThrow(() => assertSupportedOpenCodePlatform("win32"));

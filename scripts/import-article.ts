@@ -14,6 +14,11 @@ import { NeonArticleReviewEvidenceRegistry } from "../src/lib/article-import/rev
 import { reviewRetentionDependencyResolver, type ArticleReviewEvidenceRegistry } from "../src/lib/article-import/review-evidence-registry";
 
 export type ImportCommand = { kind: "recover-lease"; leaseKind: "source" | "intake" | "import" | "publication"; key: string } | { kind: "describe-workflow" | "preflight" } | { kind: "upgrade-evidence" | "cleanup"; importId: string } | { kind: "cleanup-remedy"; importId: string; file: string } | { kind: "submit-diagnosis" | "submit-owner-decision"; importId: string; file: string } | { kind: "upgrade-intake" | "check-intake"; runId: string } | { kind: "reconcile-intake-entry"; runId: string; entry: string } | { kind: "source"; source: string } | { kind: "resume"; importId: string } | { kind: "check-completion"; importId: string } | { kind: "intake"; directory?: string } | { kind: "intake-resume" | "intake-status"; runId: string } | { kind: "intake-retry"; runId: string; importId?: string; recovery?: string } | { kind: "dispatch"; importId: string } | { kind: "dispatch-intake"; runId: string };
+export type ImportRunnerAuthorization = {
+  authorizeCommand(root: string, command: ImportCommand): Promise<ImportCommand>;
+  authorizeIntakeEntry(root: string, file: string): Promise<string>;
+  authorizeSnapshot(root: string, runId: string, file: string): Promise<string>;
+};
 
 async function importExecutionStage(root: string, importId: string): Promise<string | undefined> {
   try { return articleExecutionStage(await loadImport(root, importId)); }
@@ -64,8 +69,8 @@ export function parseImportCommand(argv: string[]): ImportCommand {
   throw new Error("Use --source <file> or --resume <import-id>.");
 }
 
-export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
-  const dispatch = () => dispatchImportCommand(root, command, executor, dispatchOptions, probe);
+export async function executeImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe, authorization?: ImportRunnerAuthorization): Promise<unknown> {
+  const dispatch = async () => dispatchImportCommand(root, authorization ? await authorization.authorizeCommand(root, command) : command, executor, dispatchOptions, probe, authorization);
   if (["source", "resume", "intake", "intake-resume", "dispatch", "dispatch-intake"].includes(command.kind)) {
     return withArticleExecution(root, dispatch, probe, async () => {
       if (command.kind === "resume" || command.kind === "dispatch") return importExecutionStage(root, command.importId);
@@ -83,15 +88,16 @@ export async function executeImportRunnerCommand(
   transport: ArticleResearchRegistryTransport = createArticleResearchRegistryTransport(),
   dispatchOptions: DispatchOptions = {},
   probe?: CapabilityProbe,
+  authorization?: ImportRunnerAuthorization,
 ): Promise<unknown> {
   try {
-    return await executeImportCommand(root, command, undefined, { ...dispatchOptions, researchRegistry: transport.registry }, probe);
+    return await executeImportCommand(root, command, undefined, { ...dispatchOptions, researchRegistry: transport.registry }, probe, authorization);
   } finally {
     await transport.close();
   }
 }
 
-async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe): Promise<unknown> {
+async function dispatchImportCommand(root: string, command: ImportCommand, executor?: ImportStageExecutor, dispatchOptions?: DispatchOptions, probe?: CapabilityProbe, authorization?: ImportRunnerAuthorization): Promise<unknown> {
   if (command.kind === "recover-lease") return recoverWorkflowLease(root, command.leaseKind, command.key);
   if (command.kind === "describe-workflow") return { requirementRevision: WORKFLOW_REVISION, sequence: WORKFLOW_SEQUENCE, requirements: workflowRequirements, instructions: stageInstructions, releaseSteps, verificationSteps };
   if (command.kind === "preflight") return inspectArticlePreflight(root, probe);
@@ -134,7 +140,7 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
     return createArticleImport(root, command.source);
   }
   if (command.kind === "check-completion") return inspectImportCompletion(root, command.importId);
-  if (command.kind === "intake") return createIntakeRun(root, command.directory);
+  if (command.kind === "intake") return createIntakeRun(root, command.directory, authorization ? (file) => authorization.authorizeIntakeEntry(root, file) : undefined);
   if (command.kind === "intake-status") return loadIntakeRun(root, command.runId);
   if (command.kind === "dispatch") return dispatchArticleImport(root, command.importId, { ...dispatchOptions, executor: execute, reviewEvidenceRegistry, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
   if (command.kind === "dispatch-intake") return dispatchIntakeRun(root, command.runId, { ...dispatchOptions, executor: execute, reviewEvidenceRegistry, capabilityProbe: probe ?? dispatchOptions?.capabilityProbe });
@@ -169,7 +175,8 @@ async function dispatchImportCommand(root: string, command: ImportCommand, execu
       }
       return { ...run, activeEntry: entry.relativePath, nextEntry: entry, importState: imported };
     }
-    const imported = await createArticleImport(root, entry.capturedPath, undefined, entry.sourceFingerprint);
+    const capturedPath = authorization ? await authorization.authorizeSnapshot(root, command.runId, entry.capturedPath) : entry.capturedPath;
+    const imported = await createArticleImport(root, capturedPath, undefined, entry.sourceFingerprint);
     const saved = await markIntakeEntry(root, run, entry.relativePath, imported.stage === "QUARANTINED" ? "QUARANTINED" : "PROCESSING", { importId: imported.importId });
     return { ...saved, nextEntry: saved.entries.find((item) => item.relativePath === entry.relativePath) };
   }

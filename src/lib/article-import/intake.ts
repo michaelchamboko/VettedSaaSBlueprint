@@ -63,7 +63,7 @@ export async function checkIntakeRun(root: string, runId: string): Promise<{ ok:
   return { ok: diagnostics.length === 0, diagnostics };
 }
 
-export async function createIntakeRun(root: string, sourceDirectory = "Article Intake"): Promise<IntakeRun> {
+export async function createIntakeRun(root: string, sourceDirectory = "Article Intake", authorizeEntry?: (file: string) => Promise<string>): Promise<IntakeRun> {
   const absolute = path.resolve(root, sourceDirectory);
   const names = (await readdir(absolute, { withFileTypes: true })).filter((entry) => entry.isFile()).map((entry) => entry.name).sort((a, b) => a.localeCompare(b));
   const runId = `intake-${randomUUID()}`;
@@ -73,7 +73,8 @@ export async function createIntakeRun(root: string, sourceDirectory = "Article I
   for (const name of names) {
     const relativePath = path.relative(root, path.join(absolute, name)).replaceAll("\\", "/");
     if (!eligible.test(name)) { entries.push({ relativePath, status: "SKIPPED", reason: "Unsupported file type." }); continue; }
-    const source = await readFile(path.join(absolute, name));
+    const candidate = path.join(absolute, name);
+    const source = await readFile(authorizeEntry ? await authorizeEntry(candidate) : candidate);
     const sourceFingerprint = createHash("sha256").update(source).digest("hex");
     const capturedPath = path.join(INTAKE_ROOT, runId, "sources", `${sourceFingerprint}.source`);
     await writeFile(path.join(root, capturedPath), source, { flag: "wx" }).catch(async (error: unknown) => { if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error; });

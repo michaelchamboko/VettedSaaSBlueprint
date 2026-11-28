@@ -5,6 +5,7 @@ import {
   assertArticleToolInput,
   assertSupportedOpenCodePlatform,
   assertTransformedTool,
+  createProjectImportAuthorization,
   invokeTransformedTool,
   verifyArticleResearchRole,
 } from "./runtime.js";
@@ -38,7 +39,7 @@ export default Plugin.define({
 
       editor.add({
         name: "vetted_article_import",
-        description: "Run the existing manual article command with the scoped Neon research registry, or verify the fixed OAuth database role without starting an import.",
+        description: "Run the existing manual article command with the scoped Neon research registry, or verify the fixed OAuth database role without starting an import. Native source and folder intake are limited to regular Markdown/text files in this checkout's Article Intake directory; evidence files must be regular files in the checkout.",
         input: commandInputSchema(),
         options: { codemode: false },
         async execute(input, invocation) {
@@ -80,10 +81,14 @@ export default Plugin.define({
             ),
           });
           const transport = transportModule.createArticleResearchRegistryTransport({ directRegistry: registry });
+          const authorization = await createProjectImportAuthorization(ctx.location.directory);
           const result = await executeImportRunnerCommand(
             ctx.location.directory,
             parseImportCommand(input.argv),
             transport,
+            {},
+            undefined,
+            authorization,
           );
           return { content: JSON.stringify(result, null, 2) };
         },
