@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "boundary": "isolated synthetic controller exercise; no real article or release operation",
-  "testedRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
+  "testedRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
   "controllerEntryPoint": "executePendingImport",
   "target": {
     "label": "target",
-    "importId": "article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189",
+    "importId": "article-a1a824bb-9609-4b32-abe6-80778fdc821f",
     "artifactSha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
     "browserEvidenceSha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
     "activity": {
@@ -23,12 +23,12 @@
           "sha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de"
         },
         {
-          "path": ".automation/article-imports/evidence/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3.json",
-          "sha256": "115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3"
+          "path": ".automation/article-imports/evidence/article-a1a824bb-9609-4b32-abe6-80778fdc821f/5bd21b4f2d8cc95ca24aab87a1354dc4f82c1fbf8509f3529e845533b5bca3a5.json",
+          "sha256": "5bd21b4f2d8cc95ca24aab87a1354dc4f82c1fbf8509f3529e845533b5bca3a5"
         }
       ],
-      "inputFingerprint": "6b4d49c6dc60e8372455bcf4f4386695cf7ddab96e703a954b313fc3fd305c2b",
-      "attemptId": "activity-attempt-d81602b64f9a64b9917f1cc2"
+      "inputFingerprint": "89d5efb69ba0bcad594d30e304fa56a15c9dc0050f6990bdbbb0990c7835692c",
+      "attemptId": "activity-attempt-6764b78e030589620f407718"
     },
     "suppliedOutcome": "rejected",
     "resultingStage": "REFINING",
@@ -36,11 +36,11 @@
     "activityAttempts": [
       {
         "schemaVersion": "ImportActivityAttemptV1",
-        "attemptId": "activity-attempt-d81602b64f9a64b9917f1cc2",
+        "attemptId": "activity-attempt-6764b78e030589620f407718",
         "stage": "REFINING",
         "activityId": "purpose-and-structure",
         "sequence": 1,
-        "inputFingerprint": "6b4d49c6dc60e8372455bcf4f4386695cf7ddab96e703a954b313fc3fd305c2b",
+        "inputFingerprint": "89d5efb69ba0bcad594d30e304fa56a15c9dc0050f6990bdbbb0990c7835692c",
         "criteria": [
           {
             "id": "refining.purpose-and-structure",
@@ -53,24 +53,24 @@
             "sha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de"
           },
           {
-            "path": ".automation/article-imports/evidence/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3.json",
-            "sha256": "115f65d55d27ed481f65073c871322d9f4c64a414534ce667f81958da536c0f3"
+            "path": ".automation/article-imports/evidence/article-a1a824bb-9609-4b32-abe6-80778fdc821f/5bd21b4f2d8cc95ca24aab87a1354dc4f82c1fbf8509f3529e845533b5bca3a5.json",
+            "sha256": "5bd21b4f2d8cc95ca24aab87a1354dc4f82c1fbf8509f3529e845533b5bca3a5"
           }
         ],
-        "idempotencyKey": "38b8c642dcb87b9975ee3503ac5fcbcc9c5d0bca3a97c5507e1ff99600c592cc",
-        "workPath": ".automation/article-imports/work/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/38b8c642dcb87b9975ee3503ac5fcbcc9c5d0bca3a97c5507e1ff99600c592cc.purpose-and-structure.1.work.json",
-        "resultPath": ".automation/article-imports/work/article-1c04b5c5-fd16-4eb1-8ad2-8e11a3183189/38b8c642dcb87b9975ee3503ac5fcbcc9c5d0bca3a97c5507e1ff99600c592cc.purpose-and-structure.1.result.json",
+        "idempotencyKey": "8b106e7830ee367c0bde7266f253bfdce080cd3e9fef0423142cb8ff24f48bd0",
+        "workPath": ".automation/article-imports/work/article-a1a824bb-9609-4b32-abe6-80778fdc821f/8b106e7830ee367c0bde7266f253bfdce080cd3e9fef0423142cb8ff24f48bd0.purpose-and-structure.1.work.json",
+        "resultPath": ".automation/article-imports/work/article-a1a824bb-9609-4b32-abe6-80778fdc821f/8b106e7830ee367c0bde7266f253bfdce080cd3e9fef0423142cb8ff24f48bd0.purpose-and-structure.1.result.json",
         "reason": "initial",
         "status": "completed",
-        "issuingLeaseOwnerToken": "0059dd46-dc37-4ae7-9085-61637565dadc",
-        "issuedAt": "2026-11-27T21:14:15.792Z",
-        "completedAt": "2026-11-27T21:14:16.642Z"
+        "issuingLeaseOwnerToken": "0a00a6ed-8c3e-463a-971c-231dfbd8fa73",
+        "issuedAt": "2026-11-28T00:07:37.493Z",
+        "completedAt": "2026-11-28T00:07:38.755Z"
       }
     ]
   },
   "control": {
     "label": "control",
-    "importId": "article-f88e1f3c-42c5-496c-800b-91a8475fd134",
+    "importId": "article-86459560-e041-44bf-b2b1-0355ff5be8b6",
     "artifactSha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4",
     "browserEvidenceSha256": "dc5f12826aad6253518dd82cb94b16ff08fefed3fd1e437e333b1dff5edc092f",
     "activity": {
@@ -88,12 +88,12 @@
           "sha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4"
         },
         {
-          "path": ".automation/article-imports/evidence/article-f88e1f3c-42c5-496c-800b-91a8475fd134/c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786.json",
-          "sha256": "c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786"
+          "path": ".automation/article-imports/evidence/article-86459560-e041-44bf-b2b1-0355ff5be8b6/3354cf9a335a637722ca02bb61a81f6546cfe50f12e089c807a379ea2ab0965f.json",
+          "sha256": "3354cf9a335a637722ca02bb61a81f6546cfe50f12e089c807a379ea2ab0965f"
         }
       ],
-      "inputFingerprint": "6ee4708a62672f7177d1266e37b3a5eb8abf5c85f9d5f118db306a158f5e3b6f",
-      "attemptId": "activity-attempt-7685889d223b25a09b9e9a2e"
+      "inputFingerprint": "ed5b780897488da6a4c46a593d255b35acd784d3e6ff4a60fd3ded6504829c5c",
+      "attemptId": "activity-attempt-b863c3998fac5f86435a51d0"
     },
     "suppliedOutcome": "unverified",
     "resultingStage": "REFINING",
@@ -101,11 +101,11 @@
     "activityAttempts": [
       {
         "schemaVersion": "ImportActivityAttemptV1",
-        "attemptId": "activity-attempt-7685889d223b25a09b9e9a2e",
+        "attemptId": "activity-attempt-b863c3998fac5f86435a51d0",
         "stage": "REFINING",
         "activityId": "purpose-and-structure",
         "sequence": 1,
-        "inputFingerprint": "6ee4708a62672f7177d1266e37b3a5eb8abf5c85f9d5f118db306a158f5e3b6f",
+        "inputFingerprint": "ed5b780897488da6a4c46a593d255b35acd784d3e6ff4a60fd3ded6504829c5c",
         "criteria": [
           {
             "id": "refining.purpose-and-structure",
@@ -118,18 +118,18 @@
             "sha256": "fe0eb891fa13c5857b21d14808ec632b814febec029991c0656037869e524dc4"
           },
           {
-            "path": ".automation/article-imports/evidence/article-f88e1f3c-42c5-496c-800b-91a8475fd134/c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786.json",
-            "sha256": "c59beaa49373a74c9906d3e229df2a285f00c2416dda05afc145ab85f5396786"
+            "path": ".automation/article-imports/evidence/article-86459560-e041-44bf-b2b1-0355ff5be8b6/3354cf9a335a637722ca02bb61a81f6546cfe50f12e089c807a379ea2ab0965f.json",
+            "sha256": "3354cf9a335a637722ca02bb61a81f6546cfe50f12e089c807a379ea2ab0965f"
           }
         ],
-        "idempotencyKey": "2c29537970ca3e5f1e2fea6948c3832b82d9553140c823103c065f44f69163b3",
-        "workPath": ".automation/article-imports/work/article-f88e1f3c-42c5-496c-800b-91a8475fd134/2c29537970ca3e5f1e2fea6948c3832b82d9553140c823103c065f44f69163b3.purpose-and-structure.1.work.json",
-        "resultPath": ".automation/article-imports/work/article-f88e1f3c-42c5-496c-800b-91a8475fd134/2c29537970ca3e5f1e2fea6948c3832b82d9553140c823103c065f44f69163b3.purpose-and-structure.1.result.json",
+        "idempotencyKey": "ef2a42d8c0d78caae1869a725b0af7107427bfb6f83757b71579a3089213b62a",
+        "workPath": ".automation/article-imports/work/article-86459560-e041-44bf-b2b1-0355ff5be8b6/ef2a42d8c0d78caae1869a725b0af7107427bfb6f83757b71579a3089213b62a.purpose-and-structure.1.work.json",
+        "resultPath": ".automation/article-imports/work/article-86459560-e041-44bf-b2b1-0355ff5be8b6/ef2a42d8c0d78caae1869a725b0af7107427bfb6f83757b71579a3089213b62a.purpose-and-structure.1.result.json",
         "reason": "initial",
         "status": "completed",
-        "issuingLeaseOwnerToken": "28e3361c-43b3-42ea-8e85-3fcaff40720c",
-        "issuedAt": "2026-11-27T21:14:26.682Z",
-        "completedAt": "2026-11-27T21:14:29.344Z"
+        "issuingLeaseOwnerToken": "9d05a101-848e-4555-be2a-432b74aeb090",
+        "issuedAt": "2026-11-28T00:07:51.358Z",
+        "completedAt": "2026-11-28T00:07:52.244Z"
       }
     ]
   }

@@ -8,8 +8,8 @@ const baselineTraceabilityPath = "docs/designs/recovery-evidence/123/historical/
 const findingInventoryPath = "docs/designs/recovery-evidence/123/historical/webcatalog-finding-traceability-108.md";
 const baselineTraceabilityBlob = "4f970bdb1b227d415b8be8cb3782d85c54914dfa";
 const findingInventoryBlob = "c8b8a3d69b5496a685e3c8c49f256e6a293e2a5d";
-const testedProductRevision = "29bf7f229849bce0029a07807ce140dc07ccf033";
-const testedProductTree = "c175f3afd8c707c85e9db2efc65a23dcac5b4077";
+const testedProductRevision = "8e4f4fdf3a921949f02e97fc880703ac3975cdf3";
+const testedProductTree = "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d";
 
 const sourceLegend = {
   Hero: ["Vetted SaaS Blueprint - Design System and Experience Standards", "9.1 Hero as a complete pitch", "D04-S-039819730d12"],
@@ -200,6 +200,15 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
+  let finalCorrection;
+  let finalCorrectionSha256;
+  try {
+    const bytes = await readFile(path.join(root, "build-pack/repairs/article-recovery-123/final-correction-probes.json"));
+    finalCorrection = JSON.parse(bytes.toString("utf8"));
+    finalCorrectionSha256 = createHash("sha256").update(bytes).digest("hex");
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
   const browserFindingObservations = browserObservation ? {
     12: "Fresh exact-artifact browser proof: the target CTA is fully visible and keyboard-focusable, but its generic label does not disclose the synthetic destination. The control's descriptive label and exact destination activation work.",
     14: "Fresh exact-artifact browser proof: the target renders zero decoded article visuals. The frozen synthetic control decodes its 1600x900 deterministic diagram at all tested sizes.",
@@ -225,6 +234,7 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
   const controllerRef = controllerVerdictsSha256 ? { path: "build-pack/repairs/article-recovery-123/controller-verdicts.json", sha256: controllerVerdictsSha256 } : undefined;
   const controllerObserverRef = controllerObserverSha256 ? { path: "build-pack/repairs/article-recovery-123/controller-observer.json", sha256: controllerObserverSha256 } : undefined;
   const commandRef = commandLedgerSha256 ? { path: "build-pack/repairs/article-recovery-123/verification-commands.json", sha256: commandLedgerSha256 } : undefined;
+  const finalCorrectionRef = finalCorrectionSha256 ? { path: "build-pack/repairs/article-recovery-123/final-correction-probes.json", sha256: finalCorrectionSha256 } : undefined;
   const priorBlindRef = { path: "docs/designs/recovery-evidence/122/reviewer-manifest.json", sha256: "99ca76171121190d295177a5561f7b170179419d13e311fca2dd1a3996b1a9f0" };
   const setCurrent = (row, status, observation, refs = []) => {
     row.currentIssue123Evidence = { status, observation, refs: refs.filter(Boolean) };
@@ -289,6 +299,15 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
     const regressionObservation = controllerObserver.regressions.map((entry) => `${entry.test}: ${entry.observed}`).join("; ");
     setCurrent(testingDecisions.find((row) => row.id === 4), "final-head-focused-pass", `The independent e14ece1 observation retained seven synthetic passes and found three fixture-bound early stops: ${regressionObservation}. The corrected final product revision supplies a faithful reviewed-tree test adapter; the focused rollback and resume cases pass there.`, [controllerObserverRef, commandRef]);
   }
+  if (finalCorrection) {
+    setCurrent(stories.find((row) => row.id === 11), "partially-exercised", "A synthetic worker packet exposed one current activity and only accepted current-stage handoffs. This does not establish worker judgment quality or a complete activity sequence.", [finalCorrectionRef]);
+    setCurrent(stories.find((row) => row.id === 13), "partially-exercised", "Synthetic cleanup and restart refused redirected archive, failure-receipt and work paths. No real article file was moved, restored or deleted.", [finalCorrectionRef]);
+    setCurrent(stories.find((row) => row.id === 15), "partially-exercised", "Synthetic provider reconciliation held indeterminate lookup and bound project, alias and served commit identity. No real provider operation ran.", [finalCorrectionRef]);
+    setCurrent(stories.find((row) => row.id === 24), "partially-exercised", "Three distinct unsuccessful synthetic finding repairs required bound diagnosis before a fourth worker. The probe did not establish a successful remedy or editorial approval.", [finalCorrectionRef]);
+    setCurrent(testingDecisions.find((row) => row.id === 3), "partially-exercised", "Four synthetic containment cases refused redirected cleanup paths without writing outside the import. Other cleanup mutation boundaries remain covered only by their existing tests.", [finalCorrectionRef]);
+    setCurrent(testingDecisions.find((row) => row.id === 4), "partially-exercised", "Eight synthetic release/provider cases passed for identity, indeterminate lookup, shell-free arguments and redacted diagnostics. No real deployment, alias or rollback operation ran.", [controllerObserverRef, commandRef, finalCorrectionRef]);
+    setCurrent(testingDecisions.find((row) => row.id === 7), "partially-exercised", "Current synthetic probes cover changed accepted outputs reopening their activity and diagnosis after three distinct unsuccessful finding repairs. Other decision-7 mechanisms remain unverified here.", [finalCorrectionRef]);
+  }
   const ledger = {
     schemaVersion: 1,
     readiness: "NOT_READY",
@@ -323,11 +342,18 @@ export async function buildReadinessLedger({ root = process.cwd() } = {}) {
       control: controllerVerdicts ? { artifactSha256: controllerVerdicts.control.artifactSha256, outcome: controllerVerdicts.control.suppliedOutcome, resultingStage: controllerVerdicts.control.resultingStage, nextAction: controllerVerdicts.control.nextAction } : undefined,
       disposition: controllerVerdicts ? "target-rejected-control-unverified" : "focused-execution-required-at-tested-revision",
     },
+    finalCorrectionEvidence: finalCorrection ? {
+      testedRevision: finalCorrection.testedRevision,
+      testedTree: finalCorrection.testedTree,
+      provisional: finalCorrection.provisional,
+      observationIds: finalCorrection.observations.map((entry) => entry.id),
+      boundary: finalCorrection.boundary,
+    } : undefined,
     browserEvidence: {
       status: browserObservation ? "independent-exact-artifact-capture-retained" : "missing-exact-artifact-controller-bound-capture",
       observedRevision: browserObservation?.revision,
       promotedToRevision: testedProductRevision,
-      promotionBasis: "The 1625b26..29bf7f2 delta changes historical rendering-input replay and synthetic release-test reviewed-tree injection. The served route, components, styles, assets and frozen target/control bytes are unchanged.",
+      promotionBasis: "The 1625b26..8e4f4fd delta changes article-controller, evidence, cleanup, rendering-input and release mechanics outside the captured route. The served route, components, styles, assets and frozen target/control bytes are unchanged.",
       reviewer: "/root/browser_observer (independent)",
       sourceBindings: browserObservation ? { target: browserObservation.target, control: browserObservation.control } : undefined,
       requiredViewports: ["390x844", "320x800", "1440x900"],

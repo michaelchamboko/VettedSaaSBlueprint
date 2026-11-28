@@ -12,8 +12,8 @@
       "issue": 123
     },
     "baselineRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
-    "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-    "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+    "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+    "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
   },
   "stories": [
     {
@@ -31,8 +31,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -45,7 +45,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -65,8 +65,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -79,7 +79,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -99,8 +99,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -128,8 +128,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -142,7 +142,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -162,8 +162,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -191,8 +191,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -220,8 +220,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -234,7 +234,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -254,8 +254,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -283,8 +283,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -312,8 +312,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -341,8 +341,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -351,15 +351,11 @@
       "disposition": "historical-evidence-only",
       "currentIssue123Evidence": {
         "status": "partially-exercised",
-        "observation": "Current synthetic evidence exercises only the mechanism recorded in the referenced receipt for story 11; it does not establish the story's remaining acceptance paths.",
+        "observation": "A synthetic worker packet exposed one current activity and only accepted current-stage handoffs. This does not establish worker judgment quality or a complete activity sequence.",
         "refs": [
           {
-            "path": "build-pack/repairs/article-recovery-123/controller-observer.json",
-            "sha256": "bfda50decb4be5c85f601a0c5411cb2ba6bb8e392814fdc2a707458da2fe5b89"
-          },
-          {
-            "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
           }
         ]
       }
@@ -379,8 +375,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -408,8 +404,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -417,9 +413,14 @@
       },
       "disposition": "missing-current-proof",
       "currentIssue123Evidence": {
-        "status": "not-exercised",
-        "observation": "No criterion-specific issue-123 execution is bound to this row. Historical evidence and future acceptance remain separate.",
-        "refs": []
+        "status": "partially-exercised",
+        "observation": "Synthetic cleanup and restart refused redirected archive, failure-receipt and work paths. No real article file was moved, restored or deleted.",
+        "refs": [
+          {
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
+          }
+        ]
       }
     },
     {
@@ -437,8 +438,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -466,8 +467,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -476,15 +477,11 @@
       "disposition": "historical-evidence-only",
       "currentIssue123Evidence": {
         "status": "partially-exercised",
-        "observation": "Current synthetic evidence exercises only the mechanism recorded in the referenced receipt for story 15; it does not establish the story's remaining acceptance paths.",
+        "observation": "Synthetic provider reconciliation held indeterminate lookup and bound project, alias and served commit identity. No real provider operation ran.",
         "refs": [
           {
-            "path": "build-pack/repairs/article-recovery-123/controller-observer.json",
-            "sha256": "bfda50decb4be5c85f601a0c5411cb2ba6bb8e392814fdc2a707458da2fe5b89"
-          },
-          {
-            "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
           }
         ]
       }
@@ -504,8 +501,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -522,7 +519,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -542,8 +539,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -571,8 +568,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -605,8 +602,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -623,7 +620,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -643,8 +640,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -661,7 +658,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -681,8 +678,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -699,7 +696,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -719,8 +716,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -748,8 +745,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -777,8 +774,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -786,9 +783,14 @@
       },
       "disposition": "historical-evidence-only",
       "currentIssue123Evidence": {
-        "status": "not-exercised",
-        "observation": "No criterion-specific issue-123 execution is bound to this row. Historical evidence and future acceptance remain separate.",
-        "refs": []
+        "status": "partially-exercised",
+        "observation": "Three distinct unsuccessful synthetic finding repairs required bound diagnosis before a fourth worker. The probe did not establish a successful remedy or editorial approval.",
+        "refs": [
+          {
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
+          }
+        ]
       }
     },
     {
@@ -806,8 +808,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -824,7 +826,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -844,8 +846,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -878,8 +880,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -907,8 +909,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -925,7 +927,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -947,8 +949,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -961,7 +963,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-observer.json",
@@ -969,7 +971,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -989,8 +991,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1003,7 +1005,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1023,8 +1025,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1032,9 +1034,14 @@
       },
       "disposition": "historical-evidence-only",
       "currentIssue123Evidence": {
-        "status": "not-exercised",
-        "observation": "No criterion-specific issue-123 execution is bound to this row. Historical evidence and future acceptance remain separate.",
-        "refs": []
+        "status": "partially-exercised",
+        "observation": "Four synthetic containment cases refused redirected cleanup paths without writing outside the import. Other cleanup mutation boundaries remain covered only by their existing tests.",
+        "refs": [
+          {
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
+          }
+        ]
       }
     },
     {
@@ -1052,8 +1059,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1061,8 +1068,8 @@
       },
       "disposition": "historical-evidence-only",
       "currentIssue123Evidence": {
-        "status": "final-head-focused-pass",
-        "observation": "The independent e14ece1 observation retained seven synthetic passes and found three fixture-bound early stops: failed production verification rolls back and never reports LIVE: REPAIRING / DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH; rollback verification failure remains fail-closed: REPAIRING / DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH; deployment commit mismatch rolls back before returning: REPAIRING / DIRECT_REVIEW_AUTHORITY_REVIEW_MISMATCH. The corrected final product revision supplies a faithful reviewed-tree test adapter; the focused rollback and resume cases pass there.",
+        "status": "partially-exercised",
+        "observation": "Eight synthetic release/provider cases passed for identity, indeterminate lookup, shell-free arguments and redacted diagnostics. No real deployment, alias or rollback operation ran.",
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/controller-observer.json",
@@ -1070,7 +1077,11 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
+          },
+          {
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
           }
         ]
       }
@@ -1090,8 +1101,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1124,8 +1135,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1142,7 +1153,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -1162,8 +1173,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1172,11 +1183,11 @@
       "disposition": "historical-evidence-only",
       "currentIssue123Evidence": {
         "status": "partially-exercised",
-        "observation": "Issue 123 exercises only the exact retained observation applicable to testing decision 7; unreferenced mechanisms in that decision remain untested.",
+        "observation": "Current synthetic probes cover changed accepted outputs reopening their activity and diagnosis after three distinct unsuccessful finding repairs. Other decision-7 mechanisms remain unverified here.",
         "refs": [
           {
-            "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "path": "build-pack/repairs/article-recovery-123/final-correction-probes.json",
+            "sha256": "14d7103ce2abc335910d4d48fc8b525e01a6216896e3dc883d80a881addd546e"
           }
         ]
       }
@@ -1196,8 +1207,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1225,8 +1236,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1243,7 +1254,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1263,8 +1274,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1292,8 +1303,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1306,7 +1317,7 @@
         "refs": [
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-observer.json",
@@ -1318,7 +1329,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1340,8 +1351,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1374,8 +1385,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1408,8 +1419,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1442,8 +1453,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1476,8 +1487,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1510,8 +1521,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1539,8 +1550,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1568,8 +1579,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1597,8 +1608,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1626,8 +1637,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1655,8 +1666,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1677,7 +1688,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1697,8 +1708,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1719,7 +1730,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1739,8 +1750,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1761,7 +1772,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1781,8 +1792,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1803,7 +1814,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1823,8 +1834,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1845,7 +1856,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/verification-commands.json",
-            "sha256": "767ec63e54054cfc4b9ebaf37754364fcecaff2873da75c00b8b9f80a208d081"
+            "sha256": "8c84b104f32e25fed11e72ef7f49028986f192c8a0d6eaa956ca6e54944d8843"
           }
         ]
       }
@@ -1865,8 +1876,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1894,8 +1905,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1923,8 +1934,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1941,7 +1952,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -1961,8 +1972,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -1979,7 +1990,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -1999,8 +2010,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2017,7 +2028,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -2037,8 +2048,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2055,7 +2066,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -2075,8 +2086,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2104,8 +2115,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2133,8 +2144,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2162,8 +2173,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2191,8 +2202,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2220,8 +2231,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2249,8 +2260,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2278,8 +2289,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2307,8 +2318,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2336,8 +2347,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2365,8 +2376,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2394,8 +2405,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2423,8 +2434,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2452,8 +2463,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2481,8 +2492,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2510,8 +2521,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2539,8 +2550,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2568,8 +2579,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2597,8 +2608,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2626,8 +2637,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2655,8 +2666,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2684,8 +2695,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2713,8 +2724,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2742,8 +2753,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2771,8 +2782,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2800,8 +2811,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2829,8 +2840,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2858,8 +2869,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2892,8 +2903,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2926,8 +2937,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2955,8 +2966,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -2997,8 +3008,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3051,8 +3062,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3105,8 +3116,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3159,8 +3170,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3213,8 +3224,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3267,8 +3278,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3321,8 +3332,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3375,8 +3386,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3429,8 +3440,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3483,8 +3494,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3537,8 +3548,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3596,8 +3607,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3655,8 +3666,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3714,8 +3725,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3773,8 +3784,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3827,8 +3838,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3881,8 +3892,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3940,8 +3951,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -3999,8 +4010,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4052,8 +4063,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4106,8 +4117,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4154,8 +4165,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4208,8 +4219,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4256,8 +4267,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4315,8 +4326,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4369,8 +4380,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4428,8 +4439,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4482,8 +4493,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4541,8 +4552,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4595,8 +4606,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4643,8 +4654,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4691,8 +4702,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4745,8 +4756,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4799,8 +4810,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4853,8 +4864,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4912,8 +4923,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -4944,7 +4955,7 @@
           },
           {
             "path": "build-pack/repairs/article-recovery-123/controller-verdicts.json",
-            "sha256": "85715e17034e16db4ab859c023f8f0e8dd7504d89df72514497fdf862344a81b"
+            "sha256": "0a45a39064d9fc8d2ef144ebb8fdbf91d512181d56e6126131696a4926d394b7"
           }
         ]
       }
@@ -4975,8 +4986,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -5039,8 +5050,8 @@
       "fingerprint": {
         "historicalRevision": "bebb4fe644b3d97e9a21f46a6e06938ed35684cb",
         "historicalTraceabilityBlob": "4f970bdb1b227d415b8be8cb3782d85c54914dfa",
-        "testedBaseRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-        "testedBaseTree": "c175f3afd8c707c85e9db2efc65a23dcac5b4077"
+        "testedBaseRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+        "testedBaseTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d"
       },
       "reviewer": {
         "historical": "issue-109-fresh-context-reconciler",
@@ -5094,7 +5105,7 @@
       "rule",
       "style"
     ],
-    "testedRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
+    "testedRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
     "target": {
       "artifactSha256": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
       "outcome": "rejected",
@@ -5109,11 +5120,24 @@
     },
     "disposition": "target-rejected-control-unverified"
   },
+  "finalCorrectionEvidence": {
+    "testedRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+    "testedTree": "2caf0ad41c7d6cf20ae76e99c43e00ebe1b9e45d",
+    "provisional": false,
+    "observationIds": [
+      "activity-output-and-repair-escalation",
+      "cleanup-path-containment",
+      "provider-and-release-verification",
+      "rendering-input-scope",
+      "worker-packet-scope"
+    ],
+    "boundary": "Synthetic controller, filesystem and provider-adapter tests only. No real article, provider, deployment or production operation ran."
+  },
   "browserEvidence": {
     "status": "independent-exact-artifact-capture-retained",
     "observedRevision": "1625b26c9ee2c13b08f64e1cc0e8974b5acfbb99",
-    "promotedToRevision": "29bf7f229849bce0029a07807ce140dc07ccf033",
-    "promotionBasis": "The 1625b26..29bf7f2 delta changes historical rendering-input replay and synthetic release-test reviewed-tree injection. The served route, components, styles, assets and frozen target/control bytes are unchanged.",
+    "promotedToRevision": "8e4f4fdf3a921949f02e97fc880703ac3975cdf3",
+    "promotionBasis": "The 1625b26..8e4f4fd delta changes article-controller, evidence, cleanup, rendering-input and release mechanics outside the captured route. The served route, components, styles, assets and frozen target/control bytes are unchanged.",
     "reviewer": "/root/browser_observer (independent)",
     "sourceBindings": {
       "target": "53abf4a76a5352190ef3f16fcd44ab43f073d76826de7fe55d7e53a0951d76de",
@@ -5138,5 +5162,5 @@
     "ImageGen original PNG, deterministic derivative, provenance, independent no-people/brand judgment, integration, and truthful alternative text remain unproven for the issue-123 target.",
     "Only finding 36 received a finding-specific normal-controller rejection. Browser observations for the other findings do not by themselves prove a supervisor catch."
   ],
-  "digest": "ae043fb0679252eeacd5391f57eb662432c1c89ef8e910cc1dbc8a0dff590b64"
+  "digest": "f53bce07e8fee0aa649b7ed16f00076f769d10cf380af093d7a64ea3371632ac"
 }

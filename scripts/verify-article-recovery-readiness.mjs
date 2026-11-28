@@ -165,7 +165,34 @@ export async function verifyReadinessLedger({ root = process.cwd(), ledgerPath =
   assert.deepEqual(promotion.servedPathChanges, []);
   const commands = JSON.parse(await readFile(path.join(root, "build-pack/repairs/article-recovery-123/verification-commands.json"), "utf8"));
   assert.equal(commands.productRevision, ledger.authority.testedBaseRevision);
-  assert.ok(commands.checks.every((check) => check.status.startsWith("pass")));
+  assert.deepEqual(commands.checks.filter((check) => !check.status.startsWith("pass")).map((check) => ({ command: check.command, status: check.status })), [], "all retained final-head commands must pass");
+  assert.equal(commands.finalDelta.fromRevision, "62e7aac4f8f80b19f946083c8358883107c12415");
+  assert.deepEqual(commands.finalDelta.changedProductFiles, ["src/lib/article-import/worker-runner.ts"]);
+  assert.equal(commands.finalDelta.affectedChecksRerun.length, 3);
+  assert.match(commands.finalDelta.result, /^3\/3 affected final-delta checks passed/);
+  const finalCorrection = JSON.parse(await readFile(path.join(root, "build-pack/repairs/article-recovery-123/final-correction-probes.json"), "utf8"));
+  const expectedFinalCorrectionProbes = [
+    ["activity-output-and-repair-escalation", 2],
+    ["cleanup-path-containment", 4],
+    ["provider-and-release-verification", 8],
+    ["rendering-input-scope", 1],
+    ["worker-packet-scope", 1],
+  ];
+  assert.equal(finalCorrection.testedRevision, ledger.authority.testedBaseRevision);
+  assert.equal(finalCorrection.testedTree, ledger.authority.testedBaseTree);
+  assert.equal(finalCorrection.provisional, false, "final-correction probes must be rebound and rerun at the supplied final product revision");
+  assert.equal(finalCorrection.finalDelta.fromRevision, commands.finalDelta.fromRevision);
+  assert.deepEqual(finalCorrection.finalDelta.changedProductFiles, commands.finalDelta.changedProductFiles);
+  assert.deepEqual(finalCorrection.finalDelta.directlyRerunObservationIds, ["worker-packet-scope"]);
+  assert.deepEqual(finalCorrection.finalDelta.promotedObservationIds.sort(), expectedFinalCorrectionProbes.map(([id]) => id).filter((id) => id !== "worker-packet-scope").sort());
+  assert.match(finalCorrection.boundary, /No real article, provider, deployment or production operation ran\./);
+  assert.deepEqual(finalCorrection.observations.map((entry) => [entry.id, entry.tests]), expectedFinalCorrectionProbes);
+  for (const observation of finalCorrection.observations) {
+    assert.equal(observation.status, "pass");
+    assert.match(observation.command, /^node --import tsx --test /);
+    assert.match(observation.establishes, /\S/);
+    assert.match(observation.limitations, /\S/);
+  }
   const controller = JSON.parse(await readFile(path.join(root, "build-pack/repairs/article-recovery-123/controller-verdicts.json"), "utf8"));
   assert.equal(controller.testedRevision, ledger.authority.testedBaseRevision);
   assert.equal(controller.controllerEntryPoint, "executePendingImport");
@@ -199,6 +226,11 @@ export async function verifyReadinessLedger({ root = process.cwd(), ledgerPath =
     q40Disposition: ledger.interviewQuestions.find((row) => row.id === "Q40").disposition,
     blindedJudgments: ledger.blindedJudgments,
     browser,
+    finalCorrectionProbes: {
+      observationIds: finalCorrection.observations.map((entry) => entry.id),
+      provisional: finalCorrection.provisional,
+      noRealOperations: true,
+    },
     mutationScopes: [...ledger.controllerEvidence.mutationScopes].sort(),
     missingProof: ledger.missingProof,
     digest: ledger.digest,

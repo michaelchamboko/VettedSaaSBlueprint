@@ -21,6 +21,14 @@ test("issue 123 readiness ledger is complete and fails closed on missing proof",
   assert.equal(result.browser.viewports.includes("390x844"), true);
   assert.equal(result.browser.viewports.includes("320x800"), true);
   assert.deepEqual(result.mutationScopes, ["asset", "content", "renderer", "rule", "style"]);
+  assert.deepEqual(result.finalCorrectionProbes.observationIds, [
+    "activity-output-and-repair-escalation",
+    "cleanup-path-containment",
+    "provider-and-release-verification",
+    "rendering-input-scope",
+    "worker-packet-scope",
+  ]);
+  assert.equal(result.finalCorrectionProbes.noRealOperations, true);
   assert.ok(result.missingProof.length > 0, "known missing proof must remain visible");
   assert.ok(result.missingProof.some((entry) => /positive content-depth control/i.test(entry)));
   assert.ok(result.missingProof.some((entry) => /ImageGen original PNG/i.test(entry)));

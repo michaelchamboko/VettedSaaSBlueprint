@@ -2,7 +2,7 @@
 
 Status: **NOT_READY**
 
-The corrected controller and release paths pass their focused engineering checks at product revision `29bf7f229849bce0029a07807ce140dc07ccf033`. The readiness demonstration still does not establish all 38 findings. This is an evidence result, not a failed implementation handoff.
+The corrected controller and release paths pass their focused engineering checks at product revision `8e4f4fdf3a921949f02e97fc880703ac3975cdf3`. The readiness demonstration still does not establish all 38 findings. This is an evidence result, not a failed implementation handoff.
 
 The strict ledger contains 38 findings, 28 stories, 11 testing decisions and 52 interview labels. It keeps Q40 open. Findings 36 and 38 cite the later owner directive under the exact heading `Owner-added P1 criteria`; their `OWNER-P1-F36` and `OWNER-P1-F38` identifiers are local ledger locators, not release-era source IDs.
 
@@ -16,6 +16,7 @@ The strict ledger contains 38 findings, 28 stories, 11 testing decisions and 52 
 - Content, renderer, style, asset and rule mutations were exercised one at a time through the public catalogue test. The unaffected control remained reusable for each scoped change.
 - That mutation test has a separate positive synthetic control, `synthetic-direct-control`. Its publication authority binding and normal public route stayed valid for every target-only mutation. This proves affected-scope and approval-reuse behavior only. It is not the malformed browser control, an editorial-depth judgment or an accepted article-activity review.
 - Final-head controller probes pass candidate rebind, handoff byte recheck, finding preservation, changed-input rerun, independent resolution, rollback reconciliation, fail-closed rollback verification and productive-stage resume.
+- Final-correction probes pass concrete activity-output invalidation, three-repair diagnosis escalation, cleanup path containment, provider identity and diagnostic redaction, target-bound rendering scope, and worker-packet projection. They are synthetic mechanism checks, not article-readiness approvals.
 - The six genuine blinded judgments remain 6/6 only for issue 122's frozen packets, examined revision `cf0012f0b8d0795e9717ca427bc8bad4ce41ed2e` and recorded reviewer configuration. Issue 123 did not run six new blind judgments.
 
 ## Missing proof
